@@ -355,9 +355,9 @@ Without step 2, the code compiles in scalar mode even on RVV-capable hardware.
 | Dependency | Role | riscv64 build | riscv64 test | riscv64 release | Notes |
 |---|---|---|---|---|---|
 | C++ compiler (GCC-14/Clang-18) | Mandatory: compile headers and tests | Passes (cross-compile) | `allow_failure: true` | Not gating | Older compilers lack RVV 1.0 fixed-length support |
-| libm (glibc) | Mandatory: scalar math functions | Available on all riscv64 Linux | Passes | Available | See glibc status report |
+| libm (glibc) | Mandatory: scalar math functions | Available on all riscv64 Linux | Passes | Available | See `reports/glibc.md` |
 | pthreads | Required for threaded tests | Available | Passes | Available | None |
-| OpenBLAS | Optional BLAS backend | Builds on riscv64 | Tested in CI when BLAS backend enabled | Available | See OpenBLAS status report |
+| OpenBLAS | Optional BLAS backend | Builds on riscv64 | Tested in CI when BLAS backend enabled | Available | See `reports/openblas.md` |
 | LAPACK | Optional solver acceleration | Builds on riscv64 | Partial (tied to OpenBLAS) | Available | Tied to OpenBLAS riscv64 completeness |
 | SuiteSparse (CHOLMOD, UMFPACK, SPQR, KLU) | Optional sparse solvers | Packages available (Debian/Ubuntu) | Not in riscv64 smoketest CI | Available | Not included in CI smoketest image |
 | SuperLU | Optional sparse solver | Available (no arch-specific code) | Not in riscv64 smoketest | Available | Not tested |
@@ -372,9 +372,9 @@ Without step 2, the code compiles in scalar mode even on RVV-capable hardware.
 
 ### 9.2 Critical Dependency Deep-Dives
 
-**glibc (libm):** Required for scalar math functions. Available on all riscv64 Linux distributions. No blocking issues. See the glibc status report for riscv64 vectorized math library (`libmvec`) status.
+**glibc (libm):** Required for scalar math functions. Available on all riscv64 Linux distributions. No blocking issues. See `reports/glibc.md` for riscv64 vectorized math library (`libmvec`) status.
 
-**OpenBLAS:** The optional BLAS backend accelerates dense solvers. OpenBLAS has a RISC-V port with RVV kernels under active development. Eigen's CI tests with the BLAS backend when enabled, but riscv64 BLAS-backend coverage in the smoketest image is not confirmed from the research data. See the OpenBLAS status report.
+**OpenBLAS:** The optional BLAS backend accelerates dense solvers. OpenBLAS has a RISC-V port with RVV kernels under active development. Eigen's CI tests with the BLAS backend when enabled, but riscv64 BLAS-backend coverage in the smoketest image is not confirmed from the research data. See `reports/openblas.md`.
 
 **CUDA/HIP/SYCL:** No GPU offload is available on riscv64. This is an architectural gap relative to x86-64 and aarch64 deployments that use GPU acceleration. All three GPU backends explicitly exclude riscv64.
 

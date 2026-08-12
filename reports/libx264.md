@@ -265,7 +265,7 @@ Any riscv64 build correctness claim relies entirely on distro build daemons (Deb
 | Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Blocking Issues |
 |---|---|---|---|---|---|
 | nasm (>= 2.13) | x86/x86_64 SIMD assembler only; not invoked on riscv64 | Installed in Debian sid riscv64 (v3.01-1) | N/A (tool, not runtime) | Available | None -- not used on riscv64 |
-| libavformat / libavcodec / libavutil (FFmpeg lavf) | Optional: demuxer input for CLI (input/lavf.c) | Installed in Debian sid riscv64 (FFmpeg 7:8.1.2-2, built ~3 days before research date on rv-manda-03) | Unknown -- no riscv64 CI in FFmpeg upstream for this path | Released | None known; see multimedia/ffmpeg.md |
+| libavformat / libavcodec / libavutil (FFmpeg lavf) | Optional: demuxer input for CLI (input/lavf.c) | Installed in Debian sid riscv64 (FFmpeg 7:8.1.2-2, built ~3 days before research date on rv-manda-03) | Unknown -- no riscv64 CI in FFmpeg upstream for this path | Released | None known; see `reports/ffmpeg.md` |
 | libswscale / libavutil | Optional: pixel-format conversion for CLI (required by lavf path) | Installed as part of FFmpeg package on riscv64 | Unknown | Released | None known |
 | ffms2 (FFmpegSource2) | Optional: frame-accurate demuxer input for CLI (input/ffms.c) | Installed in Debian sid riscv64 (v5.0-2, built ~10 days before research date on rv-manda-01) | Unknown -- no riscv64 CI in ffms2 | Released | None known |
 | GPAC / libgpac | Optional: MP4 muxer output for CLI | Not in Debian sid (removed from Debian) | Unknown | Not released for riscv64 via Debian | Not a hard dep; CLI falls back gracefully |

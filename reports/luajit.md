@@ -273,7 +273,7 @@ LuaJIT uses a Makefile build system with no external dependency manifest.
 | GNU Binutils / gas | Assembler for RISC-V; required to assemble DynASM-generated output | Yes (>= 2.35 required) | Yes | Yes | Binutils 2.34 in Yocto SDK 3.1.x fails; workaround: upgrade |
 | libm | Math library (sin, cos, sqrt etc.); linked via -lm | Yes (part of glibc) | Yes | Yes | None |
 | libdl | Dynamic linker (dlopen/dlsym); linked on Linux | Yes (part of glibc) | Yes | Yes | None |
-| libffi | FFI calling-convention support for ffi.* module | Yes (added in libffi 3.3, 2019) | Yes | Yes | None. See libffi.md |
+| libffi | FFI calling-convention support for ffi.* module | Yes (added in libffi 3.3, 2019) | Yes | Yes | None. See `reports/libffi.md` |
 | GCC / Clang | C compiler for host minilua and target build | Yes (both support riscv64) | Yes | Yes | None |
 | Lua 5.1 / minilua | Self-hosted minimal Lua interpreter; compiled from host/minilua.c at build time | N/A (source-only, compiled during build) | N/A | N/A | None |
 
@@ -281,7 +281,7 @@ LuaJIT uses a Makefile build system with no external dependency manifest.
 DynASM is LuaJIT's internal macro-assembler. The riscv64 DynASM support (dasm_riscv.h, dasm_riscv.lua, dasm_riscv64.lua, dasm_riscv32.lua) does not exist in the upstream repository. These files exist only in the PR #1267 branch. Without them, the riscv64 VM cannot be assembled. This is not an external dependency problem; it is part of the same unmerged PR. Unblocking it requires the same PR merge.
 
 **Deep dive -- libffi on riscv64:**
-libffi added riscv64 support in version 3.3 (released March 2019). Static trampolines were added in 3.6.0 (2026). LuaJIT's FFI module uses libffi for call convention handling. The libffi dependency is not a blocker for riscv64. See the libffi status report at ./libraries/libffi.md for details.
+libffi added riscv64 support in version 3.3 (released March 2019). Static trampolines were added in 3.6.0 (2026). LuaJIT's FFI module uses libffi for call convention handling. The libffi dependency is not a blocker for riscv64. See `reports/libffi.md` for details.
 
 ---
 

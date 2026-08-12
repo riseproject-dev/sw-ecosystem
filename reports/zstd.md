@@ -274,9 +274,9 @@ No GitLab CI (`.gitlab-ci.yml`) exists. A `.cirrus.yml` exists but targets FreeB
 |---|---|---|---|---|---|
 | pthreads (glibc) | Optional multithreading (`ZSTD_MULTITHREAD_SUPPORT`) | Pass | Pass (in QEMU CI since PR #4502) | Shipped in Debian/Ubuntu | No issues |
 | xxhash (bundled) | Content checksums (XXH32/XXH64); bundled as `lib/common/xxhash.c` | Pass (pure C99) | Pass (included in `make check`) | Bundled in all releases | No riscv64 exemption in `xxhash.h` unaligned access check; [issue #4546](https://github.com/facebook/zstd/issues/4546) open |
-| zlib (optional) | `zlibWrapper`: drop-in zlib replacement mode | Pass | Partial (no Linux riscv64 CI) | Debian/Ubuntu ship | RVV Adler32 PR unmerged upstream; see `./libraries/zlib.md` |
-| LZ4 (optional) | `zlibWrapper` parity; appears in contrib build targets | Pass (since v1.10.0, Jul 2024) | Partial (QEMU Tier 3 CI) | v1.10.0 released Jul 2024 | Fast decode loop not enabled for riscv64; 5 open RVV PRs; see `./libraries/lz4.md` |
-| liblzma / xz-utils (optional) | Legacy stream format support (`-DZSTD_LZMA_SUPPORT=ON`) | Pass (RISC-V BCJ filter in v5.8.0, Mar 2025) | Partial (no upstream riscv64 CI runner) | v5.8.0 (Mar 2025) first stable with RISC-V BCJ | `TUKLIB_FAST_UNALIGNED_ACCESS` depends on `__riscv_misaligned_fast`; see `./libraries/xz.md` |
+| zlib (optional) | `zlibWrapper`: drop-in zlib replacement mode | Pass | Partial (no Linux riscv64 CI) | Debian/Ubuntu ship | RVV Adler32 PR unmerged upstream; see `reports/zlib.md` |
+| LZ4 (optional) | `zlibWrapper` parity; appears in contrib build targets | Pass (since v1.10.0, Jul 2024) | Partial (QEMU Tier 3 CI) | v1.10.0 released Jul 2024 | Fast decode loop not enabled for riscv64; 5 open RVV PRs; see `reports/lz4.md` |
+| liblzma / xz-utils (optional) | Legacy stream format support (`-DZSTD_LZMA_SUPPORT=ON`) | Pass (RISC-V BCJ filter in v5.8.0, Mar 2025) | Partial (no upstream riscv64 CI runner) | v5.8.0 (Mar 2025) first stable with RISC-V BCJ | `TUKLIB_FAST_UNALIGNED_ACCESS` depends on `__riscv_misaligned_fast`; see `reports/xz.md` |
 
 **Deep-dive: xxhash (bundled)**
 

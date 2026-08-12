@@ -196,9 +196,9 @@ The absence of CI is uniform across all architectures. There are no RISE CI runn
 | Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Notes |
 |------------|------|---------------|--------------|-----------------|-------|
 | Linux `perf_event` subsystem (kernel) | Core runtime -- all PMU access goes through `perf_event_open(2)` | Yes -- `riscv_pmu_sbi.c`, `riscv_pmu_legacy.c` merged | Functional on SBI v0.3+ boards | Present in all major riscv64 distros | Kernel side is ready; gap is in libpfm4's event table layer only |
-| glibc / libc6 | Standard C runtime | Yes -- Debian/Ubuntu riscv64 v2.39+ | Tested | Released | No blockers. See `./libraries/glibc.md` |
+| glibc / libc6 | Standard C runtime | Yes -- Debian/Ubuntu riscv64 v2.39+ | Tested | Released | No blockers. See `./reports/glibc.md` |
 | SWIG | Build-time -- generates Python binding glue from `python/src/perfmon_int.i` | Yes -- Debian sid riscv64 v4.4.1-2 | Not separately tested for riscv64 [NEEDS VERIFICATION] | Released | No blockers |
-| Python 3 / python3-dev | Optional -- Python bindings in `python/` subdirectory | Yes -- Debian sid riscv64 v3.13.9-3+b1 | Functional | Released | Bindings build; no HW event support on riscv64. See `./runtimes/python.md` |
+| Python 3 / python3-dev | Optional -- Python bindings in `python/` subdirectory | Yes -- Debian sid riscv64 v3.13.9-3+b1 | Functional | Released | Bindings build; no HW event support on riscv64. See `./reports/python.md` |
 | ncurses / libncurses-dev | Optional -- `perf_examples/rtop` tool only | Yes -- Debian sid riscv64 v6.6+20251231-1+b1 | Functional | Released | No blockers |
 | pthreads (NPTL) | Optional -- `perf_examples/rtop` tool only | Yes -- part of glibc on riscv64 | Functional | Released | No blockers |
 

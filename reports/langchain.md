@@ -140,11 +140,11 @@ LangChain's pure-Python core is unblocked on riscv64. The dependencies below are
 | langsmith >=0.1.17 | Tracing/evaluation SDK | `py3-none-any` (0.8.18, 2026-06-19) | None needed | No blocker; depends transitively on orjson (see below) |
 | pydantic >=2.7.4 | Data validation (pydantic-core is Rust) | `manylinux_2_31_riscv64` wheel available (v2.47.0, 2026-05-22) | No native CI; PR #1901 to add it was closed without merge | Functional; glibc floor 2.31 is higher than x86/aarch64 baseline (2.17) |
 | SQLAlchemy >=1.4,<3 | ORM/DB (agent memory, document stores) | No riscv64 wheel in 2.0.x; planned for 2.1b2+ | QEMU-emulated CI merged (PR #13183, 2026-03-18) | Source install required; first riscv64 PyPI wheel expected with SQLAlchemy 2.1 |
-| numpy >=1.26.4 / >=2.1.0 | Numerics, embedding arithmetic | No riscv64 wheel in 2.4.x or 2.5.x; expected in 2.6.0 | Native CI added (PR #31488, 2026-05-27, milestone 2.6.0); known hardware CAS flakiness on RISE runners | Source install required; PyPI wheel expected Q3 2026. See `python/numpy-status-report.md` |
-| PyTorch (optional, via langchain-huggingface) | Neural network inference, local LLM | No riscv64 wheel on PyPI (2.12.1) | Cross-compile + native RISE runner CI (PR #181739, 2026-04); no full test suite | Source build required; GPU/inductor backends incomplete. See `ai-ml/pytorch-status-report.md` |
+| numpy >=1.26.4 / >=2.1.0 | Numerics, embedding arithmetic | No riscv64 wheel in 2.4.x or 2.5.x; expected in 2.6.0 | Native CI added (PR #31488, 2026-05-27, milestone 2.6.0); known hardware CAS flakiness on RISE runners | Source install required; PyPI wheel expected Q3 2026. See `reports/numpy.md` |
+| PyTorch (optional, via langchain-huggingface) | Neural network inference, local LLM | No riscv64 wheel on PyPI (2.12.1) | Cross-compile + native RISE runner CI (PR #181739, 2026-04); no full test suite | Source build required; GPU/inductor backends incomplete. See `reports/pytorch.md` |
 | tokenizers >=0.13 (via langchain-huggingface) | HuggingFace fast tokenizers (Rust) | `manylinux_2_31_riscv64` wheel available (v0.23.1, 2026-04-27) | No dedicated riscv64 CI | Functional; PR #2073 (open) excludes riscv64 from mimalloc due to cross-compile GCC issues |
 | tiktoken >=0.3 (via langchain-openai) | OpenAI BPE tokenizer (Rust) | No riscv64 wheel on PyPI (v0.13.0) | None; PR #506 open, validated on native RISE runner | Source build requires Rust toolchain; no PyPI wheel; issue #502 open |
-| faiss-cpu (optional, vector store) | Approximate nearest-neighbor search | No riscv64 wheel on PyPI (v1.14.3) | Cross-compile CI merged (PR #5184), RVV dynamic dispatch | Source build required; pip install fails without build (issue #4321). See `agentic-ai/faiss-status-report.md` |
+| faiss-cpu (optional, vector store) | Approximate nearest-neighbor search | No riscv64 wheel on PyPI (v1.14.3) | Cross-compile CI merged (PR #5184), RVV dynamic dispatch | Source build required; pip install fails without build (issue #4321). See `reports/faiss.md` |
 | uuid-utils >=0.12,<1 (langchain-core dep) | Fast UUID generation (Rust) | No riscv64 wheel (v0.16.2, 2026-06-18) | None | No tracking issue or PR found; pip install of langchain-core fails on riscv64 unless `--no-binary uuid-utils` is specified; runtime fallback to stdlib `uuid` module is available |
 | orjson (transitive via langsmith) | Fast JSON serialization (Rust) | No riscv64 wheel (v3.11.9, 2026-05-06) | None; no public issue tracker | Source build required; langsmith falls back to stdlib `json` when orjson unavailable |
 | aiohttp (transitive, async HTTP) | Async HTTP client (C extensions) | riscv64 wheel builds present (indirect CI evidence) | QEMU-emulated; fix merged (PR #12647) | Minor; QEMU container uv-binary fix backported to 3.13/3.14 branches |
@@ -236,8 +236,8 @@ The highest-leverage investments to enable LangChain on riscv64 are entirely in 
 | numpy | Track 2.6.0 release; validate on riscv64 | Wheel expected Q3 2026; CI merged May 2026 |
 | orjson | File upstream issue | No riscv64 wheel, no public tracker |
 | SQLAlchemy | Track 2.1b2 release | Wheel expected with 2.1 pre-release |
-| PyTorch | Larger effort; see pytorch-status-report | No PyPI wheel; source build required |
-| faiss-cpu | Larger effort; see faiss-status-report | No PyPI wheel; cmake build required |
+| PyTorch | Larger effort; see `reports/pytorch.md` | No PyPI wheel; source build required |
+| faiss-cpu | Larger effort; see `reports/faiss.md` | No PyPI wheel; cmake build required |
 
 The `uuid-utils` issue is the only item directly blocking a minimal `pip install langchain-core` on riscv64. It requires 1-2 person-days to diagnose, file an upstream issue, and document a workaround.
 
@@ -252,8 +252,8 @@ The `uuid-utils` issue is the only item directly blocking a minimal `pip install
 | Functional | Monitor SQLAlchemy 2.1 release; validate langchain agent memory on riscv64 | 0.3 | Ecosystem/devrel | Medium |
 | Performance | No LangChain-layer performance work applicable | 0 | N/A | Not applicable |
 | CI/CD | No riscv64 CI addition recommended for LangChain core | 0 | N/A | Not applicable |
-| Ecosystem | PyTorch riscv64 enablement (prerequisite for langchain-huggingface on riscv64) | See pytorch-status-report | Upstream/AI-ML | High |
-| Ecosystem | faiss-cpu riscv64 wheel publish (prerequisite for vector store workflows on riscv64) | See faiss-status-report | Upstream/AI-ML | Medium |
+| Ecosystem | PyTorch riscv64 enablement (prerequisite for langchain-huggingface on riscv64) | See `reports/pytorch.md` | Upstream/AI-ML | High |
+| Ecosystem | faiss-cpu riscv64 wheel publish (prerequisite for vector store workflows on riscv64) | See `reports/faiss.md` | Upstream/AI-ML | Medium |
 
 Total LangChain-specific effort: approximately 1.7 person-weeks. All other work is accounted for in upstream dependency reports.
 
@@ -273,7 +273,7 @@ No updates yet -- initial report dated 2026-06-17.
 - [PyPI: langchain-core](https://pypi.org/project/langchain-core/)
 - [RISE Project homepage](https://riseproject.dev)
 - [RISE Blog](https://riseproject.dev/blog)
-- [RISE wheel builder package list](https://riseproject.gitlab.io/python/wheel_builder/)
+- [RISE wheel builder package list](https://riseproject.gitlab.io/reports/wheel_builder/)
 - [pydantic-core riscv64 CI PR #1901 (closed)](https://github.com/pydantic/pydantic-core/pull/1901)
 - [SQLAlchemy riscv64 CI PR #13183](https://github.com/sqlalchemy/sqlalchemy/pull/13183)
 - [numpy riscv64 CI PR #31488](https://github.com/numpy/numpy/pull/31488)
@@ -285,6 +285,6 @@ No updates yet -- initial report dated 2026-06-17.
 - [faiss-cpu riscv64 CI PR #5184](https://github.com/facebookresearch/faiss/pull/5184)
 - [faiss-cpu pip install issue #4321](https://github.com/facebookresearch/faiss/issues/4321)
 - [aiohttp QEMU fix PR #12647](https://github.com/aio-libs/aiohttp/pull/12647)
-- numpy status report: `python/numpy-status-report.md`
-- PyTorch status report: `ai-ml/pytorch-status-report.md`
-- FAISS status report: `agentic-ai/faiss-status-report.md`
+- numpy status report: `reports/numpy.md`
+- PyTorch status report: `reports/pytorch.md`
+- FAISS status report: `reports/faiss.md`

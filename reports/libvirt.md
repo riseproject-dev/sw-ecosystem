@@ -260,15 +260,15 @@ All required and most optional build dependencies of libvirt are available for r
 |---|---|---|---|---|---|
 | glib-2.0 / gobject / gio (>= 2.68) | Core event loop, object system, I/O | Installed (Debian sid 2.88.1-2) | Unknown | Debian sid, Ubuntu 24.04 | None known |
 | gnutls (>= 3.6.0) | TLS transport for all remote connections | Installed (Debian sid 3.8.13-1) | Unknown | Debian sid, Ubuntu 24.04 | None known |
-| libxml-2.0 (>= 2.9.1) | Parses all domain/network/pool XML | Installed (Debian sid 2.15.3+dfsg-1) | Unknown | Debian sid | None known. See `./libraries/libxml2.md` |
-| QEMU (runtime, not build dep) | Primary hypervisor backend | Installed (Debian sid 1:11.0.1+ds-1) | Unknown (riscv64 host) | Debian sid | None for host-side libvirt use. See `./runtimes/qemu.md` |
-| libcurl (>= 7.19.1, optional) | Storage driver remote access, migration URLs | Installed (Debian sid 8.21.0~rc3-1) | Unknown | Debian sid | None known. See `./libraries/libcurl.md` |
-| glibc (implicit) | Standard C library | Available (Debian sid riscv64 port) | Tested as part of Debian riscv64 port | Debian ports | None known. See `./libraries/glibc.md` |
-| readline (optional) | virsh interactive line editing | Installed (Debian sid 8.3-4) | Unknown | Debian sid | None. See `./libraries/readline.md` |
-| libcap-ng (optional) | Capability management for daemon privilege drop | Installed (Debian sid 0.9.3-1) | Unknown | Debian sid | None. See `./libraries/libcap.md` |
+| libxml-2.0 (>= 2.9.1) | Parses all domain/network/pool XML | Installed (Debian sid 2.15.3+dfsg-1) | Unknown | Debian sid | None known. See `reports/libxml2.md` |
+| QEMU (runtime, not build dep) | Primary hypervisor backend | Installed (Debian sid 1:11.0.1+ds-1) | Unknown (riscv64 host) | Debian sid | None for host-side libvirt use. See `reports/qemu.md` |
+| libcurl (>= 7.19.1, optional) | Storage driver remote access, migration URLs | Installed (Debian sid 8.21.0~rc3-1) | Unknown | Debian sid | None known. See `reports/libcurl.md` |
+| glibc (implicit) | Standard C library | Available (Debian sid riscv64 port) | Tested as part of Debian riscv64 port | Debian ports | None known. See `reportsaries/glibc.md` |
+| readline (optional) | virsh interactive line editing | Installed (Debian sid 8.3-4) | Unknown | Debian sid | None. See `reports/readline.md` |
+| libcap-ng (optional) | Capability management for daemon privilege drop | Installed (Debian sid 0.9.3-1) | Unknown | Debian sid | None. See `reports/libcap.md` |
 | libselinux (optional) | SELinux MAC policy for VM resources | Installed (Debian sid 3.10-1) | Unknown | Debian sid | None |
 | libnl-3.0 / libnl-route-3.0 (optional) | Netlink-based virtual network configuration | Installed (Debian sid 3.12.0-2+b1) | Unknown | Debian sid | None |
-| Python 3 (build tool) | Code generation scripts | Available (Debian sid) | N/A | Available | None. See `./runtimes/python.md` |
+| Python 3 (build tool) | Code generation scripts | Available (Debian sid) | N/A | Available | None. See `reports/python.md` |
 
 No dependency has JIT, SIMD, or cryptography paths that would require RISC-V-specific work to enable libvirt itself. The GnuTLS dependency has its own ISA-specific crypto (AES, SHA); those paths are covered in glibc/GnuTLS status reports, not in libvirt.
 

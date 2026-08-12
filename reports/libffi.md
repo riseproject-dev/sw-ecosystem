@@ -254,7 +254,7 @@ libffi has no external runtime dependencies beyond the OS ABI layer. It bundles 
 | libpthread | `pthread_mutex_t` in `tramp.c` | Provided by glibc on riscv64 | Covered by CI trampoline tests | N/A | None |
 | dlmalloc (bundled) | Closure allocation on platforms without `mmap` | No riscv64-specific code; updated to 2.8.6 in v3.6.0 | PR #981 fixed `__builtin_clz/ctz` on all GNU compilers | Bundled | None |
 | DejaGnu / expect / tcl | Test harness for `make check` | Available on riscv64 in Debian | Used in CI QEMU container | N/A (test only) | None |
-| CPython (consumer, not dep) | Uses libffi via `ctypes` | See python.md | CPython carries `CTYPES_PASS_BY_REF_HACK` workaround for issue #694 | N/A | Issue #694 (libffi upstream bug) |
+| CPython (consumer, not dep) | Uses libffi via `ctypes` | See `reports/python.md` | CPython carries `CTYPES_PASS_BY_REF_HACK` workaround for issue #694 | N/A | Issue #694 (libffi upstream bug) |
 
 libffi has no JIT backend, no SIMD intrinsic dependencies, no crypto dependencies, and no compression dependencies. The dependency graph terminates at glibc and the compiler. No second- or third-level recursive dependency analysis is warranted.
 

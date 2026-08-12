@@ -293,18 +293,18 @@ Build regressions in `drivers/perf/riscv_pmu_sbi.c` and `tools/perf/arch/riscv/`
 | libdw (elfutils) | DWARF stack unwinding (`--call-graph=dwarf`); primary production unwinder on riscv64 | Builds | Same packages as libelf | None specific to riscv64; this is the dominant unwinder on riscv64 in practice |
 | libunwind | Stack unwinding (`--call-graph=fp`); not wired for riscv64 in `Makefile.config` | Builds (generic path) | Debian sid 1.8.1, Arch riscv64 1.8.1 | Not wired in `Makefile.config` per-arch map; Ian Rogers v5 patch in review; medium severity |
 | libbpf | BPF program loading, `perf stat --bpf-counters`, `perf trace`, BPF skeletons | Builds | Debian sid 1.7.0; official port | BPF skeletons on riscv64 require clang with riscv64 BPF backend (available since LLVM 12); not blocking |
-| OpenSSL | Required for `BUILD_BPF_SKEL`; perf kvm key validation | Builds | Debian sid, Ubuntu 24.04, Arch riscv64 all package OpenSSL 3.x; some distros lag vs. upstream | Version lag on some riscv64 distros; see `libraries/openssl.md` (not yet written) |
+| OpenSSL | Required for `BUILD_BPF_SKEL`; perf kvm key validation | Builds | Debian sid, Ubuntu 24.04, Arch riscv64 all package OpenSSL 3.x; some distros lag vs. upstream | Version lag on some riscv64 distros; see `reports/openssl.md` (not yet written) |
 | zlib | Compressed debug sections | Builds | Debian sid 1.3.x | None; architecture-neutral |
 | libzstd | zstd-compressed trace data | Builds | Available in Debian sid, Arch riscv64 | None |
 | Python 3 | `perf script` Python bindings; `jevents` event table generation | Partial | Available; build failure on Python 3.13+ | CPython issue #121201 (open): `perf_jit_trampoline.c` fails to build on riscv64 for Python 3.13-3.15; affects JIT profiling integration |
 | libpfm4 | Hardware PMU event name resolution (`perf list`) | Builds | Debian sid 4.13.0+git106 for riscv64 | No RISC-V hardware PMU event tables defined in libpfm4 upstream; `perf list` falls back to raw event codes |
-| glibc | C runtime; `perf_event_open` ABI | Partial | Available in all major riscv64 distros | Known test failures in glibc test suite on riscv64; see `libraries/glibc.md` (not yet written) |
+| glibc | C runtime; `perf_event_open` ABI | Partial | Available in all major riscv64 distros | Known test failures in glibc test suite on riscv64; see `reports/glibc.md` (not yet written) |
 | libtraceevent | Trace event parsing; hard required unless `NO_LIBTRACEEVENT=1` | Builds | Debian sid for riscv64 | Cross-compilation fails silently if absent without explicit `NO_LIBTRACEEVENT=1` |
 | libnuma | NUMA topology in `perf stat`, `perf bench numa` | Builds | Debian sid 2.0.19-1 for riscv64 | NUMA on riscv64 requires kernel NUMA support; mainstream RISC-V SoCs are single-node |
 | libslang2 | TUI for `perf top`, `perf report` | Builds | Debian sid 2.3.3-6 for riscv64 | None |
 | libbabeltrace | CTF conversion in `perf data --to-ctf` | Builds | Debian sid 1.5.11-6 for riscv64 | None; optional path |
 | GTK2 | `perf annotate --gtk` GUI | Unknown | Minimal riscv64 availability; GTK2 is EOL | GTK2 deprecated; not a production use case blocker |
-| clang | Required for `BUILD_BPF_SKEL` | Builds | Available in all major riscv64 distros | LLVM riscv64 backend is Tier-1; see `debug/lldb.md` |
+| clang | Required for `BUILD_BPF_SKEL` | Builds | Available in all major riscv64 distros | LLVM riscv64 backend is Tier-1; see `reports/lldb.md` |
 
 ---
 

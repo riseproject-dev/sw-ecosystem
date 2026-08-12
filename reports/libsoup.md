@@ -287,17 +287,17 @@ No `.github/workflows/` directory exists in the GNOME/libsoup GitHub mirror; Git
 
 **Deep-dive on dependencies with architecture significance:**
 
-**brotli:** RVV optimization PR #1410 is open but stalled due to a CLA issue. The generic (scalar) riscv64 build is functional and available in Debian sid (libbrotli1 v1.2.0-3). No correctness issues on riscv64. See `./libraries/brotli.md` (24,987 bytes).
+**brotli:** RVV optimization PR #1410 is open but stalled due to a CLA issue. The generic (scalar) riscv64 build is functional and available in Debian sid (libbrotli1 v1.2.0-3). No correctness issues on riscv64. See `reports/brotli.md` (24,987 bytes).
 
-**zstd:** riscv64 architecture detection was merged in December 2025 (PR #4525). Multiple performance-oriented PRs are open: RVV intrinsics (#4584, #4622, #4629), unaligned access optimization (#4596), and prefetch tuning (#4643, #4668). The `MEM_FORCE_MEMORY_ACCESS` discussion in PR #4596 is relevant to riscv64 systems without the `Zicclsm` extension but does not block correctness. Available in Debian sid (libzstd1 v1.5.7+dfsg-3+b2). Data not available: a zstd-specific status report has not yet been generated (`./libraries/zstd.md` does not exist).
+**zstd:** riscv64 architecture detection was merged in December 2025 (PR #4525). Multiple performance-oriented PRs are open: RVV intrinsics (#4584, #4622, #4629), unaligned access optimization (#4596), and prefetch tuning (#4643, #4668). The `MEM_FORCE_MEMORY_ACCESS` discussion in PR #4596 is relevant to riscv64 systems without the `Zicclsm` extension but does not block correctness. Available in Debian sid (libzstd1 v1.5.7+dfsg-3+b2). See `reports/zstd.md` for details.
 
 **GLib:** Not itself a scoped project, but libsoup requires GLib >= 2.70. GLib has extensive per-architecture handling in its GIO and GObject subsystems. No riscv64-specific failures were identified in the research. Available as libglib2.0-0t64 v2.88.1-2 in Debian sid.
 
-**libnghttp2:** Pure C, no SIMD. Available in Debian sid (v1.69.0-1). No riscv64-specific issues identified. Data not available: an nghttp2-specific status report has not yet been generated (`./libraries/nghttp2.md` does not exist).
+**libnghttp2:** Pure C, no SIMD. Available in Debian sid (v1.69.0-1). No riscv64-specific issues identified. See `reports/nghttp2.md` for details.
 
-**SQLite:** Available in Debian sid (v3.53.2-1). See `./databases/sqlite.md` (25,043 bytes).
+**SQLite:** Available in Debian sid (v3.53.2-1). See `reports/sqlite.md` (25,043 bytes).
 
-**glibc** (runtime, not a direct libsoup dependency): See `./libraries/glibc.md` (31,546 bytes).
+**glibc** (runtime, not a direct libsoup dependency): See `reports/glibc.md` (31,546 bytes).
 
 ---
 

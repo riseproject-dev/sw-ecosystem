@@ -258,7 +258,7 @@ runc is pure Go except for CGo bindings to libseccomp and libpathrs. Its depende
 
 | Dependency | Role | riscv64 build | riscv64 test | riscv64 release | Blocking issues |
 |---|---|---|---|---|---|
-| Go runtime | Entire build toolchain | Yes, since Go 1.16 | CI covers amd64/arm64 only | Yes (GOARCH=riscv64) | None -- see Go status report |
+| Go runtime | Entire build toolchain | Yes, since Go 1.16 | CI covers amd64/arm64 only | Yes (GOARCH=riscv64) | None -- see `reports/go.md` |
 | libseccomp (v2.6.0, C) | Syscall filtering via CGo | Yes, since v2.5.0 (2021) | Partial (issue #290 notes skipped tests) | v2.6.0 (2025-01-24) | #327 is riscv32 only; riscv64 fully supported |
 | libseccomp-golang (v0.11.1) | Go bindings for libseccomp | Yes, since v0.9.2 | Yes | v0.11.1 (2025-08-05) | None; all riscv64 issues closed |
 | opencontainers/runtime-spec (v1.3.0) | OCI runtime spec; seccomp arch table | Yes | Yes | v1.3.0 (2025-11-04) | None; SCMP_ARCH_RISCV64 added, issues #1059 and #1217 closed |

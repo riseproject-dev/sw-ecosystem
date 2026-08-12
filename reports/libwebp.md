@@ -223,13 +223,13 @@ All dependencies are optional. The core libwebp encode/decode library has no man
 
 **Dependency deep-dives for SIMD-critical deps:**
 
-**libpng:** RVV SIMD merged upstream in v1.6.49 (May 2025), enabled via `-DPNG_RISCV_RVV=ON` at build time (off by default). A Paeth correctness bug was fixed in v1.6.52 (December 2025) and an intrinsic removal fix in v1.6.53. No open riscv64 issues as of June 2026. See `./multimedia/libpng.md` for full details.
+**libpng:** RVV SIMD merged upstream in v1.6.49 (May 2025), enabled via `-DPNG_RISCV_RVV=ON` at build time (off by default). A Paeth correctness bug was fixed in v1.6.52 (December 2025) and an intrinsic removal fix in v1.6.53. No open riscv64 issues as of June 2026. See `reports/libpng.md` for full details.
 
-**libjpeg-turbo:** RVV SIMD merged to the upstream dev branch (3.2 beta, February 2026) covering SIMD-accelerated DCT and color conversion. The upstream project explicitly declined to publish riscv64 release binaries (Issue #885). The DCT follow-on optimization is pending (Issue #895, branch `rvv-dct-opt`). Debian and Ubuntu currently ship 2.x/3.1.x without RVV. See `./multimedia/libjpeg-turbo.md` for full details.
+**libjpeg-turbo:** RVV SIMD merged to the upstream dev branch (3.2 beta, February 2026) covering SIMD-accelerated DCT and color conversion. The upstream project explicitly declined to publish riscv64 release binaries (Issue #885). The DCT follow-on optimization is pending (Issue #895, branch `rvv-dct-opt`). Debian and Ubuntu currently ship 2.x/3.1.x without RVV. See `reports/libjpeg-turbo.md` for full details.
 
 **libtiff:** Pure C; no SIMD of any kind (no SSE, no NEON, no RVV). Not a performance bottleneck and not a porting concern.
 
-**giflib:** Pure C throughout. Zero SIMD ever. No porting work required. See `./multimedia/giflib.md`.
+**giflib:** Pure C throughout. Zero SIMD ever. No porting work required. See `reports/giflib.md`.
 
 ---
 

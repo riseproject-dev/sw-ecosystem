@@ -179,7 +179,7 @@ The following table covers the hard and common optional dependencies for a produ
 | Dependency | Role | riscv64 Build | riscv64 Test | Blocking Issues |
 |---|---|---|---|---|
 | glibc | C runtime, pthreads (`--with-threads`) | Green | Green | Historical bugs (vector memset SIGILL in 2.40, IFUNC gp-pointer crash in 2.41) fixed in current releases (2.43 in Debian sid). No current blockers. |
-| OpenSSL | TLS/SSL, HTTP/3 QUIC (`--with-http_ssl_module`, `--with-http_v3_module`) | Green | Green (QEMU only; no native runners) | (1) AES T-table not constant-time on hardware without Zkn/Zvkned -- security-critical, fix PRs #31080/#31082 open upstream; (2) musl ISA detection silently broken (issue #28118, no fix); (3) no native riscv64 CI runners. See `libraries/openssl.md`. |
+| OpenSSL | TLS/SSL, HTTP/3 QUIC (`--with-http_ssl_module`, `--with-http_v3_module`) | Green | Green (QEMU only; no native runners) | (1) AES T-table not constant-time on hardware without Zkn/Zvkned -- security-critical, fix PRs #31080/#31082 open upstream; (2) musl ISA detection silently broken (issue #28118, no fix); (3) no native riscv64 CI runners. See `reports/openssl.md`. |
 | PCRE2 | URL rewriting (HTTP rewrite module, enabled by default) | Green | Green | PCRE2 SLJIT JIT backend supports riscv64. No blocking issues. |
 | zlib | gzip compression (enabled by default) | Green | Mostly green (no native riscv64 CI upstream) | No riscv64 correctness bugs. No SIMD acceleration for riscv64 (x86 and ARM have optimized paths; riscv64 runs generic C). Performance gap only, not a blocker. |
 | libatomic | Fallback atomics (`--with-libatomic`) | Green | Green | Not needed on riscv64; RV64A is mandatory in rv64gc baseline. |

@@ -242,7 +242,7 @@ A riscv64 regression introduced in a dependency update would not be caught befor
 
 `DataDog/go-libddwaf` is the only dependency that is structurally broken on riscv64. It ships a prebuilt `libddwaf.a` for Linux/amd64 and Linux/aarch64 only. On riscv64 the library returns `WafDisabledError` and silently disables all WAF features. No issue has been filed upstream. This affects only deployments using the DataDog APM plugin with security features enabled.
 
-`go.etcd.io/etcd` client compiles and runs on riscv64. The etcd server (a separate binary) requires the workaround environment variable `ETCD_UNSUPPORTED_ARCH=riscv64`. The etcd maintainers rejected [PR #21510](https://github.com/etcd-io/etcd/pull/21510) to add riscv64 to the supported architecture list, citing no available RISC-V CI hardware. See the etcd status report for details.
+`go.etcd.io/etcd` client compiles and runs on riscv64. The etcd server (a separate binary) requires the workaround environment variable `ETCD_UNSUPPORTED_ARCH=riscv64`. The etcd maintainers rejected [PR #21510](https://github.com/etcd-io/etcd/pull/21510) to add riscv64 to the supported architecture list, citing no available RISC-V CI hardware. See `reports/etcd.md` for details.
 
 ---
 

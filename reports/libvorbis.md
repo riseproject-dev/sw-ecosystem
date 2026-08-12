@@ -194,7 +194,7 @@ libvorbis has a minimal dependency tree: one required runtime library (libogg) a
 | Dependency | Role | riscv64 build | riscv64 test | riscv64 release | Blocking issues |
 |---|---|---|---|---|---|
 | libogg (xiph/ogg) | Container/framing layer; required at link and runtime | Passing -- Debian sid 1.3.6-2+b1 "Installed" on rv-manda-01; Alpine edge 1.3.6-r0 available | No riscv64-specific CI upstream; main CI (GitHub Actions) passes | Shipping in Debian sid, Ubuntu, Alpine edge | None |
-| libm / glibc | Math functions (`floor`, `cos`, and related DSP operations) | Passing -- Debian sid glibc 2.42-17 "Installed" on rv-osuosl-05 | riscv64 math tests pass in Debian buildd; no test-float64 failures reported | Shipping in all major distros | None; see [glibc status report](./libraries/glibc.md) |
+| libm / glibc | Math functions (`floor`, `cos`, and related DSP operations) | Passing -- Debian sid glibc 2.42-17 "Installed" on rv-osuosl-05 | riscv64 math tests pass in Debian buildd; no test-float64 failures reported | Shipping in all major distros | None; see `reports/glibc.md` |
 | pthreads (optional) | Optional threading support via `AC_CHECK_LIB(pthread)` | Part of glibc; fully supported on riscv64 | Not exercised at the library level by vorbis | Shipping everywhere | None |
 
 **libogg:** Pure bitstream framing library with no SIMD, no JIT, and no architecture-specific assembly. Not in this project's scope table but a clean riscv64 port with no known issues.

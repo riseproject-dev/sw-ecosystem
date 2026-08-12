@@ -271,12 +271,12 @@ To get a working riscv64 binary: install libgcrypt20 from the distribution packa
 | Dependency | Role | riscv64 build | riscv64 test | riscv64 release | Notes |
 |---|---|---|---|---|---|
 | libgpg-error >= 1.56 | Hard required: error codes, threading flags, gpgrt runtime | PASS (v1.61-2, Debian sid rv-osuosl-03) | No known failures | v1.61-2 in Debian sid | No RISC-V assembly in libgpg-error; pure C |
-| pthreads (glibc libpthread) | Threading (pthread_create, pthread_mutex) | PASS (glibc 2.27+ has riscv64) | Passes as part of glibc test suite | All current riscv64 distros | See glibc status report |
+| pthreads (glibc libpthread) | Threading (pthread_create, pthread_mutex) | PASS (glibc 2.27+ has riscv64) | Passes as part of glibc test suite | All current riscv64 distros | See `reports/glibc.md` |
 | Linux kernel headers (sys/auxv.h, sys/random.h) | getauxval() for hwf detection; getrandom() for entropy | PASS (present on all riscv64 Linux >= 5.0) | N/A (headers only) | All current riscv64 distros | AT_HWCAP and riscv_hwprobe syscall 258 both work on Linux 5.10+ |
 
 **Depth of dependency analysis:** libgcrypt's only non-system external library dependency is libgpg-error, which itself has no external library dependencies and no RISC-V-specific code. There are no SIMD or JIT-dependent transitive dependencies to recurse into.
 
-**In-scope cross-reference:** glibc (pthreads + kernel header integration) -- see [./libraries/glibc.md].
+**In-scope cross-reference:** glibc (pthreads + kernel header integration) -- see ![reports/glibc.md](glibc.md).
 
 ---
 

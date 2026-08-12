@@ -269,7 +269,7 @@ The RISC-V native code (PRs #7796, #7809, #7903, #8031) has merged into `trunk` 
 
 | Dependency | Role in Hadoop | riscv64 Build | riscv64 Test | riscv64 Release | Blocking Issues |
 |---|---|---|---|---|---|
-| OpenJDK / JNI | Primary runtime + JNI bridge | Green | Green | Green (Debian/Ubuntu/Fedora) | None (see separate OpenJDK report) |
+| OpenJDK / JNI | Primary runtime + JNI bridge | Green | Green | Green (Debian/Ubuntu/Fedora) | None (see `reports/openjdk.md`) |
 | zlib | Compression codec, CRC support | Green | Green | Green (packaged in all major distros) | None |
 | OpenSSL / libcrypto | AES-256-CTR encryption of HDFS data at rest and in-flight | Green (builds) | Yellow (QEMU CI only; test hang at high parallelism [#22166](https://github.com/openssl/openssl/issues/22166); test_lhash flaky [#30880](https://github.com/openssl/openssl/issues/30880)) | Green (packaged) | AES T-table not constant-time without Zkn/Zvkned ([PRs #31080](https://github.com/openssl/openssl/pull/31080), [#31082](https://github.com/openssl/openssl/pull/31082)); cross-compile with no-deprecated broken ([#29357](https://github.com/openssl/openssl/issues/29357)) |
 | BZip2 | Optional compression codec | Green | Green | Green | None |

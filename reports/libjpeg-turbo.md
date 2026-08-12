@@ -302,7 +302,7 @@ No `libjpeg-turbo` package exists on PyPI (HTTP 404). The RISE GitLab wheel buil
 |---|---|---|---|
 | zlib | PNG write pipeline | Builds and ships on riscv64 in all major distros | Pure C; no SIMD on any platform in the reference implementation. Not a blocker. |
 | libspng (optional, bundled) | PNG encode/decode | Builds on riscv64; SIMD silently disabled | Falls to `SPNG_DISABLE_OPT` path for unknown architectures. Filter optimizations (defilter_sub, defilter_avg, defilter_paeth, palette expansion) are all scalar. No upstream appetite to add RVV (no issues filed). Minor throughput gap for PNG-heavy workloads inside libjpeg-turbo's PNG read path. Not a correctness blocker. |
-| JNA (Java Native Access) | Optional TurboJPEG Java bindings | Depends on OpenJDK riscv64 status | See the runtimes/openjdk-status-report in this repository for details. |
+| JNA (Java Native Access) | Optional TurboJPEG Java bindings | Depends on OpenJDK riscv64 status | See `reports/openjdk.md` for details. |
 
 ---
 

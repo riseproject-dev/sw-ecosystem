@@ -361,12 +361,12 @@ The `ffmpeg` PyPI package (version 1.4) is a pure-Python wrapper stub. Its sole 
 
 | Library | Role | riscv64 status | Notes |
 |---------|------|----------------|-------|
-| OpenSSL | HTTPS/TLS for streaming | Full -- AES (Zkn), AES-GCM (Zvkned), ChaCha20 (RVV), SHA-256/512 (RVV), SM3/SM4 (Zvksh/Zvksed), GHASH (Zvkg/Zvbc), Poly1305 | See `libraries/openssl.md` |
+| OpenSSL | HTTPS/TLS for streaming | Full -- AES (Zkn), AES-GCM (Zvkned), ChaCha20 (RVV), SHA-256/512 (RVV), SM3/SM4 (Zvksh/Zvksed), GHASH (Zvkg/Zvbc), Poly1305 | See `reports/openssl.md` |
 | zlib | Container decompression | Builds (generic C) | No blocking issues; pure C portable |
 | zlib-ng | Optional zlib replacement | Builds with RVV | Recurring detection/SIGILL bugs: Zbc detection broken (issue #1997, Nov 2025), `crc32_riscv64_zbc` undeclared at build (issue #2148), RVV SIGILL on older kernels (issue #1705, Mar 2024), CMake arch detection fallback broken (issue #941) |
 | libbz2 / liblzma / libxml2 | Decompression, XML | Builds (generic C) | No blocking issues; pure C portable |
 | libwebp | WebP encode/decode | Builds (generic C) | None -- `src/dsp/` has x86/ARM/MIPS subdirs; no riscv files |
-| OpenBLAS | DNN inference (libtorch/libtensorflow backend) | Full -- `kernel/riscv64/` with complete BLAS L1/L2/L3, T-Head C910V/x280 vendor kernels | See `libraries/openblas.md` |
+| OpenBLAS | DNN inference (libtorch/libtensorflow backend) | Full -- `kernel/riscv64/` with complete BLAS L1/L2/L3, T-Head C910V/x280 vendor kernels | See `reports/openblas.md` |
 
 ---
 

@@ -276,8 +276,8 @@ libopus has no external runtime dependencies beyond libc and libm. All SIMD acce
 
 | Consumer | Dependency type | Notes |
 |----------|----------------|-------|
-| FFmpeg | `--enable-libopus` for Opus encode/decode | See `./multimedia/ffmpeg.md` |
-| GStreamer | `gst-plugins-base` opusenc/opusdec elements | See `./multimedia/gstreamer.md` |
+| FFmpeg | `--enable-libopus` for Opus encode/decode | See `./reports/ffmpeg.md` |
+| GStreamer | `gst-plugins-base` opusenc/opusdec elements | See `./reports/gstreamer.md` |
 
 ---
 

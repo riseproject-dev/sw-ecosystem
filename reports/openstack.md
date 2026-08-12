@@ -205,9 +205,9 @@ The following table covers critical OpenStack dependencies and their riscv64 sta
 
 | Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Blocking Issues |
 |---|---|---|---|---|---|
-| Python (CPython) | Primary runtime | Green | Yellow | Green (Debian sid: python3.13; Ubuntu 24.04: python3 3.12.3) | No JIT; perf trampoline disabled; 3.15 beta stack-unwinding regressions (#150919, #151040). See `runtimes/python.md`. |
-| OpenSSL | TLS/crypto for all HTTPS | Green | Yellow (QEMU only; SSL test hang at high parallelism: issue #22166) | Green (Debian trixie: openssl 3.5.6-1; sid: 3.6.3-1) | AES T-table not constant-time on hardware without Zkn/Zvkned (PRs #31080/#31082 open, unmerged). See `libraries/openssl.md`. |
-| glibc | Foundational C runtime | Green | Yellow | Green (Debian/Ubuntu/Arch ship current versions) | SIGILL in `__memset_vector` when RVV disabled via `prctl()` (BZ #32932). See `libraries/glibc.md`. |
+| Python (CPython) | Primary runtime | Green | Yellow | Green (Debian sid: python3.13; Ubuntu 24.04: python3 3.12.3) | No JIT; perf trampoline disabled; 3.15 beta stack-unwinding regressions (#150919, #151040). See `reports/python.md`. |
+| OpenSSL | TLS/crypto for all HTTPS | Green | Yellow (QEMU only; SSL test hang at high parallelism: issue #22166) | Green (Debian trixie: openssl 3.5.6-1; sid: 3.6.3-1) | AES T-table not constant-time on hardware without Zkn/Zvkned (PRs #31080/#31082 open, unmerged). See `reports/openssl.md`. |
+| glibc | Foundational C runtime | Green | Yellow | Green (Debian/Ubuntu/Arch ship current versions) | SIGILL in `__memset_vector` when RVV disabled via `prctl()` (BZ #32932). See `reports/glibc.md`. |
 | libvirt | Nova compute driver interface | Green (Debian sid: libvirt 12.3.0-1 Installed on rv-osuosl-02) | Yellow | Green (Debian sid Installed) | KVM/hardware virtualization unavailable on most riscv64 boards; Nova libvirt driver is functional only for QEMU TCG emulation on riscv64. |
 | QEMU | Software emulation backend | Green (Debian sid: qemu 1:11.0.1+ds-1 Installed) | Green | Green (Debian sid Installed) | No QEMU-level blockers; primary usable compute backend on riscv64. |
 | PostgreSQL | Primary production RDBMS | Green (Debian trixie: 17.10-0+deb13u1 Installed) | Yellow (no upstream riscv64 CI; Debian buildd only) | Green (Debian trixie has riscv64; sid shows no entry -- architecture-specific exclusion, not a build failure) | No upstream riscv64 CI; sid exclusion may reflect lack of explicit arch support declaration. |
@@ -216,20 +216,20 @@ The following table covers critical OpenStack dependencies and their riscv64 sta
 | Erlang/OTP | RabbitMQ runtime | Green (Debian sid: erlang 1:29.0.2+dfsg-1 Installed on rv-manda-04) | Green | Green (Debian sid Installed) | None identified. |
 | Memcached | Session/object caching (oslo.cache) | Green (Debian sid: memcached 1.6.42-1 Installed) | Green | Green (Debian sid Installed) | None identified. |
 | Open vSwitch | Virtual networking for Neutron | Green (Debian sid: openvswitch 3.7.1-3 Installed on rv-osuosl-05) | Yellow (no upstream riscv64 CI) | Green (Debian sid Installed) | None identified. |
-| Ceph | Object and block storage backend | Green (Debian sid: ceph 18.2.8+ds-2.1 Installed on rv-osuosl-02) | Yellow (no upstream riscv64 CI) | Green (Debian sid Installed) | Open FTBFS bug #1092838 with fmtlib 11.1 affects all architectures, not riscv64-specific. See `software-defined-storage/ceph.md`. |
+| Ceph | Object and block storage backend | Green (Debian sid: ceph 18.2.8+ds-2.1 Installed on rv-osuosl-02) | Yellow (no upstream riscv64 CI) | Green (Debian sid Installed) | Open FTBFS bug #1092838 with fmtlib 11.1 affects all architectures, not riscv64-specific. See `reports/ceph.md`. |
 | SQLite | Backend for Oslo services | Green (Debian sid: sqlite3 3.53.2-1 Installed on rv-osuosl-02) | Green | Green | None identified. |
 | greenlet | Low-level coroutine library (eventlet dependency) | Yellow (C extension; riscv64 not in greenlet CI matrix) | Yellow (no riscv64 CI) | Yellow (no riscv64 wheel on PyPI; distro-built only) | C extension must be compiled from source on riscv64. [NEEDS VERIFICATION: whether manylinux riscv64 wheel infrastructure added Aug 2025 has been used to publish greenlet riscv64 wheels.] |
 | cryptography (PyCA) | TLS/crypto Python binding (keystoneauth1, oslo.utils) | Green (RISE runners active per RISE blog May 2026) | Green (RISE CI on native riscv64) | Yellow (not on PyPI riscv64; available via RISE wheel index at gitlab.com/api/v4/projects/56254198/packages/pypi/simple) | Depends on OpenSSL AES gap noted above. |
 | lxml | XML processing (Nova API, Oslo) | Yellow (C extension; requires libxml2-dev and libxslt-dev) | Yellow (no riscv64 CI) | Yellow (no riscv64 wheel on PyPI; compile from source) | Build requires libxml2/libxslt development headers; both available in Debian. |
 | libffi | ctypes backend; Python `_ctypes` module | Yellow (builds; open riscv64 issues) | Yellow (test failure: struct-by-value ABI test on riscv64, libffi#281; linkage failure open since Apr 2023) | Green (Debian ships riscv64 libffi) | [libffi#281](https://github.com/libffi/libffi/issues/281): struct ABI test failure; linkage failure open since 2023; affects Python `ctypes` on riscv64. |
-| Go | Used in kolla, Prometheus exporters, adjacent services | Green (linux/riscv64 secondary port since Go 1.14) | Yellow (secondary port; build failures do not block releases) | Green (official Go releases include linux/riscv64) | No JIT for riscv64; secondary port means no release-blocking guarantee. See `runtimes/go.md`. |
+| Go | Used in kolla, Prometheus exporters, adjacent services | Green (linux/riscv64 secondary port since Go 1.14) | Yellow (secondary port; build failures do not block releases) | Green (official Go releases include linux/riscv64) | No JIT for riscv64; secondary port means no release-blocking guarantee. See `reports/go.md`. |
 | SQLAlchemy | ORM for all database-backed services | Green (pure Python; optional C extensions) | Yellow (no riscv64 CI) | Green (pure-Python wheel on PyPI) | Optional C extensions may lack riscv64 wheels; core pure-Python mode works. |
 | eventlet | Async networking (core OpenStack concurrency model) | Green (pure Python) | Yellow (no riscv64 CI; depends on greenlet C extension) | Green (PyPI pure-Python wheel) | Python riscv64 has no JIT; greenlet C extension has wheel gap (see above). |
 
 **Go** status report: `runtimes/go.md`<br/>
 **Python** status report: `runtimes/python.md`<br/>
-**OpenSSL** status report: `libraries/openssl.md`<br/>
-**glibc** status report: `libraries/glibc.md`<br/>
+**OpenSSL** status report: `reports/openssl.md`<br/>
+**glibc** status report: `reports/glibc.md`<br/>
 **Ceph** status report: Data not available: report file `software-defined-storage/ceph.md` is listed in the project README scope but was noted as not yet written at the time of research.
 
 ---
@@ -321,7 +321,7 @@ For Ironic bare-metal, the documentation is merged. Physical hardware deployment
 
 No benchmark data exists for OpenStack on riscv64. No performance optimization work is possible without first achieving functional deployability. OpenStack is Python; compute-path performance bottlenecks are primarily in the hypervisor (QEMU, libvirt, KVM) rather than in OpenStack's Python control plane. The relevant performance investments are in QEMU and libvirt, not in OpenStack itself.
 
-The OpenSSL AES constant-time gap (PRs #31080/#31082) affects TLS-heavy OpenStack components (Keystone, Swift). This is tracked in `libraries/openssl.md` and represents a security-relevant performance issue on current commodity riscv64 hardware.
+The OpenSSL AES constant-time gap (PRs #31080/#31082) affects TLS-heavy OpenStack components (Keystone, Swift). This is tracked in `reports/openssl.md` and represents a security-relevant performance issue on current commodity riscv64 hardware.
 
 ### 13.3 CI/CD Infrastructure
 
@@ -373,6 +373,6 @@ No updates yet -- initial report dated 2026-06-17.
 - [RISE RISC-V Runners six-week update](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/) -- May 2026
 - [libffi#281](https://github.com/libffi/libffi/issues/281) -- libffi struct-by-value ABI test failure on riscv64
 - `runtimes/python.md` -- Python riscv64 status (this project)
-- `libraries/openssl.md` -- OpenSSL riscv64 status (this project)
-- `libraries/glibc.md` -- glibc riscv64 status (this project)
+- `reports/openssl.md` -- OpenSSL riscv64 status (this project)
+- `reports/glibc.md` -- glibc riscv64 status (this project)
 - `runtimes/go.md` -- Go riscv64 status (this project)

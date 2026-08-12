@@ -189,9 +189,9 @@ From source: standard `./configure && make && make install` with or without the 
 | Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Blocking Issues |
 |---|---|---|---|---|---|
 | ncurses / libtinfo | Terminal I/O; readline's only mandatory runtime dep. Provides cursor movement, color, and terminal capability lookup. | Green - Debian sid ships 6.6+20251231-1+b1 built on rv-osuosl-04 | No known riscv64 failures in Debian BTS | Released in all major distros | None |
-| glibc (libc6) | C runtime; provides malloc, signal, termios, wctype and all POSIX APIs readline uses. | Green - Debian sid ships 2.42-17 for riscv64 | See glibc status report | Released | See glibc status report |
+| glibc (libc6) | C runtime; provides malloc, signal, termios, wctype and all POSIX APIs readline uses. | Green - Debian sid ships 2.42-17 for riscv64 | See `reports/glibc.md` | Released | See `reports/glibc.md` |
 | texinfo (build-time only) | Generates readline.info and history.info documentation. Not a runtime dep. | Green - standard build tool available for riscv64 | N/A | Available | None |
-| libffi | Not a readline runtime dep. Used by Python (a major readline consumer) for C-extension interop. Indirect dep when readline is embedded in Python REPL. | Green - riscv64 is a first-class libffi target; RISC-V LP64D calling convention implemented | See libffi status report | Released | See libffi status report |
+| libffi | Not a readline runtime dep. Used by Python (a major readline consumer) for C-extension interop. Indirect dep when readline is embedded in Python REPL. | Green - riscv64 is a first-class libffi target; RISC-V LP64D calling convention implemented | See `reports/libffi.md` | Released | See `reports/libffi.md` |
 
 **Dependency depth analysis:** readline's dependency tree is exceptionally shallow. The only required runtime dependency is ncurses/libtinfo. Both ncurses and glibc are fully operational on riscv64 across all major Linux distributions with no known blocking issues. No dependency in this chain has JIT backends, architecture-specific SIMD dispatch, or cryptographic assembly that requires riscv64-specific work.
 

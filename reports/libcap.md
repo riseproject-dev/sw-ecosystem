@@ -189,11 +189,11 @@ All dependencies of libcap build and test cleanly on riscv64. No blocking issues
 | Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Notes |
 |---|---|---|---|---|---|
 | Linux kernel headers (`linux/capability.h`) | Required -- defines capability constants and kernel ABI types | Pass | N/A | Available (all kernels >= 4.1) | None |
-| glibc (`libc6 >= 2.38`) | Required runtime -- syscall wrappers, pthread, dynamic linker | Pass | Pass | 2.41 in Debian sid | See `./libraries/glibc.md` |
+| glibc (`libc6 >= 2.38`) | Required runtime -- syscall wrappers, pthread, dynamic linker | Pass | Pass | 2.41 in Debian sid | See `./reports/glibc.md` |
 | pthreads (part of glibc) | Required build-time -- libpsx uses `pthread_create`; disabling drops Go/psx support | Pass | Pass | Released | Part of glibc |
 | PAM (`libpam0g`) | Optional -- enables `pam_cap` module; auto-detected at build time | Pass | Pass | 1.6.1-4 in Debian sid | Can be disabled with `PAM_CAP=no` |
 | gperf >= 3.1 | Build-time only -- generates capability name lookup hash table | Pass | N/A | 3.1-4 in Debian sid | Falls back to linear scan if absent |
-| Go toolchain (>= 1.16) | Build-time optional -- builds `cap` and `psx` Go modules | Pass | Pass | Go 1.23 in Debian sid | `GOLANG=no` skips this entirely; see `./runtimes/go.md` |
+| Go toolchain (>= 1.16) | Build-time optional -- builds `cap` and `psx` Go modules | Pass | Pass | Go 1.23 in Debian sid | `GOLANG=no` skips this entirely; see `./reports/go.md` |
 | `kernel.org/pub/linux/libs/security/libcap/psx` (Go module) | Go runtime dep of `cap` package | Pass | Pass | v1.2.78 | Pure Go; architecture-independent |
 
 **Dependency notes:**

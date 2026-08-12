@@ -367,8 +367,8 @@ libcurl has no package ecosystem of its own that requires separate riscv64 enabl
 |------|-----------|----------------------|-------|----------|
 | CI/CD | Add riscv64 test-suite execution to `linux.yml` (QEMU-based) | 2 | Contributor to curl/curl | Medium |
 | CI/CD | Provision native riscv64 runner for curl CI | Infrastructure task, not engineering | RISE or hardware partner | Low |
-| Dependencies | OpenSSL AES/GHASH constant-time fix on riscv64 (#31080/#31082) | See openssl report | OpenSSL contributor | High (security) |
-| Dependencies | zstd 4-way Huffman decode loop on riscv64 (#4622) | See zstd report | Facebook/zstd contributor | Medium (performance) |
+| Dependencies | OpenSSL AES/GHASH constant-time fix on riscv64 (#31080/#31082) | See `reports/openssl.md` | OpenSSL contributor | High (security) |
+| Dependencies | zstd 4-way Huffman decode loop on riscv64 (#4622) | See `reports/zstd.md` | Facebook/zstd contributor | Medium (performance) |
 | Functional | None | N/A | N/A | N/A |
 
 ---

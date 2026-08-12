@@ -295,11 +295,11 @@ From source on any riscv64 Linux system: standard `./configure && make && make i
 
 **libxml2 detail (critical dependency):**
 
-libxml2 is the only required non-system dependency. Issue #971 (opened 2025-08-13, open as of report date) identifies that double-checked locking in the catalog resolution code uses relaxed C11 atomics that are unsafe on weakly-ordered memory architectures, including riscv64. For normal XSLT processing that does not use XML catalogs in a multithreaded context, this is not a correctness risk. For applications that do multithreaded catalog resolution, this is a potential data race. The fix had not landed as of the report date. See `/libraries/libxml2.md` in this repository for the full analysis.
+libxml2 is the only required non-system dependency. Issue #971 (opened 2025-08-13, open as of report date) identifies that double-checked locking in the catalog resolution code uses relaxed C11 atomics that are unsafe on weakly-ordered memory architectures, including riscv64. For normal XSLT processing that does not use XML catalogs in a multithreaded context, this is not a correctness risk. For applications that do multithreaded catalog resolution, this is a potential data race. The fix had not landed as of the report date. See `reports/libxml2.md` in this repository for the full analysis.
 
 **libgcrypt detail (optional crypto dependency):**
 
-libgcrypt 1.12.0 (released 2026-01-29) introduced riscv64-accelerated paths: AES via Zvkned, SHA-256/SHA-512 via Zvknhb, GCM via Zvkg, ChaCha20 via RVV, and GHASH via Zbb+Zbc. These cover all hash functions used by EXSLT crypto extensions (MD5, SHA-1, SHA-256). The performance gap for riscv64 vs amd64/arm64 on RSA/ECDSA key operations (mpi/ bignum, generic C on riscv64) is irrelevant to XSLT use cases because EXSLT crypto only uses symmetric hash functions, not asymmetric key operations. See `/libraries/libgcrypt.md` for the full analysis.
+libgcrypt 1.12.0 (released 2026-01-29) introduced riscv64-accelerated paths: AES via Zvkned, SHA-256/SHA-512 via Zvknhb, GCM via Zvkg, ChaCha20 via RVV, and GHASH via Zbb+Zbc. These cover all hash functions used by EXSLT crypto extensions (MD5, SHA-1, SHA-256). The performance gap for riscv64 vs amd64/arm64 on RSA/ECDSA key operations (mpi/ bignum, generic C on riscv64) is irrelevant to XSLT use cases because EXSLT crypto only uses symmetric hash functions, not asymmetric key operations. See `reports/libgcrypt.md` for the full analysis.
 
 ---
 

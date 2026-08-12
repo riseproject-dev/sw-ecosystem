@@ -203,7 +203,7 @@ The library is distributed as a compiled C library through Linux distribution pa
 
 | Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Notes |
 |---|---|---|---|---|---|
-| glibc / musl | Runtime: only mandatory runtime dependency; libtraceevent.so.1 links only to libc | Pass | N/A (no arch-specific code path) | Released, all major distros | See glibc status report |
+| glibc / musl | Runtime: only mandatory runtime dependency; libtraceevent.so.1 links only to libc | Pass | N/A (no arch-specific code path) | Released, all major distros | See `reports/glibc.md` |
 | pkgconf / pkg-config | Build-time only: generates .pc file, detects optional components | Pass | N/A | Released | Standard toolchain component |
 | libcunit1 (CUnit) | Test-only: unit test framework (utest/ suite); not linked into shipped library | Pass (Debian sid riscv64: 2.1-3-dfsg-2.7+b2 "Installed" on rv-manda-02) | Tests run via `make test`; no riscv64-specific failures reported | Released | Debian bug [#1136394](https://bugs.debian.org/1136394): CUnit needs a new maintainer. Low risk -- libtraceevent does not ship CUnit |
 | asciidoc / xmlto / source-highlight | Build-Depends-Indep: generate man pages and HTML docs only (arch-independent) | Pass | N/A | Released | Only needed for documentation build; skip with `-Ddoc=false` |

@@ -311,7 +311,7 @@ These are unofficial, require an explicit non-default index URL, and are 5 minor
 
 ### 9.2 BoringSSL (deep-dive)
 
-BoringSSL is the critical dependency. Its absence of riscv64 assembly means TLS-secured gRPC calls run all crypto on the C scalar path. No FIPS validation exists for riscv64. The `OPENSSL_RISCV64` preprocessor macro is defined in `target.h` but is used only for detection, not for selecting any optimized code path. The performance delta for AES-GCM is estimated at approximately 10x vs arm64 [NEEDS VERIFICATION]; no published riscv64 vs arm64 BoringSSL benchmark was found in any source. See the separate BoringSSL status report for full details.
+BoringSSL is the critical dependency. Its absence of riscv64 assembly means TLS-secured gRPC calls run all crypto on the C scalar path. No FIPS validation exists for riscv64. The `OPENSSL_RISCV64` preprocessor macro is defined in `target.h` but is used only for detection, not for selecting any optimized code path. The performance delta for AES-GCM is estimated at approximately 10x vs arm64 [NEEDS VERIFICATION]; no published riscv64 vs arm64 BoringSSL benchmark was found in any source. See `reports/boringssl.md` for full details.
 
 Mitigation available now: set `-DgRPC_SSL_PROVIDER=package` at build time to substitute OpenSSL, which has 13 riscv64 ISA extension configurations in CI and ships riscv64 packages in all active stable branches. OpenSSL does not yet have Zvk (RISC-V Vector Cryptography) support in the mainline builds tested, but its scalar C implementation is maintained at parity with x86_64.
 

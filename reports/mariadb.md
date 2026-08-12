@@ -322,11 +322,11 @@ The riscv64 CI situation has been verified by reading the actual CI configuratio
 
 ### OpenSSL deep-dive
 
-OpenSSL's `linux64-riscv64` target inherits from `linux-generic64` and compiles the generic C implementation of all cipher and hash primitives. Hardware-accelerated AES-GCM, ChaCha20-Poly1305, and SHA implementations using the RISC-V Vector extension (RVV) and RISC-V Cryptography extensions are the subject of open upstream PRs in the OpenSSL repository (openssl/openssl #30787, #31182, #30552). These PRs were not merged as of the research date. The impact on MariaDB is a performance gap in TLS-intensive workloads on riscv64. No functional impact. See [`openssl`]({% link libraries/openssl.md %}) for full details.
+OpenSSL's `linux64-riscv64` target inherits from `linux-generic64` and compiles the generic C implementation of all cipher and hash primitives. Hardware-accelerated AES-GCM, ChaCha20-Poly1305, and SHA implementations using the RISC-V Vector extension (RVV) and RISC-V Cryptography extensions are the subject of open upstream PRs in the OpenSSL repository (openssl/openssl #30787, #31182, #30552). These PRs were not merged as of the research date. The impact on MariaDB is a performance gap in TLS-intensive workloads on riscv64. No functional impact. See `reports/openssl.md` for full details.
 
 ### PCRE2 / SLJIT deep-dive
 
-The SLJIT JIT backend for RISC-V (`sljitNativeRISCV_64.c`) is present in the PCRE2 source. One issue was resolved in October 2025 (pcre2#831: JIT was broken with `-march=rv64gcb_zicond` due to march flag conflicts). No current blockers for MariaDB's use of PCRE2 on riscv64. See [`pcre2`]({% link libraries/pcre2.md %}) for full details.
+The SLJIT JIT backend for RISC-V (`sljitNativeRISCV_64.c`) is present in the PCRE2 source. One issue was resolved in October 2025 (pcre2#831: JIT was broken with `-march=rv64gcb_zicond` due to march flag conflicts). No current blockers for MariaDB's use of PCRE2 on riscv64. See `reports/pcre2.md` for full details.
 
 ### RocksDB deep-dive (critical dependency)
 
@@ -406,7 +406,7 @@ RISE has not funded any MariaDB work. All riscv64 work to date has been contribu
 
 Data not available: no published benchmark comparing `crc32c_slow()` vs hardware CRC on riscv64 MariaDB workloads. The relative impact depends on workload I/O intensity.
 
-**OpenSSL TLS acceleration.** Contributing to or accelerating the open OpenSSL upstream PRs for riscv64 AES/ChaCha20/SHA would benefit MariaDB and every other TLS-using application on riscv64. This is out-of-scope for a MariaDB-specific investment but is complementary. See the OpenSSL status report.
+**OpenSSL TLS acceleration.** Contributing to or accelerating the open OpenSSL upstream PRs for riscv64 AES/ChaCha20/SHA would benefit MariaDB and every other TLS-using application on riscv64. This is out-of-scope for a MariaDB-specific investment but is complementary. See `reports/openssl.md`.
 
 ### 13.3 CI/CD Infrastructure
 

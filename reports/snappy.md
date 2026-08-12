@@ -260,7 +260,7 @@ All snappy dependencies are either optional benchmark-only codecs or build/test 
 |---|---|---|---|---|---|
 | zlib | Benchmark comparison codec (optional, `HAVE_LIBZ`) | Yes (pure portable C) | No dedicated riscv64 CI upstream | Debian: `zlib1g 1:1.3.dfsg+really1.3.1-1` | No |
 | LZO2 | Benchmark comparison codec (optional, `HAVE_LIBLZO2`) | Yes (pure C) | No dedicated riscv64 CI | Debian riscv64 available | No |
-| LZ4 | Benchmark comparison codec (optional, `HAVE_LIBLZ4`) | Yes (basic riscv64 support merged) | riscv64 added to LZ4 CI (QEMU) | Debian: `liblz4-dev` available | No (benchmark-only dep); see [lz4 status report](../libraries/lz4.md) for detail |
+| LZ4 | Benchmark comparison codec (optional, `HAVE_LIBLZ4`) | Yes (basic riscv64 support merged) | riscv64 added to LZ4 CI (QEMU) | Debian: `liblz4-dev` available | No (benchmark-only dep); see `reports/lz4.md` for detail |
 | google/benchmark | Build-time benchmark framework (`third_party/benchmark` submodule) | Yes | Yes | Yes (riscv64 `rdtime` support merged 2019, PR #833) | No |
 | google/googletest | Build-time test framework (`third_party/googletest` submodule) | Yes | Yes (with caveat) | Yes | Minor: Issue #3756 (open since Feb 2022) - `GetThreadCountTest.ReturnsCorrectValue` fails on riscv64; does not affect snappy library functionality |
 

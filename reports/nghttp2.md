@@ -231,19 +231,19 @@ The table below covers runtime and optional build dependencies declared in `CMak
 
 | Dependency | Role | riscv64 build | riscv64 test CI | riscv64 distro release | Notes |
 |---|---|---|---|---|---|
-| OpenSSL (>= 1.1.1) | TLS/crypto (primary backend) | Yes | No | Yes -- `libssl-dev` 3.6.3-1 (Debian sid) | 2 open correctness bugs on riscv64: issue [#30330](https://github.com/openssl/openssl/issues/30330) (Zkne key-check logic) and issue [#29357](https://github.com/openssl/openssl/issues/29357) (cross-compile with `no-deprecated`). See `./libraries/openssl.md` |
+| OpenSSL (>= 1.1.1) | TLS/crypto (primary backend) | Yes | No | Yes -- `libssl-dev` 3.6.3-1 (Debian sid) | 2 open correctness bugs on riscv64: issue [#30330](https://github.com/openssl/openssl/issues/30330) (Zkne key-check logic) and issue [#29357](https://github.com/openssl/openssl/issues/29357) (cross-compile with `no-deprecated`). See `reports/openssl.md` |
 | wolfSSL (>= 5.7.0) | TLS/crypto (alternative backend) | Yes -- 6 riscv64-specific files: AES, ChaCha, Poly1305, SHA-256/512/3 | No | Yes -- `libwolfssl-dev` 5.9.1-0.1 (Debian sid) | All riscv64 bugs closed as of June 2026. No open blockers. |
 | libngtcp2 (>= 1.23.0) | QUIC transport layer | Yes | No | Partial -- `libngtcp2-dev` 1.22.1-1 in Debian sid (behind required 1.23.0) | Version lag may prevent HTTP/3 on riscv64 from Debian packages alone. No riscv64 correctness issues filed. |
 | libnghttp3 (>= 1.16.0) | HTTP/3 framing | Yes | No | Partial -- `libnghttp3-dev` 1.15.0-1 in Debian sid (behind required 1.16.0) | Same version lag concern as libngtcp2. |
-| brotli (>= 1.0.9) | HTTP compression | Yes (scalar) | No | Yes -- `libbrotli-dev` 1.2.0-3 (Debian sid) | RVV SIMD PR [#1410](https://github.com/google/brotli/pull/1410) open since December 2025, not merged. Second attempt PR [#1489](https://github.com/google/brotli/pull/1489) closed June 2026. Scalar fallback functional. See `./libraries/brotli.md` |
-| zlib (>= 1.2.3) | HTTP compression (deflate/gzip) | Yes (scalar) | No | Yes -- `zlib1g-dev` (standard Debian) | No riscv64 SIMD optimizations. No riscv64 issues in `madler/zlib`. See `./libraries/zlib.md` (pending) |
-| jemalloc | Memory allocator (optional) | Partial | No | Yes -- `libjemalloc-dev` 5.3.1-2 (Debian sid) | Issue [#2399](https://github.com/jemalloc/jemalloc/issues/2399) (open since 2023): riscv64 cross-build undocumented and untested. No maintainer response. See `./libraries/jemalloc.md` |
+| brotli (>= 1.0.9) | HTTP compression | Yes (scalar) | No | Yes -- `libbrotli-dev` 1.2.0-3 (Debian sid) | RVV SIMD PR [#1410](https://github.com/google/brotli/pull/1410) open since December 2025, not merged. Second attempt PR [#1489](https://github.com/google/brotli/pull/1489) closed June 2026. Scalar fallback functional. See `reports/brotli.md` |
+| zlib (>= 1.2.3) | HTTP compression (deflate/gzip) | Yes (scalar) | No | Yes -- `zlib1g-dev` (standard Debian) | No riscv64 SIMD optimizations. No riscv64 issues in `madler/zlib`. See `reports/zlib.md` (pending) |
+| jemalloc | Memory allocator (optional) | Partial | No | Yes -- `libjemalloc-dev` 5.3.1-2 (Debian sid) | Issue [#2399](https://github.com/jemalloc/jemalloc/issues/2399) (open since 2023): riscv64 cross-build undocumented and untested. No maintainer response. See `reports/jemalloc.md` |
 | libev (>= 4.11) | Async I/O event loop | Yes (pure C, epoll backend on Linux) | No | Yes -- `libev-dev` 1:4.33-2.1+b3 | No riscv64 issues. Architecture-agnostic. |
-| libevent (>= 2.0.8) | Async I/O (nghttpx) | Yes | No | Yes -- `libevent-dev` 2.1.12-stable-10+b2 | No riscv64 issues. See `./libraries/libevent.md` |
+| libevent (>= 2.0.8) | Async I/O (nghttpx) | Yes | No | Yes -- `libevent-dev` 2.1.12-stable-10+b2 | No riscv64 issues. See `reports/libevent.md` |
 | c-ares (>= 1.7.5) | Async DNS | Yes | No | Yes -- `libc-ares-dev` 1.34.6-1+b1 | No riscv64 issues. Pure C. |
-| libxml2 (>= 2.6.26) | XML parsing (tools) | Yes | No | Yes -- `libxml2-dev` 2.15.3+dfsg-1 | No riscv64 issues found. See `./libraries/libxml2.md` (pending) |
+| libxml2 (>= 2.6.26) | XML parsing (tools) | Yes | No | Yes -- `libxml2-dev` 2.15.3+dfsg-1 | No riscv64 issues found. See `reports/libxml2.md` (pending) |
 | jansson (>= 2.5) | JSON (nghttpd/nghttpx) | Yes | No | Yes -- `libjansson-dev` 2.15.0-1 | No riscv64 issues. Pure C. |
-| libbpf (>= 0.7.0) | eBPF socket acceleration (optional) | Yes | No | Yes -- `libbpf-dev` 1:1.7.0-1 | riscv64 is a Linux-native eBPF target. No issues. See `./libraries/libbpf.md` (pending) |
+| libbpf (>= 0.7.0) | eBPF socket acceleration (optional) | Yes | No | Yes -- `libbpf-dev` 1:1.7.0-1 | riscv64 is a Linux-native eBPF target. No issues. See `reports/libbpf.md` (pending) |
 | systemd (>= 209) | Socket activation (optional) | Yes | N/A | Yes | Standard Debian. No riscv64 concerns. |
 | MRuby | Scripting in nghttpx (optional) | Unknown | No | Not packaged as `libmruby-dev` in Debian | Data not available: no riscv64 investigation was performed. Optional feature, not required for HTTP/2 core. |
 
@@ -302,7 +302,7 @@ Optional: a one-line fix (add `#include <arpa/inet.h>` to two files) could be su
 ### 13.2 Performance Optimization
 
 nghttp2 itself has no SIMD-amenable code paths. Performance optimization must target dependencies:
-- OpenSSL RVV crypto acceleration (in progress upstream; see openssl.md)
+- OpenSSL RVV crypto acceleration (in progress upstream; see `reports/openssl.md`)
 - brotli RVV SIMD (PR [#1410](https://github.com/google/brotli/pull/1410) pending merge)
 - zlib/zlib-ng riscv64 SIMD (not yet started anywhere)
 
@@ -327,9 +327,9 @@ Not applicable. nghttp2 has no dependent package ecosystem requiring riscv64 ena
 | Functional | Fix `#include <arpa/inet.h>` in `nghttp2_helper.c` and `nghttp2_hd_huffman.c` (GCC 14 embedded CMake fix) | 0.5 | Any contributor | Low |
 | CI/CD | Add riscv64 QEMU job to `.github/workflows/build.yml` (library-only) | 1-2 | RISE or chip vendor | Medium |
 | CI/CD | Provide RISE-hosted riscv64 runner (reduces QEMU overhead; not project-specific) | Shared infrastructure | RISE | Low (for nghttp2 alone; high if shared across projects) |
-| Performance | brotli RVV SIMD (PR [#1410](https://github.com/google/brotli/pull/1410)) -- not nghttp2 work | see brotli report | brotli upstream | High |
-| Performance | OpenSSL riscv64 correctness bugs (#30330, #29357) -- not nghttp2 work | see openssl report | OpenSSL upstream | Critical |
-| Performance | zlib riscv64 SIMD -- not nghttp2 work | see zlib report | zlib/zlib-ng upstream | Medium |
+| Performance | brotli RVV SIMD (PR [#1410](https://github.com/google/brotli/pull/1410)) -- not nghttp2 work | see `reports/brotly.md` | brotli upstream | High |
+| Performance | OpenSSL riscv64 correctness bugs (#30330, #29357) -- not nghttp2 work | see `reports/openssl.md` | OpenSSL upstream | Critical |
+| Performance | zlib riscv64 SIMD -- not nghttp2 work | see `reports/zlib.md` | zlib/zlib-ng upstream | Medium |
 
 **Overall assessment:** nghttp2 is not a RISC-V investment priority. The library itself is fully functional on riscv64 and requires no engineering investment to use. The only actionable item is a low-effort CI PR to catch future regressions. Resources should be directed at nghttp2's dependencies (OpenSSL, brotli) where genuine riscv64 blockers and performance gaps exist.
 
