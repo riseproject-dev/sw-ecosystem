@@ -21,7 +21,7 @@ The output report path is derived from the name: `reports/<slug>.md`, where `slu
 
 ## Execution model
 
-Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `.prompts/riscv-report.js`. Pass one `scope.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`):
+Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `.prompts/update-project-report-workflow.js`. Pass one `scope.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`):
 
 ```js
 Workflow({
@@ -30,7 +30,7 @@ Workflow({
     "repo": "https://<project-repository>/",         // scope.yml: repo
     "home": "https://<project-homepage>/"            // scope.yml: home
   }],
-  scriptPath: "/abs/path/to/.prompts/riscv-report.js"
+  scriptPath: "/abs/path/to/.prompts/update-project-report-workflow.js"
 })
 ```
 
@@ -88,6 +88,8 @@ Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trac
 ## Report sections
 
 Generate the following sections in order. Every section is required.
+
+When Updating the report, write the report from scratch. Do not reference previous versions, do not mention how it this report was before; the only version that matters is the last one, it must be self-contained.
 
 ### Header block
 
@@ -266,30 +268,7 @@ This section is the primary output for resource allocation decisions. Be specifi
 
 ---
 
-### 14. Updates
-
-When this report is refreshed, add a new subsection here for the update, most recent first. Do not modify the original report sections.
-
-**Format for each update:**
-
-```
-#### Update - YYYY-MM-DD
-
-**Scope:** What was re-researched.
-
-**Changes since YYYY-MM-DD:**
-- Section N: what changed, with citations.
-
-**New issues:**
-- [ID -- Title](URL): brief description.
-
-**Resolved issues:**
-- [ID -- Title](URL): brief description.
-```
-
----
-
-### 15. References
+### 14. References
 
 A complete list of every source cited in the report. Format:
 

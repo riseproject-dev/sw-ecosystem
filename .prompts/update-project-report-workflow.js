@@ -1,6 +1,6 @@
 
 export const meta = {
-  name: 'riscv-report-v2',
+  name: 'update-project-report',
   description: 'Deep research RISC-V ecosystem status report -- sequential, GitHub MCP for GitHub projects',
   phases: [
     { title: 'Search', detail: 'Sequential: GitHub MCP searches + web searches for non-GitHub sources' },
@@ -154,7 +154,7 @@ Use WebFetch:
 `}
 
 Also use WebFetch:
-- Fetch ${home} -- extract governance model, foundation membership, license
+- Fetch ${proj.home} -- extract governance model, foundation membership, license
 - Fetch https://riseproject.dev -- check if project is a RISE member
 
 Return: foundation, corporate maintainers with companies, first riscv commit date/author, tier policy, community stance on new ports.`, {label: `${proj.name}:governance`, phase: 'Search'})
