@@ -1,0 +1,233 @@
+vertical: Agentic AI inference serving (CPU-only)
+slug: agentic-ai-cpu
+author: Ludovic Henry
+run_date: 2026-08-12
+audience: exec-product
+target_profile: RVA23U64
+use: "Deck for leadership on RISC-V CPU investment for Agentic AI workloads"
+
+assumptions: []
+
+exclusions:
+  - name: "CUDA / cuDNN / cuBLAS / TensorRT / NCCL"
+    reason: "Proprietary NVIDIA GPU path; no RISC-V port exists or is planned."
+  - name: "ROCm / HIP / MIOpen"
+    reason: "AMD GPU path; no RISC-V port."
+  - name: "Intel GPU / oneAPI GPU"
+    reason: "Intel GPU path; not applicable to CPU-only target."
+  - name: "Apple MPS / CoreML"
+    reason: "Apple silicon only; not applicable."
+  - name: "Triton GPU compiler"
+    reason: "GPU-only JIT compiler; not applicable to CPU-only target."
+  - name: "torchvision / torchaudio"
+    reason: "Multimodal add-ons requiring GPU backends; explicitly excluded in vLLM riscv64 requirements."
+
+out_of_scope:
+  - name: "torch.compile pipeline (TorchDynamo, AOTAutograd, TorchInductor, Triton, torch-mlir, IREE, MLIR, LLVM)"
+    reason: "Scope is CPU eager inference only; JIT compile path excluded."
+  - name: "PyTorch distributed training (NCCL, Gloo collective, torch.distributed)"
+    reason: "Scope is inference serving, not training."
+  - name: "Numba / llvmlite"
+    reason: "Explicitly excluded by vLLM on riscv64 (llvmlite has no riscv64 support)."
+
+layers:
+  - title: "Orchestration & Agents"
+    nodes:
+      - name: LangChain
+        repo: https://github.com/langchain-ai/langchain
+        home: https://www.langchain.com/
+        slug: langchain
+        criticality: critical
+        features_in_scope: "chains, agents, tool use, RAG pipeline, prompt management"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+
+      - name: LangGraph
+        repo: https://github.com/langchain-ai/langgraph
+        home: https://www.langchain.com/langgraph
+        criticality: critical
+        features_in_scope: "stateful agent graphs, multi-agent orchestration"
+        notes: "Pure Python py3-none-any wheel. No per-project report; verified on PyPI Aug 2026."
+
+  - title: "Inference Serving"
+    nodes:
+      - name: vLLM (CPU backend)
+        repo: https://github.com/vllm-project/vllm
+        home: https://www.vllm.ai/
+        slug: vllm
+        criticality: critical
+        features_in_scope: "CPU inference backend (not GPU), continuous batching, OpenAI-compatible API"
+        notes: "Dedicated RISC-V CPU backend in source; no PyPI riscv64 wheel; must build from source."
+
+      - name: llama.cpp
+        repo: https://github.com/ggerganov/llama.cpp
+        home: https://github.com/ggerganov/llama.cpp
+        slug: llama-cpp
+        criticality: critical
+        features_in_scope: "RVV-accelerated GGUF inference on CPU"
+        notes: "Alternative to vLLM for GGUF models. Active RISE-funded RVV optimization (RP-014). Upstream CI on RISE native hardware."
+
+      - name: ExecuTorch
+        repo: https://github.com/pytorch/executorch
+        home: https://pytorch.org/executorch/
+        criticality: optional
+        features_in_scope: "on-device edge inference; XNNPACK CPU backend; GGUF-format smaller models"
+        notes: "Phase-1 riscv64 QEMU CI with comprehensive model test matrix. No upstream release. RISE fork active."
+
+  - title: "ML Framework"
+    nodes:
+      - name: PyTorch (CPU eager inference)
+        repo: https://github.com/pytorch/pytorch
+        home: https://pytorch.org/
+        slug: pytorch
+        criticality: critical
+        features_in_scope: "ATen CPU kernels, eager inference only"
+        notes: "No PyPI riscv64 wheel. RISE out-of-tree CI active. Source build required."
+
+      - name: HuggingFace Transformers
+        repo: https://github.com/huggingface/transformers
+        home: https://huggingface.co/transformers
+        criticality: critical
+        features_in_scope: "model loading, AutoModel, generation pipelines"
+        notes: "Pure Python; no per-project report. Installs on riscv64 without modification."
+
+  - title: "Vector Store / Retrieval"
+    nodes:
+      - name: FAISS (CPU)
+        repo: https://github.com/facebookresearch/faiss
+        home: https://faiss.ai/
+        slug: faiss
+        criticality: critical
+        features_in_scope: "similarity search, IndexFlatL2, HNSW, IVF"
+        notes: "No PyPI riscv64 wheel. Source build required. ISCAS PR #4503 blocked since Sep 2025."
+
+  - title: "Tokenization"
+    nodes:
+      - name: HuggingFace Tokenizers
+        repo: https://github.com/huggingface/tokenizers
+        home: https://huggingface.co/docs/tokenizers
+        slug: tokenizers
+        criticality: critical
+        features_in_scope: "fast BPE/WordPiece/Unigram tokenization for Transformers"
+        notes: "Official riscv64 PyPI wheel available since v0.23.1 (Apr 2026). Rust-based."
+
+      - name: SentencePiece
+        repo: https://github.com/google/sentencepiece
+        home: https://github.com/google/sentencepiece
+        slug: sentencepiece
+        criticality: critical
+        features_in_scope: "BPE/unigram tokenization for LLaMA, Gemma, T5 models"
+        notes: "RISE wheel builder provides riscv64 wheel. No official PyPI riscv64 wheel."
+
+      - name: Tiktoken
+        repo: https://github.com/openai/tiktoken
+        home: https://github.com/openai/tiktoken
+        criticality: optional
+        features_in_scope: "BPE tokenization for OpenAI-family models (GPT-4, GPT-2)"
+        notes: "No riscv64 wheel on PyPI. Source build (Rust) required. PR #506 stalled."
+
+  - title: "Numerical & Linear Algebra"
+    nodes:
+      - name: NumPy
+        repo: https://github.com/numpy/numpy
+        home: https://numpy.org/
+        slug: numpy
+        criticality: critical
+        features_in_scope: "array operations, fundamental Python ML dependency"
+        notes: "No riscv64 PyPI wheel as of Aug 2026 (Q3 2026 target missed). Source build or RISE wheel required."
+
+      - name: OpenBLAS
+        repo: https://github.com/xianyi/OpenBLAS
+        home: https://www.openblas.net/
+        slug: openblas
+        criticality: critical
+        features_in_scope: "BLAS/LAPACK; RVV-accelerated GEMM for CPU inference"
+        notes: "RVV 1.0 support since v0.3.28. GCC 14+ required for ZVL paths. Open TRSM correctness bug."
+
+      - name: Eigen
+        repo: https://gitlab.com/libeigen/eigen
+        home: https://eigen.tuxfamily.org/
+        criticality: optional
+        features_in_scope: "dense linear algebra used by ONNX Runtime (Eigen EP) and optional PyTorch paths"
+        notes: "Header-only C++ library; ships as libeigen3-dev (arch: all) in Debian/Ubuntu. No RVV intrinsics; scalar fallback on riscv64."
+
+  - title: "Deep Learning Primitives"
+    nodes:
+      - name: oneDNN (DNNL)
+        repo: https://github.com/uxlfoundation/oneDNN
+        home: https://uxlfoundation.github.io/oneDNN/
+        slug: onednn
+        criticality: critical
+        features_in_scope: "convolution, matmul, pooling primitives used by PyTorch CPU"
+        notes: "Experimental tier. JIT via xbyak_riscv. Active ISCAS/SpacemiT development. Embedded in PyTorch."
+
+      - name: XNNPACK
+        repo: https://github.com/google/XNNPACK
+        home: https://github.com/google/XNNPACK
+        criticality: critical
+        features_in_scope: "inference kernels used by PyTorch CPU eager and vLLM CPU"
+        notes: "100+ RVV FP16 test failures (issue #9886). Root cause: missing cpuinfo Zvfh detection."
+
+      - name: FBGEMM
+        repo: https://github.com/pytorch/FBGEMM
+        home: https://github.com/pytorch/FBGEMM
+        slug: fbgemm
+        criticality: optional
+        features_in_scope: "quantized GEMM, embedding lookup (SpMDM) for PyTorch quantized ops"
+        notes: "No riscv64 port. Runtime crash on any GEMM call. Disabled by PyTorch on riscv64 at configure time. asmjit dependency has no RVV backend."
+
+      - name: SLEEF
+        repo: https://github.com/shibatch/sleef
+        home: https://sleef.org/
+        slug: sleef
+        criticality: critical
+        features_in_scope: "SIMD transcendental math (sin, cos, log, exp) used by ATen"
+        notes: "riscv64 integrated since v3.6 (Nov 2023). RISE-funded integration into OpenJDK. No blocking issues."
+
+  - title: "Model Serialization"
+    nodes:
+      - name: SafeTensors
+        repo: https://github.com/huggingface/safetensors
+        home: https://huggingface.co/docs/safetensors
+        criticality: critical
+        features_in_scope: "model weight loading for HF Transformers and vLLM"
+        notes: "Upstream PyPI riscv64 wheel in v0.8.0 (2026-06-09). RISE wheel builder self-deprecated."
+
+      - name: ONNX Runtime (CPU EP)
+        repo: https://github.com/microsoft/onnxruntime
+        home: https://onnxruntime.ai/
+        slug: onnx
+        criticality: optional
+        features_in_scope: "ONNX CPU execution provider (alternative inference path)"
+        notes: "No riscv64 binary. Cross-compile build guide exists. Active RVV kernel work (SiFive, ZTE)."
+
+  - title: "Runtime & Language"
+    nodes:
+      - name: CPython
+        repo: https://github.com/python/cpython
+        home: https://www.python.org/
+        slug: python
+        criticality: critical
+        features_in_scope: "Python 3.10-3.13 runtime"
+        notes: "riscv64 builds available. Active 3.15 beta regression (stack unwinding). RISE provides prebuilt binaries."
+
+      - name: glibc
+        repo: https://sourceware.org/git/glibc.git
+        home: https://www.gnu.org/software/libc/
+        slug: glibc
+        criticality: critical
+        features_in_scope: "C runtime, pthreads, riscv_hwprobe syscall"
+        notes: "Ubuntu 24.04 ships glibc 2.39 which predates three crash-class fixes. Deployment risk on LTS."
+
+chains:
+  - name: "PyTorch CPU eager inference path (RVA23)"
+    sequence: ["PyTorch ATen", "oneDNN (xbyak_riscv JIT)", "XNNPACK", "OpenBLAS", "SLEEF"]
+  - name: "vLLM CPU inference path"
+    sequence: ["vLLM CPU backend", "PyTorch ATen", "oneDNN", "OpenBLAS"]
+  - name: "llama.cpp GGUF inference path"
+    sequence: ["llama.cpp", "ggml (in-tree)", "RVV kernels (llamafile SGEMM + ggml-cpu)"]
+  - name: "ExecuTorch edge inference path"
+    sequence: ["ExecuTorch runtime", "XNNPACK (CPU backend)", "OpenBLAS"]
+  - name: "Agentic RAG pipeline"
+    sequence: ["LangChain/LangGraph", "HF Transformers", "vLLM (serving)", "FAISS (retrieval)", "HF Tokenizers / SentencePiece"]
+  - name: "Model load path"
+    sequence: ["HF Transformers", "SafeTensors", "ONNX Runtime (optional)"]
