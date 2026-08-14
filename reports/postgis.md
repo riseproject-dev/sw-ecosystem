@@ -196,7 +196,7 @@ The PyPI package named `postgis` ([PyPI JSON API](https://pypi.org/pypi/postgis/
 | JSON-C | GeoJSON parsing | 0.9+ | Built successfully (0.19+ds-1, sid) | Unverified | Released in sid | None found |
 | GDAL | Raster support | 2.4.0 (configure.ac); README recommends 3+ | Built successfully (3.13.2+dfsg-1+b2, sid) | Unverified | Released in sid | Unrelated libpoppler162 rebuild note, not riscv64-specific |
 | protobuf-c | Vector tile / Geobuf support (ST_AsMVT) | 1.1.0+ | Built successfully (1.5.1-1+b2, sid) | Unverified | Released in sid | None found |
-| Protocol Buffers | Serialization used by protobuf-c toolchain | Not separately pinned | Built successfully (3.21.12-16, sid) | Unverified | Released in sid | Fails to build on alpha (unrelated arch). See [reports/protobuf.md](protobuf.md) |
+| Protocol Buffers | Serialization used by protobuf-c toolchain | Not separately pinned | Built successfully (3.21.12-16, sid) | Unverified | Released in sid | Fails to build on alpha (unrelated arch). See [reports/protocol-buffers.md](protocol-buffers.md) |
 | SFCGAL | Advanced 2D/3D analysis (optional) | 1.4.1+ (1.5.0+ recommended) | Built successfully (2.3.0-1, sid) | Unverified | Released in sid | Fails to build on alpha (unrelated arch) |
 | PCRE2 | address-standardizer extension (optional) | Not version-pinned | Built successfully (10.46-1+b2, sid) | Unverified | Released in sid | None found |
 | PostGIS itself | - | - | Built successfully (3.6.4+dfsg-2, sid) | Unverified | Released in trixie/sid | BD-Uninstallable on alpha only (unrelated arch) |
@@ -289,4 +289,4 @@ Not applicable. Section 10 is omitted per the reporting criteria: PostGIS is a P
 - gitea.osgeo.org/postgis/postgis (canonical source repository; inaccessible throughout research, Anubis bot-challenge HTTP 403)
 - trac.osgeo.org/postgis (issue tracker; inaccessible throughout research, Anubis bot-challenge HTTP 403)
 - [reports/postgresql.md](postgresql.md) (existing status report, PostgreSQL dependency)
-- [reports/protobuf.md](protobuf.md) (existing status report, Protocol Buffers dependency)
+- [reports/protocol-buffers.md](protocol-buffers.md) (existing status report, Protocol Buffers dependency)

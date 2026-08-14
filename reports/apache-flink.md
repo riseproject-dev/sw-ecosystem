@@ -208,7 +208,7 @@ The following table covers dependencies with JIT backends, SIMD paths, native co
 | Apache Arrow 19.0.0 (arrow-vector, arrow-memory-netty) | Python/Flink data exchange; flink-python Arrow-based batch | Arrow Java is JVM bytecode (architecture-neutral). Arrow C++ builds on riscv64 but has riscv64 test failures ([PR #49556](https://github.com/apache/arrow/pull/49556), open draft). | Arrow Java JARs are architecture-neutral; run on any JVM. No riscv64 PyArrow wheel on PyPI. | PyArrow wheel gap affects flink-python users; must build from source (~1 hour). Arrow C++ test failures on riscv64 (PR #49556 open). |
 | protoc 4.32.1 (build-time) | Proto code generation at build time | No pre-built riscv64 protoc binary on Maven Central ([protocolbuffers/protobuf#17798](https://github.com/protocolbuffers/protobuf/issues/17798), open, untriaged) | No riscv64 protoc binary on Maven Central | **Build blocker:** `mvn compile` on riscv64 fails at protoc download unless protoc is pre-installed to PATH. |
 | os-maven-plugin 1.7.1 | Maven build-time arch/OS detection | Correctly maps riscv64 as of 1.7.1; Flink upgraded in PR #26860 (Flink 2.2.0) | 1.7.1 released; Flink uses it | Was broken before Flink 2.2.0. Fixed. |
-| Apache Hadoop 2.10.2 (provided scope) | HDFS file system connector | Hadoop 2.10.2 predates all riscv64 work | No riscv64 artifacts for 2.10.2 | Users requiring HDFS must use Hadoop 3.5.0+ (unreleased as of research). ISA-L erasure coding degrades to Java fallback. See `reports/hadoop.md` |
+| Apache Hadoop 2.10.2 (provided scope) | HDFS file system connector | Hadoop 2.10.2 predates all riscv64 work | No riscv64 artifacts for 2.10.2 | Users requiring HDFS must use Hadoop 3.5.0+ (unreleased as of research). ISA-L erasure coding degrades to Java fallback. See `reports/apache-hadoop.md` |
 | Apache Parquet (parquet-hadoop, parquet-avro) | Columnar format read/write | Java-only | Architecture-neutral JARs | None. Pure Java. |
 | Apache Avro 1.11.5 | Schema-based serialization | Java-only | Architecture-neutral JARs | None. |
 | Conscrypt 2.5.1 (runtime scope in flink-python) | Alternate TLS/crypto provider | No riscv64 support; latest release added linux-aarch64 (2.6-alpha3); riscv64 not mentioned; zero issues or PRs filed in google/conscrypt for riscv64 | No riscv64 artifact | Runtime scope; JSSE fallback is functional. |
@@ -396,4 +396,4 @@ No updates yet -- initial report dated 2026-06-17.
 - [RISE project blog](https://riseproject.dev/blog/)
 - [RISE wheel builder](https://riseproject.gitlab.io/python/wheel_builder/)
 - [runtimes/openjdk.md](../runtimes/openjdk.md)
-- [data-analytics/hadoop.md](../data-analytics/hadoop.md)
+- [data-analytics/hadoop.md](apache-hadoop.md)

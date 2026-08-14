@@ -131,7 +131,7 @@ Runners referenced throughout the workflow files are `ubuntu-latest`/`ubuntu-22.
 | sentencepiece (C++) | Subword tokenizer used by many model configs | Working after toolchain fix (gcc bumped to gcc-14 to fix an abseil `static_assert` failure); briefly reverted for stability, now green | Passing (informational cross-build) | Not shipping on PyPI (latest 0.2.2); wheels only via community RISE index | Open issue asking whether official PyPI distribution will resume | [reports/sentencepiece.md](reports/sentencepiece.md) |
 | tiktoken (Rust) | BPE tokenizer for some model configs | Proposed, not merged - CI wheel-build PR still open | Not run in CI | Not shipping (latest 0.13.0) | Open issue requesting riscv64 wheel, unresolved | [reports/tiktoken.md](reports/tiktoken.md) |
 | faiss-cpu (C++/SIMD) | Vector similarity search for retrieval pipelines | Partial - CMake detects riscv64 and selects an RVV source set; enabling PR closed, not merged | Cross-compile SIMD smoke test only | Not shipping (latest 1.15.0); Debian sid has a native pre-RVV build | Prior "device build failed" issue closed without full fix; most RVV kernels remain scalar fallback | [reports/faiss.md](reports/faiss.md) |
-| protobuf (C++) | Serialization used by sentencepiece and model config formats | Rejected - maintainers state "RISC-V isn't on our roadmap"; multiple riscv64 issues/PRs closed without merge | Not tested | Not shipping | Explicit maintainer non-commitment, no CI coverage | [reports/protobuf.md](reports/protobuf.md) |
+| protobuf (C++) | Serialization used by sentencepiece and model config formats | Rejected - maintainers state "RISC-V isn't on our roadmap"; multiple riscv64 issues/PRs closed without merge | Not tested | Not shipping | Explicit maintainer non-commitment, no CI coverage | [reports/protocol-buffers.md](reports/protocol-buffers.md) |
 | kenlm (C++) | Audio/CTC scoring extra | Unknown/unverified - no riscv64 issues found on a single GitHub search pass; not in scope.yml | Unverified | No riscv64 wheel found on PyPI (version 0.3.0) | Not investigated further | Not in scope.yml |
 | huggingface-hub (pure Python) | Hard; model hub client | Pure Python, no native build concerns | N/A | Ships automatically (universal wheel) | None found | Not in scope.yml |
 
@@ -222,4 +222,4 @@ The most concrete, lowest-effort item identified in this research is reviving `h
 - [reports/sentencepiece.md - SentencePiece riscv64 status report](reports/sentencepiece.md)
 - [reports/tiktoken.md - tiktoken riscv64 status report](reports/tiktoken.md)
 - [reports/faiss.md - Faiss riscv64 status report](reports/faiss.md)
-- [reports/protobuf.md - Protobuf riscv64 status report](reports/protobuf.md)
+- [reports/protocol-buffers.md - Protobuf riscv64 status report](reports/protocol-buffers.md)
