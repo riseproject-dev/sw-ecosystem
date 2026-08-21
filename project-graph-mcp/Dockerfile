@@ -26,7 +26,20 @@ RUN oxigraph load \
 
 RUN oxigraph optimize --location /project-graph
 
-# Final image: oxigraph serving the pre-built database
-FROM ghcr.io/oxigraph/oxigraph:latest
+# Stage 3: build Python venv
+FROM python:3.12-slim AS py-builder
 
-COPY --from=db-builder /project-graph /project-graph
+COPY requirements.txt .
+RUN python -m venv /venv && \
+    /venv/bin/pip install --upgrade pip && \
+    /venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# Final image: Python MCP server with pyoxigraph reading the pre-built database
+FROM python:3.12-slim
+
+COPY --from=db-builder /project-graph /app/project-graph
+COPY --from=py-builder /venv /venv
+COPY server.py /app/server.py
+
+ENV PROJECT_GRAPH_DB=/app/project-graph
+CMD ["/venv/bin/python", "/app/server.py"]
