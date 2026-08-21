@@ -10,18 +10,93 @@ RUN git clone --depth 1 https://github.com/packagegraph/platform.git /platform
 
 WORKDIR /platform/etl/pg-collect
 
-RUN cargo build --release
+RUN cargo install --path .
 
-RUN cargo run --release -- deb-full \
-      --repo http://deb.debian.org/debian \
-      --dist trixie --component main \
-      --arch amd64 --arch arm64 \
+# Ubuntu noble / amd64
+RUN --mount=type=cache,target=/tmp/cache \
+    pg-collect deb-full \
+      --repo https://archive.ubuntu.com/ubuntu \
+      --dist noble --component main \
+      --arch amd64 \
       --with-sources --with-salsa \
-      -o /debian-trixie-full.nt
+      --cache-dir /tmp/cache \
+      -o /ubuntu-noble.nt
+
+# Ubuntu noble (ports) / arm64, riscv64
+RUN --mount=type=cache,target=/tmp/cache \
+    pg-collect deb-full \
+      --repo https://ports.ubuntu.com/ubuntu-ports \
+      --dist noble --component main \
+      --arch arm64 --arch riscv64 \
+      --with-sources --with-salsa \
+      --cache-dir /tmp/cache \
+      -o /ubuntu-ports-noble.nt
+
+# PyPI
+RUN --mount=type=bind,source=pypi-packages.txt,target=/pypi-packages.txt \
+    pg-collect pypi \
+      --packages-file /pypi-packages.txt \
+      --max-depth 256 \
+      --max-packages 100000 \
+      -o /pypi.nt
+
+# Conda / amd64
+RUN --mount=type=cache,target=/tmp/cache \
+    pg-collect conda \
+      --subdir linux-64 \
+      -o /conda-linux-amd64.nt
+# Conda / arm64
+RUN --mount=type=cache,target=/tmp/cache \
+    pg-collect conda \
+      --subdir linux-arm64 \
+      -o /conda-linux-arm64.nt
+# Conda / riscv64
+RUN --mount=type=cache,target=/tmp/cache \
+    pg-collect conda \
+      --subdir linux-riscv64 \
+      -o /conda-linux-riscv64.nt
 
 RUN oxigraph load \
       --location /project-graph \
-      --file /debian-trixie-full.nt \
+      --file /ubuntu-noble.nt \
+      --file /ubuntu-ports-noble.nt \
+      --file /pypi.nt \
+      --file /conda-linux-amd64.nt \
+      --file /conda-linux-arm64.nt \
+      --file /conda-linux-riscv64.nt \
+      --lenient
+
+ARG GITHUB_TOKEN
+RUN --mount=type=cache,target=/tmp/cache \
+    bash -eux -o pipefail <<'EOF'
+
+  # launch oxigraph server in the background
+  oxigraph server --location /project-graph &
+  OXIGRAPH_PID=$!
+  # wait for the server to be ready
+  until oxigraph info --location /project-graph; do sleep 1; done
+
+  # Enrich the database with GitHub data
+  pg-collect enrich-github \
+    --endpoint http://localhost:7878/ \
+    --github-token "${GITHUB_TOKEN}" \
+    --cache-dir /tmp/cache \
+    -o github.nt
+
+  # Enrich the database with Repology data
+  pg-collect enrich-repology \
+    --endpoint http://localhost:7878/ \
+    --cache-dir /tmp/cache \
+    -o repology.nt
+
+  # kill the oxigraph server
+  kill $OXIGRAPH_PID
+EOF
+
+RUN oxigraph load \
+      --location /project-graph \
+      --file /github.nt \
+      --file /repology.nt \
       --lenient
 
 RUN oxigraph optimize --location /project-graph
