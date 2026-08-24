@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/tmp/cache \
       --arch amd64 \
       --with-sources --with-salsa \
       --cache-dir /tmp/cache \
-      -o /ubuntu-noble-full.nt
+      -o /ubuntu-noble.nt
 
 # Ubuntu noble (universe) / amd64
 RUN --mount=type=cache,target=/tmp/cache \
@@ -39,7 +39,7 @@ RUN --mount=type=cache,target=/tmp/cache \
       --arch arm64 --arch riscv64 \
       --with-sources --with-salsa \
       --cache-dir /tmp/cache \
-      -o /ubuntu-ports-noble-full.nt
+      -o /ubuntu-ports-noble.nt
 
 # Ubuntu noble (universe, ports) / arm64, riscv64
 RUN --mount=type=cache,target=/tmp/cache \
