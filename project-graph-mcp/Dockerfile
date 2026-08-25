@@ -2,17 +2,24 @@
 ARG BUILDARCH
 FROM --platform=linux/${BUILDARCH} ghcr.io/oxigraph/oxigraph:latest AS oxigraph
 
-# Stage 2: compile pg-collect, generate .nt data, build and optimize the DB
+# Base: rust + oxigraph binary + pg-collect installed once. All collectors derive from this.
 ARG BUILDARCH
-FROM --platform=linux/${BUILDARCH} rust:1-bookworm AS db-builder
+FROM --platform=linux/${BUILDARCH} rust:1-bookworm AS pg-collect-base
 
 COPY --from=oxigraph /usr/local/bin/oxigraph /usr/local/bin/oxigraph
 
 ADD https://github.com/packagegraph/platform.git#main:etl/pg-collect /pg-collect
 RUN cargo install --path /pg-collect
 
+# ---------------------------------------------------------------------------
+# Phase 1: independent collectors -- built in parallel by BuildKit.
+# Each is pinned to the native build arch and uses an isolated cache mount.
+# ---------------------------------------------------------------------------
+
 # Ubuntu noble (main) / amd64
-RUN --mount=type=cache,target=/tmp/cache \
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-ubuntu-main
+RUN --mount=type=cache,target=/tmp/cache,id=cache-ubuntu-main \
     pg-collect deb-full \
       --repo https://archive.ubuntu.com/ubuntu \
       --dist noble --component main \
@@ -22,7 +29,9 @@ RUN --mount=type=cache,target=/tmp/cache \
       -o /ubuntu-noble.nt
 
 # Ubuntu noble (universe) / amd64
-RUN --mount=type=cache,target=/tmp/cache \
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-ubuntu-universe
+RUN --mount=type=cache,target=/tmp/cache,id=cache-ubuntu-universe \
     pg-collect deb-full \
       --repo https://archive.ubuntu.com/ubuntu \
       --dist noble --component universe \
@@ -32,7 +41,9 @@ RUN --mount=type=cache,target=/tmp/cache \
       -o /ubuntu-universe-noble.nt
 
 # Ubuntu noble (main, ports) / arm64, riscv64
-RUN --mount=type=cache,target=/tmp/cache \
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-ubuntu-ports-main
+RUN --mount=type=cache,target=/tmp/cache,id=cache-ubuntu-ports-main \
     pg-collect deb-full \
       --repo https://ports.ubuntu.com/ubuntu-ports \
       --dist noble --component main \
@@ -42,7 +53,9 @@ RUN --mount=type=cache,target=/tmp/cache \
       -o /ubuntu-ports-noble.nt
 
 # Ubuntu noble (universe, ports) / arm64, riscv64
-RUN --mount=type=cache,target=/tmp/cache \
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-ubuntu-ports-universe
+RUN --mount=type=cache,target=/tmp/cache,id=cache-ubuntu-ports-universe \
     pg-collect deb-full \
       --repo https://ports.ubuntu.com/ubuntu-ports \
       --dist noble --component universe \
@@ -52,7 +65,10 @@ RUN --mount=type=cache,target=/tmp/cache \
       -o /ubuntu-ports-universe-noble.nt
 
 # PyPI
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-pypi
 RUN --mount=type=bind,source=pypi-packages.txt,target=/pypi-packages.txt \
+    --mount=type=cache,target=/tmp/cache,id=cache-pypi \
     pg-collect pypi \
       --packages-file /pypi-packages.txt \
       --max-depth 256 \
@@ -61,7 +77,10 @@ RUN --mount=type=bind,source=pypi-packages.txt,target=/pypi-packages.txt \
       -o /pypi.nt
 
 # Maven
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-maven
 RUN --mount=type=bind,source=maven-packages.txt,target=/maven-packages.txt \
+    --mount=type=cache,target=/tmp/cache,id=cache-maven \
     pg-collect maven \
       --packages-file /maven-packages.txt \
       --max-depth 256 \
@@ -69,6 +88,17 @@ RUN --mount=type=bind,source=maven-packages.txt,target=/maven-packages.txt \
       --cache-dir /tmp/cache \
       -o /maven.nt
 
+# ---------------------------------------------------------------------------
+# Phase 1 convergence: load all collected .nt files into the database.
+# ---------------------------------------------------------------------------
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} pg-collect-base AS db-load-1
+COPY --from=collect-ubuntu-main            /ubuntu-noble.nt                 /ubuntu-noble.nt
+COPY --from=collect-ubuntu-universe        /ubuntu-universe-noble.nt        /ubuntu-universe-noble.nt
+COPY --from=collect-ubuntu-ports-main      /ubuntu-ports-noble.nt           /ubuntu-ports-noble.nt
+COPY --from=collect-ubuntu-ports-universe  /ubuntu-ports-universe-noble.nt  /ubuntu-ports-universe-noble.nt
+COPY --from=collect-pypi                   /pypi.nt                         /pypi.nt
+COPY --from=collect-maven                  /maven.nt                        /maven.nt
 RUN oxigraph load \
       --location /project-graph \
       --file /ubuntu-noble.nt \
@@ -79,7 +109,15 @@ RUN oxigraph load \
       --file /maven.nt \
       --lenient
 
-RUN --mount=type=cache,target=/tmp/cache \
+# ---------------------------------------------------------------------------
+# Phase 2: enrichers -- built in parallel, each queries its own oxigraph server
+# against the DB from db-load-1.
+# ---------------------------------------------------------------------------
+
+# GitHub enrichment
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} db-load-1 AS enrich-github
+RUN --mount=type=cache,target=/tmp/cache,id=cache-github \
     --mount=type=secret,id=GITHUB_TOKEN \
     bash -eux -o pipefail <<'EOF'
 
@@ -95,18 +133,43 @@ RUN --mount=type=cache,target=/tmp/cache \
     --endpoint http://localhost:7878/ \
     --github-token "$(cat /run/secrets/GITHUB_TOKEN)" \
     --cache-dir /tmp/cache \
-    -o github.nt
-
-  # Enrich the database with Repology data
-  pg-collect enrich-repology \
-    --endpoint http://localhost:7878/ \
-    --cache-dir /tmp/cache \
-    -o repology.nt
+    -o /github.nt
 
   # kill the oxigraph server
   kill $OXIGRAPH_PID
 EOF
 
+# Repology enrichment
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} db-load-1 AS enrich-repology
+RUN --mount=type=cache,target=/tmp/cache,id=cache-repology \
+    bash -eux -o pipefail <<'EOF'
+
+  # launch oxigraph server in the background
+  oxigraph serve --location /project-graph &
+  OXIGRAPH_PID=$!
+  # wait for the server to be ready
+  # until oxigraph info --location /project-graph; do sleep 1; done
+  sleep 5
+
+  # Enrich the database with Repology data
+  pg-collect enrich-repology \
+    --endpoint http://localhost:7878/ \
+    --cache-dir /tmp/cache \
+    -o /repology.nt
+
+  # kill the oxigraph server
+  kill $OXIGRAPH_PID
+EOF
+
+# ---------------------------------------------------------------------------
+# Phase 2 convergence: load enrichment data and optimize the final DB.
+# Keeps the stage name `db-builder` so the final image's COPY is unchanged.
+# ---------------------------------------------------------------------------
+ARG BUILDARCH
+FROM --platform=linux/${BUILDARCH} db-load-1 AS db-builder
+COPY --from=enrich-github   /github.nt   /github.nt
+COPY --from=enrich-repology /repology.nt /repology.nt
 RUN oxigraph load \
       --location /project-graph \
       --file /github.nt \
