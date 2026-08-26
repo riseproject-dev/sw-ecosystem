@@ -136,7 +136,7 @@ RUN --mount=type=cache,target=/tmp/cache,id=cache-github \
     -o /github.nt
 
   # kill the oxigraph server
-  kill $OXIGRAPH_PID
+  kill $OXIGRAPH_PID || true
 EOF
 
 # Repology enrichment
@@ -159,7 +159,7 @@ RUN --mount=type=cache,target=/tmp/cache,id=cache-repology \
     -o /repology.nt
 
   # kill the oxigraph server
-  kill $OXIGRAPH_PID
+  kill $OXIGRAPH_PID || true
 EOF
 
 # ---------------------------------------------------------------------------
