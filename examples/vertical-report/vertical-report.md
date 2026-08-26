@@ -192,201 +192,26 @@ deliberately dropped.
 
 ## Stage 2: Research and classification
 
-Goal: assign every node in the locked scope spec a RISC-V readiness color, with a justification, a
-source, an as-of date, and a confidence -- then emit the three output artifacts.
+Goal: assign every node in the locked scope spec a RISC-V readiness color, then emit the three
+output artifacts.
 
-### 2.1 The 5-state color model
+### 2.1 Classification -- delegate entirely to color-coding.md
 
-Every node gets exactly one color. Evaluate the waterfall top to bottom; the first rule that
-matches wins. Note the distinction that drives the whole model: **orange means no upstream test
-gate** (upstream may ship something broken on riscv64 without knowing), while **blue and green mean
-upstream tests riscv64** (upstream knows when it breaks). Green additionally means upstream ships
-the release.
+**Read `examples/color-coding/color-coding.md` in full before classifying any node.** That file
+is the single authoritative source for:
 
-0. **Architecture-independent shortcut (evaluate first).** If the node ships no compiled,
-   architecture-specific code -- a pure-Python `py3-none-any` wheel, a pure-Python sdist, a
-   platform-neutral JVM jar, a `noarch` package -- then it runs on riscv64 by construction and needs
-   no riscv64-specific port, CI, or release. Classify it **green** with `release_provider: upstream`
-   and confidence high, and note "architecture-independent; inherits riscv64 from its runtime
-   (CPython, JVM, etc.)." Do not penalize it for having no riscv64 CI: there is no
-   architecture-specific code for such CI to test. (This is why a pure-Python framework like
-   LangChain is green even though its CI runs only on x86.) A node that ships *any* compiled
-   artifact -- a C/C++/Rust extension, a native wheel, a binary -- does not take this shortcut; fall
-   through to the rules below.
+- The 5-state color model (Steps 0-2: architecture-independent shortcut, primary grade from
+  upstream CI, optimization-purpose downgrade modifier)
+- The release-provider rule (who publishes the riscv64 artifact; required for green; visible note
+  on every node where it is not upstream)
+- The research procedure (stored reports first, adversarial spot-check, fallback to live research)
+- The per-node record fields (`color`, `color_case`, `release_provider`, `optimization_gap`,
+  `justification`, `primary_source`, `report_date`, `verified_date`, `as_of`, `confidence`,
+  `delta_vs_report`)
+- All non-negotiable rules (primary source requirements, no guessing, no inferring CI from issue
+  text, Latin-1 only)
 
-1. **grey -- N/A or unknown.** The node is not classifiable. This covers two cases, and you must
-   state which one applies:
-   - *N/A:* a proprietary or vendor-only path that cannot be native RISC-V (matches an `exclusions`
-     entry). A proprietary component's RISC-V readiness is unknowable to us and irrelevant to a
-     native-RISC-V investment decision. (Grey is **not** the bucket for out-of-scope nodes -- those
-     are excluded during scoping and never reach the waterfall. See Section 1.1.)
-   - *Unknown:* research turned up insufficient data to classify. State exactly what was searched.
-2. **green.** Upstream builds it, runs its test suite, the tests pass, **and upstream itself
-   publishes an official riscv64 release artifact**. This is the only fully-supported state
-   (officially supported even if the project runs a tier system and riscv64 is not Tier 1). A
-   release published by anyone other than upstream does **not** qualify for green -- see the
-   release-provider rule.
-3. **blue.** Upstream builds it, runs its test suite, and the tests pass on riscv64, but upstream
-   publishes **no release** for riscv64. Upstream at least knows when something breaks, but a
-   downstream consumer must pin the right revision. This state **includes** the important case where
-   a third party (RISE or another) provides a consumable riscv64 release: the node stays blue and
-   carries a provider annotation (see the release-provider rule).
-4. **orange -- builds on riscv64 but no upstream test gate.** The node has working riscv64 support
-   (it builds, and either a downstream distro/conda build, a third-party build, or upstream's own
-   release ships it) but **upstream does not validate riscv64 by running its test suite**. Two
-   sub-cases, both orange, and you state which applies:
-   - *downstream-only:* built and tested only downstream (a Linux distribution, conda, vendored in a
-     consumer we know works), with no upstream riscv64 build at all.
-   - *upstream-ships-untested:* upstream builds and even releases a riscv64 artifact (so
-     `release_provider` may be `upstream`), but upstream CI only builds it and never runs the test
-     suite on riscv64. The artifact exists; its correctness is unverified by upstream.
-   In both cases the risk is identical: no upstream test gate, so upstream can break riscv64 silently.
-5. **red -- not obtainable on riscv64 without building it yourself.** Either the project does not
-   build on riscv64, or no riscv64 port exists, or riscv64 support exists in source but **no
-   consumable artifact is produced by anyone** -- not upstream, not a distro, not conda, not a third
-   party such as RISE -- and no downstream builds and tests it. Building it yourself from source is
-   not a release and is not a downstream test signal, so a source-only node stays red. **Do not
-   inflate the color to reflect source maturity:** when substantial riscv64 support is merged
-   upstream but there is still no CI, no release, and no downstream build (as is common for a young
-   port), keep it red and carry the nuance in the justification ("upstream source-supported; builds
-   from source; no CI, no release, no downstream build"). The color measures what a consumer can
-   obtain and trust, not how much code has landed. The line between red and orange is exactly this:
-   orange requires a *downstream or third party that actually builds/tests/ships* it; red is when the
-   only path is your own source build.
-
-**Strict-downgrade modifiers.** Apply these after picking a color from the waterfall (they never
-apply to the architecture-independent shortcut in rule 0, which has no arch-specific code to test):
-
-- **Build-only upstream CI.** If upstream CI *builds* riscv64 but does not *run the test suite*
-  (for example a cross-compile-only or QEMU-build-only job), the node cannot be blue or green.
-  **Cap it at orange** (the *upstream-ships-untested* sub-case). A build that is never tested is not
-  a tested build.
-- **Partial test failures.** If the test suite runs upstream on riscv64 but some tests fail (for
-  example NaN-canonicalization or floating-point-semantics failures), **downgrade one level**
-  (green -> blue, blue -> orange). Record the specific failing tests in the justification.
-
-Every classification carries an **as-of date** (when the deciding fact was last verified) and a
-**confidence** (high / medium / low), so staleness is visible on the slide.
-
-### 2.2 The release-provider rule
-
-Green is reserved for release artifacts published **directly by upstream**. Track *who publishes the
-consumable riscv64 release* in a `release_provider` field on every node. Values:
-`upstream` | `RISE` | `<distro name>` | `third-party` | `none`.
-
-- `release_provider: upstream` is a prerequisite for green.
-- **Any node whose consumable riscv64 release comes from someone other than upstream carries a
-  visible note** -- "release provided by \<provider\>, not upstream" -- in both the stack outline and
-  the status table, **regardless of its color**. This is most consequential for blue (upstream tests
-  but a third party ships the release), but it applies equally to an orange node whose only artifact
-  is a distro build (note "release provided by Debian sid") or a third-party build. The note makes a
-  hidden dependency on a non-upstream provider visible on the slide.
-
-**RISE is the primary third-party provider today, and it hosts far more than one kind of artifact.**
-The [RISE Python wheel builder](https://gitlab.com/riseproject/python/wheel_builder) is one example
-(riscv64 Python wheels), but RISE also hosts other release forms -- container images, prebuilt
-binaries, other package types -- and, separately, provides free native riscv64 CI runners, a
-board farm of physical RISC-V hardware, and directly funded upstream work. Two consequences:
-
-- **Provider detection must look beyond Python wheels.** Do not conclude `release_provider: none`
-  just because there is no RISE wheel; check whether RISE (or another party) hosts the artifact in
-  any form relevant to this node.
-- **Separate the release flag from the enablement story.** RISE-provided CI, hardware, and funding
-  are *not* a release artifact -- they belong in the next-steps narrative (Section 2.5), where they
-  matter because they tell the reader which work is already underway and must not be double-counted
-  in an investment estimate.
-
-The upstream-vs-third-party distinction is **critical for Python packages today**: many nodes are
-usable on riscv64 *only* because RISE ships the wheel. Leadership must see that dependency
-explicitly, and not mistake a RISE-hosted wheel for upstream support that could disappear the moment
-RISE stops building it.
-
-### 2.3 Per-node research procedure (hybrid)
-
-For each node, do the least work that produces a defensible color:
-
-1. **If `reports/<slug>.md` exists, reuse it.** Read it and extract the color-deciding facts:
-   Section 3 (Upstream Support Tier), Section 7 (CI/CD), Section 8 (Distribution and Release
-   Status), and the report's `Date:` header. Record that header as `report_date` -- it is the age of
-   your prior, not proof of current state.
-2. **Adversarially verify the color-deciding facts live.** Do not take the stored report at face
-   value; it may be up to 6 months stale. Re-check only the handful of facts the color depends on,
-   against primary sources (see 2.4). Record the date of your live checks as `verified_date`. If a
-   live check contradicts the stored report, trust the live check and set `delta_vs_report` for that
-   node. You do not have to re-verify every fact: state which facts you re-checked live and which you
-   carried over from the report. A fact carried from the report is dated `report_date`; a fact you
-   re-checked is dated `verified_date`. The node's `as_of` is the **oldest** date among the facts
-   that actually decided its color (so freshness is never overstated).
-3. **If no report exists, run a light targeted probe.** Answer only the questions the color depends
-   on: Does upstream publish a riscv64 release? Does upstream CI build *and test and pass* riscv64?
-   Is it built and tested downstream? Does a third party provide a release? Do not attempt a full
-   per-project report -- that is a separate, heavier workflow. All facts here are dated
-   `verified_date` (there is no prior).
-
-Do **not** run the full 16-agent per-project research workflow for each node. The vertical report is
-a classification exercise, not 30 fresh deep reports.
-
-### 2.4 Primary sources and verification (reused from the per-project prompt)
-
-Use these canonical checks. They are the same ones the per-project research prompt uses; they are
-authoritative and fast.
-
-- **Upstream CI.** Read the actual CI workflow files (`.github/workflows/*.yml`, `.gitlab-ci.yml`,
-  Jenkinsfile, `.cirrus.yml`). Confirm from file content, never from issue text, whether a riscv64
-  job exists, what triggers it, whether it runs on native hardware or QEMU, and crucially whether it
-  **runs the test suite** or only builds.
-- **PR merge status.** A PR described as "merged" in a comment or tracking issue may have been closed
-  unmerged. Verify against the API: fetch `https://api.github.com/repos/<owner>/<repo>/pulls/<n>` and
-  check `merged_at` (null + `state: closed` means closed without merging).
-- **Release artifacts and who publishes them.**
-  - PyPI: `https://pypi.org/pypi/<package>/json` -- look for `riscv64` in the `urls[].filename`.
-  - RISE Python wheel builder:
-    `https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/<package>/`.
-  - GitHub releases: list release assets; look for `riscv64` in asset filenames.
-  - For non-Python artifacts, check the project's own release channel (OCI registry, tarball
-    downloads, etc.) and whether RISE or another third party hosts a riscv64 build.
-- **Linux distribution build status** (downstream signal for orange):
-  - Ubuntu: `https://packages.ubuntu.com/search?keywords=<pkg>&searchon=names&suite=noble&section=all`
-  - Debian: `https://tracker.debian.org/pkg/<source-package>` (per-arch build status)
-  - Fedora: `https://packages.fedoraproject.org/pkgs/<source>/<binary>/`
-  - Arch Linux RISC-V: `https://archriscv.felixc.at/?q=<package>`
-- **RISE involvement** (for the release-provider flag and the next-steps narrative). Check
-  [riseproject.dev](https://riseproject.dev) and its [blog](https://riseproject.dev/blog), the
-  [riseproject-dev GitHub org](https://github.com/riseproject-dev) (CI forks, board-farm usage),
-  and the wheel builder above. The Confluence wiki at `lf-rise.atlassian.net` requires
-  authentication -- do not attempt to fetch it.
-
-**Non-negotiable rules** (inherited from the per-project prompt):
-
-- Every factual claim traces to a primary source. A claim you cannot verify against a second source
-  is marked `[NEEDS VERIFICATION]`. **Exception for authoritative negatives:** a direct absence
-  check against the canonical registry *is* the authoritative source -- e.g. the PyPI JSON API
-  listing no riscv64 wheel, or a code search returning no riscv64 files. One such check is
-  sufficient for a negative color fact; it does not need a second source and does not get a
-  `[NEEDS VERIFICATION]` tag. Reserve `[NEEDS VERIFICATION]` for positive claims that rest on a
-  single non-authoritative source (a comment, a blog post, a tracking issue).
-- Never fill a gap with a plausible guess. If a node cannot be classified, it is grey (unknown), and
-  you state what you searched.
-- Latin-1 characters only. No em-dashes; use a hyphen or a comma. Every URL is a markdown link
-  `[text](url)`, never a bare URL.
-
-### 2.5 Per-node output record
-
-Each node produces this record, which feeds the three artifacts:
-
-- `name`, `layer`, `criticality`
-- `color` (grey / green / blue / orange / red); for grey, which case (N/A vs unknown); for orange,
-  which sub-case (downstream-only vs upstream-ships-untested)
-- `release_provider` (upstream / RISE / \<distro\> / third-party / none)
-- `justification` -- one to three sentences, with the deciding fact and a markdown source link
-- `primary_source` -- the single most authoritative URL for the color
-- `report_date` -- the `Date:` header of `reports/<slug>.md`, or `none` if no report was used
-- `verified_date` -- date of your live checks for this node, or `none` if nothing was re-checked
-- `as_of` -- the oldest date among the facts that actually decided the color (never overstate
-  freshness: if the color rests on a fact carried from the report, `as_of` is `report_date`)
-- `confidence` -- high / medium / low
-- `delta_vs_report` -- set when a live check contradicted `reports/<slug>.md`; name the discrepancy
-  (use `none` when there was no contradiction, and `n/a` when there was no report)
+Do not re-derive or re-state any of those rules here. Apply them exactly as written.
 
 ---
 
@@ -472,7 +297,8 @@ comma-broken row.
 - **Actionable next steps.** Concrete, prioritized actions: what to do, who upstream is best
   positioned to do it, and -- critically -- where RISE (or another party) already covers the work
   (runners, board farm, funded contributors, hosted releases), so effort already underway is not
-  double-counted in any investment estimate. Reuse the RISE checks from Section 2.4 to ground this.
+  double-counted in any investment estimate. Use the RISE checks in `examples/color-coding/color-coding.md`
+  (Research procedure, step 4) to ground this.
 
 ---
 

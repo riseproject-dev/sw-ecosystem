@@ -16,78 +16,11 @@ const spec = args || {}
 const slug = spec.slug || (spec.vertical || 'vertical').toLowerCase().replace(/[\s.\/]+/g, '-')
 const targetProfile = spec.target_profile || 'RVA23U64'
 
-// The 5-state color model, quoted verbatim so each agent classifies to the same rubric.
-const COLOR_RULES = `RISC-V READINESS COLOR MODEL (evaluate the waterfall top to bottom; first match wins).
-Core distinction: ORANGE means no upstream test gate (upstream may ship something broken on riscv64
-without knowing); BLUE and GREEN mean upstream tests riscv64; GREEN additionally means upstream ships the release.
-
-0. ARCHITECTURE-INDEPENDENT SHORTCUT (evaluate first). If the node ships no compiled, architecture-specific
-   code (pure-Python py3-none-any wheel or sdist, platform-neutral JVM jar, noarch package), it runs on
-   riscv64 by construction. Classify GREEN, release_provider=upstream, confidence high, and note
-   "architecture-independent; inherits riscv64 from its runtime". Do NOT penalize it for lacking riscv64 CI.
-   A node shipping ANY compiled artifact (C/C++/Rust extension, native wheel, binary) does NOT take this shortcut.
-
-1. GREY -- N/A or unknown. Not classifiable. State which case:
-   - N/A: proprietary/vendor-only path that cannot be native RISC-V (matches an exclusions entry).
-   - unknown: research turned up insufficient data; state exactly what was searched.
-   (Grey is NOT for out-of-scope nodes -- those are dropped during scoping and never classified.)
-
-2. GREEN. Upstream builds it, runs its test suite, tests pass, AND upstream itself publishes an official
-   riscv64 release artifact. Only fully-supported state. A release published by anyone other than upstream
-   does NOT qualify for green.
-
-3. BLUE. Upstream builds + runs tests + tests pass on riscv64, but upstream publishes NO release. Includes
-   the case where a third party (RISE or other) provides the consumable riscv64 release: node stays blue and
-   carries a "release provided by <provider>, not upstream" annotation.
-
-4. ORANGE -- builds on riscv64 but no upstream test gate. Node has working riscv64 support (it builds, and a
-   downstream/third-party build or upstream's own release ships it) but upstream does NOT validate riscv64 by
-   running its test suite. Two sub-cases (state which):
-   - downstream-only: built and tested only downstream (distro, conda, vendored), no upstream riscv64 build.
-   - upstream-ships-untested: upstream builds and maybe releases a riscv64 artifact (release_provider may be
-     upstream), but upstream CI only builds it, never runs the test suite on riscv64.
-
-5. RED -- not obtainable on riscv64 without building it yourself. Either it does not build on riscv64, or no riscv64
-   port exists, or riscv64 support exists in source but NO consumable artifact is produced by anyone (not upstream, not
-   a distro, not conda, not a third party such as RISE) AND no downstream builds/tests it. Building it yourself from
-   source is not a release and not a downstream test signal, so a source-only node stays RED. Do NOT inflate the color
-   to reflect source maturity: when substantial riscv64 support is merged upstream but there is still no CI, no release,
-   and no downstream build, keep it RED and carry the nuance in justification ("upstream source-supported; builds from
-   source; no CI, no release, no downstream build"). The red/orange line: orange requires a downstream or third party
-   that actually builds/tests/ships it; red is when the only path is your own source build.
-
-STRICT-DOWNGRADE MODIFIERS (apply after picking a color; never apply to the rule-0 shortcut):
-- Build-only upstream CI: if upstream CI builds riscv64 but does not run the test suite (cross-compile-only or
-  QEMU-build-only), the node cannot be blue/green. CAP AT ORANGE (upstream-ships-untested sub-case).
-- Partial test failures: if the suite runs upstream on riscv64 but some tests fail (e.g. NaN-canonicalization),
-  DOWNGRADE ONE LEVEL (green->blue, blue->orange). Record the specific failing tests in justification.
-
-RELEASE-PROVIDER RULE: release_provider is one of upstream|RISE|<distro>|third-party|none. release_provider=upstream
-is a prerequisite for green. ANY node whose consumable riscv64 release comes from someone other than upstream
-carries a "release provided by <provider>, not upstream" note, regardless of color. RISE hosts more than Python
-wheels (also container images, prebuilt binaries) so do not conclude release_provider=none just because there is
-no RISE wheel. RISE-provided CI/hardware/funding is NOT a release artifact -- it belongs in the next-steps narrative.`
-
-const VERIFY_URLS = `PRIMARY SOURCES (verify from these, never from issue text):
-- Upstream CI: read actual workflow files (.github/workflows/*.yml, .gitlab-ci.yml, Jenkinsfile, .cirrus.yml).
-  Confirm whether a riscv64 job exists, native vs QEMU, and crucially whether it RUNS THE TEST SUITE or only builds.
-- PR merge status: GET https://api.github.com/repos/<owner>/<repo>/pulls/<n> and check merged_at
-  (null + state=closed means closed WITHOUT merging).
-- Release artifacts + who publishes them:
-  - PyPI: https://pypi.org/pypi/<package>/json -- look for "riscv64" in urls[].filename.
-  - RISE Python wheel builder: https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/<package>/
-  - GitHub releases: list assets, look for "riscv64" in filenames.
-  - Non-Python: check the project's own release channel (OCI registry, tarballs) and whether RISE/another party hosts a riscv64 build.
-- Linux distro build status (downstream signal for orange):
-  - Ubuntu: https://packages.ubuntu.com/search?keywords=<pkg>&searchon=names&suite=noble&section=all
-  - Debian: https://tracker.debian.org/pkg/<source-package>  (per-arch build status)
-  - Fedora: https://packages.fedoraproject.org/pkgs/<source>/<binary>/
-  - Arch Linux RISC-V: https://archriscv.felixc.at/?q=<package>
-- RISE involvement: https://riseproject.dev , https://riseproject.dev/blog , github.com/riseproject-dev .
-  Do NOT fetch the Confluence wiki at lf-rise.atlassian.net (auth-gated).
-AUTHORITATIVE NEGATIVE: a direct absence check against the canonical registry (PyPI JSON with no riscv64 wheel,
-code search returning no riscv64 files) IS the authoritative source -- one such check suffices for a negative and
-needs no [NEEDS VERIFICATION] tag. Reserve [NEEDS VERIFICATION] for positive claims resting on a single non-authoritative source.`
+// Classification rules live exclusively in examples/color-coding/color-coding.md.
+// Each classify/verify agent reads that file directly (via the Read tool) rather than
+// receiving an inline copy. This ensures the workflow stays in sync with color-coding.md
+// without needing to update two places.
+const COLOR_CODING_PATH = 'examples/color-coding/color-coding.md'
 
 // Structured per-node record schema -- forces uniform output from every classify/verify agent.
 const NODE_SCHEMA = {
@@ -165,27 +98,23 @@ Node context:
 - Homepage: ${node.home || '(none)'}
 - Features in scope for this vertical: ${node.features_in_scope || '(whole project)'}
 - Scoping notes: ${node.notes || '(none)'}
+- Per-project report slug (if a reports/<slug>.md exists): ${node.slug || '(none)'}
 - Target RISC-V profile: ${targetProfile}
 
 ${ghHint(node.repo)}
 
-HYBRID PROCEDURE:
-1. If a per-project report exists at reports/${node.slug || '<none>'}.md, Read it (use the Read tool) and extract the
-   color-deciding facts: Section 3 (Upstream Support Tier), Section 7 (CI/CD), Section 8 (Distribution and Release).
-   Record its "Date:" header as report_date. This is your prior, possibly up to 6 months stale. If you cannot access
-   the file, proceed with live research only and set report_date=none.
-2. Adversarially verify the color-deciding facts live against primary sources below. Record verified_date. If a live
-   check contradicts the stored report, trust the live check and set delta_vs_report to name the discrepancy.
-3. If no report exists, run a light targeted probe answering only: does upstream publish a riscv64 release? does
-   upstream CI build AND test AND pass riscv64? is it built/tested downstream? does a third party provide a release?
+STEP 1 -- Read the classification rules.
+Use the Read tool to read the file at path: ${COLOR_CODING_PATH}
+This file defines the complete color model, release-provider rule, research procedure,
+per-node record fields, and non-negotiable rules. Follow it exactly.
 
-${COLOR_RULES}
+STEP 2 -- Classify this node following the procedure in that file.
+The file tells you to: check reports/<slug>.md first (if one exists), adversarially spot-check
+the most important color-deciding fact, and fall back to live research only when needed.
 
-${VERIFY_URLS}
-
-Set as_of to the OLDEST date among the facts that actually decided the color (do not overstate freshness: a fact
-carried from the report is dated report_date; a fact you re-checked is dated verified_date). Every URL in justification
-must be a markdown link [text](url), never bare. No em-dashes. Return the structured record.`,
+STEP 3 -- Return the structured record.
+Every URL in justification must be a markdown link [text](url), never bare. No em-dashes.
+Set as_of to the OLDEST date among the facts that actually decided the color.`,
     { schema: NODE_SCHEMA, label: `classify:${node.name}`, phase: 'Classify' }),
 
   // Stage 2: adversarial verify
@@ -197,19 +126,20 @@ ${JSON.stringify(classified, null, 2)}
 
 ${ghHint(node.repo)}
 
-Your job:
-- Re-check the single color-deciding fact against the primary source (below). If the proposed color claims upstream
-  TESTS riscv64 (blue/green), open the actual CI workflow file and confirm a test step exists and runs on riscv64 --
-  do not accept a build-only job. If green, confirm the release artifact is published BY UPSTREAM (not RISE/distro).
-- Apply the strict-downgrade modifiers rigorously. Build-only CI caps at orange. Partial test failures downgrade one level.
-- If you cannot substantiate the proposed color, correct it (usually downward) and explain why in justification.
+STEP 1 -- Read the classification rules.
+Use the Read tool to read the file at path: ${COLOR_CODING_PATH}
+This file defines the complete color model, release-provider rule, and all verification sources.
 
-${COLOR_RULES}
+STEP 2 -- Re-check the single color-deciding fact against the primary source from that file.
+- If the proposed color claims upstream TESTS riscv64 (blue/green), open the actual CI workflow
+  file and confirm a test step exists and runs on riscv64 -- do not accept a build-only job.
+- If green, confirm the release artifact is published BY UPSTREAM (not RISE/distro).
+- Apply the strict-downgrade modifiers from the file rigorously.
+- If you cannot substantiate the proposed color, correct it (usually downward).
 
-${VERIFY_URLS}
-
-Return the FINAL corrected structured record (same schema). Keep name and layer unchanged. Update color, color_case,
-release_provider, justification, primary_source, as_of, confidence, and delta_vs_report to reflect your verdict.`,
+STEP 3 -- Return the FINAL corrected structured record (same schema).
+Keep name and layer unchanged. Update color, color_case, release_provider, justification,
+primary_source, as_of, confidence, and delta_vs_report to reflect your verdict.`,
     { schema: NODE_SCHEMA, label: `verify:${node.name}`, phase: 'Verify' }),
 )
 
