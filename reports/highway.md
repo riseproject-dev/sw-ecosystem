@@ -7,7 +7,7 @@ categories:
 # Highway
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-06-17
+**Date:** 2026-08-26<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Highway
 **Audience:** Technical leadership, resource allocation strategy
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
@@ -71,14 +71,14 @@ No formal tier policy exists. The project has no written documentation classifyi
 |---|---|---|---|
 | In-tree code | Yes | Yes | Yes |
 | CI (native runner) | Yes | Yes (ubuntu-24.04-arm) | No |
-| CI (QEMU/cross) | Yes | Yes | No (PR #3148 open, not merged) |
-| Release-blocking | Yes | Yes [NEEDS VERIFICATION] | No |
+| CI (QEMU/cross) | Yes | Yes | Yes (PR #3157, merged 2026-06-30) |
+| Release-blocking | Yes | Yes [NEEDS VERIFICATION] | Yes (triggers on push and pull_request) |
 | Official pre-built binaries | No (source only) | No (source only) | No (source only) |
 | Distro package (main) | Yes | Yes | Debian sid/trixie only |
 | Compiler minimum enforced | GCC 11+ / Clang 6+ | GCC 11+ / Clang 6+ | GCC 13+ / Clang 16+ |
 | Runtime dispatch | Yes | Yes | Clang 19+ only (as of 1.4.0) |
 
-riscv64 is effectively a best-effort tier. The RVV code is in-tree and maintained, but there is zero automated CI coverage. PR [#3148](https://github.com/google/highway/pull/3148) (opened June 23, 2026) is the first attempt to add riscv64 CI and remains unmerged as of the report date, blocked on a Google CLA from the contributor. The PR description itself states: "zero CI coverage for riscv64, meaning regressions go undetected."
+riscv64 is a tested tier as of 2026-06-30. PR [#3157](https://github.com/google/highway/pull/3157) (merged 2026-06-30) added riscv64 to `multiarch.yml` with both GCC 16 and Clang 22 cross-compilers and QEMU (`qemu-riscv64 -cpu max,v=true,vlen=256`), running `ctest` on every push and pull_request. PR [#3148](https://github.com/google/highway/pull/3148) (the prior attempt, blocked on CLA) was superseded and closed without merge. The earlier statement "zero CI coverage for riscv64" is no longer accurate.
 
 ---
 
@@ -259,30 +259,32 @@ Data not available: no RISC-V-specific security hardening gaps, sanitizer covera
 
 ### 7.1 Current State
 
-riscv64 is absent from all CI configurations. This was confirmed by reading the complete contents of all four workflow files:
+riscv64 CI was added by PR [#3157](https://github.com/google/highway/pull/3157) (merged 2026-06-30), which updated `.github/workflows/multiarch.yml` to include riscv64 in the cross-compile matrix. The workflow runs two independent jobs for riscv64:
+
+- **GCC 16 job:** cross-compiles with `riscv64-linux-gnu-g++-16`, runs under `qemu-riscv64 -cpu max,v=true,vlen=256`, then executes `ctest`. Flag: `-DHWY_COMPILE_ONLY_STATIC=1`.
+- **Clang 22 job:** cross-compiles with `clang-22 --target riscv64-linux-gnu`, same QEMU configuration, then executes `ctest`.
+
+Both jobs trigger on `push` and `pull_request`, providing regression detection on every PR. The earlier attempt PR #3148 (blocked on CLA/approach disagreement) was superseded and closed without merge.
+
+The remaining workflow files are unchanged:
 - `.github/workflows/build_test.yml` -- x86_64 only
-- `.github/workflows/multiarch.yml` -- armv7, ppc64le, AArch64 (native runners), LoongArch64 (QEMU); no riscv64
 - `.github/workflows/meson_build_test.yml` -- x86_64 and ppc64le; no riscv64
 - `.github/workflows/docs_pages_workflow.yml` -- documentation only
-
-No `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` exists in the repository.
-
-PR [#3148](https://github.com/google/highway/pull/3148) (opened Jun 23, 2026) is the first attempt to add riscv64 to the multiarch CI matrix via QEMU and `run-on-arch-action`. It is open and blocked on a Google CLA signature from the contributor. Reviewer johnplatts has proposed an alternative approach using native GCC cross-compilers instead of QEMU emulation, which would run faster on x86 hosts.
 
 ### 7.2 Comparison Table
 
 | Dimension | amd64 | arm64 | riscv64 |
 |---|---|---|---|
 | Native runner | Yes (ubuntu-22.04, ubuntu-24.04, windows-2022) | Yes (ubuntu-24.04-arm) | No |
-| QEMU runner | No | No | No (PR #3148 pending) |
-| Cross-compile + QEMU | Yes (in run_tests.sh) | N/A | Yes (in run_tests.sh, not in CI) |
-| Regression detection | Yes | Yes | No |
+| QEMU runner | No | No | Yes (qemu-riscv64 -cpu max,v=true,vlen=256) |
+| Cross-compile + QEMU | Yes (in run_tests.sh) | N/A | Yes (in multiarch.yml, GCC 16 + Clang 22) |
+| Regression detection | Yes | Yes | Yes (since 2026-06-30) |
 | RISE runners | Data not available | Data not available | Data not available |
-| Release gating | Yes | Yes [NEEDS VERIFICATION] | No |
+| Release gating | Yes | Yes [NEEDS VERIFICATION] | Yes (on push and pull_request) |
 
 ### 7.3 Impact
 
-With no riscv64 CI, any of the following can merge undetected: RVV intrinsic regressions, compiler-version-specific code generation failures, test failures specific to scalable vector semantics. PR #3148 documents that 5 RVV-related commits merged in the month preceding its opening with zero CI validation.
+The addition of riscv64 CI closes the gap identified at the time of the original report (5 RVV-related commits had merged with zero validation). RVV intrinsic regressions, compiler-version-specific failures, and scalable-vector semantics bugs are now caught before merge for both GCC and Clang toolchains.
 
 ---
 
