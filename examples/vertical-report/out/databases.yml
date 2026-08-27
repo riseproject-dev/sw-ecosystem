@@ -1,0 +1,722 @@
+title: Databases (OLTP + OLAP + KV/cache) -- self-managed open-source database stack
+target_profile: RVA23U64
+hardware_label: 'Hardware: RISC-V CPU (RVA23U64)'
+columns:
+- PostgreSQL
+- MySQL
+- MariaDB
+- Redis
+- Memcached
+product_layers:
+- Client Drivers
+- Database Engine
+- Extensions, Clustering & Proxies
+shared_layers:
+- Orchestration & Observability
+- System Libraries
+legend:
+- color: green
+  label: upstream builds+tests+releases; optimized
+- color: blue
+  label: upstream builds+tests; mostly optimized
+- color: yellow
+  label: upstream builds; some optimized
+- color: orange
+  label: no upstream build, distributions only; no optimizations
+- color: red
+  label: not working
+- color: grey
+  label: unknown or N/A
+nodes:
+- name: libpq
+  color: blue
+  criticality: critical
+  column: PostgreSQL
+  layer: Client Drivers
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: 'Build Farm: 3 active riscv64 workers, last run 2026-08-26, all passing; no GitHub Actions riscv64
+    jobs; distros provide binaries'
+- name: psycopg
+  color: green
+  criticality: optional
+  column: PostgreSQL
+  layer: Client Drivers
+  release_provider: upstream
+  upstream_release: true
+  gap: py3-none-any wheel (pure Python) + riscv64 binary wheels on PyPI; CI tests via QEMU weekly
+- name: pgx
+  color: green
+  criticality: optional
+  column: PostgreSQL
+  layer: Client Drivers
+  release_provider: upstream
+  upstream_release: true
+  gap: Pure Go, no assembly, no CGo; runs on linux/riscv64 by construction via Go toolchain
+- name: pgjdbc
+  color: green
+  criticality: optional
+  column: PostgreSQL
+  layer: Client Drivers
+  release_provider: upstream
+  upstream_release: true
+  gap: Pure-Java Type 4 JDBC; single arch-independent JAR on Maven Central
+- name: PostgreSQL
+  color: blue
+  criticality: critical
+  column: PostgreSQL
+  layer: Database Engine
+  release_provider: Debian
+  upstream_release: false
+  gap: 'Build Farm: 4 active riscv64 workers on master through REL_13_STABLE; zero GitHub Actions riscv64
+    jobs; source-only upstream tarballs'
+- name: pgvector
+  color: yellow
+  criticality: optional
+  column: PostgreSQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: Zero riscv64 CI; Ubuntu 24.04 ships 0.6.0, Debian sid ships 0.8.6, unpatched upstream; scalar fallback
+    fully functional
+- name: PostGIS
+  color: yellow
+  criticality: optional
+  column: PostgreSQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: Debian
+  upstream_release: false
+  gap: Zero riscv64 CI; Woodpecker covers arm64/armhf/s390x but not riscv64; Debian sid 3.6.4+dfsg-2,
+    no riscv64 patches
+- name: TimescaleDB
+  color: yellow
+  criticality: optional
+  column: PostgreSQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: Debian
+  upstream_release: false
+  gap: Zero riscv64 CI; upstream releases Windows amd64 only; Debian sid 2.29.2+dfsg-1 ships riscv64,
+    single non-arch patch
+- name: Apache AGE
+  color: yellow
+  criticality: optional
+  column: PostgreSQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: Debian
+  upstream_release: false
+  gap: All 5 upstream workflows x86_64 only; Debian ships postgresql-18-age 1.8.0~rc0-2 for riscv64, no
+    arch-specific patches
+- name: Citus
+  color: orange
+  criticality: optional
+  column: PostgreSQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: All 7 workflows x86_64 only; no riscv64 package in any downstream distro or PGDG
+- name: Patroni
+  color: green
+  criticality: optional
+  column: PostgreSQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: upstream
+  upstream_release: true
+  gap: Pure Python; py3-none-any wheel on PyPI v4.1.5; runs on riscv64 by construction
+- name: PgBouncer
+  color: yellow
+  criticality: optional
+  column: PostgreSQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: No riscv64 CI upstream; Debian ships 1.25.2-1 (rv-osuosl-01); no riscv64-specific packaging patches
+- name: Pgpool-II
+  color: yellow
+  criticality: optional
+  column: PostgreSQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: Debian
+  upstream_release: false
+  gap: No upstream CI of any kind; Debian sid ships pgpool2 4.7.2-1 (rv-manda-04); single generic config
+    patch
+- name: pgcat
+  color: red
+  criticality: optional
+  column: PostgreSQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: 'ring 0.16 build-blocking dependency (riscv64 support added in 0.17); upgrade PR #881 open unmerged;
+    no CI, no distro packages'
+- name: MariaDB Connector/C
+  color: yellow
+  criticality: optional
+  column: MySQL
+  layer: Client Drivers
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: No riscv64 CI; Ubuntu noble ships libmariadb3 riscv64; connector builds from unmodified upstream
+    source
+- name: go-sql-driver/mysql
+  color: green
+  criticality: optional
+  column: MySQL
+  layer: Client Drivers
+  release_provider: upstream
+  upstream_release: true
+  gap: Pure Go, no assembly/CGo; runs on linux/riscv64 by construction
+- name: MySQL
+  color: orange
+  criticality: critical
+  column: MySQL
+  layer: Database Engine
+  release_provider: Debian (Ubuntu)
+  upstream_release: false
+  gap: No upstream riscv64 CI; Ubuntu 24.04 ships 8.0.36 with use-largest-lock-free-type-selector-on-riscv.patch;
+    Debian sid removed 8.0; mysql-9.7 missing riscv64 build
+- name: Vitess
+  color: orange
+  criticality: optional
+  column: MySQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: No riscv64 CI across ~49 workflows; release v24.0.2 ships only amd64/x86_64; no distro packages
+- name: ProxySQL
+  color: orange
+  criticality: optional
+  column: MySQL
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: No riscv64 CI; v3.0.11 ships only x86_64/aarch64; coredumper unconditional dep; jemalloc 5.2.0
+    rejects riscv64gc triple
+- name: MariaDB Connector/C
+  color: yellow
+  criticality: optional
+  column: MariaDB
+  layer: Client Drivers
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: Same project as MySQL layer entry; Ubuntu noble ships libmariadb3; connector builds from unmodified
+    upstream source
+- name: go-sql-driver/mysql
+  color: green
+  criticality: optional
+  column: MariaDB
+  layer: Client Drivers
+  release_provider: upstream
+  upstream_release: true
+  gap: Same project as MySQL layer entry; pure Go; runs on linux/riscv64 by construction
+- name: MariaDB
+  color: yellow
+  criticality: critical
+  column: MariaDB
+  layer: Database Engine
+  release_provider: Debian
+  upstream_release: false
+  gap: Zero riscv64 CI (.gitlab-ci.yml 564 lines, zero riscv refs); all 17 Debian patches lack riscv64-specific
+    changes; RocksDB plugin disabled on riscv64
+- name: RocksDB
+  color: orange
+  criticality: optional
+  column: MariaDB
+  layer: Extensions, Clustering & Proxies
+  release_provider: Debian
+  upstream_release: false
+  gap: 'Zero riscv64 CI; Debian carries patch removing build-blocking #error in toku_time.h; upstream
+    PR #14530 open unmerged'
+- name: MyRocks
+  color: orange
+  criticality: optional
+  column: MariaDB
+  layer: Extensions, Clustering & Proxies
+  release_provider: Debian
+  upstream_release: false
+  gap: No upstream riscv64 CI; MDEV-29875 open/critical (jemalloc mm_malloc.h scope issue); Debian carries
+    riscv64-specific workaround patches
+- name: MariaDB ColumnStore
+  color: red
+  criticality: optional
+  column: MariaDB
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: .drone.jsonnet targets only amd64 and arm64; not packaged in Debian, Ubuntu, or Arch Linux RISC-V;
+    no known riscv64 build attempt
+- name: Galera Cluster
+  color: yellow
+  criticality: optional
+  column: MariaDB
+  layer: Extensions, Clustering & Proxies
+  release_provider: Debian
+  upstream_release: false
+  gap: Upstream CI x86 only; Debian sid ships galera-4 26.4.27-1 (rv-manda-02, 2026-08-10); no riscv64-specific
+    patch applied
+- name: MaxScale
+  color: orange
+  criticality: optional
+  column: MariaDB
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: No CI of any kind (.github/ has only dependabot.yml); no riscv64 binary from any channel
+- name: hiredis
+  color: yellow
+  criticality: critical
+  column: Redis
+  layer: Client Drivers
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: CI covers x86/arm/aarch64 but no riscv64 job; Debian sid 1.2.0-6+b4 (rv-osuosl-02), no riscv64
+    patches
+- name: Redis
+  color: orange
+  criticality: critical
+  column: Redis
+  layer: Database Engine
+  release_provider: Debian
+  upstream_release: false
+  gap: 'Zero riscv64 references across all 9 upstream CI workflows; Debian sid ships 5:8.0.6-2; PRs #15204
+    (Zbb popcount) and #15273 (HyperLogLog RVV) unreviewed since May 2026'
+- name: Valkey
+  color: orange
+  criticality: optional
+  column: Redis
+  layer: Database Engine
+  release_provider: Debian
+  upstream_release: false
+  gap: CI covers x86_64, x86-32, macOS ARM64 only; no riscv64 runner or QEMU job; no upstream release
+    binary assets; Debian sid ships valkey-server 9.1.1-1 for riscv64
+- name: KeyDB
+  color: orange
+  criticality: optional
+  column: Redis
+  layer: Database Engine
+  release_provider: none
+  upstream_release: false
+  gap: CI covers ubuntu-latest/ubuntu-20.04/macos-latest/libc-malloc only; empty release assets; no distro
+    packages; manually buildable per community report
+- name: Dragonfly
+  color: orange
+  criticality: optional
+  column: Redis
+  layer: Database Engine
+  release_provider: none
+  upstream_release: false
+  gap: Zero riscv64 CI across 20 workflows; no riscv64 assets in releases v1.38.0-v1.40.1; FATAL_ERROR
+    in helio/cmake/internal.cmake requires manual CMake override
+- name: RediSearch
+  color: orange
+  criticality: optional
+  column: Redis
+  layer: Extensions, Clustering & Proxies
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: No riscv64 CI; Ubuntu ships v1.2.2 (7 major versions behind upstream 2.10.x); VectorSimilarity
+    has no riscv64 cmake flags
+- name: RedisJSON
+  color: orange
+  criticality: optional
+  column: Redis
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: No riscv64 CI; no release artifacts; bindgen pin resolved (upgraded to 0.66.1 in 2025-12-30) --
+    no confirmed current breakage
+- name: RedisBloom
+  color: red
+  criticality: optional
+  column: Redis
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: Makefile contains explicit $(error) for any arch other than x64/arm64v8; deprecated since Redis
+    8 GA (May 2025)
+- name: RedisTimeSeries
+  color: red
+  criticality: optional
+  column: Redis
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: Makefile contains hard $(error) on riscv64; vendored cpu_features v0.6.0 emits CMake FATAL_ERROR
+    for riscv64; effectively archived
+- name: Memcached
+  color: yellow
+  criticality: critical
+  column: Memcached
+  layer: Database Engine
+  release_provider: Debian
+  upstream_release: false
+  gap: Upstream CI single x86_64-only job; Debian sid 1.6.45-1 (rv-osuosl-03); all packaging patches generic
+- name: mcrouter
+  color: red
+  criticality: optional
+  column: Memcached
+  layer: Extensions, Clustering & Proxies
+  release_provider: none
+  upstream_release: false
+  gap: 'mcrouter/lib/Clocks.cpp hits #error Unsupported CPU at compile time; folly has two open riscv64
+    build failures (#2493, #2416)'
+- name: Kubernetes
+  color: yellow
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: Debian
+  upstream_release: false
+  gap: 'No upstream riscv64 CI (zero Prow riscv64 nodes confirmed); no upstream release binaries; Debian
+    sid kubectl 1.33.4+ds-1, no riscv64-specific patches; open PR #141291 (pause image, on hold)'
+- name: containerd
+  color: yellow
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: upstream
+  upstream_release: true
+  gap: 'Nightly CI cross-compiles riscv64; ships riscv64 tarballs in every release; integration test workflow
+    has zero riscv64 entries; PR #13124 unmerged'
+- name: runc
+  color: yellow
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: upstream
+  upstream_release: true
+  gap: Publishes signed runc.riscv64 in every release (v1.5.1 confirmed); zero riscv64 occurrences in
+    all three CI workflow files
+- name: etcd
+  color: orange
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: Debian
+  upstream_release: false
+  gap: No upstream riscv64 CI; no riscv64 assets in v3.7.1 (July 2026); Debian carries two riscv64-specific
+    patches (startup gate removal; InitialMmapSize reduction from 10 GB to 16 MB)
+- name: Helm
+  color: yellow
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: upstream
+  upstream_release: true
+  gap: goreleaser cross-compiles riscv64 and publishes at get.helm.sh for every release (v4.2.4); unit
+    tests run x86_64 only
+- name: k0s
+  color: blue
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: riscv64.yml runs unit tests + 2 smoke tests on native RISE Scaleway EM-RV1 runners, all passing;
+    release v1.36.3+k0s.2 ships no riscv64 binary
+- name: k3s
+  color: orange
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: 'No CI riscv64 build; v1.33.13+k3s2 has zero riscv64 assets; cluster cannot start due to missing
+    container images; PR #7778 closed 2026-08-10 without merging'
+- name: CloudNativePG
+  color: red
+  criticality: optional
+  column: PostgreSQL
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: 'continuous-delivery.yml hard-codes PLATFORMS: "linux/amd64,linux/arm64"; v1.30.0 releases cover
+    x86_64/arm64/ppc64le/s390x only; zero riscv64 issues or PRs'
+- name: Zalando postgres-operator
+  color: orange
+  criticality: optional
+  column: PostgreSQL
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: 'All CI workflows run ubuntu-latest; platforms: linux/amd64,linux/arm64 hard-coded; no riscv64
+    in any release or distro'
+- name: Percona Operator for MySQL
+  color: orange
+  criticality: optional
+  column: MySQL
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: CI builds only linux/arm64 and linux/amd64; no riscv64 Docker image on Docker Hub
+- name: MySQL Operator for Kubernetes
+  color: orange
+  criticality: optional
+  column: MySQL
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: build.sh contains ^(amd64
+- name: mariadb-operator
+  color: orange
+  criticality: optional
+  column: MariaDB
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: '.goreleaser.yml lists goarch: [amd64, arm64] only; latest release v26.6.0 has only linux_amd64
+    and linux_arm64 tarballs'
+- name: Redis Operator (OT-CONTAINER-KIT)
+  color: orange
+  criticality: optional
+  column: Redis
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: 'publish-image.yaml hard-codes platforms: linux/amd64,linux/arm64; ci.yaml builds only amd64/arm64'
+- name: Prometheus
+  color: yellow
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: upstream
+  upstream_release: true
+  gap: build_all job cross-compiles riscv64 and publishes tarballs (since v2.46.0) and Docker images (since
+    v3.10.0); zero riscv64 entries in any test job
+- name: node_exporter
+  color: yellow
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: upstream
+  upstream_release: true
+  gap: promu crossbuild on x86, zero test execution; ships node_exporter-1.12.1.linux-riscv64.tar.gz
+- name: postgres_exporter
+  color: yellow
+  criticality: optional
+  column: PostgreSQL
+  layer: Orchestration & Observability
+  release_provider: upstream
+  upstream_release: true
+  gap: promci/build cross-compiles; test_go and integration_tests run x86_64 only; ships postgres_exporter-0.20.1.linux-riscv64.tar.gz
+- name: mysqld_exporter
+  color: yellow
+  criticality: optional
+  column: MySQL
+  layer: Orchestration & Observability
+  release_provider: upstream
+  upstream_release: true
+  gap: test_go on ubuntu-latest only; promci/build cross-compiles; ships mysqld_exporter-0.20.0.linux-riscv64.tar.gz
+- name: redis_exporter
+  color: orange
+  criticality: optional
+  column: Redis
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: v1.90.0 ships 23 Linux arch assets; riscv64 absent from all; no CI references; pure Go but upstream
+    has never shipped riscv64 binary
+- name: memcached_exporter
+  color: yellow
+  criticality: optional
+  column: Memcached
+  layer: Orchestration & Observability
+  release_provider: upstream
+  upstream_release: true
+  gap: promci/build cross-compiles; test_go on amd64 only; ships memcached_exporter-0.17.0.linux-riscv64.tar.gz
+- name: OpenTelemetry Collector
+  color: yellow
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: upstream
+  upstream_release: true
+  gap: cross-build-collector job cross-compiles with no test step; Tier 3 platform per platform-support.md;
+    publishes riscv64 tarball/.deb/.rpm/Docker in v0.159.0
+- name: Grafana
+  color: yellow
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: Alpine Linux
+  upstream_release: false
+  gap: 'release-build.yml includes riscv64 with allow-failure: true; absent from PR gate; no upstream
+    release artifact; Alpine edge ships grafana 12.4.4-r1'
+- name: Grafana Alloy
+  color: orange
+  criticality: optional
+  column: null
+  layer: Orchestration & Observability
+  release_provider: none
+  upstream_release: false
+  gap: 'build.yml lists only amd64/arm64/ppc64le/s390x; v1.19.2 (2026-08-26) has zero riscv64 assets;
+    issue #1036 closed not_planned; PR #1526 closed unmerged'
+- name: OpenSSL
+  color: blue
+  criticality: critical
+  column: null
+  layer: System Libraries
+  release_provider: Debian
+  upstream_release: false
+  gap: cross-compiles.yml runs `make all tests` via qemu-user on every push; source-only upstream tarballs
+- name: BoringSSL
+  color: yellow
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: none
+  upstream_release: false
+  gap: 'CQ-gated LUCI builders cross-compile on every commit with run_unit_tests: false and run_ssl_tests:
+    false; no binary releases'
+- name: zlib
+  color: blue
+  criticality: critical
+  column: null
+  layer: System Libraries
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: others.yml runs both cmake --build and ctest for riscv64 (OpenBSD/riscv64 via QEMU); source-only
+    upstream releases
+- name: zlib-ng
+  color: blue
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: Alpine Linux
+  upstream_release: false
+  gap: cmake.yml and configure.yml run ctest/make test on QEMU riscv64 (GCC + Clang); RVV paths in arch/riscv/
+    for all primary hot paths
+- name: LZ4
+  color: yellow
+  criticality: critical
+  column: null
+  layer: System Libraries
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: CI runs live compress/decompress under qemu-riscv64-static; LZ4_FAST_DEC_LOOP disabled; 5 RVV PRs
+    open unmerged; optimization level minimal
+- name: zstd
+  color: yellow
+  criticality: critical
+  column: null
+  layer: System Libraries
+  release_provider: Debian
+  upstream_release: false
+  gap: 'CI runs full test suite at rv64gc and with RVV vlen=128/256/512; Huffman 4-way loop disabled (PR
+    #4622 open); sequence decode scalar fallback (PR #4557 open); Zicclsm absent (PR #4596 open)'
+- name: snappy
+  color: yellow
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: 'CI runs `make test` via QEMU on every push; V128 byte-shuffle decompression fast path absent;
+    CRC32 hash has no riscv64 equivalent; PR #233 closed without merge'
+- name: jemalloc
+  color: orange
+  criticality: critical
+  column: null
+  layer: System Libraries
+  release_provider: Debian
+  upstream_release: false
+  gap: Zero riscv64 CI; Debian ships 5.3.1-2 from unpatched source; HAVE_CPU_SPINWAIT=0 on riscv64; zero
+    RVV/RISC-V assembly; absent-optimization cap overrides yellow distro floor
+- name: tcmalloc
+  color: orange
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: none
+  upstream_release: false
+  gap: No riscv64 CI; TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM=0 on riscv64; per-CPU RSEQ slab entirely
+    absent; only slower per-thread fallback available
+- name: PCRE2
+  color: blue
+  criticality: critical
+  column: null
+  layer: System Libraries
+  release_provider: Debian
+  upstream_release: false
+  gap: dev.yml ptarmigan job runs ctest in QEMU riscv64 container on every push to main (updated 2026-08-09);
+    source-only upstream releases
+- name: ICU
+  color: yellow
+  criticality: critical
+  column: null
+  layer: System Libraries
+  release_provider: Debian
+  upstream_release: false
+  gap: Zero riscv64 CI across all six major workflows; Debian sid libicu78 78.3-2 ships riscv64 with no
+    riscv64-specific patches; pure scalar C++
+- name: libevent
+  color: yellow
+  criticality: critical
+  column: null
+  layer: System Libraries
+  release_provider: Debian
+  upstream_release: false
+  gap: Zero riscv64 CI across all four workflow files; Debian sid ships 2.1.13-stable-1 from unmodified
+    upstream source; both patches are arch-agnostic
+- name: liburing
+  color: yellow
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: none
+  upstream_release: false
+  gap: ci.yml cross-compiles and installs for riscv64 but never executes binaries or calls `make test`;
+    all releases are source-only; Debian/Ubuntu/Arch RISC-V ship from unpatched upstream
+- name: libnuma
+  color: blue
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: Debian
+  upstream_release: false
+  gap: All NUMA syscalls resolve via generic kernel headers; no riscv64-specific patches; Debian sid ships
+    libnuma1 2.0.19-1+b2 on rv-osuosl-03; Ubuntu 24.04 also ships libnuma-dev for riscv64
+- name: Protocol Buffers
+  color: yellow
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: Zero riscv64 CI; no riscv64 protoc in release v36.0; Ubuntu 24.04 ships libprotobuf-dev 3.21.12
+    with no riscv64-specific Debian patches
+- name: Lua
+  color: yellow
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: Ubuntu
+  upstream_release: false
+  gap: Pure ISO C99, no arch-specific code; Ubuntu 24.04 ships lua5.4 5.4.6-3build2 riscv64; Debian packaging
+    has only two non-arch-specific patches
+- name: xxHash
+  color: blue
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: upstream
+  upstream_release: true
+  gap: ci.yml runs make check plus RVV consistency checks at vlen 128/256/512; RVV backend covers all
+    three XXH3 primary hot paths with adaptive-vlen intrinsics; no riscv64 binary upstream
+- name: glibc
+  color: green
+  criticality: critical
+  column: null
+  layer: System Libraries
+  release_provider: Debian
+  upstream_release: false
+  gap: Both Sourceware Buildbot riscv64 builders offline; Debian sid libc6 2.43-4 ships riscv64 with no
+    riscv64-specific patches
+- name: libmvec
+  color: orange
+  criticality: optional
+  column: null
+  layer: System Libraries
+  release_provider: none
+  upstream_release: false
+  gap: 'libmvec does not exist for riscv64 in upstream glibc; no Linux distro ships riscv64 libmvec; psABI
+    PR #455 merged 2026-06-18 removes one blocker but no implementation patch submitted'

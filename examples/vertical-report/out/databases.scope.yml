@@ -1,7 +1,7 @@
 vertical: Databases (OLTP + OLAP + KV/cache) -- self-managed open-source database stack
 slug: databases
 author: Ludovic Henry
-run_date: 2026-08-13
+run_date: 2026-08-27
 audience: exec-product
 target_profile: RVA23U64
 use: >
@@ -9,24 +9,21 @@ use: >
   database stack (PostgreSQL, MySQL, MariaDB, Redis, Memcached), including feature-enabling
   plugins, clustering/proxies, the Kubernetes + observability deployment substrate, and the
   low-level shared libraries (compression, crypto, allocators, system runtime, vectorization).
-  Structured so the layered stack outline pastes directly into a PowerPoint software-stack diagram.
+  Structured with five per-product sub-verticals (Client Drivers, Database Engine, Extensions /
+  Clustering & Proxies) plus two shared layers (Orchestration & Observability, System Libraries),
+  so the layered stack outline pastes directly into a PowerPoint software-stack diagram.
 
 assumptions:
-  - "Vertical is 'Databases' as a category, represented by five named engines plus their common
-     production ecosystem. Each engine is treated as critical (the subject of the report); most
-     feature plugins, proxies, operators, exporters, and interchangeable alternatives are optional."
-  - "CPU-only per operator directive: no GPU / CUDA / ROCm paths. GPU-accelerated analytics and
-     vector search are out of scope, not classified."
-  - "'Cloud' is represented by the self-managed OSS substrate (container images, Kubernetes,
-     operators). Proprietary managed services (RDS/Aurora/ElastiCache, Cloud SQL/AlloyDB/MemoryStore,
-     Azure Database) are out of scope, not classified (operator chose OSS-substrate-only)."
-  - "Linux/riscv64 server deployment assumed; Windows and macOS server targets are out of scope."
-  - "Comprehensive plugin breadth per operator. Where several near-identical choices exist, one or
-     two representatives are kept as nodes and secondary choices are folded into notes."
-  - "Target profile RVA23U64: RVV 1.0, vector crypto (Zvkned), Zba/Zbb/Zbc, and FP16 are treated as
-     mandatory baseline, so missing SIMD/crypto acceleration is a gap against baseline, not a nicety."
+  - "Five per-product sub-verticals: PostgreSQL, MySQL, MariaDB, Redis, Memcached. Each has
+     three per-product layers (Client Drivers, Database Engine, Extensions / Clustering & Proxies)."
+  - "Two shared layers span all five products: Orchestration & Observability (Kubernetes control
+     plane, database operators, metrics pipeline) and System Libraries (compression, crypto,
+     allocators, text, I/O, system runtime)."
+  - "CPU-only per operator directive: no GPU / CUDA / ROCm paths."
+  - "Target profile RVA23U64: RVV 1.0, vector crypto (Zvkned), Zba/Zbb/Zbc, and FP16 are
+     treated as mandatory baseline, so missing SIMD/crypto acceleration is a gap against baseline."
 
-exclusions: []   # No in-scope proprietary/vendor-only path under the OSS-substrate-only decision.
+exclusions: []
 
 out_of_scope:
   - name: "Managed cloud database services (AWS RDS / Aurora / ElastiCache, GCP Cloud SQL / AlloyDB / MemoryStore, Azure Database)"
@@ -37,20 +34,17 @@ out_of_scope:
     reason: "Linux/riscv64 server focus."
 
 layers:
-  - title: "Client drivers and connectors"
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────────
+
+  - title: "PostgreSQL -- Client Drivers"
     nodes:
       - name: libpq
         repo: https://git.postgresql.org/git/postgresql
         home: https://www.postgresql.org/docs/current/libpq.html
         criticality: critical
         features_in_scope: "C client library for PostgreSQL; in-tree (src/interfaces/libpq)"
-        notes: "C, compiled arch-specific. Bundled in PostgreSQL; no standalone report -- covered by reports/postgresql.md. Ships in every distro's libpq5 riscv64 package."
-      - name: hiredis
-        repo: https://github.com/redis/hiredis
-        home: https://redis.io/docs/latest/develop/clients/hiredis/
-        criticality: critical
-        features_in_scope: "C client / RESP protocol parser for Redis; bundled in redis"
-        notes: "C, compiled. No standalone report -- discussed in reports/redis.md Section 9. Generic C, no arch-specific asm."
+        notes: "C, compiled arch-specific. Bundled in PostgreSQL; no standalone report -- covered by reports/postgresql.md. Ships in every distro libpq5 riscv64 package."
       - name: psycopg
         repo: https://github.com/psycopg/psycopg
         home: https://www.psycopg.org/
@@ -68,13 +62,85 @@ layers:
         home: https://jdbc.postgresql.org/
         criticality: optional
         features_in_scope: "PostgreSQL JDBC driver for the JVM"
-        notes: "Pure-Java noarch jar; architecture-independent, inherits riscv64 from the JVM (rule-0 candidate)."
+        notes: "Pure-Java noarch jar; architecture-independent, inherits riscv64 from the JVM (Step 0 candidate)."
+
+  - title: "PostgreSQL -- Database Engine"
+    nodes:
+      - name: PostgreSQL
+        repo: https://git.postgresql.org/git/postgresql
+        home: https://www.postgresql.org/
+        slug: postgresql
+        criticality: critical
+        features_in_scope: "Core server, MVCC storage, WAL, replication, TLS, optional JIT (LLVM)"
+        notes: "C. Prior in reports/postgresql.md. Re-check: Zbb popcount / Zbc CRC32C patch series (open), JIT on riscv64, distro release status."
+
+  - title: "PostgreSQL -- Extensions, Clustering & Proxies"
+    nodes:
+      - name: pgvector
+        repo: https://github.com/pgvector/pgvector
+        home: https://github.com/pgvector/pgvector
+        criticality: optional
+        features_in_scope: "Vector similarity search extension for PostgreSQL (HNSW/IVFFlat); distance kernels"
+        notes: "C, with SIMD distance kernels (x86 AVX / ARM NEON). RVV path is the vectorization question. Check for riscv64 build + any SIMD dispatch; likely scalar fallback."
+      - name: PostGIS
+        repo: https://github.com/postgis/postgis
+        home: https://postgis.net/
+        criticality: optional
+        features_in_scope: "Geospatial extension for PostgreSQL (depends on GEOS, PROJ, GDAL)"
+        notes: "C/C++. No report. Heavy transitive deps (GEOS/PROJ/GDAL) all in Debian riscv64. Check engine + deps build."
+      - name: TimescaleDB
+        repo: https://github.com/timescale/timescaledb
+        home: https://www.timescale.com/
+        criticality: optional
+        features_in_scope: "Time-series extension for PostgreSQL (hypertables, continuous aggregates, compression)"
+        notes: "C. No report. Uses SIMD-friendly columnar compression. Check riscv64 build + license (TSL vs Apache-2 core)."
+      - name: Apache AGE
+        repo: https://github.com/apache/age
+        home: https://age.apache.org/
+        criticality: optional
+        features_in_scope: "Graph database extension for PostgreSQL (openCypher)"
+        notes: "C. No report. Version-pinned to specific PostgreSQL majors. Check riscv64 build."
+      - name: Citus
+        repo: https://github.com/citusdata/citus
+        home: https://www.citusdata.com/
+        criticality: optional
+        features_in_scope: "Distributed PostgreSQL (sharding) + columnar storage (OLAP) extension"
+        notes: "C. No report. Check riscv64 build + distro/PGDG packaging."
+      - name: Patroni
+        repo: https://github.com/patroni/patroni
+        home: https://patroni.readthedocs.io/
+        criticality: optional
+        features_in_scope: "PostgreSQL HA / automatic failover template (etcd/Consul/k8s DCS)"
+        notes: "Pure Python; architecture-independent (Step 0 candidate), inherits riscv64 from CPython."
+      - name: PgBouncer
+        repo: https://github.com/pgbouncer/pgbouncer
+        home: https://www.pgbouncer.org/
+        criticality: optional
+        features_in_scope: "Lightweight PostgreSQL connection pooler"
+        notes: "C (libevent-based). No report. Near-ubiquitous in production PG. Check riscv64 build + distro packaging."
+      - name: Pgpool-II
+        repo: https://github.com/pgpool/pgpool2
+        home: https://www.pgpool.net/
+        criticality: optional
+        features_in_scope: "PostgreSQL connection pool, load balancing, query routing"
+        notes: "C. No report. Check riscv64 build + distro packaging."
+      - name: pgcat
+        repo: https://github.com/postgresml/pgcat
+        home: https://github.com/postgresml/pgcat
+        criticality: optional
+        features_in_scope: "Rust PostgreSQL pooler/proxy with sharding and load balancing"
+        notes: "Rust. No report. Needs Rust riscv64 target (tier 2). Check build + release (OCI images)."
+
+  # ── MySQL ─────────────────────────────────────────────────────────────────────
+
+  - title: "MySQL -- Client Drivers"
+    nodes:
       - name: MariaDB Connector/C
         repo: https://github.com/mariadb-corporation/mariadb-connector-c
         home: https://mariadb.com/kb/en/mariadb-connector-c/
         criticality: optional
-        features_in_scope: "C client connector for MariaDB and MySQL"
-        notes: "C, compiled. Also serves as the client for MySQL. Packaged in Debian/Ubuntu riscv64."
+        features_in_scope: "C client connector for MySQL (also used for MariaDB)"
+        notes: "C, compiled. Packaged in Debian/Ubuntu riscv64."
       - name: go-sql-driver/mysql
         repo: https://github.com/go-sql-driver/mysql
         home: https://github.com/go-sql-driver/mysql
@@ -82,15 +148,8 @@ layers:
         features_in_scope: "Pure-Go MySQL/MariaDB driver for database/sql"
         notes: "Pure Go; compiles to linux/riscv64."
 
-  - title: "Database engines"
+  - title: "MySQL -- Database Engine"
     nodes:
-      - name: PostgreSQL
-        repo: https://git.postgresql.org/git/postgresql
-        home: https://www.postgresql.org/
-        slug: postgresql
-        criticality: critical
-        features_in_scope: "Core server, InnoDB-equivalent MVCC storage, WAL, replication, TLS, optional JIT (LLVM)"
-        notes: "C. Strong prior in reports/postgresql.md. Re-check: Zbb popcount / Zbc CRC32C patch series (open), Clang rv64gcv miscompilation, distro release status."
       - name: MySQL
         repo: https://github.com/mysql/mysql-server
         home: https://www.mysql.com/
@@ -98,6 +157,41 @@ layers:
         criticality: critical
         features_in_scope: "Core server, InnoDB, group replication, TLS"
         notes: "C++. Prior in reports/mysql.md. Re-check: Debian/Ubuntu riscv64 package status, TempTable patch upstreaming, Abseil CRC32C gap. No Oracle official riscv64 release."
+
+  - title: "MySQL -- Extensions, Clustering & Proxies"
+    nodes:
+      - name: Vitess
+        repo: https://github.com/vitessio/vitess
+        home: https://vitess.io/
+        criticality: optional
+        features_in_scope: "Horizontal sharding / distributed MySQL (vtgate, vttablet)"
+        notes: "Go (CNCF graduated). No report. Pure Go compiles to riscv64; check upstream release matrix for linux/riscv64 images."
+      - name: ProxySQL
+        repo: https://github.com/sysown/proxysql
+        home: https://proxysql.com/
+        criticality: optional
+        features_in_scope: "SQL-aware proxy / load balancer for MySQL/MariaDB"
+        notes: "C++ (bundles many deps). No report. Complex build. Check riscv64 build feasibility + release channel."
+
+  # ── MariaDB ───────────────────────────────────────────────────────────────────
+
+  - title: "MariaDB -- Client Drivers"
+    nodes:
+      - name: MariaDB Connector/C
+        repo: https://github.com/mariadb-corporation/mariadb-connector-c
+        home: https://mariadb.com/kb/en/mariadb-connector-c/
+        criticality: optional
+        features_in_scope: "C client connector for MariaDB (also used for MySQL)"
+        notes: "C, compiled. Packaged in Debian/Ubuntu riscv64."
+      - name: go-sql-driver/mysql
+        repo: https://github.com/go-sql-driver/mysql
+        home: https://github.com/go-sql-driver/mysql
+        criticality: optional
+        features_in_scope: "Pure-Go MariaDB/MySQL driver for database/sql"
+        notes: "Pure Go; compiles to linux/riscv64."
+
+  - title: "MariaDB -- Database Engine"
+    nodes:
       - name: MariaDB
         repo: https://github.com/MariaDB/server
         home: https://mariadb.org/
@@ -105,26 +199,66 @@ layers:
         criticality: critical
         features_in_scope: "Core server, InnoDB, Galera hooks, PCRE2 REGEXP, TLS"
         notes: "C/C++. Prior in reports/mariadb.md. Re-check: distro riscv64 status, MyRocks/RocksDB submodule (MDEV-29875), libatomic linkage."
+
+  - title: "MariaDB -- Extensions, Clustering & Proxies"
+    nodes:
+      - name: RocksDB
+        repo: https://github.com/facebook/rocksdb
+        home: https://rocksdb.org/
+        criticality: optional
+        features_in_scope: "LSM-tree KV store; underlies MyRocks; uses LZ4/zstd/snappy/zlib compression"
+        notes: "C++. No report but named in reports/mariadb.md (MDEV-29875). Check riscv64 build/CI/release; compression lib deps."
+      - name: MyRocks
+        repo: https://github.com/facebook/mysql-5.6
+        home: https://myrocks.io/
+        criticality: optional
+        features_in_scope: "RocksDB-backed LSM storage engine for MySQL/MariaDB"
+        notes: "C++, bundled as a storage engine in MariaDB (submodule). Not cleanly buildable on riscv64 upstream (MDEV-29875 open critical); Debian ships mariadb-plugin-rocksdb riscv64."
+      - name: MariaDB ColumnStore
+        repo: https://github.com/mariadb-corporation/mariadb-columnstore-engine
+        home: https://mariadb.com/kb/en/mariadb-columnstore/
+        criticality: optional
+        features_in_scope: "Distributed columnar analytics (OLAP) storage engine for MariaDB"
+        notes: "C++. No report. Large codebase (UM/PM processes). Check riscv64 build feasibility; likely x86/arm-only today."
+      - name: Galera Cluster
+        repo: https://github.com/codership/galera
+        home: https://galeracluster.com/
+        criticality: optional
+        features_in_scope: "Synchronous multi-master replication (wsrep) for MariaDB/MySQL/Percona XtraDB"
+        notes: "C++. No report. Check riscv64 build + distro packaging (Debian galera-4 riscv64)."
+      - name: MaxScale
+        repo: https://github.com/mariadb-corporation/MaxScale
+        home: https://mariadb.com/kb/en/maxscale/
+        criticality: optional
+        features_in_scope: "MariaDB's SQL-aware proxy / query router"
+        notes: "C++ (BSL-licensed source-available). No report. Note license: Business Source License, not fully open. Check riscv64 build + release."
+
+  # ── Redis ─────────────────────────────────────────────────────────────────────
+
+  - title: "Redis -- Client Drivers"
+    nodes:
+      - name: hiredis
+        repo: https://github.com/redis/hiredis
+        home: https://redis.io/docs/latest/develop/clients/hiredis/
+        criticality: critical
+        features_in_scope: "C client / RESP protocol parser for Redis; bundled in redis"
+        notes: "C, compiled. No standalone report -- discussed in reports/redis.md Section 9. Generic C, no arch-specific asm."
+
+  - title: "Redis -- Database Engine"
+    nodes:
       - name: Redis
         repo: https://github.com/redis/redis
         home: https://redis.io/
         slug: redis
         criticality: critical
         features_in_scope: "Core in-memory KV store, RESP, persistence, bundled jemalloc/Lua, optional TLS/modules"
-        notes: "C. Prior in reports/redis.md. Re-check: BITCOUNT Zbb + HLL RVV PRs (open), BUILD_WITH_MODULES riscv64 breakage, no upstream riscv64 CI."
-      - name: Memcached
-        repo: https://github.com/memcached/memcached
-        home: https://memcached.org/
-        slug: memcached
-        criticality: critical
-        features_in_scope: "Core cache daemon, libevent event loop, optional TLS/SASL/seccomp, extstore"
-        notes: "C. Prior in reports/memcached.md. Re-check: Debian riscv64 package, CRC32C software fallback, no upstream riscv64 CI."
+        notes: "C. Prior in reports/redis.md. Re-check: BITCOUNT Zbb + HLL RVV PRs (open), no upstream riscv64 CI."
       - name: Valkey
         repo: https://github.com/valkey-io/valkey
         home: https://valkey.io/
         criticality: optional
         features_in_scope: "Linux Foundation fork of Redis 7.2; drop-in Redis replacement"
-        notes: "C. No per-project report yet. Increasingly the default Redis substitute in distros. Check for upstream riscv64 CI (RISE Scaleway runners are available) and distro packaging."
+        notes: "C. No per-project report yet. Increasingly the default Redis substitute in distros. Check for upstream riscv64 CI and distro packaging."
       - name: KeyDB
         repo: https://github.com/Snapchat/KeyDB
         home: https://docs.keydb.dev/
@@ -138,56 +272,8 @@ layers:
         features_in_scope: "Redis- and Memcached-API-compatible in-memory store"
         notes: "C++ (heavy use of intrusive libs, io_uring, possibly SIMD). No report. Check riscv64 build feasibility (io_uring dependency), release channel (OCI images)."
 
-  - title: "Feature extensions and pluggable storage engines"
+  - title: "Redis -- Extensions, Clustering & Proxies"
     nodes:
-      - name: pgvector
-        repo: https://github.com/pgvector/pgvector
-        home: https://github.com/pgvector/pgvector
-        criticality: optional
-        features_in_scope: "Vector similarity search extension for PostgreSQL (HNSW/IVFFlat); distance kernels"
-        notes: "C, with SIMD distance kernels (x86 AVX / ARM NEON). RVV path is the vectorization question. Check for riscv64 build + any SIMD dispatch; likely scalar fallback. No report."
-      - name: Citus
-        repo: https://github.com/citusdata/citus
-        home: https://www.citusdata.com/
-        criticality: optional
-        features_in_scope: "Distributed PostgreSQL (sharding) + columnar storage (OLAP) extension"
-        notes: "C. No report. Covers both the distributed and columnar/OLAP feature asks. Check riscv64 build + distro/PGDG packaging."
-      - name: TimescaleDB
-        repo: https://github.com/timescale/timescaledb
-        home: https://www.timescale.com/
-        criticality: optional
-        features_in_scope: "Time-series extension for PostgreSQL (hypertables, continuous aggregates, compression)"
-        notes: "C. No report. Uses SIMD-friendly columnar compression. Check riscv64 build + license (TSL vs Apache-2 core)."
-      - name: PostGIS
-        repo: https://github.com/postgis/postgis
-        home: https://postgis.net/
-        criticality: optional
-        features_in_scope: "Geospatial extension for PostgreSQL (depends on GEOS, PROJ, GDAL)"
-        notes: "C/C++. No report. Heavy transitive deps (GEOS/PROJ/GDAL) all in Debian riscv64. Check engine + deps build."
-      - name: Apache AGE
-        repo: https://github.com/apache/age
-        home: https://age.apache.org/
-        criticality: optional
-        features_in_scope: "Graph database extension for PostgreSQL (openCypher)"
-        notes: "C. No report. Version-pinned to specific PostgreSQL majors. Check riscv64 build."
-      - name: RocksDB
-        repo: https://github.com/facebook/rocksdb
-        home: https://rocksdb.org/
-        criticality: optional
-        features_in_scope: "LSM-tree KV store; underlies MyRocks; uses LZ4/zstd/snappy/zlib compression"
-        notes: "C++. No report but named in reports/mariadb.md (MDEV-29875). Check riscv64 build/CI/release; jemalloc_helper scope fix; compression lib deps."
-      - name: MyRocks
-        repo: https://github.com/facebook/mysql-5.6
-        home: https://myrocks.io/
-        criticality: optional
-        features_in_scope: "RocksDB-backed LSM storage engine for MySQL/MariaDB"
-        notes: "C++, bundled as a storage engine in MariaDB (submodule) and Percona Server. No standalone report. Discussed in reports/mariadb.md: not cleanly buildable on riscv64 upstream (MDEV-29875 open critical); Debian ships mariadb-plugin-rocksdb riscv64."
-      - name: MariaDB ColumnStore
-        repo: https://github.com/mariadb-corporation/mariadb-columnstore-engine
-        home: https://mariadb.com/kb/en/mariadb-columnstore/
-        criticality: optional
-        features_in_scope: "Distributed columnar analytics (OLAP) storage engine for MariaDB"
-        notes: "C++. No report. Large codebase (UM/PM processes). Check riscv64 build feasibility; likely x86/arm-only today."
       - name: RediSearch
         repo: https://github.com/RediSearch/RediSearch
         home: https://redis.io/docs/latest/develop/interact/search-and-query/
@@ -213,56 +299,20 @@ layers:
         features_in_scope: "Time-series data type module for Redis"
         notes: "C/C++. No report. Redis module. Check riscv64 build."
 
-  - title: "Clustering, replication, sharding and proxies"
+  # ── Memcached ─────────────────────────────────────────────────────────────────
+
+  - title: "Memcached -- Database Engine"
     nodes:
-      - name: Vitess
-        repo: https://github.com/vitessio/vitess
-        home: https://vitess.io/
-        criticality: optional
-        features_in_scope: "Horizontal sharding / distributed MySQL (vtgate, vttablet); includes the Vitess k8s operator"
-        notes: "Go (CNCF graduated). No report. Pure Go compiles to riscv64; check upstream release matrix for linux/riscv64 images. Vitess operator lives in this repo."
-      - name: Galera Cluster
-        repo: https://github.com/codership/galera
-        home: https://galeracluster.com/
-        criticality: optional
-        features_in_scope: "Synchronous multi-master replication (wsrep) for MariaDB/MySQL/Percona XtraDB"
-        notes: "C++. No report. Check riscv64 build + distro packaging (Debian galera-4 riscv64)."
-      - name: Patroni
-        repo: https://github.com/patroni/patroni
-        home: https://patroni.readthedocs.io/
-        criticality: optional
-        features_in_scope: "PostgreSQL HA / automatic failover template (etcd/Consul/k8s DCS)"
-        notes: "Pure Python; architecture-independent (rule-0 candidate), inherits riscv64 from CPython."
-      - name: PgBouncer
-        repo: https://github.com/pgbouncer/pgbouncer
-        home: https://www.pgbouncer.org/
-        criticality: optional
-        features_in_scope: "Lightweight PostgreSQL connection pooler"
-        notes: "C (libevent-based). No report. Near-ubiquitous in production PG. Check riscv64 build + distro packaging."
-      - name: Pgpool-II
-        repo: https://github.com/pgpool/pgpool2
-        home: https://www.pgpool.net/
-        criticality: optional
-        features_in_scope: "PostgreSQL connection pool, load balancing, query routing"
-        notes: "C. No report. Check riscv64 build + distro packaging."
-      - name: pgcat
-        repo: https://github.com/postgresml/pgcat
-        home: https://github.com/postgresml/pgcat
-        criticality: optional
-        features_in_scope: "Rust PostgreSQL pooler/proxy with sharding and load balancing"
-        notes: "Rust. No report. Needs Rust riscv64 target (tier 2). Check build + release (OCI images)."
-      - name: ProxySQL
-        repo: https://github.com/sysown/proxysql
-        home: https://proxysql.com/
-        criticality: optional
-        features_in_scope: "SQL-aware proxy / load balancer for MySQL/MariaDB"
-        notes: "C++ (bundles many deps). No report. Complex build. Check riscv64 build feasibility + release channel."
-      - name: MaxScale
-        repo: https://github.com/mariadb-corporation/MaxScale
-        home: https://mariadb.com/kb/en/maxscale/
-        criticality: optional
-        features_in_scope: "MariaDB's SQL-aware proxy / query router"
-        notes: "C++ (BSL-licensed source-available). No report. Note license: Business Source License, not fully open. Check riscv64 build + release."
+      - name: Memcached
+        repo: https://github.com/memcached/memcached
+        home: https://memcached.org/
+        slug: memcached
+        criticality: critical
+        features_in_scope: "Core cache daemon, libevent event loop, optional TLS/SASL/seccomp, extstore"
+        notes: "C. Prior in reports/memcached.md. Re-check: Debian riscv64 package, CRC32C software fallback, no upstream riscv64 CI."
+
+  - title: "Memcached -- Extensions, Clustering & Proxies"
+    nodes:
       - name: mcrouter
         repo: https://github.com/facebook/mcrouter
         home: https://github.com/facebook/mcrouter
@@ -270,15 +320,17 @@ layers:
         features_in_scope: "Memcached protocol proxy / request router (Meta)"
         notes: "C++ (folly dependency, heavy). No report. Check riscv64 build feasibility (folly + SIMD) -- likely x86-only today."
 
-  - title: "Orchestration, deployment and operators"
+  # ── Shared: Orchestration & Observability ────────────────────────────────────
+
+  - title: "Orchestration & Observability"
     nodes:
       - name: Kubernetes
         repo: https://github.com/kubernetes/kubernetes
         home: https://kubernetes.io/
         slug: kubernetes
         criticality: optional
-        features_in_scope: "Container orchestration control plane + kubelet (the on-prem 'cloud' substrate)"
-        notes: "Go. Prior in reports/kubernetes.md. Go binaries are arch-specific compiled artifacts (NOT rule-0). Check official linux/riscv64 release images + CI."
+        features_in_scope: "Container orchestration control plane + kubelet (the on-prem deployment substrate)"
+        notes: "Go. Prior in reports/kubernetes.md. Go binaries are arch-specific compiled artifacts. Check official linux/riscv64 release images + CI."
       - name: containerd
         repo: https://github.com/containerd/containerd
         home: https://containerd.io/
@@ -306,6 +358,13 @@ layers:
         criticality: optional
         features_in_scope: "Kubernetes package manager (deploys DB charts)"
         notes: "Go. No report. Check official linux/riscv64 release binaries + CI."
+      - name: k0s
+        repo: https://github.com/k0sproject/k0s
+        home: https://k0sproject.io/
+        slug: k0s
+        criticality: optional
+        features_in_scope: "Zero-friction Kubernetes distribution with upstream riscv64 CI"
+        notes: "Go. Prior in reports/k0s.md. Check riscv64 CI status and release artifact."
       - name: k3s
         repo: https://github.com/k3s-io/k3s
         home: https://k3s.io/
@@ -313,25 +372,18 @@ layers:
         criticality: optional
         features_in_scope: "Lightweight Kubernetes distribution (edge / small DB deployments)"
         notes: "Go. Prior in reports/k3s.md. Check riscv64 release."
-      - name: k0s
-        repo: https://github.com/k0sproject/k0s
-        home: https://k0sproject.io/
-        slug: k0s
-        criticality: optional
-        features_in_scope: "Zero-friction Kubernetes distribution"
-        notes: "Go. Prior in reports/k0s.md. Check riscv64 release."
       - name: CloudNativePG
         repo: https://github.com/cloudnative-pg/cloudnative-pg
         home: https://cloudnative-pg.io/
         criticality: optional
         features_in_scope: "CNCF PostgreSQL operator for Kubernetes (primary community operator)"
-        notes: "Go. No report. Operator binary is Go (check riscv64), but the operand is the PostgreSQL container image (arch of that image is the real gate)."
+        notes: "Go. No report. Operator binary is Go; the gate is the PostgreSQL container image arch."
       - name: Zalando postgres-operator
         repo: https://github.com/zalando/postgres-operator
         home: https://github.com/zalando/postgres-operator
         criticality: optional
-        features_in_scope: "PostgreSQL operator (Patroni-based); secondary PG operator (Crunchy PGO is a third alternative)"
-        notes: "Go. No report. Crunchy Data PGO (github.com/CrunchyData/postgres-operator) is a third widely-used PG operator, folded here."
+        features_in_scope: "PostgreSQL operator (Patroni-based); secondary PG operator"
+        notes: "Go. No report."
       - name: Percona Operator for MySQL
         repo: https://github.com/percona/percona-server-mysql-operator
         home: https://docs.percona.com/percona-operator-for-mysql/
@@ -343,22 +395,19 @@ layers:
         home: https://dev.mysql.com/doc/mysql-operator/en/
         criticality: optional
         features_in_scope: "Oracle's official MySQL InnoDB Cluster operator"
-        notes: "Python operator + MySQL container images. No report. Gate is the Oracle MySQL container image arch (no official riscv64 image expected)."
+        notes: "Python operator + MySQL container images. No report. Gate is the Oracle MySQL container image arch."
       - name: mariadb-operator
         repo: https://github.com/mariadb-operator/mariadb-operator
         home: https://mariadb-operator.io/
         criticality: optional
         features_in_scope: "Cloud-native Kubernetes operator for MariaDB"
-        notes: "Go. No report. Gate is the MariaDB container image arch (MariaDB ships riscv64 more readily than Oracle)."
+        notes: "Go. No report. Gate is the MariaDB container image arch."
       - name: Redis Operator (OT-CONTAINER-KIT)
         repo: https://github.com/OT-CONTAINER-KIT/redis-operator
         home: https://ot-container-kit.github.io/redis-operator/
         criticality: optional
-        features_in_scope: "Kubernetes operator for Redis / Redis Cluster (Spotahome operator is an alternative)"
-        notes: "Go. No report. spotahome/redis-operator folded here as the alternative. Gate is the Redis/Valkey image arch."
-
-  - title: "Observability and telemetry"
-    nodes:
+        features_in_scope: "Kubernetes operator for Redis / Redis Cluster"
+        notes: "Go. No report. Gate is the Redis/Valkey image arch."
       - name: Prometheus
         repo: https://github.com/prometheus/prometheus
         home: https://prometheus.io/
@@ -383,7 +432,7 @@ layers:
         home: https://github.com/prometheus/mysqld_exporter
         criticality: optional
         features_in_scope: "Prometheus exporter for MySQL/MariaDB metrics"
-        notes: "Go (prometheus org, not prometheus-community). No report. Check riscv64 release asset."
+        notes: "Go. No report. Check riscv64 release asset."
       - name: redis_exporter
         repo: https://github.com/oliver006/redis_exporter
         home: https://github.com/oliver006/redis_exporter
@@ -403,6 +452,12 @@ layers:
         criticality: optional
         features_in_scope: "Vendor-neutral telemetry (metrics/traces/logs) pipeline"
         notes: "Go. Prior in reports/opentelemetry.md. Check riscv64 release binaries/images."
+      - name: Grafana
+        repo: https://github.com/grafana/grafana
+        home: https://grafana.com/
+        criticality: optional
+        features_in_scope: "Observability dashboards / visualization"
+        notes: "Go backend + TypeScript frontend. No report. Backend compiles to riscv64; frontend is browser-served. Check official riscv64 release/image."
       - name: Grafana Alloy
         repo: https://github.com/grafana/alloy
         home: https://grafana.com/oss/alloy/
@@ -410,14 +465,10 @@ layers:
         criticality: optional
         features_in_scope: "OpenTelemetry-based telemetry collector/agent"
         notes: "Go. Prior in reports/grafana-alloy.md. Check riscv64 release."
-      - name: Grafana
-        repo: https://github.com/grafana/grafana
-        home: https://grafana.com/
-        criticality: optional
-        features_in_scope: "Observability dashboards / visualization"
-        notes: "Go backend + TypeScript frontend. No report. Backend compiles to riscv64; frontend is browser-served (arch-neutral). Check official riscv64 release/image."
 
-  - title: "Core shared libraries (compression, crypto, allocators, text, event, I/O)"
+  # ── Shared: System Libraries ──────────────────────────────────────────────────
+
+  - title: "System Libraries"
     nodes:
       - name: OpenSSL
         repo: https://github.com/openssl/openssl
@@ -425,14 +476,14 @@ layers:
         slug: openssl
         criticality: critical
         features_in_scope: "TLS + crypto for every engine's encrypted connections"
-        notes: "C + asm. Prior in reports/openssl.md. Key gap: AES not constant-time without Zkn/Zvkned on current silicon; RVV/vector-crypto PRs open. Central to the crypto/vectorization story."
+        notes: "C + asm. Prior in reports/openssl.md. Key gap: AES not constant-time without Zkn/Zvkned; RVV/vector-crypto PRs open."
       - name: BoringSSL
         repo: https://boringssl.googlesource.com/boringssl
         home: https://boringssl.googlesource.com/boringssl
         slug: boringssl
         criticality: optional
         features_in_scope: "Google's TLS library; used by some clients/proxies (e.g. gRPC-based tooling)"
-        notes: "C/C++ + asm. Prior in reports/boringssl.md. Not the default for these DB engines (OpenSSL is); included per operator's crypto-lib ask."
+        notes: "C/C++ + asm. Prior in reports/boringssl.md. Not the default for these DB engines (OpenSSL is)."
       - name: zlib
         repo: https://github.com/madler/zlib
         home: https://zlib.net/
@@ -453,14 +504,14 @@ layers:
         slug: lz4
         criticality: critical
         features_in_scope: "Fast compression: MySQL redo log, RocksDB, general page compression"
-        notes: "C. Prior in reports/lz4.md. LZ4_FAST_DEC_LOOP not enabled on riscv64 (lz4#1739) -- performance gap."
+        notes: "C. Prior in reports/lz4.md. LZ4_FAST_DEC_LOOP not enabled on riscv64 -- performance gap."
       - name: zstd
         repo: https://github.com/facebook/zstd
         home: https://facebook.github.io/zstd/
         slug: zstd
         criticality: critical
         features_in_scope: "High-ratio compression: PG/MySQL/MariaDB page + WAL/binlog, RocksDB"
-        notes: "C. Prior in reports/zstd.md. HUF 4-way decode loop disabled on riscv64 (zstd#4622); no RVV -- performance gap, not correctness."
+        notes: "C. Prior in reports/zstd.md. HUF 4-way decode loop disabled on riscv64; no RVV -- performance gap, not correctness."
       - name: snappy
         repo: https://github.com/google/snappy
         home: https://github.com/google/snappy
@@ -474,7 +525,7 @@ layers:
         slug: jemalloc
         criticality: critical
         features_in_scope: "Default bundled allocator for Redis; optional for MySQL/MariaDB"
-        notes: "C. Prior in reports/jemalloc.md. riscv64gc support since Nov 2023; jemalloc#2399 (cross-build) open. Bundled in Redis -> load-bearing there."
+        notes: "C. Prior in reports/jemalloc.md. riscv64gc support since Nov 2023; bundled in Redis -- load-bearing there."
       - name: tcmalloc
         repo: https://github.com/google/tcmalloc
         home: https://google.github.io/tcmalloc/
@@ -488,7 +539,7 @@ layers:
         slug: pcre2
         criticality: critical
         features_in_scope: "Regex engine for MariaDB REGEXP (JIT via SLJIT); also used by proxies"
-        notes: "C. Prior in reports/pcre2.md. SLJIT has sljitNativeRISCV_64.c; pcre2#831 (JIT march) resolved. Check current JIT status."
+        notes: "C. Prior in reports/pcre2.md. SLJIT has sljitNativeRISCV_64.c; check current JIT status."
       - name: ICU
         repo: https://github.com/unicode-org/icu
         home: https://icu.unicode.org/
@@ -523,7 +574,7 @@ layers:
         slug: protobuf
         criticality: optional
         features_in_scope: "MySQL group replication wire protocol, X Protocol, NDB Cluster"
-        notes: "C++. Prior in reports/protobuf.md. All 4 riscv64 issues closed; released. Check current."
+        notes: "C++. Prior in reports/protobuf.md. Check current riscv64 status."
       - name: Lua
         repo: https://github.com/lua/lua
         home: https://www.lua.org/
@@ -535,30 +586,21 @@ layers:
         home: https://xxhash.com/
         criticality: optional
         features_in_scope: "Non-cryptographic hashing: Redis, memcached proxy routing, RocksDB"
-        notes: "C. No standalone report. RVV backend NOT implemented (XXH_RVV placeholder only); scalar validated on riscv64. Vectorization gap."
-
-  - title: "System runtime and ISA baseline"
-    nodes:
+        notes: "C. No standalone report. Check RVV backend implementation status."
       - name: glibc
         repo: https://sourceware.org/git/glibc.git
         home: https://www.gnu.org/software/libc/
         slug: glibc
         criticality: critical
         features_in_scope: "C runtime, libm, pthreads, sub-word atomics (libatomic) -- required by every engine"
-        notes: "C + asm. Prior in reports/glibc.md. riscv64 is a first-class glibc port. Note MariaDB's explicit -latomic linkage need."
+        notes: "C + asm. Prior in reports/glibc.md. riscv64 is a first-class glibc port."
       - name: libmvec
         repo: https://sourceware.org/git/glibc.git
         home: https://www.gnu.org/software/libc/
         slug: libmvec
         criticality: optional
         features_in_scope: "Vector math functions (part of glibc); vectorization baseline"
-        notes: "C + asm. Prior in reports/libmvec.md. Check riscv64 RVV vector-math availability (relevant to the RVA23 vectorization story)."
-      - name: Linux kernel (riscv64) io_uring / crypto / hwprobe
-        repo: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-        home: https://www.kernel.org/
-        criticality: critical
-        features_in_scope: "riscv64 kernel: io_uring, hwprobe (ISA feature detection), crypto acceleration, NUMA"
-        notes: "C + asm. No single per-project report (eBPF/RAS/perf reports cover subsystems). Classify the riscv64 kernel platform's readiness for DB-relevant subsystems (io_uring supported since 5.1; hwprobe for RVV dispatch)."
+        notes: "C + asm. Prior in reports/libmvec.md. Check riscv64 RVV vector-math availability."
 
 chains:
   - name: "PostgreSQL vector search path"

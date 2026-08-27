@@ -16,8 +16,9 @@ consume the per-project reports as a prior and adversarially verify them live.
 |---|---|---|
 | `vertical-report.md` | The master prompt. Run this. Self-contained; works interactively or headless. | yes |
 | `vertical-report-workflow.js` | A `Workflow` script that runs stage 2 (classify + verify + synthesize) at scale, one agent per stack node. | yes |
+| `render-stack-svg.py` | Renders the stack view-model (`out/<slug>.yml`) to an SVG stack diagram. Can also reconstruct the view-model from an existing scope spec + report. | yes |
 | `README.md` | This file. | yes |
-| `out/` | Where you save the generated scope spec and report. Git-ignored. | no |
+| `out/` | Where you save the generated scope spec, report, view-model, and SVG. Git-ignored. | no |
 
 **Generated reports are ad-hoc and are not committed.** They are research you run for your own use
 case. Save them under `out/` (git-ignored) or anywhere outside the repo. Do not commit them.
@@ -70,18 +71,29 @@ Workflow({
 
 The workflow runs three phases -- **Classify** (one agent per node, hybrid reuse-report + live
 verify), **Verify** (adversarial re-check of each color-deciding fact), **Synthesize** (writes the
-three artifacts) -- and returns `{ vertical, slug, file, report, nodeCount, records }`. Write the
-returned `report` string to `file` (`out/<slug>.md`):
+three artifacts) -- and returns
+`{ vertical, slug, file, report, nodeCount, records, viewmodel, viewmodel_yaml }`. Write the
+returned `report` string to `file` (`out/<slug>.md`) and the `viewmodel_yaml` string to
+`out/<slug>.yml`:
 
 ```python
 import json
 data = json.load(open("<workflow-output-file>"))
 item = data["result"][0]
 open(item["file"], "w", encoding="utf-8").write(item["report"])
+open(item["file"][:-3] + ".yml", "w", encoding="utf-8").write(item["viewmodel_yaml"])
 print(item["nodeCount"], "nodes;", len(item["report"]), "chars")
 ```
 
-## The output: three artifacts
+Then render the SVG stack diagram from the view-model:
+
+```bash
+python3 render-stack-svg.py render out/<slug>.yml -o out/<slug>.svg --mark-nonupstream
+```
+
+`render-stack-svg.py` needs only Python 3 and PyYAML.
+
+## The output: four artifacts
 
 Every generated report contains, in order:
 
@@ -94,6 +106,11 @@ Every generated report contains, in order:
 3. **Narrative and next steps** -- an aggregate scorecard, the load-bearing red/orange nodes as the
    story, the third-party-release dependencies called out, and a prioritized, actionable next-steps
    list that credits work RISE (or others) already cover so it is not double-counted.
+4. **Stack view-model (`<slug>.yml`)** -- a machine-readable grid (product columns x layer rows,
+   each node's color/criticality/release-provider/gap) written alongside the report. Feed it to
+   `render-stack-svg.py` to produce the SVG stack diagram (colored boxes, native hover tooltips
+   showing each node's gap). Layout comes from the scope spec's `layers:`; colors come from the
+   Artifact 2 classification records. See `vertical-report.md`, Artifact 4, for the schema.
 
 ## The color model in one paragraph
 

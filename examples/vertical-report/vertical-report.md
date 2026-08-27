@@ -304,6 +304,70 @@ comma-broken row.
   double-counted in any investment estimate. Use the RISE checks in `examples/color-coding/color-coding.md`
   (Research procedure, step 4) to ground this.
 
+### Artifact 4: Stack view-model (`<vertical-slug>.yml`)
+
+A machine-readable view-model of the layered stack, written alongside `<vertical-slug>.md`. It
+carries exactly the data the diagram renderer needs -- the 2D grid layout plus each node's color,
+criticality, release provider, and gap text -- so the renderer never has to parse the free-text
+report. Feed it to `render-stack-svg.py` (in this directory) to produce an SVG stack diagram
+(product columns x layer rows, one colored box per node, native hover tooltip showing the gap):
+
+```
+python3 render-stack-svg.py render <vertical-slug>.yml -o <vertical-slug>.svg
+```
+
+The layout is derived from the scope spec's `layers:`, not re-invented: a layer title of the form
+`"<Product> -- <Row>"` places its nodes in the product grid (the part before `--` is a **column**,
+the part after is a per-product **row-layer**); any layer title without `--` is a **full-width
+shared layer** rendered below the product grid. Column and row-layer order follow first appearance
+in `layers:`. Column widths are not uniform: each column is sized to its busiest cell, so a product
+with many extensions is wider than a sparse one. A node in a shared layer may still be placed under
+a product column -- set `column:` on that node, or let `render-stack-svg.py build` infer it from the
+report's Artifact 1 per-product subsections (e.g. "Layer 4.a -- PostgreSQL: Orchestration &
+Observability"); shared-layer nodes with no column render in a full-width strip beneath the
+per-product cells. Each node's `color`, `criticality`, `release_provider`, and `gap` (a one-line
+"what is missing on riscv64") come straight from that node's classification record (Artifact 2).
+`upstream_release` is true only when `release_provider` is `upstream`.
+
+The `color` encodes two axes at once (see `examples/color-coding/color-coding.md`): the upstream
+build/test/release posture, and -- for optimization-purpose projects (compression, crypto,
+allocators, SIMD kernels) -- the RISC-V optimization level; the optimization axis can only cap the
+grade downward. The `legend` labels spell out both axes; the chip conveys the color, so each label
+carries no color name. They render as a 2-column x 3-row grid at the top-right of the diagram
+(green/blue/yellow in the left column, orange/red/grey in the right). Schema:
+
+```yaml
+title: "Databases (OLTP + OLAP + KV/cache) ..."   # the vertical name
+target_profile: RVA23U64
+hardware_label: "Hardware: RISC-V CPU (RVA23U64)"
+columns: [PostgreSQL, MySQL, MariaDB, Redis, Memcached]   # product grid columns, in order
+product_layers: ["Client Drivers", "Database Engine", "Extensions, Clustering & Proxies"]
+shared_layers: ["Orchestration & Observability", "System Libraries"]
+legend:                                           # all six states (fixed; reused across verticals)
+  - {color: green,  label: "upstream builds+tests+releases; optimized"}
+  - {color: blue,   label: "upstream builds+tests; mostly optimized"}
+  - {color: yellow, label: "upstream builds; some optimized"}
+  - {color: orange, label: "no upstream build, distributions only; no optimizations"}
+  - {color: red,    label: "not working"}
+  - {color: grey,   label: "unknown or N/A"}
+nodes:
+  - name: libpq
+    color: blue                                   # grey | green | blue | yellow | orange | red
+    criticality: critical                         # critical | optional
+    column: PostgreSQL                            # product column; null for a shared strip node
+    layer: "Client Drivers"                       # a product_layer or shared_layer title
+    release_provider: Debian
+    upstream_release: false                        # true only when release_provider == upstream
+    gap: "Build Farm has active riscv64 workers passing full regression suite; upstream ships source only"
+  # ... one entry per node, in scope order. A shared-layer node may carry a `column:` to sit
+  # under that product (e.g. CloudNativePG under PostgreSQL in Orchestration & Observability).
+```
+
+If you are running Stage 2 inline (small stack), emit this file yourself. If you run the workflow,
+it returns the view-model (see below) and you write it to `<vertical-slug>.yml`. For a report that
+predates this artifact, `render-stack-svg.py build <scope.yml> <report.md> -o <slug>.yml`
+reconstructs the view-model from the existing scope spec and report.
+
 ---
 
 ## Running stage 2 via the Workflow

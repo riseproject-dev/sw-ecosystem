@@ -219,6 +219,153 @@ Then a "Pipeline chains and alternate paths" subsection rendering each chain as 
 Base every factual claim on the node records above. Where a record lacks data, write "Data not available" rather than guessing.`,
   { label: `synthesize:${slug}`, phase: 'Synthesize' })
 
+// ── Build Artifact 4: the stack view-model (consumed by render-stack-svg.py) ──
+// Layout comes from spec.layers: a title "<Product> -- <Row>" places its nodes in the product
+// grid (before "--" is a column, after is a per-product row-layer); a title without "--" is a
+// full-width shared layer. Color / provider / gap come from the verified node records, joined by
+// name. One node entry per scope instance (a node listed under two columns appears twice, same
+// color) so it matches render-stack-svg.py's own `build`.
+function parseReportColumns(reportText, columns) {
+  // A shared-layer node may still sit under a product column when the synthesized
+  // report's Artifact 1 splits the shared layer into per-product subsections
+  // ("### Layer 4.a -- PostgreSQL: ...", then bullets under
+  // "### Layer 4.a -- Orchestration & Observability"). Return {node: product}.
+  // Mirrors parse_report_columns() in render-stack-svg.py so workflow output and a
+  // from-files rebuild agree.
+  const colSet = new Set(columns)
+  const mapping = {}, letterToProduct = {}
+  let current = null
+  for (const line of String(reportText || '').split('\n')) {
+    const h = line.match(/^#{2,4}\s+Layer\s+\d+(?:\.([a-z]))?\s+--\s+(.+?)\s*$/)
+    if (h) {
+      const letter = h[1], title = h[2]
+      if (letter && title.includes(':')) {
+        const product = title.split(':', 1)[0].trim()
+        letterToProduct[letter] = product
+        current = colSet.has(product) ? product : null
+      } else if (letter && letterToProduct[letter]) {
+        current = colSet.has(letterToProduct[letter]) ? letterToProduct[letter] : null
+      } else {
+        current = null
+      }
+      continue
+    }
+    const b = line.match(/^-\s+\*\*(.+?)\*\*/)
+    if (b && current && !(b[1].trim() in mapping)) mapping[b[1].trim()] = current
+  }
+  return mapping
+}
+
+function buildViewModel(spec, records, slug, profile, reportText) {
+  const columns = [], productLayers = [], sharedLayers = []
+  // Two-level index: recByPair[layer][name] disambiguates a node listed under two
+  // columns; recByName[name] is the fallback. records carry `layer` (the full scope
+  // layer title) from the classify agents.
+  const recByPair = new Map(), recByName = new Map()
+  for (const r of records) {
+    if (!recByPair.has(r.layer)) recByPair.set(r.layer, new Map())
+    recByPair.get(r.layer).set(r.name, r)
+    if (!recByName.has(r.name)) recByName.set(r.name, r)
+  }
+  const lookup = (name, title) =>
+    (recByPair.get(title) && recByPair.get(title).get(name)) || recByName.get(name) || {}
+
+  // First pass to learn the columns, then resolve per-product placement of shared nodes.
+  for (const layer of spec.layers || []) {
+    const sep = (layer.title || '').indexOf(' -- ')
+    if (sep !== -1) {
+      const column = layer.title.slice(0, sep)
+      const row = layer.title.slice(sep + 4)
+      if (!columns.includes(column)) columns.push(column)
+      if (!productLayers.includes(row)) productLayers.push(row)
+    } else if (!sharedLayers.includes(layer.title || '')) {
+      sharedLayers.push(layer.title || '')
+    }
+  }
+  const reportColumns = parseReportColumns(reportText, columns)
+
+  const nodes = []
+  for (const layer of spec.layers || []) {
+    const title = layer.title || ''
+    const sep = title.indexOf(' -- ')
+    let productColumn = null, layerTitle = title
+    if (sep !== -1) {
+      productColumn = title.slice(0, sep)
+      layerTitle = title.slice(sep + 4)
+    }
+    for (const n of layer.nodes || []) {
+      const rec = lookup(n.name, title)
+      const provider = rec.release_provider || 'none'
+      // Product-layer node: column from title. Shared-layer node: explicit
+      // `column:` on the scope node, else the report's per-product placement.
+      const column = productColumn || n.column || reportColumns[n.name] || null
+      nodes.push({
+        name: n.name,
+        color: rec.color || 'grey',
+        criticality: n.criticality || 'critical',
+        column,
+        layer: layerTitle,
+        release_provider: provider,
+        upstream_release: String(provider).trim().toLowerCase() === 'upstream',
+        gap: rec.justification || '',
+      })
+    }
+  }
+
+  return {
+    title: spec.vertical || slug,
+    target_profile: profile,
+    hardware_label: `Hardware: RISC-V CPU (${profile})`,
+    columns, product_layers: productLayers, shared_layers: sharedLayers,
+    // Each label spells out both axes (upstream build/test/release posture and, for
+    // optimization-purpose projects, the RISC-V optimization level); the chip conveys the
+    // color, so the label carries no color name. Rendered as a 2-column x 3-row grid at top-right.
+    legend: [
+      { color: 'green', label: 'upstream builds+tests+releases; optimized' },
+      { color: 'blue', label: 'upstream builds+tests; mostly optimized' },
+      { color: 'yellow', label: 'upstream builds; some optimized' },
+      { color: 'orange', label: 'no upstream build, distributions only; no optimizations' },
+      { color: 'red', label: 'not working' },
+      { color: 'grey', label: 'unknown or N/A' },
+    ],
+    nodes,
+  }
+}
+
+// Minimal YAML emitter for the view-model shape (top-level scalars, arrays of scalars, and arrays
+// of flat objects). Every string is double-quoted and escaped, so the output is always valid YAML
+// regardless of colons/brackets/quotes in gap text. No external YAML dependency in the sandbox.
+function ymlDump(vm) {
+  const scalar = (v) => {
+    if (v === null || v === undefined) return 'null'
+    if (typeof v === 'boolean') return v ? 'true' : 'false'
+    if (typeof v === 'number') return String(v)
+    return '"' + String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+      .replace(/\n/g, '\\n').replace(/\t/g, '\\t') + '"'
+  }
+  const lines = []
+  for (const key of Object.keys(vm)) {
+    const val = vm[key]
+    if (Array.isArray(val)) {
+      if (val.length === 0) { lines.push(key + ': []'); continue }
+      lines.push(key + ':')
+      for (const item of val) {
+        if (item && typeof item === 'object') {
+          Object.keys(item).forEach((k, i) =>
+            lines.push((i === 0 ? '  - ' : '    ') + k + ': ' + scalar(item[k])))
+        } else {
+          lines.push('  - ' + scalar(item))
+        }
+      }
+    } else {
+      lines.push(key + ': ' + scalar(val))
+    }
+  }
+  return lines.join('\n') + '\n'
+}
+
+const viewmodel = buildViewModel(spec, allRecords, slug, targetProfile, report)
+
 return [{
   vertical: spec.vertical || slug,
   slug,
@@ -226,4 +373,6 @@ return [{
   report,
   nodeCount: allRecords.length,
   records: allRecords,
+  viewmodel,                     // Artifact 4 object: write to out/<slug>.yml (yaml.safe_dump)
+  viewmodel_yaml: ymlDump(viewmodel),   // ready-to-write YAML string (no PyYAML needed)
 }]
