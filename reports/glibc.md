@@ -1,13 +1,11 @@
 ---
 title: glibc
-categories:
-  - libraries
 ---
 
 # glibc
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-27<br/>
 **Scope:** RISC-V (riscv64/linux) support status for glibc<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -16,388 +14,360 @@ categories:
 
 ## 1. Project Overview
 
-glibc is the GNU C Library, the primary system C library for Linux. It implements the POSIX and ISO C standard library interfaces, the Linux system call wrapper layer, the ELF dynamic linker (`ld.so`), POSIX threads (NPTL), and the `libm` math library. Every user-space process on a glibc-based Linux system links against it. Its correctness and performance are foundational to every higher-level software stack.
+glibc is the GNU C Library, the standard system C library for Linux. It implements the POSIX/SUS userspace ABI between the Linux kernel and all userspace software: dynamic linking, syscall wrappers, threading (NPTL), locale, math (libm), and the C standard library. Every binary that runs on a GNU/Linux system depends on it, directly or transitively. There is no practical alternative for production riscv64 Linux systems.
 
-- **Upstream URL:** [https://sourceware.org/git/glibc.git](https://sourceware.org/git/glibc.git)
-- **Homepage:** [https://www.gnu.org/software/libc/](https://www.gnu.org/software/libc/)
-- **Mirror (archived Feb 2026):** [https://github.com/bminor/glibc](https://github.com/bminor/glibc)
-- **License:** GNU Lesser General Public License v2.1 or later
-- **Governance:** GNU Project / FSF, maintained by 8 designated GNU package maintainers with commit-access authority over ~70 developers
-- **Bug tracker:** Sourceware Bugzilla at sourceware.org (blocked to programmatic access via Anubis bot protection at time of research)
-- **Latest release:** glibc 2.43 (Data not available: exact release date; ftp.gnu.org/gnu/libc/ lists 2.43 as the latest tarball). Prior: glibc 2.42 (released 2025-07-28), glibc 2.41 (2025-01-29).
+**Governance.** glibc is a GNU project under the Free Software Foundation (FSF). It is hosted on sourceware.org, operated by Red Hat. There is no formal steering committee. The project is governed through the [libc-alpha mailing list](https://sourceware.org/pipermail/libc-alpha/) and a rotating release manager. Named port maintainers are tracked in the MAINTAINERS wiki page. Contributions require either a blanket copyright assignment agreement with the FSF or per-employer agreement. The FSF holds copyright.
+
+**Corporate sponsors active on RISC-V.** Based on commit records for the riscv port (2017-2026):
+
+| Organization | RISE membership | Role |
+|---|---|---|
+| Linaro | Not listed | Largest all-time contributor (Adhemerval Zanella, 52 RISC-V commits) |
+| Red Hat | Premier Member | Core maintainers (Joseph Myers, Florian Weimer, Carlos O'Donell) |
+| Rivos Inc. | Not listed | Key RISC-V contributors (Palmer Dabbelt, Evan Green) |
+| SiFive | Premier Member | Port founders (Palmer Dabbelt, Kito Cheng, Vincent Chen) |
+| ISCAS/PLCT Lab | General Member | Active 2025-2026 (Yao Zihong, RVV string routines) |
+| Tenstorrent | Not listed (was not listed as RISE member at time of this report) | Active reviewer 2025 (Peter Bergner) |
+| SUSE | Not listed | Active (Andreas Schwab, 7 RISC-V commits) |
+| Bluespec | Not listed | Named RISC-V port maintainer (Darius Rad, 7 commits) |
+| Google | Premier Member | Linker/toolchain (Fangrui Song, 7 commits) |
+| Western Digital | Not listed | Former contributor (Alistair Francis, 5 commits) |
+| ZTE Corporation | General Member | Active review 2025 (Zheng Ziyang, RVV memcmp/memrchr) |
+
+**Community stance on RISC-V.** The port is mature and unambiguously upstream. New RISC-V extension patches (RVV, Zbb, Zbkb, Zicfilp, Zicfiss) are accepted through the standard mailing-list review process with no reported policy resistance. The bar for new contributions is technical quality: reviewers (notably Jeffrey Law at Qualcomm) push back on microarchitecture-specific tuning before basic correctness is established, and on assembly submissions where C with compiler intrinsics would suffice.
 
 ---
 
 ## 2. Port History and Upstreaming Timeline
 
-The RISC-V port was upstreamed in **glibc 2.27** (early 2018). The original author was **Palmer Dabbelt** (then at SiFive, palmer@sifive.com).
+| Date | Event | Source |
+|---|---|---|
+| 2017-12-27 (authored) / 2018-01-29 (merged) | Initial RISC-V port: ABI implementation, TLS, soft-fp, hard float, atomics, Linux syscall interface, ABI lists. Author: Palmer Dabbelt (SiFive). First release: glibc 2.27 (2018-02-01). | [bminor/glibc commit c776fa11](https://github.com/bminor/glibc/commit/c776fa11) |
+| 2023-09-06 | XTheadBb extension string optimization (string-fz[a,i].h). | [commit 3d6fcf1b](https://github.com/bminor/glibc) |
+| 2023-12-19 | BZ #31022 fix: feenvupdate missing FE_DFL_ENV check on RISC-V. | bminor/glibc commit 802aef27 |
+| 2023-12-30 | BZ #31151 fix: implement dl_runtime_profile (ltrace/profiling support), based on LoongArch port. | bminor/glibc commit 6b326961 |
+| 2024-01-22 | Static PIE support for RISC-V. | bminor/glibc commit 6edaa12b |
+| 2024-02-05 | Bitmanip Zbb: string-fza.h / string-fzi.h using clz/ctz. | bminor/glibc commit 25788431 |
+| 2024-03-01 | Alignment-ignorant memcpy for CPUs with fast unaligned access; hwprobe vDSO call support; multi-arg IFUNC resolvers. | [commits e7919e0d, 78308ce7, 587a1290](https://github.com/bminor/glibc) |
+| 2024-10-02 | BZ #32228 fix: .preinit_array not aligned to pointer size. | [commit a36814e1](https://github.com/bminor/glibc/commit/a36814e1455093fc9ebfcdf6ef39bb0cf3d447da) |
+| 2025-04-22 | Sync NT_RISCV_TAGGED_ADDR_CTRL from Linux 6.13 to elf.h. | [commit 4e24e4d9](https://github.com/bminor/glibc/commit/4e24e4d936b57f6e7809032f55cc95a4cf4d2396) |
+| 2025-05-24 | BZ #32932 fix: __riscv_hwprobe function prototype corrected (wrong access attribute, argument types, __THROW). | [commit 8af8beb1](https://github.com/bminor/glibc/commit/8af8beb1c488dcfec754431c1626979276046545) |
+| 2025-06-20 | getrandom vDSO support for RV64 (Linux 6.16+). | [commit fc6f074e](https://github.com/bminor/glibc/commit/fc6f074e0496fb8a8df491641165f4ed3cdaa3a3) |
+| 2025-09-03 | Soft-float _FPU_SETCW fixed for GCC 16 warnings. | [commit 273f803](https://github.com/bminor/glibc/commit/273f80374aeb7d746352a098b23d9bb85e908ea8) |
+| 2025-09-03 | Vector registers added to __SYSCALL_CLOBBERS; GCC 15 + RVV 1.0 enforced at configure time. | [commit 47975914](https://github.com/bminor/glibc/commit/47975914fb106b83c42bc0baf6435a0944a23d30) |
+| 2025-10-31 | Zbkb-optimized repeat_bytes helper (packh/packw/pack). | [commit 720e8916](https://github.com/bminor/glibc/commit/720e89163702ffa1e921d926b6c36b53c3ccbee4) |
+| 2025-12-19 | RVV-optimized memset with IFUNC dispatch (first vectorized string function merged). | [commit 0b8a996f](https://github.com/bminor/glibc/commit/0b8a996f44b5f4c02991f02cd12bf05b17db4576) |
 
-- **2018-01-07:** First preparatory commits land (VDSO hash, ELF flags, shared-object subdirectory support), Palmer Dabbelt, SiFive
-- **2018-01-29:** Core port infrastructure ("RISC-V: Build Infrastructure", SHA c50615570927) and hard-float support ("RISC-V: Hard Float Support", SHA b2cb5e0298e0), Palmer Dabbelt, SiFive
-- **2018-02:** glibc 2.27 released with riscv64 upstream for the first time
-- **2019:** Early bug fixes for DL_RO_DYN_SECTION ABI (BZ #24484), VDSO for static linking (BZ #19767)
-- **2021:** Stack alignment fixes in clone and `_dl_init` (BZ #28702, BZ #28703)
-- **2023:** feenvupdate with FE_DFL_ENV fixed (BZ #31022)
-- **2024:** Alignment-ignorant memcpy added (Evan Green / Palmer Dabbelt, Rivos); multi-argument IFUNC resolvers introduced (RISC-V was first architecture to pass two arguments to resolvers)
-- **2025:** IFUNC gp-pointer crash fixed (BZ #32269); `__riscv_hwprobe` prototype corrected (BZ #32932); vector register syscall clobbers fixed; RVV memset added; Zbkb `repeat_bytes` optimization added
-- **Current maintainers:** Palmer Dabbelt (Rivos), Andrew Waterman (SiFive), Peter Bergner (IBM/Tenstorrent), Darius Rad (affiliation not confirmed from available sources)
+The RISC-V port is fully upstream. No downstream fork carries significant riscv64-specific patches that have not been submitted to libc-alpha.
 
 ---
 
 ## 3. Upstream Support Tier
 
-glibc does not publish a formal numbered tier system. Port standing is determined by the presence of active named machine maintainers and by the health of the port in the master branch.
+glibc does not have a formal tier policy (unlike GCC). Port status is governed by the MAINTAINERS wiki page, not a documented tier matrix. The practical tier for a port is determined by: named maintainers, CI coverage, and whether the port is included in official releases.
 
-The RISC-V port currently has three named machine maintainers: Palmer Dabbelt (Rivos), Andrew Waterman (SiFive), Peter Bergner (IBM). This is a stronger maintainer bench than most non-x86/arm64 architectures. The port has accumulated no known unaddressed architectural regressions as of the data available.
+**Named RISC-V maintainers (from MAINTAINERS wiki):** Darius Rad (Bluespec). Palmer Dabbelt (Rivos) and Adhemerval Zanella (Linaro) are the dominant historical contributors but are not listed in the official maintainers file as of available data [NEEDS VERIFICATION - direct MAINTAINERS file fetch was not possible due to sourceware.org Anubis protection].
 
-The practical risk indicator for glibc ports is loss of named maintainership -- the SuperH/sh port is the canonical cautionary example. RISC-V does not currently exhibit that risk.
+| Criterion | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| Named upstream maintainer | Yes | Yes | Yes (Darius Rad) |
+| CI - build | Yes (multiple builders) | Yes (multiple builders) | Yes (2 builders, both currently offline) |
+| CI - test execution | Yes | Yes | No (build-only in build-many-glibcs.py) |
+| Passes full test suite in CI | Yes | Yes | No confirmed passing run; all recent builds failed |
+| Included in glibc releases | Yes | Yes | Yes (since glibc 2.27) |
+| Debian official port | Yes | Yes | Yes |
+| Ubuntu official port | Yes | Yes | Yes |
+
+The riscv64 port receives first-class treatment in releases and package distributions. The CI situation is materially weaker than amd64/arm64: both Buildbot builders are offline as of 2026 and all recent runs failed.
 
 ---
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-The riscv64 implementation is not a stub. All ABI-critical components have real architecture-specific implementations.
+glibc's architecture-specific code lives in `sysdeps/riscv/`, `sysdeps/riscv/rv64/`, `sysdeps/unix/sysv/linux/riscv/`, and related subdirectories. The following table covers all mandatory and significant optional subsystems.
 
-### 4.1 Directory Structure
+| Subsystem | amd64 | arm64 | riscv64 | ISA extensions used | Quality |
+|---|---|---|---|---|---|
+| ELF entry point (start.S) | Full | Full | Full | Base ISA (gp init via lla) | Hand-written asm |
+| Dynamic linker (dl-machine.h) | Full | Full | Full | Base ISA | Hand-written asm + inline asm |
+| PLT trampoline (_dl_runtime_resolve) | Full | Full | Full | Base ISA | Hand-written asm |
+| PLT profiling trampoline (_dl_runtime_profile) | Full | Full | Full | Base ISA | Hand-written asm |
+| setjmp / longjmp | Full | Full | Full | Base ISA + F/D extensions | Hand-written asm |
+| clone / vfork | Full | Full | Full | Base ISA | Hand-written asm |
+| getcontext / setcontext / swapcontext | Full | Full | Full | Base ISA | Hand-written asm |
+| TLS (NPTL) | Full | Full | Full | Base ISA (tp register) | C + headers |
+| Inline syscall macros | Full | Full | Full | Base ISA; V clobbers when RVV enabled | C macros with inline asm |
+| Atomics (atomic-machine.h) | Full | Full | Full | A extension (AMOs); pause hint | C macros with inline asm |
+| FP environment (fenv.h) | Full | Full | Full | F/D extensions | C |
+| Single-precision libm (32 functions) | Full | Full | Full | F extension | C using compiler builtins |
+| Double-precision libm | Full | Full | Full | D extension | C using compiler builtins |
+| ffs / ffsll | Full | Full | Full | Zbb or XTheadBb (ctz instructions) | Compiler builtin |
+| hwprobe vDSO | N/A | N/A | Full (RV64); absent (RV32) | Base ISA | C |
+| getrandom vDSO | Full | Full | Full (RV64, Linux 6.16+) | Base ISA | C |
+| memset (scalar) | Full | Full | Full | Base ISA | Hand-written asm |
+| memset (vector) | Full (SSE2/AVX) | Full (SVE/ASIMD) | Full (RVV, merged Dec 2025) | V extension, LMUL=m8 | Hand-written asm |
+| memcpy (scalar) | Full | Full | Full (unaligned-fast path via hwprobe) | Base ISA + Zca | Hand-written asm |
+| memcpy (vector) | Full | Full | Missing (under review, v5) | V extension | Not merged |
+| memmove (vector) | Full | Full | Missing (under review, v5) | V extension | Not merged |
+| strcmp / strlen / strchr / etc. (vector) | Full | Full | Missing (under review, v5) | V extension | Not merged |
+| string byte-broadcast (repeat_bytes) | Full | Full | Full (Zbkb: packh/packw/pack) | Zbkb extension | Inline asm |
+| libmvec (vectorized math) | Full (AVX2/AVX512) | Full (SVE) | Missing (RFC stage, Feb 2026) | V + D extensions | Not merged |
+| Static PIE | Full | Full | Full | Base ISA | C + configure probes |
+| Control Flow Integrity | Full (CET) | Full (BTI/PAC) | Missing (under review, v3) | Zicfilp / Zicfiss | Not merged |
+| IFUNC dispatch framework | Full | Full | Full | Base ISA + hwprobe | C |
+| Shadow stack (setjmp/longjmp extension) | Full (CET) | Full (GCS) | Missing (under review) | Zicfiss | Not merged |
 
-The RISC-V implementation spans three directory trees:
+**IFUNC dispatch detail.** The RISC-V IFUNC framework uses `riscv_hwprobe()` (itself vDSO-accelerated) to query `RISCV_HWPROBE_KEY_IMA_EXT_0` at startup. Currently, this selects between `__memset_vector` (RVV) and `__memset_generic` for memset, and between `__memcpy_noalignment` (fast scalar) and `__memcpy_generic` for memcpy. The 18-routine RVV suite pending in v5 will extend this to all major string/memory functions.
 
-- `sysdeps/riscv/` -- base architecture code (startup, setjmp, atomic, FPU, PLT trampoline, IFUNC infrastructure, string helpers)
-- `sysdeps/riscv/rvf/`, `sysdeps/riscv/rvd/`, `sysdeps/riscv/rvv/` -- extension-specific math, FPU environment, and vector routines
-- `sysdeps/unix/sysv/linux/riscv/` -- Linux-specific syscall layer, clone, vfork, ucontext, hwprobe, IFUNC dispatch, ABI lists
-
-### 4.2 Component Coverage
-
-| Component | Implementation Status | Notes |
-|---|---|---|
-| Process startup (`_start`) | Full | `start.S`: hand-written asm, `load_gp` preinit, `__wrap_main` PIC trampoline |
-| setjmp / longjmp | Full | Saves/restores integer regs (ra, s0-s11, sp) and FP regs (fs0-fs11); soft-float variant omits FP |
-| Dynamic linker | Full | `dl-machine.h`: handles R_RISCV_RELATIVE, R_RISCV_JUMP_SLOT, TLS, R_RISCV_COPY, R_RISCV_IRELATIVE; gp-register init via `__global_pointer$` |
-| PLT trampoline | Full | `dl-trampoline.S`: `_dl_runtime_resolve` and `_dl_runtime_profile` (audit); saves/restores a0-a7 and fa0-fa7 |
-| memcpy | Full | IFUNC dispatch: `__memcpy_noalignment` (128-byte block loop) on `RISCV_HWPROBE_MISALIGNED_FAST` hardware; generic C fallback |
-| memset | Full (with known bug) | IFUNC dispatch: `__memset_vector` (RVV, LMUL=m8, `vse8.v` loop) when `RISCV_HWPROBE_IMA_V`; generic C fallback. **Known bug: SIGILL if RVV disabled via prctl() -- see Section 11.** |
-| String functions (strchr, strcmp, strlen, memchr) | Partial | Zero-byte detection primitives in `string-fza.h`/`string-fzi.h` use Zbb `orc.b` or XTheadBb `th.tstnbz` where available; actual string loops are generic C, not hand-tuned asm |
-| Atomic operations | Full | `atomic-machine.h`: AMO instructions (`amomaxu`, `amominu`); hard compile error if A extension absent; PAUSE via raw `.insn i` encoding |
-| NPTL / thread support | Full | TLS headers, `pthreaddef.h`, `pthread-offsets.h` for NPTL; tp register as thread pointer |
-| `clone()` / `vfork()` | Full | `clone.S`: 128-bit stack alignment per ABI, arg remapping, `__thread_start`; `vfork.S`: CLONE_VM|CLONE_VFORK|SIGCHLD |
-| ucontext (get/set/swap/make) | Full | Full integer + FP register save/restore; signal mask via `rt_sigprocmask`; `makecontext` handles up to 8 register args |
-| Cancellable syscall | Full | `syscall_cancel.S`: `__syscall_cancel_arch_start`/`_end` markers; PIC and non-PIC |
-| FPU control | Full | `fpu_control.h`: `frsr`/`fssr` inline asm; soft-float no-ops |
-| Floating-point environment | Full | 16 functions in `sysdeps/riscv/rvf/` (fegetenv, fesetenv, fegetround, fesetround, feholdexcpt, feupdateenv, etc.) |
-| Single-precision math | Full (no asm) | C using hardware FP classification (`fclass.s`); compiler builtins for sqrt/fma via headers |
-| Double-precision math | Full (no asm) | C using hardware instructions; builtins for sqrt/fma |
-| ffs/ffsll | Partial | `math-use-builtins-ffs.h`: hardware `ctz` when Zbb (GCC 12+) or XTheadBb (GCC 13+); otherwise generic C. Note: XTheadBb only enables ffsll, not ffs -- asymmetry suggests incomplete 32-bit ctz support in that extension under GCC 13. |
-| hwprobe VDSO | Full | `hwprobe.c`: `__riscv_hwprobe()` via `INTERNAL_VSYSCALL`; corrected prototype (BZ #32932, May 2025) |
-| Syscall layer | Full | a7 for syscall number, a0-a6 for args; vector register clobbers added Sep 2025 (was a latent silent-corruption bug) |
-| VDSO | Full (rv64 only) | `__vdso_clock_gettime` and `__vdso_getrandom` (Linux >= 4.15); rv32 lacks VDSO clocks |
-| ABI lists | Full | 15 `.abilist` files for rv64 covering libc, libm, libpthread, libdl, librt, libresolv, libthread_db, libc_malloc_debug, and others |
-| Zbkb optimization | Full | `string-misc.h`: `packh`/`packw`/`pack` for byte-replication across a machine word (Oct 2025); falls back to generic when `__riscv_zbkb` not defined |
-
-### 4.3 IFUNC Runtime Dispatch
-
-RISC-V is the first glibc architecture whose IFUNC resolvers receive two arguments: `hwcap` (uint64_t) and a pointer to `__riscv_hwprobe`. This enables resolvers to query specific microarchitectural capabilities (misaligned access performance, vector support, extension presence) without making an additional syscall.
-
-The registered IFUNC implementations as of the current codebase:
-- `memcpy`: `{__memcpy_noalignment, __memcpy_generic}` -- selects on `RISCV_HWPROBE_MISALIGNED_FAST`
-- `memset`: `{__memset_vector, __memset_generic}` -- selects on `RISCV_HWPROBE_IMA_V`
-
-### 4.4 RVV (Vector Extension) Status
-
-As of Dec 2025, only `memset` has an RVV-optimized path. No RVV `memcpy`, `strcmp`, `strlen`, `strchr`, `memchr`, or `memmove` exist upstream. The December 2024 RISE webinar explicitly listed "Vector mem* and str* in glibc" as the next priority item for the Compilers and Toolchains working group [NEEDS VERIFICATION for exact RFP funding status].
+**Known limitation in merged RVV memset.** The IFUNC resolver does not check for RVV disabled via `prctl(PR_RISCV_V_VSTATE_CTRL_OFF)`. A process that disables RVV after startup and then calls `memset()` will receive SIGILL. This is documented in the commit message as a known limitation at the time of merge. No fix has been submitted as of Feb 2026.
 
 ---
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-glibc uses autoconf `./configure` + GNU Make. There are no CMake or Meson build files.
+**Build system.** glibc uses GNU autoconf/make. It does not use CMake. All builds must be out-of-tree.
 
-### 5.1 Toolchain Version Requirements
-
-From the upstream `INSTALL` file and `sysdeps/riscv/preconfigure.ac`:
-
-| Tool | Minimum Version | Newest Verified |
-|---|---|---|
-| GCC | 12.1 | 15.1.1 |
-| GNU binutils | 2.39 | 2.45 |
-| GNU make | 4.0 | 4.4.1 |
-| GNU autoconf | exactly 2.72 | -- (only if regenerating configure) |
-| Linux kernel headers | 3.2 | 6.12 |
-| Python | 3.4 | 3.13.5 |
-| GDB (for test suite) | 7.8 + Python 3.4 | 14.2 |
-
-**Additional requirement for RVV paths:** GCC >= 15 is required if building with the V extension active. `sysdeps/riscv/preconfigure.ac` enforces: `"glibc requires GCC 15 or later for the V extension"` and requires RVV spec version >= 1.0 (encoded as `>= 1000000`). This check was added in commit 4797591 (Sep 2025).
-
-The upstream CI toolchain defaults (from `build-many-glibcs.py`) are: binutils `vcs-2.45`, GCC `vcs-15`, Linux headers `6.18`.
-
-### 5.2 ABI Constraints
-
-From `sysdeps/riscv/preconfigure.ac`:
-
-| Condition | Result |
-|---|---|
-| XLEN not 32 or 64 | Build error: "Unable to determine XLEN" |
-| FLEN = 32 (F extension, no D) | Build error: "glibc does not yet support systems with the F but not D extensions" |
-| float_abi = single | Build error: "glibc does not yet support the single floating-point ABI" |
-| No A (atomic) extension | Build error: "glibc requires the A extension" |
-| V extension + GCC < 15 | Build error: "glibc requires GCC 15 or later for the V extension" |
-
-Supported riscv64 ABI combinations (from `build-many-glibcs.py`):
-- `rv64imac` / `lp64` (soft-float)
-- `rv64imafdc` / `lp64` (hardware FP registers, soft-float ABI)
-- `rv64imafdc` / `lp64d` (hardware FP, double-precision ABI -- Debian/Ubuntu baseline)
-
-F-only (no D) is explicitly unsupported and will produce a build error.
-
-### 5.3 Cross-Compilation
-
-Standard cross-build (host=x86_64, target=riscv64):
+**Canonical cross-build command for riscv64:**
 
 ```bash
-mkdir build-riscv64 && cd build-riscv64
+mkdir build && cd build
 ../glibc/configure \
-  --host=riscv64-linux-gnu \
-  --build=$(../glibc/scripts/config.guess) \
   --prefix=/usr \
-  --with-headers=/path/to/linux-headers/usr/include \
-  --enable-kernel=5.4.0 \
-  --disable-werror \
-  CC=riscv64-linux-gnu-gcc
-make -j$(nproc)
-make install install_root=/path/to/sysroot
+  --host=riscv64-linux-gnu \
+  --build=$(gcc -dumpmachine) \
+  CC=riscv64-linux-gnu-gcc \
+  CXX=riscv64-linux-gnu-g++ \
+  --with-headers=/path/to/linux/include \
+  --enable-kernel=5.15 \
+  CFLAGS="-O2 -g"
 ```
 
-The official multi-arch build method uses `scripts/build-many-glibcs.py`:
+The GCC cross-compiler itself must be configured with `--with-arch=rv64imafdc --with-abi=lp64d --disable-multilib` (or the appropriate variant). glibc's configure derives the target ABI from compiler-predefined macros (`__riscv_xlen`, `__riscv_flen`, `__riscv_float_abi_*`).
+
+**Three CI build configurations** from `scripts/build-many-glibcs.py`:
+
+| Config name | --with-arch | --with-abi |
+|---|---|---|
+| riscv64-linux-gnu-rv64imac-lp64 | rv64imac | lp64 (soft-float) |
+| riscv64-linux-gnu-rv64imafdc-lp64 | rv64imafdc | lp64 (soft-float ABI, hard-float registers unused) |
+| riscv64-linux-gnu-rv64imafdc-lp64d | rv64imafdc | lp64d (double-float ABI) |
+
+These are build-only (no test execution in the script).
+
+**Required toolchain versions with rationale:**
+
+| Dependency | Minimum | Reason |
+|---|---|---|
+| GCC | 12.1 | Enforced at configure time via preprocessor check in configure.ac |
+| GCC | 15.0 | Required when building with RVV (-march=...v*); enforced in sysdeps/riscv/preconfigure.ac |
+| Clang | 18.0 | Alternative to GCC; same configure-time enforcement |
+| binutils | 2.39 | R_RISCV_ALIGN and R_RISCV_RELATIVE required; configure probe in sysdeps/riscv/configure.ac |
+| binutils | 2.45 | SFrame support; optional |
+| Linux kernel headers | 3.2 | --with-headers minimum |
+| Python | 3.4 | Test infrastructure scripts |
+| GNU make | 4.0 | Build orchestration |
+| GNU awk (gawk) | 3.1.2 + MPFR | Test harness |
+| GNU bison | 2.7 | Parser generation |
+
+**ABI constraints enforced at configure time.** glibc will abort configure if:
+- F extension present but D absent (F-only not supported)
+- Single-float ABI (ilp32f or lp64f) is requested
+- A extension (atomics) is absent
+
+**Linker relaxation fallback.** If the static linker does not support `R_RISCV_ALIGN` (detected at configure time via `libc_cv_riscv_r_align`), glibc automatically injects `-Wa,-mno-relax` and `-mno-relax` for all riscv objects. This is automatic and not user-controlled.
+
+**GCC 16 compatibility.** A soft-float `_FPU_SETCW` macro generated a set-but-not-used warning under GCC 16. Fixed in glibc Sept 2025 (commit 273f803). No other GCC 16 issues are known.
+
+**QEMU.** There is no Dockerfile or QEMU wrapper in the glibc source tree. `scripts/build-many-glibcs.py` defines build-only configurations with no QEMU test_wrapper. For running tests on a remote target or under QEMU:
 
 ```bash
-python3 scripts/build-many-glibcs.py /path/to/builddir checkout
-python3 scripts/build-many-glibcs.py /path/to/builddir \
-  build riscv64-linux-gnu-rv64imafdc-lp64d
+# SSH to real hardware
+make test-wrapper='scripts/cross-test-ssh.sh user@riscv64-host' tests
+
+# QEMU user mode (community practice, not in-tree)
+make test-wrapper='qemu-riscv64 -L /path/to/riscv64-sysroot' tests
 ```
 
-This script builds the full toolchain chain (binutils, stage1/stage2 GCC, Linux headers, glibc) automatically, passing `--with-arch=rv64imafdc --with-abi=lp64d --disable-multilib` to GCC.
+Use `--with-timeoutfactor=NUM` to extend test timeouts for emulation.
 
-### 5.4 Linker Relaxation Handling
-
-`sysdeps/riscv/Makefile` auto-detects `R_RISCV_ALIGN` support in the linker at configure time. If absent, it automatically adds `-Wa,-mno-relax` and `-mno-relax`. No user action is required.
-
-### 5.5 Test Execution
-
-glibc's native cross-test mechanism uses SSH:
+**Kernel header installation for riscv64:**
 
 ```bash
-make check \
-  test-wrapper="$(pwd)/scripts/cross-test-ssh.sh user@riscv-host"
+make -C linux-src headers_install ARCH=riscv INSTALL_HDR_PATH=/sysroot/usr
 ```
 
-QEMU user-mode can substitute:
-
-```bash
-make check \
-  test-wrapper="qemu-riscv64 -L /opt/riscv/sysroot"
-```
-
-No Dockerfile exists in the glibc source tree. The `riscv-collab/riscv-gnu-toolchain` CI uses stock `ubuntu-22.04` / `ubuntu-24.04` GitHub Actions runners.
+Both riscv32 and riscv64 map to Linux arch `riscv` in build-many-glibcs.py.
 
 ---
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
-This section compares riscv64 to arm64 and amd64 across the primary user-visible subsystems.
+**Functional gaps** (riscv64 cannot do X at all):
 
-### 6.1 String and Memory Functions
+| Feature | amd64 | arm64 | riscv64 | Notes |
+|---|---|---|---|---|
+| Control Flow Integrity (CFI) | Yes (CET: IBT + SHSTK) | Yes (BTI + PAC) | No | 38-file patch series v3 under review Dec 2025; not merged. The shadow stack (SSP) append to jmp_buf is an ABI change. |
+| libmvec (vectorized math) | Yes (AVX2/AVX512) | Yes (SVE) | No | RFC patch posted Feb 2026 for log/logf using RVV. Integration approach not yet approved. Licensing question raised (veclibm derivation). |
+| getrandom vDSO (RV32) | N/A | N/A | No | Only RV64 gets vDSO path. RV32 falls back to syscall. |
+| F-only ABI (no D extension) | N/A | N/A | No | configure aborts; documented limitation. |
 
-| Function | amd64 | arm64 | riscv64 |
-|---|---|---|---|
-| memcpy | Multi-variant asm (AVX-512, AVX2, SSE2, erms) | Multi-variant asm (SVE, ASIMD, DC ZVA) | Single asm variant (`__memcpy_noalignment`) for misaligned-fast hardware; generic C otherwise |
-| memset | Multi-variant asm (AVX-512, AVX2, erms) | Multi-variant asm (SVE, ASIMD, DC ZVA) | RVV asm (`__memset_vector`) on V-capable hardware (Dec 2025); generic C otherwise |
-| memchr | asm (AVX2, SSE2) | asm (SVE, ASIMD) | Generic C with Zbb zero-byte detection primitive |
-| strchr | asm (AVX2, SSE2) | asm (SVE, ASIMD) | Generic C with Zbb/XTheadBb zero-byte detection primitive |
-| strcmp | asm (AVX2, SSE2) | asm (SVE, ASIMD) | Generic C with Zbb/XTheadBb zero-byte detection primitive |
-| strlen | asm (AVX2, SSE2) | asm (SVE, ASIMD) | Generic C with Zbb/XTheadBb zero-byte detection primitive |
-| strnlen | asm (AVX2) | asm (SVE, ASIMD) | Generic C |
-| memmove | Multi-variant asm | Multi-variant asm | Generic C |
+**Performance gaps** (feature exists but no vectorized implementation):
 
-The gap for riscv64 is consistent: building blocks are hardware-accelerated (zero-byte detection via Zbb/XTheadBb, byte replication via Zbkb, misaligned-access memcpy, RVV memset), but the actual string loop functions have no dedicated hand-tuned asm.
+| Function(s) | amd64 | arm64 | riscv64 | RVV patch status |
+|---|---|---|---|---|
+| memcpy, memmove | Vectorized | SVE | Scalar only (aligned-fast path) | Under review, v5 (Feb 2026) |
+| memchr, memcmp, memcmpeq, memccpy, memrchr | Vectorized | SVE | Scalar only | Under review, v5 (Feb 2026) |
+| strcmp, strcpy, strlen, strncmp, strnlen | Vectorized | SVE | Scalar only | Under review, v5 (Feb 2026) |
+| strcat, strchr, stpncpy, strncat, strncpy, strrchr | Vectorized | SVE | Scalar only | Under review, v5 (Feb 2026) |
+| log, logf (libmvec) | Vectorized | SVE | Missing | RFC, Feb 2026; not merged |
+| atan2f (spec2017 WRF) | Vectorized | Vectorized | Not optimized | RISE issue #66: RISC-V has no scalar reciprocal estimator; vector unit path adds overhead |
 
-Data not available: quantitative throughput benchmarks comparing riscv64 to arm64 or amd64 for any of these functions. No published numeric comparison was found in accessible sources.
+Published performance figures for the pending RVV string suite (from v5 patch series, measured on SpacemiT X60):
 
-### 6.2 Math Library (libm)
+| Routine | RVV speedup vs scalar (SpacemiT X60) |
+|---|---|
+| memccpy | ~49% time reduction |
+| memrchr | ~58% time reduction |
+| strrchr | ~39% time reduction |
+| stpncpy | ~11% time reduction |
 
-All three architectures share the CORE-MATH-based correctly-rounded implementations for transcendental functions (sin, cos, exp, log, pow, etc.) that were merged across Oct 2024-Dec 2024. These are architecture-neutral.
+Published performance figures for standalone RVV memcmp patches (Dec 2025):
 
-riscv64 uses compiler builtins for sqrt and fma when the D/F extensions are present. amd64 and arm64 have additional hand-tuned asm for a subset of transcendentals (data not available: exact list of hand-tuned functions on arm64 that riscv64 lacks).
+| Platform | RVV vs __memcmp_generic speedup |
+|---|---|
+| XuanTie C920 (VLENB=128) | +54.6% |
+| SpacemiT X60 (VLENB=256) | +44.8% |
 
-Data not available: benchmark comparison of libm throughput or latency between riscv64 and arm64/amd64 on any specific function.
+No performance benchmark figures comparing riscv64 against amd64 or arm64 for any glibc function were found in any public source.
 
-### 6.3 Dynamic Linker
+**Floating-point correctness.** BZ #31022 (feenvupdate missing FE_DFL_ENV guard) was fixed in 2023. The soft-float nofpu test ULPs were updated in Jan 2025. No current open floating-point correctness bugs are documented (Bugzilla was inaccessible; bugs referenced are from commit messages only).
 
-The riscv64 dynamic linker is complete (see Section 4.2). The gp-register initialization quirk (requiring `lla` rather than simple `mv` due to `__global_pointer$` being `SHN_ABS` type) is handled correctly as of commit 3fd2ff7 (Feb 2025).
-
-### 6.4 Thread-Local Storage
-
-riscv64 uses the DTV-at-TP layout (pre-TCB, TCB_SIZE=0), which is the same model as most non-x86 architectures. No known gaps vs arm64.
-
-### 6.5 vDSO
-
-riscv64 supports `__vdso_clock_gettime` (Linux >= 4.15) and `__vdso_getrandom` (Linux >= 6.16, glibc support added Jun 2025 via commit fc6f074). amd64 and arm64 have additional vDSO entries (`gettimeofday`, `getcpu`). Data not available: full enumeration of vDSO entries present on arm64 but absent on riscv64.
+**prctl/RVV interaction (open correctness bug).** The merged RVV memset resolver selects the vector path based on hwprobe without checking prctl-disabled RVV state. A process that calls `prctl(PR_RISCV_V_VSTATE_CTRL_OFF)` after startup and then calls `memset()` will receive SIGILL. This is present in glibc master since Dec 2025.
 
 ---
 
 ## 7. CI/CD Infrastructure
 
-### 7.1 Upstream glibc CI
+**Sourceware Buildbot builders for glibc riscv64:**
 
-No CI pipeline configuration file (`.gitlab-ci.yml`, GitHub Actions workflow, Jenkinsfile, or equivalent) was found in the glibc source tree. The `bminor/glibc` GitHub mirror, which is the only accessible code mirror (archived Feb 2026), contains no `.github/` directory and no `.gitlab-ci.yml`.
+| Builder | ID | Current status | Last successful build | Recent builds |
+|---|---|---|---|---|
+| glibc-ubuntu-riscv | 293 | Offline (masterids: []) | Not observed | Last 5 builds: all FAILURE (result=2); last run Jan 28-30, 2025 |
+| glibc-fedora-riscv | 336 | Offline (masterids: []) | Not observed | Last 5 builds: all FAILURE (result=2); last run Jun 10, 2025 |
 
-`scripts/build-many-glibcs.py` defines riscv64 cross-build configurations (`rv64imac-lp64`, `rv64imafdc-lp64`, `rv64imafdc-lp64d`) and has a `bot`/`bot-cycle` mode for continuous operation, but this is a developer utility script, not a CI pipeline definition. Its presence proves that riscv64 builds are supported by the official multi-arch toolchain builder; it does not prove that any automated CI bot runs it.
+Both builders are confirmed offline as of August 2026 via direct Buildbot API query. Neither builder has produced a passing build in all observed recent history. `glibc-ubuntu-riscv` has been offline for over 18 months; `glibc-fedora-riscv` for over 14 months.
 
-**Sourceware Buildbot:** The sourceware.org Buildbot (`builder.sourceware.org`) lists the following active glibc builders: `glibc-autoregen`, `glibc-debian-arm64`, `glibc-debian-armhf`, `glibc-debian-i386`, `glibc-debian-ppc64`, `glibc-fedora-ppc64le`, `glibc-fedora-s390x`, `glibc-fedora-x86_64`, `glibc-fedrawhide-x86_64`, `glibc-snapshots-trunk`. **No riscv64 builder exists in this list.** The sourceware.org Buildbot infrastructure does have riscv64 hardware (VisionFive-2 boards donated by StarFive, Milk-V Pioneer Box from RISC-V International/SOPHGO), and those machines run RISC-V CI for other projects (binutils, GDB, elfutils, valgrind, libabigail), but not for glibc.
+**RISE CI.** RISE's Dec 2024 end-of-year update listed glibc as one of seven projects running pre-commit CI on the RISE build farm. The gcc-postcommit-ci fork in the riseproject-dev GitHub org includes a `make check-glibc-linux` target. No public dashboard URL for RISE's glibc CI results was found. [NEEDS VERIFICATION - RISE CI configuration details are not publicly documented]
 
-### 7.2 RISE Project CI
+**CI configuration in source tree.** There is no `.gitlab-ci.yml`, `.github/workflows/`, Jenkinsfile, or Buildbot config file in the glibc source tree. The CI is entirely external to the repository.
 
-The RISE December 2024 webinar slides list seven active CI projects on the RISE build farm. One of them is **glibc pre-commit CI**. The RISE build farm grew 600% in machine cycles since November 2023. New projects added to RISE CI infrastructure include glibc, LLVM, Python, and OpenJDK.
+**Test execution.** The in-tree `scripts/build-many-glibcs.py` performs cross-compilation only for riscv64 - no test execution. No QEMU test_wrapper is configured for any riscv target in that script.
 
-The nature of this CI (which configurations are tested, pass/fail status, hosting URL) is Data not available: the RISE CI dashboard or glibc-specific job definitions were not accessible from available sources.
-
-### 7.3 CI Gap Assessment
-
-riscv64 has no automated glibc CI on the upstream sourceware.org Buildbot despite that infrastructure having riscv64 hardware. The RISE build farm claims glibc pre-commit CI [NEEDS VERIFICATION for scope and configuration], but the specifics are not publicly documented in accessible sources.
+| Criterion | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| Buildbot builders | Multiple, active | Multiple, active | 2 builders, both offline since mid-2025 |
+| Build CI | Yes | Yes | Broken (offline) |
+| Test CI | Yes | Yes | No (build-only in script; Buildbot offline) |
+| RISE pre-commit CI | Not applicable | Not applicable | Yes (listed Dec 2024) [NEEDS VERIFICATION] |
+| In-tree CI config | No (external Buildbot) | No (external Buildbot) | No |
 
 ---
 
 ## 8. Distribution and Release Status
 
-| Distribution | Package | Version | Status |
-|---|---|---|---|
-| Upstream GNU | Source tarball only | 2.43 (latest) | Source distribution; no binary packages from upstream |
-| Debian unstable (sid) | libc6 riscv64 | 2.42-17 | Confirmed built successfully on `rv-osuosl-05` buildd; status "Installed" |
-| Ubuntu 24.04 (Noble) | libc6 riscv64 | 2.39-0ubuntu8 | Confirmed available; ~2.7 MB package |
-| Arch Linux RISC-V | glibc riscv64 | 2.43+r22+g8362e8ce10b2-2.1 | Confirmed in live `core` repository; package database record verified |
+**Upstream release channel.** glibc distributes source tarballs only (ftp.gnu.org/gnu/glibc/). Current release: glibc 2.44, released 2026-07-24. No binary packages are distributed upstream.
 
-The Debian autopkgtest results page for glibc lists only amd64, arm64, i386, loong64, ppc64el, s390x -- riscv64 is absent from that view. This is likely a tracking/display gap in the autopkgtest infrastructure rather than a test failure, given the successful buildd record [NEEDS VERIFICATION].
+**Commits pending release.** The following riscv64 commits are on master but not yet in a numbered release as of the bminor/glibc mirror (last tag: glibc-2.42, 2025-07-28):
+- RVV memset (commit 0b8a996f, Dec 2025)
+- Vector register clobbers in __SYSCALL_CLOBBERS (commit 47975914, Sep 2025)
+- Zbkb repeat_bytes (commit 720e8916, Oct 2025)
+- Soft-float GCC 16 fix (commit 273f803, Sep 2025)
+- Atomic-machine.h consolidation (commit 1f5d8663, Sep 2025)
+
+These will ship in glibc 2.43 when tagged.
+
+**Distribution packages:**
+
+| Distribution | Package | Version | riscv64 status |
+|---|---|---|---|
+| Debian sid | libc6 | 2.43-4 | Official port, installed. Built by buildd machine rv-manda-01. Migration to testing blocked (policy violation affecting all architectures). |
+| Ubuntu Noble (24.04) | libc6 | 2.39-0ubuntu8 | Official port, available. |
+| Arch Linux RISC-V | glibc | 2.44+r24+g16be1518495f-1.1 | Available in [core] repository as riscv64.pkg.tar.zst. |
+| Fedora | glibc | 2.44 | Available for riscv64 in rawhide [NEEDS VERIFICATION - confirmed by commit activity and architecture inclusion, not direct package page fetch]. |
+
+**PyPI.** The `glibc` PyPI package (version 0.6.1) is a pure-Python version-detection shim, not the C library. It ships as `py2.py3-none-any` and is not relevant to riscv64 binary distribution.
+
+**What a user must do to get a working binary.** On Debian, Ubuntu, and Arch Linux RISC-V, glibc for riscv64 installs as a standard distribution package with no extra steps. For cross-compilation, the user must build a cross-toolchain (GCC 12.1+ minimum, GCC 15+ for RVV) targeting riscv64-linux-gnu, then configure glibc with `--host=riscv64-linux-gnu` and appropriate kernel headers.
 
 ---
 
 ## 9. Dependencies
 
-### 9.1 GCC
+| Dependency | Role | riscv64 build | riscv64 test | riscv64 release | Notes |
+|---|---|---|---|---|---|
+| GCC 12.1+ | Primary compiler | Available | N/A | Released | GCC 15+ required for RVV; soft-float GCC 16 issue fixed |
+| GNU binutils 2.39+ | Assembler, linker | Available | N/A | Released | R_RISCV_ALIGN and R_RISCV_RELATIVE required for static PIE |
+| Linux kernel headers 3.2+ | Syscall ABI | Available | N/A | Current kernels | Both riscv32/riscv64 map to ARCH=riscv |
+| Python 3.4+ | Test harness scripts | Available | Tests pass | 3.13.x ships for riscv64 | See reports/python.md |
+| GDB 7.8+ | Test pretty-printers | Built for riscv64 | Known issues | Ships riscv64 support | See reports/gdb.md |
+| elfutils | Test/debug (eu-readelf in static PIE probe) | Available | Tests pass | Available | See reports/elfutils.md |
+| libffi | Runtime dep for Python (test scripts) | Full riscv64 support | Tests pass | Released | See reports/libffi.md |
+| zlib | Optional (memusagestat via libgd) | Available | Tests pass | Released | See reports/zlib.md |
+| libpng | Optional (memusagestat via libgd) | Available | Tests pass | Released | See reports/libpng.md |
+| libcap | Optional (nscd SELinux capability support) | Available | Tests pass | Released | See reports/libcap.md |
+| libselinux | Optional (nscd SELinux) | Available | Tests pass | Released | Not in scope.yml |
+| libaudit | Optional (nscd SELinux audit) | Available | Tests pass | Released | Not in scope.yml |
+| GNU make 4.0+ | Build system | Available | N/A | Released | Not in scope.yml |
+| GNU awk 3.1.2+ | Build scripts | Available | N/A | Released | Not in scope.yml |
+| GNU bison 2.7+ | Parser generation | Available | N/A | Released | Not in scope.yml |
 
-- **Role:** Required compiler; generates RISC-V machine code for all C, inline asm, and assembly source files
-- **Minimum:** 12.1 (general); 15.0 required if building with the V extension
-- **riscv64 build status:** Builds cleanly with GCC 12-15 for standard `rv64gc lp64d`; RVV paths require GCC >= 15
-- **Blocker:** Distros shipping GCC 12-14 cannot build the RVV-optimized memset path. The `preconfigure.ac` enforces this as a hard error, not a warning.
-- **Latest verified:** GCC 16.1 (Apr 2026) [NEEDS VERIFICATION: GCC 16 riscv64 build status with glibc]
-
-### 9.2 GNU Binutils
-
-- **Role:** Assembler and linker; required for STT_GNU_IFUNC support (glibc's IFUNC dispatch), R_RISCV_ALIGN relaxation, and R_RISCV_RELATIVE for static-PIE
-- **Minimum:** 2.39
-- **riscv64 build status:** Builds cleanly; linker relaxation auto-detected at configure time
-- **Latest verified upstream CI default:** vcs-2.45
-
-### 9.3 Linux Kernel Headers
-
-- **Role:** Provides the userspace-visible syscall ABI surface
-- **General minimum:** 3.2; RISC-V PI-mutex requires >= 4.20 (`kernel-features.h`); VDSO on rv64 requires >= 4.15
-- **hwprobe syscall:** Requires kernel >= 6.4 (added in Linux 6.4)
-- **vDSO getrandom on riscv64:** Requires kernel >= 6.16; glibc support added Jun 2025
-- **Status:** All current riscv64 distributions run kernel 6.x; all required features present
-
-### 9.4 glibc Version Requirements for Downstream Consumers
-
-The following glibc releases introduced fixes that are blocking for correct behavior on riscv64:
-
-| Version | Blocker |
-|---|---|
-| 2.40 | Static-PIE crash on self-relocation (fixed in 2.40) |
-| 2.41 | `.preinit_array` misalignment in `Scrt1.o` (BZ #32228, fixed in 2.41) |
-| 2.42 | IFUNC resolver gp-pointer SIGSEGV (BZ #32269, fixed in 2.42); incorrect `__riscv_hwprobe` attributes (BZ #32932, fixed in 2.42) |
-
-Any deployment on glibc < 2.42 for riscv64 should be treated as carrying known crash-class defects.
-
----
-
-## 10. Ecosystem Status
-
-### 10.1 Governance and Corporate Involvement
-
-glibc is governed by the GNU Project via 8 designated package maintainers. Red Hat / IBM dominates the GNU package maintainer tier (Carlos O'Donell, Jakub Jelinek, Florian Weimer, Siddhesh Poyarekar). Andreas Schwab (SUSE) and Joseph Myers (ARM) hold GNU package maintainer roles. Adhemerval Zanella (Linaro) is a major subsystem maintainer. The RISC-V machine maintainers are Palmer Dabbelt (Rivos), Andrew Waterman (SiFive), and Peter Bergner (IBM).
-
-### 10.2 RISE Project Involvement
-
-glibc is placed in the **Compilers and Toolchains working group** within the RISE project (not the System Libraries WG). Nathan Egge (Google) is TSC member; Jeff Law (Ventana Micro) leads the Compilers and Toolchains WG.
-
-Confirmed RISE involvement with glibc:
-1. **glibc pre-commit CI** is listed as one of seven active CI projects on the RISE build farm (Dec 2024 webinar)
-2. **"Vector mem* and str* in glibc"** was explicitly listed as a next-priority item in the Dec 2024 RISE Compilers and Toolchains roadmap
-3. The RISE GCC toolchain CI (`riseproject-dev/riscv-gnu-toolchain-ci`) builds a Linux/glibc toolchain and provides a `make check-glibc-linux` test target
-4. The RISE Python wheel builder produces riscv64 wheels against `manylinux_2_35` and `manylinux_2_39` glibc ABI tags (83 riscv64 binary wheels as of the available data)
-
-No RISE blog post addresses glibc development or patching as a standalone topic (0 of 27 blog posts found with "glibc" in title or summary).
-
-### 10.3 Key Active Contributors (2024-2025)
-
-| Person | Affiliation | Contribution area |
-|---|---|---|
-| Peter Bergner | Tenstorrent / IBM | Vector syscall clobbers, memcpy micro-opts reviewer, IFUNC infra |
-| Yao Zihong | ISCAS/PLCT | memcpy_noalignment micro-optimizations, RVV memset co-author |
-| Pincheng Wang | ISCAS/PLCT | Zbkb `repeat_bytes` |
-| Jerry Shih | SiFive | RVV memset co-author |
-| Jeff Law | Ventana Micro / RISE WG lead | RVV memset committer |
-| Evan Green | Rivos | Alignment-ignorant memcpy, multi-arg IFUNC resolvers |
-| Palmer Dabbelt | Rivos | Machine maintainer, alignment-ignorant memcpy |
-| Adhemerval Zanella (zatrazz) | Linaro | Atomic cleanup, hwprobe prototype fix, upstream reviewer |
-| Mark Harris | (affiliation not confirmed from sources) | `__riscv_hwprobe` prototype correction (BZ #32932) |
-| Yangyu Chen, Vivian Wang | (affiliation not confirmed from sources) | IFUNC gp-pointer fix (BZ #32269) |
+No blocking dependency issues for riscv64 are known. The GCC 15 requirement for RVV is the most consequential version constraint; distributions that ship GCC 14 or earlier cannot enable the RVV memset IFUNC path.
 
 ---
 
 ## 11. Known Bugs and Active Issues
 
-### 11.1 Fixed Bugs (historical, for context)
+**Closed correctness bugs:**
 
-| BZ | Title | Fixed in |
-|---|---|---|
-| BZ #32932 | `__riscv_hwprobe` wrong prototype (access attribute, `cpu_set_t *` vs `unsigned long *`) | glibc 2.42, May 2025 |
-| BZ #32269 | IFUNC resolver cannot access gp pointer -- SIGSEGV on resolvers using global variables | glibc 2.42, Feb 2025 |
-| BZ #32228 | `.preinit_array` section lacks pointer-size alignment | glibc 2.41, Oct 2024 |
-| BZ #31022 | `feenvupdate` fails to check for `FE_DFL_ENV` | glibc 2.39, Nov 2023 |
-| BZ #28703 | Stack not aligned to 128-bit boundary before `_dl_init` | Dec 2021 |
-| BZ #28702 | Stack not aligned to 128-bit boundary in `clone` | Dec 2021 |
-| BZ #24484 | DL_RO_DYN_SECTION ABI breakage | Jul 2019 |
+| ID | Title | Status | Severity | Notes |
+|---|---|---|---|---|
+| BZ #32932 | __riscv_hwprobe function prototype wrong (access attr, arg types, __THROW) | Fixed glibc 2.42 | Medium | False -Wstringop-overread warnings; backward compat via transparent union |
+| BZ #32228 | .preinit_array not aligned to pointer size | Fixed glibc 2.41 | Low | Section contains function pointers; alignment was wrong |
+| BZ #31022 | feenvupdate missing FE_DFL_ENV check | Fixed 2023 | Medium | Incorrect FP environment handling |
+| BZ #31151 | No dl_runtime_profile support | Fixed 2023 | Low | Blocked ltrace/profiling tools |
+| (no BZ) | Vector registers omitted from __SYSCALL_CLOBBERS | Fixed Sep 2025 | Critical | Silent data corruption possible in any code with live vector data across a syscall; required GCC 15+; affected all glibc built with RVV |
+| BZ #32269 / BZ #31317 | IFUNC resolver cannot access gp pointer | Fixed Feb 2025 | High | SIGSEGV in IFUNC resolver for PIE objects; gp pointer computed with unrelocated address |
 
-### 11.2 Open Issues
+**Open correctness bugs:**
 
-**Issue 1: RVV memset SIGILL on prctl-disabled vector (no BZ filed)**
-- **Severity:** High
-- **Introduced:** Dec 19, 2025 (commit [0b8a996](https://github.com/bminor/glibc/commit/0b8a996))
-- **Description:** The IFUNC resolver for `memset` checks `RISCV_HWPROBE_IMA_V` at process load time and selects `__memset_vector`. It does not re-check whether RVV has been subsequently disabled via `prctl(PR_RISCV_V_VSTATE_CTRL)`. Any process that disables vector support after startup and then calls `memset` receives SIGILL.
-- **Status:** Acknowledged in the commit message verbatim: "the resolver still selects the RVV variant even when the RVV extension is disabled via prctl(). As a consequence, any process that has RVV disabled via prctl() will receive SIGILL when calling memset()." No Bugzilla entry confirmed as of the research data.
-- **Mitigation:** Processes that use `prctl()` to disable RVV should not be run against glibc versions containing this commit until the fix lands.
+| ID | Title | Status | Severity | Notes |
+|---|---|---|---|---|
+| (no BZ) | RVV memset IFUNC selects vector path when RVV disabled via prctl | Open as of Feb 2026 | High | Process that calls prctl(PR_RISCV_V_VSTATE_CTRL_OFF) then memset() receives SIGILL; noted in merge commit 0b8a996f |
 
-**Issue 2: Missing vector register clobbers for GCC < 15 builds with V extension**
-- **Severity:** Low (build-time enforced)
-- **Status:** Resolved at the build level by the GCC >= 15 enforcement in `preconfigure.ac` (commit 4797591, Sep 2025). Distributions that backport the clobber fix without the GCC >= 15 guard could reintroduce silent vector register corruption. [NEEDS VERIFICATION: whether any major distribution has done this]
+**Active patch series not yet merged:**
 
-**Issue 3: RVV memcpy absent**
-- **Severity:** Performance gap, not correctness
-- **Status:** Not filed as a bug; the scalar `__memcpy_noalignment` path is the current "fast" variant. The RISE roadmap from Dec 2024 listed this as the next priority item. No upstream patch has landed as of the available data.
+| Series | Author | Status | Scale | Notes |
+|---|---|---|---|---|
+| "[PATCH v5 00/18] riscv: Add RVV str*/mem* routines" | Yao Zihong (ISCAS/PLCT) | Under review, Feb 2026 | 75 files, 3328 lines | Covers memccpy, memchr, memcmp, memcmpeq, memcpy, memmove, memrchr, stpncpy, strcat, strchr, strcmp, strcpy, strlen, strncat, strncmp, strncpy, strnlen, strrchr |
+| "[PATCH 00/12 -> v3 00/16] Support RISC-V Control Flow Integrity" | Jesse Huang (SiFive) | Under review, v3 Dec 2025 | 38 files, ~1336 lines | Zicfilp + Zicfiss; SSP in jmp_buf is ABI change; ucontext shadow stack described as "UNSAFE workaround" |
+| "[RFC PATCH 0/5] riscv: Add libmvec routines" | Yao Zihong (ISCAS/PLCT) | RFC, Feb 2026 | 23 files, ~1765 lines | Initial RVV log/logf; licensing question (veclibm derivation); integration approach not yet approved |
+| "[PATCH v3] RISC-V: Fix IFUNC resolver cannot access gp pointer" | Yangyu Chen | Under discussion, Jan 2025 | Small | Related to BZ #31317 / #32269 fix; edge case residual |
+| "[PATCH v2] riscv: Use RISCV_HWPROBE_KEY_MISALIGNED_SCALAR_PERF" | Charlie Jenkins | Under review, May 2025 | Small | Better hwprobe key for misaligned access performance detection |
+| "[RFC PATCH 0/1] riscv: Add Zilsd extension support for setjmp/longjmp on RV32" | Pincheng Wang | RFC, Jan 2026 | Small | RV32 only; Zilsd 64-bit load/store in setjmp |
 
 ---
 
 ## 12. Objections and Upstream Blockers
 
-**No architectural objections** to the RISC-V port exist in the upstream record. The port was accepted cleanly in 2018. The FSF/GNU governance model does not create structural barriers to RISC-V-specific work: RISC-V machine maintainers can approve their own patches within their subsystem, and there is no single corporate gatekeeper.
+**Objections to the RVV string suite.** Earlier upstream review cycles for assembly string routines indicated a preference for simpler implementations before microarchitecture-tuned versions. Jeffrey Law (Qualcomm) explicitly requested a "dead-simple vector implementation" before tuning; he provided a reference loop as guidance. This is a process expectation, not a hard blocker. v5 of the 18-routine suite addresses prior review feedback.
 
-**Practical friction points:**
+**CFI ABI change.** Appending the shadow stack pointer (SSP) to `struct __jmp_buf_internal_tag` is a binary ABI change. This requires coordination with distributors and has been a recurring concern on libc-alpha for all architectures adding CFI. The ucontext shadow stack management is explicitly described by the patch author as "UNSAFE" in v3. These are concrete technical objections that must be resolved before merge.
 
-1. **Sourceware.org inaccessibility:** Bugzilla, patchwork, gitweb, and mailing list archives are all blocked to programmatic HTTP access via Anubis bot protection. This makes automated tracking of open bugs, pending patches, and mailing list discussion effectively impossible for external tooling. Engineers working in this project must use the mailing list directly.
+**libmvec integration approach.** The RFC explicitly asks whether the integration approach is acceptable before investing in the full implementation. Licensing uncertainty (veclibm derivation) is a concrete blocker that requires legal clearance or a clean-room reimplementation.
 
-2. **GCC >= 15 requirement for RVV paths:** Any distribution or toolchain still on GCC 12-14 cannot build the RVV-optimized glibc routines. This affects embedded and older enterprise toolchains.
+**prctl/RVV memset bug.** The open SIGILL bug in merged RVV memset (prctl-disabled RVV) needs a fix before the 18-routine suite can safely extend the same IFUNC pattern to additional functions. A process that opts out of vector execution should not receive SIGILL from the C library.
 
-3. **No upstream riscv64 build CI on sourceware Buildbot:** Regressions in the RISC-V port are not caught by the upstream CI infrastructure. Detection depends on downstream distro builds (Debian, Fedora) and the RISE pre-commit CI (scope unverified).
-
-4. **Single-float ABI (F without D) unsupported:** This is a hard build error. Embedded riscv32 configurations with only the F extension cannot use glibc.
+**Sourceware Buildbot CI.** Both riscv64 builders are offline and have been failing. Without working CI, regressions are not detected between the time a patch is submitted and the time it lands. The absence of QEMU-based test execution in the canonical build script means there is no automated correctness gate for riscv64.
 
 ---
 
@@ -405,63 +375,83 @@ No RISE blog post addresses glibc development or patching as a standalone topic 
 
 ### 13.1 Functional Enablement
 
-The riscv64 port is functionally complete for standard `rv64gc lp64d` targets. The only functional gap requiring work is the RVV memset prctl SIGILL bug. All other functional components are production-grade.
+**Control Flow Integrity (Zicfilp + Zicfiss).** A 38-file patch series (v3) is under review. The open issues are: (a) the ucontext SSP management is unsafe, (b) the jmp_buf ABI change needs distributor coordination, (c) test coverage for the full interaction with signals and setjmp/longjmp is incomplete per review feedback. RISE compilers WG issue #5 tracks this. SiFive (Jesse Huang) is the primary author. A Qualcomm engineer with glibc review experience accelerating this to merge is the clearest investment leverage point. Estimated effort: 3-5 person-weeks to bring v3 to merge-quality, assuming the ABI change is accepted upstream. The ABI question has no engineering resolution - it requires community consensus.
+
+**RVV IFUNC prctl bug fix.** The open SIGILL bug in the merged RVV memset (prctl-disabled RVV not checked in resolver) is a correctness issue that blocks safe extension to other string functions. Fix effort: 1-2 person-weeks including upstream review cycle.
+
+**libmvec RVV (log/logf and beyond).** The RFC is at an early stage with unresolved integration and licensing questions. Log and logf are the initial scope; a full libmvec (sin, cos, exp, etc.) implementation is multiple person-months. The atan2f spec2017/WRF case (RISE issue #66) is specifically noted as harder on RISC-V because the ISA has no scalar reciprocal estimator, requiring a vector unit trip and FP unit transfer. An investment here is a multi-quarter effort with unclear upstream acceptance timeline given the RFC status.
 
 ### 13.2 Performance Optimization
 
-The primary performance gap is the absence of RVV-optimized routines beyond `memset`, and the absence of hand-tuned asm loops for string functions (strcmp, strlen, strchr, memchr, memmove, strncmp). The RISE roadmap identified this gap in Dec 2024. RVV memset landed Dec 2025. RVV memcpy is the most impactful next item.
+**RVV str*/mem* 18-routine suite.** v5 (Feb 2026) is in active review. Performance gains are documented: memcmp +54% on C920, +45% on SpacemiT X60; memccpy -49% time on SpacemiT X60. The primary bottleneck is reviewer bandwidth on libc-alpha. Assigning a Qualcomm engineer to drive review cycles and address feedback would be the highest-leverage action. Estimated effort to merge: 2-4 person-weeks of reviewer/author iteration, assuming no fundamental technical objections arise. The work is substantially done; it is in the review queue.
 
-Data not available: quantitative throughput comparison between riscv64 and arm64 for any string or memory function. No published benchmark numbers exist in accessible sources.
+**hwprobe misaligned scalar perf key (RISCV_HWPROBE_KEY_MISALIGNED_SCALAR_PERF).** Small patch under review (May 2025). Affects memcpy path selection. Low effort, high correctness value.
 
 ### 13.3 CI/CD Infrastructure
 
-The sourceware Buildbot has riscv64 hardware but no glibc builder. This is the highest-leverage infrastructure gap: catching regressions upstream, before they ship in distributions.
+Both sourceware.org riscv64 Buildbot builders are offline and all recent builds failed. There is no QEMU-based test execution for riscv64 in the canonical CI. This means riscv64 regressions are not detected until a distribution ships the release.
+
+Required work: (a) restore and stabilize the Fedora and Ubuntu riscv64 Buildbot builders on sourceware.org infrastructure, (b) add QEMU user-mode test execution to at least one builder configuration, (c) investigate and fix the underlying test failures that caused the builders to go offline. Estimated effort: 3-6 person-weeks including coordination with Red Hat/sourceware.org infrastructure team.
+
+RISE pre-commit CI is listed as covering glibc but no public dashboard or configuration details are available. This should be assessed before investing in new CI infrastructure to avoid duplication.
 
 ### 13.4 Ecosystem Enablement
 
-Downstream riscv64 deployments must run glibc >= 2.42 to avoid known crash-class bugs (IFUNC gp-pointer, static-PIE, hwprobe prototype). Ubuntu 24.04 ships glibc 2.39, which predates all three of these fixes. This is a deployment risk for riscv64 on Ubuntu 24.04 LTS.
+Not applicable. glibc is a system library. It has no dependent package ecosystem in the sense of Python packages, npm packages, or Maven JARs that separately require riscv64 enablement. glibc itself is a prerequisite for nearly every other software package on Linux, so its correctness and performance directly affect the entire ecosystem, but there is no ecosystem section warranted here.
 
 ### 13.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
-| Functional | Fix RVV memset SIGILL on prctl-disabled vector (no BZ filed) | 1-2 | RISC-V machine maintainers | Critical |
-| Performance | Implement RVV memcpy (IFUNC-dispatched) | 4-8 | ISCAS/PLCT, SiFive, Tenstorrent (current contributors) | High |
-| Performance | Implement RVV strlen, strcmp, strchr, memchr | 6-12 | ISCAS/PLCT, SiFive | High |
-| Performance | Implement RVV memmove, strncmp, strnlen | 4-8 | ISCAS/PLCT, SiFive | Medium |
-| CI/CD | Add riscv64 glibc builder to sourceware.org Buildbot | 2-4 (infra setup, ongoing maintenance) | Sourceware.org infra + RISC-V contributor | High |
-| CI/CD | Document and publish RISE glibc pre-commit CI scope and results | 1 | RISE / Compilers and Toolchains WG | Medium |
-| Ecosystem | Backport BZ #32269, BZ #32932, BZ #32228 fixes to Ubuntu 24.04 LTS | 1-2 | Canonical (Ubuntu) | High |
-| Performance | Add RVV-optimized libm functions (sinf, cosf, expf, logf for V-capable hardware) | 8-16 | Requires coordination with libm subsystem maintainers | Low |
+| Functional | Fix prctl/RVV SIGILL in memset IFUNC resolver | 1-2 | PLCT/ISCAS or Qualcomm | Critical |
+| Performance | Drive RVV str*/mem* 18-routine suite (v5) to merge | 2-4 | Qualcomm reviewer + PLCT author | High |
+| CI/CD | Restore riscv64 Buildbot builders on sourceware.org; fix failing tests | 3-6 | Red Hat / Qualcomm infra | High |
+| CI/CD | Add QEMU test execution to at least one riscv64 CI builder | 2-4 | Red Hat / Qualcomm infra | High |
+| Functional | Complete RISC-V CFI (Zicfilp+Zicfiss) - resolve ucontext safety and ABI questions | 3-5 | SiFive + community consensus | Medium |
+| Performance | hwprobe misaligned scalar perf key (small patch, under review) | 0.5 | Qualcomm reviewer | Medium |
+| Performance | libmvec RVV initial (log/logf) - resolve licensing, integration approach, implement | 8-16 | PLCT/ISCAS + Qualcomm | Low |
 
 ---
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-06-17.
 
 ---
 
 ## 15. References
 
-- [bminor/glibc GitHub mirror (archived Feb 2026)](https://github.com/bminor/glibc)
-- [glibc upstream homepage](https://www.gnu.org/software/libc/)
-- [GNU FTP -- glibc tarballs](https://ftp.gnu.org/gnu/libc/)
-- [Commit 0b8a996 -- RVV memset (Dec 2025)](https://github.com/bminor/glibc/commit/0b8a996)
-- [Commit 4797591 -- vector registers in __SYSCALL_CLOBBERS (Sep 2025)](https://github.com/bminor/glibc/commit/4797591)
-- [Commit 3fd2ff7 -- Fix IFUNC resolver gp pointer, BZ #32269 (Feb 2025)](https://github.com/bminor/glibc/commit/3fd2ff7)
-- [Commit 8af8beb -- Correct __riscv_hwprobe prototype, BZ #32932 (May 2025)](https://github.com/bminor/glibc/commit/8af8beb)
-- [Commit 720e891 -- Zbkb repeat_bytes optimization (Oct 2025)](https://github.com/bminor/glibc/commit/720e891)
-- [Commit 444d812 -- memcpy_noalignment Zca-friendly register allocation (Oct 2025)](https://github.com/bminor/glibc/commit/444d812)
-- [Commit 1f5d866 -- Consolidate atomic-machine.h (Sep 2025)](https://github.com/bminor/glibc/commit/1f5d866)
-- [Commit 273f803 -- Fix soft-float _FPU_SETCW for GCC 16 (Sep 2025)](https://github.com/bminor/glibc/commit/273f803)
-- [Commit 4c966c0 -- Use builtin for ffs/ffsll (Apr 2025)](https://github.com/bminor/glibc/commit/4c966c0)
-- [Commit 587a129 -- Alignment-ignorant memcpy (Feb 2024)](https://github.com/bminor/glibc/commit/587a129)
-- [Sourceware Buildbot -- glibc builders](https://builder.sourceware.org)
-- [Debian buildd tracker -- glibc sid riscv64](https://buildd.debian.org/status/package.php?p=glibc&suite=sid&arch=riscv64)
-- [Ubuntu 24.04 -- libc6 riscv64](https://packages.ubuntu.com/noble/riscv64/libc6/download)
-- [Arch Linux RISC-V package mirror](https://riscv.mirror.pkgbuild.com)
-- [RISE project homepage](https://riseproject.dev)
-- [RISE December 2024 End of Year Ecosystem Update](https://riseproject.dev/2024/12/18/rise-2024-end-of-year-ecosystem-update/)
-- [RISE RP009 -- LLVM SPEC Optimization (May 2025)](https://riseproject.dev/2025/05/08/project-rp009-llvm-spec-optimization/)
-- [riseproject-dev/riscv-gnu-toolchain-ci](https://github.com/riseproject-dev/riscv-gnu-toolchain-ci)
+- [bminor/glibc GitHub mirror (read-only, sourceware.org/git/glibc.git)](https://github.com/bminor/glibc)
+- [commit 0b8a996f: riscv: Add RVV memset for both multiarch and non-multiarch builds](https://github.com/bminor/glibc/commit/0b8a996f44b5f4c02991f02cd12bf05b17db4576)
+- [commit 47975914: riscv: Add vector registers to __SYSCALL_CLOBBERS](https://github.com/bminor/glibc/commit/47975914fb106b83c42bc0baf6435a0944a23d30)
+- [commit fc6f074e: riscv: linux: Add support for getrandom vDSO](https://github.com/bminor/glibc/commit/fc6f074e0496fb8a8df491641165f4ed3cdaa3a3)
+- [commit 8af8beb1: riscv: Correct __riscv_hwprobe function prototype BZ #32932](https://github.com/bminor/glibc/commit/8af8beb1c488dcfec754431c1626979276046545)
+- [commit 720e8916: riscv: Add Zbkb optimized repeat_bytes helper](https://github.com/bminor/glibc/commit/720e89163702ffa1e921d926b6c36b53c3ccbee4)
+- [commit a36814e1: riscv: align .preinit_array (bug 32228)](https://github.com/bminor/glibc/commit/a36814e1455093fc9ebfcdf6ef39bb0cf3d447da)
+- [commit 4e24e4d9: Add NT_RISCV_TAGGED_ADDR_CTRL from Linux 6.13 to elf.h](https://github.com/bminor/glibc/commit/4e24e4d936b57f6e7809032f55cc95a4cf4d2396)
+- [commit 273f8037: Fix RISC-V soft-float _FPU_SETCW for GCC 16 warnings](https://github.com/bminor/glibc/commit/273f80374aeb7d746352a098b23d9bb85e908ea8)
+- [libc-alpha: [PATCH v5 00/18] riscv: Add RVV str*/mem* routines (Feb 2026)](https://sourceware.org/pipermail/libc-alpha/2026-February/174800.html)
+- [libc-alpha: [PATCH 00/12] Support RISC-V Control Flow Integrity v1 (Jun 2025)](https://sourceware.org/pipermail/libc-alpha/2025-June/167831.html)
+- [libc-alpha: [RFC PATCH 0/5] riscv: Add libmvec routines (Feb 2026)](https://sourceware.org/pipermail/libc-alpha/2026-February/174950.html)
+- [libc-alpha: [PATCH v2] RISC-V: Add vector registers to __SYSCALL_CLOBBERS (Sep 2025)](https://sourceware.org/pipermail/libc-alpha/2025-September/169804.html)
+- [libc-alpha: [PATCH v3] riscv: Correct __riscv_hwprobe function prototype (Jun 2025)](https://sourceware.org/pipermail/libc-alpha/2025-June/167557.html)
+- [libc-alpha: [PATCH RFC v2] RISCV: insert zimop instruction at the start (Jun 2025)](https://sourceware.org/pipermail/libc-alpha/2025-June/167600.html)
+- [libc-alpha: [PATCH v3] RISC-V: Fix IFUNC resolver cannot access gp pointer (Jan 2025)](https://sourceware.org/pipermail/libc-alpha/2025-January/163560.html)
+- [libc-alpha: [RFC PATCH 0/1] riscv: Add Zilsd extension support for setjmp/longjmp on RV32 (Jan 2026)](https://sourceware.org/pipermail/libc-alpha/2026-January/174323.html)
+- [sourceware.org Buildbot API - glibc-ubuntu-riscv builder 293](https://builder.sourceware.org/buildbot/api/v2/builders/293)
+- [sourceware.org Buildbot API - glibc-fedora-riscv builder 336](https://builder.sourceware.org/buildbot/api/v2/builders/336)
+- [Debian package tracker: glibc](https://tracker.debian.org/pkg/glibc)
+- [Debian libc6 sid package page](https://packages.debian.org/sid/libc6)
+- [Debian buildd status for glibc/riscv64](https://buildd.debian.org/status/package.php?p=glibc&suite=sid)
+- [Ubuntu Noble packages: glibc-tools (riscv64)](https://packages.ubuntu.com/search?keywords=glibc&suite=noble&searchon=names&section=all)
+- [Arch Linux RISC-V port - core repository](https://archriscv.felixc.at/)
+- [GNU FTP: glibc releases](https://ftp.gnu.org/gnu/glibc/)
+- [RISE Project Dec 2024 end-of-year ecosystem update](https://riseproject.dev/2024/12/18/rise-2024-end-of-year-ecosystem-update/)
+- [RISE compilers-and-toolchains-wg issue #47: mem* and str* in glibc implementation](https://github.com/riseproject-dev/compilers-and-toolchains-wg/issues/47)
+- [RISE compilers-and-toolchains-wg issue #23: mem* and str* inline expansion in GCC](https://github.com/riseproject-dev/compilers-and-toolchains-wg/issues/23)
+- [RISE compilers-and-toolchains-wg issue #66: Improve performance of WRF benchmark (atan2f)](https://github.com/riseproject-dev/compilers-and-toolchains-wg/issues/66)
+- [RISE system-libraries-wg issue #2: glibc](https://github.com/riseproject-dev/system-libraries-wg/issues/2)
+- [riseproject-dev/gcc-postcommit-ci (includes check-glibc-linux target)](https://github.com/riseproject-dev/gcc-postcommit-ci)
+- [RISE Python wheel builder (manylinux riscv64 wheels)](https://riseproject.gitlab.io/python/wheel_builder/)
+- [bminor/glibc sysdeps/riscv directory tree](https://github.com/bminor/glibc/tree/master/sysdeps/riscv)
+- [bminor/glibc scripts/build-many-glibcs.py](https://raw.githubusercontent.com/bminor/glibc/master/scripts/build-many-glibcs.py)
