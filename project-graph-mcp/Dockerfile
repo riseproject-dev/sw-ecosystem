@@ -16,53 +16,53 @@ RUN cargo install --path /pg-collect
 # Each is pinned to the native build arch and uses an isolated cache mount.
 # ---------------------------------------------------------------------------
 
-# Ubuntu noble (main) / amd64
+# Ubuntu resolute (main) / amd64
 ARG BUILDARCH
 FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-ubuntu-main
 RUN --mount=type=cache,target=/tmp/cache,id=cache-ubuntu-main \
     pg-collect deb-full \
       --repo https://archive.ubuntu.com/ubuntu \
-      --dist noble --component main \
+      --dist resolute --component main \
       --arch amd64 \
       --with-sources --with-salsa \
       --cache-dir /tmp/cache \
-      -o /ubuntu-noble.nt
+      -o /ubuntu-resolute.nt
 
-# Ubuntu noble (universe) / amd64
+# Ubuntu resolute (universe) / amd64
 ARG BUILDARCH
 FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-ubuntu-universe
 RUN --mount=type=cache,target=/tmp/cache,id=cache-ubuntu-universe \
     pg-collect deb-full \
       --repo https://archive.ubuntu.com/ubuntu \
-      --dist noble --component universe \
+      --dist resolute --component universe \
       --arch amd64 \
       --with-sources --with-salsa \
       --cache-dir /tmp/cache \
-      -o /ubuntu-universe-noble.nt
+      -o /ubuntu-universe-resolute.nt
 
-# Ubuntu noble (main, ports) / arm64, riscv64
+# Ubuntu resolute (main, ports) / arm64, riscv64
 ARG BUILDARCH
 FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-ubuntu-ports-main
 RUN --mount=type=cache,target=/tmp/cache,id=cache-ubuntu-ports-main \
     pg-collect deb-full \
       --repo https://ports.ubuntu.com/ubuntu-ports \
-      --dist noble --component main \
+      --dist resolute --component main \
       --arch arm64 --arch riscv64 \
       --with-sources --with-salsa \
       --cache-dir /tmp/cache \
-      -o /ubuntu-ports-noble.nt
+      -o /ubuntu-ports-resolute.nt
 
-# Ubuntu noble (universe, ports) / arm64, riscv64
+# Ubuntu resolute (universe, ports) / arm64, riscv64
 ARG BUILDARCH
 FROM --platform=linux/${BUILDARCH} pg-collect-base AS collect-ubuntu-ports-universe
 RUN --mount=type=cache,target=/tmp/cache,id=cache-ubuntu-ports-universe \
     pg-collect deb-full \
       --repo https://ports.ubuntu.com/ubuntu-ports \
-      --dist noble --component universe \
+      --dist resolute --component universe \
       --arch arm64 --arch riscv64 \
       --with-sources --with-salsa \
       --cache-dir /tmp/cache \
-      -o /ubuntu-ports-universe-noble.nt
+      -o /ubuntu-ports-universe-resolute.nt
 
 # PyPI
 ARG BUILDARCH
@@ -93,18 +93,18 @@ RUN --mount=type=bind,source=maven-packages.txt,target=/maven-packages.txt \
 # ---------------------------------------------------------------------------
 ARG BUILDARCH
 FROM --platform=linux/${BUILDARCH} pg-collect-base AS db-load-1
-COPY --from=collect-ubuntu-main            /ubuntu-noble.nt                 /ubuntu-noble.nt
-COPY --from=collect-ubuntu-universe        /ubuntu-universe-noble.nt        /ubuntu-universe-noble.nt
-COPY --from=collect-ubuntu-ports-main      /ubuntu-ports-noble.nt           /ubuntu-ports-noble.nt
-COPY --from=collect-ubuntu-ports-universe  /ubuntu-ports-universe-noble.nt  /ubuntu-ports-universe-noble.nt
+COPY --from=collect-ubuntu-main            /ubuntu-resolute.nt                 /ubuntu-resolute.nt
+COPY --from=collect-ubuntu-universe        /ubuntu-universe-resolute.nt        /ubuntu-universe-resolute.nt
+COPY --from=collect-ubuntu-ports-main      /ubuntu-ports-resolute.nt           /ubuntu-ports-resolute.nt
+COPY --from=collect-ubuntu-ports-universe  /ubuntu-ports-universe-resolute.nt  /ubuntu-ports-universe-resolute.nt
 COPY --from=collect-pypi                   /pypi.nt                         /pypi.nt
 COPY --from=collect-maven                  /maven.nt                        /maven.nt
 RUN oxigraph load \
       --location /project-graph \
-      --file /ubuntu-noble.nt \
-      --file /ubuntu-universe-noble.nt \
-      --file /ubuntu-ports-noble.nt \
-      --file /ubuntu-ports-universe-noble.nt \
+      --file /ubuntu-resolute.nt \
+      --file /ubuntu-universe-resolute.nt \
+      --file /ubuntu-ports-resolute.nt \
+      --file /ubuntu-ports-universe-resolute.nt \
       --file /pypi.nt \
       --file /maven.nt \
       --lenient
@@ -114,53 +114,55 @@ RUN oxigraph load \
 # against the DB from db-load-1.
 # ---------------------------------------------------------------------------
 
-# GitHub enrichment
-ARG BUILDARCH
-FROM --platform=linux/${BUILDARCH} db-load-1 AS enrich-github
-RUN --mount=type=cache,target=/tmp/cache,id=cache-github \
-    --mount=type=secret,id=GITHUB_TOKEN \
-    bash -eux -o pipefail <<'EOF'
+## FIXME: removing enrichement for now, it's taking too long
 
-  # launch oxigraph server in the background
-  oxigraph serve --location /project-graph &
-  OXIGRAPH_PID=$!
-  # wait for the server to be ready
-  # until oxigraph info --location /project-graph; do sleep 1; done
-  sleep 5
+# # GitHub enrichment
+# ARG BUILDARCH
+# FROM --platform=linux/${BUILDARCH} db-load-1 AS enrich-github
+# RUN --mount=type=cache,target=/tmp/cache,id=cache-github \
+#     --mount=type=secret,id=GITHUB_TOKEN \
+#     bash -eux -o pipefail <<'EOF'
 
-  # Enrich the database with GitHub data
-  pg-collect enrich-github \
-    --endpoint http://localhost:7878/ \
-    --github-token "$(cat /run/secrets/GITHUB_TOKEN)" \
-    --cache-dir /tmp/cache \
-    -o /github.nt
+#   # launch oxigraph server in the background
+#   oxigraph serve --location /project-graph &
+#   OXIGRAPH_PID=$!
+#   # wait for the server to be ready
+#   # until oxigraph info --location /project-graph; do sleep 1; done
+#   sleep 5
 
-  # kill the oxigraph server
-  kill $OXIGRAPH_PID || true
-EOF
+#   # Enrich the database with GitHub data
+#   pg-collect enrich-github \
+#     --endpoint http://localhost:7878/ \
+#     --github-token "$(cat /run/secrets/GITHUB_TOKEN)" \
+#     --cache-dir /tmp/cache \
+#     -o /github.nt
 
-# Repology enrichment
-ARG BUILDARCH
-FROM --platform=linux/${BUILDARCH} db-load-1 AS enrich-repology
-RUN --mount=type=cache,target=/tmp/cache,id=cache-repology \
-    bash -eux -o pipefail <<'EOF'
+#   # kill the oxigraph server
+#   kill $OXIGRAPH_PID || true
+# EOF
 
-  # launch oxigraph server in the background
-  oxigraph serve --location /project-graph &
-  OXIGRAPH_PID=$!
-  # wait for the server to be ready
-  # until oxigraph info --location /project-graph; do sleep 1; done
-  sleep 5
+# # Repology enrichment
+# ARG BUILDARCH
+# FROM --platform=linux/${BUILDARCH} db-load-1 AS enrich-repology
+# RUN --mount=type=cache,target=/tmp/cache,id=cache-repology \
+#     bash -eux -o pipefail <<'EOF'
 
-  # Enrich the database with Repology data
-  pg-collect enrich-repology \
-    --endpoint http://localhost:7878/ \
-    --cache-dir /tmp/cache \
-    -o /repology.nt
+#   # launch oxigraph server in the background
+#   oxigraph serve --location /project-graph &
+#   OXIGRAPH_PID=$!
+#   # wait for the server to be ready
+#   # until oxigraph info --location /project-graph; do sleep 1; done
+#   sleep 5
 
-  # kill the oxigraph server
-  kill $OXIGRAPH_PID || true
-EOF
+#   # Enrich the database with Repology data
+#   pg-collect enrich-repology \
+#     --endpoint http://localhost:7878/ \
+#     --cache-dir /tmp/cache \
+#     -o /repology.nt
+
+#   # kill the oxigraph server
+#   kill $OXIGRAPH_PID || true
+# EOF
 
 # ---------------------------------------------------------------------------
 # Phase 2 convergence: load enrichment data and optimize the final DB.
@@ -168,13 +170,14 @@ EOF
 # ---------------------------------------------------------------------------
 ARG BUILDARCH
 FROM --platform=linux/${BUILDARCH} db-load-1 AS db-builder
-COPY --from=enrich-github   /github.nt   /github.nt
-COPY --from=enrich-repology /repology.nt /repology.nt
-RUN oxigraph load \
-      --location /project-graph \
-      --file /github.nt \
-      --file /repology.nt \
-      --lenient
+
+# COPY --from=enrich-github   /github.nt   /github.nt
+# COPY --from=enrich-repology /repology.nt /repology.nt
+# RUN oxigraph load \
+#       --location /project-graph \
+#       --file /github.nt \
+#       --file /repology.nt \
+#       --lenient
 
 RUN oxigraph optimize --location /project-graph
 
