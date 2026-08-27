@@ -1,462 +1,587 @@
 ---
-title: Agentic AI (CPU-only) -- RISC-V Ecosystem Status
+title: Agentic AI inference serving (CPU-only) -- RISC-V Ecosystem Status
 ---
 
-# Agentic AI (CPU-only) -- RISC-V Ecosystem Status
+# Agentic AI inference serving (CPU-only) -- RISC-V Ecosystem Status
 
 **Author:** Ludovic Henry<br/>
-**Date:** 2026-08-13<br/>
-**Scope:** RISC-V readiness of the Agentic AI (CPU-only) software stack<br/>
+**Date:** 2026-08-12<br/>
+**Scope:** RISC-V readiness of the Agentic AI inference serving (CPU-only) software stack<br/>
 **Target profile:** RVA23U64<br/>
 **Audience:** exec-product<br/>
-**Verification policy:** Colors are assigned from primary upstream sources, adversarially verified
-against the per-project reports under reports/. Items not verifiable against a second source are
-marked [NEEDS VERIFICATION]. PyPI wheel status verified live on 2026-08-12.
+**Verification policy:** Colors are assigned from primary upstream sources, adversarially verified against the per-project reports under reports/. Items not verifiable against a second source are marked [NEEDS VERIFICATION].<br/>
+
+**Out of scope (deliberately excluded, not assessed):** torch.compile pipeline (TorchDynamo, AOTAutograd, TorchInductor, Triton, torch-mlir, IREE, MLIR, LLVM); PyTorch distributed training (NCCL, Gloo collective, torch.distributed); Numba / llvmlite.
 
 ---
 
-## Artifact 1 -- Layered Stack Outline
+## Artifact 1: Layered stack outline
 
-*This section is formatted for direct paste into a PowerPoint stack diagram generator (e.g. Copilot for PowerPoint). One section per layer, one bullet per node.*
+### Color key
 
----
-
-## Layer 1 -- Orchestration & Agents
-
-- **LangChain** -- green (critical)
-  - Python framework for chains, agents, tool use, and RAG pipelines.
-  - License: MIT. Governance: LangChain, Inc. (company-controlled).
-  - Architecture-independent: `py3-none-any` wheel; installs on riscv64 via `pip install` without modification.
-
-- **LangGraph** -- green (critical)
-  - Stateful multi-agent graph orchestration layer built on LangChain.
-  - License: MIT. Governance: LangChain, Inc.
-  - Architecture-independent: `py3-none-any` wheel; installs on riscv64 via `pip install` without modification.
-
-- **Ray** -- grey, unknown (optional)
-  - Distributed execution framework for scaling Agentic AI workloads across nodes.
-  - License: Apache 2.0. Governance: Anyscale (company-controlled).
-  - No per-project report exists; no live riscv64 check performed. Ray ships compiled C++/Cython extensions. [NEEDS VERIFICATION]
+| Color | Meaning |
+|-------|---------|
+| green | Upstream ships riscv64 artifact; architecture-independent or test-passing CI |
+| blue | Tests run and pass in CI (upstream or verified downstream); no upstream binary release |
+| yellow | Build-only CI, clean distro build, or minimal optimization cap on blue CI |
+| orange | No CI, no clean distro build, or optimization entirely absent |
+| red | Confirmed broken on riscv64 |
+| grey | Not applicable (proprietary / GPU-only / out-of-scope) |
 
 ---
 
-## Layer 2 -- Inference Serving
+## Layer 1 -- Runtimes & System Libraries
 
-- **vLLM (CPU backend)** -- orange, upstream-ships-untested (critical)
-  - High-throughput LLM serving engine with continuous batching and OpenAI-compatible API.
-  - License: Apache 2.0. Governance: vLLM Project (Linux Foundation AI).
-  - Release provider: none (no riscv64 binary wheel on PyPI; must be built from source).
-  - Gap: dedicated riscv64 CPU backend exists in source; builds and runs; no upstream riscv64 CI test suite. torchvision, torchaudio, and numba explicitly excluded on riscv64.
+- **CPython** -- blue (critical)
+  - Reference Python 3.x interpreter; required by all Python-based inference serving components.
+  - License: PSF License 2.0. Governance: Python Software Foundation.
+  - Release provided by RISE (riseproject-dev/python-versions), not upstream.
+  - Gap: Upstream CPython buildbot riscv64 runner (builder 1377, "riscv64 Ubuntu23 PR") fires only on-demand per PR, not continuously; the last observed run was 2026-06-30 (build #34, passing), with no subsequent runs in the following ~59 days. No riscv64 binary is published by python.org.
 
-- **llama.cpp** -- blue (critical)
-  - GGUF-format LLM inference engine; alternative to vLLM for CPU-only deployments.
-  - License: MIT. Governance: community (ggerganov).
-  - Release provider: none (no riscv64 binary release; upstream source only).
-  - Gap: upstream CI builds and runs tests on riscv64 via RISE native runners; no binary release. RISE-funded RVV optimization project (RP-014) active. Most performant riscv64 inference option for GGUF models today.
+- **glibc** -- yellow (critical)
+  - GNU C Library; the ABI foundation for all native code on Linux riscv64.
+  - License: LGPL v2.1+. Governance: FSF / GNU Project.
+  - Release provided by Ubuntu (Noble 24.04 ships 2.39) and Debian sid.
+  - Gap: In-tree cross-compile CI has no test execution on riscv64. Sourceware Buildbot riscv64 builders (IDs 293, 336) attempt tests but return result=2 (failure) on every observable run and are currently offline. Ubuntu Noble 24.04 ships glibc 2.39, which predates the `__SYSCALL_CLOBBERS` vector-clobber fix (Sep 2025) and BZ#32932 (hwprobe prototype, glibc 2.42) -- a concrete deployment risk for RVA23 vector workloads on that LTS platform.
 
-- **ExecuTorch** -- blue (optional)
-  - PyTorch on-device edge inference runtime; targets embedded and single-board RISC-V hardware.
-  - License: BSD-3-Clause. Governance: PyTorch Foundation (Meta-anchored).
-  - Release provider: none (no upstream riscv64 PyPI wheel in any v0.1.0-v1.4.0 release).
-  - Gap: upstream CI runs a comprehensive riscv64 test matrix (6 models x XNNPACK on/off x RVV vlen 128/256/512) via QEMU; declared Phase 1 (proof-of-concept). RISE fork (riseproject-dev/executorch) active. Transition to native hardware runners is the next milestone.
+- **OpenSSL** -- blue (critical)
+  - TLS/crypto library; required by CPython, gRPC, and HTTP clients.
+  - License: Apache 2.0. Governance: OpenSSL Foundation.
+  - Release provided by Debian sid, Ubuntu 24.04, and Arch Linux RISC-V; upstream ships source only.
+  - Note: AES T-table constant-time fix PRs [#31080](https://github.com/openssl/openssl/pull/31080) and [#31082](https://github.com/openssl/openssl/pull/31082) remain open as of 2026-08-28. This is a security gap but does not affect the CI tier.
+
+- **jemalloc** -- orange (critical)
+  - High-performance allocator used by vLLM and PyTorch CPU backends for arena-based memory management.
+  - License: BSD 2-Clause. Governance: Meta / community.
+  - Release provided by Debian sid (libjemalloc2 5.3.1-2).
+  - Gap (optimization-absent): No Zihintpause spinwait, no RVV, no RISC-V assembly anywhere in the codebase. Falls back entirely to generic scalar. As an optimization-purpose allocator, absent optimization caps at orange regardless of distro availability.
+
+- **LZ4** -- yellow (critical)
+  - Fast lossless compression; used for KV-cache snapshots and checkpoint serialization in vLLM and LangGraph.
+  - License: BSD 2-Clause. Governance: Yann Collet / Meta.
+  - Release provided by Debian sid.
+  - Gap: `LZ4_FAST_DEC_LOOP` and `wildCopy64` fast decompression paths remain disabled for riscv64 while enabled on x86 and arm64. Four PRs addressing this ([#1678](https://github.com/lz4/lz4/pull/1678), [#1686](https://github.com/lz4/lz4/pull/1686), [#1739](https://github.com/lz4/lz4/pull/1739), [#1778](https://github.com/lz4/lz4/pull/1778)) are open and unmerged as of 2026-08-28. Only the Zicclsm unaligned-access scalar fix is merged, yielding minimal optimization.
+
+- **zstd** -- yellow (critical)
+  - Zstandard compression; used for model weight storage and streaming in SafeTensors and ONNX Runtime paths.
+  - License: BSD + GPLv2 (dual). Governance: Meta.
+  - Release provided by Debian sid.
+  - Gap: Huffman 4-way decode loop gated to aarch64 only (PR [#4622](https://github.com/facebook/zstd/pull/4622) open); sequence decode fast path absent for riscv64 (PR [#4557](https://github.com/facebook/zstd/pull/4557) open); unaligned-access optimization for Zicclsm unmerged (PR [#4596](https://github.com/facebook/zstd/pull/4596) open). Dominant decompression hot paths remain scalar.
+
+- **gRPC** -- orange (optional)
+  - RPC framework; used by some vLLM distributed serving configurations and OpenTelemetry exporters.
+  - License: Apache 2.0. Governance: CNCF.
+  - Release provided by Arch Linux RISC-V (1.81.0-1) and Debian sid (1.51.1-9+b1); requires riscv64-specific env var overrides to build (GRPC_BUILD_WITH_BORING_SSL_ASM=0, GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1, -latomic workaround).
+  - Gap: No upstream CI for riscv64. Issue [#41591](https://github.com/grpc/grpc/issues/41591) requesting official riscv64 wheels was closed 2026-07-15 by maintainer sergiitk citing Google's OSS Support Policy, which explicitly does not cover riscv64 -- upstream has affirmatively declined formal riscv64 support.
+
+- **tcmalloc** -- orange (optional)
+  - Google's thread-caching allocator; an optional high-performance allocator used by some serving frameworks.
+  - License: Apache 2.0. Governance: Google.
+  - No release from any source; the Debian/Ubuntu `libtcmalloc-*` packages ship the unrelated gperftools codebase, not google/tcmalloc.
+  - Gap (optimization-absent): The lock-free per-CPU RSEQ slab -- tcmalloc's primary value proposition -- is guarded to x86_64 and aarch64 only in `percpu.h`. riscv64 falls back to the slower per-thread path. No RISC-V-specific code exists anywhere in the project.
+
+- **Protobuf** -- yellow (optional)
+  - Protocol Buffers serialization; used by gRPC and ONNX model format parsing.
+  - License: BSD 3-Clause. Governance: Google.
+  - Release provided by Debian sid (3.21.12-16, built on rv-manda-03, status Installed).
+
+- **FlatBuffers** -- yellow (optional)
+  - Zero-copy serialization; used by ExecuTorch and TFLite model loading paths.
+  - License: Apache 2.0. Governance: Google.
+  - Release provided by Debian sid (libflatbuffers-dev 23.5.26+dfsg-4+b2, built on rv-osuosl-02).
+
+- **snappy** -- yellow (optional)
+  - Fast compression; used internally by LevelDB (LangGraph checkpoint backends) and some model-store caches.
+  - License: BSD 3-Clause. Governance: Google.
+  - Release provided by Debian sid.
+  - Gap: Hardware CRC32 hash (SSE4.2 / ARMv8 CRC on x86/arm64) and V128 byte shuffle in the decompressor (SSSE3/NEON on x86/arm64) remain absent on riscv64. Secondary paths have RISC-V-specific code (Zicond, Zbb, partial RVV MemCopy64), yielding minimal optimization.
 
 ---
 
-## Layer 3 -- ML Framework
+## Layer 2 -- Python Infrastructure
 
-- **PyTorch (CPU eager inference)** -- orange, upstream-ships-untested (critical)
-  - Deep learning framework; ATen CPU kernels used for eager inference.
-  - License: BSD-3-Clause. Governance: PyTorch Foundation (Linux Foundation, Meta-anchored).
-  - Release provider: none (no riscv64 PyPI wheel as of Aug 2026).
-  - Gap: cross-compile CI only; RISE out-of-tree native CI active (870+ jobs/6 wk); no PyTorch riscv64 PyPI wheel; RFC #77 to elevate to supported tier open/draft. Must be built from source.
+- **Pydantic** -- yellow (critical)
+  - Data validation and schema library; required by FastAPI request/response schemas, LangChain tool definitions, and vLLM configuration objects.
+  - License: MIT. Governance: Pydantic Ltd.
+  - Release provided by upstream (pydantic-core 2.48.0 ships 8 riscv64 manylinux wheels on PyPI).
+  - Gap: The `core-test-builds-arch` CI job that runs pytest via QEMU covers armv7, s390x, ppc64le, and aarch64 only; riscv64 is absent from the test matrix. Build-only CI.
 
-- **HuggingFace Transformers** -- green (critical)
-  - Model loading, AutoModel, generation pipelines for LLMs (LLaMA, Gemma, Mistral, etc.).
-  - License: Apache 2.0. Governance: HuggingFace, Inc.
-  - Architecture-independent: pure Python; installs on riscv64 via `pip install` without modification.
+- **httpx** -- green (critical)
+  - Async HTTP client; used by LangGraph, LangSmith, and HuggingFace Hub for remote API calls.
+  - License: BSD 3-Clause. Governance: Encode.
+
+- **requests** -- green (critical)
+  - Synchronous HTTP client; used by HuggingFace Hub, langchain-core, and model download utilities.
+  - License: Apache 2.0. Governance: PSF / Kenneth Reitz.
+
+- **typing-extensions** -- green (critical)
+  - Backport of Python typing features; required by Pydantic, LangChain, and PyTorch.
+  - License: PSF License 2.0. Governance: Python Software Foundation.
+
+- **aiohttp** -- yellow (optional)
+  - Async HTTP library; used by some LangChain community integrations and agentic tool connectors.
+  - License: Apache 2.0. Governance: aio-libs.
+  - Release provided by upstream (12 riscv64 wheels, manylinux and musllinux, on PyPI for v3.14.3).
+  - Gap: `test-command = ""` in pyproject.toml disables all test execution globally for the cibuildwheel build; build-only CI.
+
+- **packaging** -- green (optional)
+  - PEP-compliant version parsing; a dependency of pip, setuptools, and most Python packaging tools.
+  - License: Apache 2.0 / BSD 2-Clause (dual). Governance: Python Packaging Authority (PyPA).
+
+- **fsspec** -- green (optional)
+  - Filesystem abstraction; used by HuggingFace Hub for remote model loading.
+  - License: BSD 3-Clause. Governance: community (NumFOCUS-affiliated).
+
+- **tqdm** -- green (optional)
+  - Progress-bar utility; used by HuggingFace Hub and Transformers for download progress reporting.
+  - License: MIT + MPL 2.0. Governance: community.
+
+- **networkx** -- green (optional)
+  - Graph algorithms library; an optional dependency for LangGraph visualization and some chain analysis tools.
+  - License: BSD 3-Clause. Governance: NumFOCUS.
+
+- **sympy** -- green (optional)
+  - Symbolic mathematics; an optional dependency for some Transformers math utilities and model analysis tools.
+  - License: BSD 3-Clause. Governance: NumFOCUS.
+
+- **OpenTelemetry API** -- green (optional)
+  - Vendor-neutral observability API; used by LangSmith and vLLM for distributed tracing.
+  - License: Apache 2.0. Governance: CNCF.
+
+- **OpenTelemetry SDK** -- green (optional)
+  - Reference implementation of the OpenTelemetry API.
+  - License: Apache 2.0. Governance: CNCF.
+
+---
+
+## Layer 3 -- Compute
+
+- **OpenBLAS** -- blue (critical)
+  - Optimized BLAS; primary matrix-multiply backend for PyTorch CPU and ExecuTorch on riscv64 when oneDNN/XNNPACK do not cover an operation.
+  - License: BSD 3-Clause. Governance: OpenMathLib.
+  - No upstream binary release; must be built from source.
+  - Gap (partial optimization): GEMM fully covered with RVV intrinsics. TRSM partially covered in v0.3.34 (PR #5830 merged 2026-08-16): STRSM all variants and DTRSM/CTRSM/ZTRSM RN+RT covered via RVV; DTRSM/CTRSM/ZTRSM LN+LT cases still fall back to generic C.
+
+- **oneDNN (DNNL)** -- blue (critical)
+  - Intel's deep learning primitives library; the primary JIT-dispatch backend for PyTorch ATen CPU convolution, matmul, and pooling via xbyak_riscv.
+  - License: Apache 2.0. Governance: UXL Foundation.
+  - No upstream binary release.
+  - Gap (partial optimization): `src/cpu/rv64/` contains JIT RVV for f32/f16/bf16 conv, matmul, GEMM, pooling, softmax, layernorm, and eltwise. INT8 conv/matmul (s8/u8) absent.
+
+- **XNNPACK** -- blue (critical)
+  - Accelerated neural network primitives; the primary compute backend for ExecuTorch and an alternate backend for PyTorch ATen on riscv64.
+  - License: BSD 3-Clause. Governance: Google.
+  - No upstream binary release.
+  - Gap (partial optimization): 206 production RVV/Zvfh kernel files covering GEMM, DWCONV, elementwise, reductions. BF16 absent. No hand-written assembly. Narrower MR/NR tile sizes than arm64. FP16 detection bug (issue #9886) fixed in commit aee6b1b3 (2026-04-07); CI passing since at least 2026-07-08.
+
+- **SLEEF** -- blue (critical)
+  - Vectorized math library; provides transcendental functions (exp, log, sin, cos) for PyTorch ATen and oneDNN on riscv64.
+  - License: BSL-1.0 (Boost Software License). Governance: Naoki Shibata / community.
+  - Release provided by Debian sid (3.9.0-1), not upstream.
+  - Optimization: Full RVV v1.0 backend covering all in-scope SP and DP transcendentals with RVVM1 and RVVM2 LMUL configurations, matching arm64 SVE coverage. Tests run natively on riscv64 hardware via Jenkins CI.
+
+- **Eigen** -- blue (optional)
+  - C++ linear algebra library; used by ONNX Runtime and some Transformers model components.
+  - License: MPL 2.0. Governance: community.
+  - No release artifact for riscv64 from any source; RVV backend is master-only (latest release 5.0.1, 2025-11-08, contains no RVV content).
+  - Gap: All riscv64 CI jobs carry `allow_failure: true`. RVV backend covers GEMM, packet math for int/float/FP16/BF16/complex; transcendental functions (exp/log/sin/cos) and masked partial-packet tails still use scalar fallback.
 
 ---
 
 ## Layer 4 -- Model Ecosystem
 
-- **HuggingFace Tokenizers** -- blue (critical)
-  - Fast Rust-based BPE/WordPiece/Unigram tokenizer used by Transformers.
-  - License: Apache 2.0. Governance: HuggingFace, Inc.
-  - Release provided by upstream (PyPI `manylinux_2_31_riscv64` wheel since v0.23.1, Apr 2026).
-  - Gap: upstream CI does not run the riscv64 test suite (cross-compile build only).
+- **HuggingFace Hub** -- green (critical)
+  - Model registry client; used by Transformers, SafeTensors, and ONNX Runtime to download model weights and tokenizer configs.
+  - License: Apache 2.0. Governance: Hugging Face.
 
-- **SentencePiece** -- orange, downstream-only (critical)
-  - BPE/unigram tokenizer required for LLaMA, Gemma, and T5 model families.
+- **SafeTensors** -- yellow (critical)
+  - Safe, fast tensor serialization format; the default model-weight storage format for HuggingFace Transformers.
+  - License: Apache 2.0. Governance: Hugging Face.
+  - Release provided by upstream (safetensors-0.8.0 manylinux_2_31_riscv64 wheel on PyPI).
+  - Gap: riscv64 CI matrix entry contains only checkout, maturin-action cross-build, and upload steps with no pytest, QEMU, or test execution. Build-only CI; publishing a wheel without test execution does not satisfy the green criterion.
+
+- **HuggingFace Tokenizers** -- yellow (critical)
+  - Fast tokenizer library (Rust + PyO3); required by Transformers for tokenizing inputs to all major LLMs.
+  - License: Apache 2.0. Governance: Hugging Face.
+  - Release provided by upstream (manylinux_2_31_riscv64 wheel since v0.23.1, April 2026).
+  - Gap: riscv64 matrix entry in CI.yml has only "Build wheels" and "Upload wheels" steps; no test execution step exists for riscv64 on any trigger. Build-only CI.
+
+- **NumPy** -- yellow (critical)
+  - N-dimensional array library; a transitive dependency of most ML framework components on the Python path.
+  - License: BSD 3-Clause. Governance: NumFOCUS.
+  - Release provided by RISE (wheels up to 2.5.2); no upstream riscv64 wheel on PyPI.
+  - Gap: Native riscv64 CI workflow (`linux_riscv64.yml`) is build-only; no test command in cibuildwheel config. QEMU CI (`linux_qemu.yml`) runs tests but carries `continue-on-error: true` (non-blocking). The NPYV layer has no RVV backend; all ~22 arithmetic, transcendental, reduction, and comparison ufunc kernels fall back to scalar C.
+
+- **SentencePiece** -- blue (critical)
+  - Subword tokenizer; used by Transformers for T5, LLaMA, and Gemma tokenization.
   - License: Apache 2.0. Governance: Google.
-  - Release provided by RISE (RISE wheel builder); no official PyPI riscv64 wheel.
-  - Gap: riscv64 pip install from official PyPI fails; RISE wheel builder is the only consumable source.
+  - Release provided by RISE unofficial wheel builder; no riscv64 wheel in upstream v0.2.2 release (published 2026-07-12). `wheel.yml` uses `CIBW_ARCHS_LINUX: auto` with no riscv64 entry.
 
-- **Tiktoken** -- red (optional)
-  - BPE tokenizer for OpenAI-family models (GPT-4, GPT-2, Llama 3).
+- **Tiktoken** -- yellow (optional)
+  - OpenAI's BPE tokenizer; used by some LangChain integrations and OpenAI-compatible vLLM endpoints.
   - License: MIT. Governance: OpenAI.
-  - Release provider: none (no riscv64 PyPI wheel confirmed Aug 2026).
-  - Gap: PR #506 stalled; Rust source build possible but no consumable artifact shipped by anyone.
+  - Release provided by RISE (BayLibre GitLab PyPI index) and Debian sid (0.12.0-2, built on native riscv64).
+  - Gap: No upstream riscv64 CI or PyPI wheel (latest 0.14.0, released 2026-08-17, has no riscv64 artifact). Upstream PR [#506](https://github.com/openai/tiktoken/pull/506) adding riscv64 CI remains open and unmerged.
 
-- **NumPy** -- orange, downstream-only (critical)
-  - N-dimensional array library; fundamental dependency for the entire Python ML stack.
-  - License: BSD-3-Clause. Governance: NumFOCUS / NumPy Steering Council.
-  - Release provided by RISE (RISE wheel builder); no official PyPI riscv64 wheel as of Aug 2026 (Q3 2026 target missed).
-  - Gap: riscv64 CI active (QEMU + native RISE runner); Highway SIMD ufuncs require Clang 19+/GCC 15+ for RVV runtime dispatch.
-
-- **SafeTensors** -- green (critical)
-  - Secure model weight format; primary serialization for HuggingFace Transformers and vLLM.
-  - License: Apache 2.0. Governance: HuggingFace, Inc.
-  - Release provided by upstream (PyPI `manylinux_2_31_riscv64` wheel in v0.8.0, shipped 2026-06-09).
-  - RISE wheel builder previously provided older versions (0.5.2-0.7.0) and has since self-deprecated.
-
-- **ONNX Runtime (CPU EP)** -- orange, upstream-ships-untested (optional)
-  - Alternative ONNX model inference backend; optional path for non-LLM models.
-  - License: MIT. Governance: Microsoft / ONNX project.
-  - Release provider: none (no binary; cross-compile build guide exists).
-  - Gap: experimental; no upstream riscv64 CI; RVV kernels actively merging (SiFive, ZTE).
+- **ONNX Runtime (CPU EP)** -- yellow (optional)
+  - Cross-platform ML inference runtime; optional model-load path in HuggingFace Transformers (`optimum` backend).
+  - License: MIT. Governance: Microsoft / ONNX Runtime project.
+  - Release provided by Debian sid (1.23.2+dfsg-6+b5, built on rv-osuosl-01).
+  - Gap: No riscv64 CI across all 50+ workflow files. Debian packaging patches are not riscv64-specific. Eleven RVV MLAS kernel files exist in-tree (partial optimization), but the distro-floor grade is yellow and optimization level does not lower it further.
 
 ---
 
-## Layer 5 -- Compute
+## Layer 5 -- ML Framework
 
-- **FAISS (CPU)** -- orange, downstream-only (critical)
-  - Dense vector similarity search library for RAG retrieval.
-  - License: MIT. Governance: Meta AI Research.
-  - Release provider: none (no riscv64 PyPI wheel; no distro binary available).
-  - Gap: cross-compile CI merged (PR #5184); one RVV kernel exists (ScalarQuantizer QT_4bit_uniform L2); all other hot paths are scalar fallback. ISCAS port PR #4503 blocked since Sep 2025. Must be built from source.
+- **PyTorch (CPU eager inference)** -- yellow (critical)
+  - The primary ML framework for most agentic inference serving paths; ATen is the tensor compute backend for the vLLM CPU path and HuggingFace Transformers.
+  - License: BSD 3-Clause (modified). Governance: Meta / PyTorch Foundation (Linux Foundation).
+  - Release provided by Debian sid (v2.12.0+dfsg2-4); no riscv64 wheel on PyPI or RISE.
+  - Gap: Upstream CI (`.github/workflows/riscv64.yml`) contains exactly one job: `pytorch-linux-noble-riscv64-py3_12-gcc14-cross-build` with no test matrix -- build-only CI. ATen CPU vectorization has zero RVV dispatch: the `CPUCapability` enum lists DEFAULT/VSX/ZVECTOR/SVE256/SVE128/AVX2/AVX512 with no RVV entry. PR #175746 (RVV ATen vectorization) was closed without merging after the 2026-06-17 report date, making the ATen SIMD gap permanent in the near term. One RVV kernel exists (DepthwiseConvKernel.cpp, 76 lines from PR #127867). RISE out-of-tree CI (riseproject-dev/pytorch-ci) has a conditional test job on native riscv64 hardware but does not gate upstream PRs.
 
-- **OpenBLAS** -- orange, upstream-ships-untested (critical)
-  - BLAS/LAPACK reference implementation; primary GEMM backend for NumPy and PyTorch CPU.
-  - License: BSD-3-Clause. Governance: community.
-  - Release provided by Debian/Ubuntu (system package).
-  - Gap: CI is QEMU-only (no native hardware); LAPACK correctness unvalidated by upstream; open TRSM ZVL256B correctness bug; Ubuntu 24.04 ships v0.3.26 (missing DYNAMIC_ARCH and ZVL targets -- use Debian sid v0.3.33+). GCC 14+ required for RVV paths.
+- **HuggingFace Transformers** -- green (critical)
+  - Model architecture library providing Llama, Mistral, Qwen, and other LLM implementations used by vLLM and agentic pipelines.
+  - License: Apache 2.0. Governance: Hugging Face.
+  - Pure Python; all compute delegated to PyTorch, ONNX Runtime, or other backends. No architecture-specific code.
 
-- **Eigen** -- green (optional)
-  - Header-only C++ linear algebra library; used by ONNX Runtime (Eigen EP) and optional PyTorch paths.
-  - License: MPL-2.0. Governance: community (Tuxfamily).
-  - Architecture-independent: header-only; ships as `libeigen3-dev` (`arch: all`) in Debian/Ubuntu; no compiled artifacts.
-  - Note: a full RVV 1.0 SIMD backend (Tenstorrent/Syntacore; 11 headers covering float32/64, int8-64, FP16, BF16, complex, GEMM) was merged to master Nov 2025; CI runs on native SpacemiT K3 hardware (`allow_failure: true`). Not included in any versioned release (3.4.1 and 5.0.1 both predate the merge). To activate RVV: build from git master with GCC 14+/Clang 18+ and pass `-DEIGEN_RISCV64_USE_RVV10 -mrvv-vector-bits=zvl`. Known performance gaps on riscv64 master: no vectorized transcendentals (exp/log/sin/cos); `has_packet_segment` not implemented for tail elements (issue #3086).
-
-- **oneDNN (DNNL)** -- orange, upstream-ships-untested (critical)
-  - Deep learning convolution, matmul, pooling primitives; embedded in PyTorch CPU.
-  - License: Apache 2.0. Governance: UXL Foundation (Intel-anchored).
-  - Release provided by Debian sid (libdnnl3.6); no upstream binary.
-  - Gap: experimental tier; QEMU CI (SMOKE tests only); INT8 quantized conv/matmul missing; FP16 reduction overflow bug open (PR #5361); LLVM libomp build failure on native riscv64 blocks Clang deployments.
-
-- **XNNPACK** -- orange, downstream-only (critical)
-  - Accelerated inference kernels used by PyTorch CPU eager path and vLLM CPU backend.
-  - License: BSD-3-Clause. Governance: Google.
-  - Release provided by Debian sid (debports `libxnnpack0.20241108`, November 2024 snapshot -- 18 months stale).
-  - Gap: upstream CI currently has 100+ RVV FP16 test failures (issue #9886, open Apr 2026); root cause is QEMU configured without Zvfh while PR #9516 unconditionally enables FP16 dispatch. On RVA23U64 hardware where Zvfh is mandatory, FP16 inference works correctly -- the failures are QEMU-environment-specific. Tests are not run on master merges. BF16 kernels entirely absent. The Debian binary is 18 months stale and predates all 2025-2026 FP16 and pool/reduce kernel additions; consumers should build from source.
-
-- **FBGEMM** -- red (optional)
-  - Meta's quantized GEMM and embedding lookup library; used by PyTorch quantized operators.
-  - License: BSD-3-Clause. Governance: Meta (company-controlled; no foundation).
-  - Release provider: none (no riscv64 PyPI wheel or binary; PyTorch disables FBGEMM on riscv64 at configure time).
-  - Gap: no riscv64 port exists; runtime GEMM dispatch throws `std::runtime_error` on any GEMM call; asmjit JIT dependency has no RVV backend (listed "Pending" with no timeline). No RISE involvement; Meta has no expressed interest in a RISC-V port.
-
-- **SLEEF** -- blue (critical)
-  - SIMD vectorized math library (sin, cos, log, exp) used by PyTorch ATen.
-  - License: BSL-1.0. Governance: shibatch (individual maintainer).
-  - Release provided by upstream (v3.9.0, March 2025).
-  - Gap: upstream CI uses Jenkins (private, not GitHub Actions); no public CI badge for riscv64. DFT subcomponent disabled in upstream CI. RISE-funded integration into OpenJDK complete.
+- **Accelerate** -- green (optional)
+  - HuggingFace distributed training and mixed-precision abstraction; used by some LangChain tool integrations.
+  - License: Apache 2.0. Governance: Hugging Face.
 
 ---
 
-## Layer 6 -- Communication & Serialization
+## Layer 6 -- Inference Serving
 
-- **gRPC** -- orange, downstream-only (critical)
-  - RPC framework; primary transport for vLLM serving API and Ray cluster communication.
-  - License: Apache 2.0. Governance: CNCF / Google-controlled (6 of 7 steering seats Google).
-  - Release provided by Debian/Ubuntu (system C++ library); no official Python PyPI riscv64 wheel.
-  - Gap: no upstream riscv64 CI; BoringSSL (gRPC's TLS dependency) has zero riscv64 crypto assembly, resulting in an estimated 10x TLS throughput penalty vs Zkn-accelerated OpenSSL; issue #41591 (Python wheel publishing for riscv64) assigned but no action as of June 2026.
+- **vLLM (CPU backend)** -- orange (critical)
+  - High-throughput LLM serving engine with a CPU backend; the primary LLM serving target for the agentic RAG and HTTP serving pipeline chains.
+  - License: Apache 2.0. Governance: vLLM project (originally UC Berkeley).
+  - No release from any source (PyPI v0.28.0 ships only x86_64 and aarch64 wheels; no RISE, Debian, Ubuntu, or Arch packaging).
+  - Gap: No riscv64 CI across all 10 GitHub Actions workflow files. No distribution floor of any kind. Requires a full from-source build with riscv64-compatible dependencies (PyTorch Debian build, oneDNN, OpenBLAS) and unblocking of transitive native extension dependencies (pydantic-core, aiohttp).
 
-- **protobuf** -- orange, downstream-only (critical)
-  - Protocol Buffers; wire format for gRPC, ONNX Runtime, and SentencePiece.
-  - License: BSD-3-Clause. Governance: Google.
-  - Release provided by Debian/Ubuntu (system package); upstream explicitly declined prebuilt riscv64 binaries ("not on our roadmap").
-  - Gap: no upstream riscv64 CI; no prebuilt `protoc` binary for riscv64 in any upstream release (PRs #23205/#23206 abandoned 2025); requires source build or system package; no performance optimizations (no fasttable/musttail) on riscv64.
+- **llama.cpp** -- blue (critical)
+  - GGUF-format LLM inference engine; the primary CPU inference path for quantized models (Q4_0, Q4_K, etc.) in the llama.cpp pipeline chain.
+  - License: MIT. Governance: Georgi Gerganov / community.
+  - Release provided by Debian sid; no upstream riscv64 release binary (issue [#20988](https://github.com/ggerganov/llama.cpp/issues/20988) closed not-planned; PR [#20991](https://github.com/ggerganov/llama.cpp/pull/20991) unmerged).
+  - Gap (partial optimization): RVV vec dot covers all major quant formats; repack GEMM/GEMV covers Q4_0, Q4_K, Q8_0, Q2_K, IQ4_NL. Q3_K, Q5_K, Q6_K, Q5_0, Q5_1 repack paths remain scalar (draft PR [#23745](https://github.com/ggerganov/llama.cpp/pull/23745) open as of 2026-08-28).
 
-- **FlatBuffers** -- orange, downstream-only (optional)
-  - Zero-copy serialization; internal model format for ONNX Runtime and ExecuTorch.
-  - License: Apache 2.0. Governance: Google.
-  - Release provided by Debian sid (v23.5.26) and Arch Linux (v25.12.19).
-  - Gap: no upstream riscv64 CI or prebuilt binaries; validation delegated to Debian/Arch package CI; pure scalar C++ with no architecture-specific code, so functional risk is low.
+- **ExecuTorch** -- blue (optional)
+  - Meta's on-device inference runtime; used in the ExecuTorch edge inference path.
+  - License: BSD 3-Clause. Governance: Meta / PyTorch Foundation.
+  - No release artifact for riscv64 from any source (latest release v1.4.1 has no riscv64 binary).
+  - CI runs `executor_runner` under `qemu-riscv64-static` with test pass verification.
 
----
+- **FastAPI** -- green (critical)
+  - ASGI web framework; forms the HTTP serving layer for the vLLM HTTP serving path.
+  - License: MIT. Governance: Tiangolo / independent.
 
-## Layer 7 -- Runtime & System Libraries
-
-- **CPython** -- orange, upstream-ships-untested (critical)
-  - Python 3.10-3.13 runtime; the entire Python stack depends on it.
-  - License: PSF. Governance: Python Software Foundation.
-  - Release provided by RISE (prebuilt riscv64 binaries via riseproject-dev/python-versions).
-  - Gap: no official python.org riscv64 binary release; active 3.15 beta stack-unwinding regression; RISE provides the only consumable prebuilt runtime.
-
-- **glibc** -- orange, upstream-ships-untested (critical)
-  - GNU C Library; C runtime, pthreads, riscv_hwprobe syscall.
-  - License: LGPL-2.1. Governance: GNU/Sourceware.
-  - Release provided by Debian/Ubuntu (system package).
-  - Gap: Ubuntu 24.04 LTS ships glibc 2.39, which predates three crash-class fixes (IFUNC gp-pointer BZ #32269, hwprobe prototype BZ #32932, preinit alignment BZ #32228). Deployments on Ubuntu 24.04 carry latent crash risk; Debian sid glibc 2.41+ required for safe production use.
-
-- **OpenSSL** -- green (critical)
-  - TLS/crypto library; used for secure model downloads, gRPC transport, and API endpoints.
-  - License: Apache 2.0. Governance: OpenSSL Software Foundation.
-  - Release provided by upstream (all major Linux distros; first-class Tier 1 support).
-  - Note: comprehensive RVV Zvk and scalar Zkn crypto acceleration (AES-GCM, ChaCha20, SHA). On RVA23U64 hardware (Zkn mandatory), the AES constant-time fallback gap reported for older silicon is not applicable. Five performance PRs open awaiting committer merge; QEMU-only CI (no native hardware runner).
-
-- **jemalloc** -- orange, downstream-only (optional)
-  - General-purpose memory allocator; used by Redis, PyTorch, and various serving runtimes.
-  - License: BSD-2-Clause. Governance: community (sole owner Yann Collet -- [NEEDS VERIFICATION]).
-  - Release provided by Debian/Ubuntu (system package).
-  - Gap: no upstream riscv64 CI; generic C fallbacks functional; missing CPU spin-wait (Zihintpause `pause` instruction) -- marginal spinlock performance penalty.
-
-- **tcmalloc** -- orange, upstream-ships-untested (optional)
-  - Google's high-performance allocator; used by some gRPC and high-throughput serving deployments.
-  - License: Apache 2.0. Governance: Google.
-  - Release provider: none (must build from source; not packaged for riscv64 in standard distros).
-  - Gap: per-CPU RSEQ slab allocator (tcmalloc's primary performance advantage) is a compile-only stub on riscv64; falls back to per-thread cache, eliminating most of tcmalloc's throughput benefit. Requires `percpu_rseq_riscv.S` assembly (4-6 engineer-weeks to implement).
-
-- **mimalloc** -- orange, upstream-ships-untested (optional)
-  - High-performance allocator; default in Python 3.13+ (but not auto-enabled in PyTorch on riscv64).
-  - License: MIT. Governance: Microsoft.
-  - Release provider: upstream source (two open PRs pending merge: VA-bits detection #1299, TLS/atomic-yield #1319).
-  - Gap: SV39 MMU build-time fix merged Dec 2024; runtime VA-bits detection and yield optimization unmerged; potential correctness issue on mismatched VA hardware for cross-compiled binaries.
-
-- **zstd** -- orange, upstream-ships-untested (critical)
-  - Fast lossless compression; used for PyTorch checkpoint storage, vLLM KV cache, and gRPC message compression.
-  - License: BSD-3-Clause / GPL-2.0. Governance: Meta (Yann Collet, sole release maintainer).
-  - Release provided by Debian/Ubuntu (system package).
-  - Gap: PR-only CI (not triggered on push to main); 7 performance PRs stalled 2-6 months unreviewed; Zicclsm unaligned access PR #4596 (+74% compression) blocked on prior C99/UB concern; functionally complete, performance gap only.
-
-- **lz4** -- orange, upstream-ships-untested (optional)
-  - Fast lossless compression; used for PyTorch checkpoint I/O and data pipeline caching.
-  - License: BSD-2-Clause. Governance: community (Yann Collet, sole owner).
-  - Release provided by Debian/Ubuntu (system package).
-  - Gap: QEMU CI; 5 RVV performance optimization PRs stalled; functionally complete, performance gap only.
-
-- **Snappy** -- orange, upstream-ships-untested (optional)
-  - Compression library; used in some data pipeline and distributed storage contexts.
-  - License: BSD-3-Clause. Governance: Google (maintainer in maintenance mode).
-  - Release provided by Debian/Ubuntu (system package).
-  - Gap: QEMU CI; missing RVV vrgather shuffle and CRC32 hardware acceleration (Zbc); two open performance PRs (+15% and +3-14% on benchmarks) minimally reviewed.
+- **Starlette** -- green (critical)
+  - ASGI toolkit underlying FastAPI; handles request routing and lifecycle for the vLLM HTTP serving path.
+  - License: BSD 3-Clause. Governance: Encode.
 
 ---
 
-## Pipeline Chains and Alternate Paths
+## Layer 7 -- Orchestration & Agents
 
-- PyTorch CPU eager inference (RVA23): PyTorch ATen -> oneDNN (xbyak_riscv JIT) -> XNNPACK -> OpenBLAS -> SLEEF
-- vLLM CPU inference: vLLM CPU backend -> PyTorch ATen -> oneDNN -> OpenBLAS
-- vLLM serving transport: vLLM -> gRPC -> protobuf (wire format) -> OpenSSL (TLS)
-- llama.cpp GGUF inference: llama.cpp -> ggml (in-tree) -> RVV kernels (llamafile SGEMM + ggml-cpu)
-- ExecuTorch edge inference: ExecuTorch runtime -> XNNPACK (CPU backend) -> OpenBLAS
-- Agentic RAG pipeline: LangChain/LangGraph -> HF Transformers -> vLLM (serving) -> FAISS (retrieval) -> HF Tokenizers / SentencePiece
-- Model load path: HF Transformers -> SafeTensors -> ONNX Runtime (optional)
-- Model checkpoint I/O: PyTorch -> zstd / lz4 (compression) -> storage
+- **LangChain** -- green (critical)
+  - Chain and tool orchestration library; the primary user-facing interface for building agentic RAG pipelines.
+  - License: MIT. Governance: LangChain Inc.
+
+- **LangGraph** -- green (critical)
+  - Stateful multi-agent workflow engine; used for the LangGraph stateful agent path.
+  - License: MIT. Governance: LangChain Inc.
+
+- **langchain-core** -- green (critical)
+  - Core abstractions (runnables, messages, schemas) shared by all LangChain components.
+  - License: MIT. Governance: LangChain Inc.
+
+- **langgraph-checkpoint** -- green (critical)
+  - State persistence layer for LangGraph; serializes and restores agent state across invocations.
+  - License: MIT. Governance: LangChain Inc.
+  - Note: Required dependency `ormsgpack>=1.12.0` has no prebuilt riscv64 wheel and requires a Rust source build. This is a dependency-level friction issue and does not change the color of langgraph-checkpoint itself.
+
+- **langsmith** -- green (optional)
+  - Tracing and observability for LangChain / LangGraph pipelines; used in the LangGraph stateful agent path.
+  - License: MIT. Governance: LangChain Inc.
+  - Note: The optional `langsmith[langsmith_pyo3]` Rust extension extra publishes only x86_64, aarch64, and macOS arm64 wheels (no riscv64), but this extra is not required for core tracing functionality.
+
+- **langgraph-prebuilt** -- green (optional)
+  - Pre-built agent nodes (ReAct, tool-calling agents) for LangGraph.
+  - License: MIT. Governance: LangChain Inc.
+
+- **langgraph-sdk** -- green (optional)
+  - Python SDK for the LangGraph remote server API.
+  - License: MIT. Governance: LangChain Inc.
 
 ---
 
-## Artifact 2 -- Status Tables
+## Layer 8 -- Excluded (Proprietary / GPU-only)
 
-### 2a. Full Status Table (spreadsheet / CSV source)
+The following nodes are out of scope for a CPU-only riscv64 investment decision. They are listed for completeness only.
 
-| Node | Layer | Criticality | Color | Release provider | Justification | Primary source | As-of | Delta-vs-report |
-|------|-------|-------------|-------|-----------------|---------------|----------------|-------|-----------------|
-| LangChain | Orchestration | critical | green | upstream | Pure Python py3-none-any wheel; architecture-independent; inherits riscv64 from CPython. | [LangChain report](../../../reports/langchain.md) | 2026-06 | none |
-| LangGraph | Orchestration | critical | green | upstream | Pure Python py3-none-any wheel; architecture-independent; inherits riscv64 from CPython. | [PyPI](https://pypi.org/pypi/langgraph/json) | 2026-08-12 | n/a |
-| Ray | Orchestration | optional | grey (unknown) | unknown | No per-project report; no live riscv64 check performed; compiled C++/Cython extensions. | n/a | n/a | n/a |
-| vLLM (CPU backend) | Inference Serving | critical | orange (upstream-ships-untested) | none | RISC-V CPU backend in source and builds; upstream CI does not run riscv64 test suite; no riscv64 PyPI wheel. | [vLLM report](../../../reports/vllm.md) | 2026-06 | none |
-| llama.cpp | Inference Serving | critical | blue | none | Upstream CI builds and runs tests on riscv64 via RISE native runners; no binary release. | [llama.cpp report](../../../reports/llama-cpp.md) | 2026-06 | none |
-| ExecuTorch | Inference Serving | optional | blue | none | Upstream riscv64.yml CI runs comprehensive test matrix (6 models, QEMU); no release artifact. | [pytorch/executorch CI](https://github.com/pytorch/executorch) | 2026-08-12 | n/a |
-| PyTorch (CPU) | ML Framework | critical | orange (upstream-ships-untested) | none | Cross-compile CI only; RISE out-of-tree native CI; no riscv64 PyPI wheel (confirmed Aug 2026). | [PyTorch report](../../../reports/pytorch.md) | 2026-08-12 | none |
-| HuggingFace Transformers | ML Framework | critical | green | upstream | Pure Python; installs on riscv64 without modification. | [PyPI](https://pypi.org/pypi/transformers/json) | 2026-08-12 | n/a |
-| HuggingFace Tokenizers | Model Ecosystem | critical | blue | upstream | Official riscv64 PyPI wheel since v0.23.1 (Apr 2026); no riscv64 test suite in CI. | [Tokenizers report](../../../reports/tokenizers.md) | 2026-06 | none |
-| SentencePiece | Model Ecosystem | critical | orange (downstream-only) | RISE | RISE wheel builder provides riscv64 wheel; no official PyPI riscv64 wheel. | [SentencePiece report](../../../reports/sentencepiece.md) | 2026-06 | none |
-| Tiktoken | Model Ecosystem | optional | red | none | No riscv64 PyPI wheel (confirmed Aug 2026); PR #506 stalled; source build only. | [PyPI check](https://pypi.org/pypi/tiktoken/json) | 2026-08-12 | none |
-| NumPy | Model Ecosystem | critical | orange (downstream-only) | RISE | RISE wheel builder provides riscv64 wheel; no official PyPI riscv64 wheel as of Aug 2026. | [NumPy report](../../../reports/numpy.md) | 2026-08-12 | Q3 2026 target missed |
-| SafeTensors | Model Ecosystem | critical | green | upstream | Upstream ships manylinux_2_31_riscv64 wheel in v0.8.0 (PyPI, 2026-06-09); RISE wheel builder self-deprecated. | [PyPI v0.8.0](https://pypi.org/pypi/safetensors/0.8.0/json) | 2026-08-12 | none |
-| ONNX Runtime (CPU EP) | Model Ecosystem | optional | orange (upstream-ships-untested) | none | No binary; cross-compile guide exists; no upstream riscv64 CI; RVV kernels merging. | [ONNX report](../../../reports/onnx.md) | 2026-06 | none |
-| FAISS (CPU) | Compute | critical | orange (downstream-only) | none | Cross-compile CI; one RVV kernel; no riscv64 PyPI wheel or distro binary (confirmed Aug 2026). | [FAISS report](../../../reports/faiss.md) | 2026-08-12 | none |
-| OpenBLAS | Compute | critical | orange (upstream-ships-untested) | Debian/Ubuntu | QEMU-only CI; LAPACK unvalidated; TRSM ZVL256B bug; Ubuntu 24.04 ships stale version. | [OpenBLAS report](../../../reports/openblas.md) | 2026-06 | none |
-| Eigen | Compute | optional | green | upstream | Header-only C++ library; ships as arch:all Debian/Ubuntu package; architecture-independent shortcut applies. RVV 1.0 backend in git master (not in any release) requires explicit opt-in. | [Eigen report](../../../reports/eigen.md) | 2026-06 | Previously described as scalar-only; full RVV 1.0 backend merged master Nov 2025 |
-| oneDNN (DNNL) | Compute | critical | orange (upstream-ships-untested) | Debian sid | Experimental tier; SMOKE test CI only (QEMU); INT8 missing; FP16 overflow bug open. | [oneDNN report](../../../reports/onednn.md) | 2026-06 | none |
-| XNNPACK | Compute | critical | orange (downstream-only) | Debian sid (stale) | 100+ CI test failures are QEMU misconfiguration (no Zvfh configured); on RVA23U64 (Zvfh mandatory) FP16 works. Debian sid debports ships stale 18-month-old binary. | [XNNPACK report](../../../reports/xnnpack.md) | 2026-06 | Upgraded from red -- Debian sid binary exists; CI failures are QEMU-environment-specific, not code bugs on RVA23U64 |
-| FBGEMM | Compute | optional | red | none | No riscv64 port; runtime GEMM dispatch throws on riscv64; asmjit has no RVV backend; PyTorch disables FBGEMM on riscv64 at configure time. | [FBGEMM report](../../../reports/fbgemm.md) | 2026-06 | n/a |
-| SLEEF | Compute | critical | blue | upstream | riscv64 integrated since v3.6; official release v3.9.0; private Jenkins CI (not public). | [SLEEF report](../../../reports/sleef.md) | 2026-06 | none |
-| gRPC | Communication | critical | orange (downstream-only) | Debian/Ubuntu | No upstream riscv64 CI; no Python PyPI wheel; BoringSSL zero riscv64 crypto assembly (10x TLS penalty). | [gRPC report](../../../reports/grpc.md) | 2026-06 | n/a |
-| protobuf | Communication | critical | orange (downstream-only) | Debian/Ubuntu | Upstream declined riscv64 prebuilts; no upstream CI; system package only; no prebuilt protoc. | [protobuf report](../../../reports/protobuf.md) | 2026-06 | n/a |
-| FlatBuffers | Communication | optional | orange (downstream-only) | Debian sid / Arch Linux | No upstream riscv64 CI; pure scalar C++; validated only by distro package CI. | [flatbuffers report](../../../reports/flatbuffers.md) | 2026-06 | n/a |
-| CPython | Runtime | critical | orange (upstream-ships-untested) | RISE | No python.org riscv64 binary; RISE provides prebuilt; 3.15 beta regression active. | [Python report](../../../reports/python.md) | 2026-06 | none |
-| glibc | Runtime | critical | orange (upstream-ships-untested) | Debian/Ubuntu | Ubuntu 24.04 glibc 2.39 predates 3 crash-class fixes; Debian sid 2.41 required. | [glibc report](../../../reports/glibc.md) | 2026-06 | none |
-| OpenSSL | Runtime | critical | green | upstream | First-class Tier 1; RVV Zvk and scalar Zkn crypto acceleration; available in all major distros. Zvfh constant-time gap not applicable on RVA23U64 (Zkn mandatory). | [OpenSSL report](../../../reports/openssl.md) | 2026-06 | n/a |
-| jemalloc | Runtime | optional | orange (downstream-only) | Debian/Ubuntu | No upstream riscv64 CI; generic C fallbacks functional; missing Zihintpause spin-wait. | [jemalloc report](../../../reports/jemalloc.md) | 2026-06 | n/a |
-| tcmalloc | Runtime | optional | orange (upstream-ships-untested) | none | Per-CPU RSEQ slab allocator is a compile-only stub on riscv64; falls back to per-thread cache. | [tcmalloc report](../../../reports/tcmalloc.md) | 2026-06 | n/a |
-| mimalloc | Runtime | optional | orange (upstream-ships-untested) | upstream source | SV39 fix merged Dec 2024; VA-bits detection and yield PRs unmerged; correctness risk on mismatched VA hardware. | [mimalloc report](../../../reports/mimalloc.md) | 2026-06 | n/a |
-| zstd | Runtime | critical | orange (upstream-ships-untested) | Debian/Ubuntu | PR-only CI (not push-triggered); 7 performance PRs stalled; functionally complete. | [zstd report](../../../reports/zstd.md) | 2026-06 | n/a |
-| lz4 | Runtime | optional | orange (upstream-ships-untested) | Debian/Ubuntu | QEMU CI; 5 RVV performance PRs stalled; functionally complete. | [lz4 report](../../../reports/lz4.md) | 2026-06 | n/a |
-| Snappy | Runtime | optional | orange (upstream-ships-untested) | Debian/Ubuntu | QEMU CI; missing RVV vrgather and CRC32 Zbc; functionally complete. | [snappy report](../../../reports/snappy.md) | 2026-06 | n/a |
+- **CUDA / cuDNN / cuBLAS / TensorRT / NCCL** -- grey (N/A): Proprietary NVIDIA GPU path; no RISC-V port.
+- **ROCm / HIP / MIOpen** -- grey (N/A): AMD GPU path; no RISC-V port.
+- **Intel GPU / oneAPI GPU** -- grey (N/A): Intel GPU path; not applicable to CPU-only target.
+- **Apple MPS / CoreML** -- grey (N/A): Apple silicon only; not applicable.
+- **Triton GPU compiler** -- grey (N/A): GPU-only JIT compiler; not applicable to CPU-only target.
+- **torchvision / torchaudio** -- grey (N/A): Multimodal add-ons requiring GPU backends.
 
-### 2b. Slide-Ready Summary Table
+---
+
+### Pipeline chains and alternate paths
+
+**PyTorch CPU eager inference path (RVA23):**
+PyTorch ATen -> oneDNN (xbyak_riscv JIT) -> XNNPACK -> OpenBLAS -> SLEEF
+
+**vLLM CPU inference path:**
+vLLM CPU backend -> PyTorch ATen -> oneDNN -> OpenBLAS
+
+**llama.cpp GGUF inference path:**
+llama.cpp -> ggml (in-tree) -> RVV kernels (llamafile SGEMM + ggml-cpu)
+
+**ExecuTorch edge inference path:**
+ExecuTorch runtime -> XNNPACK (CPU backend) -> OpenBLAS
+
+**Agentic RAG pipeline:**
+LangChain/LangGraph -> langchain-core -> HF Transformers -> vLLM (serving) -> FAISS (retrieval) -> HF Tokenizers / SentencePiece
+
+**Model load path:**
+HF Transformers -> HuggingFace Hub -> SafeTensors -> ONNX Runtime (optional)
+
+**vLLM HTTP serving path:**
+vLLM CPU backend -> FastAPI -> Starlette -> uvicorn -> Pydantic (request/response schemas)
+
+**LangGraph stateful agent path:**
+LangGraph -> langchain-core -> langgraph-checkpoint (state) -> langsmith (tracing) -> pydantic (types)
+
+Note: FAISS and uvicorn appear in pipeline chains above but are not covered by node classification records in this report. Their riscv64 status is not assessed here.
+
+---
+
+## Artifact 2: Status table
+
+### (a) Full table
+
+| Node | Layer | Criticality | Color | Release provider | Justification summary | Primary source | As-of | Delta vs report |
+|------|-------|-------------|-------|------------------|-----------------------|----------------|-------|-----------------|
+| LangChain | Orchestration & Agents | critical | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/project/langchain/1.3.18/) | 2026-06-17 | none |
+| LangGraph | Orchestration & Agents | critical | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/langgraph/json) | 2026-06-17 | none |
+| langchain-core | Orchestration & Agents | critical | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/langchain-core/1.6.1/json) | 2026-08-27 | n/a |
+| langsmith | Orchestration & Agents | optional | green | upstream | py3-none-any wheel; pyo3 Rust extra is optional and absent on riscv64 | [PyPI](https://pypi.org/pypi/langsmith/json) | 2026-08-28 | n/a |
+| langgraph-checkpoint | Orchestration & Agents | critical | green | upstream | py3-none-any wheel; ormsgpack dep requires Rust source build | [PyPI](https://pypi.org/pypi/langgraph-checkpoint/json) | 2026-06-17 | none |
+| langgraph-prebuilt | Orchestration & Agents | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/langgraph-prebuilt/json) | 2026-08-28 | n/a |
+| langgraph-sdk | Orchestration & Agents | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/langgraph-sdk/json) | 2026-08-28 | n/a |
+| vLLM (CPU backend) | Inference Serving | critical | orange | none | No riscv64 CI; no release from any source | [GitHub workflows](https://github.com/vllm-project/vllm/tree/main/.github/workflows) | 2026-06-17 | color_case corrected from downstream-only to empty; no distro ships vllm for riscv64 |
+| llama.cpp | Inference Serving | critical | blue | Debian | Native QEMU tests pass; partial RVV optimization (Q3/Q5/Q6 repack scalar) | [build-riscv.yml](https://github.com/ggerganov/llama.cpp/blob/master/.github/workflows/build-riscv.yml) | 2026-06-17 | none |
+| ExecuTorch | Inference Serving | optional | blue | none | QEMU test execution confirmed; no riscv64 release | [riscv64.yml](https://github.com/pytorch/executorch/blob/main/.github/workflows/riscv64.yml) | 2026-08-28 | none |
+| FastAPI | Inference Serving | critical | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/fastapi/json) | 2026-08-28 | n/a |
+| Starlette | Inference Serving | critical | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/starlette/1.6.0/json) | 2026-08-28 | version 1.6.0 current (was 0.46.2 in proposal); color unchanged |
+| PyTorch (CPU eager inference) | ML Framework | critical | yellow | Debian | Build-only CI; zero RVV ATen dispatch; PR #175746 closed | [riscv64.yml](https://github.com/pytorch/pytorch/blob/main/.github/workflows/riscv64.yml) | 2026-06-17 | PR #175746 closed without merging post-report; RISE out-of-tree CI gained conditional test job |
+| HuggingFace Transformers | ML Framework | critical | green | upstream | py3-none-any wheel; no arch-specific code | [PyPI](https://pypi.org/pypi/transformers/json) | 2026-08-28 | version 5.16.1 (was 5.15.0); still py3-none-any |
+| Accelerate | ML Framework | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/accelerate/json) | 2026-08-28 | n/a |
+| HuggingFace Hub | Model Ecosystem | critical | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/huggingface_hub/json) | 2026-08-27 | n/a |
+| HuggingFace Tokenizers | Model Ecosystem | critical | yellow | upstream | Build-only CI; upstream ships manylinux riscv64 wheel since v0.23.1 | [CI.yml](https://github.com/huggingface/tokenizers/blob/main/.github/workflows/CI.yml) | 2026-03-26 | none |
+| SentencePiece | Model Ecosystem | critical | blue | RISE | QEMU test execution confirmed; no upstream wheel | [cross_build.yml](https://github.com/google/sentencepiece/blob/master/.github/workflows/cross_build.yml) | 2026-06-17 | CI upgraded gcc-10 to gcc-14; v0.2.2 released with no riscv64 wheels; color unchanged |
+| Tiktoken | Model Ecosystem | optional | yellow | RISE | No upstream CI; Debian sid + RISE wheels present; PR #506 unmerged | [build_wheels.yml](https://github.com/openai/tiktoken/blob/main/.github/workflows/build_wheels.yml) | 2026-08-28 | PyPI at 0.14.0 (still no riscv64 wheel); PR #506 mergeable but unmerged |
+| NumPy | Model Ecosystem | critical | yellow | RISE | Build-only native CI; QEMU CI non-blocking; no RVV NPYV backend | [linux_riscv64.yml](https://github.com/numpy/numpy/blob/main/.github/workflows/linux_riscv64.yml) | 2026-06-17 | RISE wheels at 2.5.2 (was 2.4.3); color unchanged |
+| SafeTensors | Model Ecosystem | critical | yellow | upstream | Build-only CI; upstream ships manylinux riscv64 wheel | [python-release.yml](https://github.com/safetensors/safetensors/blob/main/.github/workflows/python-release.yml) | 2026-06-09 | none |
+| ONNX Runtime (CPU EP) | Model Ecosystem | optional | yellow | Debian | No upstream CI; Debian sid ships for riscv64 with no riscv64-specific patches | [Debian buildd](https://buildd.debian.org/status/package.php?p=onnxruntime&suite=sid) | 2026-06-17 | Debian version now 1.23.2+dfsg-6+b5 (binNMU rebuild); color unchanged |
+| OpenBLAS | Compute | critical | blue | none | QEMU tests pass (L1/L2/L3 CBLAS); partial TRSM coverage in v0.3.34 | [riscv64_vector.yml](https://github.com/OpenMathLib/OpenBLAS/blob/develop/.github/workflows/riscv64_vector.yml) | 2026-06-17 | PR #5830 merged 2026-08-16, partially closing TRSM gap; color unchanged |
+| Eigen | Compute | optional | blue | none | Native riscv64 CI (allow_failure: true); RVV backend master-only | [gitlab-ci.yml](https://gitlab.com/libeigen/eigen/-/raw/master/ci/test.linux.gitlab-ci.yml) | 2026-06-17 | Compiler versions updated gcc-14/clang-18 to gcc-15/clang-21; color unchanged |
+| oneDNN (DNNL) | Compute | critical | blue | none | QEMU SMOKE tests pass (vlen=128, 256); partial optimization (INT8 absent) | [ci-riscv.yml](https://github.com/uxlfoundation/oneDNN/blob/main/.github/workflows/ci-riscv.yml) | 2026-06-17 | none |
+| XNNPACK | Compute | critical | blue | none | CI passing since 2026-07-08; FP16 bug fixed; partial optimization (no BF16) | [CI run #33000168130](https://github.com/google/XNNPACK/actions/runs/33000168130) | 2026-08-26 | Upgraded from yellow to blue; FP16 detection bug fixed before report date but verified post-report |
+| SLEEF | Compute | critical | blue | Debian | Native riscv64 CI; full RVV v1.0 coverage for SP/DP transcendentals | [Jenkinsfile](https://github.com/shibatch/sleef/blob/master/Jenkinsfile) | 2026-06-17 | none |
+| Pydantic | Python Infrastructure | critical | yellow | upstream | Build-only CI; upstream ships riscv64 wheels; test matrix excludes riscv64 | [ci.yml](https://github.com/pydantic/pydantic/blob/main/.github/workflows/ci.yml) | 2026-08-28 | n/a |
+| httpx | Python Infrastructure | critical | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/httpx/json) | 2026-08-28 | n/a |
+| requests | Python Infrastructure | critical | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/requests/json) | 2026-08-28 | n/a |
+| aiohttp | Python Infrastructure | optional | yellow | upstream | Build-only CI (test-command = ""); upstream ships riscv64 wheels | [ci-cd.yml](https://github.com/aio-libs/aiohttp/blob/master/.github/workflows/ci-cd.yml) | 2026-08-28 | n/a |
+| typing-extensions | Python Infrastructure | critical | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/typing-extensions/json) | 2026-08-28 | n/a |
+| packaging | Python Infrastructure | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/packaging/json) | 2026-08-28 | n/a |
+| fsspec | Python Infrastructure | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/fsspec/json) | 2026-08-28 | n/a |
+| tqdm | Python Infrastructure | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/tqdm/json) | 2026-08-28 | n/a |
+| networkx | Python Infrastructure | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/networkx/json) | 2026-08-28 | n/a |
+| sympy | Python Infrastructure | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/sympy/json) | 2025-04-27 | n/a |
+| OpenTelemetry API | Python Infrastructure | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/project/opentelemetry-api/) | 2026-08-28 | none |
+| OpenTelemetry SDK | Python Infrastructure | optional | green | upstream | py3-none-any wheel; architecture-independent | [PyPI](https://pypi.org/pypi/opentelemetry-sdk/json) | 2026-08-28 | n/a |
+| Protobuf | Runtimes & System Libraries | optional | yellow | Debian | No upstream CI; Debian sid clean build; no riscv64-specific patches | [Debian buildd](https://buildd.debian.org/status/package.php?p=protobuf&suite=unstable) | 2026-06-17 | none |
+| FlatBuffers | Runtimes & System Libraries | optional | yellow | Debian | No upstream CI; Debian sid clean build; no riscv64-specific patches | [build.yml](https://github.com/google/flatbuffers/blob/master/.github/workflows/build.yml) | 2026-06-17 | none |
+| gRPC | Runtimes & System Libraries | optional | orange | Arch Linux | No upstream CI; build requires riscv64-specific env overrides; upstream declined formal riscv64 support | [Issue #41591](https://github.com/grpc/grpc/issues/41591) | 2026-06-17 | Issue #41591 closed 2026-07-15; maintainer explicitly declined per Google OSS Support Policy |
+| CPython | Runtimes & System Libraries | critical | blue | RISE | Upstream buildbot on-demand only; last pass 2026-06-30 (build #34) | [Buildbot API](https://buildbot.python.org/api/v2/builds?builderid=1377&limit=5&order=-number) | 2026-06-30 | Buildbot repaired (was broken since 2026-03-25); builds #33 (fail) and #34 (pass) ran 2026-06-29/30; no runs since |
+| glibc | Runtimes & System Libraries | critical | yellow | Ubuntu | Build-only effective CI; all Buildbot riscv64 test runs fail; Ubuntu 24.04 ships 2.39 (missing vector-clobber fix) | [Buildbot builder 293](https://builder.sourceware.org/buildbot/api/v2/builders/293) | 2026-08-28 | Buildbot builders do attempt tests (not build-only) but all fail and both are offline; yellow upheld |
+| OpenSSL | Runtimes & System Libraries | critical | blue | Debian | QEMU test execution on every push; Debian/Ubuntu/Arch all carry packages | [cross-compiles.yml](https://github.com/openssl/openssl/blob/master/.github/workflows/cross-compiles.yml) | 2026-06-17 | AES constant-time PRs #31080/#31082 still open; does not affect CI tier |
+| jemalloc | Runtimes & System Libraries | critical | orange | Debian | No riscv64 CI; optimization entirely absent (no Zihintpause, no RVV, no asm) | [linux-ci.yml](https://github.com/jemalloc/jemalloc/blob/dev/.github/workflows/linux-ci.yml) | 2026-06-17 | none |
+| tcmalloc | Runtimes & System Libraries | optional | orange | none | No riscv64 CI; RSEQ per-CPU slab guarded to x86_64/aarch64 only; no release | [percpu.h](https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu.h) | 2026-06-17 | none |
+| LZ4 | Runtimes & System Libraries | critical | yellow | Debian | CI runs full QEMU tests; fast decompression paths disabled; four RVV PRs open | [cross-platform.yml](https://github.com/lz4/lz4/blob/dev/.github/workflows/cross-platform.yml) | 2026-06-17 | PR #1778 (new consolidated RVV PR) now open; color_case corrected from optimization-absent to yellow |
+| zstd | Runtimes & System Libraries | critical | yellow | Debian | CI runs QEMU tests (baseline + RVV vlen=128/256/512); dominant decompression paths scalar | [dev-short-tests.yml](https://github.com/facebook/zstd/blob/dev/.github/workflows/dev-short-tests.yml) | 2026-06-17 | none |
+| snappy | Runtimes & System Libraries | optional | yellow | Debian | CI runs `make test` under QEMU; primary hash and shuffle paths absent on riscv64 | [riscv64-qemu-test.yaml](https://github.com/google/snappy/blob/main/.github/workflows/riscv64-qemu-test.yaml) | 2026-06-17 | none |
+
+### (b) Slide-ready summary table
 
 | Node | Color | Criticality | Release provider |
-|------|-------|-------------|-----------------|
-| LangChain | GREEN | critical | upstream |
-| LangGraph | GREEN | critical | upstream |
-| HuggingFace Transformers | GREEN | critical | upstream |
-| SafeTensors | GREEN | critical | upstream |
-| OpenSSL | GREEN | critical | upstream |
-| Eigen | GREEN | optional | upstream |
-| SLEEF | BLUE | critical | upstream |
-| HuggingFace Tokenizers | BLUE | critical | upstream |
-| llama.cpp | BLUE | critical | none (upstream source) |
-| ExecuTorch | BLUE | optional | none (upstream source) |
-| vLLM (CPU backend) | ORANGE | critical | none -- source build |
-| PyTorch (CPU) | ORANGE | critical | none -- source build |
-| FAISS (CPU) | ORANGE | critical | none -- source build |
-| SentencePiece | ORANGE | critical | RISE only |
-| NumPy | ORANGE | critical | RISE only |
-| CPython | ORANGE | critical | RISE only |
-| OpenBLAS | ORANGE | critical | Debian/Ubuntu |
-| oneDNN (DNNL) | ORANGE | critical | Debian sid |
-| XNNPACK | ORANGE | critical | Debian sid (stale) |
-| gRPC | ORANGE | critical | Debian/Ubuntu |
-| protobuf | ORANGE | critical | Debian/Ubuntu |
-| zstd | ORANGE | critical | Debian/Ubuntu |
-| glibc | ORANGE | critical | Debian/Ubuntu |
-| ONNX Runtime (CPU EP) | ORANGE | optional | none -- source build |
-| FlatBuffers | ORANGE | optional | Debian sid / Arch |
-| jemalloc | ORANGE | optional | Debian/Ubuntu |
-| tcmalloc | ORANGE | optional | none -- source build |
-| mimalloc | ORANGE | optional | none (PRs pending) |
-| lz4 | ORANGE | optional | Debian/Ubuntu |
-| Snappy | ORANGE | optional | Debian/Ubuntu |
-| Tiktoken | RED | optional | none |
-| FBGEMM | RED | optional | none |
-| Ray | GREY | optional | unknown |
+|------|-------|-------------|------------------|
+| LangChain | green | critical | upstream |
+| LangGraph | green | critical | upstream |
+| langchain-core | green | critical | upstream |
+| langsmith | green | optional | upstream |
+| langgraph-checkpoint | green | critical | upstream |
+| langgraph-prebuilt | green | optional | upstream |
+| langgraph-sdk | green | optional | upstream |
+| vLLM (CPU backend) | orange | critical | none |
+| llama.cpp | blue | critical | Debian |
+| ExecuTorch | blue | optional | none |
+| FastAPI | green | critical | upstream |
+| Starlette | green | critical | upstream |
+| PyTorch (CPU eager inference) | yellow | critical | Debian |
+| HuggingFace Transformers | green | critical | upstream |
+| Accelerate | green | optional | upstream |
+| HuggingFace Hub | green | critical | upstream |
+| HuggingFace Tokenizers | yellow | critical | upstream |
+| SentencePiece | blue | critical | RISE |
+| Tiktoken | yellow | optional | RISE |
+| NumPy | yellow | critical | RISE |
+| SafeTensors | yellow | critical | upstream |
+| ONNX Runtime (CPU EP) | yellow | optional | Debian |
+| OpenBLAS | blue | critical | none |
+| Eigen | blue | optional | none |
+| oneDNN (DNNL) | blue | critical | none |
+| XNNPACK | blue | critical | none |
+| SLEEF | blue | critical | Debian |
+| Pydantic | yellow | critical | upstream |
+| httpx | green | critical | upstream |
+| requests | green | critical | upstream |
+| aiohttp | yellow | optional | upstream |
+| typing-extensions | green | critical | upstream |
+| packaging | green | optional | upstream |
+| fsspec | green | optional | upstream |
+| tqdm | green | optional | upstream |
+| networkx | green | optional | upstream |
+| sympy | green | optional | upstream |
+| OpenTelemetry API | green | optional | upstream |
+| OpenTelemetry SDK | green | optional | upstream |
+| Protobuf | yellow | optional | Debian |
+| FlatBuffers | yellow | optional | Debian |
+| gRPC | orange | optional | Arch Linux |
+| CPython | blue | critical | RISE |
+| glibc | yellow | critical | Ubuntu |
+| OpenSSL | blue | critical | Debian |
+| jemalloc | orange | critical | Debian |
+| tcmalloc | orange | optional | none |
+| LZ4 | yellow | critical | Debian |
+| zstd | yellow | critical | Debian |
+| snappy | yellow | optional | Debian |
 
 ---
 
-## Artifact 3 -- Narrative and Next Steps
+## Artifact 3: Narrative and next steps
 
 ### Scorecard
 
-**Critical-path nodes (22):** 5 green, 3 blue, 14 orange, 0 red, 0 grey.
+Of 29 critical-path nodes: 11 green, 8 blue, 8 yellow, 2 orange.
 
-**Optional nodes (11):** 1 green, 1 blue, 7 orange, 2 red, 1 grey.
+Of 21 optional nodes: 11 green, 2 blue, 6 yellow, 2 orange.
 
-No critical-path node is red. This is a milestone: every component of the Agentic AI CPU stack is at minimum obtainable on riscv64 in some form. The remaining gap is entirely in the orange band -- components that are buildable and runnable but lack upstream binary releases, upstream CI, or validated test suites.
+### The story
 
----
+**Two critical blockers: vLLM and jemalloc**
 
-### The Story
+vLLM (CPU backend) is the highest-priority gap in this stack. It is the only production-grade high-throughput LLM serving engine with a CPU backend, and it has no riscv64 support of any kind: no CI, no package, no binary, and no third party shipping it. The vLLM HTTP serving path and the agentic RAG pipeline both terminate at vLLM. Any deployment depending on these chains on riscv64 must build vLLM from source, resolving a chain of transitive native-extension dependencies (PyTorch Debian build, pydantic-core, aiohttp, oneDNN, OpenBLAS). There is no known organization actively pursuing a vLLM riscv64 port.
 
-**No more red critical nodes.** Two corrections to earlier assessments clear the last blocker:
+jemalloc is the critical allocator dependency for the vLLM CPU backend and PyTorch. It has no RISC-V optimization of any kind -- no Zihintpause pause hint for spinloops, no RVV, no RISC-V assembly -- and falls back entirely to generic scalar code. This is an optimization-absent orange on a critical-path node that touches every memory allocation in vLLM and PyTorch.
 
-First, **XNNPACK is now orange, not red.** The 100+ FP16 CI failures (issue #9886) are QEMU-environment-specific: QEMU is configured without Zvfh, while PR #9516 unconditionally enables FP16 dispatch when the V extension is present. On RVA23U64 hardware -- where Zvfh is mandatory per the profile specification -- FP16 inference works correctly. Debian sid debports also ships a riscv64 binary (18-month-old snapshot, stale but existent). The XNNPACK cpuinfo fix is still worth doing for CI health and portability to non-RVA23 hardware, but it is not a production blocker for our target.
+**PyTorch: the weight-bearing yellow node**
 
-Second, **XNNPACK is still functionally incomplete**: tests are not run on master merges, BF16 kernels are entirely absent, and the Debian binary is too stale to use as-is. Consumers should build XNNPACK from source for a production deployment.
+PyTorch CPU eager inference (yellow) sits under every Python-based inference path in this stack. Its ATen vectorization layer has zero RVV dispatch after PR #175746 was closed without merging. The Debian binary (v2.12.0, riscv64) is the only viable installation path; no riscv64 wheel exists on PyPI or RISE. All ATen ufunc kernels -- elementwise, reduction, and transcendental -- run scalar on riscv64. Users on Ubuntu 24.04 face an additional glibc 2.39 risk: that version predates the `__SYSCALL_CLOBBERS` vector-clobber fix and BZ#32932 (hwprobe), creating a potential correctness hazard for vector workloads. RISE has an out-of-tree CI repo with a conditional test job on native riscv64 hardware, which is the only active riscv64 test infrastructure for PyTorch, but it does not gate upstream PRs and is therefore not a guarantee of correctness.
 
-**The primary gap is now the absence of upstream binary releases, not broken code.** Of 22 critical-path nodes, only 5 can be installed from official PyPI or upstream release channels on riscv64 (LangChain, LangGraph, HF Transformers, SafeTensors, OpenSSL). Every other compiled component requires a source build, a RISE-maintained wheel, or a Debian/Ubuntu system package. This is an operational burden, not a technical one -- the code works, but the distribution pipeline is not wired for riscv64.
+**Yellow critical nodes with no test gate**
 
-**The RISE dependency is a hidden risk.** Three critical nodes -- CPython, NumPy, and SentencePiece -- are only consumable today via the RISE wheel builder (`gitlab.com/riseproject/python/wheel_builder`). If RISE stops building those wheels, those packages regress to source-build-only overnight. Leadership should not treat RISE-provided wheels as equivalent to upstream support.
+Eight critical nodes are yellow, meaning none of them have a passing test gate on riscv64 that blocks upstream regressions. The most consequential are:
 
-**Eigen's RVV story is more promising than previously assessed.** A full RVV 1.0 SIMD backend (Tenstorrent/Syntacore contribution) was merged to the Eigen master branch in November 2025, covering float32/64, int8-64, FP16, BF16, complex, and GEMM operations. CI runs on native SpacemiT K3 hardware. This backend has not shipped in any versioned Eigen release (3.4.1 and 5.0.1 both predate it), so downstream projects consuming a packaged Eigen get scalar performance today. But the technical work is done; it is waiting on a release cut. For performance-critical applications, building Eigen from git master with `-DEIGEN_RISCV64_USE_RVV10` is the path to RVV-accelerated linear algebra.
+- SafeTensors: Every HuggingFace model load relies on SafeTensors for weight deserialization. Upstream ships a riscv64 wheel but no test execution; a silent correctness regression would go undetected until deployment.
+- HuggingFace Tokenizers: All major tokenized LLMs (Llama, Mistral, Qwen, Gemma) go through this library. Upstream ships a riscv64 wheel but CI is build-only.
+- NumPy: No upstream riscv64 wheel; RISE wheels at 2.5.2. The NPYV vector abstraction layer has no RVV backend; all ufunc math operations are scalar. QEMU CI runs tests but with `continue-on-error: true`.
+- Pydantic: The vLLM request/response schema validation library. Upstream ships riscv64 wheels but the test matrix excludes riscv64.
+- glibc: Buildbot riscv64 test runners exist but every observable run fails; both builders are offline. Ubuntu Noble 24.04 ships the vulnerable 2.39 release.
+- LZ4 and zstd: Both are used for checkpoint and weight cache serialization. LZ4's fast decompression paths are disabled on riscv64. zstd's dominant decompression hot paths remain scalar. Neither blocks a deployment but both impose a measurable throughput cost.
 
-**The infrastructure layer (gRPC, protobuf, OpenSSL) is workable but has a TLS throughput gap.** OpenSSL is first-class green with Zkn/Zvk crypto acceleration. But gRPC ships with BoringSSL (not OpenSSL), and BoringSSL has zero riscv64 crypto assembly -- an estimated 10x TLS throughput penalty for high-throughput serving endpoints. Deployments that replace BoringSSL with OpenSSL (via gRPC's SSL credential override) avoid this gap.
+**Release provider concentration risk**
 
-**The memory allocator picture is nuanced.** mimalloc (Python 3.13+ default) and tcmalloc both have riscv64 gaps: mimalloc has unmerged VA-bits detection PRs, and tcmalloc's per-CPU RSEQ slab (its main performance advantage) is a stub on riscv64. For most inference serving workloads, the default glibc allocator is sufficient. jemalloc (used by Redis and some PyTorch configurations) is functionally complete on riscv64 with only a minor spinlock performance gap.
+Several critical nodes depend on RISE or Debian rather than upstream for their riscv64 binary releases, creating hidden supply-chain dependencies:
 
-**glibc LTS risk persists.** Ubuntu 24.04 ships glibc 2.39, predating three crash-class kernel interaction fixes. Any riscv64 deployment on Ubuntu 24.04 LTS is at elevated crash risk; Debian sid or a custom glibc is required for safe production use.
+- CPython: RISE (riseproject-dev/python-versions) is the only source of a prebuilt riscv64 Python interpreter. Upstream publishes no riscv64 binary. If RISE publishing is interrupted, the entire Python-based stack loses its binary distribution.
+- NumPy: RISE wheels only; no upstream riscv64 PyPI wheel.
+- SentencePiece: RISE wheel builder only; upstream's cibuildwheel config omits riscv64.
+- OpenBLAS, oneDNN, XNNPACK: No binary release from any source; must be built from source.
+- llama.cpp, OpenSSL, SLEEF: Debian sid only; not available on LTS distributions as current-release binaries.
+- PyTorch: Debian sid only; the Debian package lags upstream by several months and may not include the latest quantization or model support patches.
 
----
+### Actionable next steps
 
-### Actionable Next Steps (prioritized)
+The following actions are listed in priority order. RISE work already underway is noted to avoid double-counting.
 
-**P0 -- Merge PyTorch riscv64 CI and cut a release wheel (4-8 engineer-weeks; unlocks the entire Python ML stack)**
+**1. vLLM riscv64 port (blocking for production agentic serving)**
 
-Merge RFC #77 (RISE provides native CI runners; RISE-affiliated maintainer named). This makes riscv64 a recognized PyTorch platform, adds a non-blocking CI gate, and is a prerequisite for PyTorch publishing a riscv64 PyPI wheel. Without this, every vLLM and Transformers deployment on riscv64 is permanently a manual source build. With PyTorch as a binary, NumPy's wheel follows naturally.
+Upstream best position: vLLM project (GitHub vllm-project/vllm), specifically the CPU backend team. The CPU backend is already separated from GPU code, making riscv64 a less invasive addition than adding a new GPU backend.
 
-- Owner: Meta PyTorch team (albanD approval needed). ISCAS (zhangfeiv0) is the driver.
-- RISE coverage: RISE already provides CI runners and has a named maintainer (luhenry). The RFC is drafted. This needs Meta sign-off, not more engineering.
+Concrete actions:
+- Open a tracking issue in vllm-project/vllm requesting a riscv64 CI job and a riscv64 wheel in the release pipeline.
+- Provide a RISE bare-metal riscv64 runner for CI (RISE already operates runners for llama.cpp and PyTorch; the same runner pool can be offered to vLLM).
+- A RISE or industry contributor should build and test vLLM from source on riscv64 and publish the dependency resolution path (pinned PyTorch Debian build + oneDNN + OpenBLAS) as a documented build recipe to reduce friction for the upstream team.
+- The RISE BayLibre wheel builder should add vLLM once a working build recipe is established.
 
-**P0 -- Ship NumPy riscv64 PyPI wheel (2-4 engineer-weeks; unblocks the Python ML stack)**
+**2. PyTorch ATen RVV vectorization (critical for inference throughput)**
 
-NumPy's PR #31488 (native riscv64 CI) merged May 2026. The remaining blocker is cutting a production release with a riscv64 wheel. This unblocks NumPy, SciPy, pandas, and the entire scientific Python stack from requiring the RISE wheel builder.
+Upstream best position: PyTorch ATen maintainers (Meta / PyTorch Foundation). PR #175746 was closed; a replacement PR with a smaller scope (targeting the five highest-priority ufunc kernels for LLM inference: add, mul, sigmoid, softmax, layer_norm) would be more mergeable than a comprehensive vectorization PR.
 
-- Owner: NumPy steering council. Ludovic Henry (RISE) is named riscv64 co-maintainer.
-- RISE coverage: RISE provides CI runners and the named maintainer. The gap is cutting a release.
+Concrete actions:
+- Draft a scoped replacement for PR #175746 targeting the `CPUCapability` enum and dispatch stubs for RVV, focusing on the five kernels above.
+- RISE riscv64 CI should be promoted from conditional to always-on in riseproject-dev/pytorch-ci, and the results surfaced in upstream PR checks, to give reviewers confidence in riscv64 correctness without requiring upstream to maintain their own runner.
+- Escalate the glibc 2.39 / Ubuntu 24.04 deployment risk to the PyTorch riscv64 tracking issue: users deploying on Noble LTS today face a correctness hazard from the missing vector-clobber fix.
 
-**P1 -- Fix XNNPACK CI / cpuinfo Zvfh detection (1-2 engineer-weeks; restores CI health and unblocks non-RVA23 targets)**
+**3. jemalloc RISC-V optimization (critical for allocator performance)**
 
-Fix `cpuinfo_has_riscv_zvfh()` in `pytorch/cpuinfo`, then restore proper FP16 dispatch in XNNPACK. On RVA23U64 hardware this is not a production blocker, but it is needed for CI reliability, for non-RVA23 deployments, and for the XNNPACK BF16 work that depends on correct extension detection.
+Upstream best position: Meta jemalloc team (GitHub jemalloc/jemalloc).
 
-- Owner: Google (cpuinfo + XNNPACK). ISCAS has a stake and could drive the PR.
-- RISE coverage: RISE provides CI hardware for validation; RISE AI/ML WG tracks this.
+Concrete actions:
+- Open an upstream issue documenting the missing Zihintpause spinwait for RISC-V (the equivalent of the x86 PAUSE and ARM WFE hints that jemalloc already uses).
+- A one-function patch adding `#include <sched.h>` and `sched_yield()` or `__riscv_pause()` (via `zihintpause`) to the spin path is a tractable first contribution.
+- RVV is a lower priority for jemalloc than Zihintpause; start with the spinwait hint, then evaluate arena-metadata prefetch patterns.
 
-**P1 -- Unblock FAISS RISC-V port (4-6 engineer-weeks; unblocks RAG)**
+**4. HuggingFace Tokenizers and SafeTensors: add QEMU test execution to riscv64 CI**
 
-ISCAS PR #4503 (RVV SIMD kernels for FAISS) has been blocked since September 2025. The bottleneck is Meta FAIR reviewer bandwidth, not code quality. Merging this PR moves FAISS from orange to blue and enables GPU-free vector similarity at meaningful RVV performance.
+Upstream best position: Hugging Face (tokenizers and safetensors maintainers).
 
-- Owner: Meta FAIR (alexanderguzhva review needed). ISCAS (vsvnakers, lyd1992) are the contributors.
-- RISE coverage: None. Meta is not a RISE member. This requires direct engagement with Meta FAIR.
+Concrete actions:
+- For Tokenizers: add a QEMU-based test step to the riscv64 matrix entry in CI.yml. The cibuildwheel `CIBW_TEST_COMMAND` field is the minimal change; RISE QEMU infrastructure is already used by multiple projects in this stack and can be offered.
+- For SafeTensors: add a pytest step under QEMU to python-release.yml. The Rust core is portable and is expected to pass; the change would formalize that expectation and catch regressions.
+- Both changes are low-effort (one-line test-command additions) and would promote both nodes from yellow to green, reducing the count of test-ungated critical nodes by two.
 
-**P1 -- Advance ExecuTorch from QEMU to native hardware CI**
+**5. NumPy NPYV RVV backend**
 
-ExecuTorch Phase 1 (QEMU test matrix) is complete. Running the same matrix on native RISE riscv64 runners upgrades ExecuTorch to green and validates real-hardware latency numbers.
+Upstream best position: NumPy NPYV maintainers (NumFOCUS / community).
 
-- Owner: PyTorch / ExecuTorch team. RISE provides the runners.
-- RISE coverage: riseproject-dev/executorch fork active; RISE runners available.
+Concrete actions:
+- A NPYV RVV backend (analogous to the existing SVE and VSX backends) would unlock vectorized ufunc dispatch for all ~22 ufunc families currently running scalar on riscv64.
+- RISE should check whether any existing contributor (e.g., the same individuals who contributed RVV support to OpenBLAS and oneDNN) is positioned to start this work.
+- The upstream NumPy QEMU CI job (`linux_qemu.yml`) already has riscv64 support with `continue-on-error: true`; removing the non-blocking flag should be a goal once the NPYV backend is merged.
+- This is a larger engineering effort than items 1-4 but has a proportionally larger impact, since NumPy scalar fallback affects every numerical operation in the agentic inference pipeline outside of oneDNN/XNNPACK-dispatched operators.
 
-**P2 -- Fix oneDNN INT8 + FP16 gaps (6-12 engineer-weeks)**
+**6. LZ4 fast decompression path for riscv64**
 
-oneDNN's INT8 quantized conv/matmul are missing for riscv64. INT8 is the dominant quantization format for production LLM inference. The FP16 overflow bug (PR #5361) also blocks BF16/FP16 accuracy.
+Upstream best position: lz4 maintainers (Yann Collet / Meta).
 
-- Owner: ISCAS (zhangfeiv0, xiazhuozhao). SpacemiT hardware available.
-- RISE coverage: ISCAS and SpacemiT are RISE General Members. No dedicated RFP found for oneDNN INT8.
+Concrete actions:
+- PR [#1778](https://github.com/lz4/lz4/pull/1778) (consolidated RISC-V optimization) is the current best candidate for review. RISE or an industry contributor should provide a review, test results on riscv64 hardware, and CI runner access to accelerate merge.
+- Enabling `LZ4_FAST_DEC_LOOP` for riscv64 (with appropriate Zicclsm and alignment guards) is the minimal change; full RVV acceleration is an optional follow-on.
 
-**P2 -- Fix gRPC TLS throughput (replace BoringSSL with OpenSSL, 1-2 engineer-weeks)**
+**7. CPython riscv64 buildbot: stabilize and make continuous**
 
-gRPC's BoringSSL has no riscv64 crypto assembly, resulting in ~10x TLS throughput penalty. Configuring vLLM's gRPC endpoint to use OpenSSL via credential override is a workaround requiring no upstream changes. Upstream fix (BoringSSL RVV crypto assembly) is a multi-month effort and not RISE-funded.
+Upstream best position: CPython core developers / PSF infrastructure team.
 
-- Owner: platform/operations team for the workaround; BoringSSL team for the upstream fix.
-- RISE coverage: RISE has no involvement with BoringSSL.
+Concrete actions:
+- The riscv64 buildbot (builder 1377) fires only on-demand per PR, not continuously. RISE should work with the CPython infrastructure team to convert this to a continuous builder, ensuring regressions are caught at commit rather than at pull-request review time.
+- Build #33 failed and #34 passed on consecutive days (2026-06-29/30), suggesting flakiness. A root-cause analysis of the #33 failure should be filed to prevent recurrence.
+- RISE already provides the runner hardware; the remaining work is on the CPython buildbot configuration side.
 
-**P2 -- Ship Tiktoken riscv64 PyPI wheel (1-2 engineer-weeks; unblocks GPT-family tokenization)**
+**8. glibc Ubuntu 24.04 deployment advisory**
 
-PR #506 has validation on native RISE hardware but is stalled. The Rust build infrastructure already exists (maturin); this is a CI matrix addition.
-
-- Owner: OpenAI. External contributor has validated the build on RISE hardware.
-- RISE coverage: RISE runners used for validation; no funded contributor.
-
-**P2 -- Ship Eigen RVV in a versioned release (0 engineering cost; release cut only)**
-
-The entire Eigen RVV 1.0 SIMD backend is already merged to master. Cutting a new versioned Eigen release (3.5.x or 6.0) would make RVV-accelerated linear algebra available to all downstream consumers without requiring git master builds. This is a maintainer action, not an engineering one.
-
-- Owner: Eigen maintainers (consensus-based; no formal process). Could be proposed on the GitLab issue tracker.
-- RISE coverage: Tenstorrent drove the RVV implementation; SpacemiT provides the native CI hardware. Neither is RISE-funded for this specific action.
-
-**P3 -- Validate glibc on Ubuntu 24.04 / plan LTS upgrade path**
-
-Any production riscv64 deployment on Ubuntu 24.04 LTS should validate the three crash-class glibc bugs (BZ #32269, #32932, #32228) or plan a migration to Debian sid / Ubuntu 25.04+.
-
-- Owner: operations / platform team.
-- RISE coverage: N/A (OS/distro concern).
-
-**P3 -- Research Ray riscv64 status**
-
-Ray is the primary distributed execution framework for scaling Agentic AI workloads. Its riscv64 status is currently unknown (grey). A targeted investigation (PyPI wheel check, GitHub CI review, RISE involvement check) should precede any production planning that assumes Ray is available.
-
-- Owner: engineering team.
-- RISE coverage: RISE AI/ML WG scope includes distributed inference frameworks.
-
----
-
-### Excluded components (grey -- N/A)
-
-The following are classified grey because they are proprietary/vendor-only paths architecturally excluded from a CPU-only RISC-V deployment:
-
-- CUDA / cuDNN / cuBLAS / TensorRT / NCCL (NVIDIA proprietary GPU stack)
-- ROCm / HIP / MIOpen (AMD GPU stack)
-- Intel GPU / oneAPI GPU (Intel GPU stack)
-- Triton GPU compiler (GPU JIT only)
-- torchvision / torchaudio (GPU-dependent multimodal add-ons)
+Concrete actions:
+- Publish a deployment advisory for users running LLM inference on Ubuntu 24.04 (Noble) on riscv64: glibc 2.39 predates the `__SYSCALL_CLOBBERS` vector-clobber fix and BZ#32932. Recommend Ubuntu 25.04 (ships glibc 2.41) or Debian sid (glibc 2.41+) for production agentic inference deployments on riscv64 until Ubuntu 24.04 is patched.

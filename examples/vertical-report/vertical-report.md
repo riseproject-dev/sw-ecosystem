@@ -66,6 +66,19 @@ once. If the user has already answered something in their request, do not re-ask
   inference serving with RAG".)
 - **Named projects.** Which projects does the user already know are in the stack? (e.g. LangChain,
   vLLM, PyTorch.) These are the seeds for stack discovery.
+- **Multi-product structure.** When the stack covers multiple parallel products in the same
+  category (e.g., several database engines, several inference runtimes, several message
+  brokers), the report can be organized as product columns with shared layers below them.
+  If the named projects suggest this structure, propose the product list and ask the user to
+  confirm: for example, "This vertical covers PostgreSQL, MySQL, Redis, and Memcached -- should
+  I organize the report as four product columns with shared layers (Orchestration &
+  Observability, System Libraries) below?" Let the user confirm, add, or drop products. Then
+  propose the per-product row names (the functional layers that every product shares, e.g.,
+  "Client Drivers", "Database Engine", "Extensions & Clustering") and let the user adjust.
+  When writing the scope spec, use `product:` and `layer:` on each per-product layer
+  entry (see the schema below). The full product list and row order are
+  derived from the collection of those values. Shared layers (spanning all products) use
+  `layer:` without `product:`. Omit `product:` entirely for a single, non-parallel stack.
 - **Feature scope per project.** For each named project, which parts actually matter for this
   vertical? This is the single most important scoping question, because it decides how finely you
   decompose a project into nodes. Example: for PyTorch, does the user care about the whole
@@ -126,6 +139,10 @@ it headless, when a batch operator kicks it off, or during automated validation.
 - Make reasonable default assumptions (full feature scope unless the request narrows it; critical
   for anything on the direct path from a named project to the hardware; exec/product audience;
   RVA23U64 baseline unless stated).
+- **Multi-product structure**: if the named projects are clearly parallel products in the same
+  category (e.g., several database engines, several runtimes), infer the product columns and
+  per-product row layer names from the research. Use `product:` + `layer:` on per-product
+  layer entries in the scope spec, and list the inference as an assumption.
 - Record every such assumption explicitly in the scope spec's `assumptions:` list, so the reader
   knows exactly what was assumed and can correct it on a re-run.
 
@@ -150,8 +167,25 @@ exclusions:                                 # proprietary / vendor-only -> class
 out_of_scope:                               # user does not care about these -> NOT classified
   - name: "torch.compile pipeline (Triton, torch-mlir, IREE, MLIR, LLVM)"
     reason: "Scope is CPU eager inference only; JIT/compile path excluded by the user."
+
 layers:                                     # ordered top -> bottom, mirrors the example outline
-  - title: "Orchestration"
+  # Per-product layer: use product: + layer: instead of title:.
+  # product:       the column name (e.g. a database engine, a runtime)
+  # layer: the row name shared across all products (e.g. "Client Drivers")
+  # The full ordered product list and row order are derived from the collection of these values
+  # (first-appearance order in the layers list).
+  - product: PyTorch
+    layer: "Frontend / Eager"
+    nodes:
+      - name: PyTorch ATen
+        repo: https://github.com/pytorch/pytorch
+        home: https://pytorch.org/
+        slug: pytorch
+        criticality: critical
+        features_in_scope: "CPU eager inference"
+        notes: "C++/Python. Check riscv64 build + any SIMD dispatch."
+  # Shared layer: layer: without product:. Rendered as a full-width strip below the product grid.
+  - layer: "Orchestration"
     nodes:
       - name: LangChain
         repo: https://github.com/langchain-ai/langchain
@@ -160,7 +194,7 @@ layers:                                     # ordered top -> bottom, mirrors the
         criticality: critical               # critical | optional
         features_in_scope: "chains, agents, tool use, RAG"
         notes: "Pure Python; inherits RISC-V support from CPython."
-  - title: "Inference Serving"
+  - layer: "Inference Serving"
     nodes:
       - name: vLLM
         repo: https://github.com/vllm-project/vllm
@@ -181,12 +215,24 @@ Field semantics mirror `scope.yml`: `repo` is the canonical upstream repo URL (o
 `home` is the homepage, and `slug` (only when a per-project report exists) points stage 2 at
 `reports/<slug>.md` for reuse -- **omit `slug` entirely for a node with no report** (do not set it
 to null or empty). Each node is one classification unit in stage 2; a single project may appear as
-several nodes when its features were split during scoping. The optional `chains:` block records the
-pipeline chains and alternate paths that the layered `nodes:` list cannot express on its own (a node
-list is flat; a chain is an ordered edge sequence). Render `chains:` verbatim in the stack outline's
-"pipeline chains" section. `exclusions` are classified grey and shown in the stack; `out_of_scope`
-components are never classified and appear only as a short note so the reader knows they were
-deliberately dropped.
+several nodes when its features were split during scoping.
+
+Each layer entry is either a **per-product layer** or a **shared layer**:
+
+- **Per-product layer**: has both `product:` (the column name) and `layer:` (the row name).
+  The full ordered product list and row order are derived from first-appearance order across all
+  layer entries -- there are no separate top-level `products:` or `product_layers:` fields. A
+  shared-layer node may carry an optional `column:` field to place it under a specific product
+  column within the shared strip.
+- **Shared layer**: has `layer:` but no `product:`. Rendered as a full-width strip below the
+  product grid (e.g., "Orchestration & Observability", "System Libraries").
+- **Single-product vertical**: all layers have only `layer:`; no `product:` appears anywhere.
+
+The optional `chains:` block records the pipeline chains and alternate paths that the layered
+`nodes:` list cannot express on its own (a node list is flat; a chain is an ordered edge sequence).
+Render `chains:` verbatim in the stack outline's "pipeline chains" section. `exclusions` are
+classified grey and shown in the stack; `out_of_scope` components are never classified and appear
+only as a short note so the reader knows they were deliberately dropped.
 
 ---
 
@@ -249,13 +295,37 @@ short "Scoping assumptions" note directly under the header so the reader can cor
 ### Artifact 1: Layered stack outline
 
 A layered, top-to-bottom outline (top = what the user writes, bottom = hardware). This is the paste
-source for a Copilot-for-PowerPoint stack diagram, so it must be clean and structured. Format: one
-`##` section per layer, and under each layer **one bullet per node spanning as many lines as it
-needs** (do not try to cram every attribute onto a single physical line -- there are too many). Use
-this exact per-node shape:
+source for a Copilot-for-PowerPoint stack diagram, so it must be clean and structured.
+
+**Single-product verticals (only `layer:` in any layer entry, no `product:`):** Use one `##`
+section per layer with sequential numbering (`## Layer 1 -- <title>`, `## Layer 2 -- <title>`,
+etc.).
+
+**Multi-product verticals (some layer entries carry `product:` + `layer:`):**
+Derive the product list and row order from first-appearance order across all layer entries.
+Organize layers in two groups:
+
+1. *Per-product layers* (the product grid): one `### Layer N.x -- <Product>: <Row>` section for
+   each `(product, row-layer)` pair, where `N` is the row number (1 = first distinct
+   `layer:` value in source order) and `x` is a lowercase letter assigned to the product
+   in first-appearance order (a, b, c, ...).
+   Group all letters for the same row together before advancing to the next row:
+   `Layer 1.a -- ProductA: Row1`, `Layer 1.b -- ProductB: Row1`, ...,
+   `Layer 2.a -- ProductA: Row2`, etc.
+   When a product has no nodes for a given row, emit the heading with the single line
+   `N/A: <brief reason>` (e.g., "N/A: no dedicated client library for this protocol").
+   End each row group with a "Pipeline chains and alternate paths" subsection listing the
+   per-product chains for that row from `chains:`.
+
+2. *Shared layers* (the full-width strip): one `### Layer N -- <title>` section per shared
+   layer (N continues from the last row number of the product grid). End with the shared
+   pipeline chains from `chains:`.
+
+Under each layer section, **one bullet per node spanning as many lines as it needs:**
 
 ```
-## Layer N -- [Layer title]
+### Layer N.x -- <Product>: <Row title>   (multi-product)
+### Layer N -- <Layer title>              (single-product or shared)
 
 - **[Node name]** -- [color] ([criticality])
   - [one-line description of what it is]
@@ -264,7 +334,7 @@ this exact per-node shape:
   - [if yellow/orange/red and load-bearing:] Gap: [what is missing on riscv64].
 ```
 
-After the layers, reproduce the scope spec's `chains:` block as a "Pipeline chains and alternate
+After all layers, reproduce the scope spec's `chains:` block as a "Pipeline chains and alternate
 paths" subsection, one line per chain (`A -> B -> C -> ...`), exactly as the per-project ecosystem
 diagram convention does. The reference example that inspired this format lives outside the repo (an
 agentic-AI stack diagram); do not depend on that file being present -- the shape above is the whole
@@ -316,14 +386,14 @@ report. Feed it to `render-stack-svg.py` (in this directory) to produce an SVG s
 python3 render-stack-svg.py render <vertical-slug>.yml -o <vertical-slug>.svg
 ```
 
-The layout is derived from the scope spec's `layers:`, not re-invented: a layer title of the form
-`"<Product> -- <Row>"` places its nodes in the product grid (the part before `--` is a **column**,
-the part after is a per-product **row-layer**); any layer title without `--` is a **full-width
-shared layer** rendered below the product grid. Column and row-layer order follow first appearance
-in `layers:`. Column widths are not uniform: each column is sized to its busiest cell, so a product
-with many extensions is wider than a sparse one. A node in a shared layer may still be placed under
-a product column -- set `column:` on that node, or let `render-stack-svg.py build` infer it from the
-report's Artifact 1 per-product subsections (e.g. "Layer 4.a -- PostgreSQL: Orchestration &
+The layout is derived from the scope spec's `layers:` -- not re-invented: a layer entry with
+`product:` and `layer:` places its nodes in the product grid (column = `product:`, row =
+`layer:`); a layer entry with only `layer:` is a **full-width shared layer** rendered below
+the product grid. Column and row order follow first-appearance order across the layer entries.
+Column widths are not uniform: each column is sized to its busiest cell, so a product with many
+extensions is wider than a sparse one. A node in a shared layer may still be placed under a product
+column -- set `column:` on that node, or let `render-stack-svg.py build` infer it from the report's
+Artifact 1 per-product subsections (e.g. "Layer 4.a -- PostgreSQL: Orchestration &
 Observability"); shared-layer nodes with no column render in a full-width strip beneath the
 per-product cells. Each node's `color`, `criticality`, `release_provider`, and `gap` (a one-line
 "what is missing on riscv64") come straight from that node's classification record (Artifact 2).
@@ -355,7 +425,7 @@ nodes:
     color: blue                                   # grey | green | blue | yellow | orange | red
     criticality: critical                         # critical | optional
     column: PostgreSQL                            # product column; null for a shared strip node
-    layer: "Client Drivers"                       # a product_layer or shared_layer title
+    layer: "Client Drivers"                       # a layer or shared_layer title
     release_provider: Debian
     upstream_release: false                        # true only when release_provider == upstream
     gap: "Build Farm has active riscv64 workers passing full regression suite; upstream ships source only"

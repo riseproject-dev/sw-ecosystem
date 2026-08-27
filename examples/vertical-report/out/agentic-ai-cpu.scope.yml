@@ -31,7 +31,7 @@ out_of_scope:
     reason: "Explicitly excluded by vLLM on riscv64 (llvmlite has no riscv64 support)."
 
 layers:
-  - title: "Orchestration & Agents"
+  - layer: "Orchestration & Agents"
     nodes:
       - name: LangChain
         repo: https://github.com/langchain-ai/langchain
@@ -48,7 +48,46 @@ layers:
         features_in_scope: "stateful agent graphs, multi-agent orchestration"
         notes: "Pure Python py3-none-any wheel. No per-project report; verified on PyPI Aug 2026."
 
-  - title: "Inference Serving"
+      - name: langchain-core
+        repo: https://github.com/langchain-ai/langchain
+        home: https://python.langchain.com/docs/concepts/
+        criticality: critical
+        features_in_scope: "LangChain expression language (LCEL), Runnable primitives, base message/prompt types, callback system; direct runtime dep of both LangChain and LangGraph"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: langsmith
+        repo: https://github.com/langchain-ai/langsmith-sdk
+        home: https://smith.langchain.com/
+        criticality: optional
+        features_in_scope: "LangChain tracing, evaluation, and observability client; used by langchain-core for run tracking"
+        notes: "Has langsmith-pyo3 Rust extension component as of v0.11.x; riscv64 wheel availability needs verification."
+
+      - name: langgraph-checkpoint
+        repo: https://github.com/langchain-ai/langgraph
+        home: https://langchain-ai.github.io/langgraph/
+        criticality: critical
+        features_in_scope: "LangGraph state persistence and checkpointing interface; required by LangGraph for stateful agent graphs"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: langgraph-prebuilt
+        repo: https://github.com/langchain-ai/langgraph
+        home: https://langchain-ai.github.io/langgraph/
+        criticality: optional
+        features_in_scope: "Pre-built LangGraph agent components: ReAct agent, ToolNode, structured output"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: langgraph-sdk
+        repo: https://github.com/langchain-ai/langgraph
+        home: https://langchain-ai.github.io/langgraph/
+        criticality: optional
+        features_in_scope: "LangGraph API client SDK for communicating with LangGraph Platform (remote agent execution)"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+  - layer: "Inference Serving"
     nodes:
       - name: vLLM (CPU backend)
         repo: https://github.com/vllm-project/vllm
@@ -73,7 +112,31 @@ layers:
         features_in_scope: "on-device edge inference; XNNPACK CPU backend; GGUF-format smaller models"
         notes: "Phase-1 riscv64 QEMU CI with comprehensive model test matrix. No upstream release. RISE fork active."
 
-  - title: "ML Framework"
+      - name: FastAPI
+        repo: https://github.com/fastapi/fastapi
+        home: https://fastapi.tiangolo.com/
+        criticality: critical
+        features_in_scope: "REST API framework for vLLM's OpenAI-compatible HTTP endpoint; request validation via Pydantic"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: Starlette
+        repo: https://github.com/encode/starlette
+        home: https://www.starlette.io/
+        criticality: critical
+        features_in_scope: "ASGI toolkit underlying FastAPI; routing, middleware, streaming responses for vLLM token streaming"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: uvicorn
+        repo: https://github.com/encode/uvicorn
+        home: https://www.uvicorn.org/
+        criticality: critical
+        features_in_scope: "ASGI server for vLLM and FastAPI; production HTTP serving on riscv64"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+  - layer: "ML Framework"
     nodes:
       - name: PyTorch (CPU eager inference)
         repo: https://github.com/pytorch/pytorch
@@ -90,18 +153,24 @@ layers:
         features_in_scope: "model loading, AutoModel, generation pipelines"
         notes: "Pure Python; no per-project report. Installs on riscv64 without modification."
 
-  - title: "Vector Store / Retrieval"
-    nodes:
-      - name: FAISS (CPU)
-        repo: https://github.com/facebookresearch/faiss
-        home: https://faiss.ai/
-        slug: faiss
-        criticality: critical
-        features_in_scope: "similarity search, IndexFlatL2, HNSW, IVF"
-        notes: "No PyPI riscv64 wheel. Source build required. ISCAS PR #4503 blocked since Sep 2025."
+      - name: Accelerate
+        repo: https://github.com/huggingface/accelerate
+        home: https://huggingface.co/docs/accelerate
+        criticality: optional
+        features_in_scope: "Device-agnostic inference helper for HF Transformers; CPU offloading, mixed-precision dispatch, model sharding"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
 
-  - title: "Tokenization"
+  - layer: "Model Ecosystem"
     nodes:
+      - name: HuggingFace Hub
+        repo: https://github.com/huggingface/huggingface_hub
+        home: https://huggingface.co/docs/huggingface_hub
+        criticality: critical
+        features_in_scope: "Model card, repository, and weight download client; shared by Transformers, tokenizers, safetensors, and vLLM"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
       - name: HuggingFace Tokenizers
         repo: https://github.com/huggingface/tokenizers
         home: https://huggingface.co/docs/tokenizers
@@ -125,8 +194,6 @@ layers:
         features_in_scope: "BPE tokenization for OpenAI-family models (GPT-4, GPT-2)"
         notes: "No riscv64 wheel on PyPI. Source build (Rust) required. PR #506 stalled."
 
-  - title: "Numerical & Linear Algebra"
-    nodes:
       - name: NumPy
         repo: https://github.com/numpy/numpy
         home: https://numpy.org/
@@ -134,6 +201,31 @@ layers:
         criticality: critical
         features_in_scope: "array operations, fundamental Python ML dependency"
         notes: "No riscv64 PyPI wheel as of Aug 2026 (Q3 2026 target missed). Source build or RISE wheel required."
+
+      - name: SafeTensors
+        repo: https://github.com/huggingface/safetensors
+        home: https://huggingface.co/docs/safetensors
+        criticality: critical
+        features_in_scope: "model weight loading for HF Transformers and vLLM"
+        notes: "Upstream PyPI riscv64 wheel in v0.8.0 (2026-06-09). RISE wheel builder self-deprecated."
+
+      - name: ONNX Runtime (CPU EP)
+        repo: https://github.com/microsoft/onnxruntime
+        home: https://onnxruntime.ai/
+        slug: onnx
+        criticality: optional
+        features_in_scope: "ONNX CPU execution provider (alternative inference path)"
+        notes: "No riscv64 binary. Cross-compile build guide exists. Active RVV kernel work (SiFive, ZTE)."
+
+  - layer: "Compute"
+    nodes:
+      - name: FAISS (CPU)
+        repo: https://github.com/facebookresearch/faiss
+        home: https://faiss.ai/
+        slug: faiss
+        criticality: critical
+        features_in_scope: "similarity search, IndexFlatL2, HNSW, IVF"
+        notes: "No PyPI riscv64 wheel. Source build required. ISCAS PR #4503 blocked since Sep 2025."
 
       - name: OpenBLAS
         repo: https://github.com/xianyi/OpenBLAS
@@ -150,8 +242,6 @@ layers:
         features_in_scope: "dense linear algebra used by ONNX Runtime (Eigen EP) and optional PyTorch paths"
         notes: "Header-only C++ library; ships as libeigen3-dev (arch: all) in Debian/Ubuntu. No RVV intrinsics; scalar fallback on riscv64."
 
-  - title: "Deep Learning Primitives"
-    nodes:
       - name: oneDNN (DNNL)
         repo: https://github.com/uxlfoundation/oneDNN
         home: https://uxlfoundation.github.io/oneDNN/
@@ -183,25 +273,144 @@ layers:
         features_in_scope: "SIMD transcendental math (sin, cos, log, exp) used by ATen"
         notes: "riscv64 integrated since v3.6 (Nov 2023). RISE-funded integration into OpenJDK. No blocking issues."
 
-  - title: "Model Serialization"
+  - layer: "Python Infrastructure"
     nodes:
-      - name: SafeTensors
-        repo: https://github.com/huggingface/safetensors
-        home: https://huggingface.co/docs/safetensors
+      - name: Pydantic
+        repo: https://github.com/pydantic/pydantic
+        home: https://docs.pydantic.dev/
         criticality: critical
-        features_in_scope: "model weight loading for HF Transformers and vLLM"
-        notes: "Upstream PyPI riscv64 wheel in v0.8.0 (2026-06-09). RISE wheel builder self-deprecated."
+        features_in_scope: "Data validation and settings management; used by FastAPI (request schemas), vLLM (OpenAI API types), and langchain-core (tool/message types)"
+        notes: "Rust pydantic-core backend (v2); pydantic-core riscv64 PyPI wheel availability needs verification."
 
-      - name: ONNX Runtime (CPU EP)
-        repo: https://github.com/microsoft/onnxruntime
-        home: https://onnxruntime.ai/
-        slug: onnx
+      - name: httpx
+        repo: https://github.com/encode/httpx
+        home: https://www.python-httpx.org/
+        criticality: critical
+        features_in_scope: "Async and sync HTTP client; used by langchain-core for LLM API calls, huggingface-hub for model downloads, and openai client"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: requests
+        repo: https://github.com/psf/requests
+        home: https://requests.readthedocs.io/
+        criticality: critical
+        features_in_scope: "Sync HTTP client; used by huggingface-hub, tokenizers, and transformers for model and data downloads"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: aiohttp
+        repo: https://github.com/aio-libs/aiohttp
+        home: https://docs.aiohttp.org/
         criticality: optional
-        features_in_scope: "ONNX CPU execution provider (alternative inference path)"
-        notes: "No riscv64 binary. Cross-compile build guide exists. Active RVV kernel work (SiFive, ZTE)."
+        features_in_scope: "Async HTTP client/server; optional transport for vLLM and LangChain LLM connectors"
+        notes: "Has C extensions (multidict, frozenlist, yarl). Available in Debian riscv64 packages."
 
-  - title: "Runtime & Language"
+      - name: typing-extensions
+        repo: https://github.com/python/typing_extensions
+        home: https://typing-extensions.readthedocs.io/
+        criticality: critical
+        features_in_scope: "Backport of newer Python typing features (TypeAlias, ParamSpec, override, etc.); required by pydantic, langchain-core, transformers, torch"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: packaging
+        repo: https://github.com/pypa/packaging
+        home: https://packaging.pypa.io/
+        criticality: optional
+        features_in_scope: "PEP-compliant version parsing and specifiers; used by transformers, accelerate, and vLLM for runtime version checks"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: filelock
+        repo: https://github.com/tox-dev/filelock
+        home: https://py-filelock.readthedocs.io/
+        criticality: optional
+        features_in_scope: "Cross-platform file locking; used by huggingface-hub, transformers, and torch for cache coherency on shared filesystems"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: fsspec
+        repo: https://github.com/fsspec/filesystem_spec
+        home: https://filesystem-spec.readthedocs.io/
+        criticality: optional
+        features_in_scope: "Filesystem abstraction (local, S3, GCS, HTTP); used by PyTorch model loading, huggingface-hub, and datasets"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: tenacity
+        repo: https://github.com/jd/tenacity
+        home: https://tenacity.readthedocs.io/
+        criticality: optional
+        features_in_scope: "Retry and backoff library; used by langchain-core to make LLM API calls resilient to transient failures"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: tqdm
+        repo: https://github.com/tqdm/tqdm
+        home: https://tqdm.github.io/
+        criticality: optional
+        features_in_scope: "Progress bars; used by huggingface-hub, transformers, and vLLM for download and inference progress reporting"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: networkx
+        repo: https://github.com/networkx/networkx
+        home: https://networkx.org/
+        criticality: optional
+        features_in_scope: "Graph library; used internally by PyTorch for the FX graph IR (torch.fx) and graph transformation passes"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: sympy
+        repo: https://github.com/sympy/sympy
+        home: https://www.sympy.org/
+        criticality: optional
+        features_in_scope: "Symbolic mathematics; used internally by PyTorch for symbolic shape analysis in eager mode dispatch"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: OpenTelemetry API
+        repo: https://github.com/open-telemetry/opentelemetry-python
+        home: https://opentelemetry.io/
+        criticality: optional
+        features_in_scope: "Tracing and metrics instrumentation API; used by vLLM for request tracing and langsmith for run observability"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+      - name: OpenTelemetry SDK
+        repo: https://github.com/open-telemetry/opentelemetry-python
+        home: https://opentelemetry.io/
+        criticality: optional
+        features_in_scope: "Tracing and metrics SDK implementation (exporters, processors, samplers); used by vLLM and langsmith"
+        notes: "Pure Python py3-none-any wheel. Installs on riscv64 without modification."
+        color: grey
+
+  - layer: "Runtimes & System Libraries"
     nodes:
+      - name: Protobuf
+        repo: https://github.com/protocolbuffers/protobuf
+        home: https://developers.google.com/protocol-buffers
+        slug: protocol-buffers
+        criticality: optional
+        features_in_scope:
+        notes: "RPC framework; primary transport for vLLM serving API and Ray cluster communication."
+
+      - name: FlatBuffers
+        repo: https://github.com/google/flatbuffers
+        home: https://google.github.io/flatbuffers/
+        slug: flatbuffers
+        criticality: optional
+        features_in_scope:
+        notes: "Zero-copy serialization; internal model format for ONNX Runtime and ExecuTorch."
+
+      - name: gRPC
+        repo: https://github.com/grpc/grpc
+        home: https://grpc.io/
+        slug: grpc
+        criticality: optional
+        features_in_scope:
+        notes: "RPC framework; primary transport for vLLM serving API and Ray cluster communication."
+
       - name: CPython
         repo: https://github.com/python/cpython
         home: https://www.python.org/
@@ -218,6 +427,54 @@ layers:
         features_in_scope: "C runtime, pthreads, riscv_hwprobe syscall"
         notes: "Ubuntu 24.04 ships glibc 2.39 which predates three crash-class fixes. Deployment risk on LTS."
 
+      - name: OpenSSL
+        repo: https://github.com/openssl/openssl
+        home: https://www.openssl.org/
+        slug: openssl
+        criticality: critical
+        features_in_scope: "TLS + crypto for every engine's encrypted connections"
+        notes: "C + asm. Prior in reports/openssl.md. Key gap: AES not constant-time without Zkn/Zvkned; RVV/vector-crypto PRs open."
+
+      - name: jemalloc
+        repo: https://github.com/jemalloc/jemalloc
+        home: https://jemalloc.net/
+        slug: jemalloc
+        criticality: critical
+        features_in_scope: "Default bundled allocator for Redis; optional for MySQL/MariaDB"
+        notes: "C. Prior in reports/jemalloc.md. riscv64gc support since Nov 2023; bundled in Redis -- load-bearing there."
+
+      - name: tcmalloc
+        repo: https://github.com/google/tcmalloc
+        home: https://google.github.io/tcmalloc/
+        slug: tcmalloc
+        criticality: optional
+        features_in_scope: "Optional allocator (MySQL optional; gperftools variant)"
+        notes: "C++. Prior in reports/tcmalloc.md. Check riscv64 support (stacktrace/unwind gaps noted for gperftools)."
+
+      - name: LZ4
+        repo: https://github.com/lz4/lz4
+        home: https://lz4.github.io/lz4/
+        slug: lz4
+        criticality: critical
+        features_in_scope: "Fast compression: MySQL redo log, RocksDB, general page compression"
+        notes: "C. Prior in reports/lz4.md. LZ4_FAST_DEC_LOOP not enabled on riscv64 -- performance gap."
+
+      - name: zstd
+        repo: https://github.com/facebook/zstd
+        home: https://facebook.github.io/zstd/
+        slug: zstd
+        criticality: critical
+        features_in_scope: "High-ratio compression: PG/MySQL/MariaDB page + WAL/binlog, RocksDB"
+        notes: "C. Prior in reports/zstd.md. HUF 4-way decode loop disabled on riscv64; no RVV -- performance gap, not correctness."
+
+      - name: snappy
+        repo: https://github.com/google/snappy
+        home: https://github.com/google/snappy
+        slug: snappy
+        criticality: optional
+        features_in_scope: "Fast compression used by RocksDB / MyRocks"
+        notes: "C++. Prior in reports/snappy.md. Check riscv64 build + any SIMD path."
+
 chains:
   - name: "PyTorch CPU eager inference path (RVA23)"
     sequence: ["PyTorch ATen", "oneDNN (xbyak_riscv JIT)", "XNNPACK", "OpenBLAS", "SLEEF"]
@@ -228,6 +485,10 @@ chains:
   - name: "ExecuTorch edge inference path"
     sequence: ["ExecuTorch runtime", "XNNPACK (CPU backend)", "OpenBLAS"]
   - name: "Agentic RAG pipeline"
-    sequence: ["LangChain/LangGraph", "HF Transformers", "vLLM (serving)", "FAISS (retrieval)", "HF Tokenizers / SentencePiece"]
+    sequence: ["LangChain/LangGraph", "langchain-core", "HF Transformers", "vLLM (serving)", "FAISS (retrieval)", "HF Tokenizers / SentencePiece"]
   - name: "Model load path"
-    sequence: ["HF Transformers", "SafeTensors", "ONNX Runtime (optional)"]
+    sequence: ["HF Transformers", "HuggingFace Hub", "SafeTensors", "ONNX Runtime (optional)"]
+  - name: "vLLM HTTP serving path"
+    sequence: ["vLLM CPU backend", "FastAPI", "Starlette", "uvicorn", "Pydantic (request/response schemas)"]
+  - name: "LangGraph stateful agent path"
+    sequence: ["LangGraph", "langchain-core", "langgraph-checkpoint (state)", "langsmith (tracing)", "pydantic (types)"]

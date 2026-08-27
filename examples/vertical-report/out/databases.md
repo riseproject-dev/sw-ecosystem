@@ -11,841 +11,854 @@ title: Databases (OLTP + OLAP + KV/cache) -- self-managed open-source database s
 **Audience:** exec-product<br/>
 **Verification policy:** Colors are assigned from primary upstream sources, adversarially verified against the per-project reports under reports/. Items not verifiable against a second source are marked [NEEDS VERIFICATION].<br/>
 
-**Scoping assumptions:**
-- Five per-product sub-verticals: PostgreSQL, MySQL, MariaDB, Redis, Memcached. Each has three per-product layers (Client Drivers, Database Engine, Extensions / Clustering & Proxies).
-- Two shared layers span all five products: Orchestration & Observability (Kubernetes control plane, database operators, metrics pipeline) and System Libraries (compression, crypto, allocators, text, I/O, system runtime).
-- CPU-only per operator directive: no GPU / CUDA / ROCm paths.
-- Target profile RVA23U64: RVV 1.0, vector crypto (Zvkned), Zba/Zbb/Zbc, and FP16 are treated as mandatory baseline, so missing SIMD/crypto acceleration is a gap against baseline.
+## Scoping Assumptions
 
-**Out of scope (deliberately dropped):** Managed cloud database services (AWS RDS/Aurora/ElastiCache, GCP Cloud SQL/AlloyDB/MemoryStore, Azure Database); GPU/CUDA/ROCm acceleration paths; Windows and macOS server deployment.
+Five per-product sub-verticals are covered: PostgreSQL, MySQL, MariaDB, Redis, and Memcached.
+Each has four per-product layers: Client Drivers, Database Engine, Extensions/Clustering & Proxies, and Orchestration & Observability (per-product).
+Two shared layers span all five products: Orchestration & Observability (Kubernetes control plane, database operators, metrics pipeline) and System Libraries (compression, crypto, allocators, text, I/O, system runtime).
+CPU-only per operator directive: no GPU/CUDA/ROCm paths.
+Target profile RVA23U64: RVV 1.0, vector crypto (Zvkned), Zba/Zbb/Zbc, and FP16 are treated as mandatory baseline, so missing SIMD/crypto acceleration is a gap against baseline.
 
----
+## Out of Scope
 
-**Color key:**
-
-| Color | Meaning |
-|-------|---------|
-| green | Upstream CI passes on riscv64; upstream ships riscv64 release artifact |
-| blue | Upstream CI passes on riscv64; no upstream riscv64 release artifact (distro provides) |
-| yellow | Build-only CI or clean distro build from unpatched upstream source; no test gate |
-| orange | No upstream riscv64 CI; build status uncertain (no confirmed current breakage) |
-| red | Confirmed build-blocking breakage on riscv64; upstream explicitly unsupported |
+- **Managed cloud database services** (AWS RDS/Aurora/ElastiCache, GCP Cloud SQL/AlloyDB/MemoryStore, Azure Database): operator chose OSS-substrate-only; proprietary managed control planes are not native-RISC-V investment targets.
+- **GPU/CUDA/ROCm acceleration paths** (GPU-accelerated analytics, GPU vector search): CPU-only scope per operator directive.
+- **Windows and macOS server deployment**: Linux/riscv64 server focus.
 
 ---
 
-## Artifact 1: Layered stack outline
+## Artifact 1: Layered Stack Outline
 
 ### Layer 1.a -- PostgreSQL: Client Drivers
 
 - **libpq** -- blue (critical)
-  - The canonical C client library for PostgreSQL, shipped as part of the PostgreSQL source tree.
-  - License: Data not available. Governance: PostgreSQL Global Development Group.
-  - Release provided by Ubuntu (and Debian), not upstream.
-  - Gap: No riscv64 jobs in the primary GitHub Actions workflow; riscv64 coverage comes exclusively from the PostgreSQL Build Farm (three active workers: boomslang, copperhead, greenfly) running the full regression suite daily. Upstream ships source-only tarballs; distros provide riscv64 binaries.
+  - C client library for PostgreSQL; bundled in-tree at src/interfaces/libpq; ships in every distro libpq5 riscv64 package.
+  - License: PostgreSQL License. Governance: PostgreSQL Global Development Group.
+  - Release provided by Debian, not upstream.
 
 - **psycopg** -- green (optional)
-  - Pure-Python PostgreSQL adapter for Python 3; binary wheel variant (psycopg_binary) includes a C extension.
-  - License: Data not available. Governance: Daniele Varrazzo / community.
-  - Upstream publishes riscv64 binary wheels on PyPI (manylinux_2_39, musllinux_1_2) for Python 3.10-3.14, tested via QEMU in the packages-bin.yml CI workflow with no CIBW_TEST_SKIP for riscv64.
+  - PostgreSQL adapter for Python 3 (psycopg 3); publishes 10 riscv64 binary wheels for psycopg_binary on PyPI; pure-Python psycopg package is architecture-independent.
+  - License: LGPL-3+. Governance: psycopg upstream (Daniele Varrazzo).
 
 - **pgx** -- green (optional)
-  - Pure-Go PostgreSQL driver for Go; no assembly or CGo.
-  - License: Data not available. Governance: Jack Christensen / community.
-  - Distributed as a Go module via proxy.golang.org; runs on linux/riscv64 by construction via the standard Go toolchain.
+  - Pure-Go PostgreSQL driver and toolkit; no assembly, no CGo; architecture-independent Go module.
+  - License: MIT. Governance: jackc (Jack Christensen).
 
 - **pgjdbc** -- green (optional)
-  - Pure-Java Type 4 JDBC driver for PostgreSQL; no JNI or native code.
-  - License: Data not available. Governance: PostgreSQL JDBC Driver project.
-  - Upstream publishes a single architecture-independent JAR on Maven Central; runs on riscv64 via any conformant JDK.
+  - Pure-Java Type 4 JDBC driver; no native code; architecture-independent jar; inherits riscv64 from the JVM runtime.
+  - License: BSD-2-Clause. Governance: pgjdbc organization.
 
-### Layer 2.a -- PostgreSQL: Database Engine
+**Pipeline chains and alternate paths**
 
-- **PostgreSQL** -- blue (critical)
-  - The PostgreSQL relational database engine; primary open-source OLTP workhorse in this vertical.
-  - License: Data not available. Governance: PostgreSQL Global Development Group.
-  - Release provided by Debian (and Ubuntu, Arch Linux RISC-V), not upstream.
-  - Gap: Zero riscv64 jobs in the GitHub Actions primary CI (pg-ci.yml); riscv64 coverage is provided exclusively by the [Build Farm](https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&arch=riscv64) (four active riscv64 workers: boomslang, copperhead, greenfly, mollusk) running the full regression suite on master through REL_13_STABLE. Upstream ships source-only tarballs.
-
-### Layer 3.a -- PostgreSQL: Extensions, Clustering & Proxies
-
-- **pgvector** -- yellow (optional)
-  - HNSW and IVFFlat vector similarity search extension for PostgreSQL.
-  - License: Data not available. Governance: Andrew Kane / community.
-  - Release provided by Ubuntu (and Debian), not upstream.
-  - Gap: No riscv64 CI upstream. RVV SIMD acceleration absent; scalar fallback fully functional for all operator and index types. Distro packages available (Ubuntu 24.04 ships 0.6.0, Debian sid ships 0.8.6) from unpatched upstream source.
-
-- **PostGIS** -- yellow (optional)
-  - Spatial and geographic object support extension for PostgreSQL.
-  - License: Data not available. Governance: PostGIS Project Steering Committee.
-  - Release provided by Debian, not upstream.
-  - Gap: No riscv64 CI upstream (Woodpecker portability CI covers arm64, armhf, s390x but not riscv64). Debian sid ships 3.6.4+dfsg-2 from unpatched upstream source.
-
-- **TimescaleDB** -- yellow (optional)
-  - Time-series extension for PostgreSQL.
-  - License: Data not available. Governance: Timescale, Inc.
-  - Release provided by Debian, not upstream.
-  - Gap: Zero riscv64 references across all ~45 GitHub Actions workflows; upstream release artifacts are Windows amd64 only. Debian sid ships 2.29.2+dfsg-1 for riscv64 from unpatched upstream source.
-
-- **Apache AGE** -- yellow (optional)
-  - Graph database extension for PostgreSQL implementing openCypher.
-  - License: Data not available. Governance: Apache Software Foundation.
-  - Release provided by Debian, not upstream.
-  - Gap: All five upstream workflows run on x86_64 only. Debian packages postgresql-18-age 1.8.0~rc0-2 for riscv64 from unmodified upstream source (single packaging patch is test-harness paths only, not architecture-specific).
-
-- **Citus** -- orange (optional)
-  - Distributed PostgreSQL extension for sharding and horizontal scaling.
-  - License: Data not available. Governance: Microsoft / citusdata.
-  - Release provider: none (no upstream or distro riscv64 binary exists).
-  - Gap: All 7 GitHub Actions workflow files run exclusively on ubuntu-latest/ubuntu-22.04 (x86_64). No riscv64 package exists in Ubuntu noble, Debian, Arch Linux RISC-V, or PGDG. Build status on riscv64 is unconfirmed; no confirmed breakage has been reported.
-
-- **Patroni** -- green (optional)
-  - High-availability solution for PostgreSQL using distributed configuration stores.
-  - License: Data not available. Governance: Zalando SE / community.
-  - Pure Python; upstream publishes exclusively as a py3-none-any wheel on PyPI. Runs on riscv64 by construction.
-
-- **PgBouncer** -- yellow (optional)
-  - Lightweight connection pooler for PostgreSQL.
-  - License: Data not available. Governance: PgBouncer community.
-  - Release provided by Ubuntu (and Debian), not upstream.
-  - Gap: No riscv64 CI upstream (upstream CI covers ubuntu-22.04, ubuntu-24.04-arm, macos-15, windows-2022 only). Debian ships 1.25.2-1 for riscv64; no riscv64-specific patches in the packaging.
-
-- **Pgpool-II** -- yellow (optional)
-  - Connection pooling, load balancing, and replication middleware for PostgreSQL.
-  - License: Data not available. Governance: Pgpool Global Development Group.
-  - Release provided by Debian (and Ubuntu), not upstream.
-  - Gap: No upstream CI of any kind (.github/workflows absent). Debian sid ships pgpool2 4.7.2-1 built natively on rv-manda-04; Ubuntu 24.04 ships 4.3.7-1ubuntu4 for riscv64. Single Debian packaging patch is a generic config change.
-
-- **pgcat** -- red (optional)
-  - PostgreSQL connection pooler and proxy written in Rust.
-  - License: Data not available. Governance: PostgresML / community.
-  - Release provider: none.
-  - Gap: Build-blocking dependency -- Cargo.toml pins tokio-rustls = 0.24 and rustls = 0.21, pulling in ring 0.16 which predates riscv64 support (ring PR [#1627](https://github.com/briansmith/ring/pull/1627) targeted ring 0.17). Upgrade PR [#881](https://github.com/postgresml/pgcat/pull/881) remains open and unmerged as of 2026-08-27. No riscv64 CI, release artifacts, or distro packages exist.
-
-**Pipeline chains and alternate paths:**
-
-PostgreSQL application stack: libpq -> PostgreSQL -> pgvector -> (Patroni / PgBouncer / Pgpool-II) -> Kubernetes operators
-
-### Layer 4.a -- Orchestration & Observability
-
-- **CloudNativePG** -- red (optional)
-  - Primary CNCF Sandbox Kubernetes operator for PostgreSQL.
-  - License: Data not available. Governance: CNCF / CloudNativePG community.
-  - Release provider: none.
-  - Gap: [continuous-delivery.yml](https://github.com/cloudnative-pg/cloudnative-pg/blob/main/.github/workflows/continuous-delivery.yml) hard-codes `PLATFORMS: "linux/amd64,linux/arm64"`; all v1.30.0 release binaries cover only x86_64, arm64, ppc64le, and s390x. Zero riscv64 issues or PRs in the repository.
-
-- **Zalando postgres-operator** -- orange (optional)
-  - Kubernetes operator for automated PostgreSQL cluster management.
-  - License: Data not available. Governance: Zalando SE.
-  - Release provider: none.
-  - Gap: All three CI workflows run on ubuntu-latest (x86_64) only; [publish_ghcr_image.yaml](https://github.com/zalando/postgres-operator/blob/master/.github/workflows/publish_ghcr_image.yaml) explicitly specifies `platforms: linux/amd64,linux/arm64` with no riscv64 target. No riscv64 mention anywhere in the codebase.
-
-- **postgres_exporter** -- yellow (optional)
-  - Prometheus exporter for PostgreSQL metrics.
-  - License: Data not available. Governance: Prometheus community.
-  - Release provided by upstream.
-  - Gap: The `build` job calls promci/build (promu crossbuild, no test execution); test_go and integration_tests jobs run only on ubuntu-latest (amd64). Upstream publishes postgres_exporter-0.20.1.linux-riscv64.tar.gz directly.
+- PostgreSQL vector search path: Application -> libpq/psycopg -> PostgreSQL -> pgvector -> SIMD distance kernels (RVV target; scalar fallback today)
 
 ### Layer 1.b -- MySQL: Client Drivers
 
 - **MariaDB Connector/C** -- yellow (optional)
-  - C client library for MySQL-compatible connections, also used by MySQL clients.
-  - License: Data not available. Governance: MariaDB Corporation.
+  - C client connector for MySQL; no riscv64 CI upstream; Ubuntu noble ships libmariadb3 for riscv64 via ports archive built from unpatched source.
+  - License: LGPL-2.1. Governance: MariaDB Corporation.
   - Release provided by Ubuntu, not upstream.
-  - Gap: No riscv64 CI in any upstream branch or the external build-matrix action. Ubuntu noble ships libmariadb3 for riscv64 from the mariadb server source package; the one riscv64-specific patch in that packaging (2980-riscv-use-rdtime.patch) modifies only include/my_rdtsc.h, a server-internal file not compiled into the connector library, so the connector itself builds from unmodified upstream source.
+  - Gap: No upstream riscv64 CI job; consumable only via distro package.
 
 - **go-sql-driver/mysql** -- green (optional)
-  - Pure-Go MySQL driver; no assembly or CGo.
-  - License: Data not available. Governance: community.
-  - Distributed as a Go module via proxy.golang.org; runs on linux/riscv64 by construction.
+  - Pure-Go MySQL/MariaDB driver for database/sql; no CGo; architecture-independent Go module.
+  - License: MPL-2.0. Governance: go-sql-driver upstream.
 
-### Layer 2.b -- MySQL: Database Engine
+**Pipeline chains and alternate paths**
 
-- **MySQL** -- orange (critical)
-  - The MySQL relational database engine.
-  - License: Data not available. Governance: Oracle Corporation.
-  - Release provided by Debian (and Ubuntu), not upstream.
-  - Gap: Oracle's .github/workflows/ (pr-build.yml, mtr.yml) has zero riscv64 references. Ubuntu 24.04 Noble ships mysql-server-8.0 at version 8.0.36 for riscv64 with the [use-largest-lock-free-type-selector-on-riscv.patch](https://git.launchpad.net/ubuntu/+source/mysql-8.0/tree/debian/patches?h=ubuntu/noble) still required because upstream lock_free_type.h has no `__riscv` guard. The situation has worsened since June 2026: Debian sid removed mysql-8.0 on 2026-07-23, and the replacement mysql-9.7 (9.7.2-4) has a missing riscv64 build in the Debian tracker, leaving Ubuntu 24.04 as the primary distribution channel at 8.0.36 -- behind the 8.0.46 security release on other architectures.
-
-### Layer 3.b -- MySQL: Extensions, Clustering & Proxies
-
-- **Vitess** -- orange (optional)
-  - Distributed MySQL clustering system, originally built at YouTube.
-  - License: Data not available. Governance: CNCF / Vitess community.
-  - Release provider: none.
-  - Gap: No riscv64 CI across ~49 workflow files; latest release v24.0.2 ships only amd64.deb, x86_64.rpm, and a generic tarball. No Vitess package exists in Ubuntu, Debian, or Arch Linux RISC-V.
-
-- **ProxySQL** -- orange (optional)
-  - High-performance MySQL proxy with advanced query routing.
-  - License: Data not available. Governance: ProxySQL community / Rene Cannao.
-  - Release provider: none.
-  - Gap: No riscv64 CI; latest stable v3.0.11 ships only x86_64 and aarch64 assets. Active build blockers: coredumper is an unconditional Linux dependency with no skip flag; pinned jemalloc 5.2.0 does not recognize the riscv64gc toolchain triple (fix in 5.3.1). The sole community RISC-V PR [#5034](https://github.com/sysown/proxysql/pull/5034) (documentation-only) is stalled with no maintainer action since 2025-09-30.
-
-**Pipeline chains and alternate paths:**
-
-MySQL application stack: MariaDB Connector/C -> MySQL -> (Vitess / ProxySQL) -> Kubernetes operators
-
-### Layer 4.b -- Orchestration & Observability
-
-- **Percona Operator for MySQL** -- orange (optional)
-  - Kubernetes operator for Percona Server for MySQL.
-  - License: Data not available. Governance: Percona.
-  - Release provider: none.
-  - Gap: [scan.yml](https://github.com/percona/percona-server-mysql-operator/blob/main/.github/workflows/scan.yml) builds only linux/arm64 and linux/amd64; no riscv64 image on Docker Hub.
-
-- **MySQL Operator for Kubernetes** -- orange (optional)
-  - Official Oracle Kubernetes operator for MySQL InnoDB Cluster.
-  - License: Data not available. Governance: Oracle Corporation.
-  - Release provider: none.
-  - Gap: [build.sh](https://github.com/mysql/mysql-operator/blob/trunk/build.sh) contains a `^(amd64|arm64)$` validation guard that actively rejects riscv64 with `exit 1`. No .github/workflows directory exists.
-
-- **mysqld_exporter** -- yellow (optional)
-  - Prometheus exporter for MySQL and MariaDB metrics.
-  - License: Data not available. Governance: Prometheus community / CNCF.
-  - Release provided by upstream.
-  - Gap: test_go runs only on ubuntu-latest (x86_64); the build job cross-compiles via promci/build with no riscv64 test execution. Upstream ships mysqld_exporter-0.20.0.linux-riscv64.tar.gz directly.
+- Distributed MySQL (sharding) path: Application -> Vitess vtgate -> Vitess vttablet -> MySQL shard -> InnoDB
 
 ### Layer 1.c -- MariaDB: Client Drivers
 
 - **MariaDB Connector/C** -- yellow (optional)
-  - C client library for MariaDB-compatible connections. (Same upstream project as MySQL layer entry.)
-  - License: Data not available. Governance: MariaDB Corporation.
+  - C client connector for MariaDB; no riscv64 CI upstream; Ubuntu noble ships libmariadb3 for riscv64 via ports archive built from unpatched source.
+  - License: LGPL-2.1. Governance: MariaDB Corporation.
   - Release provided by Ubuntu, not upstream.
-  - Gap: No riscv64 CI upstream. Ubuntu noble ships libmariadb3 for riscv64 from the mariadb server source package with no riscv64-specific patches affecting the connector library itself.
+  - Gap: No upstream riscv64 CI job; consumable only via distro package.
 
 - **go-sql-driver/mysql** -- green (optional)
-  - Pure-Go MySQL/MariaDB driver. (Same upstream project as MySQL layer entry.)
-  - License: Data not available. Governance: community.
-  - Runs on linux/riscv64 by construction via the Go toolchain.
+  - Pure-Go MariaDB/MySQL driver for database/sql; no CGo; architecture-independent Go module.
+  - License: MPL-2.0. Governance: go-sql-driver upstream.
 
-### Layer 2.c -- MariaDB: Database Engine
+**Pipeline chains and alternate paths**
 
-- **MariaDB** -- yellow (critical)
-  - MariaDB Server relational database engine; drop-in MySQL replacement.
-  - License: Data not available. Governance: MariaDB Foundation.
-  - Release provided by Debian, not upstream.
-  - Gap: Zero riscv64 references in the .gitlab-ci.yml (confirmed 564 lines). All 17 Debian packaging patches contain no riscv64-specific changes, qualifying for clean-distro-build. MDEV-29875 (RocksDB plugin build failure on riscv64) is open/critical but out of scope for the default feature set built with -DPLUGIN_ROCKSDB=NO.
-
-### Layer 3.c -- MariaDB: Extensions, Clustering & Proxies
-
-- **RocksDB** -- orange (optional)
-  - LSM-tree storage engine used as the MyRocks plugin backend.
-  - License: Data not available. Governance: Meta / RocksDB community.
-  - Release provided by Debian, not upstream.
-  - Gap: Zero riscv64 CI across all 14 upstream workflow files. Debian sid 9.11.2-1 ships riscv64 with a patch that removes a build-blocking `#error` in toku_time.h for unrecognized architectures (including riscv64). Upstream PR [#14530](https://github.com/facebook/rocksdb/pull/14530) (fixes RISC_ISA typo, LLD detection) remains open and unmerged as of 2026-08-08.
-
-- **MyRocks** -- orange (optional)
-  - RocksDB storage engine plugin for MariaDB/MySQL.
-  - License: Data not available. Governance: Meta (archived repository).
-  - Release provided by Debian, not upstream.
-  - Gap: [MDEV-29875](https://jira.mariadb.org/browse/MDEV-29875) (open/critical, filed 2022-10-26, last updated 2026-06-02) documents that mariadb-plugin-rocksdb fails to build on riscv64 from vanilla upstream source due to a jemalloc mm_malloc.h scope issue. Debian maintainers carry riscv64-specific workaround patches. The upstream facebook/mysql-5.6 repository was archived on 2026-03-01.
-
-- **Galera Cluster** -- yellow (optional)
-  - Synchronous multi-primary replication plugin for MariaDB.
-  - License: Data not available. Governance: Codership.
-  - Release provided by Debian, not upstream.
-  - Gap: Upstream CI covers x86 only (Travis CI on Ubuntu Bionic, no riscv64). Debian sid builds galera-4 26.4.27-1 natively (rv-manda-02, Installed, 2026-08-10). The historical CK_TIMEOUT_MULTIPLIER fix is now set universally in upstream, so no riscv64-specific patch is applied by Debian.
-
-- **MariaDB ColumnStore** -- red (optional)
-  - Distributed columnar analytics (OLAP) storage engine for MariaDB.
-  - License: Data not available. Governance: MariaDB Corporation.
-  - Release provider: none.
-  - Gap: [.drone.jsonnet](https://github.com/mariadb-corporation/mariadb-columnstore-engine/blob/develop/.drone.jsonnet) targets only amd64 and arm64; no riscv64 CI job exists. Not packaged in Debian, Ubuntu, or Arch Linux RISC-V for riscv64. No known build attempt on riscv64.
-
-- **MaxScale** -- orange (optional)
-  - Advanced database proxy and load balancer for MariaDB.
-  - License: Data not available. Governance: MariaDB Corporation.
-  - Release provider: none.
-  - Gap: No CI of any kind -- the .github/ directory contains only dependabot.yml with no workflows subdirectory. No riscv64 binary available from any channel: not Debian (HTTP 404), not Ubuntu 24.04, not Arch Linux RISC-V, not the MariaDB download portal.
-
-**Pipeline chains and alternate paths:**
-
-MariaDB application stack: MariaDB Connector/C -> MariaDB -> (Galera Cluster / MaxScale) -> mariadb-operator -> Kubernetes
-
-MyRocks/RocksDB chain: RocksDB -> MyRocks -> MariaDB (plugin, disabled on riscv64 by default)
-
-### Layer 4.c -- Orchestration & Observability
-
-- **mariadb-operator** -- orange (optional)
-  - Kubernetes operator for MariaDB deployments.
-  - License: Data not available. Governance: mariadb-operator community.
-  - Release provider: none.
-  - Gap: [.goreleaser.yml](https://github.com/mariadb-operator/mariadb-operator/blob/main/.goreleaser.yml) lists `goarch: [amd64, arm64]` only; [release.yml](https://github.com/mariadb-operator/mariadb-operator/blob/main/.github/workflows/release.yml) sets `platforms: linux/arm64,linux/amd64`. Latest release v26.6.0 has only linux_amd64 and linux_arm64 tarballs.
+- MySQL/MariaDB LSM storage path: MySQL/MariaDB -> MyRocks -> RocksDB -> LZ4/zstd/snappy compression -> glibc
 
 ### Layer 1.d -- Redis: Client Drivers
 
 - **hiredis** -- yellow (critical)
-  - The canonical minimalist C client library for Redis.
-  - License: Data not available. Governance: Redis Ltd / community.
-  - Release provided by Ubuntu (and Debian), not upstream.
-  - Gap: Upstream CI [test.yml](https://github.com/redis/hiredis/blob/master/.github/workflows/test.yml) covers x86_64, 32-bit, arm, and aarch64 but contains no riscv64 job. Debian sid ships 1.2.0-6+b4 for riscv64 built natively with no riscv64-specific patches.
-
-### Layer 2.d -- Redis: Database Engine
-
-- **Redis** -- orange (critical)
-  - The primary in-memory KV cache and data structure server for this vertical.
-  - License: Data not available. Governance: Redis Ltd.
+  - C client / RESP protocol parser for Redis; bundled inside Redis itself; Debian sid ships libhiredis1.1.0 for riscv64 from unpatched upstream source.
+  - License: BSD-3-Clause. Governance: Redis Ltd / Redis community.
   - Release provided by Debian, not upstream.
-  - Gap: All 9 upstream CI workflow files contain zero riscv64 references; no maintainer owns RISC-V hardware. Two performance PRs ([#15204](https://github.com/redis/redis/pull/15204) Zbb popcount, [#15273](https://github.com/redis/redis/pull/15273) HyperLogLog RVV) remain unreviewed since May 2026. Debian sid ships 5:8.0.6-2 built on OSUOSL RISC-V hardware.
+  - Gap: No riscv64 CI upstream; consumable only via distro package.
 
-- **Valkey** -- orange (optional)
-  - Linux Foundation fork of Redis 7.2; drop-in Redis replacement.
-  - License: Data not available. Governance: Linux Foundation / Valkey project.
-  - Release provided by Debian, not upstream.
-  - Gap: CI workflow (unstable branch) covers Linux x86_64, x86-32, macOS ARM64 only -- no riscv64 runner or QEMU job. No upstream release binary assets. Debian sid ships valkey-server 9.1.1-1 for riscv64 as a first-class architecture.
+**Pipeline chains and alternate paths**
 
-- **KeyDB** -- orange (optional)
-  - Multi-threaded Redis fork maintained by Snapchat.
-  - License: Data not available. Governance: Snapchat.
-  - Release provider: none.
-  - Gap: CI covers ubuntu-latest, ubuntu-20.04, macos-latest, libc-malloc only; all GitHub releases have empty asset lists; no distro packages exist. Community reports (issue #517, Nov 2022) indicate the source is manually buildable on riscv64 but no CI gate exists.
-
-- **Dragonfly** -- orange (optional)
-  - Redis-compatible in-memory datastore written in C++.
-  - License: Data not available. Governance: DragonflyDB.
-  - Release provider: none.
-  - Gap: Zero riscv64 CI across all 20 GitHub Actions workflows; no riscv64 assets in releases v1.38.0 through v1.40.1; no distro packages. Native riscv64 builds additionally require a manual CMake override to bypass a FATAL_ERROR in [helio/cmake/internal.cmake](https://github.com/romange/helio/blob/main/cmake/internal.cmake) that handles only aarch64, x86_64, arm64, and s390x -- riscv64 falls to the FATAL_ERROR else branch.
-
-### Layer 3.d -- Redis: Extensions, Clustering & Proxies
-
-- **RediSearch** -- orange (optional)
-  - Full-text search and secondary indexing module for Redis.
-  - License: Data not available. Governance: Redis Ltd.
-  - Release provided by Ubuntu (v1.2.2 in universe), not upstream.
-  - Gap: No riscv64 CI across all 59 upstream workflows; the VectorSimilarity submodule has cmake/aarch64InstructionFlags.cmake and cmake/x86_64InstructionFlags.cmake but no riscv64 counterpart. Ubuntu 24.04 ships redis-redisearch 1:1.2.2-4 for riscv64 -- approximately 7 major versions behind upstream 2.10.x -- making the distribution floor resolve at orange rather than yellow.
-
-- **RedisJSON** -- orange (optional)
-  - Native JSON data type module for Redis.
-  - License: Data not available. Governance: Redis Ltd.
-  - Release provider: none.
-  - Gap: No riscv64 CI and no riscv64 release artifacts. The previously confirmed build blocker (bindgen = 0.22.1 pinned in Cargo.lock) was resolved by upgrading to bindgen 0.66.1 in PR #1483 (merged 2025-12-30). No confirmed current breakage exists, but the build has never been verified on riscv64 upstream.
-
-- **RedisBloom** -- red (optional)
-  - Probabilistic data structures module (Bloom filter, Cuckoo filter, etc.) for Redis.
-  - License: Data not available. Governance: Redis Ltd (deprecated since Redis 8 GA, May 2025).
-  - Release provider: none.
-  - Gap: The [Makefile](https://github.com/RedisBloom/RedisBloom/blob/master/Makefile) contains an explicit `$(error)` that aborts compilation for any architecture other than x64 or arm64v8, confirmed live on 2026-08-27. Non-OSI RSALv2/SSPLv1 license prevents distro distribution. No riscv64 PRs or issues have ever been filed. Module is deprecated.
-
-- **RedisTimeSeries** -- red (optional)
-  - Time-series data module for Redis.
-  - License: Data not available. Governance: Redis Ltd (merged into Redis 8).
-  - Release provider: none.
-  - Gap: The [Makefile](https://github.com/RedisTimeSeries/RedisTimeSeries/blob/master/Makefile) still contains a hard `$(error)` terminating any build on riscv64, mapping only x64 and arm64v8. The vendored cpu_features v0.6.0 submodule also emits a CMake FATAL_ERROR for riscv64. Both constitute explicit upstream statements that riscv64 is unsupported. Zero riscv64 code across all 18 workflow files.
-
-**Pipeline chains and alternate paths:**
-
-Redis application stack: hiredis -> Redis -> (RediSearch / RedisJSON) -> Redis Operator (OT-CONTAINER-KIT) -> Kubernetes
-
-### Layer 4.d -- Orchestration & Observability
-
-- **Redis Operator (OT-CONTAINER-KIT)** -- orange (optional)
-  - Kubernetes operator for Redis cluster deployments.
-  - License: Data not available. Governance: OT-CONTAINER-KIT community.
-  - Release provider: none.
-  - Gap: [publish-image.yaml](https://github.com/OT-CONTAINER-KIT/redis-operator/blob/main/.github/workflows/publish-image.yaml) hard-codes `platforms: linux/amd64,linux/arm64`; [ci.yaml](https://github.com/OT-CONTAINER-KIT/redis-operator/blob/main/.github/workflows/ci.yaml) builds only `arch: ["amd64", "arm64"]`.
-
-- **redis_exporter** -- orange (optional)
-  - Prometheus exporter for Redis metrics.
-  - License: Data not available. Governance: Oliver006 / community.
-  - Release provider: none.
-  - Gap: v1.90.0 (2026-08-27) ships 23 assets covering 9 Linux architectures but riscv64 is absent from all of them. No riscv64 references in CI workflow files. Pure Go with CGO_ENABLED=0, so trivially buildable from source, but upstream has never shipped a riscv64 binary and no distro packages the project.
+- KV cache on Kubernetes path: Redis Operator -> Redis/Valkey pod (container image) -> jemalloc -> glibc
 
 ### Layer 1.e -- Memcached: Client Drivers
 
-N/A: everything is through simple TCP connection
+N/A: No dedicated client driver nodes are defined in the scope for the Memcached product in the Client Drivers layer (Memcached clients are typically simple TCP; the scope defines only the engine, extensions, and observability layers for this product).
+
+---
+
+### Layer 2.a -- PostgreSQL: Database Engine
+
+- **PostgreSQL** -- blue (critical)
+  - Core RDBMS server with MVCC storage, WAL, streaming replication, TLS, and optional JIT (LLVM); 3 active riscv64 Build Farm workers run full regression suite on all supported branches.
+  - License: PostgreSQL License. Governance: PostgreSQL Global Development Group.
+  - Release provided by Debian, not upstream.
+
+**Pipeline chains and alternate paths**
+
+- PostgreSQL HA on Kubernetes path: CloudNativePG operator -> PostgreSQL pod (container image) -> streaming replication -> etcd/k8s API
+- TLS/encrypted connection path: Engine -> OpenSSL -> AES-GCM (Zvkned/Zkn hardware; non-constant-time scalar fallback without them)
+
+### Layer 2.b -- MySQL: Database Engine
+
+- **MySQL** -- grey (critical)
+  - Core MySQL RDBMS server with InnoDB, group replication, and TLS.
+  - Data not available.
+  - Gap: No riscv64 status data available; no upstream riscv64 CI or official binary known.
+
+**Pipeline chains and alternate paths**
+
+- Distributed MySQL (sharding) path: Application -> Vitess vtgate -> Vitess vttablet -> MySQL shard -> InnoDB
+- CRC32C checksum path (vectorization gap): InnoDB/PostgreSQL/extstore -> CRC32C -> Zbc/Zbkc clmul hardware (patches open; scalar fallback today)
+
+### Layer 2.c -- MariaDB: Database Engine
+
+- **MariaDB** -- yellow (critical)
+  - Core MariaDB server with InnoDB, Galera hooks, PCRE2 REGEXP, and TLS; Debian sid ships 1:11.8.8-1 built on native RISC-V hardware; InnoDB sv39 fix (MDEV-39142) merged 2026-03-25.
+  - License: GPL-2.0. Governance: MariaDB Foundation.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI; MDEV-29875 (RocksDB build failure) open but does not block core InnoDB server.
+
+**Pipeline chains and alternate paths**
+
+- MySQL/MariaDB LSM storage path: MySQL/MariaDB -> MyRocks -> RocksDB -> LZ4/zstd/snappy compression -> glibc
+
+### Layer 2.d -- Redis: Database Engine
+
+- **Redis** -- yellow (critical)
+  - Core in-memory KV store with RESP protocol, persistence (RDB/AOF), bundled jemalloc/Lua, and optional TLS/modules; Debian sid ships redis 8.0.6-2 from unpatched upstream source on riscv64.
+  - License: RSALv2/SSPLv1 (Redis 7.4+). Governance: Redis Ltd.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI; PRs #15204 (Zbb popcount) and #15273 (HyperLogLog RVV) open and unmerged.
+
+- **Valkey** -- yellow (optional)
+  - Linux Foundation fork of Redis 7.2; drop-in Redis replacement; Debian sid ships valkey 9.1.1-1 with autopkgtest passing on riscv64 from unpatched source.
+  - License: BSD-3-Clause. Governance: Linux Foundation / Valkey Technical Steering Committee.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI.
+
+- **KeyDB** -- orange (optional)
+  - Multi-threaded Redis-compatible fork; no riscv64 CI, no riscv64 release binary, not packaged in any distro for riscv64; one anecdotal user build report (Issue #517, 2022).
+  - License: BSD-3-Clause. Governance: Snapchat/KeyDB maintainers.
+  - Gap: No riscv64 CI, no release artifact, no distro package; status unconfirmed.
+
+- **Dragonfly** -- grey (optional)
+  - Redis- and Memcached-API-compatible in-memory store with io_uring and SIMD usage.
+  - Data not available.
+
+**Pipeline chains and alternate paths**
+
+- KV cache on Kubernetes path: Redis Operator -> Redis/Valkey pod (container image) -> jemalloc -> glibc
 
 ### Layer 2.e -- Memcached: Database Engine
 
 - **Memcached** -- yellow (critical)
-  - High-performance in-memory key-value cache.
-  - License: Data not available. Governance: Memcached community.
+  - Core cache daemon with libevent event loop, optional TLS/SASL/seccomp, and extstore; Debian sid ships memcached 1.6.45-1 on riscv64 from unpatched source.
+  - License: BSD-3-Clause. Governance: Memcached project (dormrad.io).
   - Release provided by Debian, not upstream.
-  - Gap: Upstream CI [ci.yml](https://github.com/memcached/memcached/blob/master/.github/workflows/ci.yml) has a single x86_64-only job. Debian sid ships 1.6.45-1 for riscv64 (built on rv-osuosl-03); all Debian patches are packaging-only with no riscv64-specific changes. CRC32C software fallback affects only the optional extstore path.
+  - Gap: No upstream riscv64 CI; Arch Linux RISC-V shows test suite FTBFS at this version, indicating riscv64 test reliability issues outside Debian's environment.
+
+**Pipeline chains and alternate paths**
+
+- CRC32C checksum path (vectorization gap): InnoDB/PostgreSQL/extstore -> CRC32C -> Zbc/Zbkc clmul hardware (patches open; scalar fallback today)
+
+---
+
+### Layer 3.a -- PostgreSQL: Extensions, Clustering & Proxies
+
+- **pgvector** -- yellow (optional)
+  - HNSW/IVFFlat ANN index extension for PostgreSQL; no riscv64 CI; Ubuntu 24.04 noble ships postgresql-16-pgvector (0.6.0-1) for riscv64 from unmodified upstream source; scalar path delivers full ANN functionality.
+  - License: PostgreSQL License. Governance: pgvector upstream (Andrew Kane).
+  - Release provided by Ubuntu, not upstream.
+  - Gap: No riscv64 CI; SIMD-accelerated distance kernels (RVV) not implemented; scalar fallback is functional.
+
+- **PostGIS** -- yellow (optional)
+  - Geospatial extension for PostgreSQL; no riscv64 CI; Debian sid ships postgis 3.6.4+dfsg-2 for riscv64 with no riscv64-specific patches.
+  - License: GPL-2.0+. Governance: PostGIS steering committee / OSGeo.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI.
+
+- **TimescaleDB** -- yellow (optional)
+  - Time-series extension for PostgreSQL with hypertables, continuous aggregates, and columnar compression; Debian ships timescaledb 2.29.2+dfsg-1 on riscv64 from unpatched source.
+  - License: Timescale License (TSL) / Apache-2.0 for open-source core. Governance: Timescale Inc.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI.
+
+- **Apache AGE** -- yellow (optional)
+  - Graph database extension for PostgreSQL implementing openCypher; Debian packages postgresql-18-age for riscv64 from unmodified upstream source.
+  - License: Apache-2.0. Governance: Apache Software Foundation.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI; all GitHub Actions workflows run on x86_64 only.
+
+- **Citus** -- grey (optional)
+  - Distributed PostgreSQL (sharding) and columnar storage (OLAP) extension.
+  - Data not available.
+
+- **Patroni** -- green (optional)
+  - PostgreSQL HA/automatic failover template (etcd/Consul/k8s DCS); pure Python; PyPI publishes patroni-4.1.5-py3-none-any.whl directly upstream; architecture-independent.
+  - License: MIT. Governance: Zalando SE / patroni contributors.
+
+- **PgBouncer** -- yellow (optional)
+  - Lightweight PostgreSQL connection pooler; no riscv64 CI; Debian sid ships pgbouncer 1.25.2-1 from unpatched upstream source on riscv64.
+  - License: ISC. Governance: pgbouncer contributors.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI.
+
+- **Pgpool-II** -- yellow (optional)
+  - PostgreSQL connection pool, load balancing, and query routing; no upstream CI of any kind; Debian sid and Ubuntu 24.04 Noble both ship riscv64 binary packages from unpatched upstream source.
+  - License: BSD. Governance: pgpool.net.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream CI at all; consumable only via distro package.
+
+- **pgcat** -- grey (optional)
+  - Rust PostgreSQL pooler/proxy with sharding and load balancing.
+  - Data not available.
+
+**Pipeline chains and alternate paths**
+
+- PostgreSQL vector search path: Application -> libpq/psycopg -> PostgreSQL -> pgvector -> SIMD distance kernels (RVV target; scalar fallback today)
+
+### Layer 3.b -- MySQL: Extensions, Clustering & Proxies
+
+- **Vitess** -- orange (optional)
+  - Horizontal sharding/distributed MySQL (vtgate, vttablet); no riscv64 CI across all 46 workflow files; v24.0.2 release publishes only amd64 artifacts; not packaged in any distro for riscv64.
+  - License: Apache-2.0. Governance: CNCF graduated project.
+  - Gap: No upstream riscv64 CI, no riscv64 release artifact, no distro package.
+
+- **ProxySQL** -- grey (optional)
+  - SQL-aware proxy/load balancer for MySQL/MariaDB.
+  - Data not available.
+
+**Pipeline chains and alternate paths**
+
+- Distributed MySQL (sharding) path: Application -> Vitess vtgate -> Vitess vttablet -> MySQL shard -> InnoDB
+
+### Layer 3.c -- MariaDB: Extensions, Clustering & Proxies
+
+- **RocksDB** -- orange (optional)
+  - LSM-tree key-value store underlining MyRocks; no riscv64 CI; Debian sid ships rocksdb 9.11.2-1 with riscv64-relevant patches (atomic builtin replacements, MIPS adaptation extensions); unmerged CMake riscv64 fix (PR #14530) stalled.
+  - License: Apache-2.0/GPL-2.0. Governance: Meta/Facebook.
+  - Release provided by Debian, not upstream.
+  - Gap: Vanilla upstream source requires Debian-carried patches to build on riscv64; [PR #14530](https://github.com/facebook/rocksdb/pull/14530) (CMake riscv64 support) unmerged since 2025, last updated 2026-08-08 with no maintainer response.
+
+- **MyRocks** -- orange (optional)
+  - RocksDB-backed LSM storage engine for MySQL/MariaDB; facebook/mysql-5.6 archived 2026-03-01; MDEV-29875 (open critical, last updated 2026-06-02) documents that MariaDB's RocksDB plugin requires Debian-carried patches to build on riscv64.
+  - License: GPL-2.0. Governance: Meta/Facebook (archived).
+  - Release provided by Debian, not upstream.
+  - Gap: Upstream repo archived; [MDEV-29875](https://jira.mariadb.org/browse/MDEV-29875) open critical since 2022; requires Debian patches; no upstream enablement path.
+
+- **MariaDB ColumnStore** -- red (optional)
+  - Distributed columnar analytics (OLAP) storage engine for MariaDB; three independent confirmed riscv64 blockers: (1) CMakeLists.txt silently skips the entire build when processor is not x86_64/amd64/aarch64; (2) mcs_int128.h falls through to x86 SSE movups inline asm, causing assembler error; (3) primproc.cpp hard-aborts with "Unsupported CPU architecture. ARM Advanced SIMD or x86_64 SSE4.2 required; aborting."
+  - License: GPL-2.0. Governance: MariaDB Corporation.
+  - Gap: Three compile-time and runtime hard blockers confirmed; no distro package; no upstream riscv64 issues or PRs.
+
+- **Galera Cluster** -- yellow (optional)
+  - Synchronous multi-master replication (wsrep) for MariaDB/MySQL/Percona XtraDB; Debian sid builds galera-4 26.4.27-1 successfully on riscv64 hardware (rv-manda-02) with no riscv64-specific patches.
+  - License: GPL-2.0. Governance: Codership / MariaDB Foundation.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI.
+
+- **MaxScale** -- orange (optional)
+  - MariaDB's SQL-aware proxy/query router (BSL-licensed); no upstream CI of any kind; not packaged for riscv64 in any distro; buildable from source with workarounds but no upstream validation.
+  - License: Business Source License (BSL). Governance: MariaDB Corporation.
+  - Gap: No CI, no riscv64 release, no distro package; BSL license limits redistribution.
+
+**Pipeline chains and alternate paths**
+
+- MySQL/MariaDB LSM storage path: MySQL/MariaDB -> MyRocks -> RocksDB -> LZ4/zstd/snappy compression -> glibc
+
+### Layer 3.d -- Redis: Extensions, Clustering & Proxies
+
+- **RediSearch** -- red (optional)
+  - Search and vector-search module for Redis (part of Redis Stack); Redis Stack build path contains explicit `*) echo "Unsupported architecture"; exit 1` for any arch other than x86_64 and aarch64; no riscv64 CI across all 59 workflow files; Ubuntu 24.04 ships only the 7-year-old v1.2.2.
+  - License: Redis Source Available License (RSAL). Governance: Redis Ltd.
+  - Gap: Hard build blocker in redis/redis modules/Makefile; no riscv64 CI; no current distro package; no upstream-supported path exists.
+
+- **RedisJSON** -- orange (optional)
+  - JSON document type module for Redis (Rust); no riscv64 CI; bindgen 0.66.1 in current Cargo.lock resolves prior build blocker (Issue #830); no riscv64 binary released; not packaged in any distro for riscv64.
+  - License: Redis Source Available License (RSAL). Governance: Redis Ltd.
+  - Gap: No upstream riscv64 CI; no release artifact; not confirmed buildable but likely buildable from source.
+
+- **RedisBloom** -- red (optional)
+  - Probabilistic data structures module for Redis; Makefile contains explicit `$(error RedisBloom only supports 64-bit architectures (x64, arm64v8). Current architecture: $(ARCH))` hard error confirmed live against current master; no distro package for riscv64.
+  - License: Redis Source Available License (RSAL). Governance: Redis Ltd.
+  - Gap: Deliberate build-system hard error confirmed live; upstream explicitly states riscv64 unsupported; no workaround path.
+
+- **RedisTimeSeries** -- orange (optional)
+  - Time-series data type module for Redis; Makefile contains a hard `$(error)` blocking builds on architectures other than x64 and arm64v8 (confirmed live 2026-08-27); no riscv64 CI; no distro package.
+  - License: Redis Source Available License (RSAL). Governance: Redis Ltd.
+  - Gap: Build-time hard error confirmed in current master; no riscv64 CI; no distro package.
+
+**Pipeline chains and alternate paths**
+
+- KV cache on Kubernetes path: Redis Operator -> Redis/Valkey pod (container image) -> jemalloc -> glibc
 
 ### Layer 3.e -- Memcached: Extensions, Clustering & Proxies
 
 - **mcrouter** -- red (optional)
-  - Production Memcached proxy from Meta; used for large-scale fan-out.
-  - License: Data not available. Governance: Meta.
-  - Release provider: none.
-  - Gap: [mcrouter/lib/Clocks.cpp](https://github.com/facebook/mcrouter/blob/main/mcrouter/lib/Clocks.cpp) has no `#elif defined(__riscv)` branch and hits `#error Unsupported CPU. Consider implementing your own Clock.` at compile time (confirmed live 2026-08-27). Independently, the hard-required dependency folly has two unresolved riscv64 build failures ([#2493](https://github.com/facebook/folly/issues/2493), [#2416](https://github.com/facebook/folly/issues/2416)) both still open. No distro packages mcrouter for any architecture.
+  - Memcached protocol proxy/request router from Meta; mcrouter/lib/Clocks.cpp contains unconditional `#error Unsupported CPU` with no `__riscv` guard confirmed live; folly dependency has two open riscv64 build failures (#2493, #2416); no riscv64 CI; no distro packaging.
+  - License: MIT. Governance: Meta/Facebook.
+  - Gap: Compile-time hard error in Clocks.cpp confirmed live; folly dependency also broken on riscv64; no distro package; no upstream engagement.
 
-**Pipeline chains and alternate paths:**
+**Pipeline chains and alternate paths**
 
-Memcached application stack: hiredis (or native binary protocol) -> Memcached -> mcrouter (red) -> Kubernetes
-
-### Layer 4.e -- Orchestration & Observability
-
-- **memcached_exporter** -- yellow (optional)
-  - Prometheus exporter for Memcached metrics.
-  - License: Data not available. Governance: Prometheus community / CNCF.
-  - Release provided by upstream.
-  - Gap: The build job calls promci/build (cross-compile only); test_go runs on ubuntu-latest (amd64) only. Upstream publishes memcached_exporter-0.17.0.linux-riscv64.tar.gz directly.
-
-### Layer 4 -- Orchestration & Observability
-
-- **Kubernetes** -- yellow (optional)
-  - Container orchestration control plane; the deployment substrate for all database operators in this vertical.
-  - License: Data not available. Governance: CNCF / Linux Foundation.
-  - Release provided by Debian, not upstream.
-  - Gap: No upstream riscv64 CI (zero Prow/GitHub Actions riscv64 jobs confirmed in test-infra); no upstream riscv64 release binaries. Debian sid ships kubectl 1.33.4+ds-1 for riscv64 with only two packaging patches (neither riscv64-specific). Open PR [#141291](https://github.com/kubernetes/kubernetes/pull/141291) (2026-08-10, on hold, unmerged) would add riscv64 to the pause image build.
-
-- **containerd** -- yellow (optional)
-  - Container runtime; required by Kubernetes node agents.
-  - License: Data not available. Governance: CNCF.
-  - Release provided by upstream.
-  - Gap: Upstream nightly CI cross-compiles riscv64 and ships riscv64 tarballs in every tagged release (confirmed v2.3.4), but the integration test workflow (ci.yml) has zero riscv64 entries -- no tests run on riscv64. PR [#13124](https://github.com/containerd/containerd/pull/13124) to add riscv64 integration tests via RISE runners remains open and unmerged as of 2026-08-08.
-
-- **runc** -- yellow (optional)
-  - OCI container runtime; the low-level process launcher used by containerd.
-  - License: Data not available. Governance: OCI / CNCF.
-  - Release provided by upstream.
-  - Gap: Upstream cross-compiles and publishes a signed runc.riscv64 binary in every official release (confirmed v1.5.1, 2026-07-14), but zero riscv64 occurrences exist in all three CI workflow files -- the binary is built but never tested before release.
-
-- **etcd** -- orange (optional)
-  - Distributed key-value store; the persistence backend for Kubernetes control plane state.
-  - License: Data not available. Governance: CNCF.
-  - Release provided by Debian, not upstream.
-  - Gap: No upstream riscv64 CI; no riscv64 assets in v3.7.1 (July 2026). Debian sid ships etcd 3.5.30-2 with two riscv64-specific patches: [0002](https://sources.debian.org/src/etcd/3.5.30-2/debian/patches/0002-don-t-exit-on-unsupported-arch.patch/) removes a startup arch gate, and [0025](https://sources.debian.org/src/etcd/3.5.30-2/debian/patches/0025-Reduce-InitialMmapSize-on-32-bit-and-riscv64-archite.patch/) explicitly checks `runtime.GOARCH == "riscv64"` to reduce InitialMmapSize from 10 GB to 16 MB. These riscv64-specific patches in the downstream build prevent the yellow floor from applying. Upstream issue [#21509](https://github.com/etcd-io/etcd/issues/21509) was closed 2026-06-04 with maintainer confirmation that Prow has no riscv64 nodes.
-
-- **Helm** -- yellow (optional)
-  - Kubernetes package manager; used by all database operator deployment paths.
-  - License: Data not available. Governance: CNCF.
-  - Release provided by upstream.
-  - Gap: Upstream cross-compiles via goreleaser and publishes riscv64 binaries at get.helm.sh for every release (v4.2.4 confirmed live 2026-08-13), but unit tests run only on ubuntu-latest (x86_64) with no riscv64 runner, QEMU emulation, or test execution on riscv64 in any workflow.
-
-- **k0s** -- blue (optional)
-  - Lightweight Kubernetes distribution; single-binary deployment.
-  - License: Data not available. Governance: Mirantis.
-  - Release provider: none (no riscv64 release binary).
-  - Gap: [riscv64.yml](https://github.com/k0sproject/k0s/blob/main/.github/workflows/riscv64.yml) (merged 2026-06-19) runs genuine tests on native RISE Scaleway EM-RV1 runners: unit tests (make check-unit) and 2 smoke tests (basic + airgap), all confirmed passing. The latest release v1.36.3+k0s.2 (2026-08-12) publishes assets only for amd64, arm, and arm64 -- no riscv64 binary. Tests pass but upstream does not yet ship a riscv64 release.
-
-- **k3s** -- orange (optional)
-  - Lightweight Kubernetes distribution for edge and IoT use cases.
-  - License: Data not available. Governance: Rancher Labs / SUSE.
-  - Release provider: none.
-  - Gap: v1.33.13+k3s2 has 16 assets with zero riscv64; the official installer aborts on riscv64; no CI workflow builds or tests riscv64. A manual build of v1.36.3+k3s1 succeeded in a RISC-V VM, but the cluster cannot start due to missing rancher/mirrored-pause and rancher/systemd-node riscv64 container images. Draft CI PR [#13854](https://github.com/k3s-io/k3s/pull/13854) remains unreviewed; PR #7778 was closed without merging on 2026-08-10.
-
-- **Prometheus** -- yellow (optional)
-  - Time-series metrics collection and alerting system; primary observability backend.
-  - License: Data not available. Governance: CNCF.
-  - Release provided by upstream.
-  - Gap: The `build_all` job cross-compiles riscv64 via promu and publishes official riscv64 tarballs (since v2.46.0) and Docker images (since v3.10.0, latest v3.14.0). riscv64 is absent from the PR-level `build` job and all test jobs -- zero riscv64 or GOARCH=riscv64 entries in [ci.yml](https://github.com/prometheus/prometheus/blob/main/.github/workflows/ci.yml).
-
-- **node_exporter** -- yellow (optional)
-  - Hardware and OS metrics exporter for Prometheus.
-  - License: Data not available. Governance: Prometheus community / CNCF.
-  - Release provided by upstream.
-  - Gap: riscv64 is built via `promu crossbuild` on an x86 ubuntu-latest runner with zero test execution. Upstream ships node_exporter-1.12.1.linux-riscv64.tar.gz and a Docker Hub riscv64 image. The test_go_arm job runs native ARM tests with no riscv64 equivalent.
-
-- **OpenTelemetry Collector** -- yellow (optional)
-  - Vendor-agnostic telemetry collection pipeline (traces, metrics, logs).
-  - License: Data not available. Governance: CNCF / OpenTelemetry project.
-  - Release provided by upstream.
-  - Gap: The `cross-build-collector` job in [build-and-test.yml](https://github.com/open-telemetry/opentelemetry-collector/blob/main/.github/workflows/build-and-test.yml) cross-compiles `GOOS=linux GOARCH=riscv64` with no test step. [platform-support.md](https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/platform-support.md) explicitly designates riscv64 as Tier 3 ("guaranteed to build -- binaries not tested at all"). Upstream publishes riscv64 release artifacts (tarball, .deb, .rpm, Docker multi-arch) confirmed in v0.159.0.
-
-- **Grafana** -- yellow (optional)
-  - Visualization and dashboarding platform for Prometheus and other data sources.
-  - License: Data not available. Governance: Grafana Labs.
-  - Release provided by Alpine Linux (community package).
-  - Gap: [release-build.yml](https://github.com/grafana/grafana/blob/main/.github/workflows/release-build.yml) includes riscv64 in the build matrix with `allow-failure: true` and `continue-on-error`; riscv64 is absent from the PR pre-merge gate (build-go-matrix.yml). No riscv64 upstream release artifact (v13.2.0 confirmed); only Alpine Linux edge/community ships grafana 12.4.4-r1 for riscv64.
-
-- **Grafana Alloy** -- orange (optional)
-  - OpenTelemetry-native successor to Grafana Agent; telemetry pipeline.
-  - License: Data not available. Governance: Grafana Labs.
-  - Release provider: none.
-  - Gap: [build.yml CI matrix](https://github.com/grafana/alloy/blob/main/.github/workflows/build.yml) lists only amd64, arm64, ppc64le, s390x. Latest release v1.19.2 (2026-08-26) has zero riscv64 artifacts. Issue [#1036](https://github.com/grafana/alloy/issues/1036) was closed as not_planned; PR [#1526](https://github.com/grafana/alloy/pull/1526) closed unmerged.
-
-**Pipeline chains and alternate paths:**
-
-Kubernetes orchestration stack: containerd -> runc -> Kubernetes -> etcd (control plane) -> (Helm for deployments)
-
-Database operator paths: Helm -> (Zalando postgres-operator / mariadb-operator / MySQL Operator for Kubernetes / Percona Operator for MySQL / Redis Operator) -> (PostgreSQL / MariaDB / MySQL / Redis)
-
-Metrics pipeline: (Prometheus node_exporter / postgres_exporter / mysqld_exporter / redis_exporter / memcached_exporter) -> Prometheus -> Grafana
-
-Telemetry pipeline: OpenTelemetry Collector -> Grafana Alloy -> Grafana
-
-### Layer 5 -- System Libraries
-
-- **OpenSSL** -- blue (critical)
-  - The reference TLS/crypto library; used by every database engine and driver in this vertical.
-  - License: Data not available. Governance: OpenSSL Foundation / OpenSSL Management Committee.
-  - Release provided by Debian (and Ubuntu, Arch Linux RISC-V), not upstream.
-  - Gap: Upstream CI [cross-compiles.yml](https://github.com/openssl/openssl/blob/master/.github/workflows/cross-compiles.yml) runs `make all tests` on every push via qemu-user (minus test_afalg). Upstream ships source-only tarballs; distros provide riscv64 binaries. Note: Zvkned (AES vector crypto) is part of the RVA23U64 baseline but the degree to which OpenSSL dispatches to Zvkned instructions versus software AES is not captured in this record.
-
-- **BoringSSL** -- yellow (optional)
-  - Google's TLS/crypto fork; used by some database clients and proxies.
-  - License: Data not available. Governance: Google.
-  - Release provider: none (no upstream binary releases for any architecture).
-  - Gap: Two mandatory CQ-gated LUCI builders (android_riscv64_compile_only, android_riscv64_prefixed_compile) cross-compile on every commit but both have `run_unit_tests: false` and `run_ssl_tests: false`, confirmed in [cr-buildbucket.cfg](https://boringssl.googlesource.com/boringssl/+/refs/heads/main/infra/config/generated/cr-buildbucket.cfg). No binary releases for any architecture; build-only CI.
-
-- **zlib** -- blue (critical)
-  - Reference DEFLATE compression library; used by PostgreSQL WAL, MySQL binlog, and wire protocols.
-  - License: Data not available. Governance: Mark Adler / Jean-loup Gailly.
-  - Release provided by Ubuntu (and Debian), not upstream.
-  - Gap: Upstream CI [others.yml](https://github.com/madler/zlib/blob/develop/.github/workflows/others.yml) runs both build and `ctest` for riscv64 (OpenBSD/riscv64 via QEMU). Upstream ships source-only releases.
-
-- **zlib-ng** -- blue (optional)
-  - Performance-optimized zlib replacement with RVV 1.0 SIMD paths.
-  - License: Data not available. Governance: zlib-ng community.
-  - Release provided by Alpine Linux, not upstream.
-  - RISC-V-specific implementations exist in arch/riscv/ for all primary hot paths (adler32, chunkset/inflate_fast, compare256/longest_match, slide_hash via RVV; crc32 via Zbc). Upstream CI runs `ctest --verbose` on GCC and Clang riscv64 jobs (QEMU).
-
-- **LZ4** -- yellow (critical)
-  - Fast lossless compression algorithm; used by PostgreSQL (pg_lz4), ClickHouse, Kafka, and Redis RDB.
-  - License: Data not available. Governance: Yann Collet / Facebook.
-  - Release provided by Ubuntu (and Debian), not upstream.
-  - Gap: CI [cross-platform.yml](https://github.com/lz4/lz4/blob/dev/.github/workflows/cross-platform.yml) runs a live compress/decompress pipeline under qemu-riscv64-static, giving a primary blue grade. However, `LZ4_FAST_DEC_LOOP` remains disabled on riscv64 (lz4.c lines 479-485); all five RVV/FAST_DEC_LOOP PRs (#1678, #1686, #1734, #1738, #1739) remain open and unmerged as of 2026-08-27. Optimization level is minimal, capping to yellow against the RVA23U64 baseline.
-
-- **zstd** -- yellow (critical)
-  - Zstandard compression algorithm; used by PostgreSQL WAL compression, RocksDB, MariaDB, and Kafka.
-  - License: Data not available. Governance: Meta / Zstandard community.
-  - Release provided by Debian, not upstream.
-  - Gap: CI [dev-short-tests.yml](https://github.com/facebook/zstd/blob/dev/.github/workflows/dev-short-tests.yml) runs full test suite at rv64gc baseline and with RVV at vlen=128/256/512. However, the Huffman decompression 4-way loop (`HUF_4X2_4WAY`) remains disabled on riscv64 (PR [#4622](https://github.com/facebook/zstd/pull/4622) open, unreviewed); sequence decode fast path falls to scalar C (PR [#4557](https://github.com/facebook/zstd/pull/4557) open since 2025-12-22); Zicclsm unaligned optimization absent (PR [#4596](https://github.com/facebook/zstd/pull/4596) stalled). Gaps cover primary Huffman decompression and compression throughput hot paths.
-
-- **snappy** -- yellow (optional)
-  - Snappy compression algorithm; used by RocksDB (MyRocks) and LevelDB-family stores.
-  - License: Data not available. Governance: Google.
-  - Release provided by Ubuntu, not upstream.
-  - Gap: CI [riscv64-qemu-test.yaml](https://github.com/google/snappy/blob/main/.github/workflows/riscv64-qemu-test.yaml) runs `make test` via QEMU on every push. However, the V128 byte-shuffle decompression fast path (SSSE3/NEON on amd64/arm64) and CRC32 hash have no riscv64 equivalents; riscv64-specific code covers secondary paths only (RVV MemCopy64, Zicond AdvanceToNextTag, 64-bit FindMatchLength, Zbb ctzll). PR #233 (RVV FindMatchLength) was closed without merge; PR #235 (RVV short-memcpy) remains open.
-
-- **jemalloc** -- orange (critical)
-  - General-purpose allocator used by default in Redis and optionally in PostgreSQL and MariaDB.
-  - License: Data not available. Governance: jemalloc contributors / community.
-  - Release provided by Debian, not upstream.
-  - Gap: Zero riscv64 CI across all six workflow files (confirmed live). Debian ships libjemalloc2 5.3.1-2 for riscv64 from unpatched upstream source (yellow floor). However, jemalloc's primary performance differentiator -- spin-wait/pause in the lock-free path -- is absent on riscv64: HAVE_CPU_SPINWAIT=0 is set by configure.ac for riscv64 while amd64 and arm64 both receive hardware pause/isb hints; zero RVV intrinsics or RISC-V assembly in the codebase. Absent-optimization cap holds the color at orange, overriding the yellow distro floor.
-
-- **tcmalloc** -- orange (optional)
-  - Google's thread-caching allocator; used by some MySQL builds and gRPC paths.
-  - License: Data not available. Governance: Google.
-  - Release provider: none.
-  - Gap: No riscv64 CI. The primary performance differentiator -- the per-CPU RSEQ slab (TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM = 0 on riscv64, no percpu_rseq_riscv.S) -- is entirely absent, leaving only the slower per-thread fallback. Absent-optimization cap applies.
-
-- **PCRE2** -- blue (critical)
-  - Perl-compatible regular expressions library; used by PostgreSQL, MariaDB, and MySQL.
-  - License: Data not available. Governance: PCRE2 Project / University of Cambridge.
-  - Release provided by Debian (and Ubuntu), not upstream.
-  - Gap: The `ptarmigan` job in [dev.yml](https://github.com/PCRE2Project/pcre2/blob/main/.github/workflows/dev.yml) runs `ctest -j$(nproc) --output-on-failure` in a QEMU riscv64 container on every push to main (updated 2026-08-09). Upstream ships source-only releases.
-
-- **ICU** -- yellow (critical)
-  - Unicode and internationalization support library; required by PostgreSQL, MySQL, and MariaDB.
-  - License: Data not available. Governance: Unicode Consortium.
-  - Release provided by Debian, not upstream.
-  - Gap: Zero riscv64 CI across all six major workflow files. Debian sid ships libicu78 78.3-2 for riscv64 with no riscv64-specific patches. ICU is pure scalar C++ with no SIMD for any architecture, so no optimization gap applies.
-
-- **libevent** -- yellow (critical)
-  - Event notification library; used by Memcached as its I/O backend.
-  - License: Data not available. Governance: libevent contributors.
-  - Release provided by Debian (and Ubuntu), not upstream.
-  - Gap: All four upstream CI workflow files contain zero riscv64 or QEMU references. Debian sid ships libevent 2.1.13-stable-1 from unmodified upstream source; both packaging patches are fully architecture-agnostic.
-
-- **liburing** -- yellow (optional)
-  - Linux io_uring library; used by database engines for async I/O on Linux kernels >= 5.1.
-  - License: Data not available. Governance: Jens Axboe / community.
-  - Release provider: none (all GitHub releases are source-only archives).
-  - Gap: [ci.yml](https://github.com/axboe/liburing/blob/master/.github/workflows/ci.yml) cross-compiles using gcc-riscv64-linux-gnu and compiles test_build.c against the installed library, but never executes the produced binary or calls `make test`. Build-only CI with no test execution for any architecture.
-
-- **libnuma** -- blue (optional)
-  - NUMA topology and memory policy library; used by PostgreSQL and MySQL for NUMA-aware allocation.
-  - License: Data not available. Governance: numactl / community.
-  - Release provided by Debian, not upstream.
-  - Gap: No upstream riscv64 CI; latest release v2.0.19 ships source-only. All NUMA syscalls resolve via generic kernel headers -- no riscv64-specific patches required. Debian sid ships libnuma1 2.0.19-1+b2 built on physical RISC-V hardware (rv-osuosl-03); Ubuntu 24.04 also ships libnuma-dev for riscv64.
-
-
-- **Protocol Buffers** -- yellow (optional)
-  - Serialization library; used by database gRPC interfaces and operator-to-engine communication.
-  - License: Data not available. Governance: Google.
-  - Release provided by Ubuntu, not upstream.
-  - Gap: Zero riscv64 CI across all 26 workflow files; latest release v36.0 includes no riscv64 protoc binary. Ubuntu 24.04 ships libprotobuf-dev 3.21.12 for riscv64 from unmodified upstream source (34 Debian patches contain no riscv64-specific changes).
-
-- **Lua** -- yellow (optional)
-  - Scripting language; used by Redis (server-side scripts), Memcached (mcscript), and Nginx (lua-nginx-module).
-  - License: Data not available. Governance: PUC-Rio.
-  - Release provided by Ubuntu, not upstream.
-  - Gap: Pure ISO C99 with no architecture-specific code or CI for any architecture. Ubuntu 24.04 ships lua5.4 5.4.6-3build2 for riscv64; Debian packaging contains only two non-arch-specific patches.
-
-- **xxHash** -- blue (optional)
-  - Extremely fast non-cryptographic hash; used by RocksDB, LZ4, and zstd.
-  - License: Data not available. Governance: Yann Collet.
-  - Release provided by upstream.
-  - Gap: Upstream CI [ci.yml](https://github.com/Cyan4973/xxHash/blob/dev/.github/workflows/ci.yml) runs `make check` plus RVV consistency checks at vlen 128/256/512 under qemu-riscv64-static. The RVV backend fully covers all three XXH3 primary hot paths (XXH3_accumulate_512_rvv, XXH3_scrambleAcc_rvv, XXH3_initCustomSecret_rvv) with adaptive-vlen RVV intrinsics. No riscv64 binary published upstream; upstream provides Windows binaries only (xxhsum_win64).
-
-- **glibc** -- yellow (critical)
-  - The GNU C Library; the system runtime for all native database binaries on Linux.
-  - License: Data not available. Governance: Free Software Foundation / GNU Project.
-  - Release provided by Debian, not upstream.
-  - Gap: Both Sourceware Buildbot riscv64 builders (#293, #336) are confirmed offline via live API check, with all recent runs reporting failure. No passing upstream CI exists for riscv64. Debian sid ships libc6 2.43-4 for riscv64 with no riscv64-specific patches (confirmed at [sources.debian.org](https://sources.debian.org/patches/glibc/2.43-4/)), qualifying for the yellow floor.
-
-- **libmvec** -- orange (optional)
-  - SIMD-accelerated vectorized math library (part of glibc); used by analytics and ML workloads alongside database engines.
-  - License: Data not available. Governance: Free Software Foundation / GNU Project.
-  - Release provider: none.
-  - Gap: libmvec does not exist for riscv64 in upstream glibc -- no sysdeps configure fragment sets `build_mathvec=yes` for RISC-V, so the library is never compiled for riscv64. No Linux distribution ships a riscv64 libmvec package (Debian, Ubuntu, Arch RISC-V, Fedora all confirmed absent). The psABI PR #455 (name mangling, merged 2026-06-18) removes one blocker, but no new glibc patch series has been submitted for July/August 2026 per the libc-alpha archive.
-
-**Pipeline chains and alternate paths:**
-
-Crypto layer: OpenSSL (or BoringSSL) -> all database wire-protocol TLS paths
-
-Compression layer: zlib -> zlib-ng (drop-in replacement) -> PostgreSQL/MySQL/MariaDB WAL and wire compression
-
-Fast compression: LZ4 -> zstd -> RocksDB -> MyRocks -> MariaDB (storage engine path)
-
-Allocator layer: glibc malloc (default) / jemalloc (Redis, optional PostgreSQL/MariaDB) / tcmalloc (some MySQL builds)
-
-System runtime: glibc -> libmvec -> all native database binaries
+- Observability path: Engine -> postgres_/mysqld_/redis_/memcached_exporter -> Prometheus -> Grafana -> (OpenTelemetry Collector/Grafana Alloy pipeline)
 
 ---
 
-## Artifact 2: Status tables
+### Layer 4.a -- PostgreSQL: Orchestration & Observability (per-product)
 
-### (a) Full table
+- **CloudNativePG** -- orange (optional)
+  - CNCF PostgreSQL Kubernetes operator; release-publish.yml hardcodes `platforms="linux/amd64,linux/arm64"` with no riscv64 entry; v1.30.0 contains no riscv64 binary or container image manifest; not packaged by any Linux distro (Kubernetes operators are distributed as container images only).
+  - License: Apache-2.0. Governance: CNCF Sandbox (CloudNativePG contributors).
+  - Gap: No riscv64 container image at any tier; no distro package; Kubernetes operator distribution model requires upstream container image.
 
-| Node | Layer | Criticality | Color | Release provider | Justification summary | Primary source | As-of | Delta vs report |
+- **Zalando postgres-operator** -- orange (optional)
+  - Patroni-based PostgreSQL Kubernetes operator; publish_ghcr_image.yaml explicitly lists `platforms: linux/amd64,linux/arm64` only; v2.0.2 has zero release assets; not packaged in any distro.
+  - License: MIT. Governance: Zalando SE.
+  - Gap: No riscv64 container image; no release assets; no distro package.
+
+- **Percona Operator for MySQL** -- orange (optional)
+  - Kubernetes operator for Percona Server for MySQL/XtraDB Cluster; scan.yml CI builds only linux/amd64 and linux/arm64; no riscv64 container image published; not packaged in any distro.
+  - License: Apache-2.0. Governance: Percona LLC.
+  - Gap: No riscv64 CI or container image; gate is the Percona Server container image arch.
+
+- **postgres_exporter** -- yellow (optional)
+  - Prometheus exporter for PostgreSQL metrics; CI delegates cross-compilation to promci/build composite action with no test step on riscv64; upstream publishes `postgres_exporter-0.20.1.linux-riscv64.tar.gz` as a first-class release asset.
+  - License: Apache-2.0. Governance: prometheus-community.
+  - Gap: Build-only CI with no riscv64 test execution.
+
+**Pipeline chains and alternate paths**
+
+- PostgreSQL HA on Kubernetes path: CloudNativePG operator -> PostgreSQL pod (container image) -> streaming replication -> etcd/k8s API
+- Observability path: Engine -> postgres_/mysqld_/redis_/memcached_exporter -> Prometheus -> Grafana -> (OpenTelemetry Collector/Grafana Alloy pipeline)
+
+### Layer 4.b -- MySQL: Orchestration & Observability (per-product)
+
+- **MySQL Operator for Kubernetes** -- orange (optional)
+  - Oracle's official MySQL InnoDB Cluster Kubernetes operator; build.sh rejects riscv64 with `exit 1` via a `^(amd64|arm64)$` guard confirmed live; no distro packages; hard deployment blocker is absence of Oracle-published MySQL Shell riscv64 RPMs required inside the container image.
+  - License: GPL-2.0. Governance: Oracle Corporation.
+  - Gap: Hard build-script rejection of riscv64 confirmed live; Oracle MySQL Shell has no riscv64 RPMs.
+
+- **mysqld_exporter** -- yellow (optional)
+  - Prometheus exporter for MySQL/MariaDB metrics; upstream cross-compiles and ships `mysqld_exporter-0.20.0.linux-riscv64.tar.gz` via promu toolchain; all CI runs exclusively on x86_64 with no riscv64 test execution.
+  - License: Apache-2.0. Governance: Prometheus community.
+  - Gap: Build-only CI with no riscv64 test execution.
+
+**Pipeline chains and alternate paths**
+
+- Observability path: Engine -> postgres_/mysqld_/redis_/memcached_exporter -> Prometheus -> Grafana -> (OpenTelemetry Collector/Grafana Alloy pipeline)
+
+### Layer 4.c -- MariaDB: Orchestration & Observability (per-product)
+
+- **mariadb-operator** -- orange (optional)
+  - Cloud-native Kubernetes operator for MariaDB; pure Go but release.yml and .goreleaser.yaml enumerate only amd64 and arm64; v26.6.0 contains only linux_amd64 and linux_arm64 tarballs; not packaged in any distro.
+  - License: Apache-2.0. Governance: mariadb-operator contributors.
+  - Gap: No riscv64 CI; no riscv64 release artifact; no distro package.
+
+- **mysqld_exporter** -- yellow (optional)
+  - Prometheus exporter for MySQL/MariaDB metrics; upstream cross-compiles and ships `mysqld_exporter-0.20.0.linux-riscv64.tar.gz` via promu toolchain; all CI runs exclusively on x86_64 with no riscv64 test execution.
+  - License: Apache-2.0. Governance: Prometheus community.
+  - Gap: Build-only CI with no riscv64 test execution.
+
+**Pipeline chains and alternate paths**
+
+- Observability path: Engine -> postgres_/mysqld_/redis_/memcached_exporter -> Prometheus -> Grafana -> (OpenTelemetry Collector/Grafana Alloy pipeline)
+
+### Layer 4.d -- Redis: Orchestration & Observability (per-product)
+
+- **Redis Operator (OT-CONTAINER-KIT)** -- orange (optional)
+  - Kubernetes operator for Redis/Redis Cluster; publish-image.yaml hardcodes `platforms: linux/amd64,linux/arm64`; no distro packages for riscv64; no riscv64 support pathway.
+  - License: Apache-2.0. Governance: OT-CONTAINER-KIT project.
+  - Gap: No riscv64 container image; no distro package.
+
+- **redis_exporter** -- orange (optional)
+  - Prometheus exporter for Redis/Valkey metrics; pure Go but v1.90.0 ships 9 Linux binary tarballs covering s390x, ppc64le, arm64, arm, 386, mips64(le) but not riscv64; Makefile and Docker platform string also omit riscv64; not packaged in any distro.
+  - License: MIT. Governance: oliver006 (Oliver Poitrey).
+  - Gap: riscv64 explicitly absent from build matrix despite covering many other architectures.
+
+- **memcached_exporter** -- yellow (optional)
+  - Prometheus exporter for Memcached metrics; CI cross-compiles for riscv64 via promu crossbuild with no test execution on riscv64; upstream ships `memcached_exporter-0.17.0.linux-riscv64.tar.gz` as a first-class release asset.
+  - License: Apache-2.0. Governance: Prometheus community.
+  - Gap: Build-only CI with no riscv64 test execution.
+
+**Pipeline chains and alternate paths**
+
+- Observability path: Engine -> postgres_/mysqld_/redis_/memcached_exporter -> Prometheus -> Grafana -> (OpenTelemetry Collector/Grafana Alloy pipeline)
+
+### Layer 4.e -- Memcached: Orchestration & Observability (per-product)
+
+N/A: No dedicated per-product Orchestration & Observability nodes are defined in the scope for Memcached beyond memcached_exporter (which appears under Redis Orchestration & Observability given its Prometheus community ownership; see Layer 4.d for memcached_exporter).
+
+---
+
+### Layer 5 -- Orchestration & Observability (Shared)
+
+- **Kubernetes** -- orange (optional)
+  - Container orchestration control plane + kubelet; hack/lib/golang.sh enumerates only linux/amd64, linux/arm64, linux/s390x, linux/ppc64le in all supported platform arrays; PR #141291 (open 2026-08-10) proposes adding riscv64 only to the pause image and does not change supported platform arrays; Debian ships a patched kubectl-only build with no server-side components.
+  - License: Apache-2.0. Governance: CNCF graduated (Kubernetes SIG Network/Arch).
+  - Gap: riscv64 absent from all upstream supported platform arrays; no official release binaries or server images; Debian package is kubectl-only with patches.
+
+- **containerd** -- yellow (optional)
+  - Container runtime (CRI) for Kubernetes; nightly CI cross-compiles riscv64 from x86_64 host with no test step; upstream ships riscv64 release binaries on every tagged release (v2.3.4 confirmed); [PR #13124](https://github.com/containerd/containerd/pull/13124) for RISE-runner integration tests remains open.
+  - License: Apache-2.0. Governance: CNCF graduated.
+  - Gap: Build-only CI with no riscv64 test execution; PR #13124 for upstream test coverage unmerged.
+
+- **runc** -- yellow (optional)
+  - OCI low-level container runtime; upstream cross-compiles and ships `runc.riscv64` in every release (v1.5.1 confirmed); all four CI workflow files contain zero riscv64 jobs; Issue #5166 requesting riscv64 CI closed without resolution.
+  - License: Apache-2.0. Governance: OCI / CNCF.
+  - Gap: Build-only CI with no riscv64 test execution; CI request Issue #5166 closed without resolution.
+
+- **etcd** -- orange (optional)
+  - Distributed KV store; k8s control-plane datastore and DCS for Patroni; no upstream riscv64 CI or release binaries (v3.7.1/v3.6.14/v3.5.33 all have 8 assets with no riscv64); Debian ships riscv64 package but requires at least two riscv64-specific patches: 0002 removes os.Exit(1) startup gate and 0025 reduces InitialMmapSize from 10 GB to 16 MB specifically for riscv64.
+  - License: Apache-2.0. Governance: CNCF graduated.
+  - Release provided by Debian, not upstream.
+  - Gap: Upstream has startup gate that explicitly blocks riscv64 without the `ETCD_UNSUPPORTED_ARCH` environment variable; requires two Debian-carried riscv64-specific patches to function; no official upstream release.
+
+- **Helm** -- yellow (optional)
+  - Kubernetes package manager; upstream releases `helm-v4.2.4-linux-riscv64.tar.gz` on get.helm.sh; CI cross-compiles via goreleaser (goriscv64: rva20u64) with host-native x86_64 test run only, no riscv64 test execution.
+  - License: Apache-2.0. Governance: CNCF graduated.
+  - Gap: Build-only CI with no riscv64 test execution; goreleaser uses rva20u64 profile, not rva23u64 baseline target.
+
+- **k0s** -- blue (optional)
+  - Zero-friction Kubernetes distribution; .github/workflows/riscv64.yml contains both `unittests-k0s` job and a `smoketests` matrix running natively on `ubuntu-24.04-riscv` RISE runners; latest release v1.36.3+k0s.2 contains no riscv64 binary asset.
+  - License: Apache-2.0. Governance: k0sproject / Mirantis.
+  - Gap: No upstream riscv64 release binary despite full CI; riscv64 binary must be built from source.
+
+- **k3s** -- orange (optional)
+  - Lightweight Kubernetes distribution; v1.36.4+k3s1 contains only amd64, arm64, and armhf assets; install script calls `fatal "Unsupported architecture $ARCH"` on riscv64; [PR #7778](https://github.com/k3s-io/k3s/pull/7778) (primary enablement PR) closed without merging; draft CI [PR #13854](https://github.com/k3s-io/k3s/pull/13854) open with zero reviews.
+  - License: Apache-2.0. Governance: CNCF graduated (k3s-io).
+  - Gap: Primary riscv64 enablement PR #7778 closed without merging; install script hard-rejects riscv64.
+
+- **Prometheus** -- yellow (optional)
+  - Metrics time-series database and scraper; upstream ships `prometheus-X.Y.Z.linux-riscv64.tar.gz` and Docker images (since v3.10.0) in every release; all test jobs run on x86_64 only with no riscv64 test execution.
+  - License: Apache-2.0. Governance: CNCF graduated.
+  - Gap: Build-only CI with no riscv64 test execution.
+
+- **node_exporter** -- yellow (optional)
+  - Host/hardware metrics exporter for Prometheus; upstream ships `node_exporter-1.12.1.linux-riscv64.tar.gz` and riscv64 Docker images; all CI tests run on x86_64; [Issues #2296](https://github.com/prometheus/node_exporter/issues/2296) and [#3180](https://github.com/prometheus/node_exporter/issues/3180) document that riscv64 e2e tests fail due to x86-specific CPU fixture data.
+  - License: Apache-2.0. Governance: Prometheus community.
+  - Gap: Build-only CI; known e2e test failures on riscv64 documented in open issues.
+
+- **OpenTelemetry Collector** -- yellow (optional)
+  - Vendor-neutral telemetry (metrics/traces/logs) pipeline; build-and-test.yml cross-compiles for riscv64 with no test step; upstream publishes riscv64 deb, rpm, and tar.gz binaries (v0.159.0 confirmed).
+  - License: Apache-2.0. Governance: CNCF incubating.
+  - Gap: Build-only CI with no riscv64 test execution.
+
+- **Grafana** -- yellow (optional)
+  - Observability dashboards/visualization; release-build.yml includes 5 riscv64 jobs all marked `continue-on-error: true` with build-only steps; v13.2.0 has zero riscv64 release assets; Alpine edge/community ships grafana 12.4.4-r1 as the only consumable riscv64 package.
+  - License: AGPL-3.0. Governance: Grafana Labs.
+  - Release provided by Alpine Linux, not upstream.
+  - Gap: riscv64 CI jobs marked `continue-on-error` indicating non-blocking; no upstream riscv64 release binary; community Alpine package only.
+
+- **Grafana Alloy** -- orange (optional)
+  - OpenTelemetry-based telemetry collector/agent; build.yml matrix is `[amd64, arm64, ppc64le, s390x]` with riscv64 absent; v1.19.2 contains zero riscv64 assets; [Issue #1036](https://github.com/grafana/alloy/issues/1036) closed as `not_planned`; not packaged in any distro.
+  - License: Apache-2.0. Governance: Grafana Labs.
+  - Gap: riscv64 explicitly absent from build matrix; Issue #1036 closed not_planned; no distro package.
+
+**Pipeline chains and alternate paths**
+
+- PostgreSQL HA on Kubernetes path: CloudNativePG operator -> PostgreSQL pod (container image) -> streaming replication -> etcd/k8s API
+- KV cache on Kubernetes path: Redis Operator -> Redis/Valkey pod (container image) -> jemalloc -> glibc
+- Observability path: Engine -> postgres_/mysqld_/redis_/memcached_exporter -> Prometheus -> Grafana -> (OpenTelemetry Collector/Grafana Alloy pipeline)
+
+---
+
+### Layer 6 -- System Libraries (Shared)
+
+- **OpenSSL** -- blue (critical)
+  - TLS and crypto library for every engine's encrypted connections; cross-compiles.yml runs full QEMU test suite on riscv64 on every push (EXTENDED=true) and EVP tests on every PR.
+  - License: Apache-2.0. Governance: OpenSSL Software Foundation.
+  - Release provided by Debian, not upstream.
+
+- **BoringSSL** -- yellow (optional)
+  - Google's TLS library; LUCI CQ-gated builders `android_riscv64_compile_only` and `android_riscv64_prefixed_compile` are mandatory but both have `run_ssl_tests:false` and `run_unit_tests:false`; source-only with no binary releases.
+  - License: ISC/OpenSSL-variant. Governance: Google.
+  - Gap: CQ-gated build-only CI; no test execution; no binary releases from any source.
+
+- **zlib** -- blue (critical)
+  - DEFLATE compression; others.yml runs full cmake build AND ctest test suite under QEMU on riscv64; source-only upstream; distro packages available.
+  - License: Zlib. Governance: Jean-loup Gailly / Mark Adler.
+  - Release provided by Ubuntu, not upstream.
+
+- **zlib-ng** -- grey (optional)
+  - SIMD-optimized zlib replacement.
+  - Data not available.
+
+- **LZ4** -- yellow (critical)
+  - Fast compression library; CI runs full test suite via QEMU on riscv64 (blue-grade CI); however LZ4_FAST_DEC_LOOP is explicitly disabled on riscv64 while enabled on x86 and aarch64; only scalar Zicclsm unaligned-access optimization merged (PR #1648); optimization modifier caps grade from blue to yellow.
+  - License: BSD-2-Clause. Governance: Yann Collet / lz4 project.
+  - Release provided by Debian, not upstream.
+  - Gap: LZ4_FAST_DEC_LOOP disabled on riscv64 in lib/lz4.c lines 479-485; five RVV/optimization PRs (#1678, #1686, #1734, #1738, #1739) all open and unmerged as of 2026-08-27.
+
+- **zstd** -- yellow (critical)
+  - High-ratio compression library; CI runs full test suite under QEMU (rv64gc + RVV vlen=128/256/512); optimization modifier caps to yellow: unaligned memory access (+74% on Zicclsm hardware, [PR #4596](https://github.com/facebook/zstd/pull/4596)), sequence decode fast path ([PR #4557](https://github.com/facebook/zstd/pull/4557)), and Huffman 4-way decompression ([PR #4622](https://github.com/facebook/zstd/pull/4622)) all open and unmerged.
+  - License: BSD/GPL-2.0 dual. Governance: Meta/Facebook.
+  - Release provided by Ubuntu, not upstream.
+  - Gap: Three highest-impact RVV optimization PRs (#4557, #4596, #4622) all open and unmerged.
+
+- **snappy** -- grey (optional)
+  - Fast compression used by RocksDB/MyRocks.
+  - Data not available.
+
+- **jemalloc** -- orange (critical)
+  - Default bundled allocator for Redis; Debian sid ships libjemalloc2 5.3.1-2 for riscv64 from unpatched source (clean-distro-build yellow floor); jemalloc is an optimization-purpose allocator and riscv64 falls to the wildcard case with HAVE_CPU_SPINWAIT=0 -- no Zihintpause pause instruction, no RVV intrinsics, no RISC-V assembly; optimization-absent modifier caps grade from yellow to orange.
+  - License: BSD-2-Clause. Governance: jemalloc contributors.
+  - Release provided by Debian, not upstream.
+  - Gap: No RISC-V assembly or SIMD; HAVE_CPU_SPINWAIT=0 means spin-wait hardware hint absent; performance impact is significant for Redis workloads.
+
+- **tcmalloc** -- orange (optional)
+  - Google's per-CPU RSEQ slab allocator; no riscv64 CI; percpu.h guards `TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM` to x86_64 and aarch64 only; riscv64 gets RSEQ signature 0x0 (invalid sentinel) and falls back to slower per-thread cache path.
+  - License: Apache-2.0. Governance: Google.
+  - Gap: Per-CPU RSEQ slab entirely absent on riscv64; falls to slower per-thread cache path.
+
+- **PCRE2** -- blue (critical)
+  - Regex engine for MariaDB REGEXP (JIT via SLJIT); dev.yml runs full ctest suite inside a QEMU riscv64 container on every push to main/release branches; SLJIT has sljitNativeRISCV_64.c.
+  - License: BSD-3-Clause. Governance: PCRE2 Project.
+  - Release provided by Debian, not upstream.
+
+- **ICU** -- yellow (critical)
+  - Unicode collation/locale for PostgreSQL and MySQL; no upstream riscv64 CI; Debian sid ships ICU 78.3-2 built on native riscv64 hardware (rv-manda-02) with no riscv64-specific patches; pure C/C++ with no SIMD.
+  - License: ICU License (Unicode). Governance: Unicode Consortium.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI.
+
+- **libevent** -- yellow (critical)
+  - Event loop mandatory for Memcached and used by MySQL Router/PgBouncer; no riscv64 CI; Debian sid ships libevent 2.1.13-stable-1 built on riscv64 hardware (rv-manda-04) with no riscv64-specific patches.
+  - License: BSD-3-Clause. Governance: libevent contributors.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI.
+
+- **liburing** -- yellow (optional)
+  - io_uring async I/O; CI contains riscv64 matrix entry that cross-compiles and compiles a test binary but never executes it; source-only upstream; Debian sid and Arch RISC-V ship riscv64 packages from unpatched source.
+  - License: MIT/LGPL-2.1. Governance: Jens Axboe.
+  - Gap: Build-only CI that compiles but does not run tests; no binary releases.
+
+- **libnuma** -- yellow (optional)
+  - NUMA-aware memory library for InnoDB interleave allocation; no riscv64 CI; Debian sid ships libnuma1 2.0.19-1+b2 on rv-osuosl-03 from completely unpatched source (empty patch series).
+  - License: LGPL-2.1. Governance: numactl contributors.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI.
+
+- **Protocol Buffers** -- yellow (optional)
+  - MySQL group replication wire protocol, X Protocol, and NDB Cluster; no riscv64 CI across 26 upstream workflow files; Debian sid ships protobuf 3.21.12-16 with no riscv64-specific patches.
+  - License: BSD-3-Clause. Governance: Google.
+  - Release provided by Debian, not upstream.
+  - Gap: No upstream riscv64 CI.
+
+- **Lua** -- yellow (optional)
+  - Scripting runtime for Redis EVAL (Lua 5.1 bundled) and memcached proxy (Lua 5.4 vendored); pure ISO C99 with no architecture-specific code; Ubuntu 24.04 and Debian sid ship lua5.4 5.4.8-2 with no riscv64-specific patches.
+  - License: MIT. Governance: PUC-Rio.
+  - Release provided by Ubuntu, not upstream.
+  - Gap: No upstream CI of any kind; consumable via distro package.
+
+- **xxHash** -- blue (optional)
+  - Non-cryptographic hashing used by Redis, memcached proxy routing, and RocksDB; CI qemu-consistency job runs full test suite on riscv64 under qemu-riscv64-static for both scalar and RVV (vlen 128/256/512); RVV backend covers all four primary XXH3 hot paths.
+  - License: BSD-2-Clause. Governance: Yann Collet (Cyan4973).
+
+- **glibc** -- yellow (critical)
+  - C runtime, libm, pthreads, libatomic; required by every engine; two riscv64 Buildbot builders (293, 336) are offline (last build June 2025); tests are executed on riscv64 native hardware (bpi-f3-2) but fail; Debian, Ubuntu, and Arch ship glibc 2.44 for riscv64 from unpatched upstream source.
+  - License: LGPL-2.1+/GPL-2.0+. Governance: GNU project / FSF.
+  - Gap: Both upstream riscv64 Buildbot builders offline; test suite fails on native hardware; CI coverage of riscv64 currently absent.
+
+- **libmvec** -- orange (optional)
+  - Vector math functions (part of glibc); libmvec does not exist for riscv64 in upstream glibc; sysdeps/riscv/configure.ac never sets `build_mathvec=yes`; no distro ships libmvec for riscv64; no libc-alpha submissions through August 2026.
+  - License: LGPL-2.1+/GPL-2.0+. Governance: GNU project / FSF.
+  - Gap: libmvec not built or shipped for riscv64 in any released glibc version; no upstream work in progress as of 2026-08-27.
+
+---
+
+### Pipeline Chains and Alternate Paths (Full List)
+
+- PostgreSQL vector search path: Application -> libpq/psycopg -> PostgreSQL -> pgvector -> SIMD distance kernels (RVV target; scalar fallback today)
+- MySQL/MariaDB LSM storage path: MySQL/MariaDB -> MyRocks -> RocksDB -> LZ4/zstd/snappy compression -> glibc
+- Distributed MySQL (sharding) path: Application -> Vitess vtgate -> Vitess vttablet -> MySQL shard -> InnoDB
+- PostgreSQL HA on Kubernetes path: CloudNativePG operator -> PostgreSQL pod (container image) -> streaming replication -> etcd/k8s API
+- TLS/encrypted connection path: Engine -> OpenSSL -> AES-GCM (Zvkned/Zkn hardware; non-constant-time scalar fallback without them)
+- Compression path (vectorization gap): Engine/RocksDB -> zstd/LZ4/zlib -> RVV vectorized decode (NOT enabled today -> scalar)
+- CRC32C checksum path (vectorization gap): InnoDB/PostgreSQL/extstore -> CRC32C -> Zbc/Zbkc clmul hardware (patches open; scalar fallback today)
+- KV cache on Kubernetes path: Redis Operator -> Redis/Valkey pod (container image) -> jemalloc -> glibc
+- Observability path: Engine -> postgres_/mysqld_/redis_/memcached_exporter -> Prometheus -> Grafana -> (OpenTelemetry Collector/Grafana Alloy pipeline)
+
+---
+
+## Artifact 2: Status Table
+
+### (a) Full Table
+
+| Node | Layer | Criticality | Color | Release provider | Justification summary | Primary source | As-of | Delta-vs-report |
 |------|-------|-------------|-------|------------------|-----------------------|----------------|-------|-----------------|
-| libpq | PostgreSQL -- Client Drivers | critical | blue | Ubuntu | Build Farm: 3 active riscv64 workers, last run 2026-08-26, all passing; no GitHub Actions riscv64 jobs; distros provide binaries | [buildfarm.postgresql.org](https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&arch=riscv64) | 2026-08-27 | none |
-| psycopg | PostgreSQL -- Client Drivers | optional | green | upstream | py3-none-any wheel (pure Python) + riscv64 binary wheels on PyPI; CI tests via QEMU weekly | [packages-bin.yml](https://github.com/psycopg/psycopg/blob/master/.github/workflows/packages-bin.yml) | 2026-08-14 | none |
-| pgx | PostgreSQL -- Client Drivers | optional | green | upstream | Pure Go, no assembly, no CGo; runs on linux/riscv64 by construction via Go toolchain | [ci.yml](https://github.com/jackc/pgx/blob/master/.github/workflows/ci.yml) | 2026-06-17 | none |
-| pgjdbc | PostgreSQL -- Client Drivers | optional | green | upstream | Pure-Java Type 4 JDBC; single arch-independent JAR on Maven Central | [REL42.7.13 release](https://github.com/pgjdbc/pgjdbc/releases/tag/REL42.7.13) | 2026-06-17 | none |
-| PostgreSQL | PostgreSQL -- Database Engine | critical | blue | Debian | Build Farm: 4 active riscv64 workers on master through REL_13_STABLE; zero GitHub Actions riscv64 jobs; source-only upstream tarballs | [buildfarm.postgresql.org](https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&arch=riscv64) | 2026-06-17 | none |
-| pgvector | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Ubuntu | Zero riscv64 CI; Ubuntu 24.04 ships 0.6.0, Debian sid ships 0.8.6, unpatched upstream; scalar fallback fully functional | [build.yml](https://github.com/pgvector/pgvector/blob/master/.github/workflows/build.yml) | 2026-06-17 | Corrected from orange (optimization-absent) to yellow (clean-distro-build): HNSW/IVFFlat fully functional on scalar |
-| PostGIS | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Debian | Zero riscv64 CI; Woodpecker covers arm64/armhf/s390x but not riscv64; Debian sid 3.6.4+dfsg-2, no riscv64 patches | [portability.yml](https://github.com/postgis/postgis/blob/master/.woodpecker/portability.yml) | 2026-06-17 | none |
-| TimescaleDB | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Debian | Zero riscv64 CI; upstream releases Windows amd64 only; Debian sid 2.29.2+dfsg-1 ships riscv64, single non-arch patch | [buildd.debian.org](https://buildd.debian.org/status/package.php?p=timescaledb&suite=sid) | 2026-08-27 | n/a (new entry) |
-| Apache AGE | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Debian | All 5 upstream workflows x86_64 only; Debian ships postgresql-18-age 1.8.0~rc0-2 for riscv64, no arch-specific patches | [FTP-master madison API](https://api.ftp-master.debian.org/madison?package=postgresql-18-age&f=json) | 2026-06-17 | none |
-| Citus | PostgreSQL -- Extensions, Clustering & Proxies | optional | orange | none | All 7 workflows x86_64 only; no riscv64 package in any downstream distro or PGDG | [citusdata/citus workflows](https://github.com/citusdata/citus/tree/main/.github/workflows) | 2026-06-17 | color_case corrected: no distro ships riscv64, so downstream-only sub-type does not apply |
-| Patroni | PostgreSQL -- Extensions, Clustering & Proxies | optional | green | upstream | Pure Python; py3-none-any wheel on PyPI v4.1.5; runs on riscv64 by construction | [PyPI patroni](https://pypi.org/pypi/patroni/json) | 2026-06-17 | none |
-| PgBouncer | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Ubuntu | No riscv64 CI upstream; Debian ships 1.25.2-1 (rv-osuosl-01); no riscv64-specific packaging patches | [buildd.debian.org](https://buildd.debian.org/status/package.php?p=pgbouncer&suite=sid) | 2026-08-14 | none |
-| Pgpool-II | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Debian | No upstream CI of any kind; Debian sid ships pgpool2 4.7.2-1 (rv-manda-04); single generic config patch | [buildd.debian.org](https://buildd.debian.org/status/package.php?p=pgpool2&suite=sid) | 2026-08-14 | none |
-| pgcat | PostgreSQL -- Extensions, Clustering & Proxies | optional | red | none | ring 0.16 build-blocking dependency (riscv64 support added in 0.17); upgrade PR #881 open unmerged; no CI, no distro packages | [Cargo.toml](https://github.com/postgresml/pgcat/blob/main/Cargo.toml) | 2026-06-17 | none |
-| MariaDB Connector/C | MySQL -- Client Drivers | optional | yellow | Ubuntu | No riscv64 CI; Ubuntu noble ships libmariadb3 riscv64; connector builds from unmodified upstream source | [ci.yml (branch 3.4)](https://github.com/mariadb-corporation/mariadb-connector-c/blob/3.4/.github/workflows/ci.yml) | 2026-06-17 | none |
-| go-sql-driver/mysql | MySQL -- Client Drivers | optional | green | upstream | Pure Go, no assembly/CGo; runs on linux/riscv64 by construction | [repository](https://github.com/go-sql-driver/mysql) | 2026-06-17 | none |
-| MySQL | MySQL -- Database Engine | critical | orange | Debian (Ubuntu) | No upstream riscv64 CI; Ubuntu 24.04 ships 8.0.36 with use-largest-lock-free-type-selector-on-riscv.patch; Debian sid removed 8.0; mysql-9.7 missing riscv64 build | [Ubuntu Noble patches](https://git.launchpad.net/ubuntu/+source/mysql-8.0/tree/debian/patches?h=ubuntu/noble) | 2026-06-17 | Debian removed mysql-8.0 2026-07-23; mysql-9.7 missing riscv64 build in Debian tracker; Oracle added .github/workflows but zero riscv64 jobs |
-| Vitess | MySQL -- Extensions, Clustering & Proxies | optional | orange | none | No riscv64 CI across ~49 workflows; release v24.0.2 ships only amd64/x86_64; no distro packages | [unit_test.yml](https://github.com/vitessio/vitess/blob/main/.github/workflows/unit_test.yml) | 2026-08-27 | n/a (new entry) |
-| ProxySQL | MySQL -- Extensions, Clustering & Proxies | optional | orange | none | No riscv64 CI; v3.0.11 ships only x86_64/aarch64; coredumper unconditional dep; jemalloc 5.2.0 rejects riscv64gc triple | [v3.0.11 release](https://github.com/sysown/proxysql/releases/tag/v3.0.11) | 2026-08-14 | none |
-| MariaDB Connector/C | MariaDB -- Client Drivers | optional | yellow | Ubuntu | Same project as MySQL layer entry; Ubuntu noble ships libmariadb3; connector builds from unmodified upstream source | [ci.yml (branch 3.4)](https://github.com/mariadb-corporation/mariadb-connector-c/blob/3.4/.github/workflows/ci.yml) | 2026-08-27 | none |
-| go-sql-driver/mysql | MariaDB -- Client Drivers | optional | green | upstream | Same project as MySQL layer entry; pure Go; runs on linux/riscv64 by construction | [test.yml](https://github.com/go-sql-driver/mysql/blob/master/.github/workflows/test.yml) | 2026-08-27 | none |
-| MariaDB | MariaDB -- Database Engine | critical | yellow | Debian | Zero riscv64 CI (.gitlab-ci.yml 564 lines, zero riscv refs); all 17 Debian patches lack riscv64-specific changes; RocksDB plugin disabled on riscv64 | [.gitlab-ci.yml](https://github.com/MariaDB/server/blob/main/.gitlab-ci.yml) | 2026-06-17 | none |
-| RocksDB | MariaDB -- Extensions, Clustering & Proxies | optional | orange | Debian | Zero riscv64 CI; Debian carries patch removing build-blocking #error in toku_time.h; upstream PR #14530 open unmerged | [pr-jobs.yml](https://github.com/facebook/rocksdb/blob/main/.github/workflows/pr-jobs.yml) | 2026-06-17 | none |
-| MyRocks | MariaDB -- Extensions, Clustering & Proxies | optional | orange | Debian | No upstream riscv64 CI; MDEV-29875 open/critical (jemalloc mm_malloc.h scope issue); Debian carries riscv64-specific workaround patches | [MDEV-29875](https://jira.mariadb.org/browse/MDEV-29875) | 2022-10-26 | none |
-| MariaDB ColumnStore | MariaDB -- Extensions, Clustering & Proxies | optional | red | none | .drone.jsonnet targets only amd64 and arm64; not packaged in Debian, Ubuntu, or Arch Linux RISC-V; no known riscv64 build attempt | [.drone.jsonnet](https://github.com/mariadb-corporation/mariadb-columnstore-engine/blob/develop/.drone.jsonnet) | 2026-08-27 | n/a (new entry) |
-| Galera Cluster | MariaDB -- Extensions, Clustering & Proxies | optional | yellow | Debian | Upstream CI x86 only; Debian sid ships galera-4 26.4.27-1 (rv-manda-02, 2026-08-10); no riscv64-specific patch applied | [buildd.debian.org](https://buildd.debian.org/status/package.php?p=galera-4&suite=sid) | 2026-08-14 | none |
-| MaxScale | MariaDB -- Extensions, Clustering & Proxies | optional | orange | none | No CI of any kind (.github/ has only dependabot.yml); no riscv64 binary from any channel | [.github/ directory](https://github.com/mariadb-corporation/MaxScale/tree/24.02/.github) | 2026-08-14 | none |
-| hiredis | Redis -- Client Drivers | critical | yellow | Ubuntu | CI covers x86/arm/aarch64 but no riscv64 job; Debian sid 1.2.0-6+b4 (rv-osuosl-02), no riscv64 patches | [test.yml](https://github.com/redis/hiredis/blob/master/.github/workflows/test.yml) | 2026-08-27 | n/a (new entry) |
-| Redis | Redis -- Database Engine | critical | orange | Debian | Zero riscv64 references across all 9 upstream CI workflows; Debian sid ships 5:8.0.6-2; PRs #15204 (Zbb popcount) and #15273 (HyperLogLog RVV) unreviewed since May 2026 | [ci.yml](https://github.com/redis/redis/blob/unstable/.github/workflows/ci.yml) | 2026-06-17 | none |
-| Valkey | Redis -- Database Engine | optional | orange | Debian | CI covers x86_64, x86-32, macOS ARM64 only; no riscv64 runner or QEMU job; no upstream release binary assets; Debian sid ships valkey-server 9.1.1-1 for riscv64 | [ci.yml](https://github.com/valkey-io/valkey/blob/unstable/.github/workflows/ci.yml) | 2026-08-27 | n/a (new entry) |
-| KeyDB | Redis -- Database Engine | optional | orange | none | CI covers ubuntu-latest/ubuntu-20.04/macos-latest/libc-malloc only; empty release assets; no distro packages; manually buildable per community report | [ci.yml](https://github.com/Snapchat/KeyDB/blob/main/.github/workflows/ci.yml) | 2026-08-27 | none |
-| Dragonfly | Redis -- Database Engine | optional | orange | none | Zero riscv64 CI across 20 workflows; no riscv64 assets in releases v1.38.0-v1.40.1; FATAL_ERROR in helio/cmake/internal.cmake requires manual CMake override | [ci.yml](https://github.com/dragonflydb/dragonfly/blob/main/.github/workflows/ci.yml) | 2026-08-27 | color_case corrected from downstream-only to empty: no distro ships Dragonfly for riscv64 |
-| RediSearch | Redis -- Extensions, Clustering & Proxies | optional | orange | Ubuntu | No riscv64 CI; Ubuntu ships v1.2.2 (7 major versions behind upstream 2.10.x); VectorSimilarity has no riscv64 cmake flags | [generate-matrix.yml](https://github.com/RediSearch/RediSearch/blob/master/.github/workflows/generate-matrix.yml) | 2026-06-17 | none |
-| RedisJSON | Redis -- Extensions, Clustering & Proxies | optional | orange | none | No riscv64 CI; no release artifacts; bindgen pin resolved (upgraded to 0.66.1 in 2025-12-30) -- no confirmed current breakage | [Cargo.lock](https://github.com/RedisJSON/RedisJSON/blob/master/Cargo.lock) | 2025-12-30 | Corrected from red to orange: bindgen upgraded to 0.66.1, resolving the riscv64gc triple-recognition failure |
-| RedisBloom | Redis -- Extensions, Clustering & Proxies | optional | red | none | Makefile contains explicit $(error) for any arch other than x64/arm64v8; deprecated since Redis 8 GA (May 2025) | [Makefile](https://github.com/RedisBloom/RedisBloom/blob/master/Makefile) | 2026-08-27 | none |
-| RedisTimeSeries | Redis -- Extensions, Clustering & Proxies | optional | red | none | Makefile contains hard $(error) on riscv64; vendored cpu_features v0.6.0 emits CMake FATAL_ERROR for riscv64; effectively archived | [Makefile](https://github.com/RedisTimeSeries/RedisTimeSeries/blob/master/Makefile) | 2026-06-17 | none |
-| Memcached | Memcached -- Database Engine | critical | yellow | Debian | Upstream CI single x86_64-only job; Debian sid 1.6.45-1 (rv-osuosl-03); all packaging patches generic | [buildd.debian.org](https://buildd.debian.org/status/package.php?p=memcached&suite=sid) | 2026-06-17 | Debian sid updated to 1.6.45-1 from 1.6.42-1; PR #1291 (unaligned access) closed without merging |
-| mcrouter | Memcached -- Extensions, Clustering & Proxies | optional | red | none | mcrouter/lib/Clocks.cpp hits #error Unsupported CPU at compile time; folly has two open riscv64 build failures (#2493, #2416) | [Clocks.cpp](https://github.com/facebook/mcrouter/blob/main/mcrouter/lib/Clocks.cpp) | 2026-06-17 | none |
-| Kubernetes | Orchestration & Observability | optional | yellow | Debian | No upstream riscv64 CI (zero Prow riscv64 nodes confirmed); no upstream release binaries; Debian sid kubectl 1.33.4+ds-1, no riscv64-specific patches; open PR #141291 (pause image, on hold) | [Debian patches](https://sources.debian.org/patches/kubernetes/1.33.4+ds-1/) | 2026-06-17 | Report assigned orange/downstream-only; corrected to yellow/clean-distro-build: neither Debian patch is riscv64-specific |
-| containerd | Orchestration & Observability | optional | yellow | upstream | Nightly CI cross-compiles riscv64; ships riscv64 tarballs in every release; integration test workflow has zero riscv64 entries; PR #13124 unmerged | [nightly.yml](https://github.com/containerd/containerd/blob/main/.github/workflows/nightly.yml) | 2026-08-08 | none |
-| runc | Orchestration & Observability | optional | yellow | upstream | Publishes signed runc.riscv64 in every release (v1.5.1 confirmed); zero riscv64 occurrences in all three CI workflow files | [test.yml](https://github.com/opencontainers/runc/blob/main/.github/workflows/test.yml) | 2026-06-17 | color_case corrected from clean-distro-build to build-only-ci; v1.5.1 is new latest |
-| etcd | Orchestration & Observability | optional | orange | Debian | No upstream riscv64 CI; no riscv64 assets in v3.7.1 (July 2026); Debian carries two riscv64-specific patches (startup gate removal; InitialMmapSize reduction from 10 GB to 16 MB) | [Debian patches](https://sources.debian.org/src/etcd/3.5.30-2/debian/patches/) | 2026-06-17 | Two riscv64-specific Debian patches confirmed; issue #21509 closed 2026-06-04 (Prow has no riscv64 nodes) |
-| Helm | Orchestration & Observability | optional | yellow | upstream | goreleaser cross-compiles riscv64 and publishes at get.helm.sh for every release (v4.2.4); unit tests run x86_64 only | [release.yml](https://github.com/helm/helm/blob/main/.github/workflows/release.yml) | 2026-06-17 | none |
-| k0s | Orchestration & Observability | optional | blue | none | riscv64.yml runs unit tests + 2 smoke tests on native RISE Scaleway EM-RV1 runners, all passing; release v1.36.3+k0s.2 ships no riscv64 binary | [riscv64.yml](https://github.com/k0sproject/k0s/blob/main/.github/workflows/riscv64.yml) | 2026-06-17 | none |
-| k3s | Orchestration & Observability | optional | orange | none | No CI riscv64 build; v1.33.13+k3s2 has zero riscv64 assets; cluster cannot start due to missing container images; PR #7778 closed 2026-08-10 without merging | [v1.33.13+k3s2 release](https://github.com/k3s-io/k3s/releases/tag/v1.33.13%2Bk3s2) | 2026-08-27 | PR #7778 closed without merging; riscv64 added to Makefile multiarch-binary; cluster still blocked on container images |
-| CloudNativePG | Orchestration & Observability | optional | red | none | continuous-delivery.yml hard-codes PLATFORMS: "linux/amd64,linux/arm64"; v1.30.0 releases cover x86_64/arm64/ppc64le/s390x only; zero riscv64 issues or PRs | [continuous-delivery.yml](https://github.com/cloudnative-pg/cloudnative-pg/blob/main/.github/workflows/continuous-delivery.yml) | 2026-08-27 | n/a (new entry) |
-| Zalando postgres-operator | Orchestration & Observability | optional | orange | none | All CI workflows run ubuntu-latest; platforms: linux/amd64,linux/arm64 hard-coded; no riscv64 in any release or distro | [publish_ghcr_image.yaml](https://github.com/zalando/postgres-operator/blob/master/.github/workflows/publish_ghcr_image.yaml) | 2026-08-27 | n/a (new entry) |
-| Percona Operator for MySQL | Orchestration & Observability | optional | orange | none | CI builds only linux/arm64 and linux/amd64; no riscv64 Docker image on Docker Hub | [scan.yml](https://github.com/percona/percona-server-mysql-operator/blob/main/.github/workflows/scan.yml) | 2026-08-27 | none |
-| MySQL Operator for Kubernetes | Orchestration & Observability | optional | orange | none | build.sh contains ^(amd64|arm64)$ guard that rejects riscv64 with exit 1; no .github/workflows directory | [build.sh](https://github.com/mysql/mysql-operator/blob/trunk/build.sh) | 2026-06-17 | none |
-| mariadb-operator | Orchestration & Observability | optional | orange | none | .goreleaser.yml lists goarch: [amd64, arm64] only; latest release v26.6.0 has only linux_amd64 and linux_arm64 tarballs | [.goreleaser.yml](https://github.com/mariadb-operator/mariadb-operator/blob/main/.goreleaser.yml) | 2026-06-17 | none |
-| Redis Operator (OT-CONTAINER-KIT) | Orchestration & Observability | optional | orange | none | publish-image.yaml hard-codes platforms: linux/amd64,linux/arm64; ci.yaml builds only amd64/arm64 | [publish-image.yaml](https://github.com/OT-CONTAINER-KIT/redis-operator/blob/main/.github/workflows/publish-image.yaml) | 2026-08-14 | none |
-| Prometheus | Orchestration & Observability | optional | yellow | upstream | build_all job cross-compiles riscv64 and publishes tarballs (since v2.46.0) and Docker images (since v3.10.0); zero riscv64 entries in any test job | [ci.yml](https://github.com/prometheus/prometheus/blob/main/.github/workflows/ci.yml) | 2026-06-17 | none |
-| node_exporter | Orchestration & Observability | optional | yellow | upstream | promu crossbuild on x86, zero test execution; ships node_exporter-1.12.1.linux-riscv64.tar.gz | [ci.yml](https://github.com/prometheus/node_exporter/blob/master/.github/workflows/ci.yml) | 2026-06-17 | none |
-| postgres_exporter | Orchestration & Observability | optional | yellow | upstream | promci/build cross-compiles; test_go and integration_tests run x86_64 only; ships postgres_exporter-0.20.1.linux-riscv64.tar.gz | [ci.yml](https://github.com/prometheus-community/postgres_exporter/blob/main/.github/workflows/ci.yml) | 2026-08-14 | none |
-| mysqld_exporter | Orchestration & Observability | optional | yellow | upstream | test_go on ubuntu-latest only; promci/build cross-compiles; ships mysqld_exporter-0.20.0.linux-riscv64.tar.gz | [ci.yml](https://github.com/prometheus/mysqld_exporter/blob/main/.github/workflows/ci.yml) | 2026-06-17 | none |
-| redis_exporter | Orchestration & Observability | optional | orange | none | v1.90.0 ships 23 Linux arch assets; riscv64 absent from all; no CI references; pure Go but upstream has never shipped riscv64 binary | [v1.90.0 release](https://github.com/oliver006/redis_exporter/releases/tag/v1.90.0) | 2026-08-27 | Report cited v1.89.0; v1.90.0 confirmed consistent |
-| memcached_exporter | Orchestration & Observability | optional | yellow | upstream | promci/build cross-compiles; test_go on amd64 only; ships memcached_exporter-0.17.0.linux-riscv64.tar.gz | [ci.yml](https://github.com/prometheus/memcached_exporter/blob/master/.github/workflows/ci.yml) | 2026-08-14 | none |
-| OpenTelemetry Collector | Orchestration & Observability | optional | yellow | upstream | cross-build-collector job cross-compiles with no test step; Tier 3 platform per platform-support.md; publishes riscv64 tarball/.deb/.rpm/Docker in v0.159.0 | [build-and-test.yml](https://github.com/open-telemetry/opentelemetry-collector/blob/main/.github/workflows/build-and-test.yml) | 2026-06-17 | none |
-| Grafana | Orchestration & Observability | optional | yellow | Alpine Linux | release-build.yml includes riscv64 with allow-failure: true; absent from PR gate; no upstream release artifact; Alpine edge ships grafana 12.4.4-r1 | [release-build.yml](https://github.com/grafana/grafana/blob/main/.github/workflows/release-build.yml) | 2026-08-14 | none |
-| Grafana Alloy | Orchestration & Observability | optional | orange | none | build.yml lists only amd64/arm64/ppc64le/s390x; v1.19.2 (2026-08-26) has zero riscv64 assets; issue #1036 closed not_planned; PR #1526 closed unmerged | [build.yml](https://github.com/grafana/alloy/blob/main/.github/workflows/build.yml) | 2026-08-26 | none |
-| OpenSSL | System Libraries | critical | blue | Debian | cross-compiles.yml runs `make all tests` via qemu-user on every push; source-only upstream tarballs | [cross-compiles.yml](https://github.com/openssl/openssl/blob/master/.github/workflows/cross-compiles.yml) | 2026-06-17 | Optimization modifier does not apply; blue from release-provider rule alone |
-| BoringSSL | System Libraries | optional | yellow | none | CQ-gated LUCI builders cross-compile on every commit with run_unit_tests: false and run_ssl_tests: false; no binary releases | [cr-buildbucket.cfg](https://boringssl.googlesource.com/boringssl/+/refs/heads/main/infra/config/generated/cr-buildbucket.cfg) | 2026-06-17 | none |
-| zlib | System Libraries | critical | blue | Ubuntu | others.yml runs both cmake --build and ctest for riscv64 (OpenBSD/riscv64 via QEMU); source-only upstream releases | [others.yml](https://github.com/madler/zlib/blob/develop/.github/workflows/others.yml) | 2026-06-17 | none |
-| zlib-ng | System Libraries | optional | blue | Alpine Linux | cmake.yml and configure.yml run ctest/make test on QEMU riscv64 (GCC + Clang); RVV paths in arch/riscv/ for all primary hot paths | [cmake.yml](https://github.com/zlib-ng/zlib-ng/blob/develop/.github/workflows/cmake.yml) | 2026-06-17 | none |
-| LZ4 | System Libraries | critical | yellow | Ubuntu | CI runs live compress/decompress under qemu-riscv64-static; LZ4_FAST_DEC_LOOP disabled; 5 RVV PRs open unmerged; optimization level minimal | [cross-platform.yml](https://github.com/lz4/lz4/blob/dev/.github/workflows/cross-platform.yml) | 2026-08-27 | none |
-| zstd | System Libraries | critical | yellow | Debian | CI runs full test suite at rv64gc and with RVV vlen=128/256/512; Huffman 4-way loop disabled (PR #4622 open); sequence decode scalar fallback (PR #4557 open); Zicclsm absent (PR #4596 open) | [dev-short-tests.yml](https://github.com/facebook/zstd/blob/dev/.github/workflows/dev-short-tests.yml) | 2026-06-17 | none |
-| snappy | System Libraries | optional | yellow | Ubuntu | CI runs `make test` via QEMU on every push; V128 byte-shuffle decompression fast path absent; CRC32 hash has no riscv64 equivalent; PR #233 closed without merge | [riscv64-qemu-test.yaml](https://github.com/google/snappy/blob/main/.github/workflows/riscv64-qemu-test.yaml) | 2026-06-17 | none |
-| jemalloc | System Libraries | critical | orange | Debian | Zero riscv64 CI; Debian ships 5.3.1-2 from unpatched source; HAVE_CPU_SPINWAIT=0 on riscv64; zero RVV/RISC-V assembly; absent-optimization cap overrides yellow distro floor | [linux-ci.yml](https://github.com/jemalloc/jemalloc/blob/dev/.github/workflows/linux-ci.yml) | 2026-06-17 | none |
-| tcmalloc | System Libraries | optional | orange | none | No riscv64 CI; TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM=0 on riscv64; per-CPU RSEQ slab entirely absent; only slower per-thread fallback available | [percpu.h](https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu.h) | 2026-06-17 | none |
-| PCRE2 | System Libraries | critical | blue | Debian | dev.yml ptarmigan job runs ctest in QEMU riscv64 container on every push to main (updated 2026-08-09); source-only upstream releases | [dev.yml](https://github.com/PCRE2Project/pcre2/blob/main/.github/workflows/dev.yml) | 2026-06-17 | none |
-| ICU | System Libraries | critical | yellow | Debian | Zero riscv64 CI across all six major workflows; Debian sid libicu78 78.3-2 ships riscv64 with no riscv64-specific patches; pure scalar C++ | [icu4c.yml](https://github.com/unicode-org/icu/blob/main/.github/workflows/icu4c.yml) | 2026-06-17 | none |
-| libevent | System Libraries | critical | yellow | Debian | Zero riscv64 CI across all four workflow files; Debian sid ships 2.1.13-stable-1 from unmodified upstream source; both patches are arch-agnostic | [sources.debian.org patches](https://sources.debian.org/patches/libevent/2.1.13-stable-1/) | 2026-06-17 | none |
-| liburing | System Libraries | optional | yellow | none | ci.yml cross-compiles and installs for riscv64 but never executes binaries or calls `make test`; all releases are source-only; Debian/Ubuntu/Arch RISC-V ship from unpatched upstream | [ci.yml](https://github.com/axboe/liburing/blob/master/.github/workflows/ci.yml) | 2026-06-17 | none |
-| libnuma | System Libraries | optional | blue | Debian | All NUMA syscalls resolve via generic kernel headers; no riscv64-specific patches; Debian sid ships libnuma1 2.0.19-1+b2 on rv-osuosl-03; Ubuntu 24.04 also ships libnuma-dev for riscv64 | [packages.debian.org](https://packages.debian.org/sid/riscv64/libnuma1/download) | 2026-06-17 | none |
-| Protocol Buffers | System Libraries | optional | yellow | Ubuntu | Zero riscv64 CI; no riscv64 protoc in release v36.0; Ubuntu 24.04 ships libprotobuf-dev 3.21.12 with no riscv64-specific Debian patches | [Debian patch listing](https://udd.debian.org/patches.cgi?src=protobuf&version=3.21.12-16) | 2026-08-27 | Corrected from orange (downstream-only) to yellow (clean-distro-build): no riscv64-specific Debian patches confirmed |
-| Lua | System Libraries | optional | yellow | Ubuntu | Pure ISO C99, no arch-specific code; Ubuntu 24.04 ships lua5.4 5.4.6-3build2 riscv64; Debian packaging has only two non-arch-specific patches | [packages.ubuntu.com/noble/lua5.4](https://packages.ubuntu.com/noble/lua5.4) | 2026-06-17 | none |
-| xxHash | System Libraries | optional | blue | upstream | ci.yml runs make check plus RVV consistency checks at vlen 128/256/512; RVV backend covers all three XXH3 primary hot paths with adaptive-vlen intrinsics; no riscv64 binary upstream | [ci.yml](https://github.com/Cyan4973/xxHash/blob/dev/.github/workflows/ci.yml) | 2026-08-27 | n/a (new entry) |
-| glibc | System Libraries | critical | yellow | Debian | Both Sourceware Buildbot riscv64 builders offline; Debian sid libc6 2.43-4 ships riscv64 with no riscv64-specific patches | [builder.sourceware.org API](https://builder.sourceware.org/buildbot/api/v2/builders/293/builds?limit=5&order=-number) | 2025-06-10 | none |
-| libmvec | System Libraries | optional | orange | none | libmvec does not exist for riscv64 in upstream glibc; no Linux distro ships riscv64 libmvec; psABI PR #455 merged 2026-06-18 removes one blocker but no implementation patch submitted | [libc-alpha archive](https://sourceware.org/pipermail/libc-alpha/2026-February/174950.html) | 2026-06-17 | none |
+| libpq | PostgreSQL -- Client Drivers | critical | blue | Debian | Build Farm has 3 active riscv64 workers running full regression suite; riscv64 packages in Debian/Ubuntu/Arch | [Build Farm](https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&arch=riscv64) | 2026-06-17 | Report stated 4 workers; live check 2026-08-27 confirms 3 (mollusk dropped off); color unchanged |
+| psycopg | PostgreSQL -- Client Drivers | optional | green | upstream | riscv64 in full build+test matrix (QEMU); 10 riscv64 binary wheels on PyPI for psycopg_binary 3.3.4 | [packages-bin.yml](https://github.com/psycopg/psycopg/blob/master/.github/workflows/packages-bin.yml) | 2026-08-14 | none |
+| pgx | PostgreSQL -- Client Drivers | optional | green | upstream | Pure-Go; Step 0 applies; no compiled artifacts; architecture-independent Go module | [ci.yml](https://github.com/jackc/pgx/blob/master/.github/workflows/ci.yml) | 2026-06-17 | none |
+| pgjdbc | PostgreSQL -- Client Drivers | optional | green | upstream | Pure-Java noarch jar; Step 0 applies; no native code; riscv64 inherited from JVM | [REL42.7.13](https://github.com/pgjdbc/pgjdbc/releases/tag/REL42.7.13) | 2026-07-06 | none |
+| PostgreSQL | PostgreSQL -- Database Engine | critical | blue | Debian | 3 active riscv64 Build Farm workers; full regression and tap test suite on all supported branches; JIT disabled on riscv64 (performance gap, not correctness) | [Build Farm](https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&arch=riscv64) | 2026-08-27 | Report listed 4 workers; live check 2026-08-27 shows 3 active; color unchanged |
+| pgvector | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Ubuntu | No riscv64 CI; Ubuntu 24.04 noble ships postgresql-16-pgvector (0.6.0-1) from unmodified upstream source; scalar path delivers full ANN functionality | [build.yml](https://github.com/pgvector/pgvector/blob/master/.github/workflows/build.yml) | 2026-06-17 | Proposed orange/optimization-absent refuted; corrected to yellow/clean-distro-build |
+| PostGIS | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Debian | No riscv64 CI; Debian sid ships postgis 3.6.4+dfsg-2 with no riscv64-specific patches | [portability.yml](https://github.com/postgis/postgis/blob/master/.woodpecker/portability.yml) | 2026-06-17 | none |
+| TimescaleDB | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Debian | No upstream riscv64 CI; Debian sid ships timescaledb 2.29.2+dfsg-1 from unpatched source; only Debian patch is architecture-neutral no-git-hook | [Debian buildd](https://buildd.debian.org/status/package.php?p=timescaledb&suite=sid) | 2026-08-27 | Proposed orange incorrect; Debian package builds riscv64 from unpatched source; corrected to yellow |
+| Apache AGE | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Debian | All 5 upstream workflows run on x86_64 only; Debian packages postgresql-18-age for riscv64 from unmodified source with zero architecture-specific patches | [installcheck.yaml](https://github.com/apache/age/blob/master/.github/workflows/installcheck.yaml) | 2026-06-17 | none |
+| Citus | PostgreSQL -- Extensions, Clustering & Proxies | optional | grey | none | Data not available | | 2026-08-27 | n/a |
+| Patroni | PostgreSQL -- Extensions, Clustering & Proxies | optional | green | upstream | Pure Python; PyPI publishes py3-none-any wheel directly; Step 0 applies; architecture-independent | [PyPI](https://pypi.org/pypi/patroni/json) | 2026-06-17 | none |
+| PgBouncer | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Debian | No riscv64 CI; Debian sid ships pgbouncer 1.25.2-1 from unpatched upstream source on riscv64 | [pgbouncer-ci.yml](https://github.com/pgbouncer/pgbouncer/blob/main/.github/workflows/pgbouncer-ci.yml) | 2026-08-14 | none |
+| Pgpool-II | PostgreSQL -- Extensions, Clustering & Proxies | optional | yellow | Debian | No upstream CI at all; Debian sid and Ubuntu 24.04 Noble ship riscv64 packages from unpatched upstream source | [packages.ubuntu.com](https://packages.ubuntu.com/noble/pgpool2) | 2026-08-14 | none |
+| pgcat | PostgreSQL -- Extensions, Clustering & Proxies | optional | grey | none | Data not available | | 2026-08-27 | n/a |
+| CloudNativePG | PostgreSQL -- Orchestration & Observability (per-product) | optional | orange | none | release-publish.yml hardcodes linux/amd64,linux/arm64 only; v1.30.0 has no riscv64 binary or container image; no distro package | [release-publish.yml](https://github.com/cloudnative-pg/cloudnative-pg/blob/main/.github/workflows/release-publish.yml) | 2026-06-17 | color unchanged; color_case corrected from downstream-only to empty (no distro package exists) |
+| Zalando postgres-operator | PostgreSQL -- Orchestration & Observability (per-product) | optional | orange | none | publish_ghcr_image.yaml lists only linux/amd64,linux/arm64; v2.0.2 has zero release assets; no distro package | [publish_ghcr_image.yaml](https://github.com/zalando/postgres-operator/blob/master/.github/workflows/publish_ghcr_image.yaml) | 2026-08-27 | n/a |
+| Percona Operator for MySQL | PostgreSQL -- Orchestration & Observability (per-product) | optional | orange | none | scan.yml builds only linux/amd64 and linux/arm64; no riscv64 container image; no distro package | [scan.yml](https://github.com/percona/percona-server-mysql-operator/blob/main/.github/workflows/scan.yml) | 2026-08-27 | n/a |
+| postgres_exporter | PostgreSQL -- Orchestration & Observability (per-product) | optional | yellow | upstream | CI delegates to promci/build (cross-compilation, no test step); upstream publishes postgres_exporter-0.20.1.linux-riscv64.tar.gz | [ci.yml](https://github.com/prometheus-community/postgres_exporter/blob/main/.github/workflows/ci.yml) | 2026-08-14 | none |
+| MariaDB Connector/C | MySQL -- Client Drivers | optional | yellow | Ubuntu | No riscv64 CI; Ubuntu noble ships libmariadb3 for riscv64 from unpatched source; PR #295 merged upstream 2026-02-09 | [ci.yml](https://github.com/mariadb-corporation/mariadb-connector-c/blob/3.4/.github/workflows/ci.yml) | 2026-06-17 | none |
+| go-sql-driver/mysql | MySQL -- Client Drivers | optional | green | upstream | Pure-Go; Step 0 applies; architecture-independent Go module | [test.yml](https://github.com/go-sql-driver/mysql/blob/master/.github/workflows/test.yml) | 2026-06-17 | none |
+| MySQL | MySQL -- Database Engine | critical | grey | none | Data not available | | 2026-08-27 | n/a |
+| Vitess | MySQL -- Extensions, Clustering & Proxies | optional | orange | none | Zero riscv64 references across all 46 workflow files; v24.0.2 publishes only amd64 artifacts; no distro package | [workflows](https://github.com/vitessio/vitess/tree/main/.github/workflows) | 2026-08-27 | n/a |
+| ProxySQL | MySQL -- Extensions, Clustering & Proxies | optional | grey | none | Data not available | | 2026-08-27 | n/a |
+| MySQL Operator for Kubernetes | MySQL -- Orchestration & Observability (per-product) | optional | orange | none | build.sh rejects riscv64 with exit 1; no distro packages; hard blocker is absence of Oracle MySQL Shell riscv64 RPMs | [build.sh](https://github.com/mysql/mysql-operator/blob/trunk/build.sh) | 2026-06-17 | none |
+| mysqld_exporter | MySQL -- Orchestration & Observability (per-product) | optional | yellow | upstream | Upstream ships mysqld_exporter-0.20.0.linux-riscv64.tar.gz; all CI runs on x86_64 with no riscv64 test execution | [ci.yml](https://github.com/prometheus/mysqld_exporter/blob/main/.github/workflows/ci.yml) | 2026-06-17 | none |
+| MariaDB Connector/C | MariaDB -- Client Drivers | optional | yellow | Ubuntu | No riscv64 CI; Ubuntu noble ships libmariadb3 for riscv64 from unpatched source; PR #295 merged upstream 2026-02-09 | [ci.yml](https://github.com/mariadb-corporation/mariadb-connector-c/blob/3.4/.github/workflows/ci.yml) | 2026-06-17 | none |
+| go-sql-driver/mysql | MariaDB -- Client Drivers | optional | green | upstream | Pure-Go; Step 0 applies; architecture-independent Go module | [test.yml](https://github.com/go-sql-driver/mysql/blob/master/.github/workflows/test.yml) | 2026-06-17 | none |
+| MariaDB | MariaDB -- Database Engine | critical | yellow | Debian | Zero upstream riscv64 CI; Debian sid ships 1:11.8.8-1 built on rv-osuosl-03; no riscv64-specific patches; InnoDB sv39 fix merged 2026-03-25; MDEV-29875 (RocksDB) open but does not block core server | [Debian buildd](https://buildd.debian.org/status/package.php?p=mariadb&suite=sid) | 2026-06-17 | none |
+| RocksDB | MariaDB -- Extensions, Clustering & Proxies | optional | orange | Debian | No riscv64 CI; Debian ships 9.11.2-1 but with riscv64-relevant patches; PR #14530 (CMake riscv64 support) stalled | [Debian patch](https://sources.debian.org/src/rocksdb/9.11.2-1/debian/patches/0001-replace-old-sync-with-new-atomic-builtin-equivalents.patch/) | 2026-08-27 | Patch numbering corrected; substance unchanged; color unchanged |
+| MyRocks | MariaDB -- Extensions, Clustering & Proxies | optional | orange | Debian | facebook/mysql-5.6 archived 2026-03-01; MDEV-29875 open critical; requires Debian-carried patches to build on riscv64 | [MDEV-29875](https://jira.mariadb.org/browse/MDEV-29875) | 2026-08-14 | none |
+| MariaDB ColumnStore | MariaDB -- Extensions, Clustering & Proxies | optional | red | none | Three confirmed compile-time and runtime hard blockers: CMakeLists.txt build skip, SSE movups asm error in mcs_int128.h, hard abort in primproc.cpp | [primproc.cpp](https://github.com/mariadb-corporation/mariadb-columnstore-engine/blob/develop/primitives/primproc/primproc.cpp) | 2026-06-17 | none |
+| Galera Cluster | MariaDB -- Extensions, Clustering & Proxies | optional | yellow | Debian | No upstream riscv64 CI; Debian sid builds galera-4 26.4.27-1 on rv-manda-02 with no riscv64-specific patches | [Debian buildd](https://buildd.debian.org/status/logs.php?pkg=galera-4&arch=riscv64) | 2026-08-14 | none |
+| MaxScale | MariaDB -- Extensions, Clustering & Proxies | optional | orange | none | No upstream CI at all; not packaged for riscv64 in any distro; BSL license | [MaxScale .github](https://api.github.com/repos/mariadb-corporation/MaxScale/contents/.github) | 2026-08-14 | none |
+| mariadb-operator | MariaDB -- Orchestration & Observability (per-product) | optional | orange | none | release.yml and .goreleaser.yaml enumerate only amd64 and arm64; v26.6.0 has only linux_amd64 and linux_arm64 tarballs; no distro package | [v26.6.0](https://github.com/mariadb-operator/mariadb-operator/releases/tag/26.6.0) | 2026-06-17 | none |
+| mysqld_exporter | MariaDB -- Orchestration & Observability (per-product) | optional | yellow | upstream | Upstream ships mysqld_exporter-0.20.0.linux-riscv64.tar.gz; all CI on x86_64; no riscv64 test execution | [ci.yml](https://github.com/prometheus/mysqld_exporter/blob/main/.github/workflows/ci.yml) | 2026-06-17 | none |
+| hiredis | Redis -- Client Drivers | critical | yellow | Debian | No riscv64 CI; Debian sid ships libhiredis1.1.0 1.2.0-6+b4 for riscv64 from unpatched source; +b4 binNMU is architecture-uniform | [test.yml](https://github.com/redis/hiredis/blob/master/.github/workflows/test.yml) | 2026-08-27 | n/a |
+| Redis | Redis -- Database Engine | critical | yellow | debian | No riscv64 CI across all 11 workflow files; Debian sid ships redis 8.0.6-2 from unpatched source; PRs #15204 and #15273 open | [Debian buildd](https://buildd.debian.org/status/package.php?p=redis&suite=unstable) | 2026-06-17 | Two additional workflow files present vs. report; neither contains riscv64 CI; color unchanged |
+| Valkey | Redis -- Database Engine | optional | yellow | Debian | No riscv64 CI; Debian sid ships valkey 9.1.1-1 with autopkgtest passing on riscv64; no riscv64-specific patches | [daily.yml](https://github.com/valkey-io/valkey/blob/unstable/.github/workflows/daily.yml) | 2026-08-27 | n/a |
+| KeyDB | Redis -- Database Engine | optional | orange | none | No riscv64 CI; no riscv64 binary; not packaged in any distro; one anecdotal build report (Issue #517, 2022) | [ci.yml](https://github.com/Snapchat/KeyDB/blob/main/.github/workflows/ci.yml) | 2026-06-17 | none |
+| Dragonfly | Redis -- Database Engine | optional | grey | none | Data not available | | 2026-08-27 | n/a |
+| RediSearch | Redis -- Extensions, Clustering & Proxies | optional | red | none | Explicit exit 1 for non-x86_64/aarch64 in redis/redis modules/Makefile; no riscv64 CI across 59 workflow files; no current distro package | [modules/Makefile](https://github.com/redis/redis/blob/unstable/modules/Makefile) | 2026-08-27 | none |
+| RedisJSON | Redis -- Extensions, Clustering & Proxies | optional | orange | none | No riscv64 CI; bindgen 0.66.1 in current Cargo.lock resolves prior build blocker; no riscv64 binary; no distro package | [Cargo.lock](https://github.com/RedisJSON/RedisJSON/blob/master/Cargo.lock) | 2026-08-27 | Downgraded from red to orange: cited bindgen pin blocker resolved by dependency updates |
+| RedisBloom | Redis -- Extensions, Clustering & Proxies | optional | red | none | Makefile explicit error "RedisBloom only supports 64-bit architectures (x64, arm64v8)" confirmed live; no distro package | [Makefile](https://github.com/RedisBloom/RedisBloom/blob/master/Makefile) | 2026-08-27 | Corrected from proposed orange/downstream-only to red: deliberate hard error, no distro package |
+| RedisTimeSeries | Redis -- Extensions, Clustering & Proxies | optional | orange | none | Makefile hard error blocks builds on non-x64/arm64v8 confirmed live; no riscv64 CI; no distro package | [Makefile](https://github.com/RedisTimeSeries/RedisTimeSeries/blob/master/Makefile) | 2026-06-17 | color unchanged; color_case corrected from downstream-only to empty |
+| Redis Operator (OT-CONTAINER-KIT) | Redis -- Orchestration & Observability (per-product) | optional | orange | none | publish-image.yaml hardcodes linux/amd64,linux/arm64; no distro package; no riscv64 support pathway | [publish-image.yaml](https://github.com/OT-CONTAINER-KIT/redis-operator/blob/main/.github/workflows/publish-image.yaml) | 2026-08-27 | none |
+| redis_exporter | Redis -- Orchestration & Observability (per-product) | optional | orange | none | v1.90.0 ships 9 Linux tarballs covering many arches but not riscv64; Makefile and Docker platforms also omit riscv64; no distro package | [v1.90.0](https://github.com/oliver006/redis_exporter/releases/tag/v1.90.0) | 2026-08-27 | Report referenced v1.89.0; v1.90.0 now latest; riscv64 still absent; color unchanged |
+| memcached_exporter | Redis -- Orchestration & Observability (per-product) | optional | yellow | upstream | CI cross-compiles via promu crossbuild, no test execution; upstream ships memcached_exporter-0.17.0.linux-riscv64.tar.gz | [ci.yml](https://github.com/prometheus/memcached_exporter/blob/master/.github/workflows/ci.yml) | 2026-08-14 | none |
+| Memcached | Memcached -- Database Engine | critical | yellow | Debian | Upstream CI targets x86_64 only; Debian sid ships memcached 1.6.45-1 on riscv64 from unpatched source; Arch RISC-V shows test FTBFS | [Debian buildd](https://buildd.debian.org/status/package.php?p=memcached&suite=sid) | 2026-06-17 | Debian version updated from 1.6.42-1 to 1.6.45-1; color unchanged |
+| mcrouter | Memcached -- Extensions, Clustering & Proxies | optional | red | none | Clocks.cpp contains unconditional #error Unsupported CPU with no __riscv guard confirmed live; folly dependency also has open riscv64 failures | [Clocks.cpp](https://github.com/facebook/mcrouter/blob/main/mcrouter/lib/Clocks.cpp) | 2026-08-27 | none |
+| Kubernetes | Orchestration & Observability | optional | orange | none | riscv64 absent from all supported platform arrays in hack/lib/golang.sh; PR #141291 (open 2026-08-10) covers only pause image; Debian ships kubectl-only with patches | [golang.sh](https://github.com/kubernetes/kubernetes/blob/master/hack/lib/golang.sh) | 2026-08-27 | none |
+| containerd | Orchestration & Observability | optional | yellow | upstream | Nightly CI cross-compiles riscv64 from x86_64 with no test step; upstream ships riscv64 release binaries on every tag (v2.3.4); PR #13124 for RISE integration tests unmerged | [nightly.yml](https://github.com/containerd/containerd/blob/main/.github/workflows/nightly.yml) | 2026-06-17 | Latest release v2.3.4; other facts unchanged |
+| runc | Orchestration & Observability | optional | yellow | upstream | Upstream ships runc.riscv64 in every release (v1.5.1); all four CI workflow files have zero riscv64 jobs; Issue #5166 closed without resolution | [v1.5.1](https://github.com/opencontainers/runc/releases/tag/v1.5.1) | 2026-06-17 | none |
+| etcd | Orchestration & Observability | optional | orange | Debian | No upstream riscv64 CI or release binaries; Debian package requires two riscv64-specific patches: 0002 removes os.Exit(1) startup gate, 0025 reduces InitialMmapSize to 16 MB for riscv64 | [Debian patch series](https://salsa.debian.org/go-team/packages/etcd/-/raw/debian/sid/debian/patches/series) | 2026-06-17 | Two riscv64-specific Debian patches found; patch 0025 dated 2026-06-06 (post-report); color unchanged |
+| Helm | Orchestration & Observability | optional | yellow | upstream | Upstream releases helm-v4.2.4-linux-riscv64.tar.gz; CI cross-compiles via goreleaser; all tests run on x86_64 | [release.yml](https://github.com/helm/helm/blob/main/.github/workflows/release.yml) | 2026-06-17 | none |
+| k0s | Orchestration & Observability | optional | blue | none | riscv64.yml contains unittests-k0s job and smoketests matrix running natively on ubuntu-24.04-riscv RISE runners; no riscv64 release binary | [riscv64.yml](https://github.com/k0sproject/k0s/blob/main/.github/workflows/riscv64.yml) | 2026-08-27 | Release tag advanced; still no riscv64 asset; color unchanged |
+| k3s | Orchestration & Observability | optional | orange | none | v1.36.4+k3s1 has only amd64/arm64/armhf assets; install script hard-rejects riscv64; PR #7778 closed without merging | [v1.36.4+k3s1](https://github.com/k3s-io/k3s/releases/tag/v1.36.4%2Bk3s1) | 2026-08-27 | PR #7778 (primary riscv64 enablement) now closed without merging, worsening outlook vs. report |
+| Prometheus | Orchestration & Observability | optional | yellow | upstream | Upstream ships prometheus-X.Y.Z.linux-riscv64.tar.gz and Docker images since v3.10.0; all test jobs on x86_64; no riscv64 test execution | [ci.yml](https://github.com/prometheus/prometheus/blob/main/.github/workflows/ci.yml) | 2026-06-17 | Latest release v3.14.0; color unchanged |
+| node_exporter | Orchestration & Observability | optional | yellow | upstream | Upstream ships node_exporter-1.12.1.linux-riscv64.tar.gz and Docker images; all CI on x86_64; Issues #2296 and #3180 document riscv64 e2e test failures | [ci.yml](https://github.com/prometheus/node_exporter/blob/master/.github/workflows/ci.yml) | 2026-06-17 | none |
+| OpenTelemetry Collector | Orchestration & Observability | optional | yellow | upstream | build-and-test.yml cross-compiles for riscv64 with no test step; upstream publishes riscv64 deb/rpm/tar.gz (v0.159.0) | [build-and-test.yml](https://github.com/open-telemetry/opentelemetry-collector/blob/main/.github/workflows/build-and-test.yml) | 2026-08-27 | none |
+| Grafana | Orchestration & Observability | optional | yellow | Alpine Linux | release-build.yml has 5 riscv64 jobs (continue-on-error, build-only); v13.2.0 has zero riscv64 release assets; Alpine edge ships grafana 12.4.4-r1 | [release-build.yml](https://github.com/grafana/grafana/blob/main/.github/workflows/release-build.yml) | 2026-08-14 | none |
+| Grafana Alloy | Orchestration & Observability | optional | orange | none | build.yml matrix is [amd64, arm64, ppc64le, s390x]; riscv64 absent; v1.19.2 has zero riscv64 assets; Issue #1036 closed not_planned | [v1.19.2](https://github.com/grafana/alloy/releases/tag/v1.19.2) | 2026-06-17 | none |
+| OpenSSL | System Libraries | critical | blue | Debian | cross-compiles.yml runs full QEMU test suite on riscv64 on every push; source-only upstream; Debian/Ubuntu/Arch ship riscv64 packages from unpatched source | [cross-compiles.yml](https://github.com/openssl/openssl/blob/master/.github/workflows/cross-compiles.yml) | 2026-06-17 | none |
+| BoringSSL | System Libraries | optional | yellow | none | CQ-gated LUCI builders present but both have run_ssl_tests:false and run_unit_tests:false; build-only; source-only; no binary releases | [cr-buildbucket.cfg](https://boringssl.googlesource.com/boringssl/+/refs/heads/main/infra/config/generated/cr-buildbucket.cfg) | 2026-08-27 | none |
+| zlib | System Libraries | critical | blue | Ubuntu | others.yml runs full cmake build AND ctest under QEMU on riscv64; source-only upstream; distro packages available | [others.yml](https://github.com/madler/zlib/blob/develop/.github/workflows/others.yml) | 2026-06-17 | none |
+| zlib-ng | System Libraries | optional | grey | none | Data not available | | 2026-08-27 | n/a |
+| LZ4 | System Libraries | critical | yellow | Debian | CI runs full test suite on riscv64 via QEMU (blue-grade CI); optimization modifier caps to yellow: LZ4_FAST_DEC_LOOP disabled on riscv64; five RVV PRs open and unmerged | [lz4.c](https://github.com/lz4/lz4/blob/dev/lib/lz4.c) | 2026-06-17 | release_provider corrected from upstream to Debian; other facts confirmed unchanged |
+| zstd | System Libraries | critical | yellow | Ubuntu | CI runs full test suite under QEMU (rv64gc + RVV); optimization modifier caps to yellow: 3 highest-impact RVV PRs (#4557, #4596, #4622) open and unmerged | [dev-short-tests.yml](https://github.com/facebook/zstd/blob/dev/.github/workflows/dev-short-tests.yml) | 2026-06-17 | none |
+| snappy | System Libraries | optional | grey | none | Data not available | | 2026-08-27 | n/a |
+| jemalloc | System Libraries | critical | orange | Debian | No riscv64 CI; Debian ships from unpatched source (yellow floor); optimization-absent modifier applies: no RISC-V assembly, HAVE_CPU_SPINWAIT=0 | [linux-ci.yml](https://github.com/jemalloc/jemalloc/blob/dev/.github/workflows/linux-ci.yml) | 2026-06-17 | none |
+| tcmalloc | System Libraries | optional | orange | none | No riscv64 CI; percpu.h guards RSEQ support to x86_64 and aarch64 only; riscv64 gets RSEQ signature 0x0; falls to slower per-thread cache | [percpu.h](https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu.h) | 2026-06-17 | none |
+| PCRE2 | System Libraries | critical | blue | Debian | dev.yml runs full ctest suite inside QEMU riscv64 container on every push; SLJIT has sljitNativeRISCV_64.c | [dev.yml](https://github.com/PCRE2Project/pcre2/blob/main/.github/workflows/dev.yml) | 2026-06-17 | none |
+| ICU | System Libraries | critical | yellow | Debian | No upstream riscv64 CI; Debian sid ships ICU 78.3-2 built on rv-manda-02 with no riscv64-specific patches; pure C/C++, no SIMD | [Debian buildd](https://buildd.debian.org/status/package.php?p=icu&suite=sid) | 2026-06-17 | none |
+| libevent | System Libraries | critical | yellow | Debian | No riscv64 CI; Debian sid ships libevent 2.1.13-stable-1 built on rv-manda-04 with no riscv64-specific patches | [build.yml](https://github.com/libevent/libevent/blob/master/.github/workflows/build.yml) | 2026-06-17 | Debian sid version updated from 2.1.12-stable-10+b2 to 2.1.13-stable-1; color unchanged |
+| liburing | System Libraries | optional | yellow | none | CI has riscv64 matrix entry that cross-compiles and compiles test binary but never executes it; source-only; Debian/Arch ship riscv64 packages | [ci.yml](https://github.com/axboe/liburing/blob/master/.github/workflows/ci.yml) | 2026-06-17 | none |
+| libnuma | System Libraries | optional | yellow | Debian | No riscv64 CI; Debian sid ships libnuma1 2.0.19-1+b2 on rv-osuosl-03 from completely unpatched source (empty patch series) | [Debian buildd](https://buildd.debian.org/status/package.php?p=numactl&suite=sid) | 2026-06-17 | none |
+| Protocol Buffers | System Libraries | optional | yellow | Debian | No riscv64 CI across 26 workflows; Debian sid ships protobuf 3.21.12-16 with no riscv64-specific patches | [Debian buildd](https://buildd.debian.org/status/package.php?p=protobuf&suite=unstable) | 2026-06-17 | none |
+| Lua | System Libraries | optional | yellow | ubuntu | No upstream CI; pure ISO C99; Ubuntu 24.04 and Debian sid ship lua5.4 5.4.8-2 with no riscv64-specific patches | [Debian buildd](https://buildd.debian.org/status/package.php?p=lua5.4&suite=sid) | 2026-06-17 | none |
+| xxHash | System Libraries | optional | blue | none | CI runs full test suite on riscv64 under qemu-riscv64-static for scalar and RVV (vlen 128/256/512); RVV backend covers all 4 primary XXH3 hot paths | [ci.yml](https://github.com/Cyan4973/xxHash/blob/dev/.github/workflows/ci.yml) | 2026-08-27 | n/a |
+| glibc | System Libraries | critical | yellow | upstream | Upstream riscv64 Buildbot builders both offline (last build June 2025); tests executed on riscv64 native hardware but fail; distros ship glibc 2.44 from unpatched upstream source | [Buildbot API](https://builder.sourceware.org/buildbot/api/v2/builds/525193/steps) | 2026-08-27 | Report stated build-only CI; live check shows tests run but fail on native hardware; color_case corrected |
+| libmvec | System Libraries | optional | orange | none | libmvec not built for riscv64 in any glibc version; sysdeps/riscv/configure.ac never sets build_mathvec=yes; no distro ships it; no libc-alpha submissions through Aug 2026 | [libc-alpha Aug 2026](https://sourceware.org/pipermail/libc-alpha/2026-August/) | 2026-06-17 | none |
 
-### (b) Slide-ready summary table
+---
+
+### (b) Slide-Ready Summary
 
 | Node | Color | Criticality | Release provider |
 |------|-------|-------------|-----------------|
-| libpq | blue | critical | Ubuntu |
+| libpq | blue | critical | Debian |
+| PostgreSQL | blue | critical | Debian |
+| hiredis | yellow | critical | Debian |
+| Redis | yellow | critical | debian |
+| MariaDB | yellow | critical | Debian |
+| Memcached | yellow | critical | Debian |
+| LZ4 | yellow | critical | Debian |
+| zstd | yellow | critical | Ubuntu |
+| OpenSSL | blue | critical | Debian |
+| zlib | blue | critical | Ubuntu |
+| jemalloc | orange | critical | Debian |
+| PCRE2 | blue | critical | Debian |
+| ICU | yellow | critical | Debian |
+| libevent | yellow | critical | Debian |
+| glibc | yellow | critical | upstream |
+| MySQL | grey | critical | none |
 | psycopg | green | optional | upstream |
 | pgx | green | optional | upstream |
 | pgjdbc | green | optional | upstream |
-| PostgreSQL | blue | critical | Debian |
 | pgvector | yellow | optional | Ubuntu |
 | PostGIS | yellow | optional | Debian |
 | TimescaleDB | yellow | optional | Debian |
 | Apache AGE | yellow | optional | Debian |
-| Citus | orange | optional | none |
+| Citus | grey | optional | none |
 | Patroni | green | optional | upstream |
-| PgBouncer | yellow | optional | Ubuntu |
+| PgBouncer | yellow | optional | Debian |
 | Pgpool-II | yellow | optional | Debian |
-| pgcat | red | optional | none |
-| MariaDB Connector/C | yellow | optional | Ubuntu |
-| go-sql-driver/mysql | green | optional | upstream |
-| MySQL | orange | critical | Debian (Ubuntu) |
+| pgcat | grey | optional | none |
+| CloudNativePG | orange | optional | none |
+| Zalando postgres-operator | orange | optional | none |
+| Percona Operator for MySQL | orange | optional | none |
+| postgres_exporter | yellow | optional | upstream |
+| MariaDB Connector/C (MySQL) | yellow | optional | Ubuntu |
+| go-sql-driver/mysql (MySQL) | green | optional | upstream |
 | Vitess | orange | optional | none |
-| ProxySQL | orange | optional | none |
-| MariaDB | yellow | critical | Debian |
+| ProxySQL | grey | optional | none |
+| MySQL Operator for Kubernetes | orange | optional | none |
+| mysqld_exporter (MySQL) | yellow | optional | upstream |
+| MariaDB Connector/C (MariaDB) | yellow | optional | Ubuntu |
+| go-sql-driver/mysql (MariaDB) | green | optional | upstream |
 | RocksDB | orange | optional | Debian |
 | MyRocks | orange | optional | Debian |
 | MariaDB ColumnStore | red | optional | none |
 | Galera Cluster | yellow | optional | Debian |
 | MaxScale | orange | optional | none |
-| hiredis | yellow | critical | Ubuntu |
-| Redis | orange | critical | Debian |
-| Valkey | orange | optional | Debian |
+| mariadb-operator | orange | optional | none |
+| mysqld_exporter (MariaDB) | yellow | optional | upstream |
+| Valkey | yellow | optional | Debian |
 | KeyDB | orange | optional | none |
-| Dragonfly | orange | optional | none |
-| RediSearch | orange | optional | Ubuntu |
+| Dragonfly | grey | optional | none |
+| RediSearch | red | optional | none |
 | RedisJSON | orange | optional | none |
 | RedisBloom | red | optional | none |
-| RedisTimeSeries | red | optional | none |
-| Memcached | yellow | critical | Debian |
+| RedisTimeSeries | orange | optional | none |
+| Redis Operator (OT-CONTAINER-KIT) | orange | optional | none |
+| redis_exporter | orange | optional | none |
+| memcached_exporter | yellow | optional | upstream |
 | mcrouter | red | optional | none |
-| Kubernetes | yellow | optional | Debian |
+| Kubernetes | orange | optional | none |
 | containerd | yellow | optional | upstream |
 | runc | yellow | optional | upstream |
 | etcd | orange | optional | Debian |
 | Helm | yellow | optional | upstream |
 | k0s | blue | optional | none |
 | k3s | orange | optional | none |
-| CloudNativePG | red | optional | none |
-| Zalando postgres-operator | orange | optional | none |
-| Percona Operator for MySQL | orange | optional | none |
-| MySQL Operator for Kubernetes | orange | optional | none |
-| mariadb-operator | orange | optional | none |
-| Redis Operator (OT-CONTAINER-KIT) | orange | optional | none |
 | Prometheus | yellow | optional | upstream |
 | node_exporter | yellow | optional | upstream |
-| postgres_exporter | yellow | optional | upstream |
-| mysqld_exporter | yellow | optional | upstream |
-| redis_exporter | orange | optional | none |
-| memcached_exporter | yellow | optional | upstream |
 | OpenTelemetry Collector | yellow | optional | upstream |
 | Grafana | yellow | optional | Alpine Linux |
 | Grafana Alloy | orange | optional | none |
-| OpenSSL | blue | critical | Debian |
 | BoringSSL | yellow | optional | none |
-| zlib | blue | critical | Ubuntu |
-| zlib-ng | blue | optional | Alpine Linux |
-| LZ4 | yellow | critical | Ubuntu |
-| zstd | yellow | critical | Debian |
-| snappy | yellow | optional | Ubuntu |
-| jemalloc | orange | critical | Debian |
+| zlib-ng | grey | optional | none |
+| snappy | grey | optional | none |
 | tcmalloc | orange | optional | none |
-| PCRE2 | blue | critical | Debian |
-| ICU | yellow | critical | Debian |
-| libevent | yellow | critical | Debian |
 | liburing | yellow | optional | none |
-| libnuma | blue | optional | Debian |
-| Protocol Buffers | yellow | optional | Ubuntu |
-| Lua | yellow | optional | Ubuntu |
-| xxHash | blue | optional | upstream |
-| glibc | yellow | critical | Debian |
+| libnuma | yellow | optional | Debian |
+| Protocol Buffers | yellow | optional | Debian |
+| Lua | yellow | optional | ubuntu |
+| xxHash | blue | optional | none |
 | libmvec | orange | optional | none |
 
 ---
 
-## Artifact 3: Narrative and next steps
+## Artifact 3: Narrative and Next Steps
 
 ### Scorecard
 
-**Critical-path nodes (16 total):** 5 blue, 8 yellow, 3 orange. Zero green, zero red.
+**Critical-path nodes (16 total):** 5 blue, 9 yellow, 1 orange, 1 grey. No red, no green among critical nodes.
 
-The 5 blue critical nodes are libpq, PostgreSQL, OpenSSL, zlib, and PCRE2 -- all pass the upstream test suite on riscv64 but none ship riscv64 binaries upstream; distros (Debian, Ubuntu) fill that gap.
+- Blue (5): libpq, PostgreSQL, OpenSSL, zlib, PCRE2
+- Yellow (9): hiredis, Redis, MariaDB, Memcached, LZ4, zstd, ICU, libevent, glibc
+- Orange (1): jemalloc
+- Grey (1): MySQL
 
-The 8 yellow critical nodes are MariaDB, hiredis, Memcached, LZ4, zstd, ICU, libevent, and glibc -- all build on riscv64 and are distributed by distros, but none have a test gate on riscv64 upstream.
+**Optional nodes (64 total):** 3 blue, 6 green, 4 red, 17 orange, 27 yellow, 7 grey.
 
-The 3 orange critical nodes are MySQL, Redis, and jemalloc. MySQL requires a downstream patch from Ubuntu to build; Debian's mysql-9.7 replacement currently has a missing riscv64 build, worsening the situation since June 2026. jemalloc's absent spin-wait/pause primitives mean the allocator used by default in Redis, and optionally in PostgreSQL and MariaDB, operates in a degraded performance mode with no upstream plan to address it.
+- Blue: k0s, xxHash, BoringSSL [NEEDS VERIFICATION -- BoringSSL is yellow per records; corrected: 2 blue optional: k0s, xxHash]
+- Green: psycopg, pgx, pgjdbc, Patroni, go-sql-driver/mysql (x2 for MySQL and MariaDB columns) = 6 green
+- Red: MariaDB ColumnStore, RediSearch, RedisBloom, mcrouter
+- Grey: Citus, pgcat, ProxySQL, Dragonfly, zlib-ng, snappy (6 grey)
 
-**Optional nodes (57 entries, excluding duplicates):** 5 green, 4 blue, 22 yellow, 21 orange, 4 red.
+Corrected final scorecard:
+- Critical (16): 5 blue, 9 yellow, 1 orange (jemalloc), 1 grey (MySQL)
+- Optional (64): 2 blue (k0s, xxHash), 6 green, 4 red, ~16 orange, ~29 yellow, ~7 grey
 
-### The story
+### The Story
 
-**What blocks or degrades this vertical on RISC-V**
+**Red blockers (halt any deployment relying on these components):**
 
-The four red nodes -- pgcat, RedisBloom, RedisTimeSeries, and mcrouter -- each have confirmed build-blocking issues. pgcat is the most operationally relevant: it is a PostgreSQL connection pooler in active use, and its ring 0.16 dependency is a hard build blocker with an upgrade path (PR #881) stalled by the maintainer. RedisBloom and RedisTimeSeries both carry explicit Makefile `$(error)` guards; both are officially deprecated since Redis 8 GA (May 2025), reducing their urgency, but operators running pre-Redis-8 stacks will encounter these gates. mcrouter has two independent hard blockers (the Clocks.cpp `#error` and two open folly build failures), no active upstream interest, and no distro packaging on any architecture.
+*MariaDB ColumnStore* is the single most severe blocker in the OLAP path. Three independent compile-time and runtime hard faults are confirmed in current upstream code: CMakeLists.txt silently skips the entire ColumnStore build for non-x86_64/aarch64 targets, mcs_int128.h falls through to an x86 SSE movups inline asm path causing an assembler error, and primproc.cpp hard-aborts at runtime with an explicit "ARM Advanced SIMD or x86_64 SSE4.2 required; aborting." message. There are no upstream riscv64 issues or PRs. This requires non-trivial upstream C++ surgery with sustained engagement -- no distro workaround exists.
 
-The orange critical node jemalloc is the most consequential gap in the system libraries layer. jemalloc is Redis's default allocator and is used by optional configurations of PostgreSQL and MariaDB. The absence of HAVE_CPU_SPINWAIT on riscv64 (confirmed by configure.ac) leaves the allocator's lock-free paths without hardware pause hints, directly degrading Redis throughput under contention on RVA23U64 hardware. The Debian distribution floor prevents a red classification, but the performance regression is real and there is no upstream plan or open PR to add RISC-V spin-wait support.
+*RediSearch* blocks the entire Redis search and vector-search path. The build gate in redis/redis modules/Makefile is an explicit `exit 1` for any architecture other than x86_64 and aarch64. This is the integration path for Redis Stack deployments. With no upstream riscv64 issues and the module carrying significant Rust and C++ SIMD code, this is a substantial enablement project.
 
-MySQL is the second orange critical node and is worsening. Debian removed mysql-8.0 from sid in July 2026, and the replacement mysql-9.7 (9.7.2-4) currently has a missing riscv64 build in the Debian tracker. Ubuntu 24.04 Noble remains the only reliable riscv64 distribution channel for MySQL 8, at version 8.0.36 -- 10 patch releases behind the current 8.0.46 security release on other architectures. The `use-largest-lock-free-type-selector-on-riscv.patch` applied by Ubuntu has never been upstreamed; this is a maintenance burden on Ubuntu and a distribution-provider risk for operators who do not pin Ubuntu Noble.
+*RedisBloom* has a deliberate hard error in its Makefile with the text "RedisBloom only supports 64-bit architectures (x64, arm64v8)." This is an explicit upstream position statement confirmed live on 2026-08-27. No distro provides a workaround. Any Redis Stack deployment relying on probabilistic data structures is fully blocked on riscv64.
 
-Among the optional orange nodes, the database operator layer is the most uniformly gapped. Five of the six tracked Kubernetes database operators (Zalando postgres-operator, Percona Operator for MySQL, MySQL Operator for Kubernetes, mariadb-operator, Redis Operator) have no riscv64 CI and no riscv64 release artifacts. The MySQL Operator for Kubernetes additionally has an active build guard (`exit 1` in build.sh). Only k0s among the Kubernetes distributions has native riscv64 CI (via RISE Scaleway EM-RV1 runners) and passing tests; k3s cannot start a cluster due to missing container images even though the binary now builds. etcd, the Kubernetes control plane's state store, requires two riscv64-specific downstream patches in Debian (including a 10 GB to 16 MB InitialMmapSize reduction) that upstream has declined to merge, leaving the Kubernetes control plane at orange with a permanent Debian patch dependency.
+*mcrouter* blocks the Memcached proxy/routing path entirely: a compile-time `#error Unsupported CPU` in Clocks.cpp with no `__riscv` guard is confirmed live, compounded by two open riscv64 build failures in the mandatory folly dependency ([Issue #2493](https://github.com/facebook/folly/issues/2493), [#2416](https://github.com/facebook/folly/issues/2416)).
 
-In the Redis extensions layer, RedisSearch ships only a seven-major-version-old package in Ubuntu (v1.2.2 vs upstream 2.10.x) with no vector similarity acceleration for riscv64. The VectorSimilarity submodule has cmake files for aarch64 and x86_64 only. For operators deploying vector search with Redis, RediSearch on riscv64 is not viable at current versions.
+**High-impact orange nodes:**
 
-The compression library layer (LZ4, zstd, snappy) shows a consistent pattern: upstream test suites pass on riscv64, confirming correctness, but RVV 1.0 acceleration patches sit in open pull requests with no maintainer engagement. LZ4 has five open RVV PRs (#1678, #1686, #1734, #1738, #1739); zstd has three open RVV/optimization PRs (#4557, #4596, #4622); snappy's primary RVV PR (#233) was closed without merge. For a database vertical where WAL compression, binlog compression, and RDB snapshots all flow through these libraries, the performance gap against x86_64 and aarch64 is material at scale.
+*jemalloc* is the most operationally significant orange node. It is the default bundled allocator in Redis and an optional but widely deployed allocator for MySQL and MariaDB. On riscv64 it falls to the wildcard path with HAVE_CPU_SPINWAIT=0 (no Zihintpause hint), no RVV intrinsics, and no RISC-V assembly of any kind. For a high-throughput Redis deployment the allocator is on the hot path for every key operation.
 
-libmvec does not exist for riscv64. For analytics workloads that run vectorized math alongside database engines (e.g., Python data science pipelines querying PostgreSQL or ClickHouse), the missing libmvec means glibc cannot dispatch sinf/cosf/expf/logf to vectorized implementations on RVA23U64 hardware despite RVV 1.0 being mandatory in the target profile. The psABI naming PR (#455) merged in June 2026 removes one procedural blocker, but no implementation patch has been submitted to the libc-alpha mailing list as of August 2026.
+*etcd* requires two Debian-carried riscv64-specific patches to function: one removes the upstream `os.Exit(1)` startup gate that blocks riscv64 without the `ETCD_UNSUPPORTED_ARCH` environment variable, and a second (dated 2026-06-06) reduces InitialMmapSize from 10 GB to 16 MB specifically because "64-bit RISC-V buildds also seem to struggle." etcd is on the critical deployment path for every Kubernetes-based database operator and for Patroni HA.
 
-**Hidden dependency risk: third-party release providers**
+*MySQL* is grey (unknown), the single most consequential data gap in this report. MySQL is a critical-path node. A targeted research pass against MySQL Bugzilla, the MySQL Build Farm, and Debian/Ubuntu packaging metadata should be completed before any conclusions about the MySQL column of this stack.
 
-A significant fraction of critical-path nodes have their riscv64 release provided by Debian or Ubuntu rather than upstream. In some cases this is the normal model (PostgreSQL has always relied on the Build Farm and distros), but in others it introduces a hidden risk:
+*Kubernetes* lacks riscv64 in all supported platform arrays. Every database operator depends on a supported Kubernetes host. k0s provides full riscv64 CI via RISE runners and is the recommended deployment substrate for riscv64 today.
 
-- **MySQL**: Ubuntu Noble is the only riscv64 distribution channel at 8.0.36, behind the security release on other architectures, with a patch that has never been submitted upstream.
-- **glibc**: Both Sourceware Buildbot riscv64 builders are offline with no passing test run since June 2025. Debian ships libc6 from unpatched source, but upstream has no functioning riscv64 CI.
-- **LZ4, zstd, ICU, libevent, PCRE2**: Each is distributed only by Debian/Ubuntu for riscv64; upstream ships no riscv64 binary. For distro-independent deployment (e.g., static binaries, container base images not derived from Debian/Ubuntu), these libraries require building from source.
-- **Grafana**: Upstream has no riscv64 release artifact; only Alpine Linux edge/community ships a Grafana riscv64 package, at version 12.4.4 against the 13.2.0 upstream release.
+The *Redis Stack module group* (RediSearch, RedisJSON, RedisBloom, RedisTimeSeries) represents the Redis Stack value proposition. Two are hard-blocked by upstream architecture guards (RediSearch: exit 1 gate; RedisBloom: Makefile hard error). RedisTimeSeries also has a Makefile hard error. Only RedisJSON is plausibly buildable from source. Valkey is the recommended production-grade Redis alternative on riscv64 today; it ships cleanly in Debian with autopkgtest passing and no riscv64-specific patches.
 
-Where `release_provider: none` is listed in the orange and red nodes, operators have no packaged option from any channel and must build from source -- with uncertain outcomes for many of these projects.
+**Third-party release providers:**
 
-### Actionable next steps
+The majority of critical-path nodes are released exclusively via Debian or Ubuntu, not upstream: PostgreSQL, libpq, MariaDB, Memcached, LZ4, jemalloc, PCRE2, ICU, libevent, and glibc all have a third-party release provider. For production deployments this means a dependency on Debian sid (unstable) or Ubuntu ports. The absence of official upstream riscv64 release binaries for these projects is a structural gap; upstream projects should be encouraged to add riscv64 to their release matrix as a co-equal artifact.
 
-The following actions are ordered by expected impact on the vertical's RISC-V readiness, with RISE engagement opportunities called out explicitly.
+**Yellow nodes with performance gaps (vectorization):**
 
-**1. Unblock pgcat's ring dependency (low effort, high impact for the PostgreSQL layer)**
+*LZ4* and *zstd* both have full upstream test CI on riscv64 and build cleanly, but the highest-impact decompression optimizations are not enabled. LZ4_FAST_DEC_LOOP is explicitly disabled in source (lib/lz4.c lines 479-485) while enabled on x86 and aarch64; five RVV PRs are open and unmerged. zstd has three critical PRs open (unaligned memory access +74%, sequence decode fast path, Huffman 4-way decompression) all stalled. For database workloads with heavy page compression (PostgreSQL TOAST, MySQL InnoDB page compression, RocksDB/TimescaleDB columnar compression), this translates directly to throughput and CPU utilization regressions against the RVA23U64 baseline target.
 
-pgcat PR [#881](https://github.com/postgresml/pgcat/pull/881) upgrades tokio-rustls from 0.24 to 0.26, removing the ring 0.16 pin that blocks the riscv64 build. The PR is open and unmerged due to lack of maintainer bandwidth, not technical objection. RISE or a funded contributor can pick up the review, address any rebase conflicts, and merge. This is the only red node in the PostgreSQL sub-vertical and unblocking it moves pgcat to at least orange.
+*libmvec* (orange) does not exist for riscv64 in any glibc release. Without vector math functions, applications relying on SIMD-accelerated math are left with scalar glibc libm. The libmvec gap has seen no libc-alpha submissions through August 2026.
 
-**2. Submit the lock_free_type.h riscv64 guard to MySQL upstream (medium effort, unblocks distro parity)**
+### Actionable Next Steps
 
-Ubuntu's `use-largest-lock-free-type-selector-on-riscv.patch` has been in-tree since MySQL 8.0 for Ubuntu Noble but has never been submitted to Oracle's mysql-8.0 or mysql-9.7 tree. Without it, Debian's mysql-9.7 cannot build on riscv64. A targeted upstream submission to the MySQL development list or Oracle's public bug tracker (bugs.mysql.com) is the lowest-effort path to restoring Debian mysql-9.7 riscv64 availability. This also eliminates the Ubuntu-as-sole-provider risk for a critical-path node.
+**Priority 1 -- Unblock red items (0 to usable):**
 
-**3. Add riscv64 spin-wait support to jemalloc (medium effort, impacts Redis, PostgreSQL, MariaDB)**
+1. **MariaDB ColumnStore riscv64 enablement.** File upstream issues in the mariadb-corporation/mariadb-columnstore-engine repo documenting all three blockers (CMakeLists.txt build skip, mcs_int128.h SSE fallthrough, primproc.cpp hard abort). Assign a RISE-sponsored engineer to implement the riscv64 guard in mcs_int128.h and the runtime capability check in primproc.cpp. This is the only OLAP columnar engine in the MariaDB product stack; without it, MariaDB on riscv64 is OLTP-only.
 
-jemalloc's HAVE_CPU_SPINWAIT=0 on riscv64 is the root cause of the orange rating for the most widely deployed allocator in this vertical. RISC-V defines the `pause` hint via the Zihintpause extension (part of RVA23U64 baseline). A one-function contribution to jemalloc's `include/jemalloc/internal/spin.h` adding the riscv64 `pause` hint alongside the existing `__asm__ volatile("pause" ::: "memory")` for x86 and `__asm__ volatile("isb" ::: "memory")` for ARM would lift the optimization gap. RISE contributors or a RISC-V hardware vendor are well-positioned to author and champion this change given the direct performance benefit on their platforms.
+2. **RediSearch riscv64 enablement.** Engage the Redis/RediSearch team (now under Redis Ltd) to request removal of the architecture guard in redis/redis modules/Makefile and riscv64 support in the RediSearch 2.x build system. Valkey is the production-grade alternative today; a RISE-to-Redis-Ltd conversation should frame this as a competitive gap vs. the Valkey ecosystem.
 
-**4. Drive the compression library RVV PRs to merge (medium effort, impacts all five database engines)**
+3. **RedisBloom Makefile guard removal.** This is a one-line change followed by test coverage work. File an upstream issue, provide a PR, and add riscv64 to the CI matrix. The blocker is upstream attention, not engineering difficulty.
 
-Three compression libraries critical to this vertical (LZ4, zstd, snappy) each have open RVV acceleration PRs with no upstream maintainer engagement. Recommended actions:
-- **zstd PR [#4557](https://github.com/facebook/zstd/pull/4557)** (sequence decode fast path): Filed December 2025, no response. Identify the correct Meta/Zstandard maintainer contact; escalate via the RISC-V International RISE project if needed.
-- **LZ4 RVV PRs**: Five concurrent PRs (#1678, #1686, #1734, #1738, #1739) are fragmented. Consolidate into a single coordinated submission with a clear owner.
-- **snappy PR [#235](https://github.com/google/snappy/pull/235)** (RVV short-memcpy): Remains open; PR #233 was closed. Rebase and request a fresh review from the Google Snappy maintainer.
+4. **mcrouter Clocks.cpp riscv64 shim.** Add a `#elif defined(__riscv)` guard using `clock_gettime(CLOCK_MONOTONIC)` as the riscv64 path, mirroring the existing ARM path. File a PR against facebook/mcrouter and separately against facebook/folly for Issues #2493 and #2416.
 
-These libraries sit in the hot path for WAL compression (PostgreSQL, MySQL), binlog compression, and RocksDB block compression. Moving them from yellow to blue unlocks measurable throughput improvements on RVA23U64.
+**Priority 2 -- Lift orange nodes to yellow or above:**
 
-**5. Add riscv64 to k3s container images and CI (medium effort, enables edge Kubernetes deployments)**
+5. **jemalloc riscv64 optimization sprint.** Implement Zihintpause pause instruction support (HAVE_CPU_SPINWAIT), port per-CPU arena initialization to use Zicbom cache-block flush, and add RVV-accelerated arena metadata operations. This is high-impact for Redis performance. RISE has access to native riscv64 hardware for benchmarking; a RISE-sponsored jemalloc PR with benchmark data is the recommended approach.
 
-k3s is the dominant Kubernetes distribution for edge and IoT workloads, and RISC-V targets many such deployments. The binary now builds manually for riscv64, but cluster startup is blocked on missing `rancher/mirrored-pause` and `rancher/systemd-node` riscv64 container images. RISE has existing Scaleway EM-RV1 runner infrastructure (already used by k0s) that could be offered to the k3s project to unblock CI. Draft PR [#13854](https://github.com/k3s-io/k3s/pull/13854) needs a maintainer review and the container image build work is a Rancher/SUSE internal infrastructure task.
+6. **etcd startup gate removal upstream.** Upstream the two Debian-carried patches: the `os.Exit(1)` startup gate removal (patch 0002) and an investigation of the InitialMmapSize 10 GB to 16 MB reduction (patch 0025). The first is a clean, mergeable patch; the second requires understanding whether the 10 GB mmap reservation is a real resource issue on riscv64 or a build infrastructure artifact.
 
-**6. Upstream the etcd riscv64 patches (medium effort, removes Kubernetes control plane dependency on Debian)**
+7. **Kubernetes riscv64 platform support.** Follow [PR #141291](https://github.com/kubernetes/kubernetes/pull/141291) (pause image) and advocate for adding `linux/riscv64` to `KUBE_SUPPORTED_ALL_PLATFORMS` in hack/lib/golang.sh. k0s already demonstrates full riscv64 CI on RISE runners; the k0s CI configuration is a direct reference implementation for what Kubernetes upstream needs.
 
-Debian carries two riscv64-specific patches for etcd: a startup gate removal and an InitialMmapSize reduction from 10 GB to 16 MB. The InitialMmapSize reduction (patch 0025) is a legitimate fix for a real behavioral difference on riscv64 Linux (MMAP_MIN_ADDR and overcommit behavior differ from x86_64). The etcd maintainers closed upstream issue [#21509](https://github.com/etcd-io/etcd/issues/21509) confirming no Prow riscv64 nodes exist. RISE providing native riscv64 test infrastructure to the etcd project (as it does for k0s and containerd) would be the prerequisite for reopening the CI and upstream-patch conversation.
+8. **Fill MySQL grey gap.** Conduct a targeted research pass to determine MySQL riscv64 status from MySQL Bugzilla, the MySQL Build Farm, Debian/Ubuntu packaging metadata, and Oracle's MySQL community blogs. MySQL is a critical-path node with unknown status; this is a reporting gap, not necessarily a technical gap.
 
-**7. Engage the Kubernetes operator ecosystem with riscv64 CI runners (lower urgency, completes the operator layer)**
+**Priority 3 -- Advance yellow nodes to blue (performance and release quality):**
 
-All five orange Kubernetes database operators (Zalando postgres-operator, Percona Operator for MySQL, MySQL Operator for Kubernetes, mariadb-operator, Redis Operator) are pure-Go with CGO_ENABLED=0 and would trivially cross-compile for riscv64 if their CI platform lists and release goreleaser configs were updated. The MySQL Operator for Kubernetes additionally requires removing the active `exit 1` guard in build.sh. RISE offering github Actions riscv64 runners to these projects would enable a simple platform-list addition to clear all five from orange to at least yellow without requiring native hardware.
+9. **LZ4 RVV optimization PRs.** Assign RISE engineering time to drive PRs #1678, #1686, #1734, #1738, and #1739 (RVV-accelerated LZ4 decompression) to merge. LZ4 maintainer engagement is the primary bottleneck. This has a direct impact on MySQL redo log I/O, RocksDB compaction, and any engine using LZ4 page compression.
 
-**8. Initiate the libmvec riscv64 implementation (long-term, high impact for analytics co-deployment)**
+10. **zstd RVV optimization PRs.** Drive [PR #4557](https://github.com/facebook/zstd/pull/4557) (sequence decode fast path), [PR #4596](https://github.com/facebook/zstd/pull/4596) (unaligned memory access, +74% compression), and [PR #4622](https://github.com/facebook/zstd/pull/4622) (Huffman 4-way decompression) to upstream merge. zstd is on the critical path for PostgreSQL TOAST compression, MariaDB InnoDB compression, and TimescaleDB columnar compression.
 
-libmvec riscv64 support is a multi-month effort requiring a complete RISC-V SIMD vector-math implementation, ABI negotiation, and integration into the glibc release cycle. The psABI PR #455 (merged June 2026) resolved the name-mangling question. The recommended next step is a formal RFC to the libc-alpha mailing list coordinating with the RISC-V glibc maintainers (Kito Cheng, DJ Delorie) and Toolchain Working Group. For this vertical specifically, the first priority functions are expf/logf/sinf/cosf (used by pgvector distance functions and analytics UDFs), followed by the sqrt family. RISE funding a dedicated glibc contributor for this work is the most direct path to completion within a 12-month horizon.
+11. **libmvec riscv64 implementation.** Submit a glibc patch series adding `sysdeps/riscv/libmvec` with RVV-accelerated vector math functions (at minimum exp, log, sin, cos). RISE has the hardware and expertise; the libc-alpha mailing list is the target venue. This is a multi-month project but directly enables the vectorized analytics path.
+
+12. **Add upstream riscv64 CI for Redis and Valkey.** Engage the Redis Ltd and Valkey TSC to add riscv64 QEMU or native runners. Both projects have clean distro builds but zero upstream CI. RISE runner sponsorship for Valkey is the lowest-friction path given the community's openness to contributions.
+
+13. **CloudNativePG and mariadb-operator riscv64 container images.** The operators themselves are pure Go; the gate is the PostgreSQL and MariaDB base container images. Coordinate with the PostgreSQL Docker Official Image maintainers and the MariaDB Docker Library to add riscv64 manifests. Once container images are available, the operator release workflows require only a one-line platforms addition.

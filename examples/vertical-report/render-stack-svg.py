@@ -349,7 +349,7 @@ class SvgBuilder:
     def _group_nodes(self):
         # Product grid cells, and -- for shared layers -- a per-product part
         # (nodes the report placed under a product column) plus a flat shared part.
-        self.product_cells = {}          # (column, product_layer) -> [node]
+        self.product_cells = {}          # (column, layer) -> [node]
         self.shared_pp = {}              # (shared_layer, column) -> [node]
         self.shared_flat = {}            # shared_layer -> [node]
         for layer in self.vm["shared_layers"]:
@@ -366,7 +366,11 @@ class SvgBuilder:
 
     def _size_columns(self):
         """Choose each column's boxes-per-row from its busiest cell, so a column
-        with many elements is wider (fewer stacked rows) than a sparse one."""
+        with many elements is wider (fewer stacked rows) than a sparse one.
+
+        When there are no product columns (single-vertical scope with only shared
+        layers), derive content_w from the widest shared layer instead, ensuring
+        the canvas is always wide enough to show all nodes plus the legend."""
         self.col_bpr, self.col_w, self.col_x = {}, {}, {}
         x = self.grid_x0
         for col in self.columns:
@@ -380,6 +384,21 @@ class SvgBuilder:
             self.col_bpr[col], self.col_w[col], self.col_x[col] = bpr, w, x
             x += w
         self.content_w = sum(self.col_w.values())
+
+        if not self.columns:
+            # No product columns: size the canvas from the widest shared layer.
+            max_flat = max(
+                (len(self.shared_flat.get(L, [])) for L in self.vm["shared_layers"]),
+                default=1)
+            bpr = max(1, -(-max_flat // TARGET_ROWS))
+            self.content_w = bpr * BOX_W + (bpr - 1) * BOX_GAP + 2 * CELL_PAD
+            # shared_bpr is recomputed after total_w is known; store a placeholder.
+        # Ensure total_w is wide enough to show the legend + a minimum title area.
+        # (legend_w is computed later; reserve 600px for a typical 2-col legend.)
+        LEGEND_RESERVE = 600
+        TITLE_MIN = 250
+        min_content = max(0, LEGEND_RESERVE + TITLE_MIN - GUTTER_W - MARGIN)
+        self.content_w = max(self.content_w, min_content)
         self.total_w = self.grid_x0 + self.content_w + MARGIN
 
     # -- primitives ---------------------------------------------------------
@@ -479,9 +498,10 @@ class SvgBuilder:
         vm = self.vm
         legend_w, legend_h = self._legend_size()
         header_h = max(TITLE_H, legend_h)
+        hdr_gap = COLHDR_H if self.columns else 0   # no column-name row for single-vertical stacks
         prod_h = {L: self.band_height(self.product_band_rows(L)) for L in vm["product_layers"]}
         shared_h = {L: self.shared_band_height(L) for L in vm["shared_layers"]}
-        grid_top = MARGIN + header_h + COLHDR_H
+        grid_top = MARGIN + header_h + hdr_gap
         total_h = grid_top + sum(prod_h.values()) + sum(shared_h.values()) + HW_H + MARGIN
 
         self.parts.append(

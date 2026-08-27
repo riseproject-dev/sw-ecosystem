@@ -10,8 +10,10 @@ export const meta = {
 
 // args = the parsed scope spec object written by Stage 1 (see vertical-report.md, Section 1.4).
 // Shape: { vertical, slug?, author?, run_date?, audience?, target_profile?, use?, assumptions?,
-//          exclusions?, out_of_scope?, layers: [{title, nodes: [{name, repo?, home?, slug?,
+//          exclusions?, out_of_scope?,
+//          layers: [{layer, product?, nodes: [{name, repo?, home?, slug?,
 //          criticality, features_in_scope?, notes?}]}], chains? }
+// Per-product layer: has both product: and layer:. Shared/single-product layer: layer: only.
 const spec = args || {}
 const slug = spec.slug || (spec.vertical || 'vertical').toLowerCase().replace(/[\s.\/]+/g, '-')
 const targetProfile = spec.target_profile || 'RVA23U64'
@@ -55,9 +57,15 @@ function ghHint(repo) {
 }
 
 // ── Flatten nodes from layers; pre-classify exclusions as grey; drop out_of_scope ──
+// Each layer entry has layer: and optionally product:. The canonical .layer key on each node is
+// "<product> -- <layer>" for per-product entries, or just "<layer>" for shared/single-product ones.
+function layerLabel(l) {
+  if (l.product && l.layer) return `${l.product} -- ${l.layer}`
+  return l.layer || ''
+}
 const nodes = []
-for (const layer of spec.layers || []) {
-  for (const n of layer.nodes || []) nodes.push({ ...n, layer: layer.title })
+for (const l of spec.layers || []) {
+  for (const n of l.nodes || []) nodes.push({ ...n, layer: layerLabel(l) })
 }
 log(`Vertical: ${spec.vertical || '(unnamed)'} | slug: ${slug} | ${nodes.length} nodes to classify | profile ${targetProfile}`)
 if ((spec.out_of_scope || []).length) log(`Out of scope (not classified): ${(spec.out_of_scope).map(o => o.name).join('; ')}`)
@@ -153,7 +161,32 @@ if (goodNodes.length === 0) {
 
 const allRecords = [...goodNodes, ...exclusionRecords]
 
-// ── Synthesize the 3 artifacts ──
+// Derive the layer heading convention from the scope spec for the synthesize prompt.
+// Multi-product: "### Layer N.x -- <Product>: <Row>" for product-grid rows (N = row index 1-based,
+// x = lowercase letter for product in first-appearance order); "### Layer N -- <Title>" for shared.
+// Single-product: "## Layer N -- <Title>" for every layer.
+const isMultiProduct = (spec.layers || []).some(l => l.product && l.layer)
+// Derive ordered products and layers from first-appearance for the prompt.
+const _products = [], _productLayers = []
+for (const l of spec.layers || []) {
+  if (l.product && l.layer) {
+    if (!_products.includes(l.product)) _products.push(l.product)
+    if (!_productLayers.includes(l.layer)) _productLayers.push(l.layer)
+  }
+}
+const layerHeadingInstructions = isMultiProduct ? `
+MULTI-PRODUCT LAYER HEADING CONVENTION (mandatory -- do not invent a different scheme):
+- Products (columns) in order: ${JSON.stringify(_products)} -- assigned letters a, b, c, ... in that order.
+- Per-product row layers in order: ${JSON.stringify(_productLayers)} -- numbered 1, 2, 3, ... in that order.
+- Per-product layer headings: "### Layer N.x -- <Product>: <Row>" where N is the row number and x is the product letter.
+  Example: first row of first product = "### Layer 1.a -- ${_products[0] || 'ProductA'}: ${_productLayers[0] || 'Row1'}"; first row of second product = "### Layer 1.b -- ${_products[1] || 'ProductB'}: ${_productLayers[0] || 'Row1'}".
+  Group all product letters for the same row together before incrementing N. When a product has no nodes for a row, emit the heading with a single "N/A: <brief reason>" line.
+  End each row group (all letters for one N) with a "Pipeline chains and alternate paths" subsection for that row's chains.
+- Shared layer headings: "### Layer N -- <Title>" where N continues after the last row number. End with the shared pipeline chains.
+` : `
+SINGLE-PRODUCT LAYER HEADING CONVENTION: Use "## Layer N -- <Title>" with sequential N.
+`
+
 phase('Synthesize')
 log(`Synthesizing report for ${slug} from ${allRecords.length} node records ...`)
 
@@ -169,6 +202,7 @@ SCOPING ASSUMPTIONS (reproduce under the header if non-empty): ${JSON.stringify(
 OUT OF SCOPE (note as deliberately dropped, do not classify): ${JSON.stringify((spec.out_of_scope || []).map(o => o.name))}
 PIPELINE CHAINS (render verbatim in the stack outline): ${JSON.stringify(spec.chains || [])}
 
+${layerHeadingInstructions}
 NODE CLASSIFICATION RECORDS (the source of truth for every color; do not invent facts not present here):
 ${JSON.stringify(allRecords, null, 2)}
 
@@ -191,8 +225,7 @@ title: ${spec.vertical || slug} -- RISC-V Ecosystem Status
 
 ## Artifact 1: Layered stack outline
 
-One "## Layer N -- <title>" section per layer, top (orchestration) to bottom (hardware). Under each layer, one bullet
-per node spanning as many lines as needed:
+Use the LAYER HEADING CONVENTION specified above. Under each layer heading, one bullet per node:
 - **<name>** -- <color> (<criticality>)
   - <one-line description>
   - License: <license>. Governance: <owner/foundation>.
@@ -257,7 +290,6 @@ function parseReportColumns(reportText, columns) {
 }
 
 function buildViewModel(spec, records, slug, profile, reportText) {
-  const columns = [], productLayers = [], sharedLayers = []
   // Two-level index: recByPair[layer][name] disambiguates a node listed under two
   // columns; recByName[name] is the fallback. records carry `layer` (the full scope
   // layer title) from the classify agents.
@@ -270,33 +302,29 @@ function buildViewModel(spec, records, slug, profile, reportText) {
   const lookup = (name, title) =>
     (recByPair.get(title) && recByPair.get(title).get(name)) || recByName.get(name) || {}
 
-  // First pass to learn the columns, then resolve per-product placement of shared nodes.
-  for (const layer of spec.layers || []) {
-    const sep = (layer.title || '').indexOf(' -- ')
-    if (sep !== -1) {
-      const column = layer.title.slice(0, sep)
-      const row = layer.title.slice(sep + 4)
-      if (!columns.includes(column)) columns.push(column)
-      if (!productLayers.includes(row)) productLayers.push(row)
-    } else if (!sharedLayers.includes(layer.title || '')) {
-      sharedLayers.push(layer.title || '')
+  // Derive columns (products) and productLayers from first-appearance order across layer entries.
+  // Per-product layers: product: + layer:. Shared/single-product layers: layer: only.
+  const columns = [], productLayers = [], sharedLayers = []
+  for (const l of spec.layers || []) {
+    if (l.product && l.layer) {
+      if (!columns.includes(l.product)) columns.push(l.product)
+      if (!productLayers.includes(l.layer)) productLayers.push(l.layer)
+    } else if (l.layer && !sharedLayers.includes(l.layer)) {
+      sharedLayers.push(l.layer)
     }
   }
   const reportColumns = parseReportColumns(reportText, columns)
 
   const nodes = []
-  for (const layer of spec.layers || []) {
-    const title = layer.title || ''
-    const sep = title.indexOf(' -- ')
-    let productColumn = null, layerTitle = title
-    if (sep !== -1) {
-      productColumn = title.slice(0, sep)
-      layerTitle = title.slice(sep + 4)
-    }
-    for (const n of layer.nodes || []) {
-      const rec = lookup(n.name, title)
+  for (const l of spec.layers || []) {
+    const isProductLayer = !!(l.product && l.layer)
+    const productColumn = isProductLayer ? l.product : null
+    const layerTitle = isProductLayer ? l.layer : (l.layer || '')
+    const label = isProductLayer ? `${l.product} -- ${l.layer}` : (l.layer || '')
+    for (const n of l.nodes || []) {
+      const rec = lookup(n.name, label)
       const provider = rec.release_provider || 'none'
-      // Product-layer node: column from title. Shared-layer node: explicit
+      // Product-layer node: column from product:. Shared-layer node: explicit
       // `column:` on the scope node, else the report's per-product placement.
       const column = productColumn || n.column || reportColumns[n.name] || null
       nodes.push({
