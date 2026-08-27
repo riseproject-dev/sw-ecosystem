@@ -8,7 +8,7 @@ FROM --platform=linux/${BUILDARCH} rust:1-bookworm AS pg-collect-base
 
 COPY --from=oxigraph /usr/local/bin/oxigraph /usr/local/bin/oxigraph
 
-ADD https://github.com/packagegraph/platform.git#main:etl/pg-collect /pg-collect
+ADD https://github.com/luhenry/packagegraph-platform.git#pypi-parallel:etl/pg-collect /pg-collect
 RUN cargo install --path /pg-collect
 
 # ---------------------------------------------------------------------------
