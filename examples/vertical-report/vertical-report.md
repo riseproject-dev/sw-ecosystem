@@ -200,16 +200,19 @@ output artifacts.
 **Read `examples/color-coding/color-coding.md` in full before classifying any node.** That file
 is the single authoritative source for:
 
-- The 5-state color model (Steps 0-2: architecture-independent shortcut, primary grade from
-  upstream CI, optimization-purpose downgrade modifier)
+- The 6-state color model (Steps 0-2: architecture-independent shortcut, primary grade from
+  upstream CI, optimization-purpose downgrade modifier) -- colors are grey / green / blue /
+  yellow / orange / red
 - The release-provider rule (who publishes the riscv64 artifact; required for green; visible note
   on every node where it is not upstream)
+- The distribution floor rules (yellow for clean unpatched distro builds; orange for patched or
+  uncertain distro builds)
 - The research procedure (stored reports first, adversarial spot-check, fallback to live research)
 - The per-node record fields (`color`, `color_case`, `release_provider`, `optimization_gap`,
   `justification`, `primary_source`, `report_date`, `verified_date`, `as_of`, `confidence`,
   `delta_vs_report`)
 - All non-negotiable rules (primary source requirements, no guessing, no inferring CI from issue
-  text, Latin-1 only)
+  text, red only for confirmed breakage, Latin-1 only)
 
 Do not re-derive or re-state any of those rules here. Apply them exactly as written.
 
@@ -258,7 +261,7 @@ this exact per-node shape:
   - [one-line description of what it is]
   - License: [license]. Governance: [owner/foundation].
   - [if release_provider is not upstream:] Release provided by [provider], not upstream.
-  - [if orange/red/blue and load-bearing:] Gap: [what is missing on riscv64].
+  - [if yellow/orange/red and load-bearing:] Gap: [what is missing on riscv64].
 ```
 
 After the layers, reproduce the scope spec's `chains:` block as a "Pipeline chains and alternate
@@ -290,7 +293,8 @@ comma-broken row.
 ### Artifact 3: Narrative and next steps
 
 - **Scorecard.** A one-glance aggregate, counting critical-path nodes: "Of N critical-path nodes:
-  X green, Y blue, Z orange, W red, and V grey (N/A)." Repeat for optional nodes as a second line.
+  X green, Y blue, Z yellow, W orange, V red, and U grey (N/A)." Repeat for optional nodes as a
+  second line. Omit color entries with a count of zero.
 - **The story.** Lead with the load-bearing red and orange nodes -- these are what block the
   vertical on RISC-V. Call out explicitly every node whose riscv64 release comes from a third party
   (RISE or other) rather than upstream, because that is a hidden dependency risk.

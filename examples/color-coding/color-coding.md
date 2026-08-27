@@ -4,7 +4,7 @@
 in a given list. The output is a classification table -- one row per project -- suitable for
 slides or dashboards. Each color reflects two things: the upstream CI posture for RISC-V, and
 for projects whose purpose is performance optimization, whether RISC-V-specific optimizations
-actually exist.
+actually exist and cover the primary hot paths.
 
 **The list is whatever you supply.** Pass any set of projects: GitHub repos, named libraries,
 or entries from `scope.yml`. The prompt is generic -- it does not require per-project reports
@@ -36,7 +36,12 @@ a single color-deciding fact that may have changed since the report was written.
 
 ## The color model
 
-Each project gets exactly one color from: **green / blue / orange / red / grey**.
+Each project gets exactly one color from: **green / blue / yellow / orange / red / grey**.
+
+The color encodes two axes simultaneously: (1) the upstream CI and release posture, and (2)
+for optimization-purpose projects, whether RISC-V-specific optimizations cover the operations
+that justify using the project over a simpler alternative. The CI posture sets the primary
+color; the optimization modifier can only cap downward, never raise it.
 
 Evaluate the steps below top to bottom. The first step that produces a definitive result wins.
 
@@ -59,13 +64,14 @@ color from this table:
 |--------|----------------------------|-------------------------------------------|-------------------------------------|
 | green  | yes                        | yes                                       | yes                                 |
 | blue   | yes                        | yes                                       | no                                  |
-| orange | yes                        | no (build-only CI or untested artifact)   | either                              |
-| red    | no                         | --                                        | no                                  |
-| grey   | N/A                        | --                                        | --                                  |
+| yellow | yes (build step, no tests) | no                                        | no / either                         |
+| orange | no upstream CI             | no                                        | no                                  |
+| red    | N/A -- project is broken or known non-functional on riscv64 |
+| grey   | N/A -- unknown / proprietary / vendor-locked |
 
 **CI evidence rule.** A job that builds riscv64 but does not run the test suite
 (cross-compile-only, QEMU-build-only without test execution) counts as build-only. Build-only
-CI caps the primary color at **orange**, not blue or green.
+CI sets the primary color to **yellow**, not blue or green.
 
 **Release-provider rule.** Green is reserved for artifacts published **directly by upstream**.
 Track who publishes the consumable riscv64 release in a `release_provider` field. Values:
@@ -80,17 +86,31 @@ Track who publishes the consumable riscv64 release in a `release_provider` field
 - RISE-provided CI runners, board farm, and funded upstream work are **not** release artifacts --
   they belong in the next-steps narrative. Keep the two separate.
 
-**Distribution floor.** If upstream CI is red (no riscv64 CI at all), but a Linux distribution
-(Ubuntu, Debian, Fedora, Arch RISC-V) or a third party (RISE, conda-forge) actually builds and
-ships a riscv64 package, the project is not entirely unsupported. Upgrade the primary color
-from red to **orange** (sub-type: downstream-only) and record the provider. Distribution
-availability cannot upgrade above orange -- blue and green require upstream CI.
+**Distribution floor.** If upstream CI is absent (no riscv64 CI at all), but a Linux
+distribution (Ubuntu, Debian, Fedora, Arch RISC-V) or a third party (RISE, conda-forge)
+builds and ships a riscv64 package, the project is not entirely unsupported. Apply the floor:
+
+- If the distribution builds from **unmodified upstream source** (no riscv64-specific patches
+  in the packaging diff): upgrade from "no CI" to **yellow** (sub-type: `clean-distro-build`).
+  A clean distro build confirms the project builds on riscv64 even without upstream CI.
+- If the distribution ships the package but **with riscv64-specific patches** to fix build or
+  runtime issues, or if patch status is unknown: upgrade to **orange** (sub-type:
+  `downstream-only`). The project is available but build quality on vanilla upstream is unclear.
+
+Distribution availability cannot upgrade above yellow for unpatched builds, and above orange
+for patched or uncertain builds. Blue and green require upstream CI with test execution.
+
+**Red.** Use red only when riscv64 support is confirmed broken or explicitly non-functional:
+a known ABI incompatibility, a build-blocking dependency with no riscv64 port, a runtime
+crash that is documented as a known issue and unresolved, or explicit upstream statements that
+the architecture is unsupported. Red is not a default for missing CI -- use orange or yellow
+when the project is simply untested but buildable.
 
 **Grey.** Use grey only when the project is proprietary/vendor-locked (cannot run on RISC-V
-natively by design) or when research turns up insufficient data. State which case applies and
-what was searched.
+natively by design) or when research turns up insufficient data to classify it. State which
+case applies and what was searched.
 
-### Step 2 -- Optimization-purpose downgrade modifier
+### Step 2 -- Optimization-purpose modifier
 
 This modifier applies only to projects whose **primary stated purpose is to make a specific
 algorithm faster than a reference implementation**. The test: if the project ran on RISC-V
@@ -116,21 +136,25 @@ look for architecture-specific source files (`*riscv*`, `*rvv*`, `*rv64*`, files
 code paths in the build system. Compare with what the project provides for arm64 and amd64
 (the reference: are the hot paths hand-tuned on those architectures?).
 
-Then apply the downgrade:
+Assign one of four optimization levels, then apply the cap:
 
-| RISC-V optimization coverage                                                                 | Effect on primary color |
-|---------------------------------------------------------------------------------------------|------------------------|
-| Full: key algorithms implemented with RVV intrinsics or hand-written assembly, comparable to arm64/amd64 | No change |
-| Partial: some RISC-V-specific code, but significant hot paths fall back to scalar C          | Cap at **orange**, with note "partial optimization gap" |
-| Absent: all paths use generic scalar C; no architecture-specific RISC-V code at all         | Downgrade to **red**, with note "no RISC-V optimizations; scalar fallback only" |
+| RISC-V optimization level | Description | Cap on primary color |
+|--------------------------|-------------|---------------------|
+| **Full** | All primary hot paths have RISC-V-specific implementations (RVV intrinsics, RISC-V assembly, Zb* extensions). Coverage is comparable to arm64 and amd64 for the operations that define this project's value. | No change |
+| **Partial** ("some of the way") | RISC-V-specific code covers the main differentiating operations and the project delivers genuine RISC-V-specific value. Some secondary hot paths fall back to scalar C, but the key algorithms are implemented. | Cap at **blue** |
+| **Minimal** ("so-so") | Some RISC-V-specific code exists, but the most important hot paths that define this project's value proposition still fall back to scalar C. The RISC-V-specific code is there but does not cover the critical paths. | Cap at **yellow** |
+| **Absent** | No RISC-V-specific code at all. All paths use generic scalar C; there are no architecture-specific files, no RVV intrinsics, no RISC-V assembly anywhere in the project. | Cap at **orange** |
 
-"Partial" vs "absent" is a judgment call. The guiding question: does the RISC-V-specific code
+"Partial" vs "minimal" is a judgment call. The guiding question: does the RISC-V-specific code
 cover the operations that actually justify the project's existence? For example, if a SIMD
-library has an RVV backend for 3 of its 50 vector operations but the remaining 47 use the
-scalar fallback, that is "absent" in spirit even if there is technically some RVV code. State
-the specific operations affected and the ISA extensions that would close the gap.
+library has an RVV backend implementing all its primary vector operations (even if only a single
+SIMD tier vs multiple tiers on amd64), that is "partial". If it has only a handful of
+optimized functions out of dozens that matter, that is "minimal". State the specific operations
+affected and the ISA extensions that would close the gap.
 
-The optimization modifier can only downgrade, never upgrade.
+The optimization modifier can only cap downward, never upgrade. Note that absent optimization
+caps at **orange** (not red): red is reserved for genuinely broken projects, not for
+optimization-purpose projects whose RISC-V code path is simply the scalar fallback.
 
 ---
 
@@ -158,7 +182,7 @@ internet research.** If it exists:
    including which files were read, what riscv64 jobs exist, and whether they build-only or
    run tests.
 4. Read **Section 8 (Distribution and Release Status)** -- contains per-distro riscv64
-   package availability with versions.
+   package availability with versions, and whether upstream patches were required.
 5. For optimization-purpose projects (Step 2 of the color model), also read **Section 4
    (Technical Architecture and RISC-V-Specific Subsystems)** -- contains the RISC-V
    architecture-specific code inventory and comparison table against arm64/amd64.
@@ -209,8 +233,13 @@ Check riscv64 package availability using these authoritative URLs:
 - Fedora: `https://packages.fedoraproject.org/pkgs/<source>/<binary>/`
 - Arch Linux RISC-V: `https://archriscv.felixc.at/?q=<package>`
 
-If upstream CI is red but any of these show a riscv64 package, apply the distribution floor
-(upgrade primary grade from red to orange, sub-type downstream-only).
+When a distro package exists, check whether riscv64-specific patches are present in the
+packaging repository (the `.debian/` directory on Debian/Ubuntu, the spec file on Fedora).
+Patches that fix riscv64 build failures indicate the project does not build from vanilla
+upstream source on riscv64 -- apply the patched distribution floor (orange, not yellow).
+
+If upstream CI is absent but any of these show a riscv64 package, apply the distribution floor
+(see Step 1).
 
 ### 5. RISC-V-specific optimizations (fallback: no report exists, or optimization-purpose project with no Section 4)
 
@@ -225,7 +254,8 @@ the stored report, check for:
   as a supported target with optimized paths?
 
 Compare explicitly with what exists for arm64 and amd64. State which ISA extensions are used
-on RISC-V (RVV, Zba, Zbb, Zvkned, etc.) and which are missing.
+on RISC-V (RVV, Zba, Zbb, Zvkned, etc.) and which are missing. Assign one of the four
+optimization levels (full / partial / minimal / absent) from Step 2.
 
 ---
 
@@ -242,12 +272,19 @@ Each classified project produces a record with these fields. Fill all of them; t
 downstream artifact.
 
 - `name` -- the project name as given in the input list
-- `color` -- grey / green / blue / orange / red
-- `color_case` -- for grey: `N/A` (proprietary) or `unknown` (insufficient data); for orange:
-  `downstream-only` or `upstream-ships-untested`; empty for all other colors
+- `color` -- grey / green / blue / yellow / orange / red
+- `color_case` -- sub-type clarifier:
+  - for grey: `N/A` (proprietary) or `unknown` (insufficient data)
+  - for yellow: `build-only-ci` (upstream CI builds but does not test) or `clean-distro-build`
+    (no upstream CI; distro builds from unpatched source)
+  - for orange: `downstream-only` (no upstream CI; distro ships, possibly with patches) or
+    `optimization-absent` (upstream CI passes but optimization-purpose project has no
+    RISC-V-specific code)
+  - empty for green, blue, and red
 - `release_provider` -- `upstream` | `RISE` | `<distro name>` | `third-party` | `none`
 - `optimization_gap` -- for non-optimization-purpose projects: `N/A`; for optimization-purpose
-  projects: `full`, `partial -- <what is missing>`, or `absent -- scalar fallback`
+  projects: `full`, `partial -- <what is missing>`, `minimal -- <what primary paths lack coverage>`,
+  or `absent -- scalar fallback only`
 - `justification` -- one to three sentences with the deciding fact and a markdown source link
 - `primary_source` -- the single most authoritative URL for the color
 - `report_date` -- the `Date:` header of `reports/<slug>.md`, or `none` if no report was used
@@ -267,26 +304,28 @@ One row per project. Use this exact set of columns:
 |---------|-------|-----------|----------|-------------|-----------------|---------------------|-------------|-----------------|-------|
 
 Column definitions:
-- **Color**: green / blue / orange / red / grey
+- **Color**: green / blue / yellow / orange / red / grey
 - **CI: build / test / release**: yes / no / N/A
 - **Optimization gap**: "N/A" for non-optimization-purpose projects; for optimization-purpose
-  projects: "full" / "partial -- [what is missing]" / "absent -- scalar fallback" / "unknown"
+  projects: "full" / "partial -- [what is missing]" / "minimal -- [what is missing]" /
+  "absent -- scalar fallback" / "unknown"
 - **Distro availability**: comma-separated list of distros with confirmed riscv64 packages
   (e.g., "Ubuntu 24.04, Debian sid") or "none"
 - **Report date**: the `Date:` header from `reports/<slug>.md`, or "none" if no report was used
 - **Delta vs report**: "none" if the spot-check confirmed the report; a short description of
   the discrepancy if a live check contradicted it; "n/a" if no report was used
 - **Notes**: one short phrase capturing the color-deciding fact or most important caveat
-  (e.g., "build-only CI, no test execution"; "RVV backend covers key ops, partial gap";
-  "downstream-only: Ubuntu packages it"; "no RISC-V port exists")
+  (e.g., "build-only CI, no test execution"; "RVV backend covers primary ops, partial gap";
+  "downstream-only: Ubuntu packages it"; "ring 0.16 blocks riscv64 TLS build")
 
 ### 3. Per-project justification
 
 For each project that is not green, write one paragraph:
 - What the primary color-deciding fact is and where it was found (link to the CI file, the
   distro tracker, or the release page that settled the question)
-- For optimization-purpose projects: what specific operations lack RISC-V-specific code, and
-  what ISA extensions (RVV, Zba/Zbb, Zvkned, etc.) would close the gap
+- For optimization-purpose projects: what specific operations lack RISC-V-specific code, which
+  optimization level was assigned (partial / minimal / absent), and what ISA extensions (RVV,
+  Zba/Zbb, Zvkned, etc.) would close the gap
 - Any pending work (open PRs, open issues, RISE involvement) that could change the grade
 
 For green projects, a one-line note is sufficient.
@@ -309,9 +348,13 @@ List every source used, one per line. Distinguish stored reports from live check
 - Never infer CI status from issue text, PR descriptions, or README claims. Read the workflow
   files.
 - Never guess. If data is unavailable, assign grey (unknown) and state what was searched.
+- Red is for confirmed breakage only. If a project has no CI and no distro package, default
+  to orange or grey -- not red -- unless there is positive evidence it does not work.
 - For PR merge status verification: fetch `https://api.github.com/repos/<owner>/<repo>/pulls/<n>`
   and check `merged_at`. A null `merged_at` with `state: closed` means closed without merging.
 - Latin-1 characters only. No em-dashes; use a hyphen or comma. Every URL is a markdown link
   `[text](url)`, never a bare URL.
-- The optimization modifier can only downgrade, never upgrade. Do not interpret a partial
-  optimization as a reason to raise the CI-based primary grade.
+- The optimization modifier can only cap downward, never upgrade. Do not interpret a partial
+  or minimal optimization as a reason to raise the CI-based primary grade.
+- Record the distribution patch status explicitly. Do not apply the yellow distribution floor
+  without checking whether riscv64-specific patches exist in the distro's packaging repository.

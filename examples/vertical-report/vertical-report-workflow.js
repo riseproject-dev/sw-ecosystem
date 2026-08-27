@@ -1,6 +1,6 @@
 export const meta = {
   name: 'vertical-report',
-  description: 'RISC-V vertical ecosystem report: classify each stack node red/orange/blue/green/grey, verify, synthesize 3 artifacts',
+  description: 'RISC-V vertical ecosystem report: classify each stack node red/orange/yellow/blue/green/grey, verify, synthesize 3 artifacts',
   phases: [
     { title: 'Classify', detail: 'One agent per node: hybrid reuse-report + live-verify color classification' },
     { title: 'Verify', detail: 'Adversarial re-check of each node color-deciding fact' },
@@ -30,8 +30,8 @@ const NODE_SCHEMA = {
     name: { type: 'string' },
     layer: { type: 'string' },
     criticality: { type: 'string', enum: ['critical', 'optional', 'n/a'] },
-    color: { type: 'string', enum: ['grey', 'green', 'blue', 'orange', 'red'] },
-    color_case: { type: 'string', description: 'for grey: N/A|unknown; for orange: downstream-only|upstream-ships-untested; else empty' },
+    color: { type: 'string', enum: ['grey', 'green', 'blue', 'yellow', 'orange', 'red'] },
+    color_case: { type: 'string', description: 'for grey: N/A|unknown; for yellow: build-only-ci|clean-distro-build; for orange: downstream-only|optimization-absent; else empty' },
     release_provider: { type: 'string', description: 'upstream|RISE|<distro>|third-party|none' },
     justification: { type: 'string', description: '1-3 sentences with the deciding fact and a markdown source link' },
     primary_source: { type: 'string', description: 'single most authoritative URL' },
@@ -132,7 +132,8 @@ This file defines the complete color model, release-provider rule, and all verif
 
 STEP 2 -- Re-check the single color-deciding fact against the primary source from that file.
 - If the proposed color claims upstream TESTS riscv64 (blue/green), open the actual CI workflow
-  file and confirm a test step exists and runs on riscv64 -- do not accept a build-only job.
+  file and confirm a test step exists and runs on riscv64 -- do not accept a build-only job (build-only caps at yellow).
+- If yellow, verify that the CI job (or distro build) exists but has no test execution step.
 - If green, confirm the release artifact is published BY UPSTREAM (not RISE/distro).
 - Apply the strict-downgrade modifiers from the file rigorously.
 - If you cannot substantiate the proposed color, correct it (usually downward).
@@ -196,7 +197,7 @@ per node spanning as many lines as needed:
   - <one-line description>
   - License: <license>. Governance: <owner/foundation>.
   - [if release_provider != upstream] Release provided by <provider>, not upstream.
-  - [if load-bearing and not green] Gap: <what is missing on riscv64>.
+  - [if load-bearing and color is yellow/orange/red] Gap: <what is missing on riscv64>.
 Then a "Pipeline chains and alternate paths" subsection rendering each chain as "A -> B -> C".
 
 ## Artifact 2: Status table
@@ -208,8 +209,8 @@ Then a "Pipeline chains and alternate paths" subsection rendering each chain as 
 
 ## Artifact 3: Narrative and next steps
 
-- Scorecard: "Of N critical-path nodes: X green, Y blue, Z orange, W red, V grey (N/A)." Second line for optional nodes.
-- The story: lead with load-bearing red/orange nodes (what blocks the vertical on RISC-V). Call out every node whose
+- Scorecard: "Of N critical-path nodes: X green, Y blue, Z yellow, W orange, V red, U grey (N/A)." Second line for optional nodes. Omit color entries with a count of zero.
+- The story: lead with load-bearing red and orange nodes (what blocks or degrades the vertical on RISC-V), then yellow nodes (no test gate). Call out every node whose
   riscv64 release comes from a third party (RISE or other) rather than upstream -- a hidden dependency risk.
 - Actionable next steps: concrete, prioritized actions; who upstream is best positioned; and where RISE (or another
   party) already covers the work (runners, board farm, funded contributors, hosted releases) so effort already underway

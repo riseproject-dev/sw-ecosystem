@@ -49,8 +49,8 @@ The slug is derived from the vertical name: `name.toLowerCase().replace(/[\s.\/]
 
 ### Stage 2 -- Research and synthesis (unattended)
 
-Consume the locked scope spec, classify every node in the stack for RISC-V readiness (the 5-state
-color model: grey / green / blue / orange / red), adversarially verify each color, and emit the
+Consume the locked scope spec, classify every node in the stack for RISC-V readiness (the 6-state
+color model: grey / green / blue / yellow / orange / red), adversarially verify each color, and emit the
 three output artifacts into `out/<vertical-slug>.md`.
 
 **Small stack (a handful of nodes):** just execute the Stage 2 instructions in `vertical-report.md`
@@ -98,14 +98,20 @@ Every generated report contains, in order:
 ## The color model in one paragraph
 
 Each node gets one color. **grey** = N/A (proprietary/vendor-only) or unknown. **green** = upstream
-builds, tests, passes, and publishes the riscv64 release itself. **blue** = upstream builds, tests,
-passes, but does not release (or only a third party such as RISE releases it -- flagged). **orange**
-= builds on riscv64 but no upstream test gate (downstream-only, or upstream ships an untested
-artifact). **red** = no working riscv64 support. Pure-Python / noarch nodes are green by
-construction. Build-only CI caps a node at orange; partial test failures downgrade one level. Green
-is reserved for releases published directly by upstream -- a RISE-hosted wheel keeps a node blue with
-a visible note, which matters because many packages are usable on riscv64 today only because RISE
-ships the wheel. Full rules are in `vertical-report.md`, Section 2.1.
+builds, tests, passes, and publishes the riscv64 release itself; everything is in place and
+optimized. **blue** = upstream builds and tests pass but no upstream riscv64 release (a third party
+such as RISE ships it -- flagged); for optimization-purpose projects, primary hot paths have
+RISC-V-specific code. **yellow** = upstream CI includes a build step but no test gate, or a
+distribution ships the package from unpatched upstream source with no upstream CI; for
+optimization-purpose projects, some RISC-V-specific code exists but key paths still fall back to
+scalar C. **orange** = no upstream CI, no upstream release; only available through a distribution
+that may need riscv64-specific patches; or an optimization-purpose project with no RISC-V-specific
+code at all (scalar fallback). **red** = confirmed broken or known non-functional on riscv64. Red is
+not the default for missing CI -- use orange or yellow for untested-but-buildable projects. Pure
+Python / noarch nodes are green by construction. Green is reserved for releases published directly
+by upstream -- a RISE-hosted wheel keeps a node blue with a visible note, which matters because many
+packages are usable on riscv64 today only because RISE ships the wheel. Full rules are in
+`color-coding.md`, The color model section.
 
 ## Operational notes
 
