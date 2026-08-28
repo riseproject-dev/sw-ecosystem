@@ -8,7 +8,7 @@ Each `scope.yml` entry has three fields:
 - `repo`: the canonical upstream repository URL (absent for projects with no public repo, e.g. Geekbench)
 - `home`: the project homepage URL
 
-The output report path is derived from the name: `reports/<slug>.md`, where `slug` is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. "Apache Flink" -> `reports/apache-flink.md`, "Open vSwitch" -> `reports/open-vswitch.md`).
+The output report path is derived from the name: `project-reports/<slug>.md`, where `slug` is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. "Apache Flink" -> `project-reports/apache-flink.md`, "Open vSwitch" -> `project-reports/open-vswitch.md`).
 
 **See `CLAUDE.md` in the repo root for the complete operator guide**, including:
 - How `scope.yml` maps to workflow args and how to find projects without a report yet
@@ -34,7 +34,7 @@ Workflow({
 })
 ```
 
-The script derives the output path as `reports/<slug>.md`. To override it, add an absolute `"slug"` field to the args object. The script runs four phases sequentially (8 search agents, 4 fetch agents, 3 verify agents, 1 synthesize agent = 16 total). On completion the workflow returns a JSON object with `{name, file, report, totalChars}`. Write `report` to `file` and verify before committing.
+The script derives the output path as `project-reports/<slug>.md`. To override it, add an absolute `"slug"` field to the args object. The script runs four phases sequentially (8 search agents, 4 fetch agents, 3 verify agents, 1 synthesize agent = 16 total). On completion the workflow returns a JSON object with `{name, file, report, totalChars}`. Write `report` to `file` and verify before committing.
 
 For a non-GitHub project (sourceware.org, kernel.org, googlesource.com), the `repo` URL is not a github.com URL and the script automatically switches to WebSearch + WebFetch instead of GitHub MCP tools. For a project with no `repo` at all, the script falls back to the `home` URL for web searches.
 
@@ -52,7 +52,7 @@ For a non-GitHub project (sourceware.org, kernel.org, googlesource.com), the `re
 
 You are a highly technical, principal software engineer writing a fact-based technical assessment for engineering leadership at a chip company evaluating RISC-V investment. The audience is experienced engineers and their managers. Write with precision. No hedging, no marketing language, no filler.
 
-Research the project named in the `scope.yml` entry (using its `repo`) and generate the report at the derived `reports/<slug>.md` path.
+Research the project named in the `scope.yml` entry (using its `repo`) and generate the report at the derived `project-reports/<slug>.md` path.
 
 Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trackers, CI configuration files, build scripts, release notes, changelogs, blog posts, conference slides, foundation governance documents, and any other primary sources. Use sub-agents to parallelize the search. Go deep.
 
@@ -77,7 +77,7 @@ Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trac
 
 - Every factual claim must be traceable to a primary upstream source. Claims not verifiable against a second source must be marked `[NEEDS VERIFICATION]`.
 - Never fill gaps with plausible guesses. If data is not available for a section, say so explicitly and describe what you searched.
-- The report is self-contained. It does not depend on the content of any other status report. You may write "See the [Foo](reports/foo.md) status report for details on Foo" to point a reader to a related report, but do not pull content from it and do not assume the reader has read it.
+- The report is self-contained. It does not depend on the content of any other status report. You may write "See the [Foo](project-reports/foo.md) status report for details on Foo" to point a reader to a related report, but do not pull content from it and do not assume the reader has read it.
 - Only generate Latin-1 characters. Do not use em-dashes; use a hyphen or comma instead. Write like a human.
 - Output is a Markdown file. Use the simplest, default formatting. Every URL in the report must be a Markdown link: `[descriptive text](https://url)`. Never write bare URLs.
 
@@ -200,7 +200,7 @@ This section documents the dependency graph with respect to RISC-V. Apply the fo
 
 - Is it built, tested, and released on riscv64? (yes / partial / no, with evidence)
 - Who maintains it and what community governs it?
-- If a status report exists for it, note "See the [Foo](reports/foo.md) status report" -- but do not import its content here.
+- If a status report exists for it, note "See the [Foo](project-reports/foo.md) status report" -- but do not import its content here.
 - Are there open issues, PRs, or blockers for riscv64 support?
 
 **Step 2 -- Recurse into critical dependencies.** For any dependency that is (a) not fully supported on riscv64, or (b) has its own architecture-specific subsystems, apply Step 1 to its direct dependencies. Recurse to at least 2 levels for critical dependencies; 3 levels where the architecture-specific work is deep (e.g., a numerics or crypto library that itself depends on a hardware-specific BLAS or an AES acceleration library).

@@ -13,7 +13,7 @@ actually exist and cover the primary hot paths.
 
 **The list is whatever you supply.** Pass any set of projects as arguments to this skill, or
 provide them in your next message: GitHub repos, named libraries, or entries from `scope.yml`.
-The skill is generic -- it does not require per-project reports under `reports/` but will
+The skill is generic -- it does not require per-project reports under `project-reports/reports/` but will
 reuse them as a prior when they exist.
 
 **This differs from the vertical-report.** The vertical-report classifies a full layered stack
@@ -25,17 +25,17 @@ with the added optimization-purpose modifier that vertical-report does not apply
 ## Execution model
 
 For a small list (fewer than ~10 projects), execute inline in the session: research each
-project in turn (starting from `reports/<slug>.md` if it exists), then write the output table
+project in turn (starting from `project-reports/reports/<slug>.md` if it exists), then write the output table
 and justifications.
 
 For a large list, use a companion workflow script that fans out one classification agent per
 project in parallel. Pass the project list as the workflow `args`.
 
-The repository at `reports/` contains deep per-project status reports for ~250 projects.
-Most projects you will classify already have a report there. Always check `reports/` first
+The repository at `project-reports/reports/` contains deep per-project status reports for ~250 projects.
+Most projects you will classify already have a report there. Always check `project-reports/reports/` first
 before doing any internet research -- the reports encode Section 3 (CI tier), Section 7
 (CI/CD), Section 8 (distribution), and Section 4 (architecture-specific code) in detail.
-Internet research is the fallback for projects not yet in `reports/`, or for spot-checking
+Internet research is the fallback for projects not yet in `project-reports/reports/`, or for spot-checking
 a single color-deciding fact that may have changed since the report was written.
 
 ---
@@ -173,13 +173,13 @@ exists or when a specific color-deciding fact needs freshness verification.
 
 ### 1. Reuse the existing per-project report (PRIMARY source -- always check first)
 
-The repository contains deep per-project RISC-V status reports under `reports/<slug>.md`,
+The repository contains deep per-project RISC-V status reports under `project-reports/reports/<slug>.md`,
 where the slug is the project name lowercased with spaces, dots, and slashes replaced by
-hyphens (e.g. `google/highway` -> `reports/highway.md`, `google/tcmalloc` ->
-`reports/tcmalloc.md`). These reports are the result of extensive prior research and are
+hyphens (e.g. `google/highway` -> `project-reports/reports/highway.md`, `google/tcmalloc` ->
+`project-reports/reports/tcmalloc.md`). These reports are the result of extensive prior research and are
 the authoritative starting point.
 
-**For every project in the list, check whether `reports/<slug>.md` exists before doing any
+**For every project in the list, check whether `project-reports/reports/<slug>.md` exists before doing any
 internet research.** If it exists:
 
 1. Read the report's `**Date:**` header to establish the report age (`report_date`).
@@ -293,13 +293,13 @@ downstream artifact.
   or `absent -- scalar fallback only`
 - `justification` -- one to three sentences with the deciding fact and a markdown source link
 - `primary_source` -- the single most authoritative URL for the color
-- `report_date` -- the `Date:` header of `reports/<slug>.md`, or `none` if no report was used
+- `report_date` -- the `Date:` header of `project-reports/reports/<slug>.md`, or `none` if no report was used
 - `verified_date` -- date of the adversarial spot-check, or `none` if nothing was re-checked live
 - `as_of` -- the **oldest** date among the facts that actually decided the color (never overstate
   freshness: a fact carried from the stored report is dated `report_date`; a fact verified live is
   dated `verified_date`)
 - `confidence` -- `high` / `medium` / `low`
-- `delta_vs_report` -- the discrepancy if a live check contradicted `reports/<slug>.md`; `none` if
+- `delta_vs_report` -- the discrepancy if a live check contradicted `project-reports/reports/<slug>.md`; `none` if
   the spot-check confirmed the report; `n/a` if no report was used
 
 ### 2. Summary table
@@ -317,7 +317,7 @@ Column definitions:
   "absent -- scalar fallback" / "unknown"
 - **Distro availability**: comma-separated list of distros with confirmed riscv64 packages
   (e.g., "Ubuntu 24.04, Debian sid") or "none"
-- **Report date**: the `Date:` header from `reports/<slug>.md`, or "none" if no report was used
+- **Report date**: the `Date:` header from `project-reports/reports/<slug>.md`, or "none" if no report was used
 - **Delta vs report**: "none" if the spot-check confirmed the report; a short description of
   the discrepancy if a live check contradicted it; "n/a" if no report was used
 - **Notes**: one short phrase capturing the color-deciding fact or most important caveat
@@ -341,7 +341,7 @@ For green projects, a one-line note is sufficient.
 List every source used, one per line. Distinguish stored reports from live checks:
 
 ```
-- [ProjectName] -- reports/<slug>.md (report date: YYYY-MM-DD)
+- [ProjectName] -- project-reports/reports/<slug>.md (report date: YYYY-MM-DD)
 - [ProjectName] -- [description of live check](URL) (verified: YYYY-MM-DD)
 ```
 

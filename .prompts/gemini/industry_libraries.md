@@ -13,7 +13,7 @@ The current tracking list of 147 open-source projects covers core Linux OS tools
 
 ## 1. Virtualization Market
 
-While the current scope tracks heavy-weight hypervisors ([QEMU](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/qemu.md), [libvirt](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/libvirt.md)) and container engines ([containerd](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/containerd.md), [runc](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/runc.md)), modern cloud and edge infrastructure relies on **Rust-based microVMs**, **user-space I/O drivers**, and **type-1 bare-metal hypervisors**:
+While the current scope tracks heavy-weight hypervisors ([QEMU](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/qemu.md), [libvirt](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/libvirt.md)) and container engines ([containerd](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/containerd.md), [runc](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/runc.md)), modern cloud and edge infrastructure relies on **Rust-based microVMs**, **user-space I/O drivers**, and **type-1 bare-metal hypervisors**:
 
 - **Cloud Hypervisor** (`cloud-hypervisor/cloud-hypervisor`): A Rust-based Virtual Machine Monitor (VMM) built on KVM. It is the modern standard for lightweight cloud microVMs (offering faster boot times and lower memory overhead than QEMU).
 - **Firecracker** (`firecracker-microvm/firecracker`): AWS-developed Rust microVM monitor for serverless/FaaS environments. Tracking RISC-V porting is critical for multi-tenant cloud/edge function execution.
@@ -26,7 +26,7 @@ While the current scope tracks heavy-weight hypervisors ([QEMU](file:///Users/gr
 
 ## 2. Machine Learning & AI Market
 
-The current scope tracks key frameworks ([PyTorch](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/pytorch.md), [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/vllm.md), [llama.cpp](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/llama-cpp.md), [LiteRT](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/litert.md), [ONNX](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/onnx.md)), but lacks **ML compilers**, **classical scientific ML packages**, and **vector search databases**:
+The current scope tracks key frameworks ([PyTorch](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md), [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md), [llama.cpp](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/llama-cpp.md), [LiteRT](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/litert.md), [ONNX](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/onnx.md)), but lacks **ML compilers**, **classical scientific ML packages**, and **vector search databases**:
 
 - **OpenAI Triton** (`triton-lang/triton`): A Python-like language and compiler for custom ML kernels. Triton is the primary backend engine for PyTorch 2.0 (`torch.compile` / Inductor); establishing RISC-V Triton support is a prerequisite for PyTorch compilation performance.
 - **Apache TVM** (`apache/tvm`): An end-to-end deep learning compiler stack targeting embedded hardware and RISC-V vector extensions (RVV).

@@ -10,7 +10,7 @@ Claude Code.
 
 Look the project up in `scope.yml` and pass its fields as the workflow args. The
 `repo` and `home` fields map straight through; the script derives the output path
-`reports/<slug>.md` from the name.
+`project-reports/<slug>.md` from the name.
 
 ```
 Workflow({
@@ -21,8 +21,8 @@ Workflow({
 })
 ```
 
-This writes to `reports/gdb.md`. To override the path, add an absolute `"slug"`
-field to the args object to output to `reports/<slug>.md`.
+This writes to `project-reports/gdb.md`. To override the path, add an absolute `"slug"`
+field to the args object to output to `project-reports/<slug>.md`.
 
 After the workflow completes, write the report and commit:
 
@@ -63,12 +63,12 @@ Each entry maps to one workflow invocation. The workflow args are derived as fol
 | `name` | The `name:` field, verbatim |
 | `repo` | The `repo:` field (absent for projects with no public repo, e.g. Geekbench) |
 | `home` | The `home:` field |
-| `slug` | Not in `scope.yml` -- derived by the script as `reports/<slug>.md` |
+| `slug` | Not in `scope.yml` -- derived by the script as `project-reports/<slug>.md` |
 
 The output slug is the lowercased name with spaces, dots, and slashes replaced by
 hyphens: `name.toLowerCase().replace(/[\s.\/]+/g, '-')`. So "Apache Flink" ->
-`reports/apache-flink.md`, "Open vSwitch" -> `reports/open-vswitch.md`,
-"GDB" -> `reports/gdb.md`. To override, pass an absolute `slug` arg explicitly.
+`project-reports/apache-flink.md`, "Open vSwitch" -> `project-reports/open-vswitch.md`,
+"GDB" -> `project-reports/gdb.md`. To override, pass an absolute `slug` arg explicitly.
 
 Example: for the `GDB` entry above:
 
@@ -78,14 +78,14 @@ Example: for the `GDB` entry above:
   "repo": "https://sourceware.org/git/binutils-gdb.git",
   "home": "https://www.gnu.org/software/gdb/"
 }
-// -> writes reports/gdb.md
+// -> writes project-reports/gdb.md
 ```
 
 To get the list of remaining projects (those without a status report yet):
 
 ```bash
 # Reports already generated
-ls reports/*.md 2>/dev/null | sed 's|.*/||' | sort > /tmp/done.txt
+ls project-reports/*.md 2>/dev/null | sed 's|.*/||' | sort > /tmp/done.txt
 
 # All expected report files, derived from scope.yml names
 grep '^- name:' scope.yml | sed 's/^- name:[[:space:]]*//' | \
@@ -112,7 +112,7 @@ Do not launch the next until the previous is committed.
 }
 ```
 
-The script derives the output path as `reports/<slug>.md`. Add an optional
+The script derives the output path as `project-reports/<slug>.md`. Add an optional
 `"slug"` field only when you need to override that default.
 
 ---
@@ -312,7 +312,7 @@ To reproduce the 2026-06 session from scratch on a new machine or after context 
 2. Verify the workflow script exists: `.prompts/update-project-report-workflow.js`
 3. Create the output directory if missing:
    ```bash
-   mkdir -p reports
+   mkdir -p project-reports
    ```
 4. Set the working directory to the repo root in Claude Code
 5. Read `scope.yml` to get the project list and derive workflow args

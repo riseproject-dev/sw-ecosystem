@@ -8,7 +8,7 @@ makes up this product, how RISC-V-ready is each layer, and what are the next ste
 
 **The vertical is whatever the user defines.** Do not restrict the vertical to any pre-existing
 category list. The `categories:` frontmatter that appears in the per-project reports under
-`reports/` is only a weak hint for finding related projects; it is never a constraint on what a
+`project-reports/` is only a weak hint for finding related projects; it is never a constraint on what a
 vertical can be.
 
 **Output is ad-hoc and not committed.** This prompt and its companion workflow live under
@@ -18,7 +18,7 @@ suggested default is the gitignored `examples/vertical-report/out/` directory). 
 generated reports.
 
 **Relationship to the per-project reports.** The repository already contains ~150 deep per-project
-RISC-V status reports under `reports/<slug>.md`, one per entry in `scope.yml`. Those reports are
+RISC-V status reports under `project-reports/<slug>.md`, one per entry in `scope.yml`. Those reports are
 the primary input to a vertical report. They are refreshed only every 3 to 6 months, so treat them
 as a strong prior to be **adversarially spot-checked live**, never as ground truth. When a live
 check contradicts a stored report, trust the live check and record the discrepancy (this also tells
@@ -113,7 +113,7 @@ named projects:
 
 1. For each named project, research it (homepage, repository, dependency manifest) to understand
    what it is and what it depends on.
-2. **Reuse the per-project reports.** For each project already covered by a `reports/<slug>.md`,
+2. **Reuse the per-project reports.** For each project already covered by a `project-reports/<slug>.md`,
    read that report's **Section 9 (Dependencies)** and **Section 10 (Ecosystem Status)** to harvest
    its direct and transitive dependencies and their RISC-V status. This is the fastest and most
    authoritative way to expand the stack, because the dependency recursion has already been done.
@@ -135,7 +135,7 @@ This prompt must also work when there is no human to interview -- for example wh
 it headless, when a batch operator kicks it off, or during automated validation. In that case:
 
 - Do **not** block waiting for answers.
-- Derive the entire stack from research plus the `reports/` dependency data alone.
+- Derive the entire stack from research plus the `project-reports/` dependency data alone.
 - Make reasonable default assumptions (full feature scope unless the request narrows it; critical
   for anything on the direct path from a named project to the hardware; exec/product audience;
   RVA23U64 baseline unless stated).
@@ -159,7 +159,7 @@ audience: exec-product                      # exec-product (default) | eng-leade
 target_profile: RVA23U64                    # or an ad-hoc extension list
 use: "Deck for leadership on where to invest in RISC-V enablement"
 assumptions:                                # populated when scoping ran without user answers
-  - "No user input available; stack derived from research + reports/ dependency data."
+  - "No user input available; stack derived from research + project-reports/ dependency data."
   - "Assumed full feature scope for each named project."
 exclusions:                                 # proprietary / vendor-only -> classified grey (N/A)
   - name: "CUDA / cuDNN / NCCL / TensorRT"
@@ -190,7 +190,7 @@ layers:                                     # ordered top -> bottom, mirrors the
       - name: LangChain
         repo: https://github.com/langchain-ai/langchain
         home: https://www.langchain.com/
-        slug: langchain                     # reuse reports/<slug>.md; omit if no report exists
+        slug: langchain                     # reuse project-reports/<slug>.md; omit if no report exists
         criticality: critical               # critical | optional
         features_in_scope: "chains, agents, tool use, RAG"
         notes: "Pure Python; inherits RISC-V support from CPython."
@@ -203,7 +203,7 @@ layers:                                     # ordered top -> bottom, mirrors the
         criticality: critical
         features_in_scope: "CPU inference backend"
         # no slug field for a node with no per-project report -- simply omit it
-  # ... more layers and nodes, derived from research + reports/ Section 9
+  # ... more layers and nodes, derived from research + project-reports/ Section 9
 chains:                                     # optional: pipeline chains and alternate paths
   - name: "torch.compile GPU lowering path"
     sequence: ["TorchDynamo", "AOTAutograd", "TorchInductor", "Triton", "MLIR", "LLVM"]
@@ -213,7 +213,7 @@ chains:                                     # optional: pipeline chains and alte
 
 Field semantics mirror `scope.yml`: `repo` is the canonical upstream repo URL (omit if none),
 `home` is the homepage, and `slug` (only when a per-project report exists) points stage 2 at
-`reports/<slug>.md` for reuse -- **omit `slug` entirely for a node with no report** (do not set it
+`project-reports/<slug>.md` for reuse -- **omit `slug` entirely for a node with no report** (do not set it
 to null or empty). Each node is one classification unit in stage 2; a single project may appear as
 several nodes when its features were split during scoping.
 
@@ -285,7 +285,7 @@ title: [Vertical name] -- RISC-V Ecosystem Status
 **Target profile:** [scope spec `target_profile`, e.g. RVA23U64]<br/>
 **Audience:** [scope spec `audience`]<br/>
 **Verification policy:** Colors are assigned from primary upstream sources, adversarially verified
-against the per-project reports under reports/. Items not verifiable against a second source are
+against the per-project reports under project-reports/. Items not verifiable against a second source are
 marked [NEEDS VERIFICATION].<br/>
 ```
 

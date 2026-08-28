@@ -33,7 +33,7 @@ Your developer experience on RISC-V depends entirely on the programming language
 
 - **Go & Rust**: **Near-frictionless**. Setting `GOARCH=riscv64` or `cargo build --target riscv64gc-unknown-linux-gnu` produces production-ready binaries. Cloud microservices, CLI tools, and container engines work smoothly.
 - **C/C++ Systems Code**: **Solid**. GCC 14+, Clang 18+, `glibc`, and POSIX APIs are mature.
-- **Pure Python**: **Works out of the box**. Packages like [LangChain](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/langchain.md), `requests`, or `pydantic` install natively via `pip`.
+- **Pure Python**: **Works out of the box**. Packages like [LangChain](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/langchain.md), `requests`, or `pydantic` install natively via `pip`.
 - **Python with Native Extensions**: **High friction**. You will encounter missing prebuilt binary wheels (`torch`, `vllm`, `tiktoken`, `faiss-cpu`) and must compile dependencies from source.
 
 ---
@@ -45,7 +45,7 @@ If you are developing Python AI or data science applications:
 - **Developer Workaround**:
   1. Use the **[RISE Wheel Builder](https://riseproject.gitlab.io/python/wheel_builder/)** mirror (`gitlab.com/riseproject/python/wheel_builder`), which hosts prebuilt `riscv64` wheels for 80+ packages (NumPy, SciPy, Safetensors, Tokenizers).
   2. Use Linux distribution packages (e.g. Debian sid `python3-torch` or Arch Linux RISC-V).
-  3. Swap out heavy Python AI frameworks for **pure C++ inference runtimes** like [llama.cpp](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/llama-cpp.md).
+  3. Swap out heavy Python AI frameworks for **pure C++ inference runtimes** like [llama.cpp](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/llama-cpp.md).
 
 ---
 
@@ -54,7 +54,7 @@ If you are developing Python AI or data science applications:
 When writing or tuning C/C++ or assembly code for RISC-V Vector Extensions (RVV 1.0):
 - **Hardware Variation**: Vector lengths (`VLEN`) differ across real-world hardware (e.g., `VLEN=128` on Sophgo SG2044 vs `VLEN=256` on SpacemiT X100/K1).
 - **Best Practice**: Avoid hardcoding fixed vector bit widths (like `-march=rv64gcv_zvl128b`). Write VLEN-parameterized code or query vector capabilities dynamically at runtime via `/proc/cpuinfo` or `sys_riscv_hwprobe`.
-- **Scalar Fallbacks**: Be aware that in large frameworks like PyTorch, unless an operation specifically uses [oneDNN](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/onednn.md) or [XNNPACK](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/xnnpack.md), tensor operations currently fall back to **scalar execution** because core ATen RVV vectorization ([PR #175746](https://github.com/pytorch/pytorch/pull/175746)) remains unmerged upstream.
+- **Scalar Fallbacks**: Be aware that in large frameworks like PyTorch, unless an operation specifically uses [oneDNN](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/onednn.md) or [XNNPACK](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/xnnpack.md), tensor operations currently fall back to **scalar execution** because core ATen RVV vectorization ([PR #175746](https://github.com/pytorch/pytorch/pull/175746)) remains unmerged upstream.
 
 ---
 
@@ -69,7 +69,7 @@ Do not assume that an upstream open-source project's PR checks will protect `ris
 ## 5. Systems Programming & Linux Kernel Interfaces are Rock-Solid
 
 If you are developing low-level systems software, drivers, networking tools, or kernel modules:
-- Linux kernel interfaces ([eBPF](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/ebpf.md), [linux-perf](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/linux-perf.md), `libbpf`, `io_uring`), memory allocators ([jemalloc](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/jemalloc.md), `tcmalloc`), and debuggers ([GDB](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/gdb.md), [LLDB](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/lldb.md)) work natively with high stability.
+- Linux kernel interfaces ([eBPF](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/ebpf.md), [linux-perf](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/linux-perf.md), `libbpf`, `io_uring`), memory allocators ([jemalloc](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/jemalloc.md), `tcmalloc`), and debuggers ([GDB](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/gdb.md), [LLDB](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/lldb.md)) work natively with high stability.
 - Cryptographic acceleration via OpenSSL 3.x leverages RISC-V scalar crypto (`Zkn`/`Zks`) out of the box.
 
 ---
@@ -79,7 +79,7 @@ If you are developing low-level systems software, drivers, networking tools, or 
 | Task / Domain | Recommended Tech Stack on RISC-V | Caution / What to Avoid |
 | :--- | :--- | :--- |
 | **Cloud Microservices** | Go, Rust, Docker, Kubernetes, Traefik | Avoid CGO dependencies if cross-compiling. |
-| **Local LLM Inference** | [llama.cpp](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/llama-cpp.md) (C++ with RVV 1.0) | Avoid building heavy Python [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/vllm.md)/PyTorch stacks from source. |
-| **Agentic AI & Orchestration** | Pure Python ([LangChain](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/langchain.md)) + Remote API Endpoints | Avoid local vector DBs requiring unbuilt Rust wheels (`tiktoken`). |
-| **Edge / TinyML** | C/C++, [LiteRT](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/litert.md), Zephyr RTOS, tflite-micro | Avoid `numba` / `llvmlite` (completely unsupported). |
+| **Local LLM Inference** | [llama.cpp](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/llama-cpp.md) (C++ with RVV 1.0) | Avoid building heavy Python [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md)/PyTorch stacks from source. |
+| **Agentic AI & Orchestration** | Pure Python ([LangChain](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/langchain.md)) + Remote API Endpoints | Avoid local vector DBs requiring unbuilt Rust wheels (`tiktoken`). |
+| **Edge / TinyML** | C/C++, [LiteRT](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/litert.md), Zephyr RTOS, tflite-micro | Avoid `numba` / `llvmlite` (completely unsupported). |
 | **Systems & Networking** | Rust, C (GCC 14+), `eBPF`, `liburing`, OpenSSL | Avoid hardcoded x86 SIMD assumptions (`AVX-512`). |

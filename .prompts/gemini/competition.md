@@ -22,7 +22,7 @@
 ```
 
 - **Strongest Position**: **IoT, Embedded Edge, and Cloud-Native Go Infrastructure**. RISC-V matches or exceeds ARM/x86 software parity in containerization, Go runtimes, Linux kernel tooling, and microcontroller edge nodes.
-- **Moderate Position**: **Client Browsing, Enterprise Java, and C++ LLM Inference**. RISC-V "basically works" with desktop Linux, OpenJDK JIT engines, and lightweight C++ inference ([llama.cpp](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/llama-cpp.md)), but lags ARM (Apple M-series) and x86 in single-thread IPC tuning and binary wheel availability.
+- **Moderate Position**: **Client Browsing, Enterprise Java, and C++ LLM Inference**. RISC-V "basically works" with desktop Linux, OpenJDK JIT engines, and lightweight C++ inference ([llama.cpp](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/llama-cpp.md)), but lags ARM (Apple M-series) and x86 in single-thread IPC tuning and binary wheel availability.
 - **Weakest Position**: **Server AI/ML Training & Python Data Science Stack**. RISC-V lags heavily behind NVIDIA, Intel (AMX/MKL), AMD (ROCm), and ARM (SVE2/KleidiAI) due to missing PyPI binary wheels (`pip install torch`), unmerged PyTorch RVV vectorization, and lack of Triton/Inductor JIT compilers.
 
 ---
@@ -31,21 +31,21 @@
 
 ### A. Embedded, IoT, and Edge Microcontrollers (vs. ARM Cortex-M / Cortex-R)
 - **Competitive Status**: **Strong Advantage / High Growth**.
-- **Evidence in Reports**: [LiteRT / TFLite](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/litert.md), [bionic](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/bionic.md), [glibc](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/glibc.md), [libcurl](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/libcurl.md).
+- **Evidence in Reports**: [LiteRT / TFLite](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/litert.md), [bionic](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/bionic.md), [glibc](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/glibc.md), [libcurl](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/libcurl.md).
 - **Why RISC-V Competes Well**:
   - **Zero ISA Royalties & High Customizability**: Edge SoC vendors (SpacemiT, Espressif, SiFive) can integrate domain-specific extensions (e.g. RVV 1.0 vector extensions, cryptographic ISA extensions `Zkn`/`Zks`) without paying ARM architecture licensing fees.
   - **Software Parity**: C/C++ toolchains (GCC/LLVM), lightweight RTOSs, and TinyML libraries compile cleanly to `riscv64` / `riscv32`.
 
 ### B. Cloud-Native & Containerized Infrastructure (vs. x86 Xeon/EPYC & ARM Neoverse)
 - **Competitive Status**: **High Parity**.
-- **Evidence in Reports**: [Kubernetes](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/kubernetes.md), [containerd](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/containerd.md), [runc](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/runc.md), [Docker](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/docker.md), [BuildKit](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/buildkit.md), [CoreDNS](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/coredns.md), [etcd](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/etcd.md), [Go](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/go.md), [Envoy](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/envoy.md).
+- **Evidence in Reports**: [Kubernetes](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/kubernetes.md), [containerd](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/containerd.md), [runc](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/runc.md), [Docker](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/docker.md), [BuildKit](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/buildkit.md), [CoreDNS](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/coredns.md), [etcd](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/etcd.md), [Go](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/go.md), [Envoy](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/envoy.md).
 - **Why RISC-V Competes Well**:
   - The entire container stack is written in **Go** and **Rust**. The Go compiler treats `riscv64` as a first-class architecture target.
   - Multi-architecture Docker images (`linux/riscv64`) compile cleanly. Microservices, ingress proxies (Traefik, Envoy), and service meshes run with near 1:1 software parity against ARM64 and x86_64.
 
 ### C. Core Operating System & Security Primitives (vs. x86 & ARM)
 - **Competitive Status**: **High Parity**.
-- **Evidence in Reports**: [linux-perf](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/linux-perf.md), [eBPF](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/ebpf.md), [libbpf](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/libbpf.md), [OpenSSL](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/openssl.md), [PostgreSQL](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/postgresql.md), [Redis](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/redis.md).
+- **Evidence in Reports**: [linux-perf](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/linux-perf.md), [eBPF](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/ebpf.md), [libbpf](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/libbpf.md), [OpenSSL](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/openssl.md), [PostgreSQL](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/postgresql.md), [Redis](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/redis.md).
 - **Why RISC-V Competes Well**:
   - Linux kernel development treats RISC-V as a primary ISA. Diagnostics (`eBPF`, `perf`), memory allocators (`jemalloc`, `tcmalloc`), and relational databases (`PostgreSQL`, `Redis`) run natively. OpenSSL 3.x includes RVV-accelerated cryptographic routines.
 
@@ -55,14 +55,14 @@
 
 ### A. Client Desktop & Web Browsers (vs. Intel Core, AMD Ryzen, Apple Silicon, Snapdragon X)
 - **Competitive Status**: **Functional / Moderate Gap**.
-- **Evidence in Reports**: [Chromium](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/chromium.md), [Firefox](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/firefox.md), [V8](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/v8.md), [SpiderMonkey](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/spidermonkey.md), [WebKit](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/webkit.md), [Skia](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/skia.md).
+- **Evidence in Reports**: [Chromium](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/chromium.md), [Firefox](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/firefox.md), [V8](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/v8.md), [SpiderMonkey](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/spidermonkey.md), [WebKit](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/webkit.md), [Skia](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/skia.md).
 - **Comparison vs Competitors**:
   - **Works Today**: Desktop Linux on RISC-V (e.g. Debian, Ubuntu, Arch RISC-V) runs Chromium and Firefox with hardware-accelerated 2D/3D rendering primitives.
   - **Gaps vs Competitors**: Apple Silicon and Intel/AMD have decades of JIT compiler optimization in V8/SpiderMonkey. Upstream Google and Mozilla maintainers treat RISC-V as community-maintained, meaning Tier-1 CI gating is absent.
 
 ### B. Enterprise Big Data & Java Workloads (vs. x86 & ARM)
 - **Competitive Status**: **Functional / Moderate Gap**.
-- **Evidence in Reports**: [OpenJDK](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/openjdk.md), [Apache Spark](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/spark.md), [Apache Hadoop](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/hadoop.md), [Apache Flink](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/flink.md), [Ceph](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/ceph.md).
+- **Evidence in Reports**: [OpenJDK](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/openjdk.md), [Apache Spark](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/spark.md), [Apache Hadoop](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/hadoop.md), [Apache Flink](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/flink.md), [Ceph](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/ceph.md).
 - **Comparison vs Competitors**:
   - **Works Today**: OpenJDK 21+ includes a functional HotSpot JIT compiler (`rv64gc`). Spark and Hadoop run out of the box.
   - **Gaps vs Competitors**: Intel (AVX-512/AMX) and AMD dominate high-throughput analytical query processing. RISC-V lacks broad vectorization tuning in Java vector API backends.
@@ -73,7 +73,7 @@
 
 ### A. AI / ML Frameworks & Server Inference (vs. NVIDIA CUDA, Intel AMX, AMD ROCm, ARM KleidiAI)
 - **Competitive Status**: **Major Gap / Lagging**.
-- **Evidence in Reports**: [PyTorch](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/pytorch.md), [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/vllm.md), [XNNPACK](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/xnnpack.md), [FBGEMM](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/fbgemm.md), [ONNX](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/onnx.md), [NumPy](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/numpy.md), [FAISS](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/faiss.md).
+- **Evidence in Reports**: [PyTorch](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md), [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md), [XNNPACK](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/xnnpack.md), [FBGEMM](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/fbgemm.md), [ONNX](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/onnx.md), [NumPy](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/numpy.md), [FAISS](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/faiss.md).
 - **Comparison vs Competitors**:
   - **Software Ecosystem & Wheel Distribution**: Zero `riscv64` binary wheels exist on PyPI for `torch`, `vllm`, `tiktoken`, or `faiss-cpu`. Users must spend hours building C++/Rust dependencies from source.
   - **ATen Vectorization**: PyTorch ATen RVV template library ([PR #175746](https://github.com/pytorch/pytorch/pull/175746)) remains unmerged due to scalable-vector memory copy design debates (`Vectorized::size()`). All non-oneDNN/XNNPACK tensor operations run at scalar speed.
@@ -81,13 +81,13 @@
 
 ### B. Mobile / Smartphone Mass Ecosystem (vs. ARM Cortex-A)
 - **Competitive Status**: **Major Gap / Dominated by ARM**.
-- **Evidence in Reports**: [ART (Android Runtime)](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/art.md), [Bionic](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/bionic.md), [VIXL](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/vixl.md).
+- **Evidence in Reports**: [ART (Android Runtime)](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/art.md), [Bionic](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/bionic.md), [VIXL](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vixl.md).
 - **Comparison vs Competitors**:
   - ARM holds 99%+ of the mobile smartphone market. While Android RISC-V ports exist, Google NDK toolchains and Android Runtime (ART) lack vectorization parity and NDK third-party library prebuilts compared to ARM64 (`aarch64`).
 
 ### C. High-Performance Computing (HPC) & Scientific Python (vs. Intel MKL, AMD AOCL)
 - **Competitive Status**: **Major Gap**.
-- **Evidence in Reports**: [SLEEF](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/sleef.md), [OpenBLAS](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/openblas.md), [oneDNN](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/onednn.md), [numba](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/numba.md).
+- **Evidence in Reports**: [SLEEF](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/sleef.md), [OpenBLAS](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/openblas.md), [oneDNN](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/onednn.md), [numba](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/numba.md).
 - **Comparison vs Competitors**:
   - Intel (MKL) and AMD (AOCL) provide heavily optimized BLAS/LAPACK libraries. RISC-V OpenBLAS has active RVV development, but suffers from compiler edge bugs and unmerged BLAS/LAPACK routines. `numba`/`llvmlite` lacks `riscv64` support entirely.
 

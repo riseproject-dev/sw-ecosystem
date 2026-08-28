@@ -6,7 +6,7 @@ but also open-ended verticals such as IoT, embedded, or automotive). A vertical 
 question for decision-makers: *for the stack that makes up this product, how RISC-V-ready is each
 layer, and what are the next steps?*
 
-This differs from the per-project reports under `reports/`: those cover one project each; a vertical
+This differs from the per-project reports under `project-reports/`: those cover one project each; a vertical
 report classifies a whole stack and rolls it up into slides-ready artifacts. The vertical reports
 consume the per-project reports as a prior and adversarially verify them live.
 
@@ -39,10 +39,10 @@ the research is best run unattended.
 Open `vertical-report.md` in a Claude Code session and follow it. It interviews you (what product,
 which projects, which features of each matter, critical vs optional, target ISA profile, audience,
 and any proprietary paths to exclude), researches the stack (reusing the dependency data in
-`reports/*.md`), and writes a locked **scope spec** to `out/<vertical-slug>.scope.yml`.
+`project-reports/*.md`), and writes a locked **scope spec** to `out/<vertical-slug>.scope.yml`.
 
 If there is no human to interview (a headless or batch run), the prompt degrades gracefully: it
-derives the stack from research plus the `reports/` data, states every assumption in the spec's
+derives the stack from research plus the `project-reports/` data, states every assumption in the spec's
 `assumptions:` list, and proceeds without blocking.
 
 The slug is derived from the vertical name: `name.toLowerCase().replace(/[\s.\/]+/g, '-')` (so
@@ -138,4 +138,4 @@ saturate the rate limit), and resume a stalled run with `resumeFromRunId` rather
 The per-project reports the workflow reads as priors are refreshed only every 3 to 6 months, so the
 workflow always re-verifies the color-deciding facts live and flags any node where the live check
 contradicts the stored report (`delta_vs_report`) -- that flag also tells you which per-project
-report under `reports/` is due for a refresh.
+report under `project-reports/` is due for a refresh.

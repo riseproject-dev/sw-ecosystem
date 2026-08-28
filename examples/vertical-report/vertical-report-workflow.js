@@ -31,7 +31,7 @@ const NODE_SCHEMA = {
     release_provider: { type: 'string', description: 'upstream|RISE|<distro>|third-party|none' },
     justification: { type: 'string', description: '1-3 sentences with the deciding fact and a markdown source link' },
     primary_source: { type: 'string', description: 'single most authoritative URL' },
-    report_date: { type: 'string', description: 'Date: header of reports/<slug>.md, or none' },
+    report_date: { type: 'string', description: 'Date: header of project-reports/<slug>.md, or none' },
     verified_date: { type: 'string', description: 'date of live checks, or none' },
     as_of: { type: 'string', description: 'oldest date among color-deciding facts' },
     confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
@@ -100,7 +100,7 @@ Node context:
 - Homepage: ${node.home || '(none)'}
 - Features in scope for this vertical: ${node.features_in_scope || '(whole project)'}
 - Scoping notes: ${node.notes || '(none)'}
-- Per-project report slug (if a reports/<slug>.md exists): ${node.slug || '(none)'}
+- Per-project report slug (if a project-reports/<slug>.md exists): ${node.slug || '(none)'}
 - Target RISC-V profile: ${targetProfile}
 
 ${ghHint(node.repo)}
@@ -110,7 +110,7 @@ Invoke the /project-color-coding skill to get the complete color model, release-
 research procedure, per-node record fields, and non-negotiable rules. Follow them exactly.
 
 STEP 2 -- Classify this node following the procedure in that file.
-The file tells you to: check reports/<slug>.md first (if one exists), adversarially spot-check
+The file tells you to: check project-reports/<slug>.md first (if one exists), adversarially spot-check
 the most important color-deciding fact, and fall back to live research only when needed.
 
 STEP 3 -- Return the structured record.
@@ -212,7 +212,7 @@ title: ${spec.vertical || slug} -- RISC-V Ecosystem Status
 **Scope:** RISC-V readiness of the ${spec.vertical || slug} software stack<br/>
 **Target profile:** ${targetProfile}<br/>
 **Audience:** ${spec.audience || 'exec-product'}<br/>
-**Verification policy:** Colors are assigned from primary upstream sources, adversarially verified against the per-project reports under reports/. Items not verifiable against a second source are marked [NEEDS VERIFICATION].<br/>
+**Verification policy:** Colors are assigned from primary upstream sources, adversarially verified against the per-project reports under project-reports/. Items not verifiable against a second source are marked [NEEDS VERIFICATION].<br/>
 
 (If scoping assumptions are non-empty, add a short "Scoping assumptions" note here.)
 

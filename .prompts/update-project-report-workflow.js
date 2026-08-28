@@ -172,7 +172,7 @@ Use WebFetch to find the build/dependency files at ${proj.repo}
 `}
 
 For any dependency that is also listed in scope.yml (our RISC-V Ecosystem project scope), note:
-"See status report at reports/<dependency-slug>.md" (slug = lowercased name with spaces/dots/slashes replaced by hyphens)
+"See status report at project-reports/<dependency-slug>.md" (slug = lowercased name with spaces/dots/slashes replaced by hyphens)
 
 Return a dependency table: name, role, riscv64 build status, riscv64 test status, riscv64 release status, blocking issues.`, {label: `${proj.name}:deps`, phase: 'Search'})
 
@@ -465,4 +465,4 @@ Before sizing: check what RISE has already done or funded. Do not size work alre
 
 Complete list of every source cited. Format: [descriptive text](URL).`, {label: `${proj.name}:synthesize`, phase: 'Synthesize'})
 
-return [{ name: proj.name, file: `reports/${slug}.md`, report, totalChars: fullContext.length }]
+return [{ name: proj.name, file: `project-reports/${slug}.md`, report, totalChars: fullContext.length }]

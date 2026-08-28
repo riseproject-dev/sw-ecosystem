@@ -2,7 +2,7 @@
 
 **Date:** July 2026  
 **Target Platform:** RISC-V (`riscv64/linux`)  
-**Scope:** Evaluation of Agentic AI stack components ([LangChain](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/langchain.md), [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/vllm.md), and [PyTorch](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/pytorch.md))
+**Scope:** Evaluation of Agentic AI stack components ([LangChain](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/langchain.md), [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md), and [PyTorch](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md))
 
 ---
 
@@ -17,7 +17,7 @@ An **Agentic AI stack** on RISC-V is currently in an **early-to-transitional sta
 
 ## Component-by-Component Analysis
 
-### 1. LangChain ([reports/langchain.md](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/langchain.md))
+### 1. LangChain ([project-reports/langchain.md](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/langchain.md))
 - **Architecture**: Pure Python (99.2%). Ships as a platform-agnostic `py3-none-any` wheel.
 - **What Works Today**:
   - Core agent abstractions, prompt chaining, tools, memory, and text splitters work identically to x86_64 and arm64.
@@ -30,7 +30,7 @@ An **Agentic AI stack** on RISC-V is currently in an **early-to-transitional sta
 
 ---
 
-### 2. vLLM Engine ([reports/vllm.md](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/vllm.md))
+### 2. vLLM Engine ([project-reports/vllm.md](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md))
 - **Architecture**: In-tree CPU backend supporting RVV 1.0 (VLEN=128 on Sophgo SG2044; VLEN=256 on SpacemiT X100/K1).
 - **What Works Today**:
   - **Text Inference**: FP32, FP16, and BF16 models (e.g., LLaMA, SmolLM2) run using RVV-optimized attention kernels (`vfmacc_vf` scalar-broadcast FMA).
@@ -47,7 +47,7 @@ An **Agentic AI stack** on RISC-V is currently in an **early-to-transitional sta
 
 ---
 
-### 3. PyTorch ([reports/pytorch.md](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/pytorch.md))
+### 3. PyTorch ([project-reports/pytorch.md](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md))
 - **Architecture**: Tier 3 (community-maintained). Cross-compiles with GCC 14+; native CI relay available via RISE Runners (Scaleway EM-RV1).
 - **What Works Today**:
   - Basic CPU tensor operations and Inductor C++ code generator (`cpp.march` support).
@@ -66,9 +66,9 @@ An **Agentic AI stack** on RISC-V is currently in an **early-to-transitional sta
 
 | Layer | Component | Execution Status | PyPI Binary Wheel | RISC-V Vector Acceleration |
 | :--- | :--- | :--- | :--- | :--- |
-| **Agent Framework** | [LangChain](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/langchain.md) | ✅ Works (Pure Python) | ✅ `py3-none-any` | N/A (Delegated) |
-| **Inference Engine** | [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/vllm.md) | ⚠️ Source Build Required | ❌ None | ✅ RVV 1.0 (VLEN=128 & 256) |
-| **Tensor Backend** | [PyTorch](file:///Users/gregsterling/repos/git/sw-ecosystem/reports/pytorch.md) | ⚠️ Source Build Required | ❌ None | ⚠️ Partial (oneDNN/XNNPACK; ATen scalar) |
+| **Agent Framework** | [LangChain](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/langchain.md) | ✅ Works (Pure Python) | ✅ `py3-none-any` | N/A (Delegated) |
+| **Inference Engine** | [vLLM](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md) | ⚠️ Source Build Required | ❌ None | ✅ RVV 1.0 (VLEN=128 & 256) |
+| **Tensor Backend** | [PyTorch](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md) | ⚠️ Source Build Required | ❌ None | ⚠️ Partial (oneDNN/XNNPACK; ATen scalar) |
 
 ---
 
