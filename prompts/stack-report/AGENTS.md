@@ -132,7 +132,7 @@ packages are usable on riscv64 today only because RISE ships the wheel. Full rul
 ## Operational notes
 
 The Stage 2 workflow obeys the same operational rules as the per-project research workflow -- see
-`CLAUDE.md` at the repo root: run only one research workflow at a time (16-plus concurrent agents
+`prompts/project-report/AGENTS.md`: run only one research workflow at a time (16-plus concurrent agents
 saturate the rate limit), and resume a stalled run with `resumeFromRunId` rather than restarting.
 The per-project reports the workflow reads as priors are refreshed only every 3 to 6 months, so the
 workflow always re-verifies the color-deciding facts live and flags any node where the live check

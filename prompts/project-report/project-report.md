@@ -10,7 +10,7 @@ Each `project-reports/scope.yml` entry has three fields:
 
 The output report path is derived from the name: `project-reports/<slug>.md`, where `slug` is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. "Apache Flink" -> `project-reports/apache-flink.md`, "Open vSwitch" -> `project-reports/open-vswitch.md`).
 
-**See `CLAUDE.md` in the repo root for the complete operator guide**, including:
+**See `AGENTS.md` in this directory for the complete operator guide**, including:
 - How `project-reports/scope.yml` maps to workflow args and how to find projects without a report yet
 - Rate limiting recovery procedures (resume with `resumeFromRunId`)
 - How to monitor workflow progress via the journal file

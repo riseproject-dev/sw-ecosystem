@@ -445,7 +445,7 @@ For a stack of more than a handful of nodes, stage 2 is best run with the compan
 `stack-report-workflow.js` in this directory, which fans out one classification agent per node,
 runs an adversarial verification pass, and synthesizes the three artifacts. Pass the parsed scope
 spec as the workflow `args`. See `README.md` in this directory for the exact invocation, and
-`CLAUDE.md` at the repo root for the operational rules (rate limits, one workflow at a time,
+`prompts/project-report/AGENTS.md` for the operational rules (rate limits, one workflow at a time,
 resume-on-stall) that apply to any research workflow in this repository.
 
 If the workflow script is not present, or the stack is small (a handful of nodes), just execute the
