@@ -191,7 +191,7 @@ The only platform-sensitive dependency is the JVM itself. OpenJDK received a pro
 
 See `project-reports/openjdk.md` for the full OpenJDK riscv64 status assessment.
 
-None of Guava's other direct dependencies appear in `scope.yml`.
+None of Guava's other direct dependencies appear in `project-reports/scope.yml`.
 
 ---
 

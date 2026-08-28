@@ -17,7 +17,7 @@ run produces are the operator's own research output. Save them inside version co
 `stack-reports/<slug>/` directory. Do commit generated reports.
 
 **Relationship to the per-project reports.** The repository already contains ~150 deep per-project
-RISC-V status reports under `project-reports/<slug>.md`, one per entry in `scope.yml`. Those reports are
+RISC-V status reports under `project-reports/<slug>.md`, one per entry in `project-reports/scope.yml`. Those reports are
 the primary input to a vertical report. They are refreshed only every 3 to 6 months, so treat them
 as a strong prior to be **adversarially spot-checked live**, never as ground truth. When a live
 check contradicts a stored report, trust the live check and record the discrepancy (this also tells
@@ -31,7 +31,7 @@ A vertical report is produced in two stages, because the scope must be negotiate
 the research is best run unattended.
 
 **Stage 1 -- Scoping (interactive).** Interview the user, research the stack, and write a locked
-*scope spec* (`<vertical-slug>.scope.yml`). This is conversational and happens in the main session.
+*scope spec* (`<vertical-slug>.project-reports/scope.yml`). This is conversational and happens in the main session.
 
 **Stage 2 -- Research and synthesis (unattended).** Consume the locked scope spec, classify every
 node in the stack for RISC-V readiness, adversarially verify the classification, and emit the three
@@ -54,7 +54,7 @@ theirs: `slug = name.toLowerCase().replace(/[\s.\/]+/g, '-')`. So "Agentic AI" -
 
 Goal: turn a vague request ("what's the status of Agentic AI on RISC-V?") into a precise,
 locked-down list of stack nodes to classify, with each node's feature scope and criticality
-settled. Produce `<vertical-slug>.scope.yml`.
+settled. Produce `<vertical-slug>.project-reports/scope.yml`.
 
 ### 1.1 Interview the user
 
@@ -147,7 +147,7 @@ it headless, when a batch operator kicks it off, or during automated validation.
 
 ### 1.4 Scope-spec schema
 
-Write the locked scope to `<vertical-slug>.scope.yml`. Schema:
+Write the locked scope to `<vertical-slug>.project-reports/scope.yml`. Schema:
 
 ```yaml
 vertical: Agentic AI inference serving      # one-line vertical definition
@@ -210,7 +210,7 @@ chains:                                     # optional: pipeline chains and alte
     sequence: ["PyTorch ATen", "oneDNN", "OpenBLAS"]
 ```
 
-Field semantics mirror `scope.yml`: `repo` is the canonical upstream repo URL (omit if none),
+Field semantics mirror `project-reports/scope.yml`: `repo` is the canonical upstream repo URL (omit if none),
 `home` is the homepage, and `slug` (only when a per-project report exists) points stage 2 at
 `project-reports/<slug>.md` for reuse -- **omit `slug` entirely for a node with no report** (do not set it
 to null or empty). Each node is one classification unit in stage 2; a single project may appear as
@@ -434,7 +434,7 @@ nodes:
 
 If you are running Stage 2 inline (small stack), emit this file yourself. If you run the workflow,
 it returns the view-model (see below) and you write it to `<vertical-slug>.yml`. For a report that
-predates this artifact, `render-stack-svg.py build <scope.yml> <report.md> -o <slug>.yml`
+predates this artifact, `render-stack-svg.py build <project-reports/scope.yml> <report.md> -o <slug>.yml`
 reconstructs the view-model from the existing scope spec and report.
 
 ---

@@ -186,7 +186,7 @@ cmake -DENABLE_TOOL=LLVM -DLLVM_TARGETS_TO_BUILD="X86;AArch64;RISCV" ...
 
 ## 9. Dependencies
 
-**Method note (from research):** Identified via `CMakeLists.txt` and `.gitmodules` at HEAD `c9fa188b` (master, 2026-07-28): 5 git submodules plus `find_library`/`find_package` system dependencies, cross-checked against `scope.yml` and Debian buildd riscv64 status.
+**Method note (from research):** Identified via `CMakeLists.txt` and `.gitmodules` at HEAD `c9fa188b` (master, 2026-07-28): 5 git submodules plus `find_library`/`find_package` system dependencies, cross-checked against `project-reports/scope.yml` and Debian buildd riscv64 status.
 
 | Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Community/Blocking Issues |
 |---|---|---|---|---|---|
@@ -198,7 +198,7 @@ cmake -DENABLE_TOOL=LLVM -DLLVM_TARGETS_TO_BUILD="X86;AArch64;RISCV" ...
 | elfutils/libelf (system, REQUIRED in both GCOV and LLVM modes) | ELF section/symbol-table access for `addr2line_lib`, `symbol_map`, `profile_merger` | Builds on riscv64 (Debian sid "Installed") | Debian `elfutils-debian-riscv` Buildbot worker offline since 2023 (infra gap; Ubuntu riscv64 builder active); an unrelated live-unwind FP-register gap in `riscv_initreg.c` is irrelevant to autofdo's static (non-ptrace) ELF parsing | Debian sid only, riscv64 not yet in Debian stable (bookworm) | None critical for autofdo's static-ELF usage |
 | Protocol Buffers (system, REQUIRED) | Serializes `perf.data`->proto, Propeller CFG, options | Builds on riscv64 (Debian sid "Installed"); cross-compiling with GCC 11.x needs explicit `-latomic` (inherited via abseil-cpp) | No protobuf-core riscv64 test failures | Source-only, no official `protoc` riscv64 prebuilt ([protocolbuffers/protobuf#17798](https://github.com/protocolbuffers/protobuf/issues/17798), closed without resolving Maven Central riscv64 artifacts) | None release-blocking - autofdo always builds `protoc`/`libprotobuf` from source |
 
-**Bundled/build-only dependencies** (not independently in `scope.yml`):
+**Bundled/build-only dependencies** (not independently in `project-reports/scope.yml`):
 
 | Dependency | riscv64 status | Notes |
 |---|---|---|

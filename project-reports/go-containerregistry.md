@@ -239,7 +239,7 @@ go-containerregistry is a pure Go library. No dependency has a JIT backend or cu
 - Low: `klauspost/compress` pure-Go fallback is 2-5x slower on riscv64 for deflate/zstd operations. No correctness issue.
 - Low: Go stdlib missing riscv64 CRC32 and bytealg assembly; digest verification and scanning are slower, no correctness issue.
 
-Cross-references to other scope.yml reports: Go (`project-reports/go.md`), OpenTelemetry (`project-reports/opentelemetry.md`), containerd (`project-reports/containerd.md`), Docker (`project-reports/docker.md`).
+Cross-references to other project-reports/scope.yml reports: Go (`project-reports/go.md`), OpenTelemetry (`project-reports/opentelemetry.md`), containerd (`project-reports/containerd.md`), Docker (`project-reports/docker.md`).
 
 ---
 

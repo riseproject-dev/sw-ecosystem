@@ -12,7 +12,7 @@ for projects whose purpose is performance optimization, whether RISC-V-specific 
 actually exist and cover the primary hot paths.
 
 **The list is whatever you supply.** Pass any set of projects as arguments to this skill, or
-provide them in your next message: GitHub repos, named libraries, or entries from `scope.yml`.
+provide them in your next message: GitHub repos, named libraries, or entries from `project-reports/scope.yml`.
 The skill is generic -- it does not require per-project reports under `project-reports/reports/` but will
 reuse them as a prior when they exist.
 

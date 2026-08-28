@@ -241,7 +241,7 @@ RE2's only architecture-sensitive dependency is Abseil. RE2 uses `flat_hash_map`
 
 Abseil issue #2002 is a SEGFAULT in `hashtablez_sampler` on riscv64-linux-gnu (Debian). This is in Abseil's telemetry/sampling subsystem. Whether it is triggered by normal RE2 operation is not confirmed from the research findings. [NEEDS VERIFICATION]
 
-Cross-references to separate scope.yml reports: `project-reports/abseil-cpp.md`, `project-reports/icu.md`, `project-reports/pcre2.md`, `project-reports/benchmark.md`, `project-reports/googletest.md`.
+Cross-references to separate project-reports/scope.yml reports: `project-reports/abseil-cpp.md`, `project-reports/icu.md`, `project-reports/pcre2.md`, `project-reports/benchmark.md`, `project-reports/googletest.md`.
 
 ---
 

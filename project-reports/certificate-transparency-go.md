@@ -193,13 +193,13 @@ certificate-transparency-go is a pure-Go module (go.mod only). Its riscv64 fate 
 | `github.com/cespare/xxhash/v2` (indirect) | Fast hashing, transitive (grpc-go/Trillian/Prometheus client chain) | Yes, riscv64 falls outside amd64/arm64 asm build tag, uses portable `xxhash_other.go` | Not independently verified | Go module, source-only | None found |
 | `filippo.io/edwards25519` (indirect) | Ed25519/X25519 primitives (ct-go's own Ed25519 paths use stdlib crypto/ed25519 directly) | Yes, pure constant-time Go | Not independently verified | Go module, source-only | None found |
 
-Cross-references to existing scope.yml reports, with caveats - several dependency names collide with other reports but point to different repositories:
+Cross-references to existing project-reports/scope.yml reports, with caveats - several dependency names collide with other reports but point to different repositories:
 - `project-reports/grpc.md` covers `grpc/grpc` (C++ core/multi-language repo), which has documented riscv64 friction (issues #35839, #36112, #37791, open wheel request #41591). certificate-transparency-go instead depends on `grpc/grpc-go`, a separate pure-Go repository with zero riscv64 issues found, a materially better position than the C-core report implies.
 - `project-reports/protocol-buffers.md` covers `protocolbuffers/protobuf` (C++), where maintainers have explicitly rejected riscv64 support ("not on our roadmap," Aug 2025). certificate-transparency-go instead depends on `protocolbuffers/protobuf-go`, a separate pure-Go repository with zero riscv64 issues found.
 - `project-reports/mysql.md` and `project-reports/postgresql.md` cover the database servers themselves. certificate-transparency-go's actual dependencies are the client drivers (`go-sql-driver/mysql`, `jackc/pgx`), pure Go and unaffected by server-side gaps. These reports remain relevant only if a riscv64 deployment self-hosts the Trillian storage backend on MySQL or PostgreSQL.
 - `project-reports/etcd.md` is a direct, correct match: same repository, same riscv64 status (blocked on Prow CI infrastructure, runtime-gated by `ETCD_UNSUPPORTED_ARCH`).
 
-`golang.org/x/crypto` is a sibling repository to `golang/go` (the scope.yml "Go" entry) and benefits from the same Go-team riscv64 investment documented in `project-reports/go.md`.
+`golang.org/x/crypto` is a sibling repository to `golang/go` (the project-reports/scope.yml "Go" entry) and benefits from the same Go-team riscv64 investment documented in `project-reports/go.md`.
 
 BoringSSL was checked as a candidate crypto dependency but is not actually part of the dependency tree - the only cgo path in the repo is `x509/root_cgo_darwin.go`, which links macOS's Security.framework, not BoringSSL.
 

@@ -8,7 +8,7 @@ Claude Code.
 
 ## Quick Start: Generate a Single Report
 
-Look the project up in `scope.yml` and pass its fields as the workflow args. The
+Look the project up in `project-reports/scope.yml` and pass its fields as the workflow args. The
 `repo` and `home` fields map straight through; the script derives the output path
 `project-reports/<slug>.md` from the name.
 
@@ -47,7 +47,7 @@ git add <file> && git commit -m "Add <Name> RISC-V ecosystem status report"
 ## Project List
 
 The canonical list of projects and their metadata (name, repo URL, home URL) is in
-**`scope.yml`** at the repo root. That file is the single source of truth; do not
+**`project-reports/scope.yml`** at the repo root. That file is the single source of truth; do not
 duplicate it here. Each entry has three fields:
 
 ```yaml
@@ -58,12 +58,12 @@ duplicate it here. Each entry has three fields:
 
 Each entry maps to one workflow invocation. The workflow args are derived as follows:
 
-| Arg | Source in `scope.yml` |
+| Arg | Source in `project-reports/scope.yml` |
 |-----|-----------------------|
 | `name` | The `name:` field, verbatim |
 | `repo` | The `repo:` field (absent for projects with no public repo, e.g. Geekbench) |
 | `home` | The `home:` field |
-| `slug` | Not in `scope.yml` -- derived by the script as `project-reports/<slug>.md` |
+| `slug` | Not in `project-reports/scope.yml` -- derived by the script as `project-reports/<slug>.md` |
 
 The output slug is the lowercased name with spaces, dots, and slashes replaced by
 hyphens: `name.toLowerCase().replace(/[\s.\/]+/g, '-')`. So "Apache Flink" ->
@@ -87,8 +87,8 @@ To get the list of remaining projects (those without a status report yet):
 # Reports already generated
 ls project-reports/*.md 2>/dev/null | sed 's|.*/||' | sort > /tmp/done.txt
 
-# All expected report files, derived from scope.yml names
-grep '^- name:' scope.yml | sed 's/^- name:[[:space:]]*//' | \
+# All expected report files, derived from project-reports/scope.yml names
+grep '^- name:' project-reports/scope.yml | sed 's/^- name:[[:space:]]*//' | \
   sed 's/[ ./]\+/-/g' | tr '[:upper:]' '[:lower:]' | \
   sed 's|$|.md|' | sort > /tmp/expected.txt
 
@@ -99,16 +99,16 @@ comm -23 /tmp/expected.txt /tmp/done.txt   # projects still missing a report
 
 ## Generating All Reports in Sequence
 
-Run one project at a time in the order they appear in `scope.yml`.
+Run one project at a time in the order they appear in `project-reports/scope.yml`.
 Do not launch the next until the previous is committed.
 
 ### Workflow args format
 
 ```js
 {
-  "name": "<ProjectName>",             // scope.yml: name (display name)
-  "repo": "<upstream-repo-url>",       // scope.yml: repo (GitHub or non-GitHub; omit if none)
-  "home": "<project-homepage-url>"     // scope.yml: home (for governance section)
+  "name": "<ProjectName>",             // project-reports/scope.yml: name (display name)
+  "repo": "<upstream-repo-url>",       // project-reports/scope.yml: repo (GitHub or non-GitHub; omit if none)
+  "home": "<project-homepage-url>"     // project-reports/scope.yml: home (for governance section)
 }
 ```
 
@@ -315,7 +315,7 @@ To reproduce the 2026-06 session from scratch on a new machine or after context 
    mkdir -p project-reports
    ```
 4. Set the working directory to the repo root in Claude Code
-5. Read `scope.yml` to get the project list and derive workflow args
+5. Read `project-reports/scope.yml` to get the project list and derive workflow args
 6. Find which reports are missing (see the `comm` command in the Project List section)
 7. Run one project at a time
 8. Monitor every 5 minutes using the journal Python snippet

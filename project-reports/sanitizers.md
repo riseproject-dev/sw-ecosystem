@@ -346,7 +346,7 @@ The google/sanitizers repository is archived and has no releases. The sanitizer 
 
 **libffi:** Used by the atheris Python fuzzing harness and some sanitizer interceptor harnesses. Three open riscv64 bugs: struct-by-value large argument passing ([#694](https://github.com/libffi/libffi/issues/694)), small integer return value truncation ([#466](https://github.com/libffi/libffi/issues/466)), and link failure ([#777](https://github.com/libffi/libffi/issues/777)). See `project-reports/libffi.md` for full detail.
 
-**Related projects in scope.yml:**
+**Related projects in project-reports/scope.yml:**
 
 - `project-reports/glibc.md` - LSan TLS regression is glibc-specific
 - `project-reports/libffi.md` - atheris/interceptor harness dependency

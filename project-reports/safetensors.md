@@ -209,7 +209,7 @@ safetensors has no C/C++ SIMD, JIT, or crypto backends of its own; dependency ri
 | `pyo3` | Python <-> Rust FFI | Supported via standard Rust target | No riscv64-specific gaps found | Fine | None found |
 | `objc2` / `objc2-metal` | Metal-direct GPU path, macOS/aarch64-only | Not applicable to riscv64 (`target_os = "macos"` gated) | N/A | N/A | N/A |
 
-None of these dependencies are separately tracked in `scope.yml`, so there are no cross-references to other reports in this repository.
+None of these dependencies are separately tracked in `project-reports/scope.yml`, so there are no cross-references to other reports in this repository.
 
 **Deep-dive:** there are no JIT, SIMD, or crypto dependencies to recurse into - the entire dependency graph is pure or near-pure Rust plus PyO3, and none showed riscv64-specific blocking issues in GitHub search at the time of research.
 

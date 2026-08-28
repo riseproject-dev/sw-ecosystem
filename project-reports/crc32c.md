@@ -232,7 +232,7 @@ The `GetThreadCountTest.ReturnsCorrectValue` failure on riscv64 is the sole know
 
 ### Deep-dive: google/benchmark
 
-google/benchmark is included in `scope.yml`; see `project-reports/benchmark.md` for the full riscv64 status report.
+google/benchmark is included in `project-reports/scope.yml`; see `project-reports/benchmark.md` for the full riscv64 status report.
 
 crc32c has no JIT, no crypto implementation, no floating-point arithmetic, and no GC. Its dependency surface is intentionally minimal. The three test/benchmark dependencies listed above are the complete upstream dependency set; none block riscv64 functionality.
 

@@ -228,7 +228,7 @@ None of CloudNativePG's direct or transitive Go dependencies contain JIT, SIMD, 
 - **`klauspost/compress`** - a riscv64-specific correctness issue ([#1036](https://github.com/klauspost/compress/issues/1036), an unsafe little-endian loader bug) was filed, fixed, and closed upstream; no open riscv64 issue remains.
 - **Barman's Python compression extras (`zstandard`, `lz4`)** - these are the one genuine unresolved dependency gap: no riscv64 wheels are published on PyPI for either package. This only matters if/when a riscv64 `postgres-containers` operand image is built, since barman is baked into that image via pip, not linked into the Go operator binary.
 
-### Cross-references to existing scope.yml reports
+### Cross-references to existing project-reports/scope.yml reports
 - Go: [`project-reports/go.md`](https://cloudnative-pg.io/)
 - Kubernetes: [`project-reports/kubernetes.md`](https://cloudnative-pg.io/)
 - PostgreSQL: [`project-reports/postgresql.md`](https://cloudnative-pg.io/)

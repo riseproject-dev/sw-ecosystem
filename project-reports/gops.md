@@ -18,7 +18,7 @@ title: gops
 
 The project is hosted under the `google` GitHub organization. It has no MAINTAINERS, OWNERS, or CODEOWNERS file. Governance is informal. The original author is Jaana Dogan (rakyll, Google) who created the project in November 2016 and was its primary contributor through approximately 2019. The de facto current maintainer is Tobias Klauser (tklauser, Cilium/Isovalent), who has handled CI, dependency updates, bug fixes, and Go version compatibility from approximately 2020 onward. There is no foundation affiliation and no RISE Project membership.
 
-The project is not in the `scope.yml` tracking list for this repository. No RISE blog post, RISE webinar transcript, or RISE wheel-builder listing references gops.
+The project is not in the `project-reports/scope.yml` tracking list for this repository. No RISE blog post, RISE webinar transcript, or RISE wheel-builder listing references gops.
 
 License: BSD-3-Clause.
 

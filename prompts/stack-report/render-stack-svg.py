@@ -3,7 +3,7 @@
 
 Two subcommands:
 
-  build   <scope.yml> <report.md> -o <slug>.yml
+  build   <project-reports/scope.yml> <report.md> -o <slug>.yml
           Join the layout (from the scope spec) with the per-node color + gap text
           (from the report's Artifact 2 status table) into a self-contained view-model
           YAML that the renderer consumes.
@@ -62,7 +62,7 @@ DEFAULT_LEGEND = [
 
 
 # ---------------------------------------------------------------------------
-# build: scope.yml + report.md -> view-model dict
+# build: project-reports/scope.yml + report.md -> view-model dict
 # ---------------------------------------------------------------------------
 
 def parse_scope(path):
@@ -678,7 +678,7 @@ def main(argv=None):
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    b = sub.add_parser("build", help="scope.yml + report.md -> view-model yml")
+    b = sub.add_parser("build", help="project-reports/scope.yml + report.md -> view-model yml")
     b.add_argument("scope")
     b.add_argument("report")
     b.add_argument("-o", "--out", required=True)
@@ -686,7 +686,7 @@ def main(argv=None):
 
     r = sub.add_parser("render", help="view-model yml -> svg")
     r.add_argument("viewmodel", nargs="?", help="view-model yml (or use --scope/--report)")
-    r.add_argument("--scope", help="build from this scope.yml instead of a view-model")
+    r.add_argument("--scope", help="build from this project-reports/scope.yml instead of a view-model")
     r.add_argument("--report", help="build from this report.md instead of a view-model")
     r.add_argument("-o", "--out", required=True)
     r.add_argument("--mark-nonupstream", action="store_true",

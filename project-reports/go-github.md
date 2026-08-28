@@ -187,7 +187,7 @@ go-github declares two direct module dependencies beyond the Go standard library
 
 The only dependency with riscv64-specific engineering is the Go runtime. RISE RP001 has delivered vectorized `internal/bytealg`, crypto assembly (md5, sha256, sha512), `math/big` assembly, runtime extension detection, and Bitmanip compiler output for riscv64. These improvements benefit all Go programs including go-github transparently.
 
-Neither go-cmp nor go-querystring appear in `scope.yml` and neither requires architecture-specific work.
+Neither go-cmp nor go-querystring appear in `project-reports/scope.yml` and neither requires architecture-specific work.
 
 ---
 

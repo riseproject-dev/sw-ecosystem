@@ -315,11 +315,11 @@ These will ship in glibc 2.43 when tagged.
 | zlib | Optional (memusagestat via libgd) | Available | Tests pass | Released | See project-reports/zlib.md |
 | libpng | Optional (memusagestat via libgd) | Available | Tests pass | Released | See project-reports/libpng.md |
 | libcap | Optional (nscd SELinux capability support) | Available | Tests pass | Released | See project-reports/libcap.md |
-| libselinux | Optional (nscd SELinux) | Available | Tests pass | Released | Not in scope.yml |
-| libaudit | Optional (nscd SELinux audit) | Available | Tests pass | Released | Not in scope.yml |
-| GNU make 4.0+ | Build system | Available | N/A | Released | Not in scope.yml |
-| GNU awk 3.1.2+ | Build scripts | Available | N/A | Released | Not in scope.yml |
-| GNU bison 2.7+ | Parser generation | Available | N/A | Released | Not in scope.yml |
+| libselinux | Optional (nscd SELinux) | Available | Tests pass | Released | Not in project-reports/scope.yml |
+| libaudit | Optional (nscd SELinux audit) | Available | Tests pass | Released | Not in project-reports/scope.yml |
+| GNU make 4.0+ | Build system | Available | N/A | Released | Not in project-reports/scope.yml |
+| GNU awk 3.1.2+ | Build scripts | Available | N/A | Released | Not in project-reports/scope.yml |
+| GNU bison 2.7+ | Parser generation | Available | N/A | Released | Not in project-reports/scope.yml |
 
 No blocking dependency issues for riscv64 are known. The GCC 15 requirement for RVV is the most consequential version constraint; distributions that ship GCC 14 or earlier cannot enable the RVV memset IFUNC path.
 

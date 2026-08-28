@@ -38,7 +38,7 @@ the research is best run unattended.
 Open `stack-report.md` in a Claude Code session and follow it. It interviews you (what product,
 which projects, which features of each matter, critical vs optional, target ISA profile, audience,
 and any proprietary paths to exclude), researches the stack (reusing the dependency data in
-`project-reports/*.md`), and writes a locked **scope spec** to `out/<vertical-slug>.scope.yml`.
+`project-reports/*.md`), and writes a locked **scope spec** to `out/<vertical-slug>.project-reports/scope.yml`.
 
 If there is no human to interview (a headless or batch run), the prompt degrades gracefully: it
 derives the stack from research plus the `project-reports/` data, states every assumption in the spec's
@@ -59,7 +59,7 @@ inline in the session. No workflow needed.
 **Large stack:** run the workflow, which fans out one classification agent per node.
 
 ```js
-// 1. Parse the locked scope spec (out/<slug>.scope.yml) into a JS object -- e.g. read the YAML and
+// 1. Parse the locked scope spec (out/<slug>.project-reports/scope.yml) into a JS object -- e.g. read the YAML and
 //    convert it, or hand it to the session to parse.
 // 2. Invoke the workflow with that object as args:
 Workflow({

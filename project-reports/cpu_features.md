@@ -250,9 +250,9 @@ cpu_features has no JIT backend, no SIMD library dependency, no numerics, no cry
 | libdl | Runtime: used for hwcap detection on some platforms | yes | yes | yes | Stable |
 | googletest | Test-only: fetched by CMake at configure time | yes | yes (via QEMU) | not released separately | googletest issue #3756 "GetThreadCountTest.ReturnsCorrectValue fails on risc-v64" is open but affects only a threading test unrelated to cpu_features functionality [NEEDS VERIFICATION: second source confirming issue #3756 scope] |
 
-**Downstream consumers that depend on cpu_features (from scope.yml):**
+**Downstream consumers that depend on cpu_features (from project-reports/scope.yml):**
 
-cpu_features itself is not a direct dependency of most scope.yml projects. The downstream gap that matters most is in `pytorch/cpuinfo`, a separate library with overlapping scope used by PyTorch, XNNPACK, and executorch instead of google/cpu_features:
+cpu_features itself is not a direct dependency of most project-reports/scope.yml projects. The downstream gap that matters most is in `pytorch/cpuinfo`, a separate library with overlapping scope used by PyTorch, XNNPACK, and executorch instead of google/cpu_features:
 
 - `pytorch/cpuinfo`: [Issue #124](https://github.com/pytorch/cpuinfo/issues/124) "Add: RISC-V support" has been open since 2022-12 with no implementation merged as of 2024-01. This creates a missing CPU feature dispatch chain in the entire ML inference stack on riscv64 (PyTorch -> XNNPACK -> cpuinfo -> no riscv64 support).
 - google/ruy: Uses cpu_features for dispatch. No riscv64 SIMD path exists; riscv64 falls back to generic C.
