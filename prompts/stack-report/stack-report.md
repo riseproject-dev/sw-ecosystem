@@ -12,9 +12,9 @@ category list. The `categories:` frontmatter that appears in the per-project rep
 vertical can be.
 
 **Output is ad-hoc and not committed.** This prompt and its companion workflow live under
-`prompts/vertical-report/` and are committed as reusable tooling. The scope spec and the report a
+`prompts/stack-report/` and are committed as reusable tooling. The scope spec and the report a
 run produces are the operator's own research output. Save them inside version control in the
-`vertical-report/<slug>/` directory. Do commit generated reports.
+`stack-reports/<slug>/` directory. Do commit generated reports.
 
 **Relationship to the per-project reports.** The repository already contains ~150 deep per-project
 RISC-V status reports under `project-reports/<slug>.md`, one per entry in `scope.yml`. Those reports are
@@ -36,7 +36,7 @@ the research is best run unattended.
 **Stage 2 -- Research and synthesis (unattended).** Consume the locked scope spec, classify every
 node in the stack for RISC-V readiness, adversarially verify the classification, and emit the three
 output artifacts. For a large stack, run this via the companion `Workflow` script
-(`vertical-report-workflow.js`), which fans out one research agent per node. For a small stack (a
+(`stack-report-workflow.js`), which fans out one research agent per node. For a small stack (a
 handful of nodes) you can execute the same instructions inline without the workflow.
 
 The two stages are separate because a `Workflow` runs unattended and cannot pause to ask the user
@@ -442,7 +442,7 @@ reconstructs the view-model from the existing scope spec and report.
 ## Running stage 2 via the Workflow
 
 For a stack of more than a handful of nodes, stage 2 is best run with the companion script
-`vertical-report-workflow.js` in this directory, which fans out one classification agent per node,
+`stack-report-workflow.js` in this directory, which fans out one classification agent per node,
 runs an adversarial verification pass, and synthesizes the three artifacts. Pass the parsed scope
 spec as the workflow `args`. See `README.md` in this directory for the exact invocation, and
 `CLAUDE.md` at the repo root for the operational rules (rate limits, one workflow at a time,

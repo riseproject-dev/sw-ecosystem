@@ -16,9 +16,9 @@ provide them in your next message: GitHub repos, named libraries, or entries fro
 The skill is generic -- it does not require per-project reports under `project-reports/reports/` but will
 reuse them as a prior when they exist.
 
-**This differs from the vertical-report.** The vertical-report classifies a full layered stack
+**This differs from the stack-report.** The stack-report classifies a full layered stack
 for a specific product workload. This skill classifies an arbitrary flat list of projects,
-with the added optimization-purpose modifier that vertical-report does not apply.
+with the added optimization-purpose modifier that stack-report does not apply.
 
 ---
 
@@ -269,7 +269,7 @@ optimization levels (full / partial / minimal / absent) from Step 2.
 
 Produce the following sections in order. The summary table and per-project justifications are the
 human-readable output. The per-node record fields below are the structured data that downstream
-consumers (such as the vertical-report workflow) read to build the layered stack outline, status
+consumers (such as the stack-report workflow) read to build the layered stack outline, status
 tables, and narrative.
 
 ### 1. Per-node record fields

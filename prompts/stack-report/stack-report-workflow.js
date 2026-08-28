@@ -1,5 +1,5 @@
 export const meta = {
-  name: 'vertical-report',
+  name: 'stack-report',
   description: 'RISC-V vertical ecosystem report: classify each stack node red/orange/yellow/blue/green/grey, verify, synthesize 3 artifacts',
   phases: [
     { title: 'Classify', detail: 'One agent per node: hybrid reuse-report + live-verify color classification' },
@@ -8,7 +8,7 @@ export const meta = {
   ],
 }
 
-// args = the parsed scope spec object written by Stage 1 (see vertical-report.md, Section 1.4).
+// args = the parsed scope spec object written by Stage 1 (see stack-report.md, Section 1.4).
 // Shape: { vertical, slug?, author?, run_date?, audience?, target_profile?, use?, assumptions?,
 //          exclusions?, out_of_scope?,
 //          layers: [{layer, product?, nodes: [{name, repo?, home?, slug?,
@@ -390,7 +390,7 @@ const viewmodel = buildViewModel(spec, allRecords, slug, targetProfile, report)
 return [{
   vertical: spec.vertical || slug,
   slug,
-  file: `vertical-report/${slug}/${slug}.md`,
+  file: `stack-reports/${slug}/${slug}.md`,
   report,
   nodeCount: allRecords.length,
   records: allRecords,

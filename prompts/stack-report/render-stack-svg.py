@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render a RISC-V vertical-report software stack as an SVG diagram.
+"""Render a RISC-V stack-report software stack as an SVG diagram.
 
 Two subcommands:
 
@@ -12,9 +12,9 @@ Two subcommands:
           Render the view-model to an SVG. As a convenience, `render --scope <f>
           --report <f>` builds the view-model in memory and renders in one shot.
 
-The view-model is the stable interface: the vertical-report prompt/workflow emits it
+The view-model is the stable interface: the stack-report prompt/workflow emits it
 alongside <slug>.md, so the renderer never has to parse free-text markdown. See
-examples/vertical-report/vertical-report.md (Artifact 4) for the schema.
+examples/stack-report/stack-report.md (Artifact 4) for the schema.
 
 Dependencies: Python 3.8+ and PyYAML. No other third-party packages.
 """

@@ -14,13 +14,13 @@ consume the per-project reports as a prior and adversarially verify them live.
 
 | File | Purpose | Committed? |
 |---|---|---|
-| `vertical-report.md` | The master prompt. Run this. Self-contained; works interactively or headless. | yes |
-| `vertical-report-workflow.js` | A `Workflow` script that runs stage 2 (classify + verify + synthesize) at scale, one agent per stack node. | yes |
+| `stack-report.md` | The master prompt. Run this. Self-contained; works interactively or headless. | yes |
+| `stack-report-workflow.js` | A `Workflow` script that runs stage 2 (classify + verify + synthesize) at scale, one agent per stack node. | yes |
 | `render-stack-svg.py` | Renders the stack view-model (`out/<slug>.yml`) to an SVG stack diagram. Can also reconstruct the view-model from an existing scope spec + report. | yes |
 | `README.md` | This file. | yes |
-| `vertical-report/<slug>/` | Where generated reports live. Committed. | yes |
+| `stack-reports/<slug>/` | Where generated reports live. Committed. | yes |
 
-**Generated reports are committed.** Save them under `vertical-report/<slug>/` at the repo root.
+**Generated reports are committed.** Save them under `stack-reports/<slug>/` at the repo root.
 
 ## The vertical is whatever you define
 
@@ -35,7 +35,7 @@ the research is best run unattended.
 
 ### Stage 1 -- Scoping (interactive)
 
-Open `vertical-report.md` in a Claude Code session and follow it. It interviews you (what product,
+Open `stack-report.md` in a Claude Code session and follow it. It interviews you (what product,
 which projects, which features of each matter, critical vs optional, target ISA profile, audience,
 and any proprietary paths to exclude), researches the stack (reusing the dependency data in
 `project-reports/*.md`), and writes a locked **scope spec** to `out/<vertical-slug>.scope.yml`.
@@ -53,7 +53,7 @@ Consume the locked scope spec, classify every node in the stack for RISC-V readi
 color model: grey / green / blue / yellow / orange / red), adversarially verify each color, and emit the
 three output artifacts into `out/<vertical-slug>.md`.
 
-**Small stack (a handful of nodes):** just execute the Stage 2 instructions in `vertical-report.md`
+**Small stack (a handful of nodes):** just execute the Stage 2 instructions in `stack-report.md`
 inline in the session. No workflow needed.
 
 **Large stack:** run the workflow, which fans out one classification agent per node.
@@ -64,7 +64,7 @@ inline in the session. No workflow needed.
 // 2. Invoke the workflow with that object as args:
 Workflow({
   args: <the parsed scope-spec object>,
-  scriptPath: "/abs/path/to/prompts/vertical-report/vertical-report-workflow.js"
+  scriptPath: "/abs/path/to/prompts/stack-report/stack-report-workflow.js"
 })
 ```
 
@@ -109,7 +109,7 @@ Every generated report contains, in order:
    each node's color/criticality/release-provider/gap) written alongside the report. Feed it to
    `render-stack-svg.py` to produce the SVG stack diagram (colored boxes, native hover tooltips
    showing each node's gap). Layout comes from the scope spec's `layers:`; colors come from the
-   Artifact 2 classification records. See `vertical-report.md`, Artifact 4, for the schema.
+   Artifact 2 classification records. See `stack-report.md`, Artifact 4, for the schema.
 
 ## The color model in one paragraph
 
