@@ -1,5 +1,6 @@
 ---
 title: pgx
+parent: Project Reports
 ---
 
 # pgx

@@ -1,5 +1,6 @@
 ---
 title: libsoup
+parent: Project Reports
 categories:
   - libraries
   - browser

@@ -379,6 +379,7 @@ Write the COMPLETE report. Formatting rules:
 
 ---
 title: ${proj.name}
+parent: Project Reports
 ---
 
 # ${proj.name}

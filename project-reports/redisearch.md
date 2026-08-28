@@ -1,5 +1,6 @@
 ---
 title: RediSearch
+parent: Project Reports
 ---
 
 # RediSearch

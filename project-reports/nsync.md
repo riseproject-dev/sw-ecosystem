@@ -1,5 +1,6 @@
 ---
 title: nsync
+parent: Project Reports
 ---
 
 # nsync

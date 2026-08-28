@@ -1,5 +1,6 @@
 ---
 title: BoringSSL
+parent: Project Reports
 categories:
   - libraries
   - browser

@@ -1,4 +1,10 @@
-# RISC-V Vertical Ecosystem Report -- Research Prompt
+---
+title: "Whole-Stack Report"
+parent: Prompts
+nav_order: 2
+---
+
+# Whole-Stack RISC-V Ecosystem Status Report
 
 **What this is.** A reusable prompt for generating a RISC-V readiness report for a *vertical* --
 the full software stack behind a product or workload (for example "Agentic AI inference serving",
@@ -273,10 +279,11 @@ today), and `Target profile` from `target_profile`:
 
 ```
 ---
-title: [Vertical name] -- RISC-V Ecosystem Status
+title: [Vertical name]
+parent: Whole-Stack Reports
 ---
 
-# [Vertical name] -- RISC-V Ecosystem Status
+# [Vertical name]
 
 **Author:** [scope spec `author`]<br/>
 **Date:** [scope spec `run_date`]<br/>
@@ -286,6 +293,8 @@ title: [Vertical name] -- RISC-V Ecosystem Status
 **Verification policy:** Colors are assigned from primary upstream sources, adversarially verified
 against the per-project reports under project-reports/. Items not verifiable against a second source are
 marked [NEEDS VERIFICATION].<br/>
+
+![](<vertical-slug>.svg) Link to full screen: [<vertical-slug>.svg](<vertical-slug>.svg)
 ```
 
 If the scope spec recorded any `assumptions:` (a degraded, non-interactive run), reproduce them in a

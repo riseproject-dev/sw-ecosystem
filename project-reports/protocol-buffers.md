@@ -1,5 +1,6 @@
 ---
 title: Protocol Buffers
+parent: Project Reports
 categories:
   - libraries
 ---

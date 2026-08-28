@@ -1,5 +1,6 @@
 ---
 title: MaxScale
+parent: Project Reports
 ---
 
 # MaxScale

@@ -1,5 +1,6 @@
 ---
 title: libgcrypt
+parent: Project Reports
 categories:
   - libraries
 ---

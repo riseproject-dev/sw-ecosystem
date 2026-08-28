@@ -1,5 +1,6 @@
 ---
 title: SwiftShader
+parent: Project Reports
 categories:
   - libraries
   - browser

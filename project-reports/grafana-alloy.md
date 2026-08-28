@@ -1,5 +1,6 @@
 ---
 title: Grafana Alloy
+parent: Project Reports
 categories:
   - observability
 ---

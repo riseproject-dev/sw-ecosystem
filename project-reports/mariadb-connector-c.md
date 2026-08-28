@@ -1,5 +1,6 @@
 ---
 title: MariaDB Connector/C
+parent: Project Reports
 ---
 
 # MariaDB Connector/C

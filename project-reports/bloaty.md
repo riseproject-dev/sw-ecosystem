@@ -1,5 +1,6 @@
 ---
 title: bloaty
+parent: Project Reports
 ---
 
 # bloaty

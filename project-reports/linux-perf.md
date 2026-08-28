@@ -1,5 +1,6 @@
 ---
 title: linux-perf
+parent: Project Reports
 categories:
   - perfmon
 ---

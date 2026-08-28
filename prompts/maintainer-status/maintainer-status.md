@@ -1,3 +1,8 @@
+---
+title: "Open-Source Maintainer Stance & Receptivity Analysis"
+parent: Prompts
+---
+
 # RISC-V Open-Source Maintainer Stance & Receptivity Analysis
 
 **Date:** August 2026  

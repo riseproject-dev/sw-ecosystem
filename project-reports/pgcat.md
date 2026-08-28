@@ -1,5 +1,6 @@
 ---
 title: pgcat
+parent: Project Reports
 ---
 
 # pgcat

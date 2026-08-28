@@ -1,5 +1,6 @@
 ---
 title: SpiderMonkey
+parent: Project Reports
 categories:
   - runtimes
   - browser

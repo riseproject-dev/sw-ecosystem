@@ -1,5 +1,6 @@
 ---
 title: Geekbench
+parent: Project Reports
 categories:
   - benchmarks
 ---

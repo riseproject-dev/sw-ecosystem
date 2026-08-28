@@ -1,5 +1,6 @@
 ---
 title: libjxl
+parent: Project Reports
 categories:
   - multimedia
   - browser

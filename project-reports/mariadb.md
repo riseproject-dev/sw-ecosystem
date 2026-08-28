@@ -1,5 +1,6 @@
 ---
 title: MariaDB
+parent: Project Reports
 categories:
   - databases
 ---

@@ -1,5 +1,6 @@
 ---
 title: pgvector
+parent: Project Reports
 ---
 
 # pgvector

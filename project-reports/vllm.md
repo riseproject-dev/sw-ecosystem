@@ -1,5 +1,6 @@
 ---
 title: vLLM
+parent: Project Reports
 categories:
   - llm-inference
   - ai-ml

@@ -1,5 +1,6 @@
 ---
 title: osv.dev
+parent: Project Reports
 ---
 
 # osv.dev

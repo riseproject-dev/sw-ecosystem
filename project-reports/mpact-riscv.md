@@ -1,5 +1,6 @@
 ---
 title: mpact-riscv
+parent: Project Reports
 ---
 
 # mpact-riscv

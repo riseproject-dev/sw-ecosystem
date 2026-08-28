@@ -1,3 +1,8 @@
+---
+title: "Project Priorities, Green-Field Markets, and High-Moat Spaces"
+parent: Prompts
+---
+
 # RISC-V Software Ecosystem: Project Priorities, Green-Field Markets, and High-Moat Spaces to Avoid
 
 **Date:** August 2026  

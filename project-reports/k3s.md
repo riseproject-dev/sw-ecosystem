@@ -1,5 +1,6 @@
 ---
 title: k3s
+parent: Project Reports
 categories:
   - containers
 ---

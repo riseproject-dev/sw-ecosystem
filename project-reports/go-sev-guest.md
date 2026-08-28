@@ -1,5 +1,6 @@
 ---
 title: go-sev-guest
+parent: Project Reports
 ---
 
 # go-sev-guest

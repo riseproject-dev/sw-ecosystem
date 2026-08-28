@@ -1,3 +1,8 @@
+---
+title: "Key Takeaways for Software Developers"
+parent: Prompts
+---
+
 # RISC-V Software Ecosystem: Key Takeaways for Software Developers
 
 **Date:** August 2026  

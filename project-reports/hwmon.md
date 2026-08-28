@@ -1,5 +1,6 @@
 ---
 title: hwmon
+parent: Project Reports
 categories:
   - perfmon
 ---

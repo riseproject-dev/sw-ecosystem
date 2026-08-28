@@ -1,5 +1,6 @@
 ---
 title: FreeType
+parent: Project Reports
 categories:
   - libraries
 ---

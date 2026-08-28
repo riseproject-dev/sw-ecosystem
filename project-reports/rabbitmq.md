@@ -1,5 +1,6 @@
 ---
 title: RabbitMQ
+parent: Project Reports
 categories:
   - iaas
 ---

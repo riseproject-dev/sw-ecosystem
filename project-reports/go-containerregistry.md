@@ -1,5 +1,6 @@
 ---
 title: go-containerregistry
+parent: Project Reports
 ---
 
 # go-containerregistry

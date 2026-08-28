@@ -1,8 +1,4 @@
----
-title: Sample -- RISC-V Ecosystem Status
----
-
-# Sample -- RISC-V Ecosystem Status
+# Sample
 
 **Author:** Ludovic Henry<br/>
 **Date:** 2026-08-28<br/>

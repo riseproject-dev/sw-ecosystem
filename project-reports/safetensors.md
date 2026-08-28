@@ -1,5 +1,6 @@
 ---
 title: safetensors
+parent: Project Reports
 ---
 
 # safetensors

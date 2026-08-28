@@ -1,5 +1,6 @@
 ---
 title: capstone
+parent: Project Reports
 ---
 
 # capstone

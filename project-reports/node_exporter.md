@@ -1,5 +1,6 @@
 ---
 title: node_exporter
+parent: Project Reports
 ---
 
 # node_exporter

@@ -1,5 +1,6 @@
 ---
 title: NumPy
+parent: Project Reports
 categories:
   - python-packages
   - ai-ml

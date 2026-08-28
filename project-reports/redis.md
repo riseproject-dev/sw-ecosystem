@@ -1,5 +1,6 @@
 ---
 title: Redis
+parent: Project Reports
 categories:
   - databases
 ---

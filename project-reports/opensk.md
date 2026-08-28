@@ -1,5 +1,6 @@
 ---
 title: OpenSK
+parent: Project Reports
 ---
 
 # OpenSK

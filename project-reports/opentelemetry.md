@@ -1,5 +1,6 @@
 ---
 title: OpenTelemetry
+parent: Project Reports
 categories:
   - observability
 ---

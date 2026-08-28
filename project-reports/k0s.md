@@ -1,5 +1,6 @@
 ---
 title: k0s
+parent: Project Reports
 categories:
   - containers
 ---

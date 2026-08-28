@@ -1,5 +1,6 @@
 ---
 title: Patroni
+parent: Project Reports
 ---
 
 # Patroni

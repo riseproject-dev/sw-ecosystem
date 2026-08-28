@@ -1,5 +1,6 @@
 ---
 title: LangGraph
+parent: Project Reports
 ---
 
 # LangGraph

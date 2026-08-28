@@ -1,5 +1,6 @@
 ---
 title: elfutils
+parent: Project Reports
 categories:
   - debug
   - perfmon

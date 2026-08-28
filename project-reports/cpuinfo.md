@@ -1,5 +1,6 @@
 ---
 title: cpuinfo
+parent: Project Reports
 categories:
   - libraries
 ---

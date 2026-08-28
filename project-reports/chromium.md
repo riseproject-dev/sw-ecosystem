@@ -1,5 +1,6 @@
 ---
 title: Chromium
+parent: Project Reports
 categories:
   - browser
   - android

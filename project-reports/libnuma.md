@@ -1,5 +1,6 @@
 ---
 title: libnuma
+parent: Project Reports
 categories:
   - libraries
 ---

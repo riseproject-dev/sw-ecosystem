@@ -1,3 +1,8 @@
+---
+title: "RISC-V Competitive Ecosystem Analysis"
+parent: Prompts
+---
+
 # RISC-V Competitive Ecosystem Analysis: RISC-V vs. Intel, AMD, and ARM
 
 **Date:** August 2026  

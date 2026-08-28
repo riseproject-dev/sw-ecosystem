@@ -1,5 +1,6 @@
 ---
 title: FAISS
+parent: Project Reports
 categories:
   - agentic-ai
 ---

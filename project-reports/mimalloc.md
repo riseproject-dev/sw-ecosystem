@@ -1,5 +1,6 @@
 ---
 title: mimalloc
+parent: Project Reports
 categories:
   - libraries
 ---

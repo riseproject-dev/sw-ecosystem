@@ -1,5 +1,6 @@
 ---
 title: go-github
+parent: Project Reports
 ---
 
 # go-github

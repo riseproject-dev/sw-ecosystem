@@ -1,3 +1,8 @@
+---
+title: "Agentic AI Status on RISC-V Architecture"
+parent: Prompts
+---
+
 # Agentic AI Status on RISC-V Architecture: LangChain, vLLM, and PyTorch
 
 **Date:** July 2026  

@@ -1,5 +1,6 @@
 ---
 title: osv-scanner
+parent: Project Reports
 ---
 
 # osv-scanner

@@ -1,5 +1,6 @@
 ---
 title: llvm-propeller
+parent: Project Reports
 ---
 
 # llvm-propeller

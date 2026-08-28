@@ -1,5 +1,6 @@
 ---
 title: LZ4
+parent: Project Reports
 categories:
   - libraries
 ---

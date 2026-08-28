@@ -1,5 +1,6 @@
 ---
 title: PgBouncer
+parent: Project Reports
 ---
 
 # PgBouncer

@@ -1,5 +1,6 @@
 ---
 title: VIXL
+parent: Project Reports
 categories:
   - libraries
   - android

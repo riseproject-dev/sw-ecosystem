@@ -1,5 +1,6 @@
 ---
 title: cloud-init
+parent: Project Reports
 categories:
   - iaas
 ---

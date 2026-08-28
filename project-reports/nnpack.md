@@ -1,5 +1,6 @@
 ---
 title: NNPACK
+parent: Project Reports
 categories:
   - ai-ml
 ---

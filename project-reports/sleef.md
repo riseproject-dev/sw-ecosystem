@@ -1,5 +1,6 @@
 ---
 title: SLEEF
+parent: Project Reports
 categories:
   - libraries
   - ai-ml

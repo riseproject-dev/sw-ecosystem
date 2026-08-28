@@ -1,5 +1,6 @@
 ---
 title: Pgpool-II
+parent: Project Reports
 ---
 
 # Pgpool-II

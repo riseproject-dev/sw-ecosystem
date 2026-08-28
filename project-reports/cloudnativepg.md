@@ -1,5 +1,6 @@
 ---
 title: CloudNativePG
+parent: Project Reports
 ---
 
 # CloudNativePG

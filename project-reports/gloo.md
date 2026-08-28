@@ -1,5 +1,6 @@
 ---
 title: Gloo
+parent: Project Reports
 categories:
   - ai-ml
 ---

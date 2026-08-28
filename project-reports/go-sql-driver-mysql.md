@@ -1,5 +1,6 @@
 ---
 title: go-sql-driver/mysql
+parent: Project Reports
 ---
 
 # go-sql-driver/mysql

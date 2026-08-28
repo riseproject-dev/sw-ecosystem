@@ -1,5 +1,6 @@
 ---
 title: OpenJDK
+parent: Project Reports
 categories:
   - runtimes
   - llm-inference

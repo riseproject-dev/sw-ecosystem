@@ -1,5 +1,6 @@
 ---
 title: ProxySQL
+parent: Project Reports
 ---
 
 # ProxySQL

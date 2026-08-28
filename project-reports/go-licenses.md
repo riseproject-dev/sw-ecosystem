@@ -1,5 +1,6 @@
 ---
 title: go-licenses
+parent: Project Reports
 ---
 
 # go-licenses

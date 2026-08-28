@@ -1,5 +1,6 @@
 ---
 title: LuaJIT
+parent: Project Reports
 categories:
   - runtimes
 ---

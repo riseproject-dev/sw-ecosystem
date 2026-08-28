@@ -1,5 +1,6 @@
 ---
 title: RedisJSON
+parent: Project Reports
 ---
 
 # RedisJSON

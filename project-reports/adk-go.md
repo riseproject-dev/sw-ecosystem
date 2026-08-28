@@ -1,5 +1,6 @@
 ---
 title: adk-go
+parent: Project Reports
 ---
 
 # adk-go

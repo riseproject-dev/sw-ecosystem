@@ -1,5 +1,6 @@
 ---
 title: redis_exporter
+parent: Project Reports
 ---
 
 # redis_exporter

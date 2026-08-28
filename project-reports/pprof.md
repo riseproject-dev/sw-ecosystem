@@ -1,5 +1,6 @@
 ---
 title: pprof
+parent: Project Reports
 ---
 
 # pprof

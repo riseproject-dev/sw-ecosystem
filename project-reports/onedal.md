@@ -1,5 +1,6 @@
 ---
 title: oneDAL
+parent: Project Reports
 categories:
   - libraries
 ---

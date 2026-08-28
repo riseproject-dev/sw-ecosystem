@@ -1,5 +1,6 @@
 ---
 title: sentencepiece
+parent: Project Reports
 categories:
   - ai-ml
 ---

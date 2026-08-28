@@ -1,5 +1,6 @@
 ---
 title: osv-scalibr
+parent: Project Reports
 ---
 
 # osv-scalibr

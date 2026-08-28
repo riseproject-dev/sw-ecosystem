@@ -1,5 +1,6 @@
 ---
 title: go-tdx-guest
+parent: Project Reports
 ---
 
 # go-tdx-guest

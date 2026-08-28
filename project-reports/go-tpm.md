@@ -1,5 +1,6 @@
 ---
 title: go-tpm
+parent: Project Reports
 ---
 
 # go-tpm

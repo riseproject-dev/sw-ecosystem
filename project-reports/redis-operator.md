@@ -1,5 +1,6 @@
 ---
 title: redis-operator
+parent: Project Reports
 ---
 
 # redis-operator

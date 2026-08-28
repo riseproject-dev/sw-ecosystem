@@ -202,10 +202,11 @@ ${JSON.stringify(allRecords, null, 2)}
 Write the report with this exact structure:
 
 ---
-title: ${spec.vertical || slug} -- RISC-V Ecosystem Status
+title: ${spec.vertical || slug}
+parent: Whole-Stack Reports
 ---
 
-# ${spec.vertical || slug} -- RISC-V Ecosystem Status
+# ${spec.vertical || slug}
 
 **Author:** ${spec.author || 'RISC-V Ecosystem WG'}<br/>
 **Date:** ${spec.run_date || '(run date)'}<br/>

@@ -1,5 +1,6 @@
 ---
 title: s2geometry
+parent: Project Reports
 ---
 
 # s2geometry

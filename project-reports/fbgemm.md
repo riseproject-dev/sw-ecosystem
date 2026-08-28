@@ -1,5 +1,6 @@
 ---
 title: FBGEMM
+parent: Project Reports
 categories:
   - ai-ml
 ---

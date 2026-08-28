@@ -1,3 +1,8 @@
+---
+title: "Recommended Software Ecosystem Expansion for Key Industry Markets"
+parent: Prompts
+---
+
 # Recommended RISC-V Software Ecosystem Expansion for Key Industry Markets
 
 **Date:** August 2026  

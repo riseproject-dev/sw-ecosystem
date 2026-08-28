@@ -1,5 +1,6 @@
 ---
 title: xbyak_riscv
+parent: Project Reports
 categories:
   - libraries
 ---

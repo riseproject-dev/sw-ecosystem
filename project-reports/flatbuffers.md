@@ -1,5 +1,6 @@
 ---
 title: FlatBuffers
+parent: Project Reports
 categories:
   - libraries
 ---

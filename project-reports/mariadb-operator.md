@@ -1,5 +1,6 @@
 ---
 title: mariadb-operator
+parent: Project Reports
 ---
 
 # mariadb-operator

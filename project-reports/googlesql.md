@@ -1,5 +1,6 @@
 ---
 title: googlesql
+parent: Project Reports
 ---
 
 # googlesql

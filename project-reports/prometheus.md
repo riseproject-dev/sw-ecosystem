@@ -1,5 +1,6 @@
 ---
 title: Prometheus
+parent: Project Reports
 categories:
   - observability
 ---

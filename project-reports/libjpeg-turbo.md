@@ -1,5 +1,6 @@
 ---
 title: libjpeg-turbo
+parent: Project Reports
 categories:
   - multimedia
   - android

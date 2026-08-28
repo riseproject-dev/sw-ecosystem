@@ -1,5 +1,6 @@
 ---
 title: gops
+parent: Project Reports
 ---
 
 # gops

@@ -1,5 +1,6 @@
 ---
 title: simdutf
+parent: Project Reports
 categories:
   - libraries
 ---

@@ -1,3 +1,8 @@
+---
+title: "Technical Guide & Advice for Porting Software to RISC-V"
+parent: Prompts
+---
+
 # Technical Guide & Advice for Porting Open-Source Software to RISC-V
 
 **Date:** August 2026  

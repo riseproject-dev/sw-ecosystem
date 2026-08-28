@@ -1,5 +1,6 @@
 ---
 title: postgres_exporter
+parent: Project Reports
 ---
 
 # postgres_exporter

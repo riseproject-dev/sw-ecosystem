@@ -1,5 +1,6 @@
 ---
 title: Galera
+parent: Project Reports
 ---
 
 # Galera

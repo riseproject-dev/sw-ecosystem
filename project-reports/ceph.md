@@ -1,5 +1,6 @@
 ---
 title: Ceph
+parent: Project Reports
 categories:
   - software-defined-storage
 ---

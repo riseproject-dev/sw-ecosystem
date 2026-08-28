@@ -1,5 +1,6 @@
 ---
 title: GDB
+parent: Project Reports
 categories:
   - debug
 ---

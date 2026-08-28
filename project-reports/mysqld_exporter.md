@@ -1,5 +1,6 @@
 ---
 title: mysqld_exporter
+parent: Project Reports
 ---
 
 # mysqld_exporter

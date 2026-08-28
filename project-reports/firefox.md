@@ -1,5 +1,6 @@
 ---
 title: Firefox
+parent: Project Reports
 categories:
   - browser
 ---

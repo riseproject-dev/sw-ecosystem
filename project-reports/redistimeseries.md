@@ -1,5 +1,6 @@
 ---
 title: RedisTimeSeries
+parent: Project Reports
 ---
 
 # RedisTimeSeries

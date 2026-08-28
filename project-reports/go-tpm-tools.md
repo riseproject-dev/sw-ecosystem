@@ -1,5 +1,6 @@
 ---
 title: go-tpm-tools
+parent: Project Reports
 ---
 
 # go-tpm-tools

@@ -1,5 +1,6 @@
 ---
 title: cpu_features
+parent: Project Reports
 ---
 
 # cpu_features

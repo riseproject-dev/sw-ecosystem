@@ -1,5 +1,6 @@
 ---
 title: MySQL
+parent: Project Reports
 categories:
   - databases
 ---

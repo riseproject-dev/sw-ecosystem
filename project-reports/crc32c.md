@@ -1,5 +1,6 @@
 ---
 title: crc32c
+parent: Project Reports
 ---
 
 # crc32c

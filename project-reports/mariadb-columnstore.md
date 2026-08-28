@@ -1,5 +1,6 @@
 ---
 title: MariaDB ColumnStore
+parent: Project Reports
 ---
 
 # MariaDB ColumnStore

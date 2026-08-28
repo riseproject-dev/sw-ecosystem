@@ -1,5 +1,6 @@
 ---
 title: GraalVM
+parent: Project Reports
 categories:
   - runtimes
 ---

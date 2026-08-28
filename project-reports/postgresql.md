@@ -1,5 +1,6 @@
 ---
 title: PostgreSQL
+parent: Project Reports
 categories:
   - databases
 ---

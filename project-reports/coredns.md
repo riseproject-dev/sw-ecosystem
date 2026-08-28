@@ -1,5 +1,6 @@
 ---
 title: CoreDNS
+parent: Project Reports
 categories:
   - containers
 ---

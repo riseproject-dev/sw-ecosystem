@@ -1,5 +1,6 @@
 ---
 title: LangChain
+parent: Project Reports
 categories:
   - agentic-ai
 ---

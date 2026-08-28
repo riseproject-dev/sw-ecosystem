@@ -1,5 +1,6 @@
 ---
 title: Go
+parent: Project Reports
 categories:
   - runtimes
   - containers

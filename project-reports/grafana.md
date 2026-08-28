@@ -1,5 +1,6 @@
 ---
 title: Grafana
+parent: Project Reports
 ---
 
 # Grafana

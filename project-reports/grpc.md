@@ -1,5 +1,6 @@
 ---
 title: gRPC
+parent: Project Reports
 categories:
   - libraries
 ---

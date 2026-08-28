@@ -1,5 +1,6 @@
 ---
 title: HuggingFace Transformers
+parent: Project Reports
 ---
 
 # HuggingFace Transformers

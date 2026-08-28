@@ -1,5 +1,6 @@
 ---
 title: MyRocks
+parent: Project Reports
 ---
 
 # MyRocks

@@ -1,4 +1,10 @@
-# RISC-V Ecosystem Status Report -- Research Prompt Template
+---
+title: "Per-Project RISC-V Ecosystem Status Report"
+parent: Prompts
+nav_order: 1
+---
+
+# Per-Project RISC-V Ecosystem Status Report
 
 **Usage:** Pick a project from `project-reports/scope.yml` (the project registry) and pass its fields to the `Workflow` tool (see execution model below).
 
@@ -96,6 +102,7 @@ When Updating the report, write the report from scratch. Do not reference previo
 ```
 ---
 title: [PROJECT_NAME]
+parent: Project Reports
 ---
 
 # [PROJECT_NAME]

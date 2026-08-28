@@ -1,5 +1,6 @@
 ---
 title: ruy
+parent: Project Reports
 categories:
   - ai-ml
 ---

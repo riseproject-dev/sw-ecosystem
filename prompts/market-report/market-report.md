@@ -1,3 +1,8 @@
+---
+title: "Software Ecosystem Technical Market Assessment"
+parent: Prompts
+---
+
 # RISC-V Software Ecosystem Technical Market Assessment
 
 **Date:** July 2026  

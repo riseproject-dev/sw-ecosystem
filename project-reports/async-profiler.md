@@ -1,5 +1,6 @@
 ---
 title: async-profiler
+parent: Project Reports
 categories:
   - perfmon
 ---

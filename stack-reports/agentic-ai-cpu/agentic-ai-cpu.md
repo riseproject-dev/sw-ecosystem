@@ -1,8 +1,9 @@
 ---
-title: Agentic AI inference serving (CPU-only) -- RISC-V Ecosystem Status
+title: Agentic AI inference serving
+parent: Whole-Stack Reports
 ---
 
-# Agentic AI inference serving (CPU-only) -- RISC-V Ecosystem Status
+# Agentic AI inference serving
 
 **Author:** Ludovic Henry<br/>
 **Date:** 2026-08-12<br/>
@@ -12,6 +13,8 @@ title: Agentic AI inference serving (CPU-only) -- RISC-V Ecosystem Status
 **Verification policy:** Colors are assigned from primary upstream sources, adversarially verified against the per-project reports under reports/. Items not verifiable against a second source are marked [NEEDS VERIFICATION].<br/>
 
 **Out of scope (deliberately excluded, not assessed):** torch.compile pipeline (TorchDynamo, AOTAutograd, TorchInductor, Triton, torch-mlir, IREE, MLIR, LLVM); PyTorch distributed training (NCCL, Gloo collective, torch.distributed); Numba / llvmlite.
+
+![](agentic-ai-cpu.svg) Link to full screen: [agentic-ai-cpu.svg](agentic-ai-cpu.svg)
 
 ---
 
