@@ -64,8 +64,8 @@ Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trac
 
 **RISE Project resources -- check these for every report.** The [RISE Project](https://riseproject.dev) (RISC-V Software Ecosystem) is a Linux Foundation project and the primary industry consortium coordinating RISC-V software enablement across the open-source ecosystem. Its members include Qualcomm, SiFive, Red Hat, Canonical, Google, and others. RISE directly funds and coordinates upstream work. For every report, check the following:
 
-- **RISE project portfolio and active work:** Search [riseproject.dev](https://riseproject.dev) (especially the blog at `riseproject.dev/blog`) and the [riseproject-dev GitHub organization](https://github.com/riseproject-dev) for forks, CI repos, and issue trackers related to this specific project. The Confluence wiki at `lf-rise.atlassian.net` requires authentication and is not publicly fetchable -- do not attempt to fetch it. Document what RISE has already done or committed to, so the investment analysis in Section 13 does not double-count work that is already underway.
-- **RISE RISC-V Runners:** RISE operates a pool of GitHub Actions-compatible riscv64 CI runners available to open-source projects at no cost. Check whether this project already uses RISE runners (look in `riseproject-dev` for a fork with CI), has an open request to adopt them (look in the project's CI issue tracker), or has CI gaps where RISE runners would directly unblock work. If RISE runners are available for this project, note it explicitly in Section 7 and Section 13.3 rather than sizing custom hardware provisioning.
+- **RISE project portfolio and active work:** Search [riseproject.dev](https://riseproject.dev) (especially the blog at `riseproject.dev/blog`) and the [riseproject-dev GitHub organization](https://github.com/riseproject-dev) for forks, CI repos, and issue trackers related to this specific project. The Confluence wiki at `lf-rise.atlassian.net` requires authentication and is not publicly fetchable -- do not attempt to fetch it. Document what RISE has already done or committed to, so the investment analysis in Section 14 does not double-count work that is already underway.
+- **RISE RISC-V Runners:** RISE operates a pool of GitHub Actions-compatible riscv64 CI runners available to open-source projects at no cost. Check whether this project already uses RISE runners (look in `riseproject-dev` for a fork with CI), has an open request to adopt them (look in the project's CI issue tracker), or has CI gaps where RISE runners would directly unblock work. If RISE runners are available for this project, note it explicitly in Section 7 and Section 14.3 rather than sizing custom hardware provisioning.
 - **RISE Board Farm:** RISE maintains a collection of physical RISC-V development boards for community testing and benchmarking. Check whether contributors to this project have used board farm access (look for board farm mentions in issues, PR descriptions, and blog posts). List specific boards available that are relevant to this project's hardware requirements.
 - **RISE Optimization Guide:** RISE publishes guidance on RISC-V ISA extensions, compiler flags, and software optimization techniques at [riseproject.dev](https://riseproject.dev). Check whether this project's build system, contribution guide, or RISC-V-specific code references it. If not, note whether following it would close any of the performance gaps in Section 6.
 - **RISE Python Package Index** (GitLab project at [gitlab.com/riseproject/python](https://gitlab.com/riseproject/python), browsable index at [riseproject.gitlab.io/python/wheel_builder/](https://riseproject.gitlab.io/python/wheel_builder/), installable via `pip install --extra-index-url https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple <package>`): RISE builds and hosts riscv64 Python wheels for packages that do not yet publish official riscv64 wheels on PyPI. To check whether a specific package is available, fetch the GitLab packages API directly: `https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/<package-name>/`. This is more reliable than the human-readable index page. This check is relevant for any project that is itself a Python package, ships Python bindings, or depends on Python packages. Check it before marking any Python package as "not available on riscv64."
@@ -87,7 +87,7 @@ Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trac
 - Only generate Latin-1 characters. Do not use em-dashes; use a hyphen or comma instead. Write like a human.
 - Output is a Markdown file. Use the simplest, default formatting. Every URL in the report must be a Markdown link: `[descriptive text](https://url)`. Never write bare URLs.
 
-**Update cadence:** This report is updated approximately every 6 months. When updating an existing report, do not rewrite it. Add a new "Update - YYYY-MM-DD" subsection inside the Updates section (see Section 14), describing only what changed since the previous version. All original content stays in place.
+**Update cadence:** This report is updated approximately every 6 months. When updating an existing report, do not rewrite it. Add a new "Update - YYYY-MM-DD" subsection inside the Updates section (see Section 15), describing only what changed since the previous version. All original content stays in place.
 
 ---
 
@@ -103,12 +103,15 @@ When Updating the report, write the report from scratch. Do not reference previo
 ---
 title: [PROJECT_NAME]
 parent: Project Reports
+color: [COLOR]
 ---
 
 # [PROJECT_NAME]
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
 **Date:** YYYY-MM-DD<br/>
+**Readiness:** [color]<br/>
+**Optimization level:** [full | partial | minimal | absent]   ← include only for optimization-purpose projects; omit entirely otherwise<br/>
 **Scope:** [one-line description of what this report covers]<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source.<br/>
@@ -250,21 +253,41 @@ Include this section only if the project has a significant ecosystem of packages
 
 ---
 
-### 13. Investment Analysis
+### 13. Readiness Assessment
+
+Run the `/project-color-coding` skill on this project. That skill is the authoritative source for the color model, research procedure, and decision rules. Do not replicate the color model here.
+
+The skill produces a per-node record with fields `color`, `color_case`, `release_provider`, and `optimization_gap` (for optimization-purpose projects). Use those fields to populate:
+
+- The YAML frontmatter `color:` field
+- The `**Readiness:**` header field
+- The `**Optimization level:**` header field (omit entirely for non-optimization-purpose projects)
+
+**Content of this section:**
+
+- **Color:** [color] ([color_case]) -- taken directly from the skill output
+- **Release provider:** [upstream | RISE | distro | third-party | none] -- taken from the skill output
+- For optimization-purpose projects only: which specific operations lack RISC-V-specific implementations, which ISA extensions (RVV, Zba, Zbb, Zvkned, etc.) would close the gap, and the assigned optimization level (full / partial / minimal / absent).
+- The justification from the skill output (1-3 sentences with links to the primary source).
+- Any pending work (open PRs, RISE involvement) that could change the grade.
+
+---
+
+### 14. Investment Analysis
 
 This section is the primary output for resource allocation decisions. Be specific.
 
 **Before sizing any investment item, check what RISE has already done or committed to.** Review [riseproject.dev](https://riseproject.dev) (blog posts are the most up-to-date public source) and the [riseproject-dev GitHub organization](https://github.com/riseproject-dev). The Confluence wiki is behind authentication -- skip it. For each work item below, note: (a) whether RISE has already completed it, (b) whether it is in progress under a RISE-funded contributor, or (c) whether RISE infrastructure (runners, board farm, wheel builder) would reduce the effort. Do not size work that is already covered. Do not ignore RISE-covered items -- document them as "covered by RISE" so leadership has a complete picture.
 
-**13.1 Functional enablement** -- work required to make the project build, pass its test suite, and produce correct results on riscv64. For each item: brief description, effort in person-weeks, whether it must be contributed upstream or can be done downstream, and who in the upstream community is best positioned to do it. Note whether RISE is already funding equivalent work.
+**14.1 Functional enablement** -- work required to make the project build, pass its test suite, and produce correct results on riscv64. For each item: brief description, effort in person-weeks, whether it must be contributed upstream or can be done downstream, and who in the upstream community is best positioned to do it. Note whether RISE is already funding equivalent work.
 
-**13.2 Performance optimization** -- work required to bring riscv64 performance within an acceptable range of arm64 and amd64. For each item: which gap it closes, target ISA extensions (RVV, Zba, etc.), implementation approach (C intrinsics vs hand-written assembly), estimated effort, and expected performance improvement. Check the [RISE Optimization Guide](https://riseproject.dev) for relevant guidance that could reduce the effort estimate.
+**14.2 Performance optimization** -- work required to bring riscv64 performance within an acceptable range of arm64 and amd64. For each item: which gap it closes, target ISA extensions (RVV, Zba, etc.), implementation approach (C intrinsics vs hand-written assembly), estimated effort, and expected performance improvement. Check the [RISE Optimization Guide](https://riseproject.dev) for relevant guidance that could reduce the effort estimate.
 
-**13.3 CI/CD infrastructure** -- work required to add riscv64 to the project's CI pipeline. Before estimating hardware provisioning cost, check whether RISE RISC-V Runners (see `riseproject-dev` GitHub org for active CI forks) can cover this project's CI needs at no additional infrastructure cost. If RISE runners are available, reduce the effort estimate accordingly and note the dependency on RISE runner availability.
+**14.3 CI/CD infrastructure** -- work required to add riscv64 to the project's CI pipeline. Before estimating hardware provisioning cost, check whether RISE RISC-V Runners (see `riseproject-dev` GitHub org for active CI forks) can cover this project's CI needs at no additional infrastructure cost. If RISE runners are available, reduce the effort estimate accordingly and note the dependency on RISE runner availability.
 
-**13.4 Ecosystem enablement** (if applicable) -- cost to bring the critical ecosystem to riscv64. Check the RISE Python wheel builder (verify via GitLab API) for packages already covered. Identify which remaining gaps RISE could close vs which require independent investment.
+**14.4 Ecosystem enablement** (if applicable) -- cost to bring the critical ecosystem to riscv64. Check the RISE Python wheel builder (verify via GitLab API) for packages already covered. Identify which remaining gaps RISE could close vs which require independent investment.
 
-**13.5 Summary table**
+**14.5 Summary table**
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
@@ -275,7 +298,7 @@ This section is the primary output for resource allocation decisions. Be specifi
 
 ---
 
-### 14. References
+### 15. References
 
 A complete list of every source cited in the report. Format:
 

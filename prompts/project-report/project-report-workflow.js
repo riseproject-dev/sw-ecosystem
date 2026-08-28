@@ -363,6 +363,22 @@ CRITICAL RULES:
 4. Mark any claim from only one source as [NEEDS VERIFICATION].
 5. Your final text output IS the report. Do not call any tools. Just write the report text.
 6. Section 10 (Ecosystem Status) -- include only if the project has a significant ecosystem of packages, plugins, or extensions that must also be enabled on riscv64 (e.g., Python packages, npm packages, Kubernetes operators, Maven JARs). Skip it for system libraries, runtimes, and standalone tools that have no dependent package ecosystem.
+7. Section 13 (Readiness Assessment) -- invoke the /project-color-coding skill on this project to determine the color. That skill is the authoritative source for the color model and decision rules. Pass this project (name + repo + the research findings already gathered) to the skill. Take the skill's output fields directly: color, color_case, release_provider, optimization_gap. Write those values into the YAML frontmatter color: field, the **Readiness:** header field, and (for optimization-purpose projects only) the **Optimization level:** header field. Then write Section 13 using the skill's justification and pending-work notes.
+
+READINESS COLOR MODEL (condensed reference -- the /project-color-coding skill is authoritative):
+
+Step 0: architecture-independent (pure-Python, noarch, platform-neutral JAR) -> green, stop.
+Step 1: primary grade from upstream CI:
+  green  = CI builds + tests pass + upstream publishes riscv64 artifact
+  blue   = CI builds + tests pass, no upstream riscv64 artifact
+  yellow = CI builds riscv64 but does NOT run tests (build-only)
+  orange = no upstream riscv64 CI
+  red    = confirmed broken/non-functional on riscv64
+  grey   = proprietary/vendor-locked or insufficient data
+  Distribution floor: no upstream CI but distro ships riscv64 unpatched -> yellow; patched/unknown -> orange.
+Step 2 (optimization-purpose projects only): assess RISC-V-specific code coverage:
+  full -> no cap | partial -> cap at blue | minimal -> cap at yellow | absent -> cap at orange
+  Cap only goes downward. Omit Optimization level from header for non-optimization-purpose projects.
 
 Project: ${proj.name}
 Repository: ${proj.repo}
@@ -380,12 +396,15 @@ Write the COMPLETE report. Formatting rules:
 ---
 title: ${proj.name}
 parent: Project Reports
+color: [COLOR -- grey|green|blue|yellow|orange|red]
 ---
 
 # ${proj.name}
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
 **Date:** 2026-06-17<br/>
+**Readiness:** [color]<br/>
+[**Optimization level:** full|partial|minimal|absent   ← include ONLY for optimization-purpose projects; omit entirely otherwise]<br/>
 **Scope:** RISC-V (riscv64/linux) support status for ${proj.name}<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -446,23 +465,33 @@ Table: ID | title | status | severity | notes. Highlight correctness bugs separa
 
 Stated objections, technical blockers, organizational blockers, acceptance probability.
 
-## 13. Investment Analysis
+## 13. Readiness Assessment
+
+Invoke the /project-color-coding skill on this project using the research findings already gathered (do not do new research). Take the skill's output fields directly: color, color_case, release_provider, optimization_gap. The color here must match the header **Readiness:** field and the frontmatter \`color:\` field.
+
+- **Color:** [color] ([color_case]) -- from skill output
+- **Release provider:** [upstream | RISE | distro | third-party | none] -- from skill output
+- For optimization-purpose projects only: specific operations lacking RISC-V implementations, ISA extensions that would close the gap, optimization level (full/partial/minimal/absent).
+- Justification from the skill output (1-3 sentences with links to primary source).
+- Any pending work (open PRs, RISE involvement) that could change the grade.
+
+## 14. Investment Analysis
 
 Before sizing: check what RISE has already done or funded. Do not size work already covered.
 
-### 13.1 Functional Enablement
-### 13.2 Performance Optimization
-### 13.3 CI/CD Infrastructure
-### 13.4 Ecosystem Enablement
-### 13.5 Summary Table
+### 14.1 Functional Enablement
+### 14.2 Performance Optimization
+### 14.3 CI/CD Infrastructure
+### 14.4 Ecosystem Enablement
+### 14.5 Summary Table
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
 | Functional | ... | ... | ... | Critical/High/Medium/Low |
 
-## 14. Updates
+## 15. Updates
 (No updates yet -- initial report dated 2026-06-17.)
 
-## 15. References
+## 16. References
 
 Complete list of every source cited. Format: [descriptive text](URL).`, {label: `${proj.name}:synthesize`, phase: 'Synthesize'})
 
