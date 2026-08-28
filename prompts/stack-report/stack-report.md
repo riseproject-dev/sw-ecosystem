@@ -267,6 +267,35 @@ authoritative source for:
 
 Do not re-derive or re-state any of those rules here. Apply them exactly as written.
 
+**Graph-first lookup (before live research).** Before falling back to live research, query the
+project graph database to check whether the node's Ubuntu 26.04 (Resolute) binary package exists on
+riscv64. This is faster than scraping `packages.ubuntu.com` and gives structured, queryable ground
+truth. Use `mcp__project-graph__project_graph_query` with:
+
+```sparql
+SELECT ?pkgName ?suite WHERE {
+  ?pkg a <https://purl.org/packagegraph/ontology/deb#BinaryPackage> ;
+       <https://purl.org/packagegraph/ontology/core#packageName> ?pkgName ;
+       <https://purl.org/packagegraph/ontology/core#targetArchitecture> ?arch ;
+       <https://purl.org/packagegraph/ontology/deb#inSuite> ?suite .
+  ?arch <https://purl.org/packagegraph/ontology/core#architectureName> "riscv64" .
+  FILTER(?suite = "resolute")
+  FILTER(?pkgName IN ("<nodename>", "python3-<nodename>", "lib<nodename>"))
+}
+```
+
+A non-empty result = Ubuntu 26.04 ships this package for riscv64; set `release_provider` to "ubuntu"
+and apply the distribution floor (yellow for a clean unpatched build). Record the suite name. If
+the graph returns empty, proceed with live research. Integrate graph evidence alongside any stored
+per-project report and live checks; graph results are authoritative for Ubuntu 26.04 riscv64 binary
+availability.
+
+The graph schema namespaces for reference:
+- `core:` `https://purl.org/packagegraph/ontology/core#`
+- `deb:`  `https://purl.org/packagegraph/ontology/deb#`
+- `pypi:` `https://purl.org/packagegraph/ontology/pypi#`
+- `vcs:`  `https://purl.org/packagegraph/ontology/vcs#`
+
 ---
 
 ## Output artifacts

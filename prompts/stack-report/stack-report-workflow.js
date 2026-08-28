@@ -105,6 +105,23 @@ Node context:
 
 ${ghHint(node.repo)}
 
+STEP 0 -- Query the project graph for Ubuntu 26.04 riscv64 availability (fast, structured ground truth).
+Use mcp__project-graph__project_graph_query to check whether an Ubuntu 26.04 (Resolute) binary package
+for "${node.name}" exists on riscv64. Try the most plausible Ubuntu package names (e.g. "${node.name.toLowerCase()}", "python3-${node.name.toLowerCase().replace(/[\s.\s\/]+/g,'-')}", "lib${node.name.toLowerCase().replace(/[\s.\s\/]+/g,'-')}").
+  SELECT ?pkgName ?suite WHERE {
+    ?pkg a <https://purl.org/packagegraph/ontology/deb#BinaryPackage> ;
+         <https://purl.org/packagegraph/ontology/core#packageName> ?pkgName ;
+         <https://purl.org/packagegraph/ontology/core#targetArchitecture> ?arch ;
+         <https://purl.org/packagegraph/ontology/deb#inSuite> ?suite .
+    ?arch <https://purl.org/packagegraph/ontology/core#architectureName> "riscv64" .
+    FILTER(?suite = "resolute")
+    FILTER(?pkgName IN ("${node.name.toLowerCase()}", "python3-${node.name.toLowerCase().replace(/[\s.\/]+/g,'-')}", "lib${node.name.toLowerCase().replace(/[\s.\/]+/g,'-')}"))
+  }
+A non-empty result = Ubuntu 26.04 ships this package for riscv64; record the package name and suite.
+Use this as a strong prior for the release_provider (set to "ubuntu") and as the
+color floor: if no upstream CI is found but Ubuntu 26.04 ships riscv64 unpatched, the floor is yellow.
+If the graph returns no results, proceed with STEP 1 and live research as normal.
+
 STEP 1 -- Apply the /project-color-coding skill.
 Invoke the /project-color-coding skill to get the complete color model, release-provider rule,
 research procedure, per-node record fields, and non-negotiable rules. Follow them exactly.
@@ -112,6 +129,8 @@ research procedure, per-node record fields, and non-negotiable rules. Follow the
 STEP 2 -- Classify this node following the procedure in that file.
 The file tells you to: check project-reports/<slug>.md first (if one exists), adversarially spot-check
 the most important color-deciding fact, and fall back to live research only when needed.
+Integrate the graph query result from STEP 0 as additional evidence alongside the stored report and
+live research (graph result is authoritative for Debian riscv64 binary availability).
 
 STEP 3 -- Return the structured record.
 Every URL in justification must be a markdown link [text](url), never bare. No em-dashes.

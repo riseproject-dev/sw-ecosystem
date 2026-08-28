@@ -80,6 +80,32 @@ If zero riscv64 CI found, say "NO RISCV64 CI: confirmed by reading [files checke
 log(`[3/8] Checking package/release availability for ${proj.name} ...`)
 const s3 = await agent(`Research binary package and release availability for "${proj.name}" on riscv64.
 
+STEP 0 -- Query the project graph database first (fastest, most precise).
+Use mcp__project-graph__project_graph_query to check whether an Ubuntu 26.04 (Resolute) binary package
+for this project exists on riscv64. Try the most plausible Ubuntu package names: "${proj.name.toLowerCase()}", "python3-${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}", "lib${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}". Run these queries:
+
+Ubuntu 26.04 riscv64 binary check:
+  SELECT ?pkgName ?suite WHERE {
+    ?pkg a <https://purl.org/packagegraph/ontology/deb#BinaryPackage> ;
+         <https://purl.org/packagegraph/ontology/core#packageName> ?pkgName ;
+         <https://purl.org/packagegraph/ontology/core#targetArchitecture> ?arch ;
+         <https://purl.org/packagegraph/ontology/deb#inSuite> ?suite .
+    ?arch <https://purl.org/packagegraph/ontology/core#architectureName> "riscv64" .
+    FILTER(?suite = "resolute")
+    FILTER(?pkgName IN ("${proj.name.toLowerCase()}", "python3-${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}", "lib${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}"))
+  }
+
+PyPI package check (all architectures, confirms upstream PyPI presence):
+  SELECT ?pkg ?name WHERE {
+    ?pkg a <https://purl.org/packagegraph/ontology/pypi#PythonPackage> ;
+         <https://purl.org/packagegraph/ontology/core#packageName> ?name .
+    FILTER(?name = "${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}")
+  }
+
+A non-empty Ubuntu 26.04 riscv64 result = strong confirmation the package is available for riscv64 in Ubuntu 26.04;
+record the package name and suite. A non-empty PyPI result = confirms the upstream PyPI package name.
+If both queries return empty, continue with live fallback checks below.
+
 ${ghOwner ? `
 Use GitHub MCP to check releases:
 - Use mcp__github__list_releases with owner="${ghOwner}", repo="${ghRepo}", perPage=5
@@ -91,11 +117,9 @@ Check the project's release page via WebFetch: ${proj.repo}
 Also check these via WebFetch (not GitHub MCP):
 1. PyPI: https://pypi.org/pypi/${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}/json -- check "urls" array for "riscv64" in filenames
 2. RISE wheel builder: https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}/
-3. Ubuntu 24.04: https://packages.ubuntu.com/search?keywords=${encodeURIComponent(proj.name)}&suite=noble&searchon=names&section=all
-4. Debian tracker: https://tracker.debian.org/pkg/${proj.name.toLowerCase().replace(/[\s.]+/g,'-')} -- find riscv64 build status row
-5. Arch Linux RISC-V: https://archriscv.felixc.at/?q=${encodeURIComponent(proj.name.toLowerCase())}
+3. Ubuntu 26.04: https://packages.ubuntu.com/search?keywords=${encodeURIComponent(proj.name)}&suite=resolute&searchon=names&section=all
 
-For each source: state the URL fetched, what you found, whether riscv64 is present.`, {label: `${proj.name}:packages`, phase: 'Search'})
+For each source: state the URL fetched (or query run), what you found, whether riscv64 is present.`, {label: `${proj.name}:packages`, phase: 'Search'})
 
 log(`[4/8] Checking RISE Project involvement for ${proj.name} ...`)
 const s4 = await agent(`Research RISE Project involvement with "${proj.name}".
@@ -171,10 +195,33 @@ Use GitHub MCP to fetch the dependency manifest:
 Use WebFetch to find the build/dependency files at ${proj.repo}
 `}
 
+For each major dependency identified, query the project graph to check riscv64 availability in Ubuntu 26.04.
+Use mcp__project-graph__project_graph_query with a query like:
+  SELECT ?pkgName ?suite WHERE {
+    ?pkg a <https://purl.org/packagegraph/ontology/deb#BinaryPackage> ;
+         <https://purl.org/packagegraph/ontology/core#packageName> ?pkgName ;
+         <https://purl.org/packagegraph/ontology/core#targetArchitecture> ?arch ;
+         <https://purl.org/packagegraph/ontology/deb#inSuite> ?suite .
+    ?arch <https://purl.org/packagegraph/ontology/core#architectureName> "riscv64" .
+    FILTER(?suite = "resolute")
+    FILTER(?pkgName IN ("<dep1-ubname>", "<dep2-ubname>", ...))
+  }
+Try the most plausible Ubuntu package name for each dependency (e.g. "libfoo-dev", "python3-foo", "libfoo2").
+A non-empty result = that dependency is available in Ubuntu 26.04 riscv64; record the suite.
+A Dependency struct also carries hasDependency links -- you may also query:
+  SELECT ?depName WHERE {
+    ?pkg <https://purl.org/packagegraph/ontology/core#packageName> "<ubname>" ;
+         <https://purl.org/packagegraph/ontology/core#hasDependency> ?dep .
+    ?dep <https://purl.org/packagegraph/ontology/core#dependencyTarget> ?target .
+    ?target <https://purl.org/packagegraph/ontology/core#packageName> ?depName
+  }
+to enumerate transitive dependencies for a given package (useful for confirming the full dependency chain).
+
 For any dependency that is also listed in project-reports/scope.yml (our RISC-V Ecosystem project scope), note:
 "See status report at project-reports/<dependency-slug>.md" (slug = lowercased name with spaces/dots/slashes replaced by hyphens)
 
-Return a dependency table: name, role, riscv64 build status, riscv64 test status, riscv64 release status, blocking issues.`, {label: `${proj.name}:deps`, phase: 'Search'})
+Return a dependency table: name, role, riscv64 build status, riscv64 test status, riscv64 release status, blocking issues.
+For each dependency: note "graph: found in Ubuntu 26.04 riscv64 (<suite>)" or "graph: not found" as the first data point.`, {label: `${proj.name}:deps`, phase: 'Search'})
 
 log(`[8/8] Searching perf benchmarks and bugs for ${proj.name} ...`)
 const s8 = await agent(`Search for performance benchmarks and known bugs for "${proj.name}" on RISC-V.
@@ -313,9 +360,24 @@ Your job is to REFUTE any claim that a riscv64 binary exists. Be a skeptic.
 Evidence so far:
 ${allFindings.substring(0, 7000)}
 
+STEP 0 -- Query the project graph as authoritative cross-check.
+Use mcp__project-graph__project_graph_query to query the Ubuntu 26.04 riscv64 binary package index directly.
+This is more reliable than scraping packages.ubuntu.com.
+  SELECT ?pkgName ?suite WHERE {
+    ?pkg a <https://purl.org/packagegraph/ontology/deb#BinaryPackage> ;
+         <https://purl.org/packagegraph/ontology/core#packageName> ?pkgName ;
+         <https://purl.org/packagegraph/ontology/core#targetArchitecture> ?arch ;
+         <https://purl.org/packagegraph/ontology/deb#inSuite> ?suite .
+    ?arch <https://purl.org/packagegraph/ontology/core#architectureName> "riscv64" .
+    FILTER(?suite = "resolute")
+    FILTER(?pkgName IN ("${proj.name.toLowerCase()}", "python3-${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}", "lib${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}"))
+  }
+If the graph returns results, that is high-confidence confirmation the package exists on riscv64 in Ubuntu 26.04 -- record the package name and suite as verified evidence.
+If the graph returns EMPTY but prior evidence claimed Ubuntu 26.04 riscv64 availability, flag this discrepancy as delta_vs_report.
+
 Use WebFetch to verify directly:
 1. Fetch https://pypi.org/pypi/${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}/json -- does any "urls[].filename" contain "riscv64"?
-2. Fetch Debian tracker: https://tracker.debian.org/pkg/${proj.name.toLowerCase().replace(/[\s.]+/g,'-')} -- exact riscv64 build status row
+2. Fetch Ubuntu 26.04 packages: https://packages.ubuntu.com/search?keywords=${proj.name.toLowerCase().replace(/[\s.]+/g,'-')}&suite=resolute&searchon=names&section=all -- find riscv64 status
 3. Fetch https://archriscv.felixc.at/?q=${encodeURIComponent(proj.name.toLowerCase())} -- is it listed with a version?
 
 ${ghOwner ? `
@@ -324,7 +386,7 @@ Use GitHub MCP to verify releases:
 - List EVERY asset filename. Does any contain "riscv64"?
 ` : ''}
 
-Final verdict: for each distribution channel, state whether riscv64 is available with exact evidence from API/page response.`, {label: `${proj.name}:verify-packages`, phase: 'Verify'})
+Final verdict: for each distribution channel, state whether riscv64 is available with exact evidence from graph query or API/page response.`, {label: `${proj.name}:verify-packages`, phase: 'Verify'})
 
 log(`[3/3] Adversarially verifying arch code completeness for ${proj.name} ...`)
 const v3 = await agent(`ADVERSARIAL VERIFICATION -- architecture-specific code completeness for "${proj.name}".

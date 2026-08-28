@@ -72,9 +72,22 @@ Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trac
 
 **Verifying PR merge status.** A PR that appears "merged" in an issue comment, a tracking spreadsheet, or a project blog post may have been closed without merging. Always verify against the GitHub API: fetch `https://api.github.com/repos/<owner>/<repo>/pulls/<number>` and check `"merged_at"`. A null `merged_at` with `"state": "closed"` means the PR was closed without merging. Do not rely on labels, comments, or cross-references in other issues to determine merge status.
 
-**Verifying Linux distribution packages.** Use the following canonical URLs to check riscv64 package availability for each distro rather than leaving results as [NEEDS VERIFICATION]:
+**Verifying Linux distribution packages.** Use the following canonical sources to check riscv64 package availability. Start with the project graph database (faster, structured, no HTML scraping) and fall back to web URLs only when the graph returns no results:
 
-- Ubuntu: `https://packages.ubuntu.com/search?keywords=<package>&searchon=names&suite=noble&section=all`
+- **Project graph (first stop):** Use `mcp__project-graph__project_graph_query` to query the Ubuntu 26.04 (Resolute) binary package index for riscv64. Example query for a package named "libfoo-dev":
+  ```sparql
+  SELECT ?pkgName ?suite WHERE {
+    ?pkg a <https://purl.org/packagegraph/ontology/deb#BinaryPackage> ;
+         <https://purl.org/packagegraph/ontology/core#packageName> ?pkgName ;
+         <https://purl.org/packagegraph/ontology/core#targetArchitecture> ?arch ;
+         <https://purl.org/packagegraph/ontology/deb#inSuite> ?suite .
+    ?arch <https://purl.org/packagegraph/ontology/core#architectureName> "riscv64" .
+    FILTER(?suite = "resolute")
+    FILTER(?pkgName IN ("libfoo-dev", "libfoo2", "python3-foo"))
+  }
+  ```
+  A non-empty result confirms riscv64 availability in Ubuntu 26.04; record the package name and suite. An empty result means the package is absent or the name differs -- fall back to packages.ubuntu.com.
+- Ubuntu 26.04: `https://packages.ubuntu.com/search?keywords=<package>&searchon=names&suite=resolute&section=all`
 - Debian: `https://tracker.debian.org/pkg/<source-package>` (shows per-arch build status)
 - Fedora: `https://packages.fedoraproject.org/pkgs/<source-package>/<binary-package>/`
 - Arch Linux RISC-V: `https://archriscv.felixc.at/?q=<package>`
@@ -209,6 +222,19 @@ This section documents the dependency graph with respect to RISC-V. Apply the fo
 **Step 1 -- Direct dependencies.** List every significant direct dependency: build dependencies, runtime dependencies, and optional dependencies that affect performance or functionality. For each:
 
 - Is it built, tested, and released on riscv64? (yes / partial / no, with evidence)
+- **Graph lookup:** Use `mcp__project-graph__project_graph_query` to check whether the dependency's Ubuntu 26.04 binary package exists on riscv64 before doing live GitHub searches:
+  ```sparql
+  SELECT ?pkgName ?suite WHERE {
+    ?pkg a <https://purl.org/packagegraph/ontology/deb#BinaryPackage> ;
+         <https://purl.org/packagegraph/ontology/core#packageName> ?pkgName ;
+         <https://purl.org/packagegraph/ontology/core#targetArchitecture> ?arch ;
+         <https://purl.org/packagegraph/ontology/deb#inSuite> ?suite .
+    ?arch <https://purl.org/packagegraph/ontology/core#architectureName> "riscv64" .
+    FILTER(?suite = "resolute")
+    FILTER(?pkgName IN ("<ubname>", "lib<ubname>", "python3-<ubname>"))
+  }
+  ```
+  Record "graph: found in Ubuntu 26.04 riscv64 (<suite>)" or "graph: not found" as the first data point for each dependency's riscv64 status.
 - Who maintains it and what community governs it?
 - If a status report exists for it, note "See the [Foo](project-reports/foo.md) status report" -- but do not import its content here.
 - Are there open issues, PRs, or blockers for riscv64 support?
