@@ -12,10 +12,9 @@ category list. The `categories:` frontmatter that appears in the per-project rep
 vertical can be.
 
 **Output is ad-hoc and not committed.** This prompt and its companion workflow live under
-`examples/vertical-report/` and are committed as reusable tooling. The scope spec and the report a
-run produces are the operator's own research output. Save them outside version control (the
-suggested default is the gitignored `examples/vertical-report/out/` directory). Do not commit
-generated reports.
+`prompts/vertical-report/` and are committed as reusable tooling. The scope spec and the report a
+run produces are the operator's own research output. Save them inside version control in the
+`vertical-report/<slug>/` directory. Do commit generated reports.
 
 **Relationship to the per-project reports.** The repository already contains ~150 deep per-project
 RISC-V status reports under `project-reports/<slug>.md`, one per entry in `scope.yml`. Those reports are

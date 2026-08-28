@@ -18,10 +18,9 @@ consume the per-project reports as a prior and adversarially verify them live.
 | `vertical-report-workflow.js` | A `Workflow` script that runs stage 2 (classify + verify + synthesize) at scale, one agent per stack node. | yes |
 | `render-stack-svg.py` | Renders the stack view-model (`out/<slug>.yml`) to an SVG stack diagram. Can also reconstruct the view-model from an existing scope spec + report. | yes |
 | `README.md` | This file. | yes |
-| `out/` | Where you save the generated scope spec, report, view-model, and SVG. Git-ignored. | no |
+| `vertical-report/<slug>/` | Where generated reports live. Committed. | yes |
 
-**Generated reports are ad-hoc and are not committed.** They are research you run for your own use
-case. Save them under `out/` (git-ignored) or anywhere outside the repo. Do not commit them.
+**Generated reports are committed.** Save them under `vertical-report/<slug>/` at the repo root.
 
 ## The vertical is whatever you define
 
@@ -65,7 +64,7 @@ inline in the session. No workflow needed.
 // 2. Invoke the workflow with that object as args:
 Workflow({
   args: <the parsed scope-spec object>,
-  scriptPath: "C:/Users/ludohenr/git/sw-ecosystem/examples/vertical-report/vertical-report-workflow.js"
+  scriptPath: "/abs/path/to/prompts/vertical-report/vertical-report-workflow.js"
 })
 ```
 

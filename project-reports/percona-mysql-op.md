@@ -22,7 +22,7 @@ Repository: [percona/percona-xtradb-cluster-operator](https://github.com/percona
 
 **Community culture on new ports.** No explicit policy on new architecture ports exists in any public documentation. The track record shows: arm64 support was requested and then delivered roughly 2.5 years after the project's initial release. ARM64 full support (K8SPXC-1728) was a v1.20.0 release highlight in June 2026, with a preceding bug fix (K8SPXC-1821) addressing a logrotate crash on ARM64 due to a cron package binary dependency. No community member has filed a RISC-V request.
 
-**RISE project.** Percona is not a RISE member (confirmed absent from both Premier and General member tiers at [riseproject.dev/members](https://riseproject.dev/members/)). No RISE blog post, funded work, or riseproject-dev repository is associated with this project. The [RISE databases vertical report](https://github.com/riseproject-dev/sw-ecosystem/blob/main/examples/vertical-report/out/databases.md) rates the Percona MySQL Operator as RED and characterizes the Kubernetes operator layer as a "structural gap" -- every PostgreSQL and MySQL Kubernetes operator is red.
+**RISE project.** Percona is not a RISE member (confirmed absent from both Premier and General member tiers at [riseproject.dev/members](https://riseproject.dev/members/)). No RISE blog post, funded work, or riseproject-dev repository is associated with this project. The [RISE databases vertical report](https://github.com/riseproject-dev/sw-ecosystem/blob/main/vertical-report/databases/databases.md) rates the Percona MySQL Operator as RED and characterizes the Kubernetes operator layer as a "structural gap" -- every PostgreSQL and MySQL Kubernetes operator is red.
 
 ## 2. Port History and Upstreaming Timeline
 
@@ -257,7 +257,7 @@ No updates yet -- initial report dated 2026-06-17.
 - [PR #1550: K8SPXC-1309 add multi architecture build support](https://github.com/percona/percona-xtradb-cluster-operator/pull/1550)
 - [PR #1567: K8SPXC-1309 fix multi architecture builds](https://github.com/percona/percona-xtradb-cluster-operator/pull/1567)
 - [RISE project member list](https://riseproject.dev/members/)
-- [RISE databases vertical report](https://github.com/riseproject-dev/sw-ecosystem/blob/main/examples/vertical-report/out/databases.md)
+- [RISE databases vertical report](https://github.com/riseproject-dev/sw-ecosystem/blob/main/vertical-report/databases/databases.md)
 - [Kubernetes issue #132836: proposal for official Tier 3 riscv64 support](https://github.com/kubernetes/kubernetes/issues/132836)
 - [klauspost/cpuid: riscv64 support](https://github.com/klauspost/cpuid)
 - [cert-manager releases](https://github.com/cert-manager/cert-manager/releases)

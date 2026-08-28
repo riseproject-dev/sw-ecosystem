@@ -390,10 +390,10 @@ const viewmodel = buildViewModel(spec, allRecords, slug, targetProfile, report)
 return [{
   vertical: spec.vertical || slug,
   slug,
-  file: `examples/vertical-report/out/${slug}.md`,
+  file: `vertical-report/${slug}/${slug}.md`,
   report,
   nodeCount: allRecords.length,
   records: allRecords,
-  viewmodel,                     // Artifact 4 object: write to out/<slug>.yml (yaml.safe_dump)
+  viewmodel,                     // Artifact 4 object: write to <slug>/<slug>.yml (yaml.safe_dump)
   viewmodel_yaml: ymlDump(viewmodel),   // ready-to-write YAML string (no PyYAML needed)
 }]

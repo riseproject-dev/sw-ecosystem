@@ -1,0 +1,58 @@
+vertical: Sample
+slug: sample
+author: Ludovic Henry
+audience: exec-product
+target_profile: RVA23U64
+use: >
+  Deck for exec leadership on where to invest in RISC-V enablement across the open-source
+  a sample stack (a simple C hello world). It's only to test out the vertical-report prompts
+  and the different tools it relies on (scope, gaps, roadmap, etc.). Not a real investment recommendation.
+
+assumptions:
+  - "CPU-only per operator directive: no GPU / CUDA / ROCm paths."
+  - "Target profile RVA23U64: RVV 1.0, vector crypto (Zvkned), Zba/Zbb/Zbc, and FP16 are
+     treated as mandatory baseline, so missing SIMD/crypto acceleration is a gap against baseline."
+
+exclusions: []
+
+out_of_scope:
+  - name: "Windows and macOS server deployment"
+    reason: "Linux/riscv64 server focus."
+
+layers:
+
+  - layer: "Toolchains"
+    product: GCC
+    nodes:
+      - name: gcc
+        repo: https://gcc.gnu.org/git/gcc
+        home: https://gcc.gnu.org/
+        criticality: critical
+        features_in_scope: "C compiler for RISC-V"
+        notes: "C, compiled arch-specific. Bundled in RISC-V toolchain; no standalone report. Ships in every distro riscv64 package."
+
+  - layer: "Toolchains"
+    product: LLVM
+    nodes:
+      - name: LLVM
+        repo: https://github.com/llvm/llvm-project
+        home: https://llvm.org/
+        criticality: critical
+        features_in_scope: "LLVM compiler infrastructure for RISC-V"
+        notes: "C++, compiled arch-specific. Bundled in RISC-V toolchain; no standalone report. Ships in every distro riscv64 package."
+
+  - layer: "System Libraries"
+    nodes:
+      - name: glibc
+        repo: https://sourceware.org/git/glibc.git
+        home: https://www.gnu.org/software/libc/
+        slug: glibc
+        criticality: critical
+        features_in_scope: "C runtime, libm, pthreads, sub-word atomics (libatomic) -- required by every engine"
+        notes: "C + asm. Prior in project-reports/glibc.md. riscv64 is a first-class glibc port."
+
+chains:
+  - name: "LLVM"
+    sequence: ["LLVM", "glibc"]
+  - name: "GCC"
+    sequence: ["GCC", "glibc"]
