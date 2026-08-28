@@ -1,6 +1,6 @@
 
 export const meta = {
-  name: 'update-project-report',
+  name: 'project-report',
   description: 'Deep research RISC-V ecosystem status report -- sequential, GitHub MCP for GitHub projects',
   phases: [
     { title: 'Search', detail: 'Sequential: GitHub MCP searches + web searches for non-GitHub sources' },

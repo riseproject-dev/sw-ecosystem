@@ -309,7 +309,7 @@ factual accuracy, then commit.
 To reproduce the 2026-06 session from scratch on a new machine or after context loss:
 
 1. Clone the repo: `git clone <repo>`
-2. Verify the workflow script exists: `.prompts/update-project-report-workflow.js`
+2. Verify the workflow script exists: `prompts/project-report/project-report-workflow.js`
 3. Create the output directory if missing:
    ```bash
    mkdir -p project-reports

@@ -21,7 +21,7 @@ The output report path is derived from the name: `project-reports/<slug>.md`, wh
 
 ## Execution model
 
-Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `.prompts/update-project-report-workflow.js`. Pass one `scope.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`):
+Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `prompts/project-report/project-report-workflow.js`. Pass one `scope.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`):
 
 ```js
 Workflow({
@@ -30,7 +30,7 @@ Workflow({
     "repo": "https://<project-repository>/",         // scope.yml: repo
     "home": "https://<project-homepage>/"            // scope.yml: home
   }],
-  scriptPath: "/abs/path/to/.prompts/update-project-report-workflow.js"
+  scriptPath: "/abs/path/to/prompts/project-report/project-report-workflow.js"
 })
 ```
 
