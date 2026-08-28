@@ -1,0 +1,854 @@
+vertical: Edge AI
+slug: edge-ai
+author: Ludovic Henry
+run_date: 2026-08-29
+audience: exec-product
+target_profile: RVA23U64
+use: >
+  Deck for leadership on RISC-V investment across the full Edge AI software stack —
+  covering inference runtimes, model optimization, fleet management, data pipelines,
+  observability, security, and domain-specific verticals (automotive, robotics,
+  industrial IoT, smart home, healthcare/wearables, security/surveillance).
+
+assumptions:
+  - "Edge AI means deploying AI algorithms and models directly on local edge devices
+     (IoT sensors, smart cameras, industrial PLCs, autonomous vehicles/robots,
+     smartphones/laptops, wearables, smart home appliances, edge gateways, edge servers)
+     to enable real-time local data processing without constant cloud dependency."
+  - "Target profile RVA23U64: RVV 1.0, Zba/Zbb/Zbc, FP16 treated as mandatory baseline."
+  - "Hardware tiers covered: microcontroller (MCU, <1 MB RAM), constrained SBC (1–512 MB),
+     capable SBC / edge gateway (512 MB–8 GB), edge server (>8 GB)."
+
+exclusions:
+  - name: "Cloud-only training infrastructure (TPU pods, GPU clusters, SageMaker training jobs)"
+    reason: "Scope is edge inference and deployment, not cloud-based training."
+  - name: "CUDA / cuDNN / cuBLAS / TensorRT GPU path (non-Jetson)"
+    reason: "Proprietary NVIDIA GPU path for data-center GPUs; no RISC-V port."
+  - name: "ROCm / HIP / MIOpen"
+    reason: "AMD GPU path; no RISC-V port."
+  - name: "Apple CoreML / ANE / Neural Engine SDK"
+    reason: "Apple silicon only; not applicable to RISC-V."
+  - name: "Qualcomm QNN / SNPE / AI Hub (on-device)"
+    reason: "Qualcomm Hexagon DSP / Snapdragon only; no RISC-V port."
+  - name: "MediaTek NeuroPilot / APU"
+    reason: "MediaTek APU only; no RISC-V port."
+  - name: "Samsung ONE / Exynos NPU SDK"
+    reason: "Samsung Exynos only; no RISC-V port."
+  - name: "ARM Ethos-U NPU + Vela compiler"
+    reason: "ARM Ethos-U MCU NPU; proprietary ARM silicon, not RISC-V."
+  - name: "Google Edge TPU / Coral runtime"
+    reason: "Google Edge TPU ASIC only; no RISC-V port."
+  - name: "Hailo SDK / Hailo-8 runtime"
+    reason: "Hailo-8 NPU ASIC only; no RISC-V port."
+  - name: "Rockchip RKNN toolkit"
+    reason: "Rockchip NPU only; RISC-V RKNN support is unverified."
+  - name: "STM32Cube.AI / X-CUBE-AI"
+    reason: "STM32 ARM Cortex-M only; no RISC-V port."
+  - name: "NXP eIQ"
+    reason: "NXP i.MX ARM only; no RISC-V port."
+  - name: "Renesas DRP-AI"
+    reason: "Renesas DRP-AI ASIC only; no RISC-V port."
+  - name: "Ambarella CVflow SDK"
+    reason: "Ambarella CVflow ASIC only; no RISC-V port."
+  - name: "Syntiant NDP SDK"
+    reason: "Syntiant NDP MCU NPU only; no RISC-V port."
+  - name: "GreenWaves GAP SDK"
+    reason: "GreenWaves GAP RISC-V MCU is a specialized ultra-low-power target; out of scope for RVA23U64 server/gateway tier."
+  - name: "Espressif ESP-NN"
+    reason: "ESP32 Xtensa/RISC-V ultra-low-power MCU; below RVA23U64 capability tier."
+  - name: "CMSIS-NN"
+    reason: "ARM Cortex-M only kernel library; no RISC-V port (riscv-nn is an unofficial fork, out of scope)."
+  - name: "Triton GPU compiler"
+    reason: "GPU-only JIT compiler; not applicable."
+  - name: "VxWorks / QNX (commercial RTOS)"
+    reason: "Proprietary RTOS; no open-source RISC-V path."
+  - name: "AUTOSAR Classic Platform"
+    reason: "Automotive RTOS with no open-source RISC-V implementation."
+
+out_of_scope:
+  - name: "On-device model training (full backprop, not fine-tuning)"
+    reason: "Scope is inference and fine-tuning at edge; full training workloads are cloud-side."
+  - name: "Federated learning server-side aggregation"
+    reason: "Aggregation runs in cloud/datacenter; only the on-device client (Flower client, TFF client) is in scope."
+  - name: "NVIDIA DeepStream (GPU-only pipeline)"
+    reason: "Requires NVIDIA GPU; Jetson GPU path is in scope but DeepStream itself requires CUDA."
+  - name: "Model visualization tools (Netron, etc.)"
+    reason: "Developer tooling only; not a runtime dependency."
+  - name: "Cloud IoT brokers (AWS IoT Core, Azure IoT Hub, Google Cloud IoT)"
+    reason: "Cloud-side infrastructure; only edge-local components are in scope."
+
+layers:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 1: ML INFERENCE RUNTIMES (edge-optimized)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "ML Inference Runtimes"
+    nodes:
+      - name: llama.cpp
+        repo: https://github.com/ggerganov/llama.cpp
+        home: https://github.com/ggerganov/llama.cpp
+        slug: llama-cpp
+        criticality: critical
+        features_in_scope: "GGUF-format LLM inference on CPU; RVV-accelerated kernels; 1.5–8-bit quantization; CPU+GPU hybrid offload"
+        notes: "Primary LLM inference runtime for edge servers and capable SBCs. Active RVV optimization."
+
+      - name: ONNX Runtime (edge / mobile EP)
+        repo: https://github.com/microsoft/onnxruntime
+        home: https://onnxruntime.ai/
+        slug: onnx
+        criticality: critical
+        features_in_scope: "Cross-platform inference runtime; CPU execution provider; QDQ INT8 quantization; Android/iOS/Raspberry Pi targets"
+        notes: "Debian sid ships riscv64 binary. No upstream riscv64 CI."
+
+      - name: TensorFlow Lite / LiteRT
+        repo: https://github.com/google-ai-edge/LiteRT
+        home: https://ai.google.dev/edge/litert
+        criticality: critical
+        features_in_scope: "Mobile and embedded inference; INT8/FP16 quantization (up to 75% size reduction); XNNPACK delegate; Raspberry Pi and Android targets"
+        notes: "Google rebranded TFLite as LiteRT in 2024. Primary runtime for mobile and constrained SBC tier."
+
+      - name: TensorFlow Lite Micro (TFLM)
+        repo: https://github.com/tensorflow/tflite-micro
+        home: https://ai.google.dev/edge/litert/microcontrollers/overview
+        criticality: optional
+        features_in_scope: "Bare-metal MCU inference; INT8; CMSIS-NN backend on ARM; portable C++ runtime"
+        notes: "MCU tier only. RISC-V backend via microTVM path; native TFLM RISC-V support is minimal."
+
+      - name: ExecuTorch
+        repo: https://github.com/pytorch/executorch
+        home: https://pytorch.org/executorch/
+        slug: executorch
+        criticality: critical
+        features_in_scope: "PyTorch on-device inference; .pte model format; XNNPACK CPU backend; MCU through mobile through edge server"
+        notes: "Phase-1 riscv64 QEMU CI with test pass. No upstream release binary. RISE fork active."
+
+      - name: ncnn
+        repo: https://github.com/Tencent/ncnn
+        home: https://github.com/Tencent/ncnn
+        criticality: critical
+        features_in_scope: "High-performance mobile/SBC inference; no third-party runtime dependencies; Vulkan GPU (optional); Android/iOS/Linux"
+        notes: "Production use in Tencent products (WeChat, QQ, Pitu). No riscv64-specific optimizations verified."
+
+      - name: MNN (Alibaba)
+        repo: https://github.com/alibaba/MNN
+        home: https://www.mnn.zone/
+        criticality: optional
+        features_in_scope: "Mobile/edge inference and training; supports Android, iOS, Linux; INT8/FP16; backend plugins"
+        notes: "Used in Taobao, DingTalk, and other Alibaba apps. Less commonly deployed outside Alibaba ecosystem."
+
+      - name: PaddlePaddle Lite
+        repo: https://github.com/PaddlePaddle/Paddle-Lite
+        home: https://www.paddlepaddle.org.cn/lite
+        criticality: optional
+        features_in_scope: "Inference on mobile/IoT/embedded; Android, iOS, ARM Linux, x86 Linux; INT8 quantization"
+        notes: "Dominant in China for IoT/edge use cases. Limited Western adoption."
+
+      - name: MindSpore Lite (Huawei)
+        repo: https://github.com/mindspore-ai/mindspore
+        home: https://www.mindspore.cn/lite/en
+        criticality: optional
+        features_in_scope: "On-device inference for Android, iOS, Linux, Cortex-M/A; INT8/FP16"
+        notes: "Huawei ecosystem. Used with HiSilicon Ascend NPU and Kirin NPU. Limited non-Huawei adoption."
+
+      - name: OpenVINO Runtime
+        repo: https://github.com/openvinotoolkit/openvino
+        home: https://docs.openvino.ai/
+        criticality: critical
+        features_in_scope: "Intel-optimized inference runtime; CPU/GPU/VPU execution providers; INT8; OpenVINO IR format"
+        notes: "Primary runtime for Intel-based edge devices (NUC, UP Board, industrial PCs). Debian sid ships riscv64 binary."
+
+      - name: Apache TVM / microTVM
+        repo: https://github.com/apache/tvm
+        home: https://tvm.apache.org/
+        criticality: optional
+        features_in_scope: "ML compiler and runtime; microTVM for bare-metal MCU (STM32, ESP32, RISC-V boards); auto-tuning"
+        notes: "microTVM explicitly targets RISC-V MCUs (e.g., SiFive boards). Compiler toolchain for edge targets."
+
+      - name: whisper.cpp
+        repo: https://github.com/ggerganov/whisper.cpp
+        home: https://github.com/ggerganov/whisper.cpp
+        criticality: optional
+        features_in_scope: "On-device speech recognition (OpenAI Whisper); CPU inference; RVV-capable; edge server / capable SBC"
+        notes: "Shares ggml backend with llama.cpp. Key for voice-driven edge AI (smart home, robotics)."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 2: MODEL OPTIMIZATION & CONVERSION
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Model Optimization & Conversion"
+    nodes:
+      - name: ONNX (format + tooling)
+        repo: https://github.com/onnx/onnx
+        home: https://onnx.org/
+        slug: onnx
+        criticality: critical
+        features_in_scope: "Cross-framework model interchange format; onnx-simplifier; onnx-mltools quantization; conversion hub"
+        notes: "Lingua franca for model portability. Arch-independent Python tooling."
+
+      - name: Intel Neural Compressor (INC)
+        repo: https://github.com/intel/neural-compressor
+        home: https://intel.github.io/neural-compressor/
+        criticality: optional
+        features_in_scope: "PTQ/QAT quantization; pruning; knowledge distillation; mixed-precision; targets ONNX Runtime, TFLite, PyTorch"
+        notes: "Open-source Intel tool. Generates INT8 models deployable via ONNX Runtime on edge."
+
+      - name: NNCF (Neural Network Compression Framework, Intel)
+        repo: https://github.com/openvinotoolkit/nncf
+        home: https://github.com/openvinotoolkit/nncf
+        criticality: optional
+        features_in_scope: "QAT, structured/unstructured pruning, filter pruning; integrates with PyTorch and OpenVINO"
+        notes: "Companion to OpenVINO for compression-before-deployment workflow."
+
+      - name: HuggingFace Optimum
+        repo: https://github.com/huggingface/optimum
+        home: https://huggingface.co/docs/optimum
+        criticality: optional
+        features_in_scope: "Quantization and optimization toolkit; ONNX Runtime backend; Intel, Habana, Furiosa backends; edge export"
+        notes: "Pure Python. Used upstream of ONNX Runtime edge deployment."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 3: KERNEL LIBRARIES & COMPUTE PRIMITIVES
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Kernel Libraries & Compute Primitives"
+    nodes:
+      - name: XNNPACK
+        repo: https://github.com/google/XNNPACK
+        home: https://github.com/google/XNNPACK
+        slug: xnnpack
+        criticality: critical
+        features_in_scope: "Acceleration backend for TFLite, ExecuTorch, PyTorch Mobile, ONNX Runtime Mobile, MediaPipe; RVV kernels"
+        notes: "Not a standalone inference engine. Backend for 7+ frameworks. Active RISC-V RVV support."
+
+      - name: OpenBLAS
+        repo: https://github.com/OpenMathLib/OpenBLAS
+        home: https://www.openblas.net/
+        slug: openblas
+        criticality: critical
+        features_in_scope: "BLAS/LAPACK for edge servers and capable SBCs; RVV 1.0 GEMM acceleration"
+        notes: "RVV 1.0 GEMM fully covered. TRSM partially in v0.3.34. Used by llama.cpp, ONNX Runtime, scikit-learn."
+
+      - name: SLEEF
+        repo: https://github.com/shibatch/sleef
+        home: https://sleef.org/
+        slug: sleef
+        criticality: critical
+        features_in_scope: "SIMD transcendental math (exp, log, sin, cos); RVV v1.0 backend; used by edge inference operators"
+        notes: "Full RVV v1.0 backend covering SP/DP. Jenkins CI on native riscv64 hardware."
+
+      - name: ARM Compute Library (ACL) [ARM Only]
+        repo: https://github.com/ARM-software/ComputeLibrary
+        home: https://arm-software.github.io/ComputeLibrary/
+        criticality: optional
+        features_in_scope: "Optimized kernels for ARM CPU (NEON/SVE) and GPU (OpenCL); used by Arm NN and ONNX Runtime ARM EP"
+        notes: "ARM-only; no RISC-V port. Listed for completeness as major edge kernel library."
+
+      - name: RUY (Google matrix multiply)
+        repo: https://github.com/google/ruy
+        home: https://github.com/google/ruy
+        criticality: optional
+        features_in_scope: "Optimized INT8 matrix multiply for TFLite on ARM; fallback generic path for other arch"
+        notes: "ARM-optimized, generic scalar fallback for RISC-V. Used inside TFLite."
+
+      - name: FlatBuffers
+        repo: https://github.com/google/flatbuffers
+        home: https://google.github.io/flatbuffers/
+        slug: flatbuffers
+        criticality: critical
+        features_in_scope: "Zero-copy serialization; TFLite model format; ExecuTorch .pte format; edge model loading"
+        notes: "Debian sid ships riscv64. Required by TFLite, ExecuTorch, and ONNX Runtime model loading."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 4: DATA PIPELINE & LOCAL PROCESSING
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Data Pipeline & Local Processing"
+    nodes:
+      - name: OpenCV
+        repo: https://github.com/opencv/opencv
+        home: https://opencv.org/
+        criticality: critical
+        features_in_scope: "Computer vision preprocessing; camera capture; image/video decode; inference pre/post-processing; DNN module"
+        notes: "Debian riscv64 package ships (libopencv-*). Core dependency for vision-based edge AI across all verticals."
+
+      - name: GStreamer
+        repo: https://gitlab.freedesktop.org/gstreamer/gstreamer
+        home: https://gstreamer.freedesktop.org/
+        slug: gstreamer
+        criticality: critical
+        features_in_scope: "Media pipeline framework; camera/video ingestion; hardware-accelerated decode; tensor_filter for ML inference in pipeline"
+        notes: "Debian riscv64 ships gstreamer1.0-*. Used in smart camera, surveillance, and industrial vision pipelines."
+
+      - name: MediaPipe
+        repo: https://github.com/google/mediapipe
+        home: https://mediapipe.dev/
+        criticality: optional
+        features_in_scope: "ML pipeline framework for vision/audio; face detection, pose estimation, hand tracking; Android/iOS/Linux"
+        notes: "Google. XNNPACK-accelerated. Used in healthcare wearables, retail, smart home. ARM-primary; riscv64 build untested."
+
+      - name: Mosquitto (Eclipse)
+        repo: https://github.com/eclipse/mosquitto
+        home: https://mosquitto.org/
+        criticality: critical
+        features_in_scope: "MQTT v5.0/3.1.1 broker and client library; IoT message bus for sensor data; lightweight edge broker"
+        notes: "Debian riscv64 ships libmosquitto1, libmosquittopp1, mosquitto. Core IoT data bus."
+
+      - name: Node-RED
+        repo: https://github.com/node-red/node-red
+        home: https://nodered.org/
+        criticality: optional
+        features_in_scope: "Flow-based IoT programming; sensor data routing; ML inference integration via custom nodes; industrial and smart home"
+        notes: "Node.js-based. Arch-independent. Widely used in industrial IoT for data pipeline orchestration."
+
+      - name: InfluxDB (edge / v1.x)
+        repo: https://github.com/influxdata/influxdb
+        home: https://www.influxdata.com/
+        criticality: optional
+        features_in_scope: "Time-series database for edge sensor data; metrics storage for ML inference pipelines; Telegraf integration"
+        notes: "Debian riscv64 ships influxdb 1.6.7. Primary edge metrics store alongside Prometheus."
+
+      - name: SQLite
+        repo: https://www.sqlite.org/
+        home: https://www.sqlite.org/
+        criticality: critical
+        features_in_scope: "Embedded relational database; model metadata storage; inference result persistence; offline edge operation"
+        notes: "Arch-independent C library. Near-universal on embedded Linux and mobile. No RISC-V-specific gaps."
+
+      - name: V4L2 (Video4Linux2)
+        repo: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+        home: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/v4l2.html
+        criticality: critical
+        features_in_scope: "Linux kernel camera capture API; used by OpenCV, GStreamer, and all camera-based edge AI applications"
+        notes: "Part of Linux kernel. RISC-V supported. Required for any camera-input edge AI pipeline on Linux."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 5: FLEET MANAGEMENT, ORCHESTRATION, OBSERVABILITY & DEBUGGING
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Fleet Management, Orchestration, Observability, Debugging"
+    nodes:
+      - name: k3s (Rancher)
+        repo: https://github.com/k3s-io/k3s
+        home: https://k3s.io/
+        criticality: critical
+        features_in_scope: "Lightweight Kubernetes for edge; single binary; ARM/x86/RISC-V; containerd runtime; manages AI workload containers"
+        notes: "Most widely deployed edge Kubernetes distribution. Primary orchestrator for edge AI container workloads."
+
+      - name: k0s
+        repo: https://github.com/k0sproject/k0s
+        home: https://k0sproject.io/
+        criticality: optional
+        features_in_scope: "Zero-friction Kubernetes distribution; single binary; no external host OS dependencies; edge and IoT"
+        notes: "Growing adoption as k3s alternative. No dedicated RISC-V CI verified."
+
+      - name: KubeEdge
+        repo: https://github.com/kubeedge/kubeedge
+        home: https://kubeedge.io/
+        criticality: critical
+        features_in_scope: "Kubernetes extension for edge; EdgeCore agent on device; cloud/edge sync; offline-capable; AI model deployment"
+        notes: "CNCF graduated project. Designed for cloud↔edge AI workload management. Strong IoT/edge adoption."
+
+      - name: containerd
+        repo: https://github.com/containerd/containerd
+        home: https://containerd.io/
+        slug: containerd
+        criticality: critical
+        features_in_scope: "Container runtime; k3s/k0s/KubeEdge default runtime; OCI image pull and run on edge devices"
+        notes: "Debian riscv64 ships containerd. De facto container runtime for all edge Kubernetes distributions."
+
+      - name: crun
+        repo: https://github.com/containers/crun
+        home: https://github.com/containers/crun
+        criticality: optional
+        features_in_scope: "Lightweight OCI container runtime in C; low-overhead alternative to runc for constrained edge devices"
+        notes: "Debian riscv64 ships crun. Better suited than runc for memory-constrained edge devices."
+
+      - name: WasmEdge
+        repo: https://github.com/WasmEdge/WasmEdge
+        home: https://wasmedge.org/
+        criticality: optional
+        features_in_scope: "WebAssembly runtime for edge AI; WASI-NN for ML inference (TFLite, ONNX, PyTorch backends); lightweight sandbox"
+        notes: "Emerging for edge AI: WASM sandboxing + ML inference via WASI-NN standard. RISC-V support in progress."
+
+      - name: Mender.io
+        repo: https://github.com/mendersoftware/mender
+        home: https://mender.io/
+        criticality: critical
+        features_in_scope: "OTA firmware and software updates for embedded Linux; dual-partition A/B; rollback; delta updates; model OTA"
+        notes: "Debian riscv64 ships mender-client, mender-artifact, mender-connect. Leading open-source OTA for embedded Linux."
+
+      - name: SWUpdate
+        repo: https://github.com/sbabic/swupdate
+        home: https://sbabic.github.io/swupdate/
+        criticality: critical
+        features_in_scope: "Embedded Linux software update framework; single/dual-copy; hawkBit integration; Yocto/Buildroot native"
+        notes: "Debian riscv64 ships swupdate and libswupdate. Widely used in industrial and automotive embedded Linux."
+
+      - name: RAUC (Robust Auto-Update Controller)
+        repo: https://github.com/rauc/rauc
+        home: https://rauc.readthedocs.io/
+        criticality: optional
+        features_in_scope: "Embedded Linux OTA update framework; A/B redundancy; bundle signing; hawkBit and custom server backends"
+        notes: "Debian riscv64 ships rauc. Common in automotive and industrial embedded Linux."
+
+      - name: Eclipse hawkBit
+        repo: https://github.com/eclipse/hawkbit
+        home: https://eclipse.dev/hawkbit/
+        criticality: optional
+        features_in_scope: "Backend update server for IoT device fleets; integrates with SWUpdate, RAUC, Mender; manages AI model rollouts"
+        notes: "Java-based server. Arch-independent. Pairs with SWUpdate/RAUC for device-side OTA."
+
+      - name: balenaCloud / balenaOS
+        repo: https://github.com/balena-os/balena-engine
+        home: https://www.balena.io/
+        criticality: optional
+        features_in_scope: "Container-based edge fleet management; Docker-compatible; OTA containers including ML models; SBC-focused"
+        notes: "Commercial + open-source. balenaOS is a minimal Linux for running containers on SBCs. Popular in prototyping and SME IoT."
+
+      - name: AWS IoT Greengrass v2
+        repo: https://github.com/aws-greengrass/aws-greengrass-nucleus
+        home: https://aws.amazon.com/greengrass/
+        criticality: optional
+        features_in_scope: "AWS-managed edge runtime; component-based deployment; ML inference components (TFLite, ONNX RT, DLR); Lambda at edge"
+        notes: "Commercial AWS service with open-source nucleus. Dominant in AWS IoT customers deploying ML to edge."
+
+      - name: Azure IoT Edge
+        repo: https://github.com/Azure/iotedge
+        home: https://azure.microsoft.com/en-us/products/iot-edge
+        criticality: optional
+        features_in_scope: "Microsoft-managed edge runtime; module-based Docker container deployment; ONNX Runtime module; OPC UA integration"
+        notes: "Commercial Microsoft service. Widely adopted in manufacturing and industrial IoT with Azure customers."
+
+      - name: Red Hat Device Edge (MicroShift)
+        repo: https://github.com/openshift/microshift
+        home: https://www.redhat.com/en/topics/edge-computing/microshift
+        criticality: optional
+        features_in_scope: "Minimal OpenShift/Kubernetes for edge; rpm-ostree OS updates; enterprise edge AI workload hosting"
+        notes: "Red Hat enterprise offering. RISC-V port not established. Growing in industrial and telco edge."
+
+      - name: Akri (Kubernetes device plugin)
+        repo: https://github.com/project-akri/akri
+        home: https://docs.akri.sh/
+        criticality: optional
+        features_in_scope: "Kubernetes device discovery and exposure (cameras, sensors, USB devices) to AI workloads; ONVIF, OPC UA, udev"
+        notes: "Bridges physical edge hardware into Kubernetes pods. Used with KubeEdge/k3s for camera AI pipelines."
+
+      - name: OSTree / rpm-ostree
+        repo: https://github.com/ostreedev/ostree
+        home: https://ostreedev.github.io/ostree/
+        criticality: optional
+        features_in_scope: "Atomic OS image updates for embedded Linux; image-based immutable OS for edge; used by Fedora IoT, RHEL for Edge"
+        notes: "Arch-independent. Core of Fedora IoT and Red Hat Device Edge OS update mechanism."
+
+      - name: Uptane (automotive OTA standard)
+        repo: https://github.com/uptane/uptane-standard
+        home: https://uptane.github.io/
+        criticality: optional
+        features_in_scope: "Secure OTA update standard for automotive ECUs; attack-resilient multi-repository design; TUF-based"
+        notes: "Industry standard for automotive OTA. Used by Linux Foundation Automotive Grade Linux (AGL) deployments."
+
+      - name: Prometheus
+        repo: https://github.com/prometheus/prometheus
+        home: https://prometheus.io/
+        slug: prometheus
+        criticality: critical
+        features_in_scope: "Metrics collection and alerting; node_exporter for device metrics; edge-deployed scrape targets; inference latency tracking"
+        notes: "Debian riscv64 ships prometheus. Core observability for edge Kubernetes (k3s/KubeEdge) deployments."
+
+      - name: Grafana
+        repo: https://github.com/grafana/grafana
+        home: https://grafana.com/
+        criticality: critical
+        features_in_scope: "Metrics visualization; edge dashboards for ML inference latency, throughput, device health; Prometheus data source"
+        notes: "Arch-independent Go binary. Widely deployed at edge gateway / edge server tier for ops dashboards."
+
+      - name: Fluent Bit
+        repo: https://github.com/fluent/fluent-bit
+        home: https://fluentbit.io/
+        criticality: critical
+        features_in_scope: "Lightweight log and metrics processor for edge; forward to cloud or local store; lower footprint than Fluentd"
+        notes: "Preferred over Fluentd for constrained edge devices. C-based, small binary. Arch-generic."
+
+      - name: Telegraf
+        repo: https://github.com/influxdata/telegraf
+        home: https://www.influxdata.com/time-series-platform/telegraf/
+        criticality: optional
+        features_in_scope: "Plugin-based metrics collection agent; MQTT input; IoT sensor metrics; feeds InfluxDB and Prometheus"
+        notes: "Go binary. Arch-independent. Pairs with InfluxDB for edge IoT time-series pipelines."
+
+      - name: OpenTelemetry Collector (edge)
+        repo: https://github.com/open-telemetry/opentelemetry-collector
+        home: https://opentelemetry.io/
+        criticality: optional
+        features_in_scope: "Vendor-neutral telemetry pipeline at edge; collects traces/metrics/logs from ML inference services; forwards to cloud"
+        notes: "Go binary. Arch-independent. CNCF. Used for distributed tracing of edge AI inference pipelines."
+
+      - name: GDB / gdbserver
+        repo: https://sourceware.org/git/binutils-gdb.git
+        home: https://www.gnu.org/software/gdb/
+        slug: gdb
+        criticality: critical
+        features_in_scope: "Remote debugging of edge AI applications; gdbserver for cross-debugging; RISC-V target support"
+        notes: "Debian riscv64 ships gdb, gdb-multiarch, gdbserver. Essential for debugging on-device inference issues."
+
+      - name: OpenOCD
+        repo: https://github.com/openocd-org/openocd
+        home: https://openocd.org/
+        criticality: optional
+        features_in_scope: "On-chip debugger; JTAG/SWD debugging of MCU-tier RISC-V devices running TFLite Micro or microTVM"
+        notes: "Critical for bare-metal MCU debugging. RISC-V JTAG support via SiFive and other implementations."
+
+      - name: perf (Linux perf tools)
+        repo: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+        home: https://perf.wiki.kernel.org/
+        criticality: optional
+        features_in_scope: "CPU performance profiling of edge AI inference; hardware PMU counter access; riscv64 PMU support"
+        notes: "Kernel tool. RISC-V PMU support present. Used for inference throughput optimization on edge Linux."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 6: EMBEDDED OS & RTOS
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Embedded OS & RTOS"
+    nodes:
+      - name: Zephyr RTOS
+        repo: https://github.com/zephyrproject-rtos/zephyr
+        home: https://zephyrproject.org/
+        criticality: critical
+        features_in_scope: "RTOS for MCU-tier edge AI; TFLite Micro integration; networking (BLE, Wi-Fi, LoRa); sensor drivers; RISC-V support"
+        notes: "RISC-V is a first-class target in Zephyr (SiFive, ESP32-C3, GD32VF103, etc.). TFLite Micro runs on Zephyr."
+
+      - name: FreeRTOS
+        repo: https://github.com/FreeRTOS/FreeRTOS
+        home: https://freertos.org/
+        criticality: critical
+        features_in_scope: "MCU RTOS for embedded inference; TFLite Micro integration; widely used in industrial IoT and healthcare devices"
+        notes: "RISC-V port maintained. Amazon FreeRTOS variant widely used in IoT devices."
+
+      - name: RT-Thread
+        repo: https://github.com/RT-Thread/rt-thread
+        home: https://www.rt-thread.io/
+        criticality: optional
+        features_in_scope: "MCU/SBC RTOS; AI packages (Tensorflow, MNN, ONNX RT bindings); dominant in Chinese IoT market"
+        notes: "Strong RISC-V support (Kendryte K210, GD32VF103, etc.). Widely adopted in Chinese industrial IoT."
+
+      - name: Yocto Project
+        repo: https://git.yoctoproject.org/yocto-docs
+        home: https://www.yoctoproject.org/
+        criticality: critical
+        features_in_scope: "Embedded Linux build system; meta-ai layer for TFLite/ONNX Runtime; RISC-V BSP layers; device firmware"
+        notes: "Primary build system for custom embedded Linux on edge devices. RISC-V tier supported via meta-riscv."
+
+      - name: Buildroot
+        repo: https://gitlab.com/buildroot.org/buildroot
+        home: https://buildroot.org/
+        criticality: critical
+        features_in_scope: "Lightweight embedded Linux build system; TFLite, ONNX Runtime, mosquitto, OpenCV packages; simpler than Yocto"
+        notes: "Widely used for constrained SBC and edge gateway firmware. RISC-V supported."
+
+      - name: Ubuntu Core
+        repo: https://github.com/snapcore/snapd
+        home: https://ubuntu.com/core
+        criticality: optional
+        features_in_scope: "Snap-based immutable embedded Linux; OTA updates via snapd; containerized app deployment; edge gateway / server"
+        notes: "Used in industrial and retail edge deployments. RISC-V support in progress."
+
+      - name: Flatcar Container Linux
+        repo: https://github.com/flatcar/scripts
+        home: https://www.flatcar.org/
+        criticality: optional
+        features_in_scope: "Immutable container-optimized Linux for edge servers; auto-update via Omaha/Nebraska; k3s/containerd native"
+        notes: "No RISC-V port currently. Listed as increasingly adopted edge server OS."
+
+      - name: OpenWRT
+        repo: https://github.com/openwrt/openwrt
+        home: https://openwrt.org/
+        criticality: optional
+        features_in_scope: "Linux OS for edge gateways and routers; MQTT, Node-RED packages; lightweight ML inference (ONNX RT) possible"
+        notes: "Dominant OS for edge gateways and home routers. Limited RISC-V support."
+
+      - name: micro-ROS (RTOS layer for ROS 2)
+        repo: https://github.com/micro-ROS/micro_ros_arduino
+        home: https://micro.ros.org/
+        criticality: optional
+        features_in_scope: "ROS 2 on MCU-class hardware (FreeRTOS, Zephyr, NuttX); DDS-XRCE transport; sensor/actuator integration"
+        notes: "Bridges MCU-tier devices into ROS 2 ecosystem. Vulcanexus/eProsima. RISC-V board support via Zephyr."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 7: SECURITY
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Security"
+    nodes:
+      - name: OP-TEE (Open Portable Trusted Execution Environment)
+        repo: https://github.com/OP-TEE/optee_os
+        home: https://optee.readthedocs.io/
+        criticality: optional
+        features_in_scope: "TEE OS running in ARM TrustZone (or RISC-V equivalent); secure model IP protection; secure key storage"
+        notes: "ARM TrustZone primary. RISC-V TEE (Keystone, RISC-V PMP) is an alternative path. Used for AI model encryption."
+
+      - name: AppArmor
+        repo: https://gitlab.com/apparmor/apparmor
+        home: https://apparmor.net/
+        criticality: critical
+        features_in_scope: "Mandatory access control; container security profiles; restricts edge AI inference container capabilities"
+        notes: "Debian riscv64 ships apparmor. Default LSM in Ubuntu. Used by containerd/k3s for workload isolation."
+
+      - name: WireGuard
+        repo: https://git.zx2c4.com/wireguard-linux
+        home: https://www.wireguard.com/
+        criticality: critical
+        features_in_scope: "VPN tunnel for edge device secure connectivity; zero-trust network overlay; low-overhead for constrained devices"
+        notes: "Debian riscv64 ships wireguard-tools, wireguard-go. In-kernel on Linux 5.6+. Core for edge-to-cloud secure tunneling."
+
+      - name: SPIFFE / SPIRE
+        repo: https://github.com/spiffe/spire
+        home: https://spiffe.io/
+        criticality: optional
+        features_in_scope: "Workload identity for edge containers; X.509 SVIDs; mTLS for ML inference service-to-service auth"
+        notes: "CNCF graduated. Used in KubeEdge and k3s deployments for zero-trust edge AI workload identity."
+
+      - name: Falco
+        repo: https://github.com/falcosecurity/falco
+        home: https://falco.org/
+        criticality: optional
+        features_in_scope: "Runtime security monitoring; eBPF-based syscall anomaly detection; container security at edge; threat detection"
+        notes: "CNCF. eBPF probe requires Linux 5.8+. Used for detecting adversarial attacks on edge AI inference containers."
+
+      - name: OpenSSL
+        repo: https://github.com/openssl/openssl
+        home: https://www.openssl.org/
+        slug: openssl
+        criticality: critical
+        features_in_scope: "TLS/crypto for all edge AI network communications; model download integrity; MQTT TLS; gRPC TLS"
+        notes: "Debian riscv64 ships. Required by every networked edge AI component. AES constant-time gap (PRs open)."
+
+      - name: U-Boot (secure boot)
+        repo: https://source.denx.de/u-boot/u-boot
+        home: https://www.denx.de/wiki/U-Boot
+        criticality: critical
+        features_in_scope: "Bootloader for embedded Linux; RISC-V U-Boot; verified boot (FIT image signing); chain of trust for edge devices"
+        notes: "RISC-V U-Boot is active and well-supported. Foundation of secure boot on embedded Linux edge devices."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 9.a: DOMAIN-SPECIFIC — ROBOTICS
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Domain-Specific"
+    product: "Robotics"
+    nodes:
+      - name: ROS 2 (Robot Operating System 2)
+        repo: https://github.com/ros2/ros2
+        home: https://docs.ros.org/
+        criticality: critical
+        features_in_scope: "Robotics middleware; DDS-based pub/sub; sensor fusion; navigation; AI model integration via ROS 2 nodes"
+        notes: "Standard robotics OS. RISC-V not an official tier but community builds exist. Runs on edge server / capable SBC."
+
+      - name: Nav2 (Navigation 2)
+        repo: https://github.com/ros-navigation/navigation2
+        home: https://nav2.ros.org/
+        criticality: optional
+        features_in_scope: "ROS 2 autonomous navigation stack; path planning; obstacle avoidance; integrates with AI perception pipelines"
+        notes: "Primary ROS 2 navigation framework. Deployed on mobile robots and AMRs. Requires ROS 2."
+
+      - name: MoveIt 2
+        repo: https://github.com/moveit/moveit2
+        home: https://moveit.picknik.ai/
+        criticality: optional
+        features_in_scope: "ROS 2 motion planning for robot arms; ML-based grasp planning integration; industrial robot use"
+        notes: "Standard robotic arm motion planning. Deployed in manufacturing and warehouse automation."
+
+      - name: FastDDS (eProsima)
+        repo: https://github.com/eProsima/Fast-DDS
+        home: https://fast-dds.docs.eprosima.com/
+        criticality: critical
+        features_in_scope: "DDS middleware for ROS 2; real-time pub/sub; used in robotics, automotive, and industrial edge AI"
+        notes: "Debian riscv64 ships libfastdds. Default DDS implementation for ROS 2 Humble/Iron/Jazzy."
+
+      - name: CycloneDDS (Eclipse)
+        repo: https://github.com/eclipse-cyclonedds/cyclonedds
+        home: https://cyclonedds.io/
+        criticality: optional
+        features_in_scope: "Alternative DDS middleware for ROS 2; lightweight; used in constrained robot platforms"
+        notes: "Debian riscv64 ships cyclonedds-dev. ROS 2 alternative DDS implementation."
+
+      - name: Iceoryx (Eclipse)
+        repo: https://github.com/eclipse-iceoryx/iceoryx
+        home: https://iceoryx.io/
+        criticality: optional
+        features_in_scope: "Zero-copy inter-process communication middleware; automotive/robotics edge; DDS-layer replacement for local comms"
+        notes: "Debian riscv64 ships iceoryx. True zero-copy IPC. Used in autonomous driving and industrial robotics."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 9.b: DOMAIN-SPECIFIC — INDUSTRIAL IoT
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Domain-Specific"
+    product: "Industrial IoT"
+    nodes:
+      - name: open62541 (OPC UA)
+        repo: https://github.com/open62541/open62541
+        home: https://www.open62541.org/
+        criticality: critical
+        features_in_scope: "Open-source OPC UA stack; industrial device connectivity; PLC/sensor data to ML inference pipelines; C99"
+        notes: "De facto open-source OPC UA implementation. RISC-V should build cleanly (C99). Core to IIoT edge AI pipelines."
+
+      - name: Eclipse Ditto
+        repo: https://github.com/eclipse-ditto/ditto
+        home: https://eclipse.dev/ditto/
+        criticality: optional
+        features_in_scope: "Digital twin framework; device shadow; IoT device state management; integrates with edge AI inference results"
+        notes: "Java-based cloud/edge digital twin. Used in Industry 4.0 edge AI deployments for state management."
+
+      - name: FIWARE Orion Context Broker
+        repo: https://github.com/telefonicaid/fioriware-orion
+        home: https://fiware-orion.readthedocs.io/
+        criticality: optional
+        features_in_scope: "NGSI-v2/NGSI-LD context data management; smart city and industrial IoT; AI inference result publishing"
+        notes: "Used in European smart city and industrial IoT deployments. C++ + MongoDB. Arch-independent."
+
+      - name: EMQX
+        repo: https://github.com/emqx/emqx
+        home: https://www.emqx.io/
+        criticality: optional
+        features_in_scope: "High-performance MQTT broker for large IoT fleets; MQTT to Kafka/databases bridge; rule engine for ML triggers"
+        notes: "Erlang-based. Scales from edge gateway to cloud. Used in manufacturing and energy IoT. Arch-generic Erlang."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 9.c: DOMAIN-SPECIFIC — AUTOMOTIVE
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Domain-Specific"
+    product: "Automotive"
+    nodes:
+      - name: AUTOSAR Adaptive Platform
+        repo: https://www.autosar.org/
+        home: https://www.autosar.org/standards/adaptive-platform/
+        criticality: critical
+        features_in_scope: "Automotive software platform for ADAS/AV ECUs; service-oriented architecture; ML model hosting via Execution Management"
+        notes: "Proprietary standard. Reference implementations include Apex.AI Apex.OS. RISC-V automotive ECU work is emerging."
+
+      - name: Autoware (ROS 2-based AV stack)
+        repo: https://github.com/autowarefoundation/autoware
+        home: https://autoware.org/
+        criticality: optional
+        features_in_scope: "Open-source autonomous driving software; perception (ML), planning, control; ROS 2-based; edge compute on vehicle"
+        notes: "Linux Foundation. Used by Tier IV and others. ARM64/x86 primary. RISC-V automotive compute is future-looking."
+
+      - name: Eclipse Zenoh
+        repo: https://github.com/eclipse-zenoh/zenoh
+        home: https://zenoh.io/
+        criticality: optional
+        features_in_scope: "Zero-overhead pub/sub/query protocol for IoT, robotics, automotive; DDS bridge; extremely low-latency"
+        notes: "Growing adoption in robotics and automotive as DDS complement. Rust-based. RISC-V riscv64 build possible."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 9.c: DOMAIN-SPECIFIC — SMART HOME
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Domain-Specific"
+    product: "Smart Home"
+    nodes:
+      - name: Home Assistant
+        repo: https://github.com/home-assistant/core
+        home: https://www.home-assistant.io/
+        criticality: optional
+        features_in_scope: "Open-source home automation platform; local ML inference via custom components (Whisper, Piper, YOLO); edge-local"
+        notes: "Fastest-growing open smart home platform. Runs on Raspberry Pi and similar SBCs. Python/arch-independent core."
+
+      - name: OpenThread
+        repo: https://github.com/openthread/openthread
+        home: https://openthread.io/
+        criticality: optional
+        features_in_scope: "Thread networking stack for smart home MCU devices; mesh network for IoT sensors feeding edge AI"
+        notes: "Google. Basis for Matter/Thread. Runs on MCU-class devices. RISC-V MCU support via Zephyr."
+
+      - name: Matter / chip-tool (Project CHIP)
+        repo: https://github.com/project-chip/connectedhomeip
+        home: https://csa-iot.org/developer-resource/connected-home-over-ip-chip/
+        criticality: optional
+        features_in_scope: "Unified smart home protocol; device-to-device and device-to-hub; sensor data for local edge AI processing"
+        notes: "Industry standard (Apple, Google, Amazon, Samsung). C++ + Python. RISC-V MCU build path exists."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 10: FEDERATED LEARNING (edge client side)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Federated Learning"
+    nodes:
+      - name: Flower (flwr)
+        repo: https://github.com/adap/flower
+        home: https://flower.ai/
+        criticality: optional
+        features_in_scope: "Federated learning framework; edge client runs local training round; framework-agnostic (PyTorch, TFLite, ONNX)"
+        notes: "Most widely adopted open-source FL framework. Pure Python client. Runs on capable SBC and edge server."
+
+      - name: TensorFlow Federated (TFF)
+        repo: https://github.com/google-parfait/tensorflow-federated
+        home: https://www.tensorflow.org/federated
+        criticality: optional
+        features_in_scope: "FL research framework; simulation and production; integrates with TFLite for edge device training rounds"
+        notes: "Google. Research-heavy. Edge deployment is more niche than Flower."
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 11: SUPPORTING INFRASTRUCTURE
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  - layer: "Supporting Infrastructure"
+    nodes:
+      - name: gRPC
+        repo: https://github.com/grpc/grpc
+        home: https://grpc.io/
+        slug: grpc
+        criticality: optional
+        features_in_scope: "RPC framework for edge AI service communication; model serving APIs; inter-container comms in edge k8s"
+        notes: "Debian riscv64 ships. No upstream riscv64 CI; upstream has declined formal support (issue #41591 closed 2026-07-15)."
+
+      - name: Protobuf
+        repo: https://github.com/protocolbuffers/protobuf
+        home: https://developers.google.com/protocol-buffers
+        slug: protocol-buffers
+        criticality: optional
+        features_in_scope: "Serialization for gRPC, ONNX model format, TFLite metadata, edge AI config/telemetry"
+        notes: "Debian sid ships riscv64 package (3.21.12)."
+
+      - name: HuggingFace Hub
+        repo: https://github.com/huggingface/huggingface_hub
+        home: https://huggingface.co/docs/huggingface_hub
+        criticality: optional
+        features_in_scope: "Model registry client; download pre-quantized GGUF/TFLite/ONNX models to edge devices"
+        notes: "Pure Python. Arch-independent. Used by llama.cpp, ONNX Runtime, and TFLite-based edge deployments."
+
+      - name: NumPy
+        repo: https://github.com/numpy/numpy
+        home: https://numpy.org/
+        slug: numpy
+        criticality: optional
+        features_in_scope: "Array operations for edge pre/post-processing; underpins Python-based inference pipelines at edge server tier"
+        notes: "No upstream riscv64 PyPI wheel as of Aug 2026. RISE wheels at 2.5.2. No RVV NPYV backend."
+
+
+chains:
+  - name: "TFLite vision inference pipeline (SBC)"
+    sequence: ["V4L2 (camera)", "OpenCV (preprocess)", "TFLite / LiteRT (inference)", "XNNPACK (acceleration)", "FlatBuffers (model load)"]
+  - name: "LLM inference pipeline (edge server)"
+    sequence: ["llama.cpp", "ggml (quantized kernels)", "OpenBLAS (GEMM)", "SLEEF (math)", "OpenSSL (model download TLS)"]
+  - name: "ONNX Runtime inference pipeline (edge server)"
+    sequence: ["ONNX Runtime CPU EP", "OpenBLAS", "SLEEF", "Protobuf (ONNX model parse)", "FlatBuffers"]
+  - name: "Edge AI container workload deployment"
+    sequence: ["KubeEdge (orchestration)", "containerd (runtime)", "k3s (Kubernetes)", "Mender / SWUpdate (OTA)", "WireGuard (secure tunnel)"]
+  - name: "GStreamer camera AI pipeline"
+    sequence: ["V4L2 (camera)", "GStreamer (pipeline)", "OpenCV (frame preprocess)", "TFLite / ONNX Runtime (inference)", "MQTT / Mosquitto (result publish)"]
+  - name: "Industrial IoT AI pipeline"
+    sequence: ["open62541 (OPC UA sensor data)", "Mosquitto (MQTT bus)", "Node-RED (data routing)", "ONNX Runtime (anomaly detection)", "InfluxDB (time-series store)", "Prometheus + Grafana (monitoring)"]
+  - name: "Robotics perception pipeline (ROS 2)"
+    sequence: ["V4L2 / sensor drivers", "ROS 2 (pub/sub)", "FastDDS (transport)", "OpenCV / TFLite (perception)", "Nav2 (navigation)"]
+  - name: "Secure edge device boot chain"
+    sequence: ["U-Boot (verified boot)", "Trusted Firmware-A (secure boot)", "OP-TEE (TEE)", "AppArmor (container isolation)", "WireGuard (network security)"]
+  - name: "Edge observability pipeline"
+    sequence: ["edge AI service (Prometheus metrics)", "Prometheus node_exporter", "Fluent Bit (log ship)", "Grafana (dashboard)", "OpenTelemetry Collector (traces)"]
+  - name: "MCU TinyML pipeline (Zephyr)"
+    sequence: ["Zephyr RTOS", "TFLite Micro (TFLM)", "microTVM (optional compiler)", "MQTT / OpenThread (connectivity)", "micro-ROS (optional robot integration)"]
+  - name: "Federated learning edge round"
+    sequence: ["Flower client", "TFLite / ONNX Runtime (local inference)", "local fine-tune step", "Mosquitto / gRPC (gradient upload)", "KubeEdge (workload management)"]
