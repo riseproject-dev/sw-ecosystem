@@ -18,12 +18,6 @@ const spec = args || {}
 const slug = spec.slug || (spec.vertical || 'vertical').toLowerCase().replace(/[\s.\/]+/g, '-')
 const targetProfile = spec.target_profile || 'RVA23U64'
 
-// Classification rules live exclusively in examples/color-coding/color-coding.md.
-// Each classify/verify agent reads that file directly (via the Read tool) rather than
-// receiving an inline copy. This ensures the workflow stays in sync with color-coding.md
-// without needing to update two places.
-const COLOR_CODING_PATH = 'examples/color-coding/color-coding.md'
-
 // Structured per-node record schema -- forces uniform output from every classify/verify agent.
 const NODE_SCHEMA = {
   type: 'object',
@@ -111,10 +105,9 @@ Node context:
 
 ${ghHint(node.repo)}
 
-STEP 1 -- Read the classification rules.
-Use the Read tool to read the file at path: ${COLOR_CODING_PATH}
-This file defines the complete color model, release-provider rule, research procedure,
-per-node record fields, and non-negotiable rules. Follow it exactly.
+STEP 1 -- Apply the /project-color-coding skill.
+Invoke the /project-color-coding skill to get the complete color model, release-provider rule,
+research procedure, per-node record fields, and non-negotiable rules. Follow them exactly.
 
 STEP 2 -- Classify this node following the procedure in that file.
 The file tells you to: check reports/<slug>.md first (if one exists), adversarially spot-check
@@ -134,9 +127,9 @@ ${JSON.stringify(classified, null, 2)}
 
 ${ghHint(node.repo)}
 
-STEP 1 -- Read the classification rules.
-Use the Read tool to read the file at path: ${COLOR_CODING_PATH}
-This file defines the complete color model, release-provider rule, and all verification sources.
+STEP 1 -- Apply the /project-color-coding skill.
+Invoke the /project-color-coding skill to get the complete color model, release-provider rule,
+and all verification sources.
 
 STEP 2 -- Re-check the single color-deciding fact against the primary source from that file.
 - If the proposed color claims upstream TESTS riscv64 (blue/green), open the actual CI workflow

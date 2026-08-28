@@ -1,17 +1,23 @@
+---
+name: project-color-coding
+description: Grade RISC-V readiness for a list of projects using the green/blue/yellow/orange/red/grey color model. Use when asked to classify, grade, or color-code projects for RISC-V support.
+---
+
 # RISC-V Project Color Grading
 
-**What this is.** A reusable prompt for assigning a RISC-V readiness color to each project
+**What this is.** A skill for assigning a RISC-V readiness color to each project
 in a given list. The output is a classification table -- one row per project -- suitable for
 slides or dashboards. Each color reflects two things: the upstream CI posture for RISC-V, and
 for projects whose purpose is performance optimization, whether RISC-V-specific optimizations
 actually exist and cover the primary hot paths.
 
-**The list is whatever you supply.** Pass any set of projects: GitHub repos, named libraries,
-or entries from `scope.yml`. The prompt is generic -- it does not require per-project reports
-under `reports/` but will reuse them as a prior when they exist.
+**The list is whatever you supply.** Pass any set of projects as arguments to this skill, or
+provide them in your next message: GitHub repos, named libraries, or entries from `scope.yml`.
+The skill is generic -- it does not require per-project reports under `reports/` but will
+reuse them as a prior when they exist.
 
 **This differs from the vertical-report.** The vertical-report classifies a full layered stack
-for a specific product workload. This prompt classifies an arbitrary flat list of projects,
+for a specific product workload. This skill classifies an arbitrary flat list of projects,
 with the added optimization-purpose modifier that vertical-report does not apply.
 
 ---

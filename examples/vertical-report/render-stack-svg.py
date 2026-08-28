@@ -28,7 +28,7 @@ import yaml
 
 
 # ---------------------------------------------------------------------------
-# Color model (examples/color-coding/color-coding.md). One fill per state.
+# Color model (skills/project-color-coding/SKILL.md). One fill per state.
 # ---------------------------------------------------------------------------
 
 PALETTE = {
@@ -46,7 +46,7 @@ DARK_TEXT = {"yellow", "grey"}
 # Default legend: all six states, in the color-model's ordering. Reusable across
 # verticals, so it is baked into the view-model at build time.
 #
-# Each color encodes TWO axes at once (see color-coding.md): the upstream
+# Each color encodes TWO axes at once (see skills/project-color-coding/SKILL.md): the upstream
 # build/test/release posture, and -- for optimization-purpose projects -- the
 # RISC-V optimization level. Both axes are spelled out in each label; the chip
 # conveys the color, so the label itself carries no color name. Rendered as a

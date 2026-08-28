@@ -241,10 +241,10 @@ only as a short note so the reader knows they were deliberately dropped.
 Goal: assign every node in the locked scope spec a RISC-V readiness color, then emit the three
 output artifacts.
 
-### 2.1 Classification -- delegate entirely to color-coding.md
+### 2.1 Classification -- delegate entirely to /project-color-coding
 
-**Read `examples/color-coding/color-coding.md` in full before classifying any node.** That file
-is the single authoritative source for:
+**Use the `/project-color-coding` skill to classify each node.** That skill is the single
+authoritative source for:
 
 - The 6-state color model (Steps 0-2: architecture-independent shortcut, primary grade from
   upstream CI, optimization-purpose downgrade modifier) -- colors are grey / green / blue /
@@ -371,7 +371,7 @@ comma-broken row.
 - **Actionable next steps.** Concrete, prioritized actions: what to do, who upstream is best
   positioned to do it, and -- critically -- where RISE (or another party) already covers the work
   (runners, board farm, funded contributors, hosted releases), so effort already underway is not
-  double-counted in any investment estimate. Use the RISE checks in `examples/color-coding/color-coding.md`
+  double-counted in any investment estimate. Use the RISE checks in the `/project-color-coding` skill
   (Research procedure, step 4) to ground this.
 
 ### Artifact 4: Stack view-model (`<vertical-slug>.yml`)
@@ -399,7 +399,7 @@ per-product cells. Each node's `color`, `criticality`, `release_provider`, and `
 "what is missing on riscv64") come straight from that node's classification record (Artifact 2).
 `upstream_release` is true only when `release_provider` is `upstream`.
 
-The `color` encodes two axes at once (see `examples/color-coding/color-coding.md`): the upstream
+The `color` encodes two axes at once (see the `/project-color-coding` skill): the upstream
 build/test/release posture, and -- for optimization-purpose projects (compression, crypto,
 allocators, SIMD kernels) -- the RISC-V optimization level; the optimization axis can only cap the
 grade downward. The `legend` labels spell out both axes; the chip conveys the color, so each label

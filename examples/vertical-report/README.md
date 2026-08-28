@@ -128,7 +128,7 @@ not the default for missing CI -- use orange or yellow for untested-but-buildabl
 Python / noarch nodes are green by construction. Green is reserved for releases published directly
 by upstream -- a RISE-hosted wheel keeps a node blue with a visible note, which matters because many
 packages are usable on riscv64 today only because RISE ships the wheel. Full rules are in
-`color-coding.md`, The color model section.
+`skills/project-color-coding/SKILL.md`, The color model section.
 
 ## Operational notes
 
