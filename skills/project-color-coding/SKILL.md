@@ -54,9 +54,10 @@ Evaluate the steps below top to bottom. The first step that produces a definitiv
 ### Step 0 -- Architecture-independent shortcut
 
 If the project ships no compiled, architecture-specific code -- a pure-Python `py3-none-any`
-wheel, a `noarch` package, a platform-neutral JVM jar -- it runs on riscv64 by construction.
-Classify it **green**, note "architecture-independent; inherits riscv64 from its runtime", and
-stop. Do not penalize it for lacking riscv64 CI.
+wheel, a `noarch` package, a platform-neutral JVM jar, a pure JavaScript npm package with no
+native addons -- it runs on riscv64 by construction. Classify it **green**, note
+"architecture-independent; inherits riscv64 from its runtime", and stop. Do not penalize it
+for lacking riscv64 CI.
 
 A project that ships *any* compiled artifact (C/C++/Rust extension, native wheel, binary, JNI
 library) does not take this shortcut; fall through to Step 1.
@@ -72,8 +73,8 @@ color from this table:
 | blue   | yes                        | yes                                       | no                                  |
 | yellow | yes (build step, no tests) | no                                        | no / either                         |
 | orange | no upstream CI             | no                                        | no                                  |
-| red    | N/A -- project is broken or known non-functional on riscv64 |
-| grey   | N/A -- unknown / proprietary / vendor-locked |
+| red    | riscv64 support confirmed broken or non-functional                                       |
+| grey   | N/A -- architecture-exclusive (not applicable to riscv64 by design), or unknown-unknown         |
 
 **CI evidence rule.** A job that builds riscv64 but does not run the test suite
 (cross-compile-only, QEMU-build-only without test execution) counts as build-only. Build-only
@@ -106,15 +107,22 @@ builds and ships a riscv64 package, the project is not entirely unsupported. App
 Distribution availability cannot upgrade above yellow for unpatched builds, and above orange
 for patched or uncertain builds. Blue and green require upstream CI with test execution.
 
-**Red.** Use red only when riscv64 support is confirmed broken or explicitly non-functional:
-a known ABI incompatibility, a build-blocking dependency with no riscv64 port, a runtime
-crash that is documented as a known issue and unresolved, or explicit upstream statements that
-the architecture is unsupported. Red is not a default for missing CI -- use orange or yellow
-when the project is simply untested but buildable.
+**Red.** Use red only when riscv64 support is confirmed broken or explicitly non-functional: a
+known ABI incompatibility, a build-blocking dependency with no riscv64 port, a runtime crash
+documented as a known issue and unresolved, or explicit upstream statements that the architecture
+is unsupported. Red is a known-bad state. It is not a default for missing CI -- use orange or
+yellow when the project is simply untested but buildable.
 
-**Grey.** Use grey only when the project is proprietary/vendor-locked (cannot run on RISC-V
-natively by design) or when research turns up insufficient data to classify it. State which
-case applies and what was searched.
+**Grey.** Use grey for two distinct cases:
+1. The project is by design exclusive to another architecture and RISC-V is simply not applicable
+   (e.g. ARM Compute Library, Apple Neural Engine libraries). These are N/A, not broken -- the
+   concept of riscv64 support does not apply to them.
+2. Research turns up insufficient data to classify the project: we do not know whether it works
+   or not. This is the unknown-unknown case -- no CI evidence, no distro packages, no issue
+   reports, no upstream statements one way or the other.
+
+State which case applies and what was searched. Grey is not a catch-all for "no support" -- a
+project known not to work is red, not grey.
 
 ### Step 2 -- Optimization-purpose modifier
 
@@ -280,7 +288,7 @@ downstream artifact.
 - `name` -- the project name as given in the input list
 - `color` -- grey / green / blue / yellow / orange / red
 - `color_case` -- sub-type clarifier:
-  - for grey: `N/A` (proprietary) or `unknown` (insufficient data)
+  - for grey: `arch-exclusive` (not applicable to riscv64 by design) or `unknown` (insufficient data; unknown-unknown)
   - for yellow: `build-only-ci` (upstream CI builds but does not test) or `clean-distro-build`
     (no upstream CI; distro builds from unpatched source)
   - for orange: `downstream-only` (no upstream CI; distro ships, possibly with patches) or
@@ -354,8 +362,8 @@ List every source used, one per line. Distinguish stored reports from live check
 - Never infer CI status from issue text, PR descriptions, or README claims. Read the workflow
   files.
 - Never guess. If data is unavailable, assign grey (unknown) and state what was searched.
-- Red is for confirmed breakage only. If a project has no CI and no distro package, default
-  to orange or grey -- not red -- unless there is positive evidence it does not work.
+- Red is for confirmed breakage only. If a project has no CI and no distro package, default to orange or grey -- not red -- unless there is positive evidence it does not work.
+- Grey covers two distinct cases: (1) architecture-exclusive projects where riscv64 is not applicable by design, and (2) the unknown-unknown case where no data exists. A project known not to work is red, not grey.
 - For PR merge status verification: fetch `https://api.github.com/repos/<owner>/<repo>/pulls/<n>`
   and check `merged_at`. A null `merged_at` with `state: closed` means closed without merging.
 - Latin-1 characters only. No em-dashes; use a hyphen or comma. Every URL is a markdown link
