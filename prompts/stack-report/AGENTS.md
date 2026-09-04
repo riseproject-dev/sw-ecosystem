@@ -15,10 +15,11 @@ consume the per-project reports as a prior and adversarially verify them live.
 | File | Purpose | Committed? |
 |---|---|---|
 | `stack-report.md` | The master prompt. Run this. Self-contained; works interactively or headless. | yes |
-| `stack-report-workflow.js` | A `Workflow` script that runs stage 2 (classify + verify + synthesize) at scale, one agent per stack node. | yes |
-| `render-stack-svg.py` | Renders the stack view-model (`out/<slug>.yml`) to an SVG stack diagram. Can also reconstruct the view-model from an existing scope spec + report. | yes |
-| `README.md` | This file. | yes |
+| `stack-report-workflow.js` | A `Workflow` script that runs stage 2 (classify + verify + edge-discovery + synthesize) at scale, one agent chain per stack node. | yes |
+| `AGENTS.md` | This file. | yes |
 | `stack-reports/<slug>/` | Where generated reports live. Committed. | yes |
+
+The interactive dependency-graph renderer (`_includes/dependency-graph.html`, `assets/js/dependency-graph.js`, `assets/css/dependency-graph.css`) lives at the repo root, not in this directory -- it is a site-wide asset shared by every stack report, not per-report tooling.
 
 **Generated reports are committed.** Save them under `stack-reports/<slug>/` at the repo root.
 
@@ -50,8 +51,9 @@ The slug is derived from the vertical name: `name.toLowerCase().replace(/[\s.\/]
 ### Stage 2 -- Research and synthesis (unattended)
 
 Consume the locked scope spec, classify every node in the stack for RISC-V readiness (the 6-state
-color model: grey / green / blue / yellow / orange / red), adversarially verify each color, and emit the
-three output artifacts into `out/<vertical-slug>.md`.
+color model: grey / green / blue / yellow / orange / red), adversarially verify each color, derive
+its dependency edges, and emit the report (Artifacts 1-3) into `out/<vertical-slug>.md` and the
+dependency graph (Artifact 4) into `out/<vertical-slug>.graph.json`.
 
 **Small stack (a handful of nodes):** just execute the Stage 2 instructions in `stack-report.md`
 inline in the session. No workflow needed.
@@ -68,29 +70,26 @@ Workflow({
 })
 ```
 
-The workflow runs three phases -- **Classify** (one agent per node, hybrid reuse-report + live
-verify), **Verify** (adversarial re-check of each color-deciding fact), **Synthesize** (writes the
-three artifacts) -- and returns
-`{ vertical, slug, file, report, nodeCount, records, viewmodel, viewmodel_yaml }`. Write the
-returned `report` string to `file` (`out/<slug>.md`) and the `viewmodel_yaml` string to
-`out/<slug>.yml`:
+The workflow runs four phases -- **Classify** (one agent per node, hybrid reuse-report + live
+verify), **Verify** (adversarial re-check of each color-deciding fact), **Edges** (explicit deps
+from `project-graph-mcp` + `project-reports/`, implicit deps from web research), **Synthesize**
+(writes the report and the dependency graph) -- and returns
+`{ vertical, slug, file, report, nodeCount, records, graph, graph_json }`. Write the returned
+`report` string to `file` (`out/<slug>.md`) and the `graph_json` string to `out/<slug>.graph.json`:
 
 ```python
 import json
 data = json.load(open("<workflow-output-file>"))
 item = data["result"][0]
 open(item["file"], "w", encoding="utf-8").write(item["report"])
-open(item["file"][:-3] + ".yml", "w", encoding="utf-8").write(item["viewmodel_yaml"])
-print(item["nodeCount"], "nodes;", len(item["report"]), "chars")
+open(item["file"][:-3] + ".graph.json", "w", encoding="utf-8").write(item["graph_json"])
+print(item["nodeCount"], "nodes;", len(item["graph"]["edges"]), "edges;", len(item["report"]), "chars")
 ```
 
-Then render the SVG stack diagram from the view-model:
-
-```bash
-python3 render-stack-svg.py render out/<slug>.yml -o out/<slug>.svg --mark-nonupstream
-```
-
-`render-stack-svg.py` needs only Python 3 and PyYAML.
+The report's header embeds `{% include dependency-graph.html %}`, which fetches
+`<slug>.graph.json` client-side and renders it as an interactive dependency graph on the site (see
+`_includes/dependency-graph.html`, `assets/js/dependency-graph.js` at the repo root). No separate
+render step is needed -- unlike the old SVG pipeline, the graph JSON is the final artifact.
 
 ## The output: four artifacts
 
@@ -105,11 +104,10 @@ Every generated report contains, in order:
 3. **Narrative and next steps** -- an aggregate scorecard, the load-bearing red/orange nodes as the
    story, the third-party-release dependencies called out, and a prioritized, actionable next-steps
    list that credits work RISE (or others) already cover so it is not double-counted.
-4. **Stack view-model (`<slug>.yml`)** -- a machine-readable grid (product columns x layer rows,
-   each node's color/criticality/release-provider/gap) written alongside the report. Feed it to
-   `render-stack-svg.py` to produce the SVG stack diagram (colored boxes, native hover tooltips
-   showing each node's gap). Layout comes from the scope spec's `layers:`; colors come from the
-   Artifact 2 classification records. See `stack-report.md`, Artifact 4, for the schema.
+4. **Dependency graph (`<slug>.graph.json`)** -- every node (color/criticality/release-provider/gap,
+   same as Artifact 2) plus every explicit and implicit dependency edge discovered in the Edges
+   phase, written alongside the report and rendered client-side as an interactive graph. See
+   `stack-report.md`, Artifact 4, for the schema.
 
 ## The color model in one paragraph
 

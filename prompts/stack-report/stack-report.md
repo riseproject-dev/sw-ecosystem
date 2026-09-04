@@ -296,11 +296,52 @@ The graph schema namespaces for reference:
 - `pypi:` `https://purl.org/packagegraph/ontology/pypi#`
 - `vcs:`  `https://purl.org/packagegraph/ontology/vcs#`
 
+### 2.2 Dependency graph construction
+
+Alongside the color classification, derive **every dependency edge** for each node -- both
+**explicit** (formal package/build/runtime dependencies) and **implicit** (another stack node this
+one needs to be present or running to actually be useful, even with no formal package dependency:
+an exporter needs the service it scrapes, a client library needs its server, an extension needs its
+host engine). This is Artifact 4 (Section "Output artifacts" below).
+
+Derive edges from three sources, per node:
+
+1. **Explicit, from the project graph.** Use `mcp__project-graph__project_graph_query` with
+   `core:hasDependency` to enumerate the node's direct package dependencies:
+   ```sparql
+   SELECT ?depName WHERE {
+     ?pkg <https://purl.org/packagegraph/ontology/core#packageName> "<ubuntu-package-name-guess>" ;
+          <https://purl.org/packagegraph/ontology/core#hasDependency> ?dep .
+     ?dep <https://purl.org/packagegraph/ontology/core#dependencyTarget> ?target .
+     ?target <https://purl.org/packagegraph/ontology/core#packageName> ?depName
+   }
+   ```
+   For each dependency returned, record an edge if it matches another node in this stack (by name
+   or well-known package identity). Only record it as an *external* (out-of-stack) edge when it is
+   a notable, load-bearing dependency -- skip generic base-system noise (`libc6`, `base-files`, ...)
+   unless the node's own purpose is to be that system library.
+2. **Explicit, from the per-project report.** When the node has a `project-reports/<slug>.md`,
+   read its **Section 9 (Dependencies)** and extract every dependency it documents as a structured
+   edge (this section is prose, not a table -- read it and paraphrase each dependency into one
+   sentence).
+3. **Implicit, from research.** For every other node in this stack, ask: does this node need that
+   node to be present/running/available to actually be useful, beyond a formal package dependency?
+   Confirm via WebSearch/WebFetch against the homepage/README before recording one. Implicit edges
+   only ever target another node already in this stack -- they are for in-stack context, never
+   external.
+
+An edge only points to a target outside the stack's own node list when it was found in step 1 or 2
+above (explicit) and is load-bearing; that external target becomes its own grey, minimally-detailed
+node in the graph (`in_scope: false`) so the missing context stays visible without pulling
+unrelated packages into the classified stack. Never invent an edge with no evidence; multiple
+sources confirming the same edge merge into one edge with combined evidence, not duplicate edges.
+
 ---
 
 ## Output artifacts
 
-Write all three into the generated report `<vertical-slug>.md`. Default framing is exec/product
+Write Artifacts 1-3 into the generated report `<vertical-slug>.md`, and Artifact 4 into
+`<vertical-slug>.graph.json` alongside it. Default framing is exec/product
 (PowerPoint-first); shift technical depth up if the scope spec's audience is eng-leadership. The
 report opens with a header block in the same style as the per-project reports. `Author` comes from
 the scope spec's `author` field (default: the operator running it), `Date` from `run_date` (default:
@@ -323,7 +364,7 @@ parent: Whole-Stack Reports
 against the per-project reports under project-reports/. Items not verifiable against a second source are
 marked [NEEDS VERIFICATION].<br/>
 
-![](<vertical-slug>.svg) Link to full screen: [<vertical-slug>.svg](<vertical-slug>.svg)
+{% include dependency-graph.html slug="<vertical-slug>" %}
 ```
 
 If the scope spec recorded any `assumptions:` (a degraded, non-interactive run), reproduce them in a
@@ -411,78 +452,106 @@ comma-broken row.
   double-counted in any investment estimate. Use the RISE checks in the `/project-color-coding` skill
   (Research procedure, step 4) to ground this.
 
-### Artifact 4: Stack view-model (`<vertical-slug>.yml`)
+### Artifact 4: Dependency graph (`<vertical-slug>.graph.json`)
 
-A machine-readable view-model of the layered stack, written alongside `<vertical-slug>.md`. It
-carries exactly the data the diagram renderer needs -- the 2D grid layout plus each node's color,
-criticality, release provider, and gap text -- so the renderer never has to parse the free-text
-report. Feed it to `render-stack-svg.py` (in this directory) to produce an SVG stack diagram
-(product columns x layer rows, one colored box per node, native hover tooltip showing the gap):
+A machine-readable dependency graph of the stack, written alongside `<vertical-slug>.md`. It
+carries every node (with its color/criticality/release-provider/gap, same as Artifact 2) plus the
+full explicit + implicit edge list derived in Section 2.2, so the site's interactive graph renderer
+never has to parse free-text markdown. This is the artifact that `{% include dependency-graph.html
+%}` (embedded in the report header, see "Output artifacts" above) fetches client-side.
 
+Each node's `color`, `criticality`, `release_provider`, and `gap` come straight from its
+classification record (Artifact 2); `upstream_release` is true only when `release_provider` is
+`upstream`. `in_scope: false` marks the "one-hop external leaf" case -- a dependency target that is
+not itself a node in this stack (Section 2.2); it always carries `color: "grey"` and minimal
+fields. Schema:
+
+```json
+{
+  "vertical": "Databases (OLTP + OLAP + KV/cache)",
+  "slug": "databases",
+  "target_profile": "RVA23U64",
+  "nodes": [
+    {
+      "id": "libpq",
+      "name": "libpq",
+      "layer": "Client Drivers",
+      "column": "PostgreSQL",
+      "criticality": "critical",
+      "color": "blue",
+      "release_provider": "Debian",
+      "upstream_release": false,
+      "gap": "Build Farm has active riscv64 workers passing full regression suite; upstream ships source only",
+      "in_scope": true,
+      "repo": "https://github.com/postgres/postgres",
+      "home": "https://www.postgresql.org/",
+      "report": "/sw-ecosystem/project-reports/postgresql.html"
+    },
+    {
+      "id": "glibc-dev-tools--external",
+      "name": "glibc build toolchain helpers",
+      "in_scope": false,
+      "color": "grey",
+      "layer": null,
+      "column": null,
+      "criticality": "n/a",
+      "release_provider": "none",
+      "upstream_release": false,
+      "gap": "",
+      "repo": null,
+      "home": null,
+      "report": "/sw-ecosystem/project-reports/glibc-dev-tools.html"
+    }
+  ],
+  "edges": [
+    {
+      "source": "libpq",
+      "target": "glibc",
+      "type": "explicit",
+      "relation": "build-dependency",
+      "evidence": "project-graph",
+      "note": "core:hasDependency, Ubuntu 26.04 riscv64 binary package graph"
+    },
+    {
+      "source": "postgres-exporter",
+      "target": "postgresql",
+      "type": "implicit",
+      "relation": "requires-to-be-useful",
+      "evidence": "web-search",
+      "note": "exporter scrapes a running PostgreSQL instance; non-functional without one"
+    }
+  ]
+}
 ```
-python3 render-stack-svg.py render <vertical-slug>.yml -o <vertical-slug>.svg
-```
 
-The layout is derived from the scope spec's `layers:` -- not re-invented: a layer entry with
-`product:` and `layer:` places its nodes in the product grid (column = `product:`, row =
-`layer:`); a layer entry with only `layer:` is a **full-width shared layer** rendered below
-the product grid. Column and row order follow first-appearance order across the layer entries.
-Column widths are not uniform: each column is sized to its busiest cell, so a product with many
-extensions is wider than a sparse one. A node in a shared layer may still be placed under a product
-column -- set `column:` on that node, or let `render-stack-svg.py build` infer it from the report's
-Artifact 1 per-product subsections (e.g. "Layer 4.a -- PostgreSQL: Orchestration &
-Observability"); shared-layer nodes with no column render in a full-width strip beneath the
-per-product cells. Each node's `color`, `criticality`, `release_provider`, and `gap` (a one-line
-"what is missing on riscv64") come straight from that node's classification record (Artifact 2).
-`upstream_release` is true only when `release_provider` is `upstream`.
+- `id` is a stable slug of the node's display name (`name.toLowerCase().replace(/[^a-z0-9]+/g,
+  '-')`, trimmed of leading/trailing hyphens); reuse the node's `slug:` from the scope spec when it
+  has one, so `id` matches `project-reports/<slug>.md`. An external leaf node's `id` carries a
+  `--external` suffix (e.g. `glibc-dev-tools--external`) so it never collides with an in-scope id.
+- `report` **always** links to `/sw-ecosystem/project-reports/<slug>.html` (root-relative, using the
+  site's fixed baseurl -- correct regardless of how deep the linking page is nested) with `<slug>`
+  being the scope-spec `slug:` when the node has one, else its own `id` -- stripped of `--external`
+  for a leaf node -- for every node, in-scope or external, whether or not that report currently
+  exists. Clicking a focused node on the site opens this link unconditionally; a node with no
+  per-project report 404s rather than silently falling back to `repo`/`home`. `repo`/`home` come
+  straight from the scope spec and are informational only (not used for the click-through link).
+- `edges[].type` is `explicit` or `implicit`; `edges[].evidence` is `project-graph`,
+  `project-report`, or `web-search` (or an array of these when more than one source confirms the
+  same edge). `relation` is a short free-text label (`build-dependency`, `runtime-dependency`,
+  `requires-to-be-useful`, `client-of`, `extension-of`, ...).
 
-The `color` encodes two axes at once (see the `/project-color-coding` skill): the upstream
-build/test/release posture, and -- for optimization-purpose projects (compression, crypto,
-allocators, SIMD kernels) -- the RISC-V optimization level; the optimization axis can only cap the
-grade downward. The `legend` labels spell out both axes; the chip conveys the color, so each label
-carries no color name. They render as a 2-column x 3-row grid at the top-right of the diagram
-(green/blue/yellow in the left column, orange/red/grey in the right). Schema:
-
-```yaml
-title: "Databases (OLTP + OLAP + KV/cache) ..."   # the vertical name
-target_profile: RVA23U64
-hardware_label: "Hardware: RISC-V CPU (RVA23U64)"
-columns: [PostgreSQL, MySQL, MariaDB, Redis, Memcached]   # product grid columns, in order
-product_layers: ["Client Drivers", "Database Engine", "Extensions, Clustering & Proxies"]
-shared_layers: ["Orchestration & Observability", "System Libraries"]
-legend:                                           # all six states (fixed; reused across verticals)
-  - {color: green,  label: "upstream builds+tests+releases; optimized"}
-  - {color: blue,   label: "upstream builds+tests; mostly optimized"}
-  - {color: yellow, label: "upstream builds; some optimized"}
-  - {color: orange, label: "no upstream build, distributions only; no optimizations"}
-  - {color: red,    label: "not working"}
-  - {color: grey,   label: "unknown or N/A"}
-nodes:
-  - name: libpq
-    color: blue                                   # grey | green | blue | yellow | orange | red
-    criticality: critical                         # critical | optional
-    column: PostgreSQL                            # product column; null for a shared strip node
-    layer: "Client Drivers"                       # a layer or shared_layer title
-    release_provider: Debian
-    upstream_release: false                        # true only when release_provider == upstream
-    gap: "Build Farm has active riscv64 workers passing full regression suite; upstream ships source only"
-  # ... one entry per node, in scope order. A shared-layer node may carry a `column:` to sit
-  # under that product (e.g. CloudNativePG under PostgreSQL in Orchestration & Observability).
-```
-
-If you are running Stage 2 inline (small stack), emit this file yourself. If you run the workflow,
-it returns the view-model (see below) and you write it to `<vertical-slug>.yml`. For a report that
-predates this artifact, `render-stack-svg.py build <project-reports/scope.yml> <report.md> -o <slug>.yml`
-reconstructs the view-model from the existing scope spec and report.
+If you are running Stage 2 inline (small stack), emit this file yourself, following the derivation
+in Section 2.2. If you run the workflow, it returns the graph object and a ready-to-write JSON
+string (see below) -- write the latter to `<vertical-slug>.graph.json`.
 
 ---
 
 ## Running stage 2 via the Workflow
 
 For a stack of more than a handful of nodes, stage 2 is best run with the companion script
-`stack-report-workflow.js` in this directory, which fans out one classification agent per node,
-runs an adversarial verification pass, and synthesizes the three artifacts. Pass the parsed scope
-spec as the workflow `args`. See `README.md` in this directory for the exact invocation, and
+`stack-report-workflow.js` in this directory, which fans out one classify + verify + edge-discovery
+agent chain per node, then synthesizes the report and the dependency graph. Pass the parsed scope
+spec as the workflow `args`. See `AGENTS.md` in this directory for the exact invocation, and
 `prompts/project-report/AGENTS.md` for the operational rules (rate limits, one workflow at a time,
 resume-on-stall) that apply to any research workflow in this repository.
 
