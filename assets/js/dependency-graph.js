@@ -88,6 +88,21 @@
     return { nodeMap: nodeMap, edgeMap: edgeMap, allNodeIds: Array.from(visible) };
   }
 
+  // Each node's `report` is baked in at generation time as a production URL, e.g.
+  // "/sw-ecosystem/project-reports/<slug>.html" (see stack-report-workflow.js reportUrl()).
+  // A PR preview is served one level deeper, at ".../pr-preview/pr-<N>/stack-reports/...",
+  // so a bare production link would incorrectly point at the live site instead of the
+  // preview. Rewrite the baked-in site prefix to whatever base path this page is actually
+  // being served under, detected from the page's own URL, so the link is correct in both.
+  function resolveReportUrl(reportPath) {
+    if (!reportPath) return reportPath;
+    var idx = reportPath.indexOf('/project-reports/');
+    if (idx === -1) return reportPath;
+    var m = /^(.*)\/stack-reports\//.exec(window.location.pathname);
+    var currentBase = m ? m[1] : '';
+    return currentBase + reportPath.slice(idx);
+  }
+
   function nodeClass(n) {
     var cls = 'dg-node dg-node-' + (n.color || 'grey');
     if (n.in_scope === false) cls += ' dg-node-external';
@@ -235,7 +250,7 @@
               if (selected === id) {
                 // Always the project-report URL, even if that page doesn't exist yet (404) --
                 // never silently fall back to repo/home.
-                if (n.report) window.open(n.report, '_blank');
+                if (n.report) window.open(resolveReportUrl(n.report), '_blank');
                 return;
               }
               selected = id;

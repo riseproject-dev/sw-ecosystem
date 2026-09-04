@@ -5,24 +5,60 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, closed]
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: pages-${{ github.ref }}
 
 jobs:
-  build:
+  preview:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        if: github.event.action != 'closed'
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Compute preview baseurl
+        if: github.event.action != 'closed'
+        id: preview_baseurl
+        run: |
+          base=$(ruby -ryaml -e "puts YAML.load_file('_config.yml')['baseurl']")
+          echo "value=${base}/pr-preview/pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+
+      # A preview is served one path segment deeper (.../pr-preview/pr-<N>/) than the
+      # production site, so it needs its own baseurl or every internal link/asset
+      # would point at production.
+      - name: Build site
+        if: github.event.action != 'closed'
+        run: bundle exec jekyll build --destination _site --baseurl "${{ steps.preview_baseurl.outputs.value }}"
+        env:
+          JEKYLL_ENV: production
+
+      # Auto-detects deploy vs. removal from the pull_request event action, so this
+      # same step both publishes updates and tears down the preview when the PR is
+      # closed.
+      - name: Deploy or remove PR preview
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.8.1
+        with:
+          source-dir: ./_site
+
+  deploy:
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: "3.4"
@@ -31,18 +67,9 @@ jobs:
         run: bundle exec jekyll build --destination _site
         env:
           JEKYLL_ENV: production
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: _site
-
-  deploy:
-    if: github.event_name != 'pull_request'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+        uses: peaceiris/actions-gh-pages@1ef5a1b1df4c63fe21a2242edbee6cac921ece01 # v4.1.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          keep_files: true
