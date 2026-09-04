@@ -1,3 +1,8 @@
+---
+title: Sample
+parent: Whole-Stack Reports
+---
+
 # Sample
 
 **Author:** Ludovic Henry<br/>
@@ -8,6 +13,8 @@
 **Verification policy:** Colors are assigned from primary upstream sources, adversarially verified
 against the per-project reports under reports/. Items not verifiable against a second source are
 marked [NEEDS VERIFICATION].<br/>
+
+{% include dependency-graph.html slug="sample" %}
 
 **Scoping assumptions:**
 

@@ -1,10 +1,11 @@
 export const meta = {
   name: 'stack-report',
-  description: 'RISC-V vertical ecosystem report: classify each stack node red/orange/yellow/blue/green/grey, verify, synthesize 3 artifacts',
+  description: 'RISC-V vertical ecosystem report: classify each stack node red/orange/yellow/blue/green/grey, verify, derive its dependency edges, synthesize the report + dependency graph',
   phases: [
     { title: 'Classify', detail: 'One agent per node: hybrid reuse-report + live-verify color classification' },
     { title: 'Verify', detail: 'Adversarial re-check of each node color-deciding fact' },
-    { title: 'Synthesize', detail: 'Write the 3 artifacts (stack outline, status table, narrative) from node verdicts' },
+    { title: 'Edges', detail: 'One agent per node: explicit deps from project-graph-mcp + project-reports, implicit deps from web research' },
+    { title: 'Synthesize', detail: 'Write the report (3 artifacts) and the dependency graph JSON from node verdicts + edges' },
   ],
 }
 
@@ -38,6 +39,32 @@ const NODE_SCHEMA = {
     delta_vs_report: { type: 'string', description: 'the discrepancy if a live check contradicted the report; else none or n/a' },
   },
   required: ['name', 'layer', 'criticality', 'color', 'release_provider', 'justification', 'primary_source', 'as_of', 'confidence', 'delta_vs_report'],
+}
+
+// Structured per-node dependency-edge record. "target" is either another node's name in this
+// stack (matched case-insensitively downstream) or a short descriptive name for a dependency
+// that is not itself a scoped stack node (rendered as an external/grey leaf in the graph).
+const EDGE_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    edges: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          target: { type: 'string', description: 'dependency name; use another node\'s name from this stack EXACTLY when it is one of them, else a short specific name for an external dependency' },
+          type: { type: 'string', enum: ['explicit', 'implicit'] },
+          relation: { type: 'string', description: 'short label, e.g. build-dependency, runtime-dependency, requires-to-be-useful, client-of, extension-of' },
+          evidence: { type: 'string', enum: ['project-graph', 'project-report', 'web-search'] },
+          note: { type: 'string', description: 'one sentence of evidence/justification, with a markdown source link when available' },
+        },
+        required: ['target', 'type', 'relation', 'evidence', 'note'],
+      },
+    },
+  },
+  required: ['edges'],
 }
 
 function ghHint(repo) {
@@ -85,9 +112,9 @@ if (nodes.length === 0) {
   return [{ vertical: spec.vertical, slug, status: 'FAILED', reason: 'No nodes in scope spec.' }]
 }
 
-// ── Classify -> Verify, per node, no barrier between stages ──
+// ── Classify -> Verify -> Edges, per node, no barrier between stages ──
 phase('Classify')
-const verified = await pipeline(
+const processed = await pipeline(
   nodes,
 
   // Stage 1: classify
@@ -162,10 +189,60 @@ STEP 3 -- Return the FINAL corrected structured record (same schema).
 Keep name and layer unchanged. Update color, color_case, release_provider, justification,
 primary_source, as_of, confidence, and delta_vs_report to reflect your verdict.`,
     { schema: NODE_SCHEMA, label: `verify:${node.name}`, phase: 'Verify' }),
+
+  // Stage 3: dependency-edge discovery (explicit + implicit)
+  (verifiedRecord, node) => agent(`Find the dependencies of ONE node in a RISC-V vertical software stack: "${node.name}".
+Both EXPLICIT dependencies (formal package/build/runtime dependencies) and IMPLICIT dependencies
+(other stack nodes this one needs to be present/running to actually be useful, even without a
+formal package dependency -- e.g. an exporter needs the service it scrapes, a client needs its
+server, an extension needs its host engine).
+
+Node context:
+- Layer: ${node.layer}
+- Repo: ${node.repo || '(none)'}
+- Homepage: ${node.home || '(none)'}
+- Per-project report slug (if a project-reports/<slug>.md exists): ${node.slug || '(none)'}
+
+OTHER NODES IN THIS STACK (use one of these names EXACTLY as "target" when the dependency is one
+of them; otherwise give a short, specific name for the external dependency instead):
+${JSON.stringify(nodes.filter(n => n.name !== node.name).map(n => n.name))}
+
+${ghHint(node.repo)}
+
+STEP 1 -- Explicit dependencies from the project graph (fast, structured ground truth).
+Use mcp__project-graph__project_graph_query with core:hasDependency to enumerate "${node.name}"'s
+direct package dependencies. Try the most plausible Ubuntu package name(s) for "${node.name}"
+(e.g. "${node.name.toLowerCase()}", "lib${node.name.toLowerCase().replace(/[\s.\/]+/g,'-')}"):
+  SELECT ?depName WHERE {
+    ?pkg <https://purl.org/packagegraph/ontology/core#packageName> "<ubuntu-package-name-guess>" ;
+         <https://purl.org/packagegraph/ontology/core#hasDependency> ?dep .
+    ?dep <https://purl.org/packagegraph/ontology/core#dependencyTarget> ?target .
+    ?target <https://purl.org/packagegraph/ontology/core#packageName> ?depName
+  }
+For each dependency the graph returns: if it matches one of OTHER NODES IN THIS STACK, record it
+(type "explicit", evidence "project-graph"). Only record it as an EXTERNAL (out-of-stack) explicit
+dependency if it is a notable, load-bearing dependency -- skip generic base-system noise (libc6,
+base-files, etc.) unless this node's own purpose IS to be that system library.
+
+STEP 2 -- Explicit dependencies from the per-project report.
+${node.slug ? `Read project-reports/${node.slug}.md, Section 9 (Dependencies). Extract every dependency it documents as an edge: type "explicit", evidence "project-report", relation matching what the section describes (e.g. "build-dependency", "runtime-dependency", "linked-library"), note = a one-sentence paraphrase of what that subsection says.` : 'No per-project report exists for this node (no `slug` field) -- skip this step.'}
+
+STEP 3 -- Implicit dependencies ("needs this to be useful").
+Beyond formal dependencies, does "${node.name}" need any OTHER NODE IN THIS STACK to be present,
+running, or available to actually be useful? Use WebSearch/WebFetch/the project homepage/README to
+confirm before reporting one. Only report an implicit edge whose target is one of OTHER NODES IN
+THIS STACK -- implicit edges are for in-stack context only, never external.
+
+STEP 4 -- Return the structured edges list.
+Do not invent a dependency you found no evidence for; if a step finds nothing, contribute no edges
+for it. Never report "${node.name}" depending on itself. Every "note" is one sentence, with a
+markdown link [text](url) when a source URL exists.`,
+    { schema: EDGE_SCHEMA, label: `edges:${node.name}`, phase: 'Edges' })
+    .then(result => ({ ...verifiedRecord, edges: (result && result.edges) || [] })),
 )
 
-const goodNodes = verified.filter(Boolean)
-log(`Classify+Verify complete: ${goodNodes.length}/${nodes.length} nodes classified`)
+const goodNodes = processed.filter(Boolean)
+log(`Classify+Verify+Edges complete: ${goodNodes.length}/${nodes.length} nodes classified`)
 if (goodNodes.length === 0) {
   log('ABORT: no nodes classified (tools unavailable or rate-limited). Not writing report.')
   return [{ vertical: spec.vertical, slug, status: 'FAILED', reason: 'Zero nodes classified.' }]
@@ -234,6 +311,8 @@ parent: Whole-Stack Reports
 **Audience:** ${spec.audience || 'exec-product'}<br/>
 **Verification policy:** Colors are assigned from primary upstream sources, adversarially verified against the per-project reports under project-reports/. Items not verifiable against a second source are marked [NEEDS VERIFICATION].<br/>
 
+{% include dependency-graph.html slug="${slug}" %}
+
 (If scoping assumptions are non-empty, add a short "Scoping assumptions" note here.)
 
 ## Artifact 1: Layered stack outline
@@ -265,147 +344,160 @@ Then a "Pipeline chains and alternate paths" subsection rendering each chain as 
 Base every factual claim on the node records above. Where a record lacks data, write "Data not available" rather than guessing.`,
   { label: `synthesize:${slug}`, phase: 'Synthesize' })
 
-// ── Build Artifact 4: the stack view-model (consumed by render-stack-svg.py) ──
-// Layout comes from spec.layers: a title "<Product> -- <Row>" places its nodes in the product
-// grid (before "--" is a column, after is a per-product row-layer); a title without "--" is a
-// full-width shared layer. Color / provider / gap come from the verified node records, joined by
-// name. One node entry per scope instance (a node listed under two columns appears twice, same
-// color) so it matches render-stack-svg.py's own `build`.
-function parseReportColumns(reportText, columns) {
-  // A shared-layer node may still sit under a product column when the synthesized
-  // report's Artifact 1 splits the shared layer into per-product subsections
-  // ("### Layer 4.a -- PostgreSQL: ...", then bullets under
-  // "### Layer 4.a -- Orchestration & Observability"). Return {node: product}.
-  // Mirrors parse_report_columns() in render-stack-svg.py so workflow output and a
-  // from-files rebuild agree.
-  const colSet = new Set(columns)
-  const mapping = {}, letterToProduct = {}
-  let current = null
-  for (const line of String(reportText || '').split('\n')) {
-    const h = line.match(/^#{2,4}\s+Layer\s+\d+(?:\.([a-z]))?\s+--\s+(.+?)\s*$/)
-    if (h) {
-      const letter = h[1], title = h[2]
-      if (letter && title.includes(':')) {
-        const product = title.split(':', 1)[0].trim()
-        letterToProduct[letter] = product
-        current = colSet.has(product) ? product : null
-      } else if (letter && letterToProduct[letter]) {
-        current = colSet.has(letterToProduct[letter]) ? letterToProduct[letter] : null
-      } else {
-        current = null
-      }
-      continue
-    }
-    const b = line.match(/^-\s+\*\*(.+?)\*\*/)
-    if (b && current && !(b[1].trim() in mapping)) mapping[b[1].trim()] = current
-  }
-  return mapping
+// ── Build Artifact 4: the dependency graph (nodes + explicit/implicit edges) ──
+// Node id: a stable slug of the node's display name.
+function nodeId(name) {
+  return String(name).toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'node'
 }
 
-function buildViewModel(spec, records, slug, profile, reportText) {
-  // Two-level index: recByPair[layer][name] disambiguates a node listed under two
-  // columns; recByName[name] is the fallback. records carry `layer` (the full scope
-  // layer title) from the classify agents.
+// Every node links to its project-reports page, whether or not that page exists yet -- clicking a
+// node is meant to always open project-reports/<slug>.html, 404ing when there is no report there
+// rather than silently falling back to a repo/home URL. `baseSlug` should be the node's own
+// project-reports slug candidate: the scope spec's `slug:` when given, else the node id (stripped
+// of the "--external" suffix for a one-hop external leaf node). Root-relative with the site's fixed
+// baseurl (_config.yml: baseurl: "/sw-ecosystem"), not relative to the stack report's own path, so
+// the link is correct regardless of how deep the linking page is nested.
+function reportUrl(baseSlug) {
+  return `/sw-ecosystem/project-reports/${baseSlug}.html`
+}
+
+function buildGraphJson(spec, records, slug, profile) {
+  // Two-level index for CLASSIFICATION data: recByPair[layer][name] disambiguates a node
+  // listed under two per-product layers with the SAME name (e.g. "MariaDB Connector/C" appears
+  // under both the MySQL and MariaDB Client Drivers layers) -- each has its own independently
+  // classified record; recByName[name] is the fallback for older/collapsed data.
   const recByPair = new Map(), recByName = new Map()
   for (const r of records) {
     if (!recByPair.has(r.layer)) recByPair.set(r.layer, new Map())
     recByPair.get(r.layer).set(r.name, r)
     if (!recByName.has(r.name)) recByName.set(r.name, r)
   }
-  const lookup = (name, title) =>
-    (recByPair.get(title) && recByPair.get(title).get(name)) || recByName.get(name) || {}
+  const lookupRec = (name, fullLabel) =>
+    (recByPair.get(fullLabel) && recByPair.get(fullLabel).get(name)) || recByName.get(name) || {}
 
-  // Derive columns (products) and productLayers from first-appearance order across layer entries.
-  // Per-product layers: product: + layer:. Shared/single-product layers: layer: only.
-  const columns = [], productLayers = [], sharedLayers = []
-  for (const l of spec.layers || []) {
-    if (l.product && l.layer) {
-      if (!columns.includes(l.product)) columns.push(l.product)
-      if (!productLayers.includes(l.layer)) productLayers.push(l.layer)
-    } else if (l.layer && !sharedLayers.includes(l.layer)) {
-      sharedLayers.push(l.layer)
-    }
+  // Node ids must be unique per scope INSTANCE, not per name -- the same package can
+  // legitimately appear as two separate nodes (one per product column). uniqueId() also
+  // guards against two differently-worded external dependency names slugifying to the same id.
+  const seenIds = new Set()
+  function uniqueId(base) {
+    let id = base, n = 2
+    while (seenIds.has(id)) { id = `${base}-${n}`; n++ }
+    seenIds.add(id)
+    return id
   }
-  const reportColumns = parseReportColumns(reportText, columns)
+
+  const idByPair = new Map()        // "<fullLabel> <name>" -> node id, precise per scope instance
+  const idsByNormName = new Map()   // normalized display name -> [node ids] sharing that name
+  function registerName(norm, id) {
+    const arr = idsByNormName.get(norm)
+    if (arr) { if (!arr.includes(id)) arr.push(id) } else idsByNormName.set(norm, [id])
+  }
 
   const nodes = []
   for (const l of spec.layers || []) {
     const isProductLayer = !!(l.product && l.layer)
     const productColumn = isProductLayer ? l.product : null
     const layerTitle = isProductLayer ? l.layer : (l.layer || '')
-    const label = isProductLayer ? `${l.product} -- ${l.layer}` : (l.layer || '')
+    const fullLabel = layerLabel(l)
     for (const n of l.nodes || []) {
-      const rec = lookup(n.name, label)
-      const provider = rec.release_provider || 'none'
-      // Product-layer node: column from product:. Shared-layer node: explicit
-      // `column:` on the scope node, else the report's per-product placement.
-      const column = productColumn || n.column || reportColumns[n.name] || null
+      const rec = lookupRec(n.name, fullLabel)
+      const norm = String(n.name).toLowerCase().trim()
+      const baseId = nodeId(n.slug || n.name)
+      const id = uniqueId(productColumn ? `${baseId}--${nodeId(productColumn)}` : baseId)
+      idByPair.set(fullLabel + ' ' + n.name, id)
+      registerName(norm, id)
       nodes.push({
+        id,
         name: n.name,
-        color: rec.color || 'grey',
-        criticality: n.criticality || 'critical',
-        column,
         layer: layerTitle,
-        release_provider: provider,
-        upstream_release: String(provider).trim().toLowerCase() === 'upstream',
+        column: productColumn || n.column || null,
+        criticality: n.criticality || rec.criticality || 'critical',
+        color: rec.color || 'grey',
+        release_provider: rec.release_provider || 'none',
+        upstream_release: String(rec.release_provider || '').trim().toLowerCase() === 'upstream',
         gap: rec.justification || '',
+        in_scope: true,
+        repo: n.repo || null,
+        home: n.home || null,
+        report: reportUrl(n.slug || baseId),
       })
     }
   }
-
-  return {
-    title: spec.vertical || slug,
-    target_profile: profile,
-    hardware_label: `Hardware: RISC-V CPU (${profile})`,
-    columns, product_layers: productLayers, shared_layers: sharedLayers,
-    // Each label spells out both axes (upstream build/test/release posture and, for
-    // optimization-purpose projects, the RISC-V optimization level); the chip conveys the
-    // color, so the label carries no color name. Rendered as a 2-column x 3-row grid at top-right.
-    legend: [
-      { color: 'green', label: 'upstream builds+tests+releases; optimized' },
-      { color: 'blue', label: 'upstream builds+tests; mostly optimized' },
-      { color: 'yellow', label: 'upstream builds; some optimized' },
-      { color: 'orange', label: 'no upstream build, distributions only; no optimizations' },
-      { color: 'red', label: 'not working' },
-      { color: 'grey', label: 'unknown or N/A' },
-    ],
-    nodes,
+  // Excluded (proprietary/vendor-only) nodes also get a graph node so their grey status is visible.
+  for (const e of spec.exclusions || []) {
+    const norm = String(e.name).toLowerCase().trim()
+    if (idsByNormName.has(norm)) continue
+    const baseId = nodeId(e.name)
+    const id = uniqueId(baseId)
+    registerName(norm, id)
+    nodes.push({
+      id, name: e.name, layer: 'Excluded (proprietary / vendor-only)', column: null,
+      criticality: 'n/a', color: 'grey', release_provider: 'none', upstream_release: false,
+      gap: e.reason || '', in_scope: true, repo: null, home: null, report: reportUrl(baseId),
+    })
   }
-}
 
-// Minimal YAML emitter for the view-model shape (top-level scalars, arrays of scalars, and arrays
-// of flat objects). Every string is double-quoted and escaped, so the output is always valid YAML
-// regardless of colons/brackets/quotes in gap text. No external YAML dependency in the sandbox.
-function ymlDump(vm) {
-  const scalar = (v) => {
-    if (v === null || v === undefined) return 'null'
-    if (typeof v === 'boolean') return v ? 'true' : 'false'
-    if (typeof v === 'number') return String(v)
-    return '"' + String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-      .replace(/\n/g, '\\n').replace(/\t/g, '\\t') + '"'
-  }
-  const lines = []
-  for (const key of Object.keys(vm)) {
-    const val = vm[key]
-    if (Array.isArray(val)) {
-      if (val.length === 0) { lines.push(key + ': []'); continue }
-      lines.push(key + ':')
-      for (const item of val) {
-        if (item && typeof item === 'object') {
-          Object.keys(item).forEach((k, i) =>
-            lines.push((i === 0 ? '  - ' : '    ') + k + ': ' + scalar(item[k])))
+  // Resolve every discovered edge target against the in-scope node-id map (case-insensitive);
+  // anything unmatched becomes (or reuses) an external grey leaf node -- the "one-hop external
+  // dependency" case, so implicit context stays visible even for a dependency outside this stack.
+  // A source resolves precisely via its own (layer, name); a target is given only by name (the
+  // edge-discovery prompt has no layer-qualified name to point at), so it fans out to every node
+  // instance sharing that name -- correct for the rare same-name-in-two-products case, a no-op
+  // fan-out of one for everything else. External targets dedupe by slug, not raw text, so two
+  // differently-worded mentions of the same external package ("Google Benchmark" / "google
+  // benchmark") merge into one leaf node instead of two near-duplicates.
+  const externalIds = new Map()   // slug -> node id
+  const edgeIndex = new Map()     // `${source}|${target}|${type}` -> merged edge (with evidenceSet)
+  for (const rec of records) {
+    const sourceId = idByPair.get(rec.layer + ' ' + rec.name) ||
+      (idsByNormName.get(String(rec.name).toLowerCase().trim()) || [])[0]
+    if (!sourceId) continue
+    for (const e of rec.edges || []) {
+      const targetNorm = String(e.target || '').toLowerCase().trim()
+      if (!targetNorm) continue
+      let targetIds = idsByNormName.get(targetNorm)
+      if (!targetIds) {
+        const externalBaseId = nodeId(e.target)
+        let targetId = externalIds.get(externalBaseId)
+        if (!targetId) {
+          targetId = uniqueId(externalBaseId + '--external')
+          externalIds.set(externalBaseId, targetId)
+          nodes.push({
+            id: targetId, name: e.target, in_scope: false, color: 'grey',
+            layer: null, column: null, criticality: 'n/a', release_provider: 'none',
+            upstream_release: false, gap: '', repo: null, home: null,
+            report: reportUrl(externalBaseId),
+          })
+        }
+        targetIds = [targetId]
+      }
+      for (const targetId of targetIds) {
+        if (targetId === sourceId) continue
+        const key = `${sourceId}|${targetId}|${e.type}`
+        const existing = edgeIndex.get(key)
+        if (existing) {
+          existing.evidenceSet.add(e.evidence)
+          if (e.note && existing.note.indexOf(e.note) === -1) existing.note += '; ' + e.note
         } else {
-          lines.push('  - ' + scalar(item))
+          edgeIndex.set(key, {
+            source: sourceId, target: targetId, type: e.type, relation: e.relation || '',
+            evidenceSet: new Set([e.evidence]), note: e.note || '',
+          })
         }
       }
-    } else {
-      lines.push(key + ': ' + scalar(val))
     }
   }
-  return lines.join('\n') + '\n'
+  const edges = Array.from(edgeIndex.values()).map(e => ({
+    source: e.source, target: e.target, type: e.type, relation: e.relation,
+    evidence: e.evidenceSet.size === 1 ? Array.from(e.evidenceSet)[0] : Array.from(e.evidenceSet),
+    note: e.note,
+  }))
+
+  return { vertical: spec.vertical || slug, slug, target_profile: profile, nodes, edges }
 }
 
-const viewmodel = buildViewModel(spec, allRecords, slug, targetProfile, report)
+const graph = buildGraphJson(spec, allRecords, slug, targetProfile)
 
 return [{
   vertical: spec.vertical || slug,
@@ -414,6 +506,6 @@ return [{
   report,
   nodeCount: allRecords.length,
   records: allRecords,
-  viewmodel,                     // Artifact 4 object: write to <slug>/<slug>.yml (yaml.safe_dump)
-  viewmodel_yaml: ymlDump(viewmodel),   // ready-to-write YAML string (no PyYAML needed)
+  graph,                                   // Artifact 4 object: write to <slug>/<slug>.graph.json
+  graph_json: JSON.stringify(graph, null, 2),   // ready-to-write JSON string
 }]
