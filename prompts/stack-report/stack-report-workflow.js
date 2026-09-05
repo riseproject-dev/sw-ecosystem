@@ -376,9 +376,8 @@ function buildGraphJson(spec, records, slug, profile) {
   const lookupRec = (name, fullLabel) =>
     (recByPair.get(fullLabel) && recByPair.get(fullLabel).get(name)) || recByName.get(name) || {}
 
-  // Node ids must be unique per scope INSTANCE, not per name -- the same package can
-  // legitimately appear as two separate nodes (one per product column). uniqueId() also
-  // guards against two differently-worded external dependency names slugifying to the same id.
+  // uniqueId() guards against two differently-named nodes slugifying to the same base id
+  // (e.g. two differently-worded external dependency mentions).
   const seenIds = new Set()
   function uniqueId(base) {
     let id = base, n = 2
@@ -387,14 +386,13 @@ function buildGraphJson(spec, records, slug, profile) {
     return id
   }
 
-  const idByPair = new Map()        // "<fullLabel> <name>" -> node id, precise per scope instance
-  const idsByNormName = new Map()   // normalized display name -> [node ids] sharing that name
-  function registerName(norm, id) {
-    const arr = idsByNormName.get(norm)
-    if (arr) { if (!arr.includes(id)) arr.push(id) } else idsByNormName.set(norm, [id])
-  }
-
-  const nodes = []
+  // A node's identity is its NAME, not its scope-spec instance -- the same package can be listed
+  // under more than one per-product layer (e.g. "MariaDB Connector/C" under both the MySQL and
+  // MariaDB Client Drivers rows), and every such instance must collapse into ONE graph node/box,
+  // not one per layer, or the graph shows duplicate boxes for the same real dependency.
+  const CRIT_RANK = { critical: 2, optional: 1, 'n/a': 0 }
+  const groups = new Map()   // normalized name -> merged group
+  const groupOrder = []
   for (const l of spec.layers || []) {
     const isProductLayer = !!(l.product && l.layer)
     const productColumn = isProductLayer ? l.product : null
@@ -403,34 +401,53 @@ function buildGraphJson(spec, records, slug, profile) {
     for (const n of l.nodes || []) {
       const rec = lookupRec(n.name, fullLabel)
       const norm = String(n.name).toLowerCase().trim()
-      const baseId = nodeId(n.slug || n.name)
-      const id = uniqueId(productColumn ? `${baseId}--${nodeId(productColumn)}` : baseId)
-      idByPair.set(fullLabel + ' ' + n.name, id)
-      registerName(norm, id)
-      nodes.push({
-        id,
-        name: n.name,
-        layer: layerTitle,
-        column: productColumn || n.column || null,
-        criticality: n.criticality || rec.criticality || 'critical',
-        color: rec.color || 'grey',
-        release_provider: rec.release_provider || 'none',
-        upstream_release: String(rec.release_provider || '').trim().toLowerCase() === 'upstream',
-        gap: rec.justification || '',
-        in_scope: true,
-        repo: n.repo || null,
-        home: n.home || null,
-        report: reportUrl(n.slug || baseId),
-      })
+      const crit = n.criticality || rec.criticality || 'critical'
+      let g = groups.get(norm)
+      if (!g) {
+        g = { name: n.name, rec, layerTitle, columns: new Set(), criticality: crit,
+          slug: n.slug || null, repo: n.repo || null, home: n.home || null }
+        groups.set(norm, g)
+        groupOrder.push(norm)
+      }
+      if (productColumn) g.columns.add(productColumn)
+      else if (n.column) g.columns.add(n.column)
+      if ((CRIT_RANK[crit] || 0) > (CRIT_RANK[g.criticality] || 0)) g.criticality = crit
+      if (!g.slug && n.slug) g.slug = n.slug
+      if (!g.repo && n.repo) g.repo = n.repo
+      if (!g.home && n.home) g.home = n.home
     }
+  }
+
+  const idByNormName = new Map()   // normalized display name -> node id
+  const nodes = []
+  for (const norm of groupOrder) {
+    const g = groups.get(norm)
+    const baseId = nodeId(g.slug || g.name)
+    const id = uniqueId(baseId)
+    idByNormName.set(norm, id)
+    nodes.push({
+      id,
+      name: g.name,
+      layer: g.layerTitle,
+      column: g.columns.size === 1 ? Array.from(g.columns)[0] : null,
+      criticality: g.criticality,
+      color: g.rec.color || 'grey',
+      release_provider: g.rec.release_provider || 'none',
+      upstream_release: String(g.rec.release_provider || '').trim().toLowerCase() === 'upstream',
+      gap: g.rec.justification || '',
+      in_scope: true,
+      repo: g.repo,
+      home: g.home,
+      report: reportUrl(g.slug || baseId),
+    })
   }
   // Excluded (proprietary/vendor-only) nodes also get a graph node so their grey status is visible.
   for (const e of spec.exclusions || []) {
     const norm = String(e.name).toLowerCase().trim()
-    if (idsByNormName.has(norm)) continue
+    if (idByNormName.has(norm)) continue
     const baseId = nodeId(e.name)
     const id = uniqueId(baseId)
-    registerName(norm, id)
+    idByNormName.set(norm, id)
     nodes.push({
       id, name: e.name, layer: 'Excluded (proprietary / vendor-only)', column: null,
       criticality: 'n/a', color: 'grey', release_provider: 'none', upstream_release: false,
@@ -441,25 +458,22 @@ function buildGraphJson(spec, records, slug, profile) {
   // Resolve every discovered edge target against the in-scope node-id map (case-insensitive);
   // anything unmatched becomes (or reuses) an external grey leaf node -- the "one-hop external
   // dependency" case, so implicit context stays visible even for a dependency outside this stack.
-  // A source resolves precisely via its own (layer, name); a target is given only by name (the
-  // edge-discovery prompt has no layer-qualified name to point at), so it fans out to every node
-  // instance sharing that name -- correct for the rare same-name-in-two-products case, a no-op
-  // fan-out of one for everything else. External targets dedupe by slug, not raw text, so two
-  // differently-worded mentions of the same external package ("Google Benchmark" / "google
-  // benchmark") merge into one leaf node instead of two near-duplicates.
+  // Both ends resolve by normalized name, so edges recorded against any duplicate-name instance
+  // (e.g. "MariaDB Connector/C" classified once under MySQL, once under MariaDB) land on the same
+  // merged node. External targets dedupe by slug, not raw text, so two differently-worded mentions
+  // of the same external package ("Google Benchmark" / "google benchmark") merge into one leaf node.
   const externalIds = new Map()   // slug -> node id
   const edgeIndex = new Map()     // `${source}|${target}|${type}` -> merged edge (with evidenceSet)
   for (const rec of records) {
-    const sourceId = idByPair.get(rec.layer + ' ' + rec.name) ||
-      (idsByNormName.get(String(rec.name).toLowerCase().trim()) || [])[0]
+    const sourceId = idByNormName.get(String(rec.name).toLowerCase().trim())
     if (!sourceId) continue
     for (const e of rec.edges || []) {
       const targetNorm = String(e.target || '').toLowerCase().trim()
       if (!targetNorm) continue
-      let targetIds = idsByNormName.get(targetNorm)
-      if (!targetIds) {
+      let targetId = idByNormName.get(targetNorm)
+      if (!targetId) {
         const externalBaseId = nodeId(e.target)
-        let targetId = externalIds.get(externalBaseId)
+        targetId = externalIds.get(externalBaseId)
         if (!targetId) {
           targetId = uniqueId(externalBaseId + '--external')
           externalIds.set(externalBaseId, targetId)
@@ -470,21 +484,18 @@ function buildGraphJson(spec, records, slug, profile) {
             report: reportUrl(externalBaseId),
           })
         }
-        targetIds = [targetId]
       }
-      for (const targetId of targetIds) {
-        if (targetId === sourceId) continue
-        const key = `${sourceId}|${targetId}|${e.type}`
-        const existing = edgeIndex.get(key)
-        if (existing) {
-          existing.evidenceSet.add(e.evidence)
-          if (e.note && existing.note.indexOf(e.note) === -1) existing.note += '; ' + e.note
-        } else {
-          edgeIndex.set(key, {
-            source: sourceId, target: targetId, type: e.type, relation: e.relation || '',
-            evidenceSet: new Set([e.evidence]), note: e.note || '',
-          })
-        }
+      if (targetId === sourceId) continue
+      const key = `${sourceId}|${targetId}|${e.type}`
+      const existing = edgeIndex.get(key)
+      if (existing) {
+        existing.evidenceSet.add(e.evidence)
+        if (e.note && existing.note.indexOf(e.note) === -1) existing.note += '; ' + e.note
+      } else {
+        edgeIndex.set(key, {
+          source: sourceId, target: targetId, type: e.type, relation: e.relation || '',
+          evidenceSet: new Set([e.evidence]), note: e.note || '',
+        })
       }
     }
   }
