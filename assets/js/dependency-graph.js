@@ -116,15 +116,38 @@
     return tip;
   }
 
+  function clusterId(column) {
+    return 'cluster--' + String(column).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  // Groups nodes into a dagre-d3 cluster (compound node) per `column` (product), using the
+  // "experimental" clusters feature (https://dagrejs.github.io/project/dagre-d3/latest/demo/clusters.html:
+  // graph created with {compound:true}, a cluster is a setNode() a child points at via
+  // setParent()). Nodes with no column (column: null, e.g. shared/single-product nodes and
+  // external leaves) are left unparented, i.e. outside any cluster.
   function buildDagreGraph(ds, showExternal) {
-    var g = new dagreD3.graphlib.Graph({ directed: true })
+    var g = new dagreD3.graphlib.Graph({ directed: true, compound: true })
       .setGraph({ nodesep: 40, ranksep: 70, rankdir: 'TB' })
       .setDefaultEdgeLabel(function () { return {}; });
 
-    ds.allNodeIds.forEach(function (id) {
+    var visibleIds = ds.allNodeIds.filter(function (id) {
       var n = ds.nodeMap[id].data;
-      if (!showExternal && n.in_scope === false) return;
+      return showExternal || n.in_scope !== false;
+    });
+
+    var columns = [];
+    visibleIds.forEach(function (id) {
+      var n = ds.nodeMap[id].data;
+      if (n.in_scope !== false && n.column && columns.indexOf(n.column) === -1) columns.push(n.column);
+    });
+    columns.forEach(function (column) {
+      g.setNode(clusterId(column), { label: column, clusterLabelPos: 'top' });
+    });
+
+    visibleIds.forEach(function (id) {
+      var n = ds.nodeMap[id].data;
       g.setNode(id, { label: n.name, rx: 5, ry: 5, padding: 10, class: nodeClass(n) });
+      if (n.in_scope !== false && n.column) g.setParent(id, clusterId(n.column));
     });
     Object.keys(ds.edgeMap).forEach(function (eid) {
       var e = ds.edgeMap[eid];
