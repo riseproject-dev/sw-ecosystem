@@ -1,13 +1,13 @@
 ---
-title: Databases (OLTP + OLAP + KV/cache) -- self-managed open-source database stack
+title: Databases
 parent: Whole-Stack Reports
 ---
 
-# Databases (OLTP + OLAP + KV/cache) -- self-managed open-source database stack
+# Databases
 
 **Author:** Ludovic Henry<br/>
 **Date:** 2026-08-27<br/>
-**Scope:** RISC-V readiness of the Databases (OLTP + OLAP + KV/cache) -- self-managed open-source database stack software stack<br/>
+**Scope:** RISC-V readiness of the Databases software stack<br/>
 **Target profile:** RVA23U64<br/>
 **Audience:** exec-product<br/>
 **Verification policy:** Colors are assigned from primary upstream sources, adversarially verified against the per-project reports under project-reports/. Items not verifiable against a second source are marked [NEEDS VERIFICATION].<br/>
