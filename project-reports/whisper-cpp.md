@@ -1,10 +1,10 @@
-# whisper.cpp
-
 ---
 title: whisper.cpp
 parent: Project Reports
 color: yellow
 ---
+
+# whisper.cpp
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
 **Date:** 2026-06-17<br/>
