@@ -232,21 +232,26 @@
 </h1>
     
 
-<p><strong>Usage:</strong> Pick a project from <code class="language-plaintext highlighter-rouge">project-reports/scope.yml</code> (the project registry) and pass its fields to the <code class="language-plaintext highlighter-rouge">Workflow</code> tool (see execution model below).</p>
+<p><strong>Usage:</strong> Pick a project from <code class="language-plaintext highlighter-rouge">projects.yml</code> (the project registry) and pass its fields to the <code class="language-plaintext highlighter-rouge">Workflow</code> tool (see execution model below).</p>
 
-<p>Each <code class="language-plaintext highlighter-rouge">project-reports/scope.yml</code> entry has three fields:</p>
+<p>Each <code class="language-plaintext highlighter-rouge">projects.yml</code> entry has these fields:</p>
 
 <ul>
   <li><code class="language-plaintext highlighter-rouge">name</code>: the project display name, e.g. “Node.js”, “PyTorch”, “OpenJDK”</li>
   <li><code class="language-plaintext highlighter-rouge">repo</code>: the canonical upstream repository URL (absent for projects with no public repo, e.g. Geekbench)</li>
   <li><code class="language-plaintext highlighter-rouge">home</code>: the project homepage URL</li>
+  <li><code class="language-plaintext highlighter-rouge">report</code> (optional): path to the per-project report under <code class="language-plaintext highlighter-rouge">project-reports/</code> – present only when a report already exists</li>
+  <li><code class="language-plaintext highlighter-rouge">synonyms</code> (optional): alternate names the project appears under in the dependency graphs</li>
 </ul>
+
+<p>Only <code class="language-plaintext highlighter-rouge">name</code>, <code class="language-plaintext highlighter-rouge">repo</code>, and <code class="language-plaintext highlighter-rouge">home</code> are passed to the workflow; <code class="language-plaintext highlighter-rouge">report</code>/<code class="language-plaintext highlighter-rouge">synonyms</code> are registry
+bookkeeping. Pick a project whose entry has no <code class="language-plaintext highlighter-rouge">report:</code> field yet (it still needs a report).</p>
 
 <p>The output report path is derived from the name: <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>, where <code class="language-plaintext highlighter-rouge">slug</code> is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. “Apache Flink” -&gt; <code class="language-plaintext highlighter-rouge">project-reports/apache-flink.md</code>, “Open vSwitch” -&gt; <code class="language-plaintext highlighter-rouge">project-reports/open-vswitch.md</code>).</p>
 
 <p><strong>See <code class="language-plaintext highlighter-rouge">AGENTS.md</code> in this directory for the complete operator guide</strong>, including:</p>
 <ul>
-  <li>How <code class="language-plaintext highlighter-rouge">project-reports/scope.yml</code> maps to workflow args and how to find projects without a report yet</li>
+  <li>How <code class="language-plaintext highlighter-rouge">projects.yml</code> maps to workflow args and how to find projects without a report yet</li>
   <li>Rate limiting recovery procedures (resume with <code class="language-plaintext highlighter-rouge">resumeFromRunId</code>)</li>
   <li>How to monitor workflow progress via the journal file</li>
   <li>How to write, verify, and commit each report</li>
@@ -261,13 +266,13 @@
 </h2>
     
 
-<p>Do not use <code class="language-plaintext highlighter-rouge">/deep-research</code> for this prompt – it loads instructions but does not self-execute. Instead, invoke the <code class="language-plaintext highlighter-rouge">Workflow</code> tool directly with the pre-built script at <code class="language-plaintext highlighter-rouge">prompts/project-report/project-report-workflow.js</code>. Pass one <code class="language-plaintext highlighter-rouge">project-reports/scope.yml</code> entry as the single element of <code class="language-plaintext highlighter-rouge">args</code> (the <code class="language-plaintext highlighter-rouge">repo</code> and <code class="language-plaintext highlighter-rouge">home</code> fields map straight through; the script derives the output path from <code class="language-plaintext highlighter-rouge">name</code>):</p>
+<p>Do not use <code class="language-plaintext highlighter-rouge">/deep-research</code> for this prompt – it loads instructions but does not self-execute. Instead, invoke the <code class="language-plaintext highlighter-rouge">Workflow</code> tool directly with the pre-built script at <code class="language-plaintext highlighter-rouge">prompts/project-report/project-report-workflow.js</code>. Pass one <code class="language-plaintext highlighter-rouge">projects.yml</code> entry as the single element of <code class="language-plaintext highlighter-rouge">args</code> (the <code class="language-plaintext highlighter-rouge">repo</code> and <code class="language-plaintext highlighter-rouge">home</code> fields map straight through; the script derives the output path from <code class="language-plaintext highlighter-rouge">name</code>):</p>
 
 <div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Workflow</span><span class="p">({</span>
   <span class="na">args</span><span class="p">:</span> <span class="p">[{</span>
-    <span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">&lt;project-name&gt;</span><span class="dl">"</span><span class="p">,</span>                        <span class="c1">// project-reports/scope.yml: name</span>
-    <span class="dl">"</span><span class="s2">repo</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-repository&gt;/</span><span class="dl">"</span><span class="p">,</span>         <span class="c1">// project-reports/scope.yml: repo</span>
-    <span class="dl">"</span><span class="s2">home</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-homepage&gt;/</span><span class="dl">"</span>            <span class="c1">// project-reports/scope.yml: home</span>
+    <span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">&lt;project-name&gt;</span><span class="dl">"</span><span class="p">,</span>                        <span class="c1">// projects.yml: name</span>
+    <span class="dl">"</span><span class="s2">repo</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-repository&gt;/</span><span class="dl">"</span><span class="p">,</span>         <span class="c1">// projects.yml: repo</span>
+    <span class="dl">"</span><span class="s2">home</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-homepage&gt;/</span><span class="dl">"</span>            <span class="c1">// projects.yml: home</span>
   <span class="p">}],</span>
   <span class="na">scriptPath</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/abs/path/to/prompts/project-report/project-report-workflow.js</span><span class="dl">"</span>
 <span class="p">})</span>
@@ -295,7 +300,7 @@
 
 <p>You are a highly technical, principal software engineer writing a fact-based technical assessment for engineering leadership at a chip company evaluating RISC-V investment. The audience is experienced engineers and their managers. Write with precision. No hedging, no marketing language, no filler.</p>
 
-<p>Research the project named in the <code class="language-plaintext highlighter-rouge">project-reports/scope.yml</code> entry (using its <code class="language-plaintext highlighter-rouge">repo</code>) and generate the report at the derived <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code> path.</p>
+<p>Research the project named in the <code class="language-plaintext highlighter-rouge">projects.yml</code> entry (using its <code class="language-plaintext highlighter-rouge">repo</code>) and generate the report at the derived <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code> path.</p>
 
 <p>Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trackers, CI configuration files, build scripts, release notes, changelogs, blog posts, conference slides, foundation governance documents, and any other primary sources. Use sub-agents to parallelize the search. Go deep.</p>
 

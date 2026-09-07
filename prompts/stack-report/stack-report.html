@@ -249,7 +249,8 @@ run produces are the operator’s own research output. Save them inside version 
 <code class="language-plaintext highlighter-rouge">stack-reports/&lt;slug&gt;/</code> directory. Do commit generated reports.</p>
 
 <p><strong>Relationship to the per-project reports.</strong> The repository already contains ~150 deep per-project
-RISC-V status reports under <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>, one per entry in <code class="language-plaintext highlighter-rouge">project-reports/scope.yml</code>. Those reports are
+RISC-V status reports under <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>, one per entry in <code class="language-plaintext highlighter-rouge">projects.yml</code> that has a
+<code class="language-plaintext highlighter-rouge">report:</code> field. Those reports are
 the primary input to a vertical report. They are refreshed only every 3 to 6 months, so treat them
 as a strong prior to be <strong>adversarially spot-checked live</strong>, never as ground truth. When a live
 check contradicts a stored report, trust the live check and record the discrepancy (this also tells
@@ -267,7 +268,7 @@ the operator which per-project report needs a refresh).</p><hr />
 the research is best run unattended.</p>
 
 <p><strong>Stage 1 – Scoping (interactive).</strong> Interview the user, research the stack, and write a locked
-<em>scope spec</em> (<code class="language-plaintext highlighter-rouge">&lt;vertical-slug&gt;.project-reports/scope.yml</code>). This is conversational and happens in the main session.</p>
+<em>scope spec</em> (<code class="language-plaintext highlighter-rouge">&lt;vertical-slug&gt;.scope.yml</code>). This is conversational and happens in the main session.</p>
 
 <p><strong>Stage 2 – Research and synthesis (unattended).</strong> Consume the locked scope spec, classify every
 node in the stack for RISC-V readiness, adversarially verify the classification, and emit the three
@@ -294,7 +295,7 @@ theirs: <code class="language-plaintext highlighter-rouge">slug = name.toLowerCa
 
 <p>Goal: turn a vague request (“what’s the status of Agentic AI on RISC-V?”) into a precise,
 locked-down list of stack nodes to classify, with each node’s feature scope and criticality
-settled. Produce <code class="language-plaintext highlighter-rouge">&lt;vertical-slug&gt;.project-reports/scope.yml</code>.</p>
+settled. Produce <code class="language-plaintext highlighter-rouge">&lt;vertical-slug&gt;.scope.yml</code>.</p>
 <h3 id="11-interview-the-user">
   
   
@@ -417,7 +418,7 @@ knows exactly what was assumed and can correct it on a re-run.</li>
 </h3>
     
 
-<p>Write the locked scope to <code class="language-plaintext highlighter-rouge">&lt;vertical-slug&gt;.project-reports/scope.yml</code>. Schema:</p>
+<p>Write the locked scope to <code class="language-plaintext highlighter-rouge">&lt;vertical-slug&gt;.scope.yml</code>. Schema:</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">vertical</span><span class="pi">:</span> <span class="s">Agentic AI inference serving</span>      <span class="c1"># one-line vertical definition</span>
 <span class="na">slug</span><span class="pi">:</span> <span class="s">agentic-ai</span>                            <span class="c1"># optional; else derived from vertical name</span>
@@ -479,7 +480,7 @@ knows exactly what was assumed and can correct it on a re-run.</li>
     <span class="na">sequence</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">PyTorch</span><span class="nv"> </span><span class="s">ATen"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">oneDNN"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">OpenBLAS"</span><span class="pi">]</span>
 </code></pre></div></div>
 
-<p>Field semantics mirror <code class="language-plaintext highlighter-rouge">project-reports/scope.yml</code>: <code class="language-plaintext highlighter-rouge">repo</code> is the canonical upstream repo URL (omit if none),
+<p>Field semantics mirror <code class="language-plaintext highlighter-rouge">projects.yml</code>: <code class="language-plaintext highlighter-rouge">repo</code> is the canonical upstream repo URL (omit if none),
 <code class="language-plaintext highlighter-rouge">home</code> is the homepage, and <code class="language-plaintext highlighter-rouge">slug</code> (only when a per-project report exists) points stage 2 at
 <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code> for reuse – <strong>omit <code class="language-plaintext highlighter-rouge">slug</code> entirely for a node with no report</strong> (do not set it
 to null or empty). Each node is one classification unit in stage 2; a single project may appear as
@@ -844,7 +845,7 @@ fields. Schema:</p>
       </span><span class="nl">"gap"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
       </span><span class="nl">"repo"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"home"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"report"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/sw-ecosystem/project-reports/glibc-dev-tools.html"</span><span class="w">
+      </span><span class="nl">"report"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
   </span><span class="nl">"edges"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
@@ -873,13 +874,20 @@ fields. Schema:</p>
 '-')</code>, trimmed of leading/trailing hyphens); reuse the node’s <code class="language-plaintext highlighter-rouge">slug:</code> from the scope spec when it
 has one, so <code class="language-plaintext highlighter-rouge">id</code> matches <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>. An external leaf node’s <code class="language-plaintext highlighter-rouge">id</code> carries a
 <code class="language-plaintext highlighter-rouge">--external</code> suffix (e.g. <code class="language-plaintext highlighter-rouge">glibc-dev-tools--external</code>) so it never collides with an in-scope id.</li>
-  <li><code class="language-plaintext highlighter-rouge">report</code> <strong>always</strong> links to <code class="language-plaintext highlighter-rouge">/sw-ecosystem/project-reports/&lt;slug&gt;.html</code> (root-relative, using the
-site’s fixed baseurl – correct regardless of how deep the linking page is nested) with <code class="language-plaintext highlighter-rouge">&lt;slug&gt;</code>
-being the scope-spec <code class="language-plaintext highlighter-rouge">slug:</code> when the node has one, else its own <code class="language-plaintext highlighter-rouge">id</code> – stripped of <code class="language-plaintext highlighter-rouge">--external</code>
-for a leaf node – for every node, in-scope or external, whether or not that report currently
-exists. Clicking a focused node on the site opens this link unconditionally; a node with no
-per-project report 404s rather than silently falling back to <code class="language-plaintext highlighter-rouge">repo</code>/<code class="language-plaintext highlighter-rouge">home</code>. <code class="language-plaintext highlighter-rouge">repo</code>/<code class="language-plaintext highlighter-rouge">home</code> come
-straight from the scope spec and are informational only (not used for the click-through link).</li>
+  <li><code class="language-plaintext highlighter-rouge">report</code> links to <code class="language-plaintext highlighter-rouge">/sw-ecosystem/project-reports/&lt;slug&gt;.html</code> (root-relative, using the site’s
+fixed baseurl – correct regardless of how deep the linking page is nested) <strong>only when a
+per-project report actually exists</strong> for the node; otherwise it is <code class="language-plaintext highlighter-rouge">null</code>. A report is known to
+exist when the node matches a <code class="language-plaintext highlighter-rouge">projects.yml</code> entry that carries a <code class="language-plaintext highlighter-rouge">report:</code> field (the workflow
+derives the <code class="language-plaintext highlighter-rouge">.html</code> URL from that entry’s <code class="language-plaintext highlighter-rouge">.md</code> path), or, for a scope-spec node, when it carries a
+<code class="language-plaintext highlighter-rouge">slug:</code>. Clicking a focused node on the site opens <code class="language-plaintext highlighter-rouge">report</code> when set, else falls back to <code class="language-plaintext highlighter-rouge">repo</code>,
+else <code class="language-plaintext highlighter-rouge">home</code> – so a node with no report opens its source repository instead of 404ing. <code class="language-plaintext highlighter-rouge">repo</code>/<code class="language-plaintext highlighter-rouge">home</code>
+come from the scope spec, enriched from <code class="language-plaintext highlighter-rouge">projects.yml</code> (by name or <code class="language-plaintext highlighter-rouge">synonyms</code>) when the spec omits
+them.</li>
+  <li>External leaf nodes (<code class="language-plaintext highlighter-rouge">in_scope: false</code>) converge via <code class="language-plaintext highlighter-rouge">projects.yml</code>: a dependency-edge target that
+matches a registry entry by name or synonym collapses onto ONE canonical leaf carrying that entry’s
+canonical name plus its <code class="language-plaintext highlighter-rouge">repo</code>/<code class="language-plaintext highlighter-rouge">home</code> (and <code class="language-plaintext highlighter-rouge">report</code> when one exists), so differently-worded mentions
+of the same dependency become a single node. A target with no registry match stays a bare grey leaf
+with <code class="language-plaintext highlighter-rouge">repo</code>/<code class="language-plaintext highlighter-rouge">home</code>/<code class="language-plaintext highlighter-rouge">report</code> all <code class="language-plaintext highlighter-rouge">null</code>.</li>
   <li><code class="language-plaintext highlighter-rouge">edges[].type</code> is <code class="language-plaintext highlighter-rouge">explicit</code> or <code class="language-plaintext highlighter-rouge">implicit</code>; <code class="language-plaintext highlighter-rouge">edges[].evidence</code> is <code class="language-plaintext highlighter-rouge">project-graph</code>,
 <code class="language-plaintext highlighter-rouge">project-report</code>, or <code class="language-plaintext highlighter-rouge">web-search</code> (or an array of these when more than one source confirms the
 same edge). <code class="language-plaintext highlighter-rouge">relation</code> is a short free-text label (<code class="language-plaintext highlighter-rouge">build-dependency</code>, <code class="language-plaintext highlighter-rouge">runtime-dependency</code>,
