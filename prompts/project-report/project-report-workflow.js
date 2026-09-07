@@ -217,7 +217,7 @@ A Dependency struct also carries hasDependency links -- you may also query:
   }
 to enumerate transitive dependencies for a given package (useful for confirming the full dependency chain).
 
-For any dependency that is also listed in project-reports/scope.yml (our RISC-V Ecosystem project scope), note:
+For any dependency that is also listed in projects.yml (our RISC-V Ecosystem project scope), note:
 "See status report at project-reports/<dependency-slug>.md" (slug = lowercased name with spaces/dots/slashes replaced by hyphens)
 
 Return a dependency table: name, role, riscv64 build status, riscv64 test status, riscv64 release status, blocking issues.

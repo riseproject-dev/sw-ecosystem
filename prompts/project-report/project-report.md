@@ -6,18 +6,23 @@ nav_order: 1
 
 # Per-Project RISC-V Ecosystem Status Report
 
-**Usage:** Pick a project from `project-reports/scope.yml` (the project registry) and pass its fields to the `Workflow` tool (see execution model below).
+**Usage:** Pick a project from `projects.yml` (the project registry) and pass its fields to the `Workflow` tool (see execution model below).
 
-Each `project-reports/scope.yml` entry has three fields:
+Each `projects.yml` entry has these fields:
 
 - `name`: the project display name, e.g. "Node.js", "PyTorch", "OpenJDK"
 - `repo`: the canonical upstream repository URL (absent for projects with no public repo, e.g. Geekbench)
 - `home`: the project homepage URL
+- `report` (optional): path to the per-project report under `project-reports/` -- present only when a report already exists
+- `synonyms` (optional): alternate names the project appears under in the dependency graphs
+
+Only `name`, `repo`, and `home` are passed to the workflow; `report`/`synonyms` are registry
+bookkeeping. Pick a project whose entry has no `report:` field yet (it still needs a report).
 
 The output report path is derived from the name: `project-reports/<slug>.md`, where `slug` is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. "Apache Flink" -> `project-reports/apache-flink.md`, "Open vSwitch" -> `project-reports/open-vswitch.md`).
 
 **See `AGENTS.md` in this directory for the complete operator guide**, including:
-- How `project-reports/scope.yml` maps to workflow args and how to find projects without a report yet
+- How `projects.yml` maps to workflow args and how to find projects without a report yet
 - Rate limiting recovery procedures (resume with `resumeFromRunId`)
 - How to monitor workflow progress via the journal file
 - How to write, verify, and commit each report
@@ -27,14 +32,14 @@ The output report path is derived from the name: `project-reports/<slug>.md`, wh
 
 ## Execution model
 
-Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `prompts/project-report/project-report-workflow.js`. Pass one `project-reports/scope.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`):
+Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `prompts/project-report/project-report-workflow.js`. Pass one `projects.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`):
 
 ```js
 Workflow({
   args: [{
-    "name": "<project-name>",                        // project-reports/scope.yml: name
-    "repo": "https://<project-repository>/",         // project-reports/scope.yml: repo
-    "home": "https://<project-homepage>/"            // project-reports/scope.yml: home
+    "name": "<project-name>",                        // projects.yml: name
+    "repo": "https://<project-repository>/",         // projects.yml: repo
+    "home": "https://<project-homepage>/"            // projects.yml: home
   }],
   scriptPath: "/abs/path/to/prompts/project-report/project-report-workflow.js"
 })
@@ -58,7 +63,7 @@ For a non-GitHub project (sourceware.org, kernel.org, googlesource.com), the `re
 
 You are a highly technical, principal software engineer writing a fact-based technical assessment for engineering leadership at a chip company evaluating RISC-V investment. The audience is experienced engineers and their managers. Write with precision. No hedging, no marketing language, no filler.
 
-Research the project named in the `project-reports/scope.yml` entry (using its `repo`) and generate the report at the derived `project-reports/<slug>.md` path.
+Research the project named in the `projects.yml` entry (using its `repo`) and generate the report at the derived `project-reports/<slug>.md` path.
 
 Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trackers, CI configuration files, build scripts, release notes, changelogs, blog posts, conference slides, foundation governance documents, and any other primary sources. Use sub-agents to parallelize the search. Go deep.
 

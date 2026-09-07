@@ -13,11 +13,35 @@ export const meta = {
 // Shape: { vertical, slug?, author?, run_date?, audience?, target_profile?, use?, assumptions?,
 //          exclusions?, out_of_scope?,
 //          layers: [{layer, product?, nodes: [{name, repo?, home?, slug?,
-//          criticality, features_in_scope?, notes?}]}], chains? }
+//          criticality, features_in_scope?, notes?}]}], chains?,
+//          registry? }
 // Per-product layer: has both product: and layer:. Shared/single-product layer: layer: only.
+// registry (optional): the parsed projects.yml (repo root) -- an array of
+//   { name, repo?, home?, report?, synonyms? } entries. The orchestrator loads it and passes it in
+//   (this script is sandboxed with no filesystem access). buildGraphJson uses it to enrich graph
+//   nodes: fill missing repo/home, set the node's report link ONLY when a report exists, and
+//   converge dependency-edge targets (by name or synonym) onto their one canonical project.
 const spec = args || {}
 const slug = spec.slug || (spec.vertical || 'vertical').toLowerCase().replace(/[\s.\/]+/g, '-')
 const targetProfile = spec.target_profile || 'RVA23U64'
+
+// ── Project registry (projects.yml) lookup ──────────────────────────────────────────────────
+// Index every entry by its canonical name AND each synonym (normalized, case-insensitive), so a
+// graph node or edge target named by any known spelling resolves to the single canonical entry.
+const registry = (spec.registry) || []
+const registryByName = new Map()   // normalized name-or-synonym -> canonical registry entry
+for (const e of registry) {
+  if (!e || !e.name) continue
+  const add = (k) => {
+    const nk = String(k || '').toLowerCase().trim()
+    if (nk && !registryByName.has(nk)) registryByName.set(nk, e)
+  }
+  add(e.name)
+  for (const s of e.synonyms || []) add(s)
+}
+function lookupRegistry(name) {
+  return registryByName.get(String(name || '').toLowerCase().trim()) || null
+}
 
 // Structured per-node record schema -- forces uniform output from every classify/verify agent.
 const NODE_SCHEMA = {
@@ -351,15 +375,20 @@ function nodeId(name) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'node'
 }
 
-// Every node links to its project-reports page, whether or not that page exists yet -- clicking a
-// node is meant to always open project-reports/<slug>.html, 404ing when there is no report there
-// rather than silently falling back to a repo/home URL. `baseSlug` should be the node's own
-// project-reports slug candidate: the scope spec's `slug:` when given, else the node id (stripped
-// of the "--external" suffix for a one-hop external leaf node). Root-relative with the site's fixed
-// baseurl (_config.yml: baseurl: "/sw-ecosystem"), not relative to the stack report's own path, so
-// the link is correct regardless of how deep the linking page is nested.
+// A node's `report` links to its per-project page ONLY when that report actually exists (the
+// registry entry carries a `report:` path). The site's click-through falls back report -> repo ->
+// home, so a node with no report opens its source repo instead of 404ing. `reportUrl` builds the
+// root-relative site URL from a slug (site baseurl is fixed at /sw-ecosystem in _config.yml, so the
+// link is correct regardless of how deep the linking page is nested). `reportUrlFromEntry` derives
+// it from a registry entry's `report:` .md source path (project-reports/<slug>.md -> .../<slug>.html),
+// returning null when the entry has no report.
 function reportUrl(baseSlug) {
   return `/sw-ecosystem/project-reports/${baseSlug}.html`
+}
+function reportUrlFromEntry(entry) {
+  if (!entry || !entry.report) return null
+  const m = String(entry.report).match(/([^/]+)\.md$/)
+  return m ? reportUrl(m[1]) : null
 }
 
 function buildGraphJson(spec, records, slug, profile) {
@@ -425,6 +454,12 @@ function buildGraphJson(spec, records, slug, profile) {
     const baseId = nodeId(g.slug || g.name)
     const id = uniqueId(baseId)
     idByNormName.set(norm, id)
+    // Enrich from the project registry (projects.yml): fill repo/home the scope spec omitted, and
+    // set the report link ONLY when a per-project report exists. Precedence for report: the
+    // registry entry's report: path -> the scope spec's own slug: (a node with slug: is asserting a
+    // report exists) -> null (no report, click-through falls back to repo/home).
+    const entry = lookupRegistry(g.name)
+    const report = reportUrlFromEntry(entry) || (g.slug ? reportUrl(g.slug) : null)
     nodes.push({
       id,
       name: g.name,
@@ -436,9 +471,9 @@ function buildGraphJson(spec, records, slug, profile) {
       upstream_release: String(g.rec.release_provider || '').trim().toLowerCase() === 'upstream',
       gap: g.rec.justification || '',
       in_scope: true,
-      repo: g.repo,
-      home: g.home,
-      report: reportUrl(g.slug || baseId),
+      repo: g.repo || (entry && entry.repo) || null,
+      home: g.home || (entry && entry.home) || null,
+      report,
     })
   }
   // Excluded (proprietary/vendor-only) nodes also get a graph node so their grey status is visible.
@@ -448,21 +483,30 @@ function buildGraphJson(spec, records, slug, profile) {
     const baseId = nodeId(e.name)
     const id = uniqueId(baseId)
     idByNormName.set(norm, id)
+    const entry = lookupRegistry(e.name)
     nodes.push({
       id, name: e.name, layer: 'Excluded (proprietary / vendor-only)', column: null,
       criticality: 'n/a', color: 'grey', release_provider: 'none', upstream_release: false,
-      gap: e.reason || '', in_scope: true, repo: null, home: null, report: reportUrl(baseId),
+      gap: e.reason || '', in_scope: true,
+      repo: (entry && entry.repo) || null, home: (entry && entry.home) || null,
+      report: reportUrlFromEntry(entry),
     })
   }
 
+  // Resolve every discovered edge target against the in-scope node-id map (case-insensitive);
   // Resolve every discovered edge target against the in-scope node-id map (case-insensitive);
   // anything unmatched becomes (or reuses) an external grey leaf node -- the "one-hop external
   // dependency" case, so implicit context stays visible even for a dependency outside this stack.
   // Both ends resolve by normalized name, so edges recorded against any duplicate-name instance
   // (e.g. "MariaDB Connector/C" classified once under MySQL, once under MariaDB) land on the same
-  // merged node. External targets dedupe by slug, not raw text, so two differently-worded mentions
-  // of the same external package ("Google Benchmark" / "google benchmark") merge into one leaf node.
-  const externalIds = new Map()   // slug -> node id
+  // merged node. External targets converge via the project registry: a target matching a registry
+  // entry by name OR synonym collapses onto ONE canonical external node (keyed by the entry's
+  // canonical name), so differently-worded mentions of the same dependency ("Google Benchmark",
+  // "google/benchmark", "benchmark") become a single leaf carrying the canonical name plus the
+  // registry's repo/home, and its report link only when a report exists. Targets with no registry
+  // match fall back to slug-based dedup and carry no report (click-through uses repo/home, or
+  // nothing) rather than an always-404 report URL.
+  const externalIds = new Map()   // dedup key (canonical name or slug) -> node id
   const edgeIndex = new Map()     // `${source}|${target}|${type}` -> merged edge (with evidenceSet)
   for (const rec of records) {
     const sourceId = idByNormName.get(String(rec.name).toLowerCase().trim())
@@ -472,16 +516,29 @@ function buildGraphJson(spec, records, slug, profile) {
       if (!targetNorm) continue
       let targetId = idByNormName.get(targetNorm)
       if (!targetId) {
-        const externalBaseId = nodeId(e.target)
-        targetId = externalIds.get(externalBaseId)
+        const entry = lookupRegistry(e.target)
+        // A target named by a synonym may actually BE an in-scope node under its canonical name
+        // (e.g. edge target "libpq" -> canonical "PostgreSQL", which is in this stack). Point the
+        // edge at that in-scope node instead of spawning an external leaf.
+        if (entry) targetId = idByNormName.get(entry.name.toLowerCase().trim())
+      }
+      if (!targetId) {
+        const entry = lookupRegistry(e.target)
+        // Dedup external leaves by canonical registry name when matched, else by slug of the raw
+        // target text. This is what converges all synonym spellings onto one node.
+        const dedupKey = entry ? 'reg:' + entry.name.toLowerCase().trim() : 'slug:' + nodeId(e.target)
+        targetId = externalIds.get(dedupKey)
         if (!targetId) {
+          const displayName = entry ? entry.name : e.target
+          const externalBaseId = nodeId(entry ? entry.name : e.target)
           targetId = uniqueId(externalBaseId + '--external')
-          externalIds.set(externalBaseId, targetId)
+          externalIds.set(dedupKey, targetId)
           nodes.push({
-            id: targetId, name: e.target, in_scope: false, color: 'grey',
+            id: targetId, name: displayName, in_scope: false, color: 'grey',
             layer: null, column: null, criticality: 'n/a', release_provider: 'none',
-            upstream_release: false, gap: '', repo: null, home: null,
-            report: reportUrl(externalBaseId),
+            upstream_release: false, gap: '',
+            repo: (entry && entry.repo) || null, home: (entry && entry.home) || null,
+            report: reportUrlFromEntry(entry),
           })
         }
       }

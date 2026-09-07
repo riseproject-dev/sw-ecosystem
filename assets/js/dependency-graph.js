@@ -88,8 +88,9 @@
     return { nodeMap: nodeMap, edgeMap: edgeMap, allNodeIds: Array.from(visible) };
   }
 
-  // Each node's `report` is baked in at generation time as a production URL, e.g.
-  // "/sw-ecosystem/project-reports/<slug>.html" (see stack-report-workflow.js reportUrl()).
+  // A node's `report` is baked in at generation time as a production URL, e.g.
+  // "/sw-ecosystem/project-reports/<slug>.html" (see stack-report-workflow.js reportUrl()), or is
+  // null when no per-project report exists (the click handler then falls back to repo/home).
   // A PR preview is served one level deeper, at ".../pr-preview/pr-<N>/stack-reports/...",
   // so a bare production link would incorrectly point at the live site instead of the
   // preview. Rewrite the baked-in site prefix to whatever base path this page is actually
@@ -351,9 +352,15 @@
             .on('click', function (d) {
               d3.event.stopPropagation();
               if (selected === d.id) {
-                // Always the project-report URL, even if that page doesn't exist yet (404) --
-                // never silently fall back to repo/home.
-                if (d.data.report) window.open(resolveReportUrl(d.data.report), '_blank');
+                // Second click on the already-selected node opens a link, preferring the richest
+                // destination that exists: the per-project report (only set when one actually
+                // exists), then the source repository, then the homepage. A node with none stays
+                // inert rather than 404ing.
+                var url = d.data.report ? resolveReportUrl(d.data.report)
+                        : d.data.repo ? d.data.repo
+                        : d.data.home ? d.data.home
+                        : null;
+                if (url) window.open(url, '_blank');
                 return;
               }
               selected = d.id;

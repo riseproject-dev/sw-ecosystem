@@ -6,7 +6,7 @@ parent: Prompts
 # Recommended RISC-V Software Ecosystem Expansion for Key Industry Markets
 
 **Date:** August 2026  
-**Scope:** Proposed expansion of tracked open-source projects in [project-reports/scope.yml](file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/scope.yml) to cover Virtualization, Machine Learning, IoT & Edge, Automotive, and Aerospace markets.
+**Scope:** Proposed expansion of tracked open-source projects in [projects.yml](file:///Users/gregsterling/repos/git/sw-ecosystem/projects.yml) to cover Virtualization, Machine Learning, IoT & Edge, Automotive, and Aerospace markets.
 
 ---
 

@@ -23,7 +23,8 @@ run produces are the operator's own research output. Save them inside version co
 `stack-reports/<slug>/` directory. Do commit generated reports.
 
 **Relationship to the per-project reports.** The repository already contains ~150 deep per-project
-RISC-V status reports under `project-reports/<slug>.md`, one per entry in `project-reports/scope.yml`. Those reports are
+RISC-V status reports under `project-reports/<slug>.md`, one per entry in `projects.yml` that has a
+`report:` field. Those reports are
 the primary input to a vertical report. They are refreshed only every 3 to 6 months, so treat them
 as a strong prior to be **adversarially spot-checked live**, never as ground truth. When a live
 check contradicts a stored report, trust the live check and record the discrepancy (this also tells
@@ -37,7 +38,7 @@ A vertical report is produced in two stages, because the scope must be negotiate
 the research is best run unattended.
 
 **Stage 1 -- Scoping (interactive).** Interview the user, research the stack, and write a locked
-*scope spec* (`<vertical-slug>.project-reports/scope.yml`). This is conversational and happens in the main session.
+*scope spec* (`<vertical-slug>.scope.yml`). This is conversational and happens in the main session.
 
 **Stage 2 -- Research and synthesis (unattended).** Consume the locked scope spec, classify every
 node in the stack for RISC-V readiness, adversarially verify the classification, and emit the three
@@ -60,7 +61,7 @@ theirs: `slug = name.toLowerCase().replace(/[\s.\/]+/g, '-')`. So "Agentic AI" -
 
 Goal: turn a vague request ("what's the status of Agentic AI on RISC-V?") into a precise,
 locked-down list of stack nodes to classify, with each node's feature scope and criticality
-settled. Produce `<vertical-slug>.project-reports/scope.yml`.
+settled. Produce `<vertical-slug>.scope.yml`.
 
 ### 1.1 Interview the user
 
@@ -153,7 +154,7 @@ it headless, when a batch operator kicks it off, or during automated validation.
 
 ### 1.4 Scope-spec schema
 
-Write the locked scope to `<vertical-slug>.project-reports/scope.yml`. Schema:
+Write the locked scope to `<vertical-slug>.scope.yml`. Schema:
 
 ```yaml
 vertical: Agentic AI inference serving      # one-line vertical definition
@@ -216,7 +217,7 @@ chains:                                     # optional: pipeline chains and alte
     sequence: ["PyTorch ATen", "oneDNN", "OpenBLAS"]
 ```
 
-Field semantics mirror `project-reports/scope.yml`: `repo` is the canonical upstream repo URL (omit if none),
+Field semantics mirror `projects.yml`: `repo` is the canonical upstream repo URL (omit if none),
 `home` is the homepage, and `slug` (only when a per-project report exists) points stage 2 at
 `project-reports/<slug>.md` for reuse -- **omit `slug` entirely for a node with no report** (do not set it
 to null or empty). Each node is one classification unit in stage 2; a single project may appear as
@@ -500,7 +501,7 @@ fields. Schema:
       "gap": "",
       "repo": null,
       "home": null,
-      "report": "/sw-ecosystem/project-reports/glibc-dev-tools.html"
+      "report": null
     }
   ],
   "edges": [
@@ -528,13 +529,20 @@ fields. Schema:
   '-')`, trimmed of leading/trailing hyphens); reuse the node's `slug:` from the scope spec when it
   has one, so `id` matches `project-reports/<slug>.md`. An external leaf node's `id` carries a
   `--external` suffix (e.g. `glibc-dev-tools--external`) so it never collides with an in-scope id.
-- `report` **always** links to `/sw-ecosystem/project-reports/<slug>.html` (root-relative, using the
-  site's fixed baseurl -- correct regardless of how deep the linking page is nested) with `<slug>`
-  being the scope-spec `slug:` when the node has one, else its own `id` -- stripped of `--external`
-  for a leaf node -- for every node, in-scope or external, whether or not that report currently
-  exists. Clicking a focused node on the site opens this link unconditionally; a node with no
-  per-project report 404s rather than silently falling back to `repo`/`home`. `repo`/`home` come
-  straight from the scope spec and are informational only (not used for the click-through link).
+- `report` links to `/sw-ecosystem/project-reports/<slug>.html` (root-relative, using the site's
+  fixed baseurl -- correct regardless of how deep the linking page is nested) **only when a
+  per-project report actually exists** for the node; otherwise it is `null`. A report is known to
+  exist when the node matches a `projects.yml` entry that carries a `report:` field (the workflow
+  derives the `.html` URL from that entry's `.md` path), or, for a scope-spec node, when it carries a
+  `slug:`. Clicking a focused node on the site opens `report` when set, else falls back to `repo`,
+  else `home` -- so a node with no report opens its source repository instead of 404ing. `repo`/`home`
+  come from the scope spec, enriched from `projects.yml` (by name or `synonyms`) when the spec omits
+  them.
+- External leaf nodes (`in_scope: false`) converge via `projects.yml`: a dependency-edge target that
+  matches a registry entry by name or synonym collapses onto ONE canonical leaf carrying that entry's
+  canonical name plus its `repo`/`home` (and `report` when one exists), so differently-worded mentions
+  of the same dependency become a single node. A target with no registry match stays a bare grey leaf
+  with `repo`/`home`/`report` all `null`.
 - `edges[].type` is `explicit` or `implicit`; `edges[].evidence` is `project-graph`,
   `project-report`, or `web-search` (or an array of these when more than one source confirms the
   same edge). `relation` is a short free-text label (`build-dependency`, `runtime-dependency`,

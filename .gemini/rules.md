@@ -6,7 +6,7 @@ This repository contains RISC-V ecosystem status reports for open-source project
 
 ## Quick Start: Generate a Single Report
 
-Look the project up in `project-reports/scope.yml` and pass its fields as workflow args. The `repo` and `home` fields map straight through; the script derives the output path `project-reports/<slug>.md` from the name.
+Look the project up in `projects.yml` and pass its fields as workflow args. The `repo` and `home` fields map straight through; the script derives the output path `project-reports/<slug>.md` from the name.
 
 ```bash
 node .prompts/riscv-report.js '{"name": "GDB", "repo": "https://sourceware.org/git/binutils-gdb.git", "home": "https://www.gnu.org/software/gdb/"}'
@@ -36,22 +36,23 @@ git add <file> && git commit -m "Add <Name> RISC-V ecosystem status report"
 
 ## Project List
 
-The canonical list of projects and their metadata (name, repo URL, home URL) is in **`project-reports/scope.yml`** at the repo root. That file is the single source of truth; do not duplicate it here. Each entry has three fields:
+The canonical list of projects and their metadata (name, repo URL, home URL) is in **`projects.yml`** at the repo root. That file is the single source of truth; do not duplicate it here. Each entry has `name`, `repo`, `home`, and optionally `report:` (path to an existing per-project report) and `synonyms:` (alternate names used in the dependency graphs):
 
 ```yaml
 - name: GDB
   repo: https://sourceware.org/git/binutils-gdb.git
   home: https://www.gnu.org/software/gdb/
+  report: project-reports/gdb.md
 ```
 
 Each entry maps to one workflow invocation. The workflow args are derived as follows:
 
-| Arg | Source in `project-reports/scope.yml` |
+| Arg | Source in `projects.yml` |
 |-----|-----------------------|
 | `name` | The `name:` field, verbatim |
 | `repo` | The `repo:` field (absent for projects with no public repo, e.g. Geekbench) |
 | `home` | The `home:` field |
-| `slug` | Not in `project-reports/scope.yml` -- derived by the script as `project-reports/<slug>.md` |
+| `slug` | Not in `projects.yml` -- derived by the script as `project-reports/<slug>.md` |
 
 The output slug is the lowercased name with spaces, dots, and slashes replaced by hyphens: `name.toLowerCase().replace(/[\s.\/]+/g, '-')`. So "Apache Flink" -> `project-reports/apache-flink.md`, "Open vSwitch" -> `project-reports/open-vswitch.md`, "GDB" -> `project-reports/gdb.md`. To override, pass an explicit `slug` arg.
 
@@ -66,34 +67,35 @@ Example: for the `GDB` entry above:
 // -> writes project-reports/gdb.md
 ```
 
-To get the list of remaining projects (those without a status report yet):
+To get the list of projects that still need a status report -- entries in `projects.yml` with no `report:` field (requires a YAML parser; entries are now multi-line so a line grep is unreliable):
 
 ```bash
-# Reports already generated
-ls project-reports/*.md 2>/dev/null | sed 's|.*/||' | sort > /tmp/done.txt
-
-# All expected report files, derived from project-reports/scope.yml names
-grep '^- name:' project-reports/scope.yml | sed 's/^- name:[[:space:]]*//' | \
-  sed 's/[ ./]\+/-/g' | tr '[:upper:]' '[:lower:]' | \
-  sed 's|$|.md|' | sort > /tmp/expected.txt
-
-comm -23 /tmp/expected.txt /tmp/done.txt   # projects still missing a report
+python3 - <<'PY'
+import yaml
+reg = yaml.safe_load(open('projects.yml'))
+missing = [e['name'] for e in reg if not e.get('report')]
+print(f"{len(missing)} projects with no report:")
+for n in sorted(missing, key=str.lower):
+    print(" ", n)
+PY
 ```
+
+Note: many `projects.yml` entries are dependency-graph-only libraries, not necessarily report candidates; use judgment about which warrant a full per-project report.
 
 ---
 
 ## Generating All Reports in Sequence
 
-Run one project at a time in the order they appear in `project-reports/scope.yml`.
+Run one project at a time in the order they appear in `projects.yml`.
 Do not launch the next until the previous is committed.
 
 ### Workflow args format
 
 ```json
 {
-  "name": "<ProjectName>",             // project-reports/scope.yml: name (display name)
-  "repo": "<upstream-repo-url>",       // project-reports/scope.yml: repo (GitHub or non-GitHub; omit if none)
-  "home": "<project-homepage-url>"     // project-reports/scope.yml: home (for governance section)
+  "name": "<ProjectName>",             // projects.yml: name (display name)
+  "repo": "<upstream-repo-url>",       // projects.yml: repo (GitHub or non-GitHub; omit if none)
+  "home": "<project-homepage-url>"     // projects.yml: home (for governance section)
 }
 ```
 
@@ -182,7 +184,7 @@ The workflow script (`.prompts/riscv-report.js`) runs four phases sequentially, 
 
 1. Verify the workflow script exists: `.prompts/riscv-report.js`
 2. Create the output directory if missing: `mkdir -p reports`
-3. Read `project-reports/scope.yml` to get the project list and derive workflow args
+3. Read `projects.yml` to get the project list and derive workflow args
 4. Find which reports are missing
 5. Run one project at a time
 6. Wait and resume on any rate limit stall
