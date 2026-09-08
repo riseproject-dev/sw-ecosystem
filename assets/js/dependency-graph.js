@@ -1,8 +1,9 @@
 /*
  * Renders <slug>.graph.json (see prompts/stack-report/stack-report.md, Artifact 4) as an
  * interactive dependency graph: a d3-force layout (d3 v5, loaded via CDN in
- * _includes/dependency-graph.html -- no build step), with zoom/pan, click-a-node to focus its
- * ancestor+descendant subgraph, hover to highlight neighbors, a search box, and a legend.
+ * _includes/dependency-graph.html -- no build step), with zoom/pan, click-a-node to open its
+ * report/repo/home, hover to highlight neighbors, a search box (which can also focus a node's
+ * ancestor+descendant subgraph), and a legend.
  *
  * Loaded once per page; initializes every ".dependency-graph" container it finds.
  */
@@ -65,8 +66,10 @@
     return out;
   }
 
-  // A node's "focused subgraph" is itself plus every ancestor and descendant -- clicking a node
-  // zooms into just that context, mirroring conda-forge's DependencyGraph component.
+  // A node's "focused subgraph" is itself plus every ancestor and descendant -- selecting a node
+  // (via search; see doSearch below) zooms into just that context, mirroring conda-forge's
+  // DependencyGraph component. Clicking a node in the graph instead opens its report/repo/home
+  // directly (see the node click handler in draw()).
   function focusedSubgraph(nodeId, ds) {
     if (!nodeId || !ds.nodeMap[nodeId]) return ds;
     var ancestors = findAllAncestors(nodeId, ds);
@@ -213,9 +216,9 @@
       '<div class="dg-canvas"><svg></svg></div>' +
       '<div class="dg-legend"></div>' +
       '<p class="dg-instructions">Arrows point from a node to what it depends on. Solid = explicit dependency, ' +
-      'dashed = implicit ("needs it to be useful"). Scroll to zoom, drag to pan, click a node to focus its ' +
-      'subgraph (click it again to open its report/repo), click the background or Reset view to return, ' +
-      'hover to highlight neighbors.</p>';
+      'dashed = implicit ("needs it to be useful"). Scroll to zoom, drag to pan, click a node to open its ' +
+      'report/repo/home, search for a node to focus its subgraph (click the background or Reset view to ' +
+      'return), hover to highlight neighbors.</p>';
     container.appendChild(wrap);
 
     renderLegend(wrap.querySelector('.dg-legend'));
@@ -351,21 +354,15 @@
             .on('mouseleave', function () { highlight(ds, null); })
             .on('click', function (d) {
               d3.event.stopPropagation();
-              if (selected === d.id) {
-                // Second click on the already-selected node opens a link, preferring the richest
-                // destination that exists: the per-project report (only set when one actually
-                // exists), then the source repository, then the homepage. A node with none stays
-                // inert rather than 404ing.
-                var url = d.data.report ? resolveReportUrl(d.data.report)
-                        : d.data.repo ? d.data.repo
-                        : d.data.home ? d.data.home
-                        : null;
-                if (url) window.open(url, '_blank');
-                return;
-              }
-              selected = d.id;
-              resetBtn.hidden = false;
-              draw();
+              // Clicking a node opens a link, preferring the richest destination that exists: the
+              // per-project report (only set when one actually exists), then the source
+              // repository, then the homepage. A node with none stays inert rather than 404ing.
+              // To focus a node's ancestor+descendant subgraph instead, use the search box.
+              var url = d.data.report ? resolveReportUrl(d.data.report)
+                      : d.data.repo ? d.data.repo
+                      : d.data.home ? d.data.home
+                      : null;
+              if (url) window.open(url, '_blank');
             });
 
           fitToView(layout);
