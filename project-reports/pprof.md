@@ -1,7 +1,7 @@
 ---
 title: pprof
 parent: Project Reports
-color: grey
+color: yellow
 dependencies:
   - name: Go
     relation: build-dependency

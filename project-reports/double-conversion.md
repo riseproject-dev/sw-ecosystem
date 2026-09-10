@@ -1,7 +1,7 @@
 ---
 title: double-conversion
 parent: Project Reports
-color: grey
+color: yellow
 ---
 
 {% include dependency-graph.html slug="dependencies" focus="double-conversion" %}

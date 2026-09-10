@@ -1,7 +1,7 @@
 ---
 title: Gloo
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - ai-ml
 dependencies:

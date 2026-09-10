@@ -1,7 +1,7 @@
 ---
 title: QEMU
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - runtimes
   - iaas

@@ -1,7 +1,7 @@
 ---
 title: libseccomp
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - libraries
   - containers

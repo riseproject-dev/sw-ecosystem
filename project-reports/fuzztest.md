@@ -1,7 +1,7 @@
 ---
 title: fuzztest
 parent: Project Reports
-color: grey
+color: red
 dependencies:
   - name: Abseil
     relation: build-dependency

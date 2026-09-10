@@ -1,7 +1,7 @@
 ---
 title: NNPACK
 parent: Project Reports
-color: grey
+color: red
 categories:
   - ai-ml
 dependencies:

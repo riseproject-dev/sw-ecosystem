@@ -1,7 +1,7 @@
 ---
 title: re2
 parent: Project Reports
-color: grey
+color: yellow
 dependencies:
   - name: Abseil
     relation: build-dependency

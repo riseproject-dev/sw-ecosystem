@@ -1,7 +1,7 @@
 ---
 title: GDB
 parent: Project Reports
-color: grey
+color: blue
 categories:
   - debug
 dependencies:

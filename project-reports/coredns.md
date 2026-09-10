@@ -1,7 +1,7 @@
 ---
 title: CoreDNS
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - containers
 dependencies:

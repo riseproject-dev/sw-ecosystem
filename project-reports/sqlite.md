@@ -1,7 +1,7 @@
 ---
 title: SQLite
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - databases
 dependencies:

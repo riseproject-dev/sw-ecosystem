@@ -1,7 +1,7 @@
 ---
 title: brotli
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - libraries
 ---

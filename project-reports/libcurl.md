@@ -1,7 +1,7 @@
 ---
 title: libcurl
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - libraries
 dependencies:

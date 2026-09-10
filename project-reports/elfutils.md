@@ -1,7 +1,7 @@
 ---
 title: elfutils
 parent: Project Reports
-color: grey
+color: blue
 categories:
   - debug
   - perfmon

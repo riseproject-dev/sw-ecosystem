@@ -1,7 +1,7 @@
 ---
 title: libffi
 parent: Project Reports
-color: grey
+color: blue
 categories:
   - libraries
 ---

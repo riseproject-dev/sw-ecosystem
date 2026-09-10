@@ -1,7 +1,7 @@
 ---
 title: googletest
 parent: Project Reports
-color: grey
+color: yellow
 dependencies:
   - name: glibc
     relation: build-dependency

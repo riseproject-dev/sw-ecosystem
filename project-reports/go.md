@@ -1,7 +1,7 @@
 ---
 title: Go
 parent: Project Reports
-color: grey
+color: green
 categories:
   - runtimes
   - containers

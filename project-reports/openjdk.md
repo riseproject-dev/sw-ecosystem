@@ -1,7 +1,7 @@
 ---
 title: OpenJDK
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - runtimes
   - llm-inference

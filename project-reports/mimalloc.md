@@ -1,7 +1,7 @@
 ---
 title: mimalloc
 parent: Project Reports
-color: grey
+color: orange
 categories:
   - libraries
 ---

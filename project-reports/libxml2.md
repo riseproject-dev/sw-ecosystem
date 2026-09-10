@@ -1,7 +1,7 @@
 ---
 title: libxml2
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - libraries
 dependencies:

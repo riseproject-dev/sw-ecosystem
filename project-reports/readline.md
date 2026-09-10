@@ -1,7 +1,7 @@
 ---
 title: readline
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - libraries
 dependencies:

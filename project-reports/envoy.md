@@ -1,7 +1,7 @@
 ---
 title: Envoy
 parent: Project Reports
-color: grey
+color: orange
 categories:
   - containers
 dependencies:

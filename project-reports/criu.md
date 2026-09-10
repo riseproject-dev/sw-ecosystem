@@ -1,7 +1,7 @@
 ---
 title: CRIU
 parent: Project Reports
-color: grey
+color: yellow
 categories:
   - containers
 dependencies:
