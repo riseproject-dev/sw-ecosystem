@@ -8,7 +8,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="go-sql-driver-mysql" %}
+{% include dependency-graph.html slug="dependencies" subset="go-sql-driver-mysql" %}
 
 # go-sql-driver/mysql
 

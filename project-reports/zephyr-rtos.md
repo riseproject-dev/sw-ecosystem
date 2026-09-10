@@ -26,7 +26,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="zephyr-rtos" %}
+{% include dependency-graph.html slug="dependencies" subset="zephyr-rtos" %}
 
 # Zephyr RTOS
 

@@ -24,7 +24,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="onetbb" %}
+{% include dependency-graph.html slug="dependencies" subset="onetbb" %}
 
 # oneTBB
 

@@ -25,7 +25,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libaom" %}
+{% include dependency-graph.html slug="dependencies" subset="libaom" %}
 
 # libaom
 

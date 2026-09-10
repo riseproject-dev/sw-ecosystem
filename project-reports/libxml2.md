@@ -22,7 +22,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libxml2" %}
+{% include dependency-graph.html slug="dependencies" subset="libxml2" %}
 
 # libxml2
 

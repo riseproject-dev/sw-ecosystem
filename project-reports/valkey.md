@@ -35,7 +35,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="valkey" %}
+{% include dependency-graph.html slug="dependencies" subset="valkey" %}
 
 # Valkey
 

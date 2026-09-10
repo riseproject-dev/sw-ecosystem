@@ -63,7 +63,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="webkit" %}
+{% include dependency-graph.html slug="dependencies" subset="webkit" %}
 
 # WebKit
 

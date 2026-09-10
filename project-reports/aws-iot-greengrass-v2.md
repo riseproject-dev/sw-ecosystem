@@ -17,7 +17,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="aws-iot-greengrass-v2" %}
+{% include dependency-graph.html slug="dependencies" subset="aws-iot-greengrass-v2" %}
 
 # AWS IoT Greengrass v2
 

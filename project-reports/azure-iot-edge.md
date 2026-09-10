@@ -17,7 +17,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="azure-iot-edge" %}
+{% include dependency-graph.html slug="dependencies" subset="azure-iot-edge" %}
 
 # Azure IoT Edge
 

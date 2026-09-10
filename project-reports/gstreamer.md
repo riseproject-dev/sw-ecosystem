@@ -43,7 +43,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="gstreamer" %}
+{% include dependency-graph.html slug="dependencies" subset="gstreamer" %}
 
 # GStreamer
 

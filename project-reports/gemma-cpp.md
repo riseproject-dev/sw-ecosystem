@@ -22,7 +22,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="gemma-cpp" %}
+{% include dependency-graph.html slug="dependencies" subset="gemma-cpp" %}
 
 # gemma.cpp
 

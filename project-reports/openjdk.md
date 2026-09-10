@@ -48,7 +48,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="openjdk" %}
+{% include dependency-graph.html slug="dependencies" subset="openjdk" %}
 
 # OpenJDK
 

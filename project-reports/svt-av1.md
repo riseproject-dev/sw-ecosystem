@@ -12,7 +12,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="svt-av1" %}
+{% include dependency-graph.html slug="dependencies" subset="svt-av1" %}
 
 # SVT-AV1
 

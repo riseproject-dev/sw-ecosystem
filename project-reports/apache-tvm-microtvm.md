@@ -23,7 +23,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="apache-tvm-microtvm" %}
+{% include dependency-graph.html slug="dependencies" subset="apache-tvm-microtvm" %}
 
 # Apache TVM / microTVM
 

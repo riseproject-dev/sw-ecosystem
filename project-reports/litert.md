@@ -37,7 +37,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="litert" %}
+{% include dependency-graph.html slug="dependencies" subset="litert" %}
 
 # LiteRT
 

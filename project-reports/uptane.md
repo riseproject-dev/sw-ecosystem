@@ -35,7 +35,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="uptane" %}
+{% include dependency-graph.html slug="dependencies" subset="uptane" %}
 
 # Uptane
 

@@ -26,7 +26,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="edge-impulse-python-sdk" %}
+{% include dependency-graph.html slug="dependencies" subset="edge-impulse-python-sdk" %}
 
 # Edge Impulse Python SDK
 

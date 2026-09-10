@@ -5,7 +5,7 @@ categories:
   - multimedia
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libfdk-aac" %}
+{% include dependency-graph.html slug="dependencies" subset="libfdk-aac" %}
 
 # libfdk-aac
 

@@ -43,7 +43,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="containerd" %}
+{% include dependency-graph.html slug="dependencies" subset="containerd" %}
 
 # containerd
 **Author:** Ludovic HENRY \<ludovic.henry@qti.qualcomm.com\>

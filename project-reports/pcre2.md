@@ -10,7 +10,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="pcre2" %}
+{% include dependency-graph.html slug="dependencies" subset="pcre2" %}
 
 # PCRE2
 

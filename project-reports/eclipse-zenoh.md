@@ -41,7 +41,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="eclipse-zenoh" %}
+{% include dependency-graph.html slug="dependencies" subset="eclipse-zenoh" %}
 
 # Eclipse Zenoh
 

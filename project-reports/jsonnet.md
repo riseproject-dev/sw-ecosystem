@@ -13,7 +13,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="jsonnet" %}
+{% include dependency-graph.html slug="dependencies" subset="jsonnet" %}
 
 # jsonnet
 

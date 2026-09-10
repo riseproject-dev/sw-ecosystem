@@ -7,7 +7,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="go-jsonnet" %}
+{% include dependency-graph.html slug="dependencies" subset="go-jsonnet" %}
 
 # go-jsonnet
 

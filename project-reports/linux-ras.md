@@ -6,7 +6,7 @@ categories:
   - debug
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="linux-ras" %}
+{% include dependency-graph.html slug="dependencies" subset="linux-ras" %}
 
 # Linux RAS
 

@@ -26,7 +26,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="edge-impulse-processing-blocks" %}
+{% include dependency-graph.html slug="dependencies" subset="edge-impulse-processing-blocks" %}
 
 # Edge Impulse Processing Blocks
 

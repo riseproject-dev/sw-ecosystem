@@ -29,7 +29,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="intel-neural-compressor-(inc)" %}
+{% include dependency-graph.html slug="dependencies" subset="intel-neural-compressor-(inc)" %}
 
 # Intel Neural Compressor (INC)
 

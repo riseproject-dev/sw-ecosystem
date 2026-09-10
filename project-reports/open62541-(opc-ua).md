@@ -17,7 +17,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="open62541-(opc-ua)" %}
+{% include dependency-graph.html slug="dependencies" subset="open62541-(opc-ua)" %}
 
 # open62541 (OPC UA)
 

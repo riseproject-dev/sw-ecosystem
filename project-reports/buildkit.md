@@ -21,7 +21,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="buildkit" %}
+{% include dependency-graph.html slug="dependencies" subset="buildkit" %}
 
 # BuildKit
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

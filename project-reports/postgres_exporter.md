@@ -44,7 +44,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="postgres_exporter" %}
+{% include dependency-graph.html slug="dependencies" subset="postgres_exporter" %}
 
 # postgres_exporter
 

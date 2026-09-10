@@ -23,7 +23,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="flower-(flwr)" %}
+{% include dependency-graph.html slug="dependencies" subset="flower-(flwr)" %}
 
 # Flower (flwr)
 

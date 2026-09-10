@@ -25,7 +25,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="protocol-buffers" %}
+{% include dependency-graph.html slug="dependencies" subset="protocol-buffers" %}
 
 # Protocol Buffers
 

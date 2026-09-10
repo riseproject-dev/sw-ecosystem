@@ -47,7 +47,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="grafana" %}
+{% include dependency-graph.html slug="dependencies" subset="grafana" %}
 
 # Grafana
 

@@ -14,7 +14,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="openvino-runtime" %}
+{% include dependency-graph.html slug="dependencies" subset="openvino-runtime" %}
 
 # OpenVINO Runtime
 

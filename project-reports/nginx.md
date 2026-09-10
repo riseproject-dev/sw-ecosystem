@@ -24,7 +24,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="nginx" %}
+{% include dependency-graph.html slug="dependencies" subset="nginx" %}
 
 # nginx
 

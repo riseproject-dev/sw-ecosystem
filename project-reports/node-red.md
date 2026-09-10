@@ -17,7 +17,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="node-red" %}
+{% include dependency-graph.html slug="dependencies" subset="node-red" %}
 
 # Node-RED
 

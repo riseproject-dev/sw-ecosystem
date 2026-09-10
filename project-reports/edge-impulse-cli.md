@@ -11,7 +11,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="edge-impulse-cli" %}
+{% include dependency-graph.html slug="dependencies" subset="edge-impulse-cli" %}
 
 # Edge Impulse CLI
 

@@ -23,7 +23,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="eigen" %}
+{% include dependency-graph.html slug="dependencies" subset="eigen" %}
 
 # Eigen
 

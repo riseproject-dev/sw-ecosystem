@@ -23,7 +23,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="openblas" %}
+{% include dependency-graph.html slug="dependencies" subset="openblas" %}
 
 # OpenBLAS
 

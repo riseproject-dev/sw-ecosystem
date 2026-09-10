@@ -36,7 +36,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="ceph" %}
+{% include dependency-graph.html slug="dependencies" subset="ceph" %}
 
 # Ceph
 

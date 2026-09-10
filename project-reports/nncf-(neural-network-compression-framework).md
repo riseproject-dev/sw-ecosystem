@@ -35,7 +35,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="nncf-(neural-network-compression-framework)" %}
+{% include dependency-graph.html slug="dependencies" subset="nncf-(neural-network-compression-framework)" %}
 
 # NNCF (Neural Network Compression Framework)
 

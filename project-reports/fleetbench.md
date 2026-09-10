@@ -52,7 +52,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="fleetbench" %}
+{% include dependency-graph.html slug="dependencies" subset="fleetbench" %}
 
 # fleetbench
 

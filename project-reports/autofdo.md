@@ -34,7 +34,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="autofdo" %}
+{% include dependency-graph.html slug="dependencies" subset="autofdo" %}
 
 # autofdo
 

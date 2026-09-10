@@ -49,7 +49,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="ray" %}
+{% include dependency-graph.html slug="dependencies" subset="ray" %}
 
 # Ray
 

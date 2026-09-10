@@ -49,7 +49,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="k0s" %}
+{% include dependency-graph.html slug="dependencies" subset="k0s" %}
 
 # k0s
 

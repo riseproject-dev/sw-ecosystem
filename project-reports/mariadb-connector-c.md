@@ -23,7 +23,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mariadb-connector-c" %}
+{% include dependency-graph.html slug="dependencies" subset="mariadb-connector-c" %}
 
 # MariaDB Connector/C
 

@@ -19,7 +19,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="fscrypt" %}
+{% include dependency-graph.html slug="dependencies" subset="fscrypt" %}
 
 # fscrypt
 

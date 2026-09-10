@@ -20,7 +20,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="iceoryx" %}
+{% include dependency-graph.html slug="dependencies" subset="iceoryx" %}
 
 # Iceoryx
 

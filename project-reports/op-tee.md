@@ -14,7 +14,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="op-tee" %}
+{% include dependency-graph.html slug="dependencies" subset="op-tee" %}
 
 # OP-TEE
 

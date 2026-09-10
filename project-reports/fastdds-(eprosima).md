@@ -26,7 +26,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="fastdds-(eprosima)" %}
+{% include dependency-graph.html slug="dependencies" subset="fastdds-(eprosima)" %}
 
 # FastDDS (eProsima)
 

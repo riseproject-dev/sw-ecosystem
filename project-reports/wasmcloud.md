@@ -26,7 +26,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="wasmcloud" %}
+{% include dependency-graph.html slug="dependencies" subset="wasmcloud" %}
 
 # wasmCloud
 

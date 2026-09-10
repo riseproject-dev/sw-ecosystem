@@ -16,7 +16,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="jemalloc" %}
+{% include dependency-graph.html slug="dependencies" subset="jemalloc" %}
 
 # jemalloc
 

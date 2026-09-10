@@ -20,7 +20,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="edge-impulse-ros-integration" %}
+{% include dependency-graph.html slug="dependencies" subset="edge-impulse-ros-integration" %}
 
 # Edge Impulse ROS Integration
 

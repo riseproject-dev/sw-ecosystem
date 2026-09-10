@@ -11,7 +11,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="edge-impulse-linux-sdk-(go)" %}
+{% include dependency-graph.html slug="dependencies" subset="edge-impulse-linux-sdk-(go)" %}
 
 # Edge Impulse Linux SDK (Go)
 

@@ -3,7 +3,7 @@ title: native-pkcs11
 parent: Project Reports
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="native-pkcs11" %}
+{% include dependency-graph.html slug="dependencies" subset="native-pkcs11" %}
 
 # native-pkcs11
 

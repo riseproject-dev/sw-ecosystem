@@ -19,7 +19,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="adk-go" %}
+{% include dependency-graph.html slug="dependencies" subset="adk-go" %}
 
 # adk-go
 

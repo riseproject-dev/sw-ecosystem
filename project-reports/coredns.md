@@ -46,7 +46,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="coredns" %}
+{% include dependency-graph.html slug="dependencies" subset="coredns" %}
 
 # CoreDNS
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

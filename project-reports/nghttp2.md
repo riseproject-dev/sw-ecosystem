@@ -45,7 +45,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="nghttp2" %}
+{% include dependency-graph.html slug="dependencies" subset="nghttp2" %}
 
 # nghttp2
 

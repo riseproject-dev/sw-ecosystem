@@ -16,7 +16,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="nsjail" %}
+{% include dependency-graph.html slug="dependencies" subset="nsjail" %}
 
 # nsjail
 

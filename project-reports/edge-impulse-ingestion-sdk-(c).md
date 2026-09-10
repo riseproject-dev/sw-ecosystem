@@ -11,7 +11,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="edge-impulse-ingestion-sdk-(c)" %}
+{% include dependency-graph.html slug="dependencies" subset="edge-impulse-ingestion-sdk-(c)" %}
 
 # Edge Impulse Ingestion SDK (C)
 

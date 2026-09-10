@@ -46,7 +46,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="traefik" %}
+{% include dependency-graph.html slug="dependencies" subset="traefik" %}
 
 # Traefik
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

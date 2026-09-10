@@ -38,7 +38,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="fiware-orion-context-broker" %}
+{% include dependency-graph.html slug="dependencies" subset="fiware-orion-context-broker" %}
 
 # FIWARE Orion Context Broker
 

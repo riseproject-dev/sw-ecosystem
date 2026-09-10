@@ -23,7 +23,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="whisper-cpp" %}
+{% include dependency-graph.html slug="dependencies" subset="whisper-cpp" %}
 
 # whisper.cpp
 

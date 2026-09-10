@@ -17,7 +17,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="kubeedge" %}
+{% include dependency-graph.html slug="dependencies" subset="kubeedge" %}
 
 # KubeEdge
 

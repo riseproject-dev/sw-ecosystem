@@ -41,7 +41,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="elfutils" %}
+{% include dependency-graph.html slug="dependencies" subset="elfutils" %}
 
 # elfutils
 **Author:** Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;

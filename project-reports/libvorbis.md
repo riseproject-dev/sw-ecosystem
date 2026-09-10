@@ -9,7 +9,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libvorbis" %}
+{% include dependency-graph.html slug="dependencies" subset="libvorbis" %}
 
 # libvorbis
 

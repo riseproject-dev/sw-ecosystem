@@ -8,7 +8,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="ostree-rpm-ostree" %}
+{% include dependency-graph.html slug="dependencies" subset="ostree-rpm-ostree" %}
 
 # OSTree / rpm-ostree
 

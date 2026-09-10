@@ -17,7 +17,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="emqx" %}
+{% include dependency-graph.html slug="dependencies" subset="emqx" %}
 
 # EMQX
 

@@ -13,7 +13,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="go-tpm" %}
+{% include dependency-graph.html slug="dependencies" subset="go-tpm" %}
 
 # go-tpm
 

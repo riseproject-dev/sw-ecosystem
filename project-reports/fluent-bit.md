@@ -35,7 +35,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="fluent-bit" %}
+{% include dependency-graph.html slug="dependencies" subset="fluent-bit" %}
 
 # Fluent Bit
 

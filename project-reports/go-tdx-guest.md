@@ -22,7 +22,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="go-tdx-guest" %}
+{% include dependency-graph.html slug="dependencies" subset="go-tdx-guest" %}
 
 # go-tdx-guest
 

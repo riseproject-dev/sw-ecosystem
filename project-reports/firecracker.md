@@ -41,7 +41,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="firecracker" %}
+{% include dependency-graph.html slug="dependencies" subset="firecracker" %}
 
 # Firecracker
 

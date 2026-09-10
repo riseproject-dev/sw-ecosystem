@@ -10,7 +10,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="go-cloud" %}
+{% include dependency-graph.html slug="dependencies" subset="go-cloud" %}
 
 # go-cloud
 

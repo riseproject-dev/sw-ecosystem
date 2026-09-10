@@ -32,7 +32,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="dragonfly" %}
+{% include dependency-graph.html slug="dependencies" subset="dragonfly" %}
 
 # Dragonfly
 

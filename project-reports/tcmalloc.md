@@ -22,7 +22,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="tcmalloc" %}
+{% include dependency-graph.html slug="dependencies" subset="tcmalloc" %}
 
 # tcmalloc
 

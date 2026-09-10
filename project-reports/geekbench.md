@@ -5,7 +5,7 @@ categories:
   - benchmarks
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="geekbench" %}
+{% include dependency-graph.html slug="dependencies" subset="geekbench" %}
 
 # Geekbench
 

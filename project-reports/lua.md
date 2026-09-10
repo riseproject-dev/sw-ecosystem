@@ -8,7 +8,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="lua" %}
+{% include dependency-graph.html slug="dependencies" subset="lua" %}
 
 # Lua
 

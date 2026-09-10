@@ -5,7 +5,7 @@ categories:
   - libraries
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="xbyak-riscv" %}
+{% include dependency-graph.html slug="dependencies" subset="xbyak-riscv" %}
 
 # xbyak_riscv
 

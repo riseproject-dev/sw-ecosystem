@@ -22,7 +22,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="sentencepiece" %}
+{% include dependency-graph.html slug="dependencies" subset="sentencepiece" %}
 
 # sentencepiece
 

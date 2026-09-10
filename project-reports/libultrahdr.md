@@ -16,7 +16,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libultrahdr" %}
+{% include dependency-graph.html slug="dependencies" subset="libultrahdr" %}
 
 # libultrahdr
 

@@ -3,7 +3,8 @@
  * interactive dependency graph: a d3-force layout (d3 v5, loaded via CDN in
  * _includes/dependency-graph.html -- no build step), with zoom/pan, click-a-node to open its
  * report/repo/home, hover to highlight neighbors, a search box (which can also focus a node's
- * ancestor+descendant subgraph), and a legend.
+ * ancestor+descendant subgraph), and a legend. A container's data-subset, when set, additionally
+ * bounds the whole instance to one node's descendants (see descendantSubgraph below).
  *
  * Loaded once per page; initializes every ".dependency-graph" container it finds.
  */
@@ -66,6 +67,62 @@
     return out;
   }
 
+  // True for a "runtime-dependency" relation, and (since stack-report graphs give `relation` as
+  // free text -- see prompts/stack-report/stack-report.md) anything else that reads as purely
+  // about runtime, e.g. not "build-and-runtime-dependency". Shared by edgeClass (solid vs. dashed
+  // line) and findDescendantsRuntimeOnlyBeyondRoot below, so "renders as a solid runtime edge" and
+  // "counts as runtime for subset traversal" never disagree.
+  function isRuntimeRelation(relation) {
+    var r = (relation || '').toLowerCase();
+    return r.indexOf('runtime') !== -1 && r.indexOf('build') === -1 && r.indexOf('test') === -1;
+  }
+
+  // Same BFS as findAllDescendants, except only rootId's own outgoing edges may be any relation --
+  // every hop past that follows runtime-dependency edges only. Used for a per-project subset (see
+  // descendantSubgraph below), so a direct dependency's own build/test tooling (a "dependency of a
+  // dependency", several links removed from the project itself) never drags itself into view; the
+  // runtime chain, which does end up in the project's own runtime footprint, is still followed
+  // arbitrarily deep.
+  function findDescendantsRuntimeOnlyBeyondRoot(rootId, ds) {
+    var seen = new Set([rootId]), queue = [rootId], out = new Set();
+    while (queue.length) {
+      var cur = queue.shift();
+      (ds.nodeMap[cur].outgoing || []).forEach(function (eid) {
+        var e = ds.edgeMap[eid];
+        if (cur !== rootId && !isRuntimeRelation(e.relation)) return;
+        if (!seen.has(e.target)) { seen.add(e.target); out.add(e.target); queue.push(e.target); }
+      });
+    }
+    return out;
+  }
+
+  // Rebuilds a graph data structure containing only `visible` node ids -- both nodeMap's own
+  // incoming/outgoing lists and edgeMap are pruned to edges whose endpoints are both visible, so
+  // callers (focusedSubgraph, descendantSubgraph below) never leak a dangling reference to a node
+  // that got filtered out. `edgeFilter`, when given, can additionally drop an edge between two
+  // visible nodes outright (used by descendantSubgraph to suppress indirect build/test edges whose
+  // endpoints both happen to be visible via some other path).
+  function restrictToVisible(visible, ds, edgeFilter) {
+    function edgeVisible(eid) {
+      var e = ds.edgeMap[eid];
+      if (!visible.has(e.source) || !visible.has(e.target)) return false;
+      return !edgeFilter || edgeFilter(e);
+    }
+    var nodeMap = {}, edgeMap = {};
+    visible.forEach(function (id) {
+      var n = ds.nodeMap[id];
+      nodeMap[id] = {
+        data: n.data,
+        incoming: n.incoming.filter(edgeVisible),
+        outgoing: n.outgoing.filter(edgeVisible),
+      };
+    });
+    Object.keys(ds.edgeMap).forEach(function (eid) {
+      if (edgeVisible(eid)) edgeMap[eid] = ds.edgeMap[eid];
+    });
+    return { nodeMap: nodeMap, edgeMap: edgeMap, allNodeIds: Array.from(visible) };
+  }
+
   // A node's "focused subgraph" is itself plus every ancestor and descendant -- selecting a node
   // (via search; see doSearch below) zooms into just that context, mirroring conda-forge's
   // DependencyGraph component. Clicking a node in the graph instead opens its report/repo/home
@@ -75,20 +132,25 @@
     var ancestors = findAllAncestors(nodeId, ds);
     var descendants = findAllDescendants(nodeId, ds);
     var visible = new Set([nodeId].concat(Array.from(ancestors), Array.from(descendants)));
-    var nodeMap = {}, edgeMap = {};
-    visible.forEach(function (id) {
-      var n = ds.nodeMap[id];
-      nodeMap[id] = {
-        data: n.data,
-        incoming: n.incoming.filter(function (eid) { return visible.has(ds.edgeMap[eid].source); }),
-        outgoing: n.outgoing.filter(function (eid) { return visible.has(ds.edgeMap[eid].target); }),
-      };
+    return restrictToVisible(visible, ds);
+  }
+
+  // A node's "descendant subset" is itself plus every descendant, with ancestors excluded
+  // entirely -- used (via data-subset; see init() below) to bound a per-project graph instance to
+  // just what that project depends on, transitively. Unlike focusedSubgraph, this is not a
+  // temporary zoom-in: it replaces the base graph the instance ever operates on (drawing,
+  // search, and focus/reset all stay within it), so that e.g. a project depended on by hundreds
+  // of others never pulls all of them onto that project's own page. Beyond the project's own
+  // direct dependencies, only the runtime-dependency chain is included/rendered -- see
+  // findDescendantsRuntimeOnlyBeyondRoot -- so a dependency's build/test tooling doesn't clutter
+  // a project page it's several links removed from.
+  function descendantSubgraph(nodeId, ds) {
+    if (!nodeId || !ds.nodeMap[nodeId]) return ds;
+    var descendants = findDescendantsRuntimeOnlyBeyondRoot(nodeId, ds);
+    var visible = new Set([nodeId].concat(Array.from(descendants)));
+    return restrictToVisible(visible, ds, function (e) {
+      return e.source === nodeId || isRuntimeRelation(e.relation);
     });
-    Object.keys(ds.edgeMap).forEach(function (eid) {
-      var e = ds.edgeMap[eid];
-      if (visible.has(e.source) && visible.has(e.target)) edgeMap[eid] = e;
-    });
-    return { nodeMap: nodeMap, edgeMap: edgeMap, allNodeIds: Array.from(visible) };
   }
 
   // A node's `report` is baked in at generation time as a production URL, e.g.
@@ -119,9 +181,7 @@
   // whose `relation` is free text -- see prompts/stack-report/stack-report.md) any other relation
   // that isn't purely about runtime, e.g. "requires-to-be-useful" or "build-and-runtime-dependency".
   function edgeClass(relation) {
-    var r = (relation || '').toLowerCase();
-    var isRuntimeOnly = r.indexOf('runtime') !== -1 && r.indexOf('build') === -1 && r.indexOf('test') === -1;
-    return 'dg-edge ' + (isRuntimeOnly ? 'dg-edge-runtime' : 'dg-edge-other');
+    return 'dg-edge ' + (isRuntimeRelation(relation) ? 'dg-edge-runtime' : 'dg-edge-other');
   }
 
   function nodeTooltip(n) {
@@ -276,8 +336,14 @@
       })
       .then(function (graphJson) {
         var fullDs = buildGraphDataStructure(graphJson);
+        var subsetId = container.getAttribute('data-subset') || null;
+        // baseDs, not fullDs, is what the rest of this instance (drawing, search, focus/reset)
+        // ever operates on -- when data-subset is set, nodes outside that project's own
+        // descendant tree (most of all, other projects that merely also depend on it) never
+        // appear here, no matter what the user clicks or searches for.
+        var baseDs = subsetId ? descendantSubgraph(subsetId, fullDs) : fullDs;
         var selected = container.getAttribute('data-focus') || null;
-        if (selected && !fullDs.nodeMap[selected]) selected = null;
+        if (selected && !baseDs.nodeMap[selected]) selected = null;
         if (selected) resetBtn.hidden = false;
 
         function fitToView(layout) {
@@ -321,7 +387,7 @@
         }
 
         function draw() {
-          var ds = focusedSubgraph(selected, fullDs);
+          var ds = focusedSubgraph(selected, baseDs);
           var showExternal = externalToggle.checked;
           var layout = buildForceLayout(ds, showExternal);
 
@@ -393,14 +459,14 @@
           term = term.trim().toLowerCase();
           searchResults.innerHTML = '';
           if (!term) { searchResults.hidden = true; return; }
-          var matches = fullDs.allNodeIds
-            .filter(function (id) { return fullDs.nodeMap[id].data.name.toLowerCase().indexOf(term) !== -1; })
+          var matches = baseDs.allNodeIds
+            .filter(function (id) { return baseDs.nodeMap[id].data.name.toLowerCase().indexOf(term) !== -1; })
             .slice(0, 15);
           searchResults.hidden = matches.length === 0;
           matches.forEach(function (id) {
             var item = document.createElement('div');
             item.className = 'dg-search-item';
-            item.textContent = fullDs.nodeMap[id].data.name;
+            item.textContent = baseDs.nodeMap[id].data.name;
             item.addEventListener('click', function () {
               selected = id;
               resetBtn.hidden = false;

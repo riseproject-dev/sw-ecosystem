@@ -6,7 +6,7 @@ categories:
   - libraries
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libnuma" %}
+{% include dependency-graph.html slug="dependencies" subset="libnuma" %}
 
 # libnuma
 

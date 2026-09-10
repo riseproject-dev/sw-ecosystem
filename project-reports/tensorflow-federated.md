@@ -41,7 +41,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="tensorflow-federated" %}
+{% include dependency-graph.html slug="dependencies" subset="tensorflow-federated" %}
 
 # TensorFlow Federated
 

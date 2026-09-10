@@ -16,7 +16,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="google-authenticator-libpam" %}
+{% include dependency-graph.html slug="dependencies" subset="google-authenticator-libpam" %}
 
 # google-authenticator-libpam
 

@@ -20,7 +20,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="eclipse-hawkbit" %}
+{% include dependency-graph.html slug="dependencies" subset="eclipse-hawkbit" %}
 
 # Eclipse hawkBit
 

@@ -11,7 +11,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="tinkerbell" %}
+{% include dependency-graph.html slug="dependencies" subset="tinkerbell" %}
 
 # Tinkerbell
 

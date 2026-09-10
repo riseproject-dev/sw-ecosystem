@@ -20,7 +20,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="xnnpack" %}
+{% include dependency-graph.html slug="dependencies" subset="xnnpack" %}
 
 # XNNPACK
 

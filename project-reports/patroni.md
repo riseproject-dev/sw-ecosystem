@@ -23,7 +23,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="patroni" %}
+{% include dependency-graph.html slug="dependencies" subset="patroni" %}
 
 # Patroni
 

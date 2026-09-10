@@ -40,7 +40,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="runc" %}
+{% include dependency-graph.html slug="dependencies" subset="runc" %}
 
 # runc
 **Author:** Ludovic HENRY \<ludovic.henry@qti.qualcomm.com\><br/>

@@ -28,7 +28,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="seesaw" %}
+{% include dependency-graph.html slug="dependencies" subset="seesaw" %}
 
 # seesaw
 

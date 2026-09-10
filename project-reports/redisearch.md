@@ -47,7 +47,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="redisearch" %}
+{% include dependency-graph.html slug="dependencies" subset="redisearch" %}
 
 # RediSearch
 

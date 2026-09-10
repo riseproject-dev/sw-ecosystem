@@ -19,7 +19,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="nnpack" %}
+{% include dependency-graph.html slug="dependencies" subset="nnpack" %}
 
 # NNPACK
 

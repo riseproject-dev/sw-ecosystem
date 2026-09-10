@@ -17,7 +17,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="nav2" %}
+{% include dependency-graph.html slug="dependencies" subset="nav2" %}
 
 # Nav2
 

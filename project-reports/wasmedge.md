@@ -29,7 +29,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="wasmedge" %}
+{% include dependency-graph.html slug="dependencies" subset="wasmedge" %}
 
 # WasmEdge
 

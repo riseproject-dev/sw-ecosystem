@@ -26,7 +26,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mysqld_exporter" %}
+{% include dependency-graph.html slug="dependencies" subset="mysqld_exporter" %}
 
 # mysqld_exporter
 

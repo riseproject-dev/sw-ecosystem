@@ -41,7 +41,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="redisjson" %}
+{% include dependency-graph.html slug="dependencies" subset="redisjson" %}
 
 # RedisJSON
 

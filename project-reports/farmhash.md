@@ -3,7 +3,7 @@ title: farmhash
 parent: Project Reports
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="farmhash" %}
+{% include dependency-graph.html slug="dependencies" subset="farmhash" %}
 
 # farmhash
 

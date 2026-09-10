@@ -14,7 +14,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libpng" %}
+{% include dependency-graph.html slug="dependencies" subset="libpng" %}
 
 # libpng
 

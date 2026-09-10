@@ -29,7 +29,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="tensorflow-lite-micro-(tflm)" %}
+{% include dependency-graph.html slug="dependencies" subset="tensorflow-lite-micro-(tflm)" %}
 
 # TensorFlow Lite Micro (TFLM)
 

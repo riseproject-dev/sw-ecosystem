@@ -39,7 +39,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="rabbitmq" %}
+{% include dependency-graph.html slug="dependencies" subset="rabbitmq" %}
 
 # RabbitMQ
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

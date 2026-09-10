@@ -32,7 +32,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="home-assistant" %}
+{% include dependency-graph.html slug="dependencies" subset="home-assistant" %}
 
 # Home Assistant
 

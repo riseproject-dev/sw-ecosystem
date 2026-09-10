@@ -3,7 +3,7 @@ title: nsync
 parent: Project Reports
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="nsync" %}
+{% include dependency-graph.html slug="dependencies" subset="nsync" %}
 
 # nsync
 

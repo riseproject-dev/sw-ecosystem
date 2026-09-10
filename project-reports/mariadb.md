@@ -28,7 +28,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mariadb" %}
+{% include dependency-graph.html slug="dependencies" subset="mariadb" %}
 
 # MariaDB
 **Author:** Ludovic HENRY \<ludovic.henry@qti.qualcomm.com\>

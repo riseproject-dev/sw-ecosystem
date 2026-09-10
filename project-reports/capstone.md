@@ -3,7 +3,7 @@ title: capstone
 parent: Project Reports
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="capstone" %}
+{% include dependency-graph.html slug="dependencies" subset="capstone" %}
 
 # capstone
 

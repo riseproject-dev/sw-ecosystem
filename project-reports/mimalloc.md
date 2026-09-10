@@ -6,7 +6,7 @@ categories:
   - libraries
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mimalloc" %}
+{% include dependency-graph.html slug="dependencies" subset="mimalloc" %}
 
 # mimalloc
 

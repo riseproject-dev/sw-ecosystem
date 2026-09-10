@@ -27,7 +27,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="art" %}
+{% include dependency-graph.html slug="dependencies" subset="art" %}
 
 # ART
 

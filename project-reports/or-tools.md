@@ -40,7 +40,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="or-tools" %}
+{% include dependency-graph.html slug="dependencies" subset="or-tools" %}
 
 # or-tools
 

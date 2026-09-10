@@ -61,7 +61,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="ffmpeg" %}
+{% include dependency-graph.html slug="dependencies" subset="ffmpeg" %}
 
 # FFmpeg
 

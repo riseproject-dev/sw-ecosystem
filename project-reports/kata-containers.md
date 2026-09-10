@@ -26,7 +26,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="kata-containers" %}
+{% include dependency-graph.html slug="dependencies" subset="kata-containers" %}
 
 # Kata Containers
 

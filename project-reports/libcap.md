@@ -10,7 +10,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libcap" %}
+{% include dependency-graph.html slug="dependencies" subset="libcap" %}
 
 # libcap
 

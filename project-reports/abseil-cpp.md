@@ -13,7 +13,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="abseil-cpp" %}
+{% include dependency-graph.html slug="dependencies" subset="abseil-cpp" %}
 
 # Abseil-cpp
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

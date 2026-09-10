@@ -50,7 +50,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mindspore-lite" %}
+{% include dependency-graph.html slug="dependencies" subset="mindspore-lite" %}
 
 # MindSpore Lite
 

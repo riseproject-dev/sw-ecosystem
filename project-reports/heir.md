@@ -49,7 +49,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="heir" %}
+{% include dependency-graph.html slug="dependencies" subset="heir" %}
 
 # heir
 

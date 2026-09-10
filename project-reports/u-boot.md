@@ -32,7 +32,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="u-boot" %}
+{% include dependency-graph.html slug="dependencies" subset="u-boot" %}
 
 # U-Boot
 

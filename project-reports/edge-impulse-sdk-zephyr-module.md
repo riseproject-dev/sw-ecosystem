@@ -20,7 +20,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="edge-impulse-sdk-zephyr-module" %}
+{% include dependency-graph.html slug="dependencies" subset="edge-impulse-sdk-zephyr-module" %}
 
 # Edge Impulse SDK Zephyr Module
 

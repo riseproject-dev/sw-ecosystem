@@ -19,7 +19,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="gops" %}
+{% include dependency-graph.html slug="dependencies" subset="gops" %}
 
 # gops
 

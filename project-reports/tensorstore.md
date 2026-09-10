@@ -110,7 +110,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="tensorstore" %}
+{% include dependency-graph.html slug="dependencies" subset="tensorstore" %}
 
 # tensorstore
 

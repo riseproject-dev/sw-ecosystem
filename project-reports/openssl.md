@@ -28,7 +28,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="openssl" %}
+{% include dependency-graph.html slug="dependencies" subset="openssl" %}
 
 # OpenSSL
 

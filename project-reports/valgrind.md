@@ -31,7 +31,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="valgrind" %}
+{% include dependency-graph.html slug="dependencies" subset="valgrind" %}
 
 # Valgrind
 

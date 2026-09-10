@@ -18,7 +18,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="cloud-init" %}
+{% include dependency-graph.html slug="dependencies" subset="cloud-init" %}
 
 # cloud-init
 

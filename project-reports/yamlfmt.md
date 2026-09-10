@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="yamlfmt" %}
+{% include dependency-graph.html slug="dependencies" subset="yamlfmt" %}
 
 # yamlfmt
 

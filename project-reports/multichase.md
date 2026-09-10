@@ -3,7 +3,7 @@ title: multichase
 parent: Project Reports
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="multichase" %}
+{% include dependency-graph.html slug="dependencies" subset="multichase" %}
 
 # multichase
 

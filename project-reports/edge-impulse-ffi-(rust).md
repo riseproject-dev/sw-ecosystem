@@ -35,7 +35,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="edge-impulse-ffi-(rust)" %}
+{% include dependency-graph.html slug="dependencies" subset="edge-impulse-ffi-(rust)" %}
 
 # Edge Impulse FFI (Rust)
 

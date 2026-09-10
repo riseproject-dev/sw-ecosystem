@@ -20,7 +20,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="numpy" %}
+{% include dependency-graph.html slug="dependencies" subset="numpy" %}
 
 # NumPy
 

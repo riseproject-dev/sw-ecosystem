@@ -64,7 +64,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="openstack" %}
+{% include dependency-graph.html slug="dependencies" subset="openstack" %}
 
 # OpenStack
 

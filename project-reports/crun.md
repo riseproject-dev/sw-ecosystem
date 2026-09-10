@@ -44,7 +44,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="crun" %}
+{% include dependency-graph.html slug="dependencies" subset="crun" %}
 
 # crun
 

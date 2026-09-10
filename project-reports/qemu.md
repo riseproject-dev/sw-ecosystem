@@ -62,7 +62,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="qemu" %}
+{% include dependency-graph.html slug="dependencies" subset="qemu" %}
 
 # QEMU
 

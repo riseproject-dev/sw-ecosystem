@@ -16,7 +16,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="readline" %}
+{% include dependency-graph.html slug="dependencies" subset="readline" %}
 
 # readline
 

@@ -4,7 +4,7 @@ parent: Project Reports
 color: yellow
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="double-conversion" %}
+{% include dependency-graph.html slug="dependencies" subset="double-conversion" %}
 
 # double-conversion
 

@@ -18,7 +18,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="async-profiler" %}
+{% include dependency-graph.html slug="dependencies" subset="async-profiler" %}
 
 # async-profiler
 

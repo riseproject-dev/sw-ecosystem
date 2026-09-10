@@ -13,7 +13,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="vixl" %}
+{% include dependency-graph.html slug="dependencies" subset="vixl" %}
 
 # VIXL
 

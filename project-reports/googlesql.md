@@ -43,7 +43,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="googlesql" %}
+{% include dependency-graph.html slug="dependencies" subset="googlesql" %}
 
 # googlesql
 

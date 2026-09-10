@@ -14,7 +14,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="rt-thread" %}
+{% include dependency-graph.html slug="dependencies" subset="rt-thread" %}
 
 # RT-Thread
 

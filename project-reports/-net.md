@@ -23,7 +23,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="-net" %}
+{% include dependency-graph.html slug="dependencies" subset="-net" %}
 
 # .NET
 

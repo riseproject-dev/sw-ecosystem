@@ -19,7 +19,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="numba" %}
+{% include dependency-graph.html slug="dependencies" subset="numba" %}
 
 # numba
 

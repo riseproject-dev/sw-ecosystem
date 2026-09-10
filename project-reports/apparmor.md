@@ -20,7 +20,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="apparmor" %}
+{% include dependency-graph.html slug="dependencies" subset="apparmor" %}
 
 # AppArmor
 

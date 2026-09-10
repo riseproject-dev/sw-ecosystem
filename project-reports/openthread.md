@@ -17,7 +17,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="openthread" %}
+{% include dependency-graph.html slug="dependencies" subset="openthread" %}
 
 # OpenThread
 

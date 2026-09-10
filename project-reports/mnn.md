@@ -56,7 +56,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mnn" %}
+{% include dependency-graph.html slug="dependencies" subset="mnn" %}
 
 # MNN
 

@@ -26,7 +26,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="trusted-firmware-a-(tf-a)" %}
+{% include dependency-graph.html slug="dependencies" subset="trusted-firmware-a-(tf-a)" %}
 
 # Trusted Firmware-A (TF-A)
 

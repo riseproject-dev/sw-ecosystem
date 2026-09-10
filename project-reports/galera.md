@@ -23,7 +23,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="galera" %}
+{% include dependency-graph.html slug="dependencies" subset="galera" %}
 
 # Galera
 

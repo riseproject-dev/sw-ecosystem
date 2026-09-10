@@ -34,7 +34,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libsoup" %}
+{% include dependency-graph.html slug="dependencies" subset="libsoup" %}
 
 # libsoup
 

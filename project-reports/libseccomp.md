@@ -7,7 +7,7 @@ categories:
   - containers
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libseccomp" %}
+{% include dependency-graph.html slug="dependencies" subset="libseccomp" %}
 
 # libseccomp
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

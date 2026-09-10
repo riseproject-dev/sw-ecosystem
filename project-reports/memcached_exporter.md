@@ -32,7 +32,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="memcached_exporter" %}
+{% include dependency-graph.html slug="dependencies" subset="memcached_exporter" %}
 
 # memcached_exporter
 

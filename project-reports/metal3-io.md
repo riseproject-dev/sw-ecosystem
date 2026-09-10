@@ -17,7 +17,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="metal3-io" %}
+{% include dependency-graph.html slug="dependencies" subset="metal3-io" %}
 
 # metal3-io
 

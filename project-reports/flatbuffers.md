@@ -22,7 +22,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="flatbuffers" %}
+{% include dependency-graph.html slug="dependencies" subset="flatbuffers" %}
 
 # FlatBuffers
 

@@ -22,7 +22,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="longfellow-zk" %}
+{% include dependency-graph.html slug="dependencies" subset="longfellow-zk" %}
 
 # longfellow-zk
 

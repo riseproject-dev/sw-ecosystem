@@ -41,7 +41,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="ncnn" %}
+{% include dependency-graph.html slug="dependencies" subset="ncnn" %}
 
 # ncnn
 

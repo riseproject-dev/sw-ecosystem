@@ -3,7 +3,7 @@ title: kafel
 parent: Project Reports
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="kafel" %}
+{% include dependency-graph.html slug="dependencies" subset="kafel" %}
 
 # kafel
 

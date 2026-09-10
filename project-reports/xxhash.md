@@ -4,7 +4,7 @@ parent: Project Reports
 color: blue
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="xxhash" %}
+{% include dependency-graph.html slug="dependencies" subset="xxhash" %}
 
 # xxHash
 

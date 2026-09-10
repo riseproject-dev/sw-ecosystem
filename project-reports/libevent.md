@@ -16,7 +16,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libevent" %}
+{% include dependency-graph.html slug="dependencies" subset="libevent" %}
 
 # libevent
 

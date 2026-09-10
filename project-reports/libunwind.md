@@ -14,7 +14,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libunwind" %}
+{% include dependency-graph.html slug="dependencies" subset="libunwind" %}
 
 # libunwind
 

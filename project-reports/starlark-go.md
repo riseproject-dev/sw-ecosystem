@@ -19,7 +19,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="starlark-go" %}
+{% include dependency-graph.html slug="dependencies" subset="starlark-go" %}
 
 # starlark-go
 

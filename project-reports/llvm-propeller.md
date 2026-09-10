@@ -25,7 +25,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="llvm-propeller" %}
+{% include dependency-graph.html slug="dependencies" subset="llvm-propeller" %}
 
 # llvm-propeller
 

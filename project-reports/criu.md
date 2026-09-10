@@ -40,7 +40,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="criu" %}
+{% include dependency-graph.html slug="dependencies" subset="criu" %}
 
 # CRIU
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

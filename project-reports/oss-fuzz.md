@@ -13,7 +13,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="oss-fuzz" %}
+{% include dependency-graph.html slug="dependencies" subset="oss-fuzz" %}
 
 # oss-fuzz
 

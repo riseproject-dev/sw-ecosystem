@@ -17,7 +17,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="node_exporter" %}
+{% include dependency-graph.html slug="dependencies" subset="node_exporter" %}
 
 # node_exporter
 

@@ -28,7 +28,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="harfbuzz" %}
+{% include dependency-graph.html slug="dependencies" subset="harfbuzz" %}
 
 # HarfBuzz
 

@@ -41,7 +41,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="redis_exporter" %}
+{% include dependency-graph.html slug="dependencies" subset="redis_exporter" %}
 
 # redis_exporter
 

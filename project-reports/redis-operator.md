@@ -26,7 +26,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="redis-operator" %}
+{% include dependency-graph.html slug="dependencies" subset="redis-operator" %}
 
 # redis-operator
 

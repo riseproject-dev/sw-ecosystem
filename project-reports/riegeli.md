@@ -40,7 +40,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="riegeli" %}
+{% include dependency-graph.html slug="dependencies" subset="riegeli" %}
 
 # riegeli
 

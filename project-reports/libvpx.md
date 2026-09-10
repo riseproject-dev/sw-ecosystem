@@ -12,7 +12,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libvpx" %}
+{% include dependency-graph.html slug="dependencies" subset="libvpx" %}
 
 # libvpx
 

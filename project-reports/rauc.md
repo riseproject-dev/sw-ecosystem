@@ -35,7 +35,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="rauc" %}
+{% include dependency-graph.html slug="dependencies" subset="rauc" %}
 
 # RAUC
 

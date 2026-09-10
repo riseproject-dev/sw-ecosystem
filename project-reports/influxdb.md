@@ -38,7 +38,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="influxdb" %}
+{% include dependency-graph.html slug="dependencies" subset="influxdb" %}
 
 # InfluxDB
 

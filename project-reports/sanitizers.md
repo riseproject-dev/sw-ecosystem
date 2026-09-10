@@ -13,7 +13,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="sanitizers" %}
+{% include dependency-graph.html slug="dependencies" subset="sanitizers" %}
 
 # sanitizers
 

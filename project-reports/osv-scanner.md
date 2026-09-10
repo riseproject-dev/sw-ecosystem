@@ -3,7 +3,7 @@ title: osv-scanner
 parent: Project Reports
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="osv-scanner" %}
+{% include dependency-graph.html slug="dependencies" subset="osv-scanner" %}
 
 # osv-scanner
 

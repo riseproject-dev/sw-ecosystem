@@ -14,7 +14,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="oracle-mysql-op" %}
+{% include dependency-graph.html slug="dependencies" subset="oracle-mysql-op" %}
 
 # Oracle MySQL-op
 

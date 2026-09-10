@@ -7,7 +7,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="google-ctf" %}
+{% include dependency-graph.html slug="dependencies" subset="google-ctf" %}
 
 # google-ctf
 

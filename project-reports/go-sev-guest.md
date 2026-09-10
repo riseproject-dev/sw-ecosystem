@@ -16,7 +16,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="go-sev-guest" %}
+{% include dependency-graph.html slug="dependencies" subset="go-sev-guest" %}
 
 # go-sev-guest
 

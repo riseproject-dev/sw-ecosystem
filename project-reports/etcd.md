@@ -34,7 +34,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="etcd" %}
+{% include dependency-graph.html slug="dependencies" subset="etcd" %}
 
 # etcd
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

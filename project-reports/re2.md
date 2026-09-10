@@ -23,7 +23,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="re2" %}
+{% include dependency-graph.html slug="dependencies" subset="re2" %}
 
 # re2
 

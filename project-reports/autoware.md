@@ -35,7 +35,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="autoware" %}
+{% include dependency-graph.html slug="dependencies" subset="autoware" %}
 
 # Autoware
 

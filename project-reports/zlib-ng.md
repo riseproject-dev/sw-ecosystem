@@ -13,7 +13,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="zlib-ng" %}
+{% include dependency-graph.html slug="dependencies" subset="zlib-ng" %}
 
 # zlib-ng
 

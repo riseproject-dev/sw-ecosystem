@@ -13,7 +13,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="percona-mysql-op" %}
+{% include dependency-graph.html slug="dependencies" subset="percona-mysql-op" %}
 
 # Percona MySQL-op
 

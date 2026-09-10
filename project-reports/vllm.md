@@ -53,7 +53,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="vllm" %}
+{% include dependency-graph.html slug="dependencies" subset="vllm" %}
 
 # vLLM
 

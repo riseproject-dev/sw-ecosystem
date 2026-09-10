@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="micro-ros" %}
+{% include dependency-graph.html slug="dependencies" subset="micro-ros" %}
 
 # micro-ROS
 

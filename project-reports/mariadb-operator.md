@@ -29,7 +29,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mariadb-operator" %}
+{% include dependency-graph.html slug="dependencies" subset="mariadb-operator" %}
 
 # mariadb-operator
 

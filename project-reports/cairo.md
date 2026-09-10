@@ -19,7 +19,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="cairo" %}
+{% include dependency-graph.html slug="dependencies" subset="cairo" %}
 
 # Cairo
 

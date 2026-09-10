@@ -35,7 +35,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="huggingface-transformers" %}
+{% include dependency-graph.html slug="dependencies" subset="huggingface-transformers" %}
 
 # HuggingFace Transformers
 

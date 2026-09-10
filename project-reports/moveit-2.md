@@ -23,7 +23,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="moveit-2" %}
+{% include dependency-graph.html slug="dependencies" subset="moveit-2" %}
 
 # MoveIt 2
 

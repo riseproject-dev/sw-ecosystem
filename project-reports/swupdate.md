@@ -44,7 +44,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="swupdate" %}
+{% include dependency-graph.html slug="dependencies" subset="swupdate" %}
 
 # SWUpdate
 

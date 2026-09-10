@@ -5,7 +5,7 @@ categories:
   - multimedia
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libopus" %}
+{% include dependency-graph.html slug="dependencies" subset="libopus" %}
 
 # libopus
 

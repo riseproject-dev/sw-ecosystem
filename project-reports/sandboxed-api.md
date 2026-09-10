@@ -31,7 +31,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="sandboxed-api" %}
+{% include dependency-graph.html slug="dependencies" subset="sandboxed-api" %}
 
 # sandboxed-api
 

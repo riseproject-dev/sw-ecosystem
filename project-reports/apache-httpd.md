@@ -39,7 +39,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="apache-httpd" %}
+{% include dependency-graph.html slug="dependencies" subset="apache-httpd" %}
 
 # Apache httpd
 

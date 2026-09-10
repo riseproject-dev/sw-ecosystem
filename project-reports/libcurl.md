@@ -43,7 +43,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libcurl" %}
+{% include dependency-graph.html slug="dependencies" subset="libcurl" %}
 
 # libcurl
 

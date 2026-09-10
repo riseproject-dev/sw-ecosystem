@@ -38,7 +38,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="maxscale" %}
+{% include dependency-graph.html slug="dependencies" subset="maxscale" %}
 
 # MaxScale
 

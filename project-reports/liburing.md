@@ -10,7 +10,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="liburing" %}
+{% include dependency-graph.html slug="dependencies" subset="liburing" %}
 
 # liburing
 

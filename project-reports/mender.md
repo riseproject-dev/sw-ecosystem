@@ -17,7 +17,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mender" %}
+{% include dependency-graph.html slug="dependencies" subset="mender" %}
 
 # Mender
 

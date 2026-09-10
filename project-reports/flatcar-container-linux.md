@@ -38,7 +38,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="flatcar-container-linux" %}
+{% include dependency-graph.html slug="dependencies" subset="flatcar-container-linux" %}
 
 # Flatcar Container Linux
 

@@ -29,7 +29,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="huggingface-optimum" %}
+{% include dependency-graph.html slug="dependencies" subset="huggingface-optimum" %}
 
 # HuggingFace Optimum
 

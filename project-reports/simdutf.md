@@ -12,7 +12,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="simdutf" %}
+{% include dependency-graph.html slug="dependencies" subset="simdutf" %}
 
 # simdutf
 

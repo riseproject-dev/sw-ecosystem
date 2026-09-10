@@ -7,7 +7,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="packetdrill" %}
+{% include dependency-graph.html slug="dependencies" subset="packetdrill" %}
 
 # packetdrill
 

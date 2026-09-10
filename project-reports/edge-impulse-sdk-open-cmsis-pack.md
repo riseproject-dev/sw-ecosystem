@@ -17,7 +17,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="edge-impulse-sdk-open-cmsis-pack" %}
+{% include dependency-graph.html slug="dependencies" subset="edge-impulse-sdk-open-cmsis-pack" %}
 
 # Edge Impulse SDK Open CMSIS Pack
 

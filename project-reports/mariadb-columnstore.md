@@ -29,7 +29,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mariadb-columnstore" %}
+{% include dependency-graph.html slug="dependencies" subset="mariadb-columnstore" %}
 
 # MariaDB ColumnStore
 

@@ -8,7 +8,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="huggingface-hub" %}
+{% include dependency-graph.html slug="dependencies" subset="huggingface-hub" %}
 
 # HuggingFace Hub
 

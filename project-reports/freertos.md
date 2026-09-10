@@ -11,7 +11,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="freertos" %}
+{% include dependency-graph.html slug="dependencies" subset="freertos" %}
 
 # FreeRTOS
 

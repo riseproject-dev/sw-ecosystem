@@ -55,7 +55,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="grafana-alloy" %}
+{% include dependency-graph.html slug="dependencies" subset="grafana-alloy" %}
 
 # Grafana Alloy
 

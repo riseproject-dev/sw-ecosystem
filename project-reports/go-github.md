@@ -7,7 +7,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="go-github" %}
+{% include dependency-graph.html slug="dependencies" subset="go-github" %}
 
 # go-github
 

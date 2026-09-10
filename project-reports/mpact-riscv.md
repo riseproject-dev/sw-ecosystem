@@ -22,7 +22,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mpact-riscv" %}
+{% include dependency-graph.html slug="dependencies" subset="mpact-riscv" %}
 
 # mpact-riscv
 

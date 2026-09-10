@@ -37,7 +37,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="quiche" %}
+{% include dependency-graph.html slug="dependencies" subset="quiche" %}
 
 # quiche
 

@@ -20,7 +20,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="citus" %}
+{% include dependency-graph.html slug="dependencies" subset="citus" %}
 
 # Citus
 

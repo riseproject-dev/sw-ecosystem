@@ -47,7 +47,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="opencv" %}
+{% include dependency-graph.html slug="dependencies" subset="opencv" %}
 
 # OpenCV
 

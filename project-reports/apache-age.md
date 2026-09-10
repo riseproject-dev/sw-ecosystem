@@ -32,7 +32,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="apache-age" %}
+{% include dependency-graph.html slug="dependencies" subset="apache-age" %}
 
 # Apache AGE
 

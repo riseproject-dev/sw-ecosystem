@@ -6,7 +6,7 @@ categories:
   - libraries
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libmvec" %}
+{% include dependency-graph.html slug="dependencies" subset="libmvec" %}
 
 # libmvec
 

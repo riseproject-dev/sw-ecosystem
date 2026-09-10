@@ -38,7 +38,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="tiktoken" %}
+{% include dependency-graph.html slug="dependencies" subset="tiktoken" %}
 
 # tiktoken
 

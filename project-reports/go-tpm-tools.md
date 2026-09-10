@@ -40,7 +40,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="go-tpm-tools" %}
+{% include dependency-graph.html slug="dependencies" subset="go-tpm-tools" %}
 
 # go-tpm-tools
 

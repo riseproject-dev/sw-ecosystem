@@ -17,7 +17,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="gstreamer-plugin-for-edge-impulse" %}
+{% include dependency-graph.html slug="dependencies" subset="gstreamer-plugin-for-edge-impulse" %}
 
 # GStreamer Plugin for Edge Impulse
 

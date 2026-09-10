@@ -45,7 +45,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="apache-spark" %}
+{% include dependency-graph.html slug="dependencies" subset="apache-spark" %}
 
 # Apache Spark
 

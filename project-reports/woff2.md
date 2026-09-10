@@ -11,7 +11,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="woff2" %}
+{% include dependency-graph.html slug="dependencies" subset="woff2" %}
 
 # woff2
 

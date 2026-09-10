@@ -11,7 +11,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="matter-chip-tool-(project-chip)" %}
+{% include dependency-graph.html slug="dependencies" subset="matter-chip-tool-(project-chip)" %}
 
 # Matter / chip-tool (Project CHIP)
 

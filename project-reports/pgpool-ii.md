@@ -11,7 +11,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="pgpool-ii" %}
+{% include dependency-graph.html slug="dependencies" subset="pgpool-ii" %}
 
 # Pgpool-II
 

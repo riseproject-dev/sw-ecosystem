@@ -38,7 +38,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="red-hat-device-edge-(microshift)" %}
+{% include dependency-graph.html slug="dependencies" subset="red-hat-device-edge-(microshift)" %}
 
 # Red Hat Device Edge (MicroShift)
 

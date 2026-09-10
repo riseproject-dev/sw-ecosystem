@@ -32,7 +32,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="zalando-pg-op" %}
+{% include dependency-graph.html slug="dependencies" subset="zalando-pg-op" %}
 
 # Zalando PG-op
 

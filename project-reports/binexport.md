@@ -16,7 +16,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="binexport" %}
+{% include dependency-graph.html slug="dependencies" subset="binexport" %}
 
 # binexport
 

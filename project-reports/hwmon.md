@@ -5,7 +5,7 @@ categories:
   - perfmon
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="hwmon" %}
+{% include dependency-graph.html slug="dependencies" subset="hwmon" %}
 
 # hwmon
 

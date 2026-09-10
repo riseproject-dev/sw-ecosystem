@@ -19,7 +19,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="dav1d" %}
+{% include dependency-graph.html slug="dependencies" subset="dav1d" %}
 
 # dav1d
 

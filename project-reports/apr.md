@@ -30,7 +30,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="apr" %}
+{% include dependency-graph.html slug="dependencies" subset="apr" %}
 
 # APR
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

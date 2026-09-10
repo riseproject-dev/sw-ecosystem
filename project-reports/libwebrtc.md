@@ -55,7 +55,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libwebrtc" %}
+{% include dependency-graph.html slug="dependencies" subset="libwebrtc" %}
 
 # libwebrtc
 

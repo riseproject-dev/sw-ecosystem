@@ -21,7 +21,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="freetype" %}
+{% include dependency-graph.html slug="dependencies" subset="freetype" %}
 
 # FreeType
 

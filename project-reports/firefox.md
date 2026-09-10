@@ -45,7 +45,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="firefox" %}
+{% include dependency-graph.html slug="dependencies" subset="firefox" %}
 
 # Firefox
 

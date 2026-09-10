@@ -10,7 +10,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="perf_data_converter" %}
+{% include dependency-graph.html slug="dependencies" subset="perf_data_converter" %}
 
 # perf_data_converter
 

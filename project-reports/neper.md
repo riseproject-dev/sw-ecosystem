@@ -7,7 +7,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="neper" %}
+{% include dependency-graph.html slug="dependencies" subset="neper" %}
 
 # neper
 

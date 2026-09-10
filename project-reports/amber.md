@@ -34,7 +34,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="amber" %}
+{% include dependency-graph.html slug="dependencies" subset="amber" %}
 
 # amber
 

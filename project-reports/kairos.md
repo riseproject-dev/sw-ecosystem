@@ -32,7 +32,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="kairos" %}
+{% include dependency-graph.html slug="dependencies" subset="kairos" %}
 
 # Kairos
 

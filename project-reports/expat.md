@@ -6,7 +6,7 @@ categories:
   - libraries
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="expat" %}
+{% include dependency-graph.html slug="dependencies" subset="expat" %}
 
 # expat
 

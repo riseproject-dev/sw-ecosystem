@@ -34,7 +34,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="comprehensive-rust" %}
+{% include dependency-graph.html slug="dependencies" subset="comprehensive-rust" %}
 
 # comprehensive-rust
 

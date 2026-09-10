@@ -19,7 +19,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="nss" %}
+{% include dependency-graph.html slug="dependencies" subset="nss" %}
 
 # NSS
 

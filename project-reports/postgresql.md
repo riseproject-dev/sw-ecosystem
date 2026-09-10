@@ -70,7 +70,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="postgresql" %}
+{% include dependency-graph.html slug="dependencies" subset="postgresql" %}
 
 # PostgreSQL
 

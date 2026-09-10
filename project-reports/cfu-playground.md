@@ -22,7 +22,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="cfu-playground" %}
+{% include dependency-graph.html slug="dependencies" subset="cfu-playground" %}
 
 # CFU-Playground
 

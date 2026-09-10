@@ -10,7 +10,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="osv-scalibr" %}
+{% include dependency-graph.html slug="dependencies" subset="osv-scalibr" %}
 
 # osv-scalibr
 

@@ -36,7 +36,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libvirt" %}
+{% include dependency-graph.html slug="dependencies" subset="libvirt" %}
 
 # libvirt
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

@@ -23,7 +23,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="spiffe-spire" %}
+{% include dependency-graph.html slug="dependencies" subset="spiffe-spire" %}
 
 # SPIFFE / SPIRE
 

@@ -6,7 +6,7 @@ categories:
   - perfmon
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libtraceevent" %}
+{% include dependency-graph.html slug="dependencies" subset="libtraceevent" %}
 
 # libtraceevent
 

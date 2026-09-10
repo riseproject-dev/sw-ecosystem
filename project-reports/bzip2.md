@@ -6,7 +6,7 @@ categories:
   - libraries
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="bzip2" %}
+{% include dependency-graph.html slug="dependencies" subset="bzip2" %}
 
 # bzip2
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

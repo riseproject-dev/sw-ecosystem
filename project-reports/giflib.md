@@ -6,7 +6,7 @@ categories:
   - android
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="giflib" %}
+{% include dependency-graph.html slug="dependencies" subset="giflib" %}
 
 # giflib
 

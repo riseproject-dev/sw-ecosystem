@@ -30,7 +30,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="docker" %}
+{% include dependency-graph.html slug="dependencies" subset="docker" %}
 
 # Docker
 

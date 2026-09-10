@@ -56,7 +56,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="trillian" %}
+{% include dependency-graph.html slug="dependencies" subset="trillian" %}
 
 # trillian
 

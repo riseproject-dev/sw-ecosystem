@@ -26,7 +26,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="eclipse-ditto" %}
+{% include dependency-graph.html slug="dependencies" subset="eclipse-ditto" %}
 
 # Eclipse Ditto
 

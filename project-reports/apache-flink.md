@@ -60,7 +60,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="apache-flink" %}
+{% include dependency-graph.html slug="dependencies" subset="apache-flink" %}
 
 # Apache Flink
 

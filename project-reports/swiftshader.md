@@ -28,7 +28,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="swiftshader" %}
+{% include dependency-graph.html slug="dependencies" subset="swiftshader" %}
 
 # SwiftShader
 

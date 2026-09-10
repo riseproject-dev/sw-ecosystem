@@ -11,7 +11,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="mosquitto" %}
+{% include dependency-graph.html slug="dependencies" subset="mosquitto" %}
 
 # Mosquitto
 

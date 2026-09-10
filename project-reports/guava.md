@@ -7,7 +7,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="guava" %}
+{% include dependency-graph.html slug="dependencies" subset="guava" %}
 
 # guava
 

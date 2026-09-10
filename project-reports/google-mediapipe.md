@@ -50,7 +50,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="google-mediapipe" %}
+{% include dependency-graph.html slug="dependencies" subset="google-mediapipe" %}
 
 # Google MediaPipe
 

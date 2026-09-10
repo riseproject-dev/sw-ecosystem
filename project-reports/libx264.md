@@ -9,7 +9,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libx264" %}
+{% include dependency-graph.html slug="dependencies" subset="libx264" %}
 
 # libx264
 

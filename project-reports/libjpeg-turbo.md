@@ -16,7 +16,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libjpeg-turbo" %}
+{% include dependency-graph.html slug="dependencies" subset="libjpeg-turbo" %}
 
 # libjpeg-turbo
 

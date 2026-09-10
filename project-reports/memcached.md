@@ -31,7 +31,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="memcached" %}
+{% include dependency-graph.html slug="dependencies" subset="memcached" %}
 
 # Memcached
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

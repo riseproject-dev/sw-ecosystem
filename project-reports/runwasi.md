@@ -23,7 +23,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="runwasi" %}
+{% include dependency-graph.html slug="dependencies" subset="runwasi" %}
 
 # runwasi
 

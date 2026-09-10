@@ -47,7 +47,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="ros-2" %}
+{% include dependency-graph.html slug="dependencies" subset="ros-2" %}
 
 # ROS 2
 

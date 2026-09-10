@@ -26,7 +26,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="helm" %}
+{% include dependency-graph.html slug="dependencies" subset="helm" %}
 
 # Helm
 

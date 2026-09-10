@@ -23,7 +23,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="interlink" %}
+{% include dependency-graph.html slug="dependencies" subset="interlink" %}
 
 # Interlink
 

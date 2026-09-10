@@ -132,7 +132,7 @@ dependencies:
     criticality: [critical | optional]
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="[SLUG]" %}
+{% include dependency-graph.html slug="dependencies" subset="[SLUG]" %}
 
 # [PROJECT_NAME]
 

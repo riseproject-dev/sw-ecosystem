@@ -14,7 +14,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="wireguard" %}
+{% include dependency-graph.html slug="dependencies" subset="wireguard" %}
 
 # WireGuard
 

@@ -23,7 +23,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="akri" %}
+{% include dependency-graph.html slug="dependencies" subset="akri" %}
 
 # Akri
 

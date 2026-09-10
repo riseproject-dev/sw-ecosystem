@@ -7,7 +7,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="cpu_features" %}
+{% include dependency-graph.html slug="dependencies" subset="cpu_features" %}
 
 # cpu_features
 

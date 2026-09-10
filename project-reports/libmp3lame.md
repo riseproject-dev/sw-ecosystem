@@ -18,7 +18,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libmp3lame" %}
+{% include dependency-graph.html slug="dependencies" subset="libmp3lame" %}
 
 # libmp3lame
 

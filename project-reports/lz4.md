@@ -10,7 +10,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="lz4" %}
+{% include dependency-graph.html slug="dependencies" subset="lz4" %}
 
 # LZ4
 

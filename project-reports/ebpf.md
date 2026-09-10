@@ -27,7 +27,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="ebpf" %}
+{% include dependency-graph.html slug="dependencies" subset="ebpf" %}
 
 # eBPF
 

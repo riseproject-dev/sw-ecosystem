@@ -28,7 +28,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="open-vswitch" %}
+{% include dependency-graph.html slug="dependencies" subset="open-vswitch" %}
 
 # Open vSwitch
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

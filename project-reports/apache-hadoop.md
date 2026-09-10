@@ -36,7 +36,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="apache-hadoop" %}
+{% include dependency-graph.html slug="dependencies" subset="apache-hadoop" %}
 
 # Apache Hadoop
 

@@ -27,7 +27,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="graalvm" %}
+{% include dependency-graph.html slug="dependencies" subset="graalvm" %}
 
 # GraalVM
 

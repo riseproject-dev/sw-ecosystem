@@ -10,7 +10,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libpfm4" %}
+{% include dependency-graph.html slug="dependencies" subset="libpfm4" %}
 
 # libpfm4
 

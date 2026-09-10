@@ -20,7 +20,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libbpf" %}
+{% include dependency-graph.html slug="dependencies" subset="libbpf" %}
 
 # libbpf
 

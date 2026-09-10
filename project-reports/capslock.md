@@ -10,7 +10,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="capslock" %}
+{% include dependency-graph.html slug="dependencies" subset="capslock" %}
 
 # capslock
 

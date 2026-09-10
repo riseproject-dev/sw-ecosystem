@@ -25,7 +25,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="certificate-transparency-go" %}
+{% include dependency-graph.html slug="dependencies" subset="certificate-transparency-go" %}
 
 # certificate-transparency-go
 

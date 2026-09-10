@@ -6,7 +6,7 @@ categories:
   - libraries
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="brotli" %}
+{% include dependency-graph.html slug="dependencies" subset="brotli" %}
 
 # brotli
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

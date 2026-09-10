@@ -4,7 +4,7 @@ parent: Project Reports
 color: red
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="paddlepaddle-lite" %}
+{% include dependency-graph.html slug="dependencies" subset="paddlepaddle-lite" %}
 
 # PaddlePaddle Lite
 

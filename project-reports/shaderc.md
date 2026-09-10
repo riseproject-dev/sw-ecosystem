@@ -22,7 +22,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="shaderc" %}
+{% include dependency-graph.html slug="dependencies" subset="shaderc" %}
 
 # shaderc
 

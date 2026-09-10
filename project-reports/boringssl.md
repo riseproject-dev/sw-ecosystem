@@ -24,7 +24,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="boringssl" %}
+{% include dependency-graph.html slug="dependencies" subset="boringssl" %}
 
 # BoringSSL
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

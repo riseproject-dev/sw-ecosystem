@@ -46,7 +46,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="security-research" %}
+{% include dependency-graph.html slug="dependencies" subset="security-research" %}
 
 # security-research
 

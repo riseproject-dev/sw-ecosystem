@@ -28,7 +28,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="crosvm" %}
+{% include dependency-graph.html slug="dependencies" subset="crosvm" %}
 
 # crosvm
 

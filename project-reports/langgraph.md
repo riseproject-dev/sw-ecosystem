@@ -29,7 +29,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="langgraph" %}
+{% include dependency-graph.html slug="dependencies" subset="langgraph" %}
 
 # LangGraph
 

@@ -44,7 +44,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="python" %}
+{% include dependency-graph.html slug="dependencies" subset="python" %}
 
 # Python
 

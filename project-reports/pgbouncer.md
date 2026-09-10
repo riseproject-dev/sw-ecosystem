@@ -8,7 +8,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="pgbouncer" %}
+{% include dependency-graph.html slug="dependencies" subset="pgbouncer" %}
 
 # PgBouncer
 

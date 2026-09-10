@@ -26,7 +26,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="falco" %}
+{% include dependency-graph.html slug="dependencies" subset="falco" %}
 
 # Falco
 

@@ -29,7 +29,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="executorch" %}
+{% include dependency-graph.html slug="dependencies" subset="executorch" %}
 
 # executorch
 

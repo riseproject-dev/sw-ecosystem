@@ -44,7 +44,7 @@ dependencies:
     criticality: optional
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="rocksdb" %}
+{% include dependency-graph.html slug="dependencies" subset="rocksdb" %}
 
 # RocksDB
 

@@ -14,7 +14,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="yocto-project" %}
+{% include dependency-graph.html slug="dependencies" subset="yocto-project" %}
 
 # Yocto Project
 

@@ -9,7 +9,7 @@ dependencies:
     criticality: critical
 ---
 
-{% include dependency-graph.html slug="dependencies" focus="libgcrypt" %}
+{% include dependency-graph.html slug="dependencies" subset="libgcrypt" %}
 
 # libgcrypt
 
