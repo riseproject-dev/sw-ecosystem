@@ -3,7 +3,43 @@ title: RabbitMQ
 parent: Project Reports
 categories:
   - iaas
+dependencies:
+  - name: Erlang/OTP
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: critical
+  - name: Elixir
+    relation: build-dependency
+    criticality: optional
+  - name: Ra
+    relation: build-dependency
+    criticality: critical
+  - name: Khepri
+    relation: build-dependency
+    criticality: critical
+  - name: Osiris
+    relation: build-dependency
+    criticality: optional
+  - name: Cowboy
+    relation: build-dependency
+    criticality: optional
+  - name: Ranch
+    relation: build-dependency
+    criticality: optional
+  - name: jose
+    relation: build-dependency
+    criticality: optional
+  - name: lz4-java
+    relation: build-dependency
+    criticality: optional
+  - name: snappy-java
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="rabbitmq" %}
 
 # RabbitMQ
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

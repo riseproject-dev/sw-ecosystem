@@ -2,7 +2,25 @@
 title: AppArmor
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Linux kernel
+    relation: build-dependency
+    criticality: critical
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: Linux-PAM
+    relation: runtime-dependency
+    criticality: optional
+  - name: libaudit
+    relation: runtime-dependency
+    criticality: optional
+  - name: Python
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="apparmor" %}
 
 # AppArmor
 

@@ -1,9 +1,28 @@
 ---
 title: FlatBuffers
 parent: Project Reports
+color: yellow
 categories:
   - libraries
+dependencies:
+  - name: gRPC
+    relation: test-dependency
+    criticality: optional
+  - name: Abseil
+    relation: test-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: test-dependency
+    criticality: optional
+  - name: bitflags
+    relation: runtime-dependency
+    criticality: critical
+  - name: serde
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="flatbuffers" %}
 
 # FlatBuffers
 

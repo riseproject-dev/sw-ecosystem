@@ -1,9 +1,12 @@
 ---
 title: zlib
 parent: Project Reports
+color: blue
 categories:
   - libraries
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="zlib" %}
 
 # zlib
 

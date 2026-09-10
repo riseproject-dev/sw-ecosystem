@@ -1,7 +1,32 @@
 ---
 title: Helm
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: Go
+    relation: runtime-dependency
+    criticality: critical
+  - name: go-crypto
+    relation: runtime-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
+  - name: wazero
+    relation: runtime-dependency
+    criticality: optional
+  - name: Kubernetes
+    relation: build-dependency
+    criticality: critical
+  - name: oras-go
+    relation: build-dependency
+    criticality: optional
+  - name: distribution/distribution
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="helm" %}
 
 # Helm
 

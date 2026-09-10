@@ -1,9 +1,43 @@
 ---
 title: Envoy
 parent: Project Reports
+color: grey
 categories:
   - containers
+dependencies:
+  - name: BoringSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: LuaJIT
+    relation: runtime-dependency
+    criticality: optional
+  - name: V8
+    relation: runtime-dependency
+    criticality: optional
+  - name: re2
+    relation: runtime-dependency
+    criticality: critical
+  - name: simdutf
+    relation: runtime-dependency
+    criticality: optional
+  - name: Highway
+    relation: runtime-dependency
+    criticality: optional
+  - name: Abseil
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC
+    relation: runtime-dependency
+    criticality: critical
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="envoy" %}
 
 # Envoy
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

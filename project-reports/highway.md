@@ -1,9 +1,28 @@
 ---
 title: Highway
 parent: Project Reports
+color: grey
 categories:
   - libraries
+dependencies:
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: QEMU
+    relation: test-dependency
+    criticality: optional
+  - name: mold
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="highway" %}
 
 # Highway
 

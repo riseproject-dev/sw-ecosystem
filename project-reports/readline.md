@@ -1,9 +1,22 @@
 ---
 title: readline
 parent: Project Reports
+color: grey
 categories:
   - libraries
+dependencies:
+  - name: ncurses
+    relation: runtime-dependency
+    criticality: critical
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: texinfo
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="readline" %}
 
 # readline
 

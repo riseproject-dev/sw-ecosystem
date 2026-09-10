@@ -1,7 +1,28 @@
 ---
 title: alioth
 parent: Project Reports
+dependencies:
+  - name: libc (Rust crate)
+    relation: runtime-dependency
+    criticality: critical
+  - name: io-uring
+    relation: runtime-dependency
+    criticality: critical
+  - name: zerocopy
+    relation: runtime-dependency
+    criticality: optional
+  - name: mio
+    relation: runtime-dependency
+    criticality: optional
+  - name: parking_lot
+    relation: runtime-dependency
+    criticality: optional
+  - name: miniz_oxide
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="alioth" %}
 
 # alioth
 

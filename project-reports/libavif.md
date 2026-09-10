@@ -4,7 +4,31 @@ parent: Project Reports
 categories:
   - multimedia
   - browser
+dependencies:
+  - name: libaom
+    relation: build-dependency
+    criticality: optional
+  - name: dav1d
+    relation: build-dependency
+    criticality: optional
+  - name: rav1e
+    relation: build-dependency
+    criticality: optional
+  - name: SVT-AV1
+    relation: build-dependency
+    criticality: optional
+  - name: libgav1
+    relation: build-dependency
+    criticality: optional
+  - name: libyuv
+    relation: build-dependency
+    criticality: optional
+  - name: libwebp
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libavif" %}
 
 # libavif
 

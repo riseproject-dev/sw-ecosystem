@@ -1,7 +1,20 @@
 ---
 title: googletest
 parent: Project Reports
+color: grey
+dependencies:
+  - name: glibc
+    relation: build-dependency
+    criticality: critical
+  - name: Abseil
+    relation: build-dependency
+    criticality: optional
+  - name: re2
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="googletest" %}
 
 # googletest
 

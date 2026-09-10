@@ -2,7 +2,40 @@
 title: Valkey
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: jemalloc
+    relation: build-dependency
+    criticality: critical
+  - name: Lua
+    relation: build-dependency
+    criticality: critical
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: systemd
+    relation: runtime-dependency
+    criticality: optional
+  - name: rdma-core
+    relation: runtime-dependency
+    criticality: optional
+  - name: libvalkey
+    relation: build-dependency
+    criticality: critical
+  - name: linenoise
+    relation: build-dependency
+    criticality: optional
+  - name: HdrHistogram_c
+    relation: build-dependency
+    criticality: optional
+  - name: fpconv
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="valkey" %}
 
 # Valkey
 

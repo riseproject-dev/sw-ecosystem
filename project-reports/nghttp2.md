@@ -3,7 +3,49 @@ title: nghttp2
 parent: Project Reports
 categories:
   - libraries
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: wolfSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: ngtcp2
+    relation: build-dependency
+    criticality: optional
+  - name: nghttp3
+    relation: build-dependency
+    criticality: optional
+  - name: brotli
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
+  - name: libevent
+    relation: build-dependency
+    criticality: optional
+  - name: c-ares
+    relation: build-dependency
+    criticality: optional
+  - name: libbpf
+    relation: build-dependency
+    criticality: optional
+  - name: libxml2
+    relation: build-dependency
+    criticality: optional
+  - name: Jansson
+    relation: build-dependency
+    criticality: optional
+  - name: systemd
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="nghttp2" %}
 
 # nghttp2
 

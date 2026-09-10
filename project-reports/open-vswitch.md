@@ -4,7 +4,31 @@ parent: Project Reports
 categories:
   - containers
   - iaas
+dependencies:
+  - name: DPDK
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: runtime-dependency
+    criticality: optional
+  - name: libbpf
+    relation: build-dependency
+    criticality: optional
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: optional
+  - name: libcap-ng
+    relation: runtime-dependency
+    criticality: optional
+  - name: libunbound
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="open-vswitch" %}
 
 # Open vSwitch
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

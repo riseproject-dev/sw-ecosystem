@@ -1,9 +1,46 @@
 ---
 title: CRIU
 parent: Project Reports
+color: grey
 categories:
   - containers
+dependencies:
+  - name: protobuf-c
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: libnl
+    relation: runtime-dependency
+    criticality: critical
+  - name: libnet
+    relation: runtime-dependency
+    criticality: critical
+  - name: libcap
+    relation: build-dependency
+    criticality: critical
+  - name: UUID library
+    relation: runtime-dependency
+    criticality: critical
+  - name: GnuTLS
+    relation: runtime-dependency
+    criticality: optional
+  - name: libnftables
+    relation: runtime-dependency
+    criticality: optional
+  - name: libbpf
+    relation: build-dependency
+    criticality: optional
+  - name: libselinux
+    relation: build-dependency
+    criticality: optional
+  - name: libdrm
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="criu" %}
 
 # CRIU
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

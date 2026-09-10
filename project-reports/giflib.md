@@ -6,6 +6,8 @@ categories:
   - android
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="giflib" %}
+
 # giflib
 
 **Author:** Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;<br/>

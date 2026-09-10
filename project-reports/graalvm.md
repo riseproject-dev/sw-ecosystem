@@ -3,7 +3,31 @@ title: GraalVM
 parent: Project Reports
 categories:
   - runtimes
+dependencies:
+  - name: OpenJDK
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: libffi
+    relation: runtime-dependency
+    criticality: optional
+  - name: musl
+    relation: build-dependency
+    criticality: optional
+  - name: glibc
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: xz
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="graalvm" %}
 
 # GraalVM
 

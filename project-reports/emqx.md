@@ -2,7 +2,22 @@
 title: EMQX
 parent: Project Reports
 color: orange
+dependencies:
+  - name: RocksDB
+    relation: runtime-dependency
+    criticality: critical
+  - name: msquic
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: jq
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="emqx" %}
 
 # EMQX
 

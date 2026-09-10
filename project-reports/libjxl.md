@@ -4,7 +4,40 @@ parent: Project Reports
 categories:
   - multimedia
   - browser
+dependencies:
+  - name: Highway
+    relation: build-dependency
+    criticality: critical
+  - name: brotli
+    relation: build-dependency
+    criticality: optional
+  - name: lcms2
+    relation: build-dependency
+    criticality: optional
+  - name: skcms
+    relation: build-dependency
+    criticality: optional
+  - name: libpng
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: sjpeg
+    relation: build-dependency
+    criticality: optional
+  - name: OpenEXR
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libjxl" %}
 
 # libjxl
 

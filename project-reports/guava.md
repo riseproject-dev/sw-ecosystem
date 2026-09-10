@@ -1,7 +1,13 @@
 ---
 title: guava
 parent: Project Reports
+dependencies:
+  - name: OpenJDK
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="guava" %}
 
 # guava
 

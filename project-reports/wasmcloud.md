@@ -2,7 +2,31 @@
 title: wasmCloud
 parent: Project Reports
 color: orange
+dependencies:
+  - name: wasmtime
+    relation: build-dependency
+    criticality: critical
+  - name: aws-lc-rs
+    relation: build-dependency
+    criticality: critical
+  - name: rustls
+    relation: build-dependency
+    criticality: critical
+  - name: sha2
+    relation: build-dependency
+    criticality: optional
+  - name: flate2
+    relation: build-dependency
+    criticality: optional
+  - name: async-nats
+    relation: build-dependency
+    criticality: critical
+  - name: tokio
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="wasmcloud" %}
 
 # wasmCloud
 

@@ -1,7 +1,22 @@
 ---
 title: google-authenticator-libpam
 parent: Project Reports
+dependencies:
+  - name: Linux-PAM
+    relation: build-dependency
+    criticality: critical
+  - name: glibc
+    relation: build-dependency
+    criticality: critical
+  - name: libqrencode
+    relation: build-dependency
+    criticality: optional
+  - name: libselinux
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="google-authenticator-libpam" %}
 
 # google-authenticator-libpam
 

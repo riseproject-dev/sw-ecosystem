@@ -1,7 +1,13 @@
 ---
 title: go-jsonnet
 parent: Project Reports
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="go-jsonnet" %}
 
 # go-jsonnet
 

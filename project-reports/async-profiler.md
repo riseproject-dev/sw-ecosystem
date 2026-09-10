@@ -3,7 +3,22 @@ title: async-profiler
 parent: Project Reports
 categories:
   - perfmon
+dependencies:
+  - name: linux-perf
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenJDK
+    relation: runtime-dependency
+    criticality: critical
+  - name: GraalVM
+    relation: build-dependency
+    criticality: optional
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="async-profiler" %}
 
 # async-profiler
 

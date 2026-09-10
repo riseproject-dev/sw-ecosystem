@@ -1,10 +1,68 @@
 ---
 title: QEMU
 parent: Project Reports
+color: grey
 categories:
   - runtimes
   - iaas
+dependencies:
+  - name: GLib
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: pixman
+    relation: build-dependency
+    criticality: critical
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: capstone
+    relation: build-dependency
+    criticality: optional
+  - name: GnuTLS
+    relation: build-dependency
+    criticality: optional
+  - name: nettle
+    relation: build-dependency
+    criticality: optional
+  - name: liburing
+    relation: build-dependency
+    criticality: optional
+  - name: libseccomp
+    relation: build-dependency
+    criticality: critical
+  - name: libslirp
+    relation: build-dependency
+    criticality: optional
+  - name: libcurl
+    relation: build-dependency
+    criticality: optional
+  - name: libpng
+    relation: build-dependency
+    criticality: optional
+  - name: snappy
+    relation: build-dependency
+    criticality: optional
+  - name: virglrenderer
+    relation: build-dependency
+    criticality: optional
+  - name: spice-server
+    relation: build-dependency
+    criticality: optional
+  - name: libusb
+    relation: build-dependency
+    criticality: optional
+  - name: libssh
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSBI
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="qemu" %}
 
 # QEMU
 

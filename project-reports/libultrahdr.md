@@ -1,7 +1,22 @@
 ---
 title: libultrahdr
 parent: Project Reports
+dependencies:
+  - name: libjpeg-turbo
+    relation: build-dependency
+    criticality: critical
+  - name: libheif
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libultrahdr" %}
 
 # libultrahdr
 

@@ -2,7 +2,61 @@
 title: MNN
 parent: Project Reports
 color: orange
+dependencies:
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: oneDNN
+    relation: build-dependency
+    criticality: optional
+  - name: Eigen
+    relation: build-dependency
+    criticality: optional
+  - name: SLEEF
+    relation: build-dependency
+    criticality: optional
+  - name: xxHash
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: snappy
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
+  - name: Highway
+    relation: build-dependency
+    criticality: optional
+  - name: XNNPACK
+    relation: build-dependency
+    criticality: optional
+  - name: cpuinfo
+    relation: build-dependency
+    criticality: optional
+  - name: ruy
+    relation: build-dependency
+    criticality: optional
+  - name: NNPACK
+    relation: build-dependency
+    criticality: optional
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mnn" %}
 
 # MNN
 

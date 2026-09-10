@@ -1,7 +1,16 @@
 ---
 title: brunsli
 parent: Project Reports
+dependencies:
+  - name: brotli
+    relation: build-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="brunsli" %}
 
 # brunsli
 

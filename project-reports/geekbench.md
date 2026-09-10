@@ -5,6 +5,8 @@ categories:
   - benchmarks
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="geekbench" %}
+
 # Geekbench
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

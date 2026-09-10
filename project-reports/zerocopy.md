@@ -2,7 +2,13 @@
 title: zerocopy
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: Miri
+    relation: test-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="zerocopy" %}
 
 # zerocopy
 

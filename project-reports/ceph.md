@@ -3,7 +3,40 @@ title: Ceph
 parent: Project Reports
 categories:
   - software-defined-storage
+dependencies:
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: critical
+  - name: Boost
+    relation: build-dependency
+    criticality: critical
+  - name: RocksDB
+    relation: build-dependency
+    criticality: critical
+  - name: liburing
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: snappy
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: ISA-L
+    relation: build-dependency
+    criticality: optional
+  - name: SPDK
+    relation: build-dependency
+    criticality: optional
+  - name: DPDK
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="ceph" %}
 
 # Ceph
 

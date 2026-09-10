@@ -3,7 +3,25 @@ title: oneDAL
 parent: Project Reports
 categories:
   - libraries
+dependencies:
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: critical
+  - name: oneTBB
+    relation: build-dependency
+    criticality: critical
+  - name: OpenMP
+    relation: build-dependency
+    criticality: optional
+  - name: oneDPL
+    relation: build-dependency
+    criticality: optional
+  - name: Catch2
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="onedal" %}
 
 # oneDAL
 

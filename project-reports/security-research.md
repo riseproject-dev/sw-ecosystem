@@ -1,7 +1,52 @@
 ---
 title: security-research
 parent: Project Reports
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: nsjail
+    relation: runtime-dependency
+    criticality: optional
+  - name: kafel
+    relation: build-dependency
+    criticality: optional
+  - name: minijail
+    relation: runtime-dependency
+    criticality: optional
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: optional
+  - name: libmnl
+    relation: build-dependency
+    criticality: optional
+  - name: libnftnl
+    relation: build-dependency
+    criticality: optional
+  - name: QEMU
+    relation: runtime-dependency
+    criticality: optional
+  - name: libbpf
+    relation: build-dependency
+    criticality: optional
+  - name: sanitizers
+    relation: test-dependency
+    criticality: optional
+  - name: gvisor
+    relation: runtime-dependency
+    criticality: optional
+  - name: Chromium
+    relation: runtime-dependency
+    criticality: critical
+  - name: Kubernetes
+    relation: runtime-dependency
+    criticality: optional
+  - name: Linux kernel
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="security-research" %}
 
 # security-research
 

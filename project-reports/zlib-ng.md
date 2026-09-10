@@ -1,9 +1,19 @@
 ---
 title: zlib-ng
 parent: Project Reports
+color: blue
 categories:
   - libraries
+dependencies:
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="zlib-ng" %}
 
 # zlib-ng
 

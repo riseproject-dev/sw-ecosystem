@@ -3,6 +3,8 @@ title: multichase
 parent: Project Reports
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="multichase" %}
+
 # multichase
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

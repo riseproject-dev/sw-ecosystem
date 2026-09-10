@@ -1,9 +1,52 @@
 ---
 title: Traefik
 parent: Project Reports
+color: grey
 categories:
   - containers
+dependencies:
+  - name: bytedance/sonic
+    relation: build-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
+  - name: andybalholm/brotli
+    relation: build-dependency
+    criticality: optional
+  - name: quic-go/quic-go
+    relation: build-dependency
+    criticality: optional
+  - name: gRPC
+    relation: build-dependency
+    criticality: optional
+  - name: OpenTelemetry
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: critical
+  - name: go-jose/go-jose
+    relation: build-dependency
+    criticality: optional
+  - name: wazero
+    relation: build-dependency
+    criticality: optional
+  - name: ebitengine/purego
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: optional
+  - name: SPIFFE / SPIRE
+    relation: build-dependency
+    criticality: optional
+  - name: tjfoc/gmsm
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="traefik" %}
 
 # Traefik
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

@@ -2,7 +2,49 @@
 title: crun
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: json-c
+    relation: runtime-dependency
+    criticality: critical
+  - name: libcap
+    relation: runtime-dependency
+    criticality: critical
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: critical
+  - name: systemd
+    relation: runtime-dependency
+    criticality: optional
+  - name: BLAKE3
+    relation: build-dependency
+    criticality: optional
+  - name: wasmer
+    relation: build-dependency
+    criticality: optional
+  - name: wasmtime
+    relation: build-dependency
+    criticality: optional
+  - name: WasmEdge
+    relation: build-dependency
+    criticality: optional
+  - name: WAMR
+    relation: build-dependency
+    criticality: optional
+  - name: Mono
+    relation: build-dependency
+    criticality: optional
+  - name: libkrun
+    relation: build-dependency
+    criticality: optional
+  - name: CRIU
+    relation: runtime-dependency
+    criticality: optional
+  - name: libocispec
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="crun" %}
 
 # crun
 

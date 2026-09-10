@@ -1,7 +1,19 @@
 ---
 title: crc32c
 parent: Project Reports
+dependencies:
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
+  - name: glog
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="crc32c" %}
 
 # crc32c
 

@@ -4,7 +4,19 @@ parent: Project Reports
 categories:
   - multimedia
   - android
+dependencies:
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: libspng
+    relation: build-dependency
+    criticality: optional
+  - name: JNA
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libjpeg-turbo" %}
 
 # libjpeg-turbo
 

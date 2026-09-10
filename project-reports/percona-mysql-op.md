@@ -1,7 +1,19 @@
 ---
 title: Percona MySQL-op
 parent: Project Reports
+dependencies:
+  - name: Kubernetes
+    relation: runtime-dependency
+    criticality: critical
+  - name: Percona XtraDB Cluster
+    relation: runtime-dependency
+    criticality: critical
+  - name: cert-manager
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="percona-mysql-op" %}
 
 # Percona MySQL-op
 

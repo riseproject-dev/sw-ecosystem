@@ -2,7 +2,31 @@
 title: Kata Containers
 parent: Project Reports
 color: blue
+dependencies:
+  - name: QEMU
+    relation: runtime-dependency
+    criticality: critical
+  - name: Cloud Hypervisor
+    relation: runtime-dependency
+    criticality: optional
+  - name: containerd
+    relation: build-dependency
+    criticality: optional
+  - name: runc
+    relation: build-dependency
+    criticality: optional
+  - name: CRI-O
+    relation: build-dependency
+    criticality: optional
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: optional
+  - name: virtiofsd
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="kata-containers" %}
 
 # Kata Containers
 

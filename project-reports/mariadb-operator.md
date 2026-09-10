@@ -1,7 +1,35 @@
 ---
 title: mariadb-operator
 parent: Project Reports
+color: orange
+dependencies:
+  - name: Kubernetes
+    relation: build-dependency
+    criticality: critical
+  - name: controller-runtime
+    relation: build-dependency
+    criticality: critical
+  - name: cert-manager
+    relation: build-dependency
+    criticality: critical
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: critical
+  - name: klauspost/cpuid
+    relation: build-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
+  - name: cespare/xxhash
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mariadb-operator" %}
 
 # mariadb-operator
 

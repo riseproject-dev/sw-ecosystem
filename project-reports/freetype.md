@@ -3,7 +3,25 @@ title: FreeType
 parent: Project Reports
 categories:
   - libraries
+dependencies:
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: libpng
+    relation: build-dependency
+    criticality: optional
+  - name: bzip2
+    relation: build-dependency
+    criticality: optional
+  - name: brotli
+    relation: build-dependency
+    criticality: optional
+  - name: HarfBuzz
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="freetype" %}
 
 # FreeType
 

@@ -4,7 +4,73 @@ parent: Project Reports
 categories:
   - libraries
   - browser
+dependencies:
+  - name: Highway
+    relation: build-dependency
+    criticality: critical
+  - name: HarfBuzz
+    relation: runtime-dependency
+    criticality: critical
+  - name: FreeType
+    relation: runtime-dependency
+    criticality: critical
+  - name: libjpeg-turbo
+    relation: runtime-dependency
+    criticality: optional
+  - name: libwebp
+    relation: runtime-dependency
+    criticality: optional
+  - name: libavif
+    relation: runtime-dependency
+    criticality: optional
+  - name: libjxl
+    relation: runtime-dependency
+    criticality: optional
+  - name: ICU
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: Abseil
+    relation: runtime-dependency
+    criticality: critical
+  - name: brotli
+    relation: build-dependency
+    criticality: optional
+  - name: expat
+    relation: build-dependency
+    criticality: optional
+  - name: PartitionAlloc
+    relation: runtime-dependency
+    criticality: critical
+  - name: Vulkan
+    relation: runtime-dependency
+    criticality: critical
+  - name: VulkanMemoryAllocator
+    relation: build-dependency
+    criticality: optional
+  - name: dawn
+    relation: runtime-dependency
+    criticality: optional
+  - name: SPIRV-Tools
+    relation: build-dependency
+    criticality: optional
+  - name: SPIRV-Cross
+    relation: build-dependency
+    criticality: optional
+  - name: wuffs
+    relation: build-dependency
+    criticality: optional
+  - name: angle
+    relation: runtime-dependency
+    criticality: optional
+  - name: SwiftShader
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="skia" %}
 
 # Skia
 

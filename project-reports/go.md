@@ -1,10 +1,29 @@
 ---
 title: Go
 parent: Project Reports
+color: grey
 categories:
   - runtimes
   - containers
+dependencies:
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: optional
+  - name: glibc
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
+  - name: BoringSSL
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="go" %}
 
 # Go
 

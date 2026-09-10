@@ -3,7 +3,25 @@ title: BuildKit
 parent: Project Reports
 categories:
   - containers
+dependencies:
+  - name: containerd
+    relation: runtime-dependency
+    criticality: critical
+  - name: runc
+    relation: runtime-dependency
+    criticality: critical
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
+  - name: bbolt
+    relation: build-dependency
+    criticality: optional
+  - name: xxHash
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="buildkit" %}
 
 # BuildKit
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

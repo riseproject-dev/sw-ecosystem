@@ -1,7 +1,49 @@
 ---
 title: googlesql
 parent: Project Reports
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC
+    relation: build-dependency
+    criticality: optional
+  - name: re2
+    relation: build-dependency
+    criticality: critical
+  - name: BoringSSL
+    relation: build-dependency
+    criticality: optional
+  - name: ICU
+    relation: build-dependency
+    criticality: critical
+  - name: riegeli
+    relation: build-dependency
+    criticality: optional
+  - name: farmhash
+    relation: build-dependency
+    criticality: optional
+  - name: differential-privacy
+    relation: build-dependency
+    criticality: optional
+  - name: nlohmann/json
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
+  - name: Bazel
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="googlesql" %}
 
 # googlesql
 

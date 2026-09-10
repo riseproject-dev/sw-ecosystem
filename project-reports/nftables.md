@@ -1,7 +1,19 @@
 ---
 title: nftables
 parent: Project Reports
+dependencies:
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: critical
+  - name: vishvananda/netlink
+    relation: build-dependency
+    criticality: optional
+  - name: vishvananda/netns
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="nftables" %}
 
 # nftables
 

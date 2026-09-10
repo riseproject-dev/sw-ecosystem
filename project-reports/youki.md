@@ -2,7 +2,34 @@
 title: youki
 parent: Project Reports
 color: orange
+dependencies:
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: optional
+  - name: CRIU
+    relation: runtime-dependency
+    criticality: critical
+  - name: libbpf
+    relation: runtime-dependency
+    criticality: optional
+  - name: rbpf
+    relation: runtime-dependency
+    criticality: optional
+  - name: wasmtime
+    relation: runtime-dependency
+    criticality: critical
+  - name: wasmer
+    relation: runtime-dependency
+    criticality: critical
+  - name: WasmEdge
+    relation: runtime-dependency
+    criticality: optional
+  - name: flate2
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="youki" %}
 
 # youki
 

@@ -2,7 +2,28 @@
 title: Interlink
 parent: Project Reports
 color: orange
+dependencies:
+  - name: containerd
+    relation: runtime-dependency
+    criticality: optional
+  - name: runc
+    relation: runtime-dependency
+    criticality: optional
+  - name: Docker
+    relation: runtime-dependency
+    criticality: optional
+  - name: Kubernetes
+    relation: runtime-dependency
+    criticality: critical
+  - name: virtual-kubelet
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC-Go
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="interlink" %}
 
 # Interlink
 

@@ -1,7 +1,56 @@
 ---
 title: mcrouter
 parent: Project Reports
+color: red
+dependencies:
+  - name: fbthrift
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: libevent
+    relation: runtime-dependency
+    criticality: critical
+  - name: Boost
+    relation: build-dependency
+    criticality: optional
+  - name: fmt
+    relation: build-dependency
+    criticality: optional
+  - name: glog
+    relation: build-dependency
+    criticality: optional
+  - name: gflags
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: LZ4
+    relation: runtime-dependency
+    criticality: optional
+  - name: snappy
+    relation: runtime-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
+  - name: libunwind
+    relation: build-dependency
+    criticality: optional
+  - name: xz
+    relation: runtime-dependency
+    criticality: optional
+  - name: bzip2
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mcrouter" %}
 
 # mcrouter
 

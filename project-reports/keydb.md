@@ -1,7 +1,50 @@
 ---
 title: KeyDB
 parent: Project Reports
+color: orange
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
+  - name: RocksDB
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: snappy
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: bzip2
+    relation: build-dependency
+    criticality: optional
+  - name: hiredis
+    relation: build-dependency
+    criticality: optional
+  - name: Lua
+    relation: build-dependency
+    criticality: optional
+  - name: concurrentqueue
+    relation: build-dependency
+    criticality: critical
+  - name: memkind
+    relation: build-dependency
+    criticality: optional
+  - name: HdrHistogram_c
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="keydb" %}
 
 # KeyDB
 

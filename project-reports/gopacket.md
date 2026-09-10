@@ -1,7 +1,28 @@
 ---
 title: gopacket
 parent: Project Reports
+dependencies:
+  - name: libpcap
+    relation: build-dependency
+    criticality: critical
+  - name: PF_RING
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
+  - name: golang.org/x/net
+    relation: runtime-dependency
+    criticality: optional
+  - name: vishvananda/netlink
+    relation: runtime-dependency
+    criticality: optional
+  - name: vishvananda/netns
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gopacket" %}
 
 # gopacket
 

@@ -4,7 +4,22 @@ parent: Project Reports
 categories:
   - multimedia
   - browser
+dependencies:
+  - name: libpng
+    relation: runtime-dependency
+    criticality: optional
+  - name: libjpeg-turbo
+    relation: runtime-dependency
+    criticality: optional
+  - name: giflib
+    relation: runtime-dependency
+    criticality: optional
+  - name: SDL2
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libwebp" %}
 
 # libwebp
 

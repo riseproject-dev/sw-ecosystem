@@ -4,6 +4,8 @@ parent: Project Reports
 color: orange
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="v4l2-(video4linux2)" %}
+
 # V4L2 (Video4Linux2)
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

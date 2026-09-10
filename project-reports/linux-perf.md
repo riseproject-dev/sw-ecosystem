@@ -3,7 +3,46 @@ title: linux-perf
 parent: Project Reports
 categories:
   - perfmon
+dependencies:
+  - name: elfutils
+    relation: runtime-dependency
+    criticality: critical
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: optional
+  - name: libbpf
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: Python
+    relation: build-dependency
+    criticality: optional
+  - name: libpfm4
+    relation: runtime-dependency
+    criticality: optional
+  - name: libtraceevent
+    relation: runtime-dependency
+    criticality: critical
+  - name: libnuma
+    relation: runtime-dependency
+    criticality: optional
+  - name: babeltrace
+    relation: runtime-dependency
+    criticality: optional
+  - name: GTK2
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="linux-perf" %}
 
 # linux-perf
 

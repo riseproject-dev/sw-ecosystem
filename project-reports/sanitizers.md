@@ -1,7 +1,19 @@
 ---
 title: sanitizers
 parent: Project Reports
+dependencies:
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: optional
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: libffi
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="sanitizers" %}
 
 # sanitizers
 

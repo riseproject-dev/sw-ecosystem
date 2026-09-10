@@ -2,7 +2,28 @@
 title: runwasi
 parent: Project Reports
 color: orange
+dependencies:
+  - name: wasmtime
+    relation: runtime-dependency
+    criticality: critical
+  - name: WasmEdge
+    relation: runtime-dependency
+    criticality: optional
+  - name: wasmer
+    relation: runtime-dependency
+    criticality: optional
+  - name: WAMR
+    relation: runtime-dependency
+    criticality: optional
+  - name: youki
+    relation: runtime-dependency
+    criticality: optional
+  - name: containerd
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="runwasi" %}
 
 # runwasi
 

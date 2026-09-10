@@ -3,7 +3,16 @@ title: libx265
 parent: Project Reports
 categories:
   - multimedia
+dependencies:
+  - name: libnuma
+    relation: runtime-dependency
+    criticality: optional
+  - name: libvmaf
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libx265" %}
 
 # libx265
 

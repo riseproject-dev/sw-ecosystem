@@ -3,7 +3,43 @@ title: Apache httpd
 parent: Project Reports
 categories:
   - webservers
+dependencies:
+  - name: APR
+    relation: runtime-dependency
+    criticality: critical
+  - name: APR-util
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: PCRE2
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: brotli
+    relation: runtime-dependency
+    criticality: optional
+  - name: nghttp2
+    relation: runtime-dependency
+    criticality: optional
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: optional
+  - name: libxml2
+    relation: runtime-dependency
+    criticality: optional
+  - name: Jansson
+    relation: runtime-dependency
+    criticality: optional
+  - name: Lua
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="apache-httpd" %}
 
 # Apache httpd
 

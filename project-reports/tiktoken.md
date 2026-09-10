@@ -1,7 +1,44 @@
 ---
 title: tiktoken
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: pyo3
+    relation: build-dependency
+    criticality: critical
+  - name: fancy-regex
+    relation: build-dependency
+    criticality: critical
+  - name: regex (Rust crate)
+    relation: build-dependency
+    criticality: optional
+  - name: rustc-hash
+    relation: build-dependency
+    criticality: optional
+  - name: bstr
+    relation: build-dependency
+    criticality: optional
+  - name: setuptools-rust
+    relation: build-dependency
+    criticality: optional
+  - name: regex (Python package)
+    relation: runtime-dependency
+    criticality: critical
+  - name: requests
+    relation: runtime-dependency
+    criticality: optional
+  - name: blobfile
+    relation: runtime-dependency
+    criticality: optional
+  - name: cibuildwheel
+    relation: build-dependency
+    criticality: optional
+  - name: manylinux
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="tiktoken" %}
 
 # tiktoken
 

@@ -1,7 +1,13 @@
 ---
 title: google-ctf
 parent: Project Reports
+dependencies:
+  - name: Unicorn Engine
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="google-ctf" %}
 
 # google-ctf
 

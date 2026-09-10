@@ -2,7 +2,28 @@
 title: Apache TVM / microTVM
 parent: Project Reports
 color: orange
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Apache TVM-FFI
+    relation: runtime-dependency
+    criticality: critical
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: XGBoost
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: optional
+  - name: oneDNN
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="apache-tvm-microtvm" %}
 
 # Apache TVM / microTVM
 

@@ -1,7 +1,31 @@
 ---
 title: llvm-propeller
 parent: Project Reports
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Abseil
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: elfutils
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
+  - name: perf_data_converter
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="llvm-propeller" %}
 
 # llvm-propeller
 

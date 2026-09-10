@@ -6,6 +6,8 @@ categories:
   - perfmon
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="libtraceevent" %}
+
 # libtraceevent
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

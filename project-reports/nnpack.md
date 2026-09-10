@@ -1,9 +1,25 @@
 ---
 title: NNPACK
 parent: Project Reports
+color: grey
 categories:
   - ai-ml
+dependencies:
+  - name: cpuinfo
+    relation: build-dependency
+    criticality: optional
+  - name: pthreadpool
+    relation: build-dependency
+    criticality: optional
+  - name: psimd
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="nnpack" %}
 
 # NNPACK
 

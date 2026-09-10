@@ -1,7 +1,40 @@
 ---
 title: amber
 parent: Project Reports
+dependencies:
+  - name: shaderc
+    relation: build-dependency
+    criticality: critical
+  - name: SPIRV-Tools
+    relation: build-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: lodepng
+    relation: runtime-dependency
+    criticality: optional
+  - name: SwiftShader
+    relation: runtime-dependency
+    criticality: optional
+  - name: Vulkan-Loader
+    relation: runtime-dependency
+    criticality: optional
+  - name: Vulkan-ValidationLayers
+    relation: runtime-dependency
+    criticality: optional
+  - name: DirectXShaderCompiler (DXC)
+    relation: build-dependency
+    criticality: optional
+  - name: clspv
+    relation: build-dependency
+    criticality: optional
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="amber" %}
 
 # amber
 

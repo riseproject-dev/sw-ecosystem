@@ -1,7 +1,14 @@
 ---
 title: go-sql-driver/mysql
 parent: Project Reports
+color: green
+dependencies:
+  - name: filippo.io/edwards25519
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="go-sql-driver-mysql" %}
 
 # go-sql-driver/mysql
 

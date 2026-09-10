@@ -1,7 +1,58 @@
 ---
 title: fleetbench
 parent: Project Reports
+dependencies:
+  - name: tcmalloc
+    relation: build-dependency
+    criticality: critical
+  - name: Highway
+    relation: build-dependency
+    criticality: optional
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC
+    relation: build-dependency
+    criticality: optional
+  - name: brotli
+    relation: build-dependency
+    criticality: optional
+  - name: snappy
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: benchmark
+    relation: build-dependency
+    criticality: critical
+  - name: re2
+    relation: build-dependency
+    criticality: optional
+  - name: ScaNN
+    relation: build-dependency
+    criticality: optional
+  - name: LLVM libc
+    relation: build-dependency
+    criticality: optional
+  - name: libpfm4
+    relation: runtime-dependency
+    criticality: optional
+  - name: libzip
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: libnuma
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="fleetbench" %}
 
 # fleetbench
 

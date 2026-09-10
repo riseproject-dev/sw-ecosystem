@@ -1,7 +1,28 @@
 ---
 title: CFU-Playground
 parent: Project Reports
+dependencies:
+  - name: ruy
+    relation: build-dependency
+    criticality: critical
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: critical
+  - name: TensorFlow Lite Micro (TFLM)
+    relation: build-dependency
+    criticality: critical
+  - name: gemmlowp
+    relation: build-dependency
+    criticality: optional
+  - name: Renode
+    relation: test-dependency
+    criticality: optional
+  - name: Verilator
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="cfu-playground" %}
 
 # CFU-Playground
 

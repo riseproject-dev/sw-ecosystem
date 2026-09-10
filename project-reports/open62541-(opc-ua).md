@@ -2,7 +2,22 @@
 title: open62541 (OPC UA)
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: Mbed TLS
+    relation: runtime-dependency
+    criticality: optional
+  - name: LibreSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="open62541-(opc-ua)" %}
 
 # open62541 (OPC UA)
 

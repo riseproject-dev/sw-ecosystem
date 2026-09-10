@@ -1,11 +1,63 @@
 ---
 title: PyTorch
 parent: Project Reports
+color: yellow
 categories:
   - python-packages
   - llm-inference
   - ai-ml
+dependencies:
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: critical
+  - name: oneDNN
+    relation: build-dependency
+    criticality: critical
+  - name: XNNPACK
+    relation: build-dependency
+    criticality: critical
+  - name: cpuinfo
+    relation: build-dependency
+    criticality: critical
+  - name: SLEEF
+    relation: build-dependency
+    criticality: optional
+  - name: FBGEMM
+    relation: build-dependency
+    criticality: optional
+  - name: NNPACK
+    relation: build-dependency
+    criticality: optional
+  - name: psimd
+    relation: build-dependency
+    criticality: optional
+  - name: Gloo
+    relation: build-dependency
+    criticality: optional
+  - name: pthreadpool
+    relation: build-dependency
+    criticality: critical
+  - name: mimalloc
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: ONNX (format/schema)
+    relation: build-dependency
+    criticality: optional
+  - name: OpenMP
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
+  - name: NumPy
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="pytorch" %}
 
 # PyTorch
 

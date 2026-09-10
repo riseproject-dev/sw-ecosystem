@@ -2,7 +2,22 @@
 title: AWS IoT Greengrass v2
 parent: Project Reports
 color: red
+dependencies:
+  - name: Amazon Corretto
+    relation: runtime-dependency
+    criticality: critical
+  - name: aws-crt-java
+    relation: runtime-dependency
+    criticality: critical
+  - name: JNA
+    relation: runtime-dependency
+    criticality: optional
+  - name: oshi
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="aws-iot-greengrass-v2" %}
 
 # AWS IoT Greengrass v2
 

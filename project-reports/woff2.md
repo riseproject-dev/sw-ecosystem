@@ -2,7 +2,16 @@
 title: woff2
 parent: Project Reports
 color: orange
+dependencies:
+  - name: brotli
+    relation: build-dependency
+    criticality: critical
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="woff2" %}
 
 # woff2
 

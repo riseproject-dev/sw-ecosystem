@@ -1,9 +1,25 @@
 ---
 title: SQLite
 parent: Project Reports
+color: grey
 categories:
   - databases
+dependencies:
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: ICU
+    relation: build-dependency
+    criticality: optional
+  - name: readline
+    relation: runtime-dependency
+    criticality: optional
+  - name: Tcl
+    relation: test-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="sqlite" %}
 
 # SQLite
 

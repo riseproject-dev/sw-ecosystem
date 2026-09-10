@@ -2,7 +2,31 @@
 title: Eclipse Ditto
 parent: Project Reports
 color: orange
+dependencies:
+  - name: OpenJDK
+    relation: runtime-dependency
+    criticality: critical
+  - name: Apache Pekko
+    relation: runtime-dependency
+    criticality: critical
+  - name: Netty
+    relation: runtime-dependency
+    criticality: critical
+  - name: MongoDB Java Driver
+    relation: runtime-dependency
+    criticality: critical
+  - name: lz4-java
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache Kafka
+    relation: runtime-dependency
+    criticality: optional
+  - name: AWS SDK for Java
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="eclipse-ditto" %}
 
 # Eclipse Ditto
 

@@ -2,7 +2,28 @@
 title: Akri
 parent: Project Reports
 color: orange
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: ring
+    relation: runtime-dependency
+    criticality: critical
+  - name: systemd
+    relation: runtime-dependency
+    criticality: critical
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: flate2
+    relation: runtime-dependency
+    criticality: optional
+  - name: brotli (Rust crate)
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="akri" %}
 
 # Akri
 

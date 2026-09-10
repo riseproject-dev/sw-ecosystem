@@ -4,6 +4,8 @@ parent: Project Reports
 color: orange
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="yamlfmt" %}
+
 # yamlfmt
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

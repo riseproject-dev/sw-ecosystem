@@ -2,7 +2,43 @@
 title: InfluxDB
 parent: Project Reports
 color: orange
+dependencies:
+  - name: wasmtime
+    relation: runtime-dependency
+    criticality: critical
+  - name: rustls
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache Arrow
+    relation: runtime-dependency
+    criticality: critical
+  - name: DataFusion
+    relation: runtime-dependency
+    criticality: critical
+  - name: jemalloc
+    relation: runtime-dependency
+    criticality: optional
+  - name: BLAKE3
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: brotli (Rust crate)
+    relation: build-dependency
+    criticality: optional
+  - name: snappy
+    relation: build-dependency
+    criticality: optional
+  - name: pyo3
+    relation: build-dependency
+    criticality: optional
+  - name: SQLite
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="influxdb" %}
 
 # InfluxDB
 

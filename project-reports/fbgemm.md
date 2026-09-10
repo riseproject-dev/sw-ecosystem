@@ -1,9 +1,28 @@
 ---
 title: FBGEMM
 parent: Project Reports
+color: red
 categories:
   - ai-ml
+dependencies:
+  - name: asmjit
+    relation: build-dependency
+    criticality: critical
+  - name: cpuinfo
+    relation: build-dependency
+    criticality: optional
+  - name: OpenMP
+    relation: runtime-dependency
+    criticality: optional
+  - name: Python
+    relation: build-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="fbgemm" %}
 
 # FBGEMM
 

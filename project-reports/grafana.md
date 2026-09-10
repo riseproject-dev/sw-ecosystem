@@ -1,7 +1,53 @@
 ---
 title: Grafana
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: Go
+    relation: runtime-dependency
+    criticality: critical
+  - name: Prometheus
+    relation: runtime-dependency
+    criticality: optional
+  - name: gRPC-Go
+    relation: runtime-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: OpenTelemetry
+    relation: runtime-dependency
+    criticality: optional
+  - name: modernc.org/sqlite
+    relation: runtime-dependency
+    criticality: optional
+  - name: dgraph-io/badger
+    relation: runtime-dependency
+    criticality: optional
+  - name: blevesearch/bleve
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache Arrow
+    relation: runtime-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: runtime-dependency
+    criticality: optional
+  - name: Node.js
+    relation: build-dependency
+    criticality: critical
+  - name: redis/go-redis
+    relation: runtime-dependency
+    criticality: optional
+  - name: pgx
+    relation: runtime-dependency
+    criticality: optional
+  - name: go-sql-driver/mysql
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="grafana" %}
 
 # Grafana
 

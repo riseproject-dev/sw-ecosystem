@@ -1,7 +1,14 @@
 ---
 title: Lua
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: readline
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="lua" %}
 
 # Lua
 

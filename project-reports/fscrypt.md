@@ -1,7 +1,25 @@
 ---
 title: fscrypt
 parent: Project Reports
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: critical
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: Linux-PAM
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="fscrypt" %}
 
 # fscrypt
 

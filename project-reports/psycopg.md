@@ -1,7 +1,38 @@
 ---
 title: psycopg
 parent: Project Reports
+color: green
+dependencies:
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: Python
+    relation: runtime-dependency
+    criticality: critical
+  - name: Cython
+    relation: build-dependency
+    criticality: critical
+  - name: manylinux
+    relation: build-dependency
+    criticality: optional
+  - name: cibuildwheel
+    relation: build-dependency
+    criticality: optional
+  - name: NumPy
+    relation: build-dependency
+    criticality: optional
+  - name: gevent
+    relation: build-dependency
+    criticality: optional
+  - name: dnspython
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="psycopg" %}
 
 # psycopg
 

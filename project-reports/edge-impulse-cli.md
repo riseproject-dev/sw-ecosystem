@@ -2,7 +2,16 @@
 title: Edge Impulse CLI
 parent: Project Reports
 color: orange
+dependencies:
+  - name: sharp
+    relation: runtime-dependency
+    criticality: critical
+  - name: serialport
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-cli" %}
 
 # Edge Impulse CLI
 

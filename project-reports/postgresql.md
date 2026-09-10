@@ -1,9 +1,76 @@
 ---
 title: PostgreSQL
 parent: Project Reports
+color: blue
 categories:
   - databases
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: Python
+    relation: runtime-dependency
+    criticality: optional
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: LLVM
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: ICU
+    relation: runtime-dependency
+    criticality: optional
+  - name: LZ4
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: readline
+    relation: runtime-dependency
+    criticality: optional
+  - name: libxml2
+    relation: runtime-dependency
+    criticality: optional
+  - name: libxslt
+    relation: runtime-dependency
+    criticality: optional
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: optional
+  - name: liburing
+    relation: runtime-dependency
+    criticality: optional
+  - name: libnuma
+    relation: runtime-dependency
+    criticality: optional
+  - name: Kerberos
+    relation: runtime-dependency
+    criticality: optional
+  - name: Linux-PAM
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenLDAP
+    relation: runtime-dependency
+    criticality: optional
+  - name: UUID library
+    relation: runtime-dependency
+    criticality: optional
+  - name: Perl
+    relation: build-dependency
+    criticality: critical
+  - name: Flex
+    relation: build-dependency
+    criticality: critical
+  - name: GNU bison
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="postgresql" %}
 
 # PostgreSQL
 

@@ -2,7 +2,19 @@
 title: WireGuard
 parent: Project Reports
 color: blue
+dependencies:
+  - name: Linux kernel
+    relation: runtime-dependency
+    criticality: critical
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: nftables
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="wireguard" %}
 
 # WireGuard
 

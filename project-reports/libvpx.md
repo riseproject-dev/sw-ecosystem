@@ -3,7 +3,16 @@ title: libvpx
 parent: Project Reports
 categories:
   - multimedia
+dependencies:
+  - name: libyuv
+    relation: runtime-dependency
+    criticality: optional
+  - name: libwebm
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libvpx" %}
 
 # libvpx
 

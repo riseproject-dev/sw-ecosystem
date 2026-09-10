@@ -2,7 +2,16 @@
 title: Edge Impulse Linux SDK (Go)
 parent: Project Reports
 color: orange
+dependencies:
+  - name: disintegration/imaging
+    relation: runtime-dependency
+    criticality: critical
+  - name: fsnotify/fsnotify
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-linux-sdk-(go)" %}
 
 # Edge Impulse Linux SDK (Go)
 

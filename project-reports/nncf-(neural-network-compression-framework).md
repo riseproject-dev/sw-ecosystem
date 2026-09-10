@@ -2,7 +2,40 @@
 title: NNCF (Neural Network Compression Framework)
 parent: Project Reports
 color: green
+dependencies:
+  - name: PyTorch
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenVINO Runtime
+    relation: runtime-dependency
+    criticality: critical
+  - name: ONNX
+    relation: build-dependency
+    criticality: optional
+  - name: ONNX (format/schema)
+    relation: build-dependency
+    criticality: optional
+  - name: NumPy
+    relation: build-dependency
+    criticality: optional
+  - name: SciPy
+    relation: build-dependency
+    criticality: optional
+  - name: scikit-learn
+    relation: build-dependency
+    criticality: optional
+  - name: safetensors
+    relation: build-dependency
+    criticality: optional
+  - name: torchvision
+    relation: build-dependency
+    criticality: optional
+  - name: torchaudio
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="nncf-(neural-network-compression-framework)" %}
 
 # NNCF (Neural Network Compression Framework)
 

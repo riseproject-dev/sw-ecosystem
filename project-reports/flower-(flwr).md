@@ -2,7 +2,28 @@
 title: Flower (flwr)
 parent: Project Reports
 color: green
+dependencies:
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: gRPC
+    relation: runtime-dependency
+    criticality: critical
+  - name: cryptography
+    relation: runtime-dependency
+    criticality: critical
+  - name: pycryptodome
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: runtime-dependency
+    criticality: critical
+  - name: Ray
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="flower-(flwr)" %}
 
 # Flower (flwr)
 

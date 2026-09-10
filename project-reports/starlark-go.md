@@ -1,7 +1,25 @@
 ---
 title: starlark-go
 parent: Project Reports
+dependencies:
+  - name: chzyer/readline
+    relation: runtime-dependency
+    criticality: optional
+  - name: google/go-cmp
+    relation: test-dependency
+    criticality: optional
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
+  - name: golang.org/x/term
+    relation: runtime-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="starlark-go" %}
 
 # starlark-go
 

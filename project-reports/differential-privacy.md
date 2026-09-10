@@ -1,7 +1,49 @@
 ---
 title: differential-privacy
 parent: Project Reports
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: BoringSSL
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: gonum
+    relation: build-dependency
+    criticality: optional
+  - name: Apache Beam
+    relation: runtime-dependency
+    criticality: optional
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: SciPy
+    relation: runtime-dependency
+    criticality: optional
+  - name: mpmath
+    relation: runtime-dependency
+    criticality: optional
+  - name: absl-py
+    relation: build-dependency
+    criticality: optional
+  - name: gRPC-Go
+    relation: runtime-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="differential-privacy" %}
 
 # differential-privacy
 

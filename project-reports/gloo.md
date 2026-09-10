@@ -1,9 +1,37 @@
 ---
 title: Gloo
 parent: Project Reports
+color: grey
 categories:
   - ai-ml
+dependencies:
+  - name: libuv
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: hiredis
+    relation: runtime-dependency
+    criticality: optional
+  - name: rdma-core
+    relation: runtime-dependency
+    criticality: optional
+  - name: Open MPI
+    relation: runtime-dependency
+    criticality: optional
+  - name: NCCL
+    relation: runtime-dependency
+    criticality: optional
+  - name: RCCL
+    relation: runtime-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gloo" %}
 
 # Gloo
 

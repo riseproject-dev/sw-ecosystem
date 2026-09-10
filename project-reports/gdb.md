@@ -1,9 +1,58 @@
 ---
 title: GDB
 parent: Project Reports
+color: grey
 categories:
   - debug
+dependencies:
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: Python
+    relation: runtime-dependency
+    criticality: critical
+  - name: readline
+    relation: runtime-dependency
+    criticality: critical
+  - name: ncurses
+    relation: runtime-dependency
+    criticality: optional
+  - name: expat
+    relation: runtime-dependency
+    criticality: critical
+  - name: elfutils
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: critical
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: xz
+    relation: runtime-dependency
+    criticality: optional
+  - name: GNU MPFR
+    relation: runtime-dependency
+    criticality: optional
+  - name: GMP
+    relation: runtime-dependency
+    criticality: critical
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: critical
+  - name: GNU Guile
+    relation: build-dependency
+    criticality: optional
+  - name: babeltrace
+    relation: runtime-dependency
+    criticality: optional
+  - name: ROCdbgapi
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gdb" %}
 
 # GDB
 

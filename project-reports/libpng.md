@@ -1,10 +1,20 @@
 ---
 title: libpng
 parent: Project Reports
+color: grey
 categories:
   - multimedia
   - android
+dependencies:
+  - name: zlib
+    relation: build-dependency
+    criticality: critical
+  - name: zlib-ng
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libpng" %}
 
 # libpng
 

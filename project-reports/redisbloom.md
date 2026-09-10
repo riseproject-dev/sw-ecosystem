@@ -1,7 +1,20 @@
 ---
 title: RedisBloom
 parent: Project Reports
+color: red
+dependencies:
+  - name: Redis
+    relation: runtime-dependency
+    criticality: critical
+  - name: t-digest-c
+    relation: build-dependency
+    criticality: optional
+  - name: RedisModulesSDK
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="redisbloom" %}
 
 # RedisBloom
 

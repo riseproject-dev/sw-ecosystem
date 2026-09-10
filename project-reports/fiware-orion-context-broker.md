@@ -2,7 +2,43 @@
 title: FIWARE Orion Context Broker
 parent: Project Reports
 color: orange
+dependencies:
+  - name: mongo-c-driver
+    relation: runtime-dependency
+    criticality: critical
+  - name: librdkafka
+    relation: runtime-dependency
+    criticality: optional
+  - name: libmicrohttpd
+    relation: runtime-dependency
+    criticality: critical
+  - name: Mosquitto
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: GnuTLS
+    relation: runtime-dependency
+    criticality: optional
+  - name: libgcrypt
+    relation: runtime-dependency
+    criticality: optional
+  - name: Cyrus SASL
+    relation: runtime-dependency
+    criticality: optional
+  - name: Boost
+    relation: build-dependency
+    criticality: critical
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: critical
+  - name: UUID library
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="fiware-orion-context-broker" %}
 
 # FIWARE Orion Context Broker
 

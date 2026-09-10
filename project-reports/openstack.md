@@ -4,7 +4,67 @@ parent: Project Reports
 categories:
   - containers
   - iaas
+dependencies:
+  - name: Python
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: libvirt
+    relation: runtime-dependency
+    criticality: critical
+  - name: QEMU
+    relation: runtime-dependency
+    criticality: critical
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: MariaDB
+    relation: runtime-dependency
+    criticality: optional
+  - name: RabbitMQ
+    relation: runtime-dependency
+    criticality: critical
+  - name: Memcached
+    relation: runtime-dependency
+    criticality: optional
+  - name: Open vSwitch
+    relation: runtime-dependency
+    criticality: optional
+  - name: Ceph
+    relation: runtime-dependency
+    criticality: optional
+  - name: SQLite
+    relation: runtime-dependency
+    criticality: optional
+  - name: greenlet
+    relation: build-dependency
+    criticality: optional
+  - name: cryptography
+    relation: runtime-dependency
+    criticality: optional
+  - name: lxml
+    relation: build-dependency
+    criticality: optional
+  - name: libffi
+    relation: build-dependency
+    criticality: optional
+  - name: Go
+    relation: build-dependency
+    criticality: optional
+  - name: SQLAlchemy
+    relation: runtime-dependency
+    criticality: optional
+  - name: eventlet
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="openstack" %}
 
 # OpenStack
 

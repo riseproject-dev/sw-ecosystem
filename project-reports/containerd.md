@@ -1,9 +1,49 @@
 ---
 title: containerd
 parent: Project Reports
+color: yellow
 categories:
   - containers
+dependencies:
+  - name: runc
+    relation: runtime-dependency
+    criticality: critical
+  - name: CRIU
+    relation: runtime-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
+  - name: containerd/cgroups
+    relation: build-dependency
+    criticality: critical
+  - name: CNI plugins
+    relation: runtime-dependency
+    criticality: optional
+  - name: gRPC-Go
+    relation: build-dependency
+    criticality: critical
+  - name: bbolt
+    relation: build-dependency
+    criticality: critical
+  - name: OpenTelemetry
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: critical
+  - name: erofs/go-erofs
+    relation: build-dependency
+    criticality: optional
+  - name: Kubernetes
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="containerd" %}
 
 # containerd
 **Author:** Ludovic HENRY \<ludovic.henry@qti.qualcomm.com\>

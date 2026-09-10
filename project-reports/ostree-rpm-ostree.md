@@ -2,7 +2,13 @@
 title: OSTree / rpm-ostree
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="ostree-rpm-ostree" %}
 
 # OSTree / rpm-ostree
 

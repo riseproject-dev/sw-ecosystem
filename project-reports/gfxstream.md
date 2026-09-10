@@ -1,7 +1,43 @@
 ---
 title: gfxstream
 parent: Project Reports
+dependencies:
+  - name: SwiftShader
+    relation: runtime-dependency
+    criticality: critical
+  - name: rutabaga_gfx
+    relation: runtime-dependency
+    criticality: critical
+  - name: angle
+    relation: runtime-dependency
+    criticality: optional
+  - name: astc-encoder
+    relation: build-dependency
+    criticality: optional
+  - name: Mesa
+    relation: test-dependency
+    criticality: optional
+  - name: glslang
+    relation: build-dependency
+    criticality: optional
+  - name: SPIRV-Tools
+    relation: build-dependency
+    criticality: optional
+  - name: Abseil
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gfxstream" %}
 
 # gfxstream
 

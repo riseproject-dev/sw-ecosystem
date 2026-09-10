@@ -1,7 +1,13 @@
 ---
 title: go-licenses
 parent: Project Reports
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="go-licenses" %}
 
 # go-licenses
 

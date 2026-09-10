@@ -1,7 +1,38 @@
 ---
 title: PostGIS
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: GEOS
+    relation: build-dependency
+    criticality: critical
+  - name: PROJ
+    relation: build-dependency
+    criticality: critical
+  - name: libxml2
+    relation: build-dependency
+    criticality: critical
+  - name: json-c
+    relation: build-dependency
+    criticality: optional
+  - name: GDAL
+    relation: build-dependency
+    criticality: optional
+  - name: protobuf-c
+    relation: build-dependency
+    criticality: optional
+  - name: SFCGAL
+    relation: build-dependency
+    criticality: optional
+  - name: PCRE2
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="postgis" %}
 
 # PostGIS
 

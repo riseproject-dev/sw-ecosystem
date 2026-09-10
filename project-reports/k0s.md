@@ -1,9 +1,55 @@
 ---
 title: k0s
 parent: Project Reports
+color: blue
 categories:
   - containers
+dependencies:
+  - name: Kubernetes
+    relation: build-dependency
+    criticality: critical
+  - name: containerd
+    relation: build-dependency
+    criticality: critical
+  - name: runc
+    relation: build-dependency
+    criticality: optional
+  - name: etcd
+    relation: build-dependency
+    criticality: critical
+  - name: kine
+    relation: build-dependency
+    criticality: optional
+  - name: CoreDNS
+    relation: build-dependency
+    criticality: optional
+  - name: kube-router
+    relation: build-dependency
+    criticality: optional
+  - name: Envoy
+    relation: runtime-dependency
+    criticality: optional
+  - name: Helm
+    relation: build-dependency
+    criticality: optional
+  - name: keepalived
+    relation: build-dependency
+    criticality: optional
+  - name: konnectivity
+    relation: build-dependency
+    criticality: optional
+  - name: sonobuoy
+    relation: test-dependency
+    criticality: optional
+  - name: syft
+    relation: test-dependency
+    criticality: optional
+  - name: iptables
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="k0s" %}
 
 # k0s
 

@@ -5,6 +5,8 @@ categories:
   - libraries
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="xbyak-riscv" %}
+
 # xbyak_riscv
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

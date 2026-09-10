@@ -1,7 +1,16 @@
 ---
 title: osv-scalibr
 parent: Project Reports
+dependencies:
+  - name: containerd
+    relation: build-dependency
+    criticality: optional
+  - name: Docker
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="osv-scalibr" %}
 
 # osv-scalibr
 

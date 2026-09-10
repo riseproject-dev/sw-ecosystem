@@ -1,9 +1,12 @@
 ---
 title: mimalloc
 parent: Project Reports
+color: grey
 categories:
   - libraries
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mimalloc" %}
 
 # mimalloc
 

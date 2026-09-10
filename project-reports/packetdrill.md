@@ -1,7 +1,13 @@
 ---
 title: packetdrill
 parent: Project Reports
+dependencies:
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="packetdrill" %}
 
 # packetdrill
 

@@ -2,7 +2,16 @@
 title: Edge Impulse Ingestion SDK (C)
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Mbed TLS
+    relation: build-dependency
+    criticality: optional
+  - name: QCBOR
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-ingestion-sdk-(c)" %}
 
 # Edge Impulse Ingestion SDK (C)
 

@@ -2,7 +2,40 @@
 title: Edge Impulse FFI (Rust)
 parent: Project Reports
 color: orange
+dependencies:
+  - name: TensorFlow Lite Micro (TFLM)
+    relation: build-dependency
+    criticality: critical
+  - name: TensorFlow Lite
+    relation: build-dependency
+    criticality: optional
+  - name: XNNPACK
+    relation: build-dependency
+    criticality: optional
+  - name: cpuinfo
+    relation: build-dependency
+    criticality: optional
+  - name: ruy
+    relation: build-dependency
+    criticality: optional
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: optional
+  - name: farmhash
+    relation: build-dependency
+    criticality: optional
+  - name: pthreadpool
+    relation: build-dependency
+    criticality: optional
+  - name: ONNX
+    relation: build-dependency
+    criticality: optional
+  - name: Apache TVM / microTVM
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-ffi-(rust)" %}
 
 # Edge Impulse FFI (Rust)
 

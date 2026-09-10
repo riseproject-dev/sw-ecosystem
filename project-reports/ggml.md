@@ -2,7 +2,34 @@
 title: ggml
 parent: Project Reports
 color: blue
+dependencies:
+  - name: OpenMP
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: optional
+  - name: oneDNN
+    relation: build-dependency
+    criticality: optional
+  - name: Intel MKL
+    relation: build-dependency
+    criticality: optional
+  - name: shaderc
+    relation: build-dependency
+    criticality: optional
+  - name: CUDA
+    relation: build-dependency
+    criticality: optional
+  - name: ROCm
+    relation: build-dependency
+    criticality: optional
+  - name: memkind
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="ggml" %}
 
 # ggml
 

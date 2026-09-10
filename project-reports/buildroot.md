@@ -2,7 +2,22 @@
 title: Buildroot
 parent: Project Reports
 color: blue
+dependencies:
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: critical
+  - name: GNU make
+    relation: build-dependency
+    criticality: critical
+  - name: Perl
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="buildroot" %}
 
 # Buildroot
 

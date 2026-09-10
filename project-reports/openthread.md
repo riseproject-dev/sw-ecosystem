@@ -2,7 +2,22 @@
 title: OpenThread
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Mbed TLS
+    relation: runtime-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: gRPC
+    relation: test-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="openthread" %}
 
 # OpenThread
 

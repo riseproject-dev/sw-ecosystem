@@ -1,7 +1,22 @@
 ---
 title: binexport
 parent: Project Reports
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="binexport" %}
 
 # binexport
 

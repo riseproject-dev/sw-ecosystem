@@ -1,7 +1,37 @@
 ---
 title: OpenSK
 parent: Project Reports
+dependencies:
+  - name: Tock
+    relation: runtime-dependency
+    criticality: critical
+  - name: Wasefire
+    relation: runtime-dependency
+    criticality: critical
+  - name: p256
+    relation: runtime-dependency
+    criticality: optional
+  - name: sha2
+    relation: runtime-dependency
+    criticality: optional
+  - name: aes
+    relation: runtime-dependency
+    criticality: critical
+  - name: ed25519-compact
+    relation: runtime-dependency
+    criticality: optional
+  - name: getrandom
+    relation: runtime-dependency
+    criticality: optional
+  - name: portable-atomic-util
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="opensk" %}
 
 # OpenSK
 

@@ -2,7 +2,40 @@
 title: RAUC
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: critical
+  - name: libcurl
+    relation: build-dependency
+    criticality: optional
+  - name: composefs
+    relation: build-dependency
+    criticality: optional
+  - name: GLib
+    relation: build-dependency
+    criticality: optional
+  - name: json-glib
+    relation: build-dependency
+    criticality: optional
+  - name: D-Bus
+    relation: build-dependency
+    criticality: optional
+  - name: libnl
+    relation: build-dependency
+    criticality: optional
+  - name: libfdisk
+    relation: build-dependency
+    criticality: optional
+  - name: systemd
+    relation: build-dependency
+    criticality: optional
+  - name: glibc
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="rauc" %}
 
 # RAUC
 

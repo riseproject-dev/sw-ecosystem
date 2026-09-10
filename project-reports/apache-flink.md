@@ -3,7 +3,64 @@ title: Apache Flink
 parent: Project Reports
 categories:
   - data-analytics
+dependencies:
+  - name: OpenJDK
+    relation: runtime-dependency
+    criticality: critical
+  - name: snappy-java
+    relation: runtime-dependency
+    criticality: optional
+  - name: lz4-java
+    relation: runtime-dependency
+    criticality: optional
+  - name: Netty
+    relation: runtime-dependency
+    criticality: critical
+  - name: netty-tcnative
+    relation: test-dependency
+    criticality: optional
+  - name: frocksdbjni
+    relation: runtime-dependency
+    criticality: critical
+  - name: forstjni
+    relation: runtime-dependency
+    criticality: critical
+  - name: Apache Arrow
+    relation: runtime-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: os-maven-plugin
+    relation: build-dependency
+    criticality: critical
+  - name: Apache Hadoop
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache Parquet
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache Avro
+    relation: runtime-dependency
+    criticality: optional
+  - name: Conscrypt
+    relation: runtime-dependency
+    criticality: optional
+  - name: Byte Buddy
+    relation: runtime-dependency
+    criticality: optional
+  - name: Janino
+    relation: runtime-dependency
+    criticality: optional
+  - name: Kryo
+    relation: runtime-dependency
+    criticality: optional
+  - name: ZooKeeper
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="apache-flink" %}
 
 # Apache Flink
 

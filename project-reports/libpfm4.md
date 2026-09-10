@@ -4,7 +4,13 @@ parent: Project Reports
 categories:
   - libraries
   - perfmon
+dependencies:
+  - name: Python
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libpfm4" %}
 
 # libpfm4
 

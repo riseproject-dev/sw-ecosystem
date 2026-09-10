@@ -3,7 +3,40 @@ title: Apache Hadoop
 parent: Project Reports
 categories:
   - data-analytics
+dependencies:
+  - name: OpenJDK
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: bzip2
+    relation: runtime-dependency
+    criticality: optional
+  - name: ISA-L
+    relation: build-dependency
+    criticality: optional
+  - name: PMDK
+    relation: runtime-dependency
+    criticality: optional
+  - name: LZ4
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: snappy
+    relation: runtime-dependency
+    criticality: optional
+  - name: leveldb
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="apache-hadoop" %}
 
 # Apache Hadoop
 

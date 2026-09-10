@@ -4,7 +4,22 @@ parent: Project Reports
 categories:
   - libraries
   - browser
+dependencies:
+  - name: NSPR
+    relation: runtime-dependency
+    criticality: critical
+  - name: SQLite
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="nss" %}
 
 # NSS
 

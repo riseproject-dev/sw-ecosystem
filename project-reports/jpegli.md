@@ -1,7 +1,34 @@
 ---
 title: jpegli
 parent: Project Reports
+dependencies:
+  - name: Highway
+    relation: build-dependency
+    criticality: critical
+  - name: libjpeg-turbo
+    relation: runtime-dependency
+    criticality: optional
+  - name: brotli
+    relation: build-dependency
+    criticality: optional
+  - name: libpng
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: skcms
+    relation: build-dependency
+    criticality: optional
+  - name: lcms2
+    relation: build-dependency
+    criticality: optional
+  - name: sjpeg
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="jpegli" %}
 
 # jpegli
 

@@ -1,7 +1,55 @@
 ---
 title: Ray
 parent: Project Reports
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: optional
+  - name: BoringSSL
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC
+    relation: build-dependency
+    criticality: critical
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
+  - name: RocksDB
+    relation: build-dependency
+    criticality: critical
+  - name: NumPy
+    relation: build-dependency
+    criticality: critical
+  - name: pyarrow
+    relation: build-dependency
+    criticality: critical
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: critical
+  - name: xz
+    relation: build-dependency
+    criticality: optional
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: optional
+  - name: OpenTelemetry
+    relation: build-dependency
+    criticality: optional
+  - name: Redis
+    relation: build-dependency
+    criticality: optional
+  - name: hiredis
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="ray" %}
 
 # Ray
 

@@ -3,7 +3,28 @@ title: nginx
 parent: Project Reports
 categories:
   - webservers
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: PCRE2
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: libxslt
+    relation: build-dependency
+    criticality: optional
+  - name: Perl
+    relation: build-dependency
+    criticality: optional
+  - name: LuaJIT
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="nginx" %}
 
 # nginx
 

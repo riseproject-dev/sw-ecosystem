@@ -2,7 +2,55 @@
 title: MindSpore Lite
 parent: Project Reports
 color: orange
+dependencies:
+  - name: oneDNN
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: optional
+  - name: Eigen
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: libjpeg-turbo
+    relation: build-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
+  - name: sentencepiece
+    relation: build-dependency
+    criticality: optional
+  - name: OpenCV
+    relation: build-dependency
+    criticality: optional
+  - name: gRPC
+    relation: build-dependency
+    criticality: optional
+  - name: re2
+    relation: build-dependency
+    criticality: optional
+  - name: ICU
+    relation: build-dependency
+    criticality: optional
+  - name: SQLite
+    relation: build-dependency
+    criticality: optional
+  - name: glog
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mindspore-lite" %}
 
 # MindSpore Lite
 

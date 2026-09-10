@@ -2,7 +2,31 @@
 title: Edge Impulse Python SDK
 parent: Project Reports
 color: green
+dependencies:
+  - name: edgeimpulse-api
+    relation: runtime-dependency
+    criticality: critical
+  - name: requests
+    relation: runtime-dependency
+    criticality: critical
+  - name: python-socketio
+    relation: runtime-dependency
+    criticality: critical
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: optional
+  - name: pandas
+    relation: runtime-dependency
+    criticality: optional
+  - name: ONNX (format/schema)
+    relation: runtime-dependency
+    criticality: optional
+  - name: TensorFlow
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-python-sdk" %}
 
 # Edge Impulse Python SDK
 

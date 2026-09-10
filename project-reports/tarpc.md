@@ -2,7 +2,46 @@
 title: tarpc
 parent: Project Reports
 color: orange
+dependencies:
+  - name: tokio
+    relation: runtime-dependency
+    criticality: critical
+  - name: serde
+    relation: runtime-dependency
+    criticality: critical
+  - name: futures
+    relation: runtime-dependency
+    criticality: optional
+  - name: rand
+    relation: runtime-dependency
+    criticality: optional
+  - name: tracing
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenTelemetry
+    relation: runtime-dependency
+    criticality: optional
+  - name: tokio-serde
+    relation: runtime-dependency
+    criticality: optional
+  - name: rustls
+    relation: test-dependency
+    criticality: optional
+  - name: Tonic
+    relation: test-dependency
+    criticality: optional
+  - name: h2
+    relation: test-dependency
+    criticality: optional
+  - name: hyper
+    relation: test-dependency
+    criticality: optional
+  - name: flate2
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="tarpc" %}
 
 # tarpc
 

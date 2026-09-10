@@ -2,7 +2,34 @@
 title: HuggingFace Optimum
 parent: Project Reports
 color: green
+dependencies:
+  - name: PyTorch
+    relation: runtime-dependency
+    criticality: critical
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: HuggingFace Transformers
+    relation: runtime-dependency
+    criticality: critical
+  - name: sentencepiece
+    relation: runtime-dependency
+    criticality: optional
+  - name: ONNX
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenVINO Runtime
+    relation: runtime-dependency
+    criticality: optional
+  - name: Intel Neural Compressor (INC)
+    relation: runtime-dependency
+    criticality: optional
+  - name: NNCF (Neural Network Compression Framework)
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="huggingface-optimum" %}
 
 # HuggingFace Optimum
 

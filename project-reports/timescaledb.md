@@ -2,7 +2,28 @@
 title: TimescaleDB
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: UMASH
+    relation: build-dependency
+    criticality: critical
+  - name: FastLanes
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="timescaledb" %}
 
 # TimescaleDB
 

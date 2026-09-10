@@ -1,7 +1,22 @@
 ---
 title: draco
 parent: Project Reports
+dependencies:
+  - name: Eigen
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: tinygltf
+    relation: build-dependency
+    criticality: optional
+  - name: gulrak/filesystem
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="draco" %}
 
 # draco
 

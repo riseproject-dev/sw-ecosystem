@@ -3,6 +3,8 @@ title: kafel
 parent: Project Reports
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="kafel" %}
+
 # kafel
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

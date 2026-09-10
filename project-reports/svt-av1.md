@@ -3,7 +3,16 @@ title: SVT-AV1
 parent: Project Reports
 categories:
   - multimedia
+dependencies:
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: Valgrind
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="svt-av1" %}
 
 # SVT-AV1
 

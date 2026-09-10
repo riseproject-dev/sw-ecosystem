@@ -3,7 +3,40 @@ title: LLDB
 parent: Project Reports
 categories:
   - debug
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Python
+    relation: build-dependency
+    criticality: optional
+  - name: SWIG
+    relation: build-dependency
+    criticality: optional
+  - name: libxml2
+    relation: runtime-dependency
+    criticality: optional
+  - name: libedit
+    relation: runtime-dependency
+    criticality: optional
+  - name: ncurses
+    relation: runtime-dependency
+    criticality: optional
+  - name: xz
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: Lua
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="lldb" %}
 
 # LLDB
 

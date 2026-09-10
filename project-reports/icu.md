@@ -1,9 +1,31 @@
 ---
 title: ICU
 parent: Project Reports
+color: yellow
 categories:
   - libraries
+dependencies:
+  - name: HarfBuzz
+    relation: runtime-dependency
+    criticality: optional
+  - name: double-conversion
+    relation: build-dependency
+    criticality: optional
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: GCC
+    relation: build-dependency
+    criticality: optional
+  - name: OpenJDK
+    relation: runtime-dependency
+    criticality: optional
+  - name: JMH
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="icu" %}
 
 # ICU
 

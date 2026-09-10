@@ -1,7 +1,38 @@
 ---
 title: Apache AGE
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: GNU bison
+    relation: build-dependency
+    criticality: critical
+  - name: Flex
+    relation: build-dependency
+    criticality: critical
+  - name: pgvector
+    relation: test-dependency
+    criticality: optional
+  - name: ANTLR4
+    relation: runtime-dependency
+    criticality: optional
+  - name: psycopg
+    relation: runtime-dependency
+    criticality: optional
+  - name: lib/pq
+    relation: runtime-dependency
+    criticality: optional
+  - name: pgjdbc
+    relation: runtime-dependency
+    criticality: optional
+  - name: node-postgres
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="apache-age" %}
 
 # Apache AGE
 

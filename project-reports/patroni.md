@@ -1,7 +1,29 @@
 ---
 title: Patroni
 parent: Project Reports
+color: green
+dependencies:
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: psycopg
+    relation: build-dependency
+    criticality: optional
+  - name: cryptography
+    relation: build-dependency
+    criticality: critical
+  - name: psutil
+    relation: build-dependency
+    criticality: critical
+  - name: PyYAML
+    relation: build-dependency
+    criticality: optional
+  - name: etcd
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="patroni" %}
 
 # Patroni
 

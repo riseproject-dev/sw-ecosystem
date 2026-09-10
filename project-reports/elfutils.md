@@ -1,10 +1,47 @@
 ---
 title: elfutils
 parent: Project Reports
+color: grey
 categories:
   - debug
   - perfmon
+dependencies:
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: critical
+  - name: bzip2
+    relation: runtime-dependency
+    criticality: optional
+  - name: xz
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: optional
+  - name: libmicrohttpd
+    relation: runtime-dependency
+    criticality: optional
+  - name: SQLite
+    relation: runtime-dependency
+    criticality: optional
+  - name: libarchive
+    relation: runtime-dependency
+    criticality: optional
+  - name: json-c
+    relation: runtime-dependency
+    criticality: optional
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="elfutils" %}
 
 # elfutils
 **Author:** Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;

@@ -1,10 +1,26 @@
 ---
 title: NumPy
 parent: Project Reports
+color: yellow
 categories:
   - python-packages
   - ai-ml
+dependencies:
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: critical
+  - name: Highway
+    relation: build-dependency
+    criticality: optional
+  - name: PocketFFT
+    relation: build-dependency
+    criticality: optional
+  - name: Cython
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="numpy" %}
 
 # NumPy
 

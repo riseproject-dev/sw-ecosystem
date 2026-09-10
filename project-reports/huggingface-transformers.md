@@ -1,7 +1,41 @@
 ---
 title: HuggingFace Transformers
 parent: Project Reports
+color: green
+dependencies:
+  - name: tokenizers
+    relation: runtime-dependency
+    criticality: critical
+  - name: safetensors
+    relation: runtime-dependency
+    criticality: critical
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: PyTorch
+    relation: runtime-dependency
+    criticality: critical
+  - name: sentencepiece
+    relation: runtime-dependency
+    criticality: optional
+  - name: tiktoken
+    relation: runtime-dependency
+    criticality: optional
+  - name: FAISS
+    relation: runtime-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: runtime-dependency
+    criticality: optional
+  - name: kenlm
+    relation: runtime-dependency
+    criticality: optional
+  - name: HuggingFace Hub
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="huggingface-transformers" %}
 
 # HuggingFace Transformers
 

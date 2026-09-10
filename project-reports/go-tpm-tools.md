@@ -1,7 +1,46 @@
 ---
 title: go-tpm-tools
 parent: Project Reports
+dependencies:
+  - name: go-tpm
+    relation: build-dependency
+    criticality: critical
+  - name: ms-tpm-20-ref
+    relation: test-dependency
+    criticality: optional
+  - name: go-attestation
+    relation: build-dependency
+    criticality: critical
+  - name: go-sev-guest
+    relation: build-dependency
+    criticality: critical
+  - name: go-tdx-guest
+    relation: build-dependency
+    criticality: critical
+  - name: go-configfs-tsm
+    relation: build-dependency
+    criticality: optional
+  - name: go-eventlog
+    relation: build-dependency
+    criticality: critical
+  - name: certificate-transparency-go
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: optional
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: BoringSSL
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="go-tpm-tools" %}
 
 # go-tpm-tools
 

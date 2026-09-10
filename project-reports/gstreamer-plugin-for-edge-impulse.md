@@ -2,7 +2,22 @@
 title: GStreamer Plugin for Edge Impulse
 parent: Project Reports
 color: orange
+dependencies:
+  - name: GStreamer
+    relation: build-dependency
+    criticality: critical
+  - name: Cairo
+    relation: build-dependency
+    criticality: optional
+  - name: Pango
+    relation: build-dependency
+    criticality: optional
+  - name: Edge Impulse Runner (Rust)
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gstreamer-plugin-for-edge-impulse" %}
 
 # GStreamer Plugin for Edge Impulse
 

@@ -1,7 +1,46 @@
 ---
 title: or-tools
 parent: Project Reports
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: Eigen
+    relation: build-dependency
+    criticality: critical
+  - name: re2
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: bzip2
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
+  - name: HiGHS
+    relation: build-dependency
+    criticality: critical
+  - name: SCIP
+    relation: build-dependency
+    criticality: critical
+  - name: COIN-OR
+    relation: build-dependency
+    criticality: critical
+  - name: Boost
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="or-tools" %}
 
 # or-tools
 

@@ -2,7 +2,28 @@
 title: whisper.cpp
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: ggml
+    relation: build-dependency
+    criticality: critical
+  - name: llama.cpp
+    relation: build-dependency
+    criticality: optional
+  - name: OpenBLAS
+    relation: runtime-dependency
+    criticality: optional
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: optional
+  - name: FFmpeg
+    relation: runtime-dependency
+    criticality: optional
+  - name: SDL2
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="whisper-cpp" %}
 
 # whisper.cpp
 

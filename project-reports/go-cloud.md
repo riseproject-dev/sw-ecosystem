@@ -1,7 +1,16 @@
 ---
 title: go-cloud
 parent: Project Reports
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="go-cloud" %}
 
 # go-cloud
 

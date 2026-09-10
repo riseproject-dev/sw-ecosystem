@@ -1,7 +1,16 @@
 ---
 title: mangle
 parent: Project Reports
+dependencies:
+  - name: ANTLR4
+    relation: build-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mangle" %}
 
 # mangle
 

@@ -5,6 +5,8 @@ categories:
   - multimedia
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="libfdk-aac" %}
+
 # libfdk-aac
 
 **Author:** Ludovic HENRY `<ludovic.henry@qti.qualcomm.com>`

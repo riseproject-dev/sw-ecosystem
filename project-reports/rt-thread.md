@@ -2,7 +2,19 @@
 title: RT-Thread
 parent: Project Reports
 color: blue
+dependencies:
+  - name: Mbed TLS
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: musl
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="rt-thread" %}
 
 # RT-Thread
 

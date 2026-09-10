@@ -1,9 +1,16 @@
 ---
 title: LZ4
 parent: Project Reports
+color: yellow
 categories:
   - libraries
+dependencies:
+  - name: xxHash
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="lz4" %}
 
 # LZ4
 

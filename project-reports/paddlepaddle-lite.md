@@ -4,6 +4,8 @@ parent: Project Reports
 color: red
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="paddlepaddle-lite" %}
+
 # PaddlePaddle Lite
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

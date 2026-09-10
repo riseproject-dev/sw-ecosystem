@@ -4,7 +4,28 @@ parent: Project Reports
 categories:
   - libraries
   - android
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: critical
+  - name: Linux kernel
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: runtime-dependency
+    criticality: optional
+  - name: ICU
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="bionic" %}
 
 # Bionic
 

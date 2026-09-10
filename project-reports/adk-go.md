@@ -1,7 +1,25 @@
 ---
 title: adk-go
 parent: Project Reports
+dependencies:
+  - name: gRPC-Go
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenTelemetry
+    relation: runtime-dependency
+    criticality: optional
+  - name: GORM
+    relation: runtime-dependency
+    criticality: optional
+  - name: glebarez/sqlite
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="adk-go" %}
 
 # adk-go
 

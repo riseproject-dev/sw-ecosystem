@@ -2,7 +2,13 @@
 title: HuggingFace Hub
 parent: Project Reports
 color: green
+dependencies:
+  - name: hf-xet
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="huggingface-hub" %}
 
 # HuggingFace Hub
 

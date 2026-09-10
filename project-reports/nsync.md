@@ -3,6 +3,8 @@ title: nsync
 parent: Project Reports
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="nsync" %}
+
 # nsync
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

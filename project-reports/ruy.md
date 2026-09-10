@@ -3,7 +3,16 @@ title: ruy
 parent: Project Reports
 categories:
   - ai-ml
+dependencies:
+  - name: cpuinfo
+    relation: runtime-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="ruy" %}
 
 # ruy
 

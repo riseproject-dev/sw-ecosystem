@@ -2,7 +2,19 @@
 title: wuffs
 parent: Project Reports
 color: orange
+dependencies:
+  - name: SDL2
+    relation: build-dependency
+    criticality: optional
+  - name: SDL2_image
+    relation: build-dependency
+    criticality: optional
+  - name: libxcb
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="wuffs" %}
 
 # wuffs
 

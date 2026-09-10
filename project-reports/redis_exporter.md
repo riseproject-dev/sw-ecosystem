@@ -1,7 +1,47 @@
 ---
 title: redis_exporter
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: gomodule/redigo
+    relation: build-dependency
+    criticality: optional
+  - name: mna/redisc
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/client_model
+    relation: build-dependency
+    criticality: optional
+  - name: sirupsen/logrus
+    relation: build-dependency
+    criticality: optional
+  - name: cespare/xxhash
+    relation: build-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/procfs
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/common
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: critical
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="redis_exporter" %}
 
 # redis_exporter
 

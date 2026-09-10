@@ -4,7 +4,46 @@ parent: Project Reports
 categories:
   - browser
   - android
+dependencies:
+  - name: V8
+    relation: runtime-dependency
+    criticality: critical
+  - name: FFmpeg
+    relation: runtime-dependency
+    criticality: critical
+  - name: libjpeg-turbo
+    relation: runtime-dependency
+    criticality: critical
+  - name: libpng
+    relation: runtime-dependency
+    criticality: critical
+  - name: BoringSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: Skia
+    relation: runtime-dependency
+    criticality: critical
+  - name: XNNPACK
+    relation: runtime-dependency
+    criticality: optional
+  - name: SwiftShader
+    relation: runtime-dependency
+    criticality: optional
+  - name: ICU
+    relation: runtime-dependency
+    criticality: critical
+  - name: HarfBuzz
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: critical
+  - name: libpfm4
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="chromium" %}
 
 # Chromium
 

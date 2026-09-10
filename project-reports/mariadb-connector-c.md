@@ -1,7 +1,29 @@
 ---
 title: MariaDB Connector/C
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: optional
+  - name: Boost
+    relation: build-dependency
+    criticality: optional
+  - name: GnuTLS
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mariadb-connector-c" %}
 
 # MariaDB Connector/C
 

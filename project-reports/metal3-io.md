@@ -2,7 +2,22 @@
 title: metal3-io
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Kubernetes
+    relation: build-dependency
+    criticality: critical
+  - name: controller-runtime
+    relation: build-dependency
+    criticality: critical
+  - name: etcd
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="metal3-io" %}
 
 # metal3-io
 

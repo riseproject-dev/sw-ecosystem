@@ -4,7 +4,28 @@ parent: Project Reports
 categories:
   - multimedia
   - browser
+dependencies:
+  - name: libyuv
+    relation: build-dependency
+    criticality: optional
+  - name: libwebm
+    relation: build-dependency
+    criticality: optional
+  - name: Highway
+    relation: build-dependency
+    criticality: optional
+  - name: libjxl
+    relation: build-dependency
+    criticality: optional
+  - name: libvmaf
+    relation: build-dependency
+    criticality: optional
+  - name: TensorFlow Lite
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libaom" %}
 
 # libaom
 

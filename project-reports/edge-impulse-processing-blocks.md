@@ -2,7 +2,31 @@
 title: Edge Impulse Processing Blocks
 parent: Project Reports
 color: orange
+dependencies:
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: SciPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: scikit-learn
+    relation: runtime-dependency
+    criticality: critical
+  - name: Pillow
+    relation: runtime-dependency
+    criticality: critical
+  - name: PyWavelets
+    relation: runtime-dependency
+    criticality: critical
+  - name: matplotlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: librosa
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-processing-blocks" %}
 
 # Edge Impulse Processing Blocks
 

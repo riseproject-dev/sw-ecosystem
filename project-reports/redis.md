@@ -1,9 +1,43 @@
 ---
 title: Redis
 parent: Project Reports
+color: yellow
 categories:
   - databases
+dependencies:
+  - name: jemalloc
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
+  - name: Lua
+    relation: build-dependency
+    criticality: critical
+  - name: hiredis
+    relation: build-dependency
+    criticality: optional
+  - name: xxHash
+    relation: build-dependency
+    criticality: optional
+  - name: HdrHistogram_c
+    relation: build-dependency
+    criticality: optional
+  - name: linenoise
+    relation: build-dependency
+    criticality: optional
+  - name: fpconv
+    relation: build-dependency
+    criticality: optional
+  - name: tre
+    relation: build-dependency
+    criticality: optional
+  - name: systemd
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="redis" %}
 
 # Redis
 

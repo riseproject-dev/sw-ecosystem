@@ -1,7 +1,22 @@
 ---
 title: minijail
 parent: Project Reports
+dependencies:
+  - name: libcap
+    relation: runtime-dependency
+    criticality: critical
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: critical
+  - name: kafel
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="minijail" %}
 
 # minijail
 

@@ -1,9 +1,49 @@
 ---
 title: k3s
 parent: Project Reports
+color: orange
 categories:
   - containers
+dependencies:
+  - name: Kubernetes
+    relation: build-dependency
+    criticality: critical
+  - name: containerd
+    relation: build-dependency
+    criticality: optional
+  - name: runc
+    relation: build-dependency
+    criticality: optional
+  - name: etcd
+    relation: build-dependency
+    criticality: critical
+  - name: kine
+    relation: build-dependency
+    criticality: optional
+  - name: flannel
+    relation: build-dependency
+    criticality: optional
+  - name: CNI plugins
+    relation: build-dependency
+    criticality: optional
+  - name: CoreDNS
+    relation: build-dependency
+    criticality: optional
+  - name: Traefik
+    relation: build-dependency
+    criticality: critical
+  - name: local-path-provisioner
+    relation: build-dependency
+    criticality: critical
+  - name: Helm
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="k3s" %}
 
 # k3s
 

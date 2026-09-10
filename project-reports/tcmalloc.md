@@ -1,9 +1,28 @@
 ---
 title: tcmalloc
 parent: Project Reports
+color: orange
 categories:
   - libraries
+dependencies:
+  - name: Abseil
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
+  - name: fuzztest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="tcmalloc" %}
 
 # tcmalloc
 

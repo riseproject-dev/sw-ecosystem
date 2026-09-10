@@ -1,7 +1,29 @@
 ---
 title: Galera
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: Boost
+    relation: build-dependency
+    criticality: critical
+  - name: Asio
+    relation: build-dependency
+    criticality: critical
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: Check
+    relation: test-dependency
+    criticality: optional
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="galera" %}
 
 # Galera
 

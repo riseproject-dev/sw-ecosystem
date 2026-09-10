@@ -2,7 +2,22 @@
 title: Azure IoT Edge
 parent: Project Reports
 color: orange
+dependencies:
+  - name: .NET
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: Docker
+    relation: runtime-dependency
+    criticality: critical
+  - name: tokio
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="azure-iot-edge" %}
 
 # Azure IoT Edge
 

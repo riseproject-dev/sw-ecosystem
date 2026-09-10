@@ -4,7 +4,37 @@ parent: Project Reports
 categories:
   - libraries
   - browser
+dependencies:
+  - name: GLib
+    relation: build-dependency
+    criticality: critical
+  - name: nghttp2
+    relation: build-dependency
+    criticality: critical
+  - name: libpsl
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: brotli
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: SQLite
+    relation: build-dependency
+    criticality: optional
+  - name: Kerberos
+    relation: build-dependency
+    criticality: optional
+  - name: GnuTLS
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libsoup" %}
 
 # libsoup
 

@@ -3,6 +3,8 @@ title: farmhash
 parent: Project Reports
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="farmhash" %}
+
 # farmhash
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

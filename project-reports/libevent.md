@@ -1,9 +1,22 @@
 ---
 title: libevent
 parent: Project Reports
+color: yellow
 categories:
   - libraries
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: Mbed TLS
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libevent" %}
 
 # libevent
 

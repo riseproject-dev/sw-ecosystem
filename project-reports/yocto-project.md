@@ -2,7 +2,19 @@
 title: Yocto Project
 parent: Project Reports
 color: blue
+dependencies:
+  - name: QEMU
+    relation: test-dependency
+    criticality: critical
+  - name: OpenSBI
+    relation: build-dependency
+    criticality: critical
+  - name: Rust
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="yocto-project" %}
 
 # Yocto Project
 

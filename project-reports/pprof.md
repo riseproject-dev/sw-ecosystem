@@ -1,7 +1,29 @@
 ---
 title: pprof
 parent: Project Reports
+color: grey
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: chzyer/readline
+    relation: build-dependency
+    criticality: critical
+  - name: ianlancetaylor/demangle
+    relation: build-dependency
+    criticality: optional
+  - name: GNU binutils
+    relation: runtime-dependency
+    criticality: optional
+  - name: LLVM
+    relation: runtime-dependency
+    criticality: optional
+  - name: Graphviz
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="pprof" %}
 
 # pprof
 

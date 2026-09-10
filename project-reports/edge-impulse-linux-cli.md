@@ -2,7 +2,16 @@
 title: Edge Impulse Linux CLI
 parent: Project Reports
 color: red
+dependencies:
+  - name: koffi
+    relation: runtime-dependency
+    criticality: critical
+  - name: sharp
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-linux-cli" %}
 
 # Edge Impulse Linux CLI
 

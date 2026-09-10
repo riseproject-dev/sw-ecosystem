@@ -1,9 +1,31 @@
 ---
 title: Protocol Buffers
 parent: Project Reports
+color: yellow
 categories:
   - libraries
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: utf8_range
+    relation: build-dependency
+    criticality: critical
+  - name: re2
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: JsonCpp
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="protocol-buffers" %}
 
 # Protocol Buffers
 

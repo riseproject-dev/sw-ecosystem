@@ -1,9 +1,37 @@
 ---
 title: Valgrind
 parent: Project Reports
+color: grey
 categories:
   - debug
+dependencies:
+  - name: GNU make
+    relation: build-dependency
+    criticality: critical
+  - name: autoconf
+    relation: build-dependency
+    criticality: optional
+  - name: automake
+    relation: build-dependency
+    criticality: optional
+  - name: Perl
+    relation: test-dependency
+    criticality: critical
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: Linux kernel
+    relation: runtime-dependency
+    criticality: critical
+  - name: GDB
+    relation: runtime-dependency
+    criticality: optional
+  - name: Open MPI
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="valgrind" %}
 
 # Valgrind
 

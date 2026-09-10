@@ -4,6 +4,8 @@ parent: Project Reports
 color: orange
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="micro-ros" %}
+
 # micro-ROS
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

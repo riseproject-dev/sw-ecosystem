@@ -1,7 +1,35 @@
 ---
 title: executorch
 parent: Project Reports
+color: blue
+dependencies:
+  - name: XNNPACK
+    relation: runtime-dependency
+    criticality: optional
+  - name: cpuinfo
+    relation: runtime-dependency
+    criticality: optional
+  - name: PyTorch
+    relation: build-dependency
+    criticality: critical
+  - name: FlatBuffers
+    relation: runtime-dependency
+    criticality: critical
+  - name: sentencepiece
+    relation: runtime-dependency
+    criticality: optional
+  - name: pthreadpool
+    relation: runtime-dependency
+    criticality: optional
+  - name: TorchAO
+    relation: runtime-dependency
+    criticality: optional
+  - name: tokenizers
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="executorch" %}
 
 # executorch
 

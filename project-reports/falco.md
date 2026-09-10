@@ -2,7 +2,31 @@
 title: Falco
 parent: Project Reports
 color: orange
+dependencies:
+  - name: falcosecurity/libs
+    relation: runtime-dependency
+    criticality: critical
+  - name: jemalloc
+    relation: runtime-dependency
+    criticality: optional
+  - name: mimalloc
+    relation: runtime-dependency
+    criticality: optional
+  - name: gperftools
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="falco" %}
 
 # Falco
 

@@ -2,7 +2,40 @@
 title: Uptane
 parent: Project Reports
 color: orange
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: critical
+  - name: SQLite
+    relation: runtime-dependency
+    criticality: critical
+  - name: libsodium
+    relation: runtime-dependency
+    criticality: critical
+  - name: libarchive
+    relation: runtime-dependency
+    criticality: optional
+  - name: OSTree / rpm-ostree
+    relation: runtime-dependency
+    criticality: optional
+  - name: Boost
+    relation: build-dependency
+    criticality: critical
+  - name: asn1c
+    relation: build-dependency
+    criticality: critical
+  - name: JsonCpp
+    relation: build-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="uptane" %}
 
 # Uptane
 

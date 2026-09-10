@@ -2,7 +2,43 @@
 title: Telegraf
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: klauspost/compress
+    relation: runtime-dependency
+    criticality: optional
+  - name: golang/snappy
+    relation: runtime-dependency
+    criticality: optional
+  - name: pierrec/lz4/v4
+    relation: runtime-dependency
+    criticality: optional
+  - name: andybalholm/brotli
+    relation: runtime-dependency
+    criticality: optional
+  - name: zeebo/blake3
+    relation: runtime-dependency
+    criticality: optional
+  - name: minio/highwayhash
+    relation: runtime-dependency
+    criticality: optional
+  - name: klauspost/cpuid
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache Arrow
+    relation: runtime-dependency
+    criticality: optional
+  - name: gonum
+    relation: runtime-dependency
+    criticality: optional
+  - name: modernc.org/sqlite
+    relation: runtime-dependency
+    criticality: optional
+  - name: segmentio/asm
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="telegraf" %}
 
 # Telegraf
 

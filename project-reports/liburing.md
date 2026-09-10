@@ -1,9 +1,16 @@
 ---
 title: liburing
 parent: Project Reports
+color: yellow
 categories:
   - libraries
+dependencies:
+  - name: libbpf
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="liburing" %}
 
 # liburing
 

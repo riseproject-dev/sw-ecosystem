@@ -1,7 +1,40 @@
 ---
 title: autofdo
 parent: Project Reports
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: critical
+  - name: zstd
+    relation: build-dependency
+    criticality: critical
+  - name: elfutils
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: runtime-dependency
+    criticality: critical
+  - name: glog
+    relation: build-dependency
+    criticality: critical
+  - name: gflags
+    relation: build-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="autofdo" %}
 
 # autofdo
 

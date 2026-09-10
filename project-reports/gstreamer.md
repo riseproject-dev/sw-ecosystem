@@ -4,7 +4,46 @@ parent: Project Reports
 categories:
   - multimedia
   - browser
+dependencies:
+  - name: GLib
+    relation: build-dependency
+    criticality: critical
+  - name: liborc
+    relation: build-dependency
+    criticality: critical
+  - name: FFmpeg
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
+  - name: GnuTLS
+    relation: build-dependency
+    criticality: optional
+  - name: dav1d
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: zlib-ng
+    relation: build-dependency
+    criticality: optional
+  - name: libopus
+    relation: build-dependency
+    criticality: optional
+  - name: libvpx
+    relation: build-dependency
+    criticality: optional
+  - name: libx264
+    relation: build-dependency
+    criticality: optional
+  - name: libx265
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gstreamer" %}
 
 # GStreamer
 

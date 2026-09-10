@@ -1,9 +1,34 @@
 ---
 title: gRPC
 parent: Project Reports
+color: yellow
 categories:
   - libraries
+dependencies:
+  - name: BoringSSL
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: c-ares
+    relation: build-dependency
+    criticality: optional
+  - name: re2
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="grpc" %}
 
 # gRPC
 

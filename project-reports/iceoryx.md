@@ -2,7 +2,25 @@
 title: Iceoryx
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: libacl
+    relation: runtime-dependency
+    criticality: optional
+  - name: ncurses
+    relation: runtime-dependency
+    criticality: optional
+  - name: cpptoml
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="iceoryx" %}
 
 # Iceoryx
 

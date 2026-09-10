@@ -1,7 +1,35 @@
 ---
 title: LangGraph
 parent: Project Reports
+color: green
+dependencies:
+  - name: LangChain
+    relation: runtime-dependency
+    criticality: optional
+  - name: xxHash
+    relation: runtime-dependency
+    criticality: optional
+  - name: Pydantic
+    relation: runtime-dependency
+    criticality: optional
+  - name: uuid-utils
+    relation: runtime-dependency
+    criticality: optional
+  - name: orjson
+    relation: runtime-dependency
+    criticality: optional
+  - name: ormsgpack
+    relation: runtime-dependency
+    criticality: optional
+  - name: psycopg
+    relation: runtime-dependency
+    criticality: optional
+  - name: uvloop
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="langgraph" %}
 
 # LangGraph
 

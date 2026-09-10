@@ -2,7 +2,19 @@
 title: Lima
 parent: Project Reports
 color: orange
+dependencies:
+  - name: QEMU
+    relation: runtime-dependency
+    criticality: critical
+  - name: gvisor
+    relation: runtime-dependency
+    criticality: critical
+  - name: cilium/ebpf
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="lima" %}
 
 # Lima
 

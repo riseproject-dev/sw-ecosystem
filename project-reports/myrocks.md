@@ -1,7 +1,47 @@
 ---
 title: MyRocks
 parent: Project Reports
+color: orange
+dependencies:
+  - name: RocksDB
+    relation: runtime-dependency
+    criticality: critical
+  - name: MySQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: snappy
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: bzip2
+    relation: build-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
+  - name: liburing
+    relation: build-dependency
+    criticality: optional
+  - name: oneTBB
+    relation: build-dependency
+    criticality: optional
+  - name: Facebook Folly
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="myrocks" %}
 
 # MyRocks
 

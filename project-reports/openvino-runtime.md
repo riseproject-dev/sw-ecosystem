@@ -2,7 +2,19 @@
 title: OpenVINO Runtime
 parent: Project Reports
 color: blue
+dependencies:
+  - name: xbyak_riscv
+    relation: build-dependency
+    criticality: critical
+  - name: oneDNN
+    relation: build-dependency
+    criticality: critical
+  - name: oneTBB
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="openvino-runtime" %}
 
 # OpenVINO Runtime
 

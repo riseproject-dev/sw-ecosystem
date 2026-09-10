@@ -1,9 +1,28 @@
 ---
 title: sentencepiece
 parent: Project Reports
+color: blue
 categories:
   - ai-ml
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: darts_clone
+    relation: build-dependency
+    criticality: optional
+  - name: esaxx-rs
+    relation: build-dependency
+    criticality: optional
+  - name: tcmalloc
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="sentencepiece" %}
 
 # sentencepiece
 

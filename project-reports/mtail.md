@@ -1,7 +1,19 @@
 ---
 title: mtail
 parent: Project Reports
+dependencies:
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/procfs
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mtail" %}
 
 # mtail
 

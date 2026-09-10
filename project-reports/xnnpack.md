@@ -1,10 +1,26 @@
 ---
 title: XNNPACK
 parent: Project Reports
+color: blue
 categories:
   - libraries
   - ai-ml
+dependencies:
+  - name: cpuinfo
+    relation: runtime-dependency
+    criticality: critical
+  - name: pthreadpool
+    relation: runtime-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="xnnpack" %}
 
 # XNNPACK
 

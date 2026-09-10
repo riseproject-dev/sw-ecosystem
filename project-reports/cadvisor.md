@@ -1,7 +1,32 @@
 ---
 title: cadvisor
 parent: Project Reports
+color: grey
+dependencies:
+  - name: runc
+    relation: build-dependency
+    criticality: optional
+  - name: containerd/cgroups
+    relation: build-dependency
+    criticality: critical
+  - name: containerd
+    relation: runtime-dependency
+    criticality: optional
+  - name: Docker
+    relation: runtime-dependency
+    criticality: optional
+  - name: gRPC-Go
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: critical
+  - name: libpfm4
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="cadvisor" %}
 
 # cadvisor
 

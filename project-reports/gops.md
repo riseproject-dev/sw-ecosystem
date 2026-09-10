@@ -1,7 +1,25 @@
 ---
 title: gops
 parent: Project Reports
+dependencies:
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
+  - name: shirou/gopsutil
+    relation: runtime-dependency
+    criticality: critical
+  - name: spf13/cobra
+    relation: runtime-dependency
+    criticality: optional
+  - name: xlab/treeprint
+    relation: runtime-dependency
+    criticality: optional
+  - name: rsc.io/goversion
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gops" %}
 
 # gops
 

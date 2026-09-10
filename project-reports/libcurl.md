@@ -1,9 +1,49 @@
 ---
 title: libcurl
 parent: Project Reports
+color: grey
 categories:
   - libraries
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: zlib-ng
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: brotli
+    relation: build-dependency
+    criticality: optional
+  - name: nghttp2
+    relation: build-dependency
+    criticality: optional
+  - name: ngtcp2
+    relation: build-dependency
+    criticality: optional
+  - name: nghttp3
+    relation: build-dependency
+    criticality: optional
+  - name: c-ares
+    relation: build-dependency
+    criticality: optional
+  - name: libssh2
+    relation: build-dependency
+    criticality: optional
+  - name: libidn2
+    relation: build-dependency
+    criticality: optional
+  - name: libpsl
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libcurl" %}
 
 # libcurl
 

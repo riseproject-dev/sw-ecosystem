@@ -2,7 +2,28 @@
 title: MoveIt 2
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Eigen
+    relation: build-dependency
+    criticality: critical
+  - name: OSQP
+    relation: build-dependency
+    criticality: critical
+  - name: Boost
+    relation: build-dependency
+    criticality: optional
+  - name: OpenMP
+    relation: runtime-dependency
+    criticality: optional
+  - name: assimp
+    relation: build-dependency
+    criticality: optional
+  - name: fmt
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="moveit-2" %}
 
 # MoveIt 2
 

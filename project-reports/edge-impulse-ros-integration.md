@@ -2,7 +2,25 @@
 title: Edge Impulse ROS Integration
 parent: Project Reports
 color: orange
+dependencies:
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenCV
+    relation: runtime-dependency
+    criticality: critical
+  - name: PyAudio
+    relation: runtime-dependency
+    criticality: critical
+  - name: Edge Impulse Linux SDK (Python)
+    relation: runtime-dependency
+    criticality: critical
+  - name: ROS 2
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-ros-integration" %}
 
 # Edge Impulse ROS Integration
 

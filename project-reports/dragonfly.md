@@ -1,7 +1,38 @@
 ---
 title: Dragonfly
 parent: Project Reports
+color: orange
+dependencies:
+  - name: mimalloc
+    relation: runtime-dependency
+    criticality: critical
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Boost
+    relation: build-dependency
+    criticality: critical
+  - name: liburing
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: SimSIMD
+    relation: build-dependency
+    criticality: optional
+  - name: gperftools
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="dragonfly" %}
 
 # Dragonfly
 

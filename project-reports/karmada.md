@@ -2,7 +2,19 @@
 title: Karmada
 parent: Project Reports
 color: orange
+dependencies:
+  - name: etcd
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC-Go
+    relation: runtime-dependency
+    criticality: optional
+  - name: gopher-lua
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="karmada" %}
 
 # Karmada
 

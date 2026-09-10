@@ -1,9 +1,40 @@
 ---
 title: etcd
 parent: Project Reports
+color: orange
 categories:
   - containers
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: bbolt
+    relation: runtime-dependency
+    criticality: critical
+  - name: etcd-io/raft
+    relation: runtime-dependency
+    criticality: critical
+  - name: gRPC-Go
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: runtime-dependency
+    criticality: critical
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: optional
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
+  - name: prometheus/client_golang
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenTelemetry
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="etcd" %}
 
 # etcd
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

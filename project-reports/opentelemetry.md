@@ -1,9 +1,43 @@
 ---
 title: OpenTelemetry
 parent: Project Reports
+color: yellow
 categories:
   - observability
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC-Go
+    relation: runtime-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: runtime-dependency
+    criticality: optional
+  - name: glibc
+    relation: runtime-dependency
+    criticality: optional
+  - name: gRPC
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: tokio
+    relation: runtime-dependency
+    criticality: optional
+  - name: Tonic
+    relation: runtime-dependency
+    criticality: optional
+  - name: Prost
+    relation: runtime-dependency
+    criticality: optional
+  - name: pprof-rs
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="opentelemetry" %}
 
 # OpenTelemetry
 

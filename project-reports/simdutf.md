@@ -3,7 +3,16 @@ title: simdutf
 parent: Project Reports
 categories:
   - libraries
+dependencies:
+  - name: ICU
+    relation: build-dependency
+    criticality: optional
+  - name: aklomp/base64
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="simdutf" %}
 
 # simdutf
 

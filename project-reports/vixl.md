@@ -4,7 +4,16 @@ parent: Project Reports
 categories:
   - libraries
   - android
+dependencies:
+  - name: SCons
+    relation: build-dependency
+    criticality: critical
+  - name: cpplint
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="vixl" %}
 
 # VIXL
 

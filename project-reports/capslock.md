@@ -1,7 +1,16 @@
 ---
 title: capslock
 parent: Project Reports
+dependencies:
+  - name: golang.org/x/tools
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="capslock" %}
 
 # capslock
 

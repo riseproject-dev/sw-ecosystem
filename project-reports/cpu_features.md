@@ -1,7 +1,13 @@
 ---
 title: cpu_features
 parent: Project Reports
+dependencies:
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="cpu_features" %}
 
 # cpu_features
 

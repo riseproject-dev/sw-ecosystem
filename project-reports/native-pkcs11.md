@@ -3,6 +3,8 @@ title: native-pkcs11
 parent: Project Reports
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="native-pkcs11" %}
+
 # native-pkcs11
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

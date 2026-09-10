@@ -2,7 +2,46 @@
 title: Firecracker
 parent: Project Reports
 color: orange
+dependencies:
+  - name: kvm-ioctls
+    relation: build-dependency
+    criticality: critical
+  - name: linux-loader
+    relation: build-dependency
+    criticality: critical
+  - name: vm-fdt
+    relation: build-dependency
+    criticality: critical
+  - name: vm-memory
+    relation: build-dependency
+    criticality: critical
+  - name: vm-allocator
+    relation: build-dependency
+    criticality: critical
+  - name: vm-superio
+    relation: build-dependency
+    criticality: critical
+  - name: vmm-sys-util
+    relation: build-dependency
+    criticality: critical
+  - name: vhost
+    relation: build-dependency
+    criticality: critical
+  - name: aws-lc-rs
+    relation: build-dependency
+    criticality: critical
+  - name: gdbstub
+    relation: build-dependency
+    criticality: optional
+  - name: userfaultfd
+    relation: runtime-dependency
+    criticality: optional
+  - name: micro-http
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="firecracker" %}
 
 # Firecracker
 

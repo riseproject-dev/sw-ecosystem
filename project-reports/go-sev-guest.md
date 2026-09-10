@@ -1,7 +1,22 @@
 ---
 title: go-sev-guest
 parent: Project Reports
+dependencies:
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: critical
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: go-configfs-tsm
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="go-sev-guest" %}
 
 # go-sev-guest
 

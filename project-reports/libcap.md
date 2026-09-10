@@ -1,9 +1,16 @@
 ---
 title: libcap
 parent: Project Reports
+color: grey
 categories:
   - libraries
+dependencies:
+  - name: Linux-PAM
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libcap" %}
 
 # libcap
 

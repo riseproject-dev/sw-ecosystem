@@ -1,9 +1,34 @@
 ---
 title: OpenSSL
 parent: Project Reports
+color: blue
 categories:
   - libraries
+dependencies:
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: Perl
+    relation: build-dependency
+    criticality: optional
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: brotli
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: musl
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="openssl" %}
 
 # OpenSSL
 

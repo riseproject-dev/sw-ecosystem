@@ -3,7 +3,49 @@ title: Firefox
 parent: Project Reports
 categories:
   - browser
+dependencies:
+  - name: NSS
+    relation: runtime-dependency
+    criticality: critical
+  - name: dav1d
+    relation: runtime-dependency
+    criticality: optional
+  - name: libjpeg-turbo
+    relation: runtime-dependency
+    criticality: optional
+  - name: libpng
+    relation: runtime-dependency
+    criticality: optional
+  - name: Highway
+    relation: build-dependency
+    criticality: optional
+  - name: libjxl
+    relation: runtime-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
+  - name: libwebrtc
+    relation: build-dependency
+    criticality: optional
+  - name: libaom
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: NSPR
+    relation: runtime-dependency
+    criticality: critical
+  - name: libsrtp
+    relation: runtime-dependency
+    criticality: optional
+  - name: libwebp
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="firefox" %}
 
 # Firefox
 

@@ -2,7 +2,34 @@
 title: OpenYurt
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Kubernetes
+    relation: build-dependency
+    criticality: critical
+  - name: etcd
+    relation: runtime-dependency
+    criticality: critical
+  - name: gRPC-Go
+    relation: build-dependency
+    criticality: optional
+  - name: containerd
+    relation: runtime-dependency
+    criticality: critical
+  - name: runc
+    relation: runtime-dependency
+    criticality: critical
+  - name: Docker
+    relation: build-dependency
+    criticality: optional
+  - name: coreos/go-iptables
+    relation: runtime-dependency
+    criticality: optional
+  - name: vishvananda/netlink
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="openyurt" %}
 
 # OpenYurt
 

@@ -1,9 +1,46 @@
 ---
 title: runc
 parent: Project Reports
+color: yellow
 categories:
   - containers
+dependencies:
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: critical
+  - name: libseccomp-golang
+    relation: build-dependency
+    criticality: optional
+  - name: opencontainers/runtime-spec
+    relation: build-dependency
+    criticality: critical
+  - name: opencontainers/cgroups
+    relation: build-dependency
+    criticality: critical
+  - name: opencontainers/selinux
+    relation: build-dependency
+    criticality: optional
+  - name: CRIU
+    relation: runtime-dependency
+    criticality: optional
+  - name: vishvananda/netlink
+    relation: build-dependency
+    criticality: optional
+  - name: vishvananda/netns
+    relation: build-dependency
+    criticality: optional
+  - name: libpathrs
+    relation: build-dependency
+    criticality: optional
+  - name: moby/sys
+    relation: build-dependency
+    criticality: optional
+  - name: coreos/go-systemd
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="runc" %}
 
 # runc
 **Author:** Ludovic HENRY \<ludovic.henry@qti.qualcomm.com\><br/>

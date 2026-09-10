@@ -1,10 +1,29 @@
 ---
 title: OpenBLAS
 parent: Project Reports
+color: blue
 categories:
   - libraries
   - ai-ml
+dependencies:
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: optional
+  - name: OpenMP
+    relation: build-dependency
+    criticality: optional
+  - name: LAPACK
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="openblas" %}
 
 # OpenBLAS
 

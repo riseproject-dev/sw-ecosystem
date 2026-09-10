@@ -1,7 +1,14 @@
 ---
 title: pgvector
 parent: Project Reports
+color: orange
+dependencies:
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="pgvector" %}
 
 # pgvector
 

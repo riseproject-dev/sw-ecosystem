@@ -1,7 +1,13 @@
 ---
 title: neper
 parent: Project Reports
+dependencies:
+  - name: libnuma
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="neper" %}
 
 # neper
 

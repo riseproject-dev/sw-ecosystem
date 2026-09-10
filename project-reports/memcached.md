@@ -1,9 +1,37 @@
 ---
 title: Memcached
 parent: Project Reports
+color: yellow
 categories:
   - databases
+dependencies:
+  - name: libevent
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: Cyrus SASL
+    relation: runtime-dependency
+    criticality: optional
+  - name: libseccomp
+    relation: build-dependency
+    criticality: optional
+  - name: Lua
+    relation: build-dependency
+    criticality: optional
+  - name: liburing
+    relation: build-dependency
+    criticality: optional
+  - name: mcmc
+    relation: build-dependency
+    criticality: optional
+  - name: xxHash
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="memcached" %}
 
 # Memcached
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

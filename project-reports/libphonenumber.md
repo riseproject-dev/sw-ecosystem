@@ -1,7 +1,28 @@
 ---
 title: libphonenumber
 parent: Project Reports
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: ICU
+    relation: build-dependency
+    criticality: critical
+  - name: re2
+    relation: build-dependency
+    criticality: optional
+  - name: Boost
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libphonenumber" %}
 
 # libphonenumber
 

@@ -2,7 +2,37 @@
 title: Home Assistant
 parent: Project Reports
 color: orange
+dependencies:
+  - name: cryptography
+    relation: runtime-dependency
+    criticality: critical
+  - name: PyNaCl
+    relation: runtime-dependency
+    criticality: optional
+  - name: bcrypt
+    relation: runtime-dependency
+    criticality: optional
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: pandas
+    relation: runtime-dependency
+    criticality: optional
+  - name: Pillow
+    relation: runtime-dependency
+    criticality: optional
+  - name: orjson
+    relation: runtime-dependency
+    criticality: critical
+  - name: gRPC
+    relation: runtime-dependency
+    criticality: optional
+  - name: FFmpeg
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="home-assistant" %}
 
 # Home Assistant
 

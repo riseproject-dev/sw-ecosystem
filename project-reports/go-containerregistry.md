@@ -1,7 +1,16 @@
 ---
 title: go-containerregistry
 parent: Project Reports
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: klauspost/compress
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="go-containerregistry" %}
 
 # go-containerregistry
 

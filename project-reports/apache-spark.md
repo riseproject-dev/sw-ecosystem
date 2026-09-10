@@ -3,7 +3,49 @@ title: Apache Spark
 parent: Project Reports
 categories:
   - data-analytics
+dependencies:
+  - name: OpenJDK
+    relation: runtime-dependency
+    criticality: critical
+  - name: Apache Hadoop
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache Arrow
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache ORC
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache Parquet
+    relation: runtime-dependency
+    criticality: optional
+  - name: Apache Avro
+    relation: runtime-dependency
+    criticality: optional
+  - name: Netty
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: gRPC
+    relation: runtime-dependency
+    criticality: optional
+  - name: snappy-java
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd-jni
+    relation: runtime-dependency
+    criticality: optional
+  - name: lz4-java
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="apache-spark" %}
 
 # Apache Spark
 

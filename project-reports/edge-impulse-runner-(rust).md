@@ -2,7 +2,13 @@
 title: Edge Impulse Runner (Rust)
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Edge Impulse FFI (Rust)
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-runner-(rust)" %}
 
 # Edge Impulse Runner (Rust)
 

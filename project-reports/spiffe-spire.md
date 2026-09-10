@@ -2,7 +2,28 @@
 title: SPIFFE / SPIRE
 parent: Project Reports
 color: orange
+dependencies:
+  - name: open-policy-agent/opa
+    relation: runtime-dependency
+    criticality: optional
+  - name: mattn/go-sqlite3
+    relation: runtime-dependency
+    criticality: optional
+  - name: circl
+    relation: runtime-dependency
+    criticality: optional
+  - name: decred/dcrd/dcrec/secp256k1/v4
+    relation: runtime-dependency
+    criticality: optional
+  - name: golang/snappy
+    relation: runtime-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="spiffe-spire" %}
 
 # SPIFFE / SPIRE
 

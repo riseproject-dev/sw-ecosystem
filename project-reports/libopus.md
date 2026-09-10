@@ -5,6 +5,8 @@ categories:
   - multimedia
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="libopus" %}
+
 # libopus
 
 **Author:** Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;

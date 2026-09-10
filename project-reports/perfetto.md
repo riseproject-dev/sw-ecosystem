@@ -1,7 +1,31 @@
 ---
 title: perfetto
 parent: Project Reports
+dependencies:
+  - name: libunwindstack
+    relation: build-dependency
+    criticality: critical
+  - name: PCRE2
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: Abseil
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: gRPC
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="perfetto" %}
 
 # perfetto
 

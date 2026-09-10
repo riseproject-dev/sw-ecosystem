@@ -2,7 +2,31 @@
 title: OpenOCD
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: jimtcl
+    relation: runtime-dependency
+    criticality: optional
+  - name: capstone
+    relation: runtime-dependency
+    criticality: optional
+  - name: libusb
+    relation: runtime-dependency
+    criticality: critical
+  - name: hidapi
+    relation: runtime-dependency
+    criticality: optional
+  - name: libftdi
+    relation: runtime-dependency
+    criticality: optional
+  - name: libgpiod
+    relation: runtime-dependency
+    criticality: optional
+  - name: libjaylink
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="openocd" %}
 
 # OpenOCD
 

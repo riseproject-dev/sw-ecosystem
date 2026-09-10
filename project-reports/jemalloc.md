@@ -1,9 +1,22 @@
 ---
 title: jemalloc
 parent: Project Reports
+color: yellow
 categories:
   - libraries
+dependencies:
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="jemalloc" %}
 
 # jemalloc
 

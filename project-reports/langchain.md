@@ -1,9 +1,43 @@
 ---
 title: LangChain
 parent: Project Reports
+color: green
 categories:
   - agentic-ai
+dependencies:
+  - name: Pydantic
+    relation: runtime-dependency
+    criticality: optional
+  - name: SQLAlchemy
+    relation: runtime-dependency
+    criticality: optional
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: optional
+  - name: PyTorch
+    relation: runtime-dependency
+    criticality: optional
+  - name: tokenizers
+    relation: runtime-dependency
+    criticality: optional
+  - name: tiktoken
+    relation: runtime-dependency
+    criticality: optional
+  - name: FAISS
+    relation: runtime-dependency
+    criticality: optional
+  - name: uuid-utils
+    relation: runtime-dependency
+    criticality: critical
+  - name: orjson
+    relation: runtime-dependency
+    criticality: optional
+  - name: aiohttp
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="langchain" %}
 
 # LangChain
 

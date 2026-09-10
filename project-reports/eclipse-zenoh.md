@@ -2,7 +2,46 @@
 title: Eclipse Zenoh
 parent: Project Reports
 color: orange
+dependencies:
+  - name: ring
+    relation: build-dependency
+    criticality: critical
+  - name: rustls
+    relation: build-dependency
+    criticality: critical
+  - name: quinn
+    relation: build-dependency
+    criticality: critical
+  - name: io-uring
+    relation: build-dependency
+    criticality: optional
+  - name: flate2
+    relation: build-dependency
+    criticality: optional
+  - name: lz4_flex
+    relation: build-dependency
+    criticality: optional
+  - name: rsa
+    relation: build-dependency
+    criticality: optional
+  - name: sha3
+    relation: build-dependency
+    criticality: optional
+  - name: aes
+    relation: build-dependency
+    criticality: optional
+  - name: x509-parser
+    relation: build-dependency
+    criticality: optional
+  - name: buddy_system_allocator
+    relation: build-dependency
+    criticality: optional
+  - name: talc
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="eclipse-zenoh" %}
 
 # Eclipse Zenoh
 

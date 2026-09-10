@@ -1,7 +1,44 @@
 ---
 title: MaxScale
 parent: Project Reports
+color: orange
+dependencies:
+  - name: MariaDB Connector/C
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: PCRE2
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: optional
+  - name: GnuTLS
+    relation: build-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
+  - name: tcmalloc
+    relation: build-dependency
+    criticality: optional
+  - name: librdkafka
+    relation: build-dependency
+    criticality: optional
+  - name: Jansson
+    relation: build-dependency
+    criticality: optional
+  - name: libmicrohttpd
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="maxscale" %}
 
 # MaxScale
 

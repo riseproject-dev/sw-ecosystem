@@ -1,7 +1,38 @@
 ---
 title: fuzztest
 parent: Project Reports
+color: grey
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: re2
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: optional
+  - name: nlohmann/json
+    relation: test-dependency
+    criticality: optional
+  - name: ANTLR4
+    relation: build-dependency
+    criticality: optional
+  - name: riegeli
+    relation: build-dependency
+    criticality: optional
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="fuzztest" %}
 
 # fuzztest
 

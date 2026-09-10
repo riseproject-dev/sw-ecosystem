@@ -1,9 +1,55 @@
 ---
 title: Prometheus
 parent: Project Reports
+color: yellow
 categories:
   - observability
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: optional
+  - name: cespare/xxhash
+    relation: build-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
+  - name: golang/snappy
+    relation: build-dependency
+    criticality: optional
+  - name: pprof
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/procfs
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: critical
+  - name: edsrzf/mmap-go
+    relation: build-dependency
+    criticality: critical
+  - name: grafana/regexp
+    relation: build-dependency
+    criticality: optional
+  - name: gRPC-Go
+    relation: build-dependency
+    criticality: critical
+  - name: automaxprocs
+    relation: build-dependency
+    criticality: optional
+  - name: automemlimit
+    relation: build-dependency
+    criticality: optional
+  - name: dennwc/varint
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="prometheus" %}
 
 # Prometheus
 

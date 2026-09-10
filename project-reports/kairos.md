@@ -2,7 +2,37 @@
 title: Kairos
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: Docker
+    relation: build-dependency
+    criticality: optional
+  - name: containerd
+    relation: build-dependency
+    criticality: optional
+  - name: runc
+    relation: build-dependency
+    criticality: optional
+  - name: go-tpm
+    relation: build-dependency
+    criticality: optional
+  - name: go-tpm-tools
+    relation: build-dependency
+    criticality: optional
+  - name: circl
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: runtime-dependency
+    criticality: optional
+  - name: xz
+    relation: runtime-dependency
+    criticality: optional
+  - name: systemd
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="kairos" %}
 
 # Kairos
 

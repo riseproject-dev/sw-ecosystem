@@ -1,7 +1,34 @@
 ---
 title: crosvm
 parent: Project Reports
+dependencies:
+  - name: Linux kernel
+    relation: runtime-dependency
+    criticality: critical
+  - name: minijail
+    relation: runtime-dependency
+    criticality: critical
+  - name: gdbstub
+    relation: build-dependency
+    criticality: optional
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: FFmpeg
+    relation: build-dependency
+    criticality: optional
+  - name: GDB
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="crosvm" %}
 
 # crosvm
 

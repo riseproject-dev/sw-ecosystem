@@ -1,9 +1,22 @@
 ---
 title: libxslt
 parent: Project Reports
+color: grey
 categories:
   - libraries
+dependencies:
+  - name: libxml2
+    relation: build-dependency
+    criticality: critical
+  - name: libgcrypt
+    relation: build-dependency
+    criticality: optional
+  - name: Python
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libxslt" %}
 
 # libxslt
 

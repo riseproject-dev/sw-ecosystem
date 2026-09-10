@@ -6,6 +6,8 @@ categories:
   - debug
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="linux-ras" %}
+
 # Linux RAS
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

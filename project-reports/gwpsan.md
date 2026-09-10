@@ -1,7 +1,28 @@
 ---
 title: gwpsan
 parent: Project Reports
+dependencies:
+  - name: Linux kernel
+    relation: runtime-dependency
+    criticality: critical
+  - name: DynamoRIO
+    relation: build-dependency
+    criticality: critical
+  - name: Abseil
+    relation: test-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
+  - name: re2
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gwpsan" %}
 
 # gwpsan
 

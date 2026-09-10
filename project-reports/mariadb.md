@@ -1,9 +1,34 @@
 ---
 title: MariaDB
 parent: Project Reports
+color: yellow
 categories:
   - databases
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: PCRE2
+    relation: runtime-dependency
+    criticality: optional
+  - name: libnuma
+    relation: build-dependency
+    criticality: optional
+  - name: readline
+    relation: build-dependency
+    criticality: optional
+  - name: systemd
+    relation: runtime-dependency
+    criticality: optional
+  - name: RocksDB
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mariadb" %}
 
 # MariaDB
 **Author:** Ludovic HENRY \<ludovic.henry@qti.qualcomm.com\>

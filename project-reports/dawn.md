@@ -1,7 +1,22 @@
 ---
 title: dawn
 parent: Project Reports
+dependencies:
+  - name: SwiftShader
+    relation: build-dependency
+    criticality: optional
+  - name: angle
+    relation: build-dependency
+    criticality: optional
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="dawn" %}
 
 # dawn
 

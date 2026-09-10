@@ -1,9 +1,28 @@
 ---
 title: snappy
 parent: Project Reports
+color: blue
 categories:
   - libraries
+dependencies:
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: LZO2
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="snappy" %}
 
 # snappy
 

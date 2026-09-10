@@ -1,7 +1,20 @@
 ---
 title: Oracle MySQL-op
 parent: Project Reports
+color: orange
+dependencies:
+  - name: MySQL Shell
+    relation: runtime-dependency
+    criticality: critical
+  - name: MySQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: Kubernetes
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="oracle-mysql-op" %}
 
 # Oracle MySQL-op
 

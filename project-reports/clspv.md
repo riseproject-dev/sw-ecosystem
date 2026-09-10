@@ -1,7 +1,25 @@
 ---
 title: clspv
 parent: Project Reports
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: SPIRV-Tools
+    relation: build-dependency
+    criticality: critical
+  - name: SPIRV-Headers
+    relation: build-dependency
+    criticality: critical
+  - name: amber
+    relation: test-dependency
+    criticality: optional
+  - name: SwiftShader
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="clspv" %}
 
 # clspv
 

@@ -2,7 +2,43 @@
 title: CRI-O
 parent: Project Reports
 color: orange
+dependencies:
+  - name: runc
+    relation: runtime-dependency
+    criticality: critical
+  - name: containerd
+    relation: build-dependency
+    criticality: critical
+  - name: CRIU
+    relation: runtime-dependency
+    criticality: optional
+  - name: libseccomp
+    relation: build-dependency
+    criticality: critical
+  - name: conmon
+    relation: runtime-dependency
+    criticality: critical
+  - name: conmon-rs
+    relation: runtime-dependency
+    criticality: optional
+  - name: Kata Containers
+    relation: runtime-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: critical
+  - name: containers/ocicrypt
+    relation: build-dependency
+    criticality: optional
+  - name: mattn/go-sqlite3
+    relation: build-dependency
+    criticality: critical
+  - name: ulikunitz/xz
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="cri-o" %}
 
 # CRI-O
 

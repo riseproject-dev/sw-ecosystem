@@ -1,7 +1,23 @@
 ---
 title: node_exporter
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: prometheus/procfs
+    relation: runtime-dependency
+    criticality: critical
+  - name: prometheus/client_golang
+    relation: runtime-dependency
+    criticality: critical
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="node_exporter" %}
 
 # node_exporter
 

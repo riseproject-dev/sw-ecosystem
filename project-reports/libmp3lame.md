@@ -3,7 +3,22 @@ title: libmp3lame
 parent: Project Reports
 categories:
   - multimedia
+dependencies:
+  - name: libmpg123
+    relation: runtime-dependency
+    criticality: critical
+  - name: ncurses
+    relation: build-dependency
+    criticality: optional
+  - name: libsndfile
+    relation: build-dependency
+    criticality: optional
+  - name: GTK2
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libmp3lame" %}
 
 # libmp3lame
 

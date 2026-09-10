@@ -1,9 +1,52 @@
 ---
 title: CoreDNS
 parent: Project Reports
+color: grey
 categories:
   - containers
+dependencies:
+  - name: miekg/dns
+    relation: build-dependency
+    criticality: critical
+  - name: quic-go/quic-go
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: optional
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
+  - name: klauspost/cpuid
+    relation: build-dependency
+    criticality: optional
+  - name: minio/simdjson-go
+    relation: build-dependency
+    criticality: optional
+  - name: DataDog/go-libddwaf
+    relation: build-dependency
+    criticality: optional
+  - name: DataDog/dd-trace-go
+    relation: build-dependency
+    criticality: optional
+  - name: etcd
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: optional
+  - name: gRPC-Go
+    relation: build-dependency
+    criticality: optional
+  - name: automaxprocs
+    relation: build-dependency
+    criticality: optional
+  - name: oschwald/geoip2-golang
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="coredns" %}
 
 # CoreDNS
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

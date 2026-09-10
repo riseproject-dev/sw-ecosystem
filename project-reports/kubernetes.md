@@ -1,9 +1,34 @@
 ---
 title: Kubernetes
 parent: Project Reports
+color: orange
 categories:
   - containers
+dependencies:
+  - name: containerd
+    relation: build-dependency
+    criticality: optional
+  - name: runc
+    relation: build-dependency
+    criticality: optional
+  - name: etcd
+    relation: build-dependency
+    criticality: critical
+  - name: CNI plugins
+    relation: build-dependency
+    criticality: optional
+  - name: CoreDNS
+    relation: build-dependency
+    criticality: optional
+  - name: CRIU
+    relation: runtime-dependency
+    criticality: critical
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="kubernetes" %}
 
 # Kubernetes
 

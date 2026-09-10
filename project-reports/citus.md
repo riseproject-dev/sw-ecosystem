@@ -1,7 +1,26 @@
 ---
 title: Citus
 parent: Project Reports
+color: orange
+dependencies:
+  - name: PostgreSQL
+    relation: build-dependency
+    criticality: critical
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
+  - name: Intel safestringlib
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="citus" %}
 
 # Citus
 

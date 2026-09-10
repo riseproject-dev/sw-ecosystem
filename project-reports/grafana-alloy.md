@@ -1,9 +1,61 @@
 ---
 title: Grafana Alloy
 parent: Project Reports
+color: orange
 categories:
   - observability
+dependencies:
+  - name: Go
+    relation: runtime-dependency
+    criticality: critical
+  - name: coreos/go-systemd
+    relation: runtime-dependency
+    criticality: critical
+  - name: beyla
+    relation: runtime-dependency
+    criticality: critical
+  - name: go.opentelemetry.io/ebpf-profiler
+    relation: runtime-dependency
+    criticality: critical
+  - name: klauspost/compress
+    relation: runtime-dependency
+    criticality: optional
+  - name: cadvisor
+    relation: runtime-dependency
+    criticality: optional
+  - name: node_exporter
+    relation: runtime-dependency
+    criticality: optional
+  - name: Prometheus
+    relation: runtime-dependency
+    criticality: critical
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: optional
+  - name: cespare/xxhash
+    relation: runtime-dependency
+    criticality: optional
+  - name: pprof
+    relation: runtime-dependency
+    criticality: optional
+  - name: Grafana Loki
+    relation: runtime-dependency
+    criticality: optional
+  - name: Grafana Pyroscope
+    relation: runtime-dependency
+    criticality: optional
+  - name: automemlimit
+    relation: runtime-dependency
+    criticality: optional
+  - name: dskit
+    relation: runtime-dependency
+    criticality: optional
+  - name: sarama
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="grafana-alloy" %}
 
 # Grafana Alloy
 

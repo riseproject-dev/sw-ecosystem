@@ -16,8 +16,9 @@ Each `projects.yml` entry has these fields:
 - `report` (optional): path to the per-project report under `project-reports/` -- present only when a report already exists
 - `synonyms` (optional): alternate names the project appears under in the dependency graphs
 
-Only `name`, `repo`, and `home` are passed to the workflow; `report`/`synonyms` are registry
-bookkeeping. Pick a project whose entry has no `report:` field yet (it still needs a report).
+Only `name`, `repo`, `home`, and the full `projects.yml` array itself (as `registry`, see execution
+model below) are passed to the workflow; `report`/`synonyms` are registry bookkeeping. Pick a
+project whose entry has no `report:` field yet (it still needs a report).
 
 The output report path is derived from the name: `project-reports/<slug>.md`, where `slug` is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. "Apache Flink" -> `project-reports/apache-flink.md`, "Open vSwitch" -> `project-reports/open-vswitch.md`).
 
@@ -32,20 +33,23 @@ The output report path is derived from the name: `project-reports/<slug>.md`, wh
 
 ## Execution model
 
-Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `prompts/project-report/project-report-workflow.js`. Pass one `projects.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`):
+Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `prompts/project-report/project-report-workflow.js`. Pass one `projects.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`), plus the full parsed `projects.yml` as `registry` -- the script has no filesystem access, so it can only resolve dependency names against the registry if the caller loads and passes it:
 
 ```js
 Workflow({
   args: [{
     "name": "<project-name>",                        // projects.yml: name
     "repo": "https://<project-repository>/",         // projects.yml: repo
-    "home": "https://<project-homepage>/"            // projects.yml: home
+    "home": "https://<project-homepage>/",           // projects.yml: home
+    "registry": [ /* the full parsed projects.yml array */ ]
   }],
   scriptPath: "/abs/path/to/prompts/project-report/project-report-workflow.js"
 })
 ```
 
-The script derives the output path as `project-reports/<slug>.md`. To override it, add an absolute `"slug"` field to the args object. The script runs four phases sequentially (8 search agents, 4 fetch agents, 3 verify agents, 1 synthesize agent = 16 total). On completion the workflow returns a JSON object with `{name, file, report, totalChars}`. Write `report` to `file` and verify before committing.
+The script derives the output path as `project-reports/<slug>.md`. To override it, add an absolute `"slug"` field to the args object. The script runs four phases sequentially (8 search agents, 4 fetch agents, 3 verify agents, 1 dependency-structuring agent, 1 synthesize agent = 17 total). On completion the workflow returns a JSON object with `{name, file, report, totalChars, new_registry_entries}`. Write `report` to `file` and verify before committing.
+
+`new_registry_entries` lists any direct dependency (found for Section 9 / the report's own `dependencies:` frontmatter) whose name did not resolve against `registry` -- i.e. it has no `projects.yml` entry yet. **Before committing the report**, add one new alphabetically-positioned entry (`name`/`repo`/`home`, best effort) to `projects.yml` for each item in this array -- see `AGENTS.md`'s "After the workflow completes" section. This keeps the hard constraint enforced by `_plugins/dependency_graph_generator.rb` (every `dependencies: name:` in every report must match a `projects.yml` entry, or the site fails to build) from ever actually tripping in normal use.
 
 For a non-GitHub project (sourceware.org, kernel.org, googlesource.com), the `repo` URL is not a github.com URL and the script automatically switches to WebSearch + WebFetch instead of GitHub MCP tools. For a project with no `repo` at all, the script falls back to the `home` URL for web searches.
 
@@ -122,7 +126,13 @@ When Updating the report, write the report from scratch. Do not reference previo
 title: [PROJECT_NAME]
 parent: Project Reports
 color: [COLOR]
+dependencies:
+  - name: [DEPENDENCY_NAME]        ← projects.yml's own canonical `name:` spelling, never a synonym
+    relation: [build-dependency | test-dependency | runtime-dependency]
+    criticality: [critical | optional]
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="[SLUG]" %}
 
 # [PROJECT_NAME]
 
@@ -135,6 +145,13 @@ color: [COLOR]
 **Verification policy:** Every claim is cross-referenced to a primary upstream source.<br/>
 Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 ```
+
+`dependencies:` lists every *direct* dependency from Section 9 (not transitive/indirect ones -- the
+dependency graph derives those client-side). `[SLUG]` is this report's own filename slug (matching
+`title`). The `project-report-workflow.js` script generates both automatically -- one entry per direct
+dependency, `name` resolved against `projects.yml` -- and splices them into its output deterministically,
+so this template only needs to be followed exactly when writing a report by hand. Every project report
+must include this graph; it is not optional.
 
 ---
 
@@ -222,7 +239,12 @@ This section drives the investment analysis.
 
 ### 9. Dependencies
 
-This section documents the dependency graph with respect to RISC-V. Apply the following process:
+This section documents the dependency graph with respect to RISC-V. Apply the following process.
+
+Every *direct* dependency named in Step 1 below must also appear in the header block's `dependencies:`
+frontmatter (see above) -- that structured list drives the rendered dependency graph. Indirect/recursed
+dependencies from Step 2 are prose-only; do not add them to `dependencies:` (the graph derives them
+client-side from direct edges alone).
 
 **Step 1 -- Direct dependencies.** List every significant direct dependency: build dependencies, runtime dependencies, and optional dependencies that affect performance or functionality. For each:
 

@@ -2,7 +2,61 @@
 title: trillian
 parent: Project Reports
 color: orange
+dependencies:
+  - name: gRPC
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: etcd
+    relation: runtime-dependency
+    criticality: critical
+  - name: go-sql-driver/mysql
+    relation: build-dependency
+    criticality: optional
+  - name: MySQL
+    relation: runtime-dependency
+    criticality: optional
+  - name: pgx
+    relation: build-dependency
+    criticality: optional
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: optional
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: optional
+  - name: Spanner
+    relation: build-dependency
+    criticality: optional
+  - name: cockroach-go
+    relation: build-dependency
+    criticality: optional
+  - name: CockroachDB
+    relation: runtime-dependency
+    criticality: optional
+  - name: k8s.io/client-go
+    relation: build-dependency
+    criticality: optional
+  - name: merkle
+    relation: build-dependency
+    criticality: critical
+  - name: pkcs11key
+    relation: build-dependency
+    criticality: optional
+  - name: Redis
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: critical
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="trillian" %}
 
 # trillian
 

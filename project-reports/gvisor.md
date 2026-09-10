@@ -1,7 +1,28 @@
 ---
 title: gvisor
 parent: Project Reports
+dependencies:
+  - name: libseccomp
+    relation: build-dependency
+    criticality: critical
+  - name: cilium/ebpf
+    relation: build-dependency
+    criticality: optional
+  - name: gRPC-Go
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: vishvananda/netlink
+    relation: build-dependency
+    criticality: optional
+  - name: google/btree
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gvisor" %}
 
 # gvisor
 

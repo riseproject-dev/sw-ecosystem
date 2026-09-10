@@ -1,7 +1,32 @@
 ---
 title: CloudNativePG
 parent: Project Reports
+color: orange
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: controller-runtime
+    relation: build-dependency
+    criticality: critical
+  - name: Kubernetes
+    relation: build-dependency
+    criticality: critical
+  - name: pgx
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC-Go
+    relation: build-dependency
+    criticality: optional
+  - name: barman-cloud
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="cloudnativepg" %}
 
 # CloudNativePG
 

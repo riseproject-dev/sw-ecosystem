@@ -1,10 +1,29 @@
 ---
 title: Eigen
 parent: Project Reports
+color: blue
 categories:
   - libraries
   - ai-ml
+dependencies:
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: optional
+  - name: LAPACK
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="eigen" %}
 
 # Eigen
 

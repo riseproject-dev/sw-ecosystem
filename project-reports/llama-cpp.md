@@ -1,10 +1,26 @@
 ---
 title: llama.cpp
 parent: Project Reports
+color: blue
 categories:
   - llm-inference
   - ai-ml
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenBLAS
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenMP
+    relation: build-dependency
+    criticality: optional
+  - name: cpp-httplib
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="llama-cpp" %}
 
 # llama.cpp
 

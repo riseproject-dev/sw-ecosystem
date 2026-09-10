@@ -1,7 +1,22 @@
 ---
 title: nsjail
 parent: Project Reports
+dependencies:
+  - name: kafel
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: libcap
+    relation: build-dependency
+    criticality: optional
+  - name: libnl
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="nsjail" %}
 
 # nsjail
 

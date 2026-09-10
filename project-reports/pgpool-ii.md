@@ -1,7 +1,17 @@
 ---
 title: Pgpool-II
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="pgpool-ii" %}
 
 # Pgpool-II
 

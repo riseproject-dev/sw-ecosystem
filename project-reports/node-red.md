@@ -2,7 +2,22 @@
 title: Node-RED
 parent: Project Reports
 color: green
+dependencies:
+  - name: Node.js
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: libuv
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="node-red" %}
 
 # Node-RED
 

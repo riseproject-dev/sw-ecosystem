@@ -1,7 +1,35 @@
 ---
 title: MariaDB ColumnStore
 parent: Project Reports
+color: red
+dependencies:
+  - name: MariaDB
+    relation: build-dependency
+    criticality: critical
+  - name: snappy
+    relation: runtime-dependency
+    criticality: optional
+  - name: LZ4
+    relation: runtime-dependency
+    criticality: optional
+  - name: Boost
+    relation: build-dependency
+    criticality: critical
+  - name: Apache Thrift
+    relation: build-dependency
+    criticality: critical
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: optional
+  - name: libxml2
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mariadb-columnstore" %}
 
 # MariaDB ColumnStore
 

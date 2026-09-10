@@ -3,7 +3,13 @@ title: libvorbis
 parent: Project Reports
 categories:
   - multimedia
+dependencies:
+  - name: libogg
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libvorbis" %}
 
 # libvorbis
 

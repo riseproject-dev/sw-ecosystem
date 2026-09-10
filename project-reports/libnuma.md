@@ -1,9 +1,12 @@
 ---
 title: libnuma
 parent: Project Reports
+color: yellow
 categories:
   - libraries
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libnuma" %}
 
 # libnuma
 

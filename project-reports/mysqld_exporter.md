@@ -1,7 +1,32 @@
 ---
 title: mysqld_exporter
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: go-sql-driver/mysql
+    relation: runtime-dependency
+    criticality: critical
+  - name: MySQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: prometheus/client_golang
+    relation: runtime-dependency
+    criticality: critical
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: filippo.io/edwards25519
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mysqld_exporter" %}
 
 # mysqld_exporter
 

@@ -1,7 +1,14 @@
 ---
 title: pgjdbc
 parent: Project Reports
+color: green
+dependencies:
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="pgjdbc" %}
 
 # pgjdbc
 

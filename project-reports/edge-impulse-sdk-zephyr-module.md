@@ -2,7 +2,25 @@
 title: Edge Impulse SDK Zephyr Module
 parent: Project Reports
 color: orange
+dependencies:
+  - name: TensorFlow Lite Micro (TFLM)
+    relation: build-dependency
+    criticality: critical
+  - name: ruy
+    relation: build-dependency
+    criticality: critical
+  - name: gemmlowp
+    relation: build-dependency
+    criticality: optional
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: critical
+  - name: kissfft
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-sdk-zephyr-module" %}
 
 # Edge Impulse SDK Zephyr Module
 

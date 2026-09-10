@@ -1,9 +1,25 @@
 ---
 title: zstd
 parent: Project Reports
+color: blue
 categories:
   - libraries
+dependencies:
+  - name: xxHash
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: critical
+  - name: xz
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="zstd" %}
 
 # zstd
 

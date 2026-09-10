@@ -1,7 +1,19 @@
 ---
 title: jsonnet
 parent: Project Reports
+dependencies:
+  - name: rapidyaml
+    relation: build-dependency
+    criticality: critical
+  - name: nlohmann/json
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="jsonnet" %}
 
 # jsonnet
 

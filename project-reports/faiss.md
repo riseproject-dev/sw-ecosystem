@@ -1,9 +1,28 @@
 ---
 title: FAISS
 parent: Project Reports
+color: yellow
 categories:
   - agentic-ai
+dependencies:
+  - name: OpenBLAS
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenMP
+    relation: runtime-dependency
+    criticality: critical
+  - name: Intel MKL
+    relation: runtime-dependency
+    criticality: optional
+  - name: CUDA
+    relation: build-dependency
+    criticality: optional
+  - name: SWIG
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="faiss" %}
 
 # FAISS
 

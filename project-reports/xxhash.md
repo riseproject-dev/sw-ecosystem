@@ -4,6 +4,8 @@ parent: Project Reports
 color: blue
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="xxhash" %}
+
 # xxHash
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

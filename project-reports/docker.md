@@ -3,7 +3,34 @@ title: Docker
 parent: Project Reports
 categories:
   - containers
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: runc
+    relation: runtime-dependency
+    criticality: critical
+  - name: containerd
+    relation: runtime-dependency
+    criticality: critical
+  - name: BuildKit
+    relation: runtime-dependency
+    criticality: critical
+  - name: rootlesskit
+    relation: runtime-dependency
+    criticality: optional
+  - name: tini
+    relation: runtime-dependency
+    criticality: optional
+  - name: Buildx
+    relation: runtime-dependency
+    criticality: optional
+  - name: CRIU
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="docker" %}
 
 # Docker
 

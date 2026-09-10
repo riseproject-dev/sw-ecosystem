@@ -3,7 +3,13 @@ title: LuaJIT
 parent: Project Reports
 categories:
   - runtimes
+dependencies:
+  - name: libffi
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="luajit" %}
 
 # LuaJIT
 

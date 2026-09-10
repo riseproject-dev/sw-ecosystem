@@ -2,7 +2,46 @@
 title: TensorFlow Federated
 parent: Project Reports
 color: orange
+dependencies:
+  - name: TensorFlow
+    relation: build-dependency
+    criticality: critical
+  - name: Eigen
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: SciPy
+    relation: runtime-dependency
+    criticality: optional
+  - name: differential-privacy
+    relation: runtime-dependency
+    criticality: optional
+  - name: pybind11
+    relation: build-dependency
+    criticality: critical
+  - name: federated_language
+    relation: build-dependency
+    criticality: optional
+  - name: ml_dtypes
+    relation: runtime-dependency
+    criticality: optional
+  - name: dm-tree
+    relation: runtime-dependency
+    criticality: optional
+  - name: wrapt
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="tensorflow-federated" %}
 
 # TensorFlow Federated
 

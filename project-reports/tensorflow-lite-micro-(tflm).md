@@ -2,7 +2,34 @@
 title: TensorFlow Lite Micro (TFLM)
 parent: Project Reports
 color: orange
+dependencies:
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: critical
+  - name: kissfft
+    relation: build-dependency
+    criticality: optional
+  - name: ruy
+    relation: build-dependency
+    criticality: critical
+  - name: gemmlowp
+    relation: build-dependency
+    criticality: optional
+  - name: Pigweed
+    relation: build-dependency
+    criticality: optional
+  - name: eyalroz_printf
+    relation: build-dependency
+    criticality: optional
+  - name: NumPy
+    relation: test-dependency
+    criticality: optional
+  - name: TensorFlow
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="tensorflow-lite-micro-(tflm)" %}
 
 # TensorFlow Lite Micro (TFLM)
 

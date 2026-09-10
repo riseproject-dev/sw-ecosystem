@@ -1,11 +1,30 @@
 ---
 title: BoringSSL
 parent: Project Reports
+color: yellow
 categories:
   - libraries
   - browser
   - android
+dependencies:
+  - name: fiat-crypto
+    relation: build-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
+  - name: libunwind
+    relation: build-dependency
+    criticality: optional
+  - name: Wycheproof
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="boringssl" %}
 
 # BoringSSL
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

@@ -1,10 +1,32 @@
 ---
 title: oneDNN
 parent: Project Reports
+color: blue
 categories:
   - libraries
   - ai-ml
+dependencies:
+  - name: xbyak_riscv
+    relation: build-dependency
+    criticality: critical
+  - name: OpenMP
+    relation: build-dependency
+    criticality: critical
+  - name: oneTBB
+    relation: build-dependency
+    criticality: optional
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: spdlog
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="onednn" %}
 
 # oneDNN
 

@@ -3,6 +3,8 @@ title: capstone
 parent: Project Reports
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="capstone" %}
+
 # capstone
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

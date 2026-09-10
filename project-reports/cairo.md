@@ -1,7 +1,25 @@
 ---
 title: Cairo
 parent: Project Reports
+dependencies:
+  - name: pixman
+    relation: build-dependency
+    criticality: critical
+  - name: FreeType
+    relation: build-dependency
+    criticality: critical
+  - name: fontconfig
+    relation: build-dependency
+    criticality: critical
+  - name: libpng
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="cairo" %}
 
 # Cairo
 

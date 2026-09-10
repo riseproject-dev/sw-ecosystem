@@ -1,7 +1,34 @@
 ---
 title: seesaw
 parent: Project Reports
+dependencies:
+  - name: libnl
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: miekg/dns
+    relation: build-dependency
+    criticality: optional
+  - name: fsnotify/fsnotify
+    relation: build-dependency
+    criticality: optional
+  - name: golang/glog
+    relation: build-dependency
+    criticality: optional
+  - name: goconf
+    relation: build-dependency
+    criticality: optional
+  - name: godebug
+    relation: test-dependency
+    criticality: optional
+  - name: Quagga
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="seesaw" %}
 
 # seesaw
 

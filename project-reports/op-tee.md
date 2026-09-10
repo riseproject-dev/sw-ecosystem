@@ -2,7 +2,19 @@
 title: OP-TEE
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: Mbed TLS
+    relation: runtime-dependency
+    criticality: critical
+  - name: LibTomCrypt
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="op-tee" %}
 
 # OP-TEE
 

@@ -2,7 +2,34 @@
 title: WasmEdge
 parent: Project Reports
 color: blue
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: zstd
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: simdjson
+    relation: build-dependency
+    criticality: critical
+  - name: fmt
+    relation: build-dependency
+    criticality: critical
+  - name: spdlog
+    relation: build-dependency
+    criticality: critical
+  - name: BLAKE3
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="wasmedge" %}
 
 # WasmEdge
 

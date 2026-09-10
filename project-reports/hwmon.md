@@ -5,6 +5,8 @@ categories:
   - perfmon
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="hwmon" %}
+
 # hwmon
 
 **Author:** Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;<br/>

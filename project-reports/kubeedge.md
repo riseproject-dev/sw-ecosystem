@@ -2,7 +2,22 @@
 title: KubeEdge
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Kubernetes
+    relation: runtime-dependency
+    criticality: critical
+  - name: SQLite
+    relation: runtime-dependency
+    criticality: critical
+  - name: containerd
+    relation: runtime-dependency
+    criticality: critical
+  - name: runc
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="kubeedge" %}
 
 # KubeEdge
 

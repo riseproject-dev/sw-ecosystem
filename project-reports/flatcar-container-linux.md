@@ -2,7 +2,43 @@
 title: Flatcar Container Linux
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Linux kernel
+    relation: build-dependency
+    criticality: critical
+  - name: glibc
+    relation: build-dependency
+    criticality: critical
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: containerd
+    relation: runtime-dependency
+    criticality: critical
+  - name: runc
+    relation: runtime-dependency
+    criticality: critical
+  - name: Docker
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: libseccomp
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: xz
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="flatcar-container-linux" %}
 
 # Flatcar Container Linux
 

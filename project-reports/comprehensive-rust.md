@@ -1,7 +1,40 @@
 ---
 title: comprehensive-rust
 parent: Project Reports
+dependencies:
+  - name: mdBook
+    relation: build-dependency
+    criticality: critical
+  - name: rustls
+    relation: test-dependency
+    criticality: optional
+  - name: tokio
+    relation: test-dependency
+    criticality: optional
+  - name: quinn
+    relation: test-dependency
+    criticality: optional
+  - name: sha2
+    relation: test-dependency
+    criticality: optional
+  - name: chacha20
+    relation: test-dependency
+    criticality: optional
+  - name: cxx
+    relation: test-dependency
+    criticality: optional
+  - name: simdutf8
+    relation: test-dependency
+    criticality: optional
+  - name: zerocopy
+    relation: test-dependency
+    criticality: optional
+  - name: buddy_system_allocator
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="comprehensive-rust" %}
 
 # comprehensive-rust
 

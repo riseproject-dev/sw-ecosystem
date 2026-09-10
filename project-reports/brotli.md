@@ -1,9 +1,12 @@
 ---
 title: brotli
 parent: Project Reports
+color: grey
 categories:
   - libraries
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="brotli" %}
 
 # brotli
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

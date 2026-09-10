@@ -2,7 +2,31 @@
 title: Zephyr RTOS
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: Mbed TLS
+    relation: runtime-dependency
+    criticality: optional
+  - name: TF-PSA-Crypto
+    relation: runtime-dependency
+    criticality: optional
+  - name: mldsa-native
+    relation: runtime-dependency
+    criticality: optional
+  - name: mcuboot
+    relation: runtime-dependency
+    criticality: optional
+  - name: CMSIS-DSP
+    relation: runtime-dependency
+    criticality: optional
+  - name: CMSIS-NN
+    relation: runtime-dependency
+    criticality: optional
+  - name: picolibc
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="zephyr-rtos" %}
 
 # Zephyr RTOS
 

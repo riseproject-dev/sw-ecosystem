@@ -1,7 +1,29 @@
 ---
 title: re2
 parent: Project Reports
+color: grey
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: glibc
+    relation: build-dependency
+    criticality: critical
+  - name: ICU
+    relation: build-dependency
+    criticality: optional
+  - name: PCRE2
+    relation: test-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="re2" %}
 
 # re2
 

@@ -1,7 +1,17 @@
 ---
 title: benchmark
 parent: Project Reports
+color: grey
+dependencies:
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: libpfm4
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="benchmark" %}
 
 # benchmark
 

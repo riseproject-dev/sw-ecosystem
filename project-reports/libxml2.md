@@ -1,9 +1,28 @@
 ---
 title: libxml2
 parent: Project Reports
+color: grey
 categories:
   - libraries
+dependencies:
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: zlib-ng
+    relation: build-dependency
+    criticality: optional
+  - name: ICU
+    relation: runtime-dependency
+    criticality: optional
+  - name: readline
+    relation: runtime-dependency
+    criticality: optional
+  - name: Python
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libxml2" %}
 
 # libxml2
 

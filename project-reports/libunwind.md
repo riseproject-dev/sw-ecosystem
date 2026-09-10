@@ -1,10 +1,20 @@
 ---
 title: libunwind
 parent: Project Reports
+color: grey
 categories:
   - libraries
   - debug
+dependencies:
+  - name: xz
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libunwind" %}
 
 # libunwind
 

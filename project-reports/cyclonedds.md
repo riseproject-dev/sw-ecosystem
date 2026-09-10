@@ -2,7 +2,19 @@
 title: CycloneDDS
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: Iceoryx
+    relation: runtime-dependency
+    criticality: optional
+  - name: Iceoryx2
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="cyclonedds" %}
 
 # CycloneDDS
 

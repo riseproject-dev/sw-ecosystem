@@ -1,7 +1,25 @@
 ---
 title: honggfuzz
 parent: Project Reports
+dependencies:
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: critical
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: critical
+  - name: capstone
+    relation: build-dependency
+    criticality: optional
+  - name: xz
+    relation: runtime-dependency
+    criticality: optional
+  - name: libblocksruntime
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="honggfuzz" %}
 
 # honggfuzz
 

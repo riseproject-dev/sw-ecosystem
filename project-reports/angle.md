@@ -1,7 +1,43 @@
 ---
 title: angle
 parent: Project Reports
+dependencies:
+  - name: SwiftShader
+    relation: runtime-dependency
+    criticality: optional
+  - name: VulkanMemoryAllocator
+    relation: build-dependency
+    criticality: critical
+  - name: SPIRV-Tools
+    relation: build-dependency
+    criticality: critical
+  - name: glslang
+    relation: build-dependency
+    criticality: critical
+  - name: SPIRV-Cross
+    relation: build-dependency
+    criticality: optional
+  - name: astc-encoder
+    relation: build-dependency
+    criticality: optional
+  - name: cpu_features
+    relation: build-dependency
+    criticality: optional
+  - name: dawn
+    relation: runtime-dependency
+    criticality: optional
+  - name: Abseil
+    relation: build-dependency
+    criticality: optional
+  - name: libpng
+    relation: test-dependency
+    criticality: optional
+  - name: expat
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="angle" %}
 
 # angle
 

@@ -2,7 +2,34 @@
 title: Intel Neural Compressor (INC)
 parent: Project Reports
 color: green
+dependencies:
+  - name: PyTorch
+    relation: runtime-dependency
+    criticality: critical
+  - name: TensorFlow
+    relation: runtime-dependency
+    criticality: optional
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: ONNX
+    relation: runtime-dependency
+    criticality: optional
+  - name: sentencepiece
+    relation: runtime-dependency
+    criticality: optional
+  - name: tokenizers
+    relation: runtime-dependency
+    criticality: optional
+  - name: TorchAO
+    relation: runtime-dependency
+    criticality: optional
+  - name: Intel Extension for PyTorch (IPEX)
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="intel-neural-compressor-(inc)" %}
 
 # Intel Neural Compressor (INC)
 

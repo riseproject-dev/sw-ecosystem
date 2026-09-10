@@ -2,7 +2,40 @@
 title: Autoware
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Eigen
+    relation: build-dependency
+    criticality: critical
+  - name: OpenCV
+    relation: runtime-dependency
+    criticality: critical
+  - name: PCL
+    relation: runtime-dependency
+    criticality: critical
+  - name: Boost
+    relation: build-dependency
+    criticality: critical
+  - name: CUDA
+    relation: runtime-dependency
+    criticality: critical
+  - name: OSQP
+    relation: build-dependency
+    criticality: critical
+  - name: Sophus
+    relation: build-dependency
+    criticality: optional
+  - name: fmt
+    relation: build-dependency
+    criticality: critical
+  - name: yaml-cpp
+    relation: runtime-dependency
+    criticality: critical
+  - name: GeographicLib
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="autoware" %}
 
 # Autoware
 

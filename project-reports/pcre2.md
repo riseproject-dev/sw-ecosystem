@@ -1,9 +1,16 @@
 ---
 title: PCRE2
 parent: Project Reports
+color: blue
 categories:
   - libraries
+dependencies:
+  - name: SLJIT
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="pcre2" %}
 
 # PCRE2
 

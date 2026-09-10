@@ -1,7 +1,16 @@
 ---
 title: perf_data_converter
 parent: Project Reports
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="perf_data_converter" %}
 
 # perf_data_converter
 

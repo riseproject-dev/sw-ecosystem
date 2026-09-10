@@ -2,7 +2,16 @@
 title: Mosquitto
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mosquitto" %}
 
 # Mosquitto
 

@@ -2,7 +2,37 @@
 title: U-Boot
 parent: Project Reports
 color: blue
+dependencies:
+  - name: GNU make
+    relation: build-dependency
+    criticality: critical
+  - name: GNU bison
+    relation: build-dependency
+    criticality: critical
+  - name: Flex
+    relation: build-dependency
+    criticality: critical
+  - name: Python
+    relation: build-dependency
+    criticality: critical
+  - name: pyelftools
+    relation: build-dependency
+    criticality: critical
+  - name: dtc
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: SWIG
+    relation: build-dependency
+    criticality: optional
+  - name: GnuTLS
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="u-boot" %}
 
 # U-Boot
 

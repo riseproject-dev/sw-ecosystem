@@ -2,7 +2,16 @@
 title: Matter / chip-tool (Project CHIP)
 parent: Project Reports
 color: orange
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: JsonCpp
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="matter-chip-tool-(project-chip)" %}
 
 # Matter / chip-tool (Project CHIP)
 

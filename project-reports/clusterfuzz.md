@@ -1,7 +1,40 @@
 ---
 title: clusterfuzz
 parent: Project Reports
+dependencies:
+  - name: LLVM
+    relation: runtime-dependency
+    criticality: critical
+  - name: AFL++
+    relation: runtime-dependency
+    criticality: optional
+  - name: honggfuzz
+    relation: runtime-dependency
+    criticality: optional
+  - name: fuzztest
+    relation: runtime-dependency
+    criticality: optional
+  - name: atheris
+    relation: runtime-dependency
+    criticality: optional
+  - name: gRPC
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: cryptography
+    relation: build-dependency
+    criticality: critical
+  - name: psutil
+    relation: build-dependency
+    criticality: critical
+  - name: Redis
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="clusterfuzz" %}
 
 # clusterfuzz
 

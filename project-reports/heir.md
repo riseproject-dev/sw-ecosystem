@@ -1,7 +1,55 @@
 ---
 title: heir
 parent: Project Reports
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: OpenFHE
+    relation: build-dependency
+    criticality: optional
+  - name: tfhe-rs
+    relation: build-dependency
+    criticality: optional
+  - name: poulpy-ckks/poulpy-cpu-ref
+    relation: build-dependency
+    criticality: optional
+  - name: Lattigo
+    relation: build-dependency
+    criticality: optional
+  - name: Eigen
+    relation: build-dependency
+    criticality: critical
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: or-tools
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: fuzztest
+    relation: test-dependency
+    criticality: optional
+  - name: zlib-ng
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
+  - name: Yosys
+    relation: runtime-dependency
+    criticality: optional
+  - name: libffi
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="heir" %}
 
 # heir
 

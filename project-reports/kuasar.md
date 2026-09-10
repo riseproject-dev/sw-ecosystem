@@ -2,7 +2,37 @@
 title: Kuasar
 parent: Project Reports
 color: orange
+dependencies:
+  - name: wasmtime
+    relation: runtime-dependency
+    criticality: critical
+  - name: WasmEdge
+    relation: runtime-dependency
+    criticality: optional
+  - name: QEMU
+    relation: runtime-dependency
+    criticality: critical
+  - name: Cloud Hypervisor
+    relation: build-dependency
+    criticality: optional
+  - name: StratoVirt
+    relation: build-dependency
+    criticality: optional
+  - name: youki
+    relation: build-dependency
+    criticality: critical
+  - name: runc
+    relation: build-dependency
+    criticality: optional
+  - name: containerd
+    relation: runtime-dependency
+    criticality: critical
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="kuasar" %}
 
 # Kuasar
 

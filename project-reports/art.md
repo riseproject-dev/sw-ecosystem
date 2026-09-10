@@ -3,7 +3,31 @@ title: ART
 parent: Project Reports
 categories:
   - android
+dependencies:
+  - name: Bionic
+    relation: runtime-dependency
+    criticality: critical
+  - name: libunwindstack
+    relation: runtime-dependency
+    criticality: optional
+  - name: Conscrypt
+    relation: runtime-dependency
+    criticality: critical
+  - name: ICU
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: xz
+    relation: runtime-dependency
+    criticality: optional
+  - name: LZ4
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="art" %}
 
 # ART
 

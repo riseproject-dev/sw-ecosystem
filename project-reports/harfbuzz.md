@@ -1,9 +1,34 @@
 ---
 title: HarfBuzz
 parent: Project Reports
+color: grey
 categories:
   - libraries
+dependencies:
+  - name: FreeType
+    relation: runtime-dependency
+    criticality: critical
+  - name: ICU
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: GLib
+    relation: build-dependency
+    criticality: optional
+  - name: Cairo
+    relation: build-dependency
+    criticality: optional
+  - name: Graphite2
+    relation: build-dependency
+    criticality: optional
+  - name: libpng
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="harfbuzz" %}
 
 # HarfBuzz
 

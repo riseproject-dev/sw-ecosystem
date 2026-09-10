@@ -1,10 +1,13 @@
 ---
 title: libseccomp
 parent: Project Reports
+color: grey
 categories:
   - libraries
   - containers
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libseccomp" %}
 
 # libseccomp
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

@@ -3,7 +3,34 @@ title: APR
 parent: Project Reports
 categories:
   - libraries
+dependencies:
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: optional
+  - name: expat
+    relation: build-dependency
+    criticality: optional
+  - name: libxml2
+    relation: build-dependency
+    criticality: optional
+  - name: SQLite
+    relation: build-dependency
+    criticality: optional
+  - name: PostgreSQL
+    relation: build-dependency
+    criticality: optional
+  - name: Cyrus SASL
+    relation: build-dependency
+    criticality: optional
+  - name: OpenLDAP
+    relation: build-dependency
+    criticality: optional
+  - name: UUID library
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="apr" %}
 
 # APR
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

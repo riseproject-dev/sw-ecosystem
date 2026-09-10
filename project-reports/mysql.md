@@ -1,9 +1,55 @@
 ---
 title: MySQL
 parent: Project Reports
+color: orange
 categories:
   - databases
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: ICU
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: RapidJSON
+    relation: build-dependency
+    criticality: optional
+  - name: Boost
+    relation: build-dependency
+    criticality: optional
+  - name: Abseil
+    relation: build-dependency
+    criticality: optional
+  - name: libevent
+    relation: build-dependency
+    criticality: optional
+  - name: libcurl
+    relation: build-dependency
+    criticality: optional
+  - name: Cyrus SASL
+    relation: build-dependency
+    criticality: optional
+  - name: gperftools
+    relation: build-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mysql" %}
 
 # MySQL
 

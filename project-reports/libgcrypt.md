@@ -3,7 +3,13 @@ title: libgcrypt
 parent: Project Reports
 categories:
   - libraries
+dependencies:
+  - name: libgpg-error
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libgcrypt" %}
 
 # libgcrypt
 

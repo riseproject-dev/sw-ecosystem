@@ -1,7 +1,28 @@
 ---
 title: gemma.cpp
 parent: Project Reports
+dependencies:
+  - name: Highway
+    relation: build-dependency
+    criticality: critical
+  - name: sentencepiece
+    relation: build-dependency
+    criticality: critical
+  - name: nlohmann/json
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: cpp-httplib
+    relation: build-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="gemma-cpp" %}
 
 # gemma.cpp
 

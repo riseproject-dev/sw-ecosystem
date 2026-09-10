@@ -2,7 +2,16 @@
 title: Tinkerbell
 parent: Project Reports
 color: orange
+dependencies:
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: critical
+  - name: containerd
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="tinkerbell" %}
 
 # Tinkerbell
 

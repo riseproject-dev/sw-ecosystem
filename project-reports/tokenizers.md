@@ -1,10 +1,47 @@
 ---
 title: tokenizers
 parent: Project Reports
+color: yellow
 categories:
   - ai-ml
   - python-packages
+dependencies:
+  - name: maturin
+    relation: build-dependency
+    criticality: critical
+  - name: pyo3
+    relation: build-dependency
+    criticality: critical
+  - name: rayon
+    relation: build-dependency
+    criticality: critical
+  - name: ahash
+    relation: build-dependency
+    criticality: optional
+  - name: oniguruma
+    relation: build-dependency
+    criticality: optional
+  - name: fancy-regex
+    relation: build-dependency
+    criticality: critical
+  - name: esaxx-rs
+    relation: build-dependency
+    criticality: optional
+  - name: daachorse
+    relation: build-dependency
+    criticality: critical
+  - name: unicode-normalization-alignments
+    relation: build-dependency
+    criticality: critical
+  - name: spm_precompiled
+    relation: build-dependency
+    criticality: optional
+  - name: tokio
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="tokenizers" %}
 
 # tokenizers
 

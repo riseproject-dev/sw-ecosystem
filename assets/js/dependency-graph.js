@@ -92,17 +92,19 @@
   }
 
   // A node's `report` is baked in at generation time as a production URL, e.g.
-  // "/sw-ecosystem/project-reports/<slug>.html" (see stack-report-workflow.js reportUrl()), or is
-  // null when no per-project report exists (the click handler then falls back to repo/home).
-  // A PR preview is served one level deeper, at ".../pr-preview/pr-<N>/stack-reports/...",
-  // so a bare production link would incorrectly point at the live site instead of the
-  // preview. Rewrite the baked-in site prefix to whatever base path this page is actually
-  // being served under, detected from the page's own URL, so the link is correct in both.
+  // "/sw-ecosystem/project-reports/<slug>.html" (see stack-report-workflow.js reportUrl(), or for
+  // the shared project-dependency graph, _plugins/dependency_graph_generator.rb), or is null when
+  // no per-project report exists (the click handler then falls back to repo/home).
+  // A PR preview is served one level deeper, at ".../pr-preview/pr-<N>/stack-reports/..." or
+  // ".../pr-preview/pr-<N>/project-reports/...", so a bare production link would incorrectly
+  // point at the live site instead of the preview. Rewrite the baked-in site prefix to whatever
+  // base path this page is actually being served under, detected from the page's own URL (which
+  // itself lives under one of those same two directories), so the link is correct in both.
   function resolveReportUrl(reportPath) {
     if (!reportPath) return reportPath;
     var idx = reportPath.indexOf('/project-reports/');
     if (idx === -1) return reportPath;
-    var m = /^(.*)\/stack-reports\//.exec(window.location.pathname);
+    var m = /^(.*)\/(?:stack-reports|project-reports)\//.exec(window.location.pathname);
     var currentBase = m ? m[1] : '';
     return currentBase + reportPath.slice(idx);
   }
@@ -265,7 +267,9 @@
       })
       .then(function (graphJson) {
         var fullDs = buildGraphDataStructure(graphJson);
-        var selected = null;
+        var selected = container.getAttribute('data-focus') || null;
+        if (selected && !fullDs.nodeMap[selected]) selected = null;
+        if (selected) resetBtn.hidden = false;
 
         function fitToView(layout) {
           var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -433,7 +437,7 @@
     var chip2 = document.createElement('span');
     chip2.className = 'dg-legend-chip dg-legend-chip-external';
     ext.appendChild(chip2);
-    ext.appendChild(document.createTextNode('external dependency (outside this stack)'));
+    ext.appendChild(document.createTextNode('external dependency (no report yet)'));
     el.appendChild(ext);
   }
 

@@ -1,7 +1,28 @@
 ---
 title: leveldb
 parent: Project Reports
+dependencies:
+  - name: snappy
+    relation: build-dependency
+    criticality: optional
+  - name: crc32c
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: tcmalloc
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="leveldb" %}
 
 # leveldb
 

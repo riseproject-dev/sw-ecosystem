@@ -1,7 +1,32 @@
 ---
 title: redis-operator
 parent: Project Reports
+color: orange
+dependencies:
+  - name: Redis
+    relation: runtime-dependency
+    criticality: critical
+  - name: Kubernetes
+    relation: runtime-dependency
+    criticality: critical
+  - name: controller-runtime
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: optional
+  - name: redis/go-redis
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC-Go
+    relation: build-dependency
+    criticality: optional
+  - name: OpenTelemetry
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="redis-operator" %}
 
 # redis-operator
 

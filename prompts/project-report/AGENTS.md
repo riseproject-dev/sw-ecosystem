@@ -130,7 +130,7 @@ The script derives the output path as `project-reports/<slug>.md`. Add an option
 
 ### One project at a time
 
-**Never launch two workflows concurrently.** Each workflow runs 16 agents that each
+**Never launch two workflows concurrently.** Each workflow runs 17 agents that each
 make dozens of API calls. Two concurrent workflows will immediately saturate the
 rate limit and both will stall with agents frozen at 3 lines.
 
@@ -147,7 +147,7 @@ so the search agents spend extra retries.
 ### Rate limiting
 
 The model rate limit is per-minute. Each workflow burns roughly 600k-700k tokens across
-all 16 agents. When a rate limit is hit:
+all 17 agents. When a rate limit is hit:
 
 1. The workflow stalls -- agents freeze mid-run with no new journal entries
 2. The workflow process eventually dies, leaving the journal with STARTED but no RESULT
@@ -160,7 +160,7 @@ all 16 agents. When a rate limit is hit:
    - The `resumeFromRunId` causes completed agents to return cached results instantly
    - Only the remaining agents run live
 3. If the resumed workflow also stalls, wait 15 minutes then resume again
-4. Repeat until all 16 agents complete
+4. Repeat until all 17 agents complete
 
 **Checking workflow progress** while it runs:
 
@@ -189,8 +189,9 @@ item = data["result"][0]
 status = item.get("status", "OK")   # "FAILED" or absent (=OK)
 report = item.get("report", "")
 filepath = item["file"]
+new_entries = item.get("new_registry_entries", [])
 
-print(f"Status: {status}, chars: {len(report)}")
+print(f"Status: {status}, chars: {len(report)}, new registry entries: {len(new_entries)}")
 
 if status != "FAILED" and len(report) > 5000:
     with open(filepath, "w", encoding="utf-8") as f:
@@ -199,12 +200,52 @@ if status != "FAILED" and len(report) > 5000:
     print(next(l for l in open(filepath) if l.startswith("# ")))   # verify title heading
 ```
 
+### Registering new dependencies
+
+The report's `dependencies:` frontmatter (see `project-report.md`'s Header block section) can only
+name dependencies that already have a `projects.yml` entry -- `_plugins/dependency_graph_generator.rb`
+hard-fails the site build otherwise. The workflow resolves every direct dependency against the
+`registry` array you passed it (see Execution model in `project-report.md`) and returns any that
+didn't match as `new_registry_entries`: `[{name, repo, home}, ...]`.
+
+**Before writing/committing the report**, add one entry to `projects.yml` for each item in
+`new_registry_entries` that isn't already there (double check -- the resolution is best-effort, so a
+near-miss spelling can produce a false "new" entry for a project that's actually already listed under
+a different name; if so, either skip it or add the missing spelling to that entry's `synonyms:`
+instead of creating a duplicate).
+
+Insert each new entry as its own `- name: / repo: / home:` block (no `report:` or `synonyms:` -- those
+are added later, by hand, only if this dependency ever gets its own report), in alphabetical order
+(case-insensitive) by `name`, using a targeted `Edit` against the two entries it falls between. Do
+**not** reformat or re-dump the whole file through a YAML serializer -- `projects.yml` is hand-formatted
+with a header comment and blank-line-separated entries; a full re-serialize would touch all ~700
+entries and produce an unreviewable diff for a one-entry addition. Example insertion between existing
+`- name: OpenSK` and `- name: OpenSSL` entries:
+
+```yaml
+- name: OpenSK
+  repo: https://github.com/google/OpenSK
+  home: https://github.com/google/OpenSK
+  report: project-reports/opensk.md
+
+- name: OpenSSH
+  repo: https://github.com/openssh/openssh-portable
+  home: https://www.openssh.com/
+
+- name: OpenSSL
+  repo: https://github.com/openssl/openssl
+  home: https://www.openssl.org/
+  report: project-reports/openssl.md
+```
+
 ### Verification criteria
 
 Before committing, verify:
 1. File size > 10 KB -- target for a full report
 2. File size > 5 KB minimum -- below 5 KB is likely partial/stub, do not commit
 3. First line after front-matter is exactly `# <ProjectName>`
+4. Every `dependencies:` entry in the new report's frontmatter has a matching `projects.yml` entry
+   (either pre-existing or just added above)
 
 If any check fails: do NOT commit. Note the failure, continue with the next project,
 come back later with a fresh workflow run for the failed one.
@@ -216,22 +257,25 @@ git add <directory>/<project>.md
 git commit -m "Add <Name> status report"
 ```
 
+If you added any `projects.yml` entries in this run, stage and commit that file too (either in the
+same commit or a preceding one -- the report's build depends on it).
+
 ---
 
 ## Workflow Internals
 
 The workflow script (`.prompts/riscv-report.js`) runs four phases sequentially,
-16 agents total:
+17 agents total:
 
 | Phase | Agents | What they do |
 |-------|--------|-------------|
 | Search | 8 | Issues/PRs, CI config, packages, RISE, arch code, governance, deps, perf/bugs |
 | Fetch | 4 | Deep reads of top issues, PR merge verification, build docs, RISE details |
 | Verify | 3 | Adversarial CI check, adversarial package check, arch code completeness |
-| Synthesize | 1 | Writes the full report text from all findings |
+| Synthesize | 2 | Extracts the structured direct-dependency list (resolved against `projects.yml`), then writes the full report text from all findings |
 
 Phases are sequential (each agent awaits the previous). This prevents rate limit
-stampedes. The Synthesize agent receives up to 90,000 characters of research
+stampedes. The Synthesize phase's final agent receives up to 90,000 characters of research
 context and writes the report as its final text output (no Write tool call).
 
 The main session then writes the returned `report` string to disk via Python.
@@ -289,7 +333,7 @@ preserves all completed agent results. The resume only re-runs the missing agent
 
 ### Rate limit pattern
 
-Rate limits hit predictably around agent 11-12 of 16. The symptom is `started`
+Rate limits hit predictably around agent 11-12 of 17. The symptom is `started`
 count stays at N while `result` count stays at N-2 for many minutes. Wait 15
 minutes and resume. Two resumes are usually sufficient to clear the queue.
 

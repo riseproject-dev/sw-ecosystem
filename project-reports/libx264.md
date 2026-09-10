@@ -3,7 +3,13 @@ title: libx264
 parent: Project Reports
 categories:
   - multimedia
+dependencies:
+  - name: FFmpeg
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libx264" %}
 
 # libx264
 

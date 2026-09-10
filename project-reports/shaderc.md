@@ -1,7 +1,28 @@
 ---
 title: shaderc
 parent: Project Reports
+dependencies:
+  - name: glslang
+    relation: build-dependency
+    criticality: critical
+  - name: SPIRV-Tools
+    relation: build-dependency
+    criticality: critical
+  - name: SPIRV-Headers
+    relation: build-dependency
+    criticality: optional
+  - name: re2
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: effcee
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="shaderc" %}
 
 # shaderc
 

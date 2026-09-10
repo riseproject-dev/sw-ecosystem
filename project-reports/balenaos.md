@@ -2,7 +2,25 @@
 title: balenaOS
 parent: Project Reports
 color: orange
+dependencies:
+  - name: runc
+    relation: runtime-dependency
+    criticality: critical
+  - name: containerd
+    relation: runtime-dependency
+    criticality: critical
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: critical
+  - name: klauspost/compress
+    relation: build-dependency
+    criticality: optional
+  - name: eBPF
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="balenaos" %}
 
 # balenaOS
 

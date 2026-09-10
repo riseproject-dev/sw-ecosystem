@@ -3,7 +3,22 @@ title: cloud-init
 parent: Project Reports
 categories:
   - iaas
+dependencies:
+  - name: Python
+    relation: runtime-dependency
+    criticality: critical
+  - name: PyYAML
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: systemd
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="cloud-init" %}
 
 # cloud-init
 

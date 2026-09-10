@@ -1,11 +1,54 @@
 ---
 title: OpenJDK
 parent: Project Reports
+color: grey
 categories:
   - runtimes
   - llm-inference
   - data-analytics
+dependencies:
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: libpng
+    relation: build-dependency
+    criticality: optional
+  - name: giflib
+    relation: build-dependency
+    criticality: optional
+  - name: lcms2
+    relation: build-dependency
+    criticality: optional
+  - name: HarfBuzz
+    relation: build-dependency
+    criticality: optional
+  - name: FreeType
+    relation: build-dependency
+    criticality: optional
+  - name: fontconfig
+    relation: build-dependency
+    criticality: optional
+  - name: libffi
+    relation: build-dependency
+    criticality: optional
+  - name: libjpeg
+    relation: build-dependency
+    criticality: optional
+  - name: CUPS
+    relation: build-dependency
+    criticality: optional
+  - name: libX11
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="openjdk" %}
 
 # OpenJDK
 

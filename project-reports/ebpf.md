@@ -3,7 +3,31 @@ title: eBPF
 parent: Project Reports
 categories:
   - perfmon
+dependencies:
+  - name: libbpf
+    relation: runtime-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: elfutils
+    relation: build-dependency
+    criticality: critical
+  - name: pahole
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: libcap
+    relation: build-dependency
+    criticality: optional
+  - name: iproute2
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="ebpf" %}
 
 # eBPF
 

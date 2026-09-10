@@ -1,7 +1,50 @@
 ---
 title: postgres_exporter
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: lib/pq
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/procfs
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/common
+    relation: build-dependency
+    criticality: optional
+  - name: prometheus/exporter-toolkit
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: optional
+  - name: cespare/xxhash
+    relation: build-dependency
+    criticality: optional
+  - name: coreos/go-systemd
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: mdlayher/vsock
+    relation: build-dependency
+    criticality: optional
+  - name: promu
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="postgres_exporter" %}
 
 # postgres_exporter
 

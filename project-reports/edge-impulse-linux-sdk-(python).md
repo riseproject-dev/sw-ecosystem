@@ -2,7 +2,22 @@
 title: Edge Impulse Linux SDK (Python)
 parent: Project Reports
 color: green
+dependencies:
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: PyAudio
+    relation: runtime-dependency
+    criticality: critical
+  - name: six
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenCV
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-linux-sdk-(python)" %}
 
 # Edge Impulse Linux SDK (Python)
 

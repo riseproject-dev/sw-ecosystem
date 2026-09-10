@@ -1,7 +1,38 @@
 ---
 title: memcached_exporter
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: Memcached
+    relation: runtime-dependency
+    criticality: critical
+  - name: gomemcache
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/client_golang
+    relation: build-dependency
+    criticality: critical
+  - name: prometheus/procfs
+    relation: build-dependency
+    criticality: optional
+  - name: cespare/xxhash
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: optional
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: coreos/go-systemd
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="memcached_exporter" %}
 
 # memcached_exporter
 

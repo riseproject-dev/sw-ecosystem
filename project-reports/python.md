@@ -1,10 +1,50 @@
 ---
 title: Python
 parent: Project Reports
+color: blue
 categories:
   - runtimes
   - ai-ml
+dependencies:
+  - name: libffi
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: bzip2
+    relation: build-dependency
+    criticality: optional
+  - name: xz
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: libmpdec
+    relation: build-dependency
+    criticality: critical
+  - name: expat
+    relation: build-dependency
+    criticality: optional
+  - name: SQLite
+    relation: build-dependency
+    criticality: optional
+  - name: mimalloc
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
+  - name: glibc
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="python" %}
 
 # Python
 

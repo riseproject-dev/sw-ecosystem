@@ -2,7 +2,31 @@
 title: FastDDS (eProsima)
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: Fast-CDR
+    relation: runtime-dependency
+    criticality: critical
+  - name: foonathan_memory
+    relation: runtime-dependency
+    criticality: critical
+  - name: Asio
+    relation: runtime-dependency
+    criticality: critical
+  - name: TinyXML2
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: SQLite
+    relation: runtime-dependency
+    criticality: optional
+  - name: Boost
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="fastdds-(eprosima)" %}
 
 # FastDDS (eProsima)
 

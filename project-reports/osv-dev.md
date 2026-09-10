@@ -1,7 +1,16 @@
 ---
 title: osv.dev
 parent: Project Reports
+dependencies:
+  - name: gRPC
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="osv-dev" %}
 
 # osv.dev
 

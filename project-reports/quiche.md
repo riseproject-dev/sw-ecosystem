@@ -1,7 +1,43 @@
 ---
 title: quiche
 parent: Project Reports
+dependencies:
+  - name: BoringSSL
+    relation: build-dependency
+    criticality: critical
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: re2
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: fuzztest
+    relation: test-dependency
+    criticality: optional
+  - name: highwayhash
+    relation: build-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: quic-trace
+    relation: build-dependency
+    criticality: optional
+  - name: googleurl
+    relation: build-dependency
+    criticality: optional
+  - name: anonymous-tokens
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="quiche" %}
 
 # quiche
 

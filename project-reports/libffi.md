@@ -1,9 +1,12 @@
 ---
 title: libffi
 parent: Project Reports
+color: grey
 categories:
   - libraries
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libffi" %}
 
 # libffi
 

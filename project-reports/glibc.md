@@ -1,7 +1,47 @@
 ---
 title: glibc
 parent: Project Reports
+color: yellow
+dependencies:
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: critical
+  - name: Linux kernel
+    relation: build-dependency
+    criticality: critical
+  - name: GNU make
+    relation: build-dependency
+    criticality: critical
+  - name: gawk
+    relation: build-dependency
+    criticality: critical
+  - name: GNU bison
+    relation: build-dependency
+    criticality: critical
+  - name: Python
+    relation: test-dependency
+    criticality: optional
+  - name: GDB
+    relation: test-dependency
+    criticality: optional
+  - name: elfutils
+    relation: test-dependency
+    criticality: optional
+  - name: libcap
+    relation: runtime-dependency
+    criticality: optional
+  - name: libselinux
+    relation: runtime-dependency
+    criticality: optional
+  - name: libaudit
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="glibc" %}
 
 # glibc
 

@@ -1,9 +1,12 @@
 ---
 title: libmvec
 parent: Project Reports
+color: orange
 categories:
   - libraries
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libmvec" %}
 
 # libmvec
 

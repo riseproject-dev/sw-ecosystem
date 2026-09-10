@@ -1,7 +1,19 @@
 ---
 title: oss-fuzz
 parent: Project Reports
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: fuzztest
+    relation: build-dependency
+    criticality: critical
+  - name: Bazelisk
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="oss-fuzz" %}
 
 # oss-fuzz
 

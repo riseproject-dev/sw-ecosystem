@@ -1,9 +1,19 @@
 ---
 title: cpuinfo
 parent: Project Reports
+color: grey
 categories:
   - libraries
+dependencies:
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="cpuinfo" %}
 
 # cpuinfo
 

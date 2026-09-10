@@ -4,7 +4,22 @@ parent: Project Reports
 categories:
   - multimedia
   - browser
+dependencies:
+  - name: Meson
+    relation: build-dependency
+    criticality: critical
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="dav1d" %}
 
 # dav1d
 

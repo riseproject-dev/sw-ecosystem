@@ -3,6 +3,8 @@ title: osv-scanner
 parent: Project Reports
 ---
 
+{% include dependency-graph.html slug="dependencies" focus="osv-scanner" %}
+
 # osv-scanner
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

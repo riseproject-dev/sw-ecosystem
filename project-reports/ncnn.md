@@ -2,7 +2,46 @@
 title: ncnn
 parent: Project Reports
 color: blue
+dependencies:
+  - name: Vulkan-Loader
+    relation: build-dependency
+    criticality: optional
+  - name: glslang
+    relation: build-dependency
+    criticality: optional
+  - name: SPIRV-Tools
+    relation: build-dependency
+    criticality: optional
+  - name: OpenMP
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: OpenCV
+    relation: build-dependency
+    criticality: optional
+  - name: Eigen
+    relation: build-dependency
+    criticality: optional
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: optional
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: optional
+  - name: XNNPACK
+    relation: build-dependency
+    criticality: optional
+  - name: ruy
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="ncnn" %}
 
 # ncnn
 

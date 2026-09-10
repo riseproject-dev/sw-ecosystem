@@ -3,7 +3,40 @@ title: libvirt
 parent: Project Reports
 categories:
   - iaas
+dependencies:
+  - name: GLib
+    relation: build-dependency
+    criticality: critical
+  - name: GnuTLS
+    relation: build-dependency
+    criticality: critical
+  - name: libxml2
+    relation: build-dependency
+    criticality: critical
+  - name: QEMU
+    relation: runtime-dependency
+    criticality: critical
+  - name: libcurl
+    relation: build-dependency
+    criticality: optional
+  - name: readline
+    relation: build-dependency
+    criticality: optional
+  - name: libcap
+    relation: build-dependency
+    criticality: optional
+  - name: libselinux
+    relation: build-dependency
+    criticality: optional
+  - name: libnl
+    relation: build-dependency
+    criticality: optional
+  - name: Python
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libvirt" %}
 
 # libvirt
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>

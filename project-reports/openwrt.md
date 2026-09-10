@@ -2,7 +2,40 @@
 title: OpenWRT
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: musl
+    relation: runtime-dependency
+    criticality: critical
+  - name: glibc
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: Mbed TLS
+    relation: runtime-dependency
+    criticality: optional
+  - name: wolfSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: GMP
+    relation: runtime-dependency
+    criticality: optional
+  - name: GNU MPFR
+    relation: runtime-dependency
+    criticality: optional
+  - name: Nettle
+    relation: runtime-dependency
+    criticality: optional
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="openwrt" %}
 
 # OpenWRT
 

@@ -2,7 +2,31 @@
 title: Trusted Firmware-A (TF-A)
 parent: Project Reports
 color: grey
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: Mbed TLS
+    relation: build-dependency
+    criticality: critical
+  - name: CMake
+    relation: build-dependency
+    criticality: optional
+  - name: GNU make
+    relation: build-dependency
+    criticality: critical
+  - name: dtc
+    relation: build-dependency
+    criticality: optional
+  - name: Poetry
+    relation: build-dependency
+    criticality: optional
+  - name: QCBOR
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="trusted-firmware-a-(tf-a)" %}
 
 # Trusted Firmware-A (TF-A)
 

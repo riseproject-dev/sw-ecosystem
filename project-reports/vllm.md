@@ -1,10 +1,59 @@
 ---
 title: vLLM
 parent: Project Reports
+color: orange
 categories:
   - llm-inference
   - ai-ml
+dependencies:
+  - name: PyTorch
+    relation: build-dependency
+    criticality: critical
+  - name: NumPy
+    relation: build-dependency
+    criticality: critical
+  - name: oneDNN
+    relation: build-dependency
+    criticality: critical
+  - name: tokenizers
+    relation: build-dependency
+    criticality: critical
+  - name: safetensors
+    relation: build-dependency
+    criticality: critical
+  - name: HuggingFace Transformers
+    relation: build-dependency
+    criticality: critical
+  - name: sentencepiece
+    relation: build-dependency
+    criticality: critical
+  - name: tiktoken
+    relation: build-dependency
+    criticality: critical
+  - name: msgspec
+    relation: build-dependency
+    criticality: optional
+  - name: BLAKE3
+    relation: build-dependency
+    criticality: optional
+  - name: outlines-core
+    relation: build-dependency
+    criticality: optional
+  - name: numba
+    relation: build-dependency
+    criticality: optional
+  - name: torchaudio
+    relation: build-dependency
+    criticality: optional
+  - name: torchvision
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="vllm" %}
 
 # vLLM
 

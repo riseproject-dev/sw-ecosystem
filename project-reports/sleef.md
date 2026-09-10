@@ -1,10 +1,29 @@
 ---
 title: SLEEF
 parent: Project Reports
+color: blue
 categories:
   - libraries
   - ai-ml
+dependencies:
+  - name: TLFloat
+    relation: runtime-dependency
+    criticality: critical
+  - name: GNU MPFR
+    relation: test-dependency
+    criticality: optional
+  - name: FFTW3
+    relation: test-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: test-dependency
+    criticality: optional
+  - name: OpenMP
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="sleef" %}
 
 # SLEEF
 

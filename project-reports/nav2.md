@@ -2,7 +2,22 @@
 title: Nav2
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Eigen
+    relation: build-dependency
+    criticality: critical
+  - name: OpenCV
+    relation: build-dependency
+    criticality: optional
+  - name: nlohmann/json
+    relation: build-dependency
+    criticality: optional
+  - name: yaml-cpp
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="nav2" %}
 
 # Nav2
 

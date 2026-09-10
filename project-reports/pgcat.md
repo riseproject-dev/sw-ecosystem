@@ -1,7 +1,14 @@
 ---
 title: pgcat
 parent: Project Reports
+color: red
+dependencies:
+  - name: rustls
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="pgcat" %}
 
 # pgcat
 

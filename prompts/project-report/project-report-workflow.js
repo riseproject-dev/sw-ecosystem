@@ -15,6 +15,55 @@ const ABORT_THRESHOLD = 1000
 
 const slug = proj.slug || proj.name.toLowerCase().replace(/[\s.\/]+/g, '-')
 
+// ── Project registry (projects.yml) lookup ──────────────────────────────────────────────────
+// proj.registry (optional): the parsed projects.yml (repo root) -- an array of
+//   { name, repo?, home?, report?, synonyms? } entries. The operator loads it and passes it in
+//   (this script is sandboxed with no filesystem access). Mirrors registryByName/lookupRegistry
+//   in stack-report-workflow.js: index every entry by its canonical name AND each synonym
+//   (normalized, case-insensitive), so a dependency named by any known spelling resolves to the
+//   single canonical entry -- used below to write Section 9's direct dependencies into
+//   frontmatter using projects.yml's own `name:` spelling, never an ad-hoc one.
+const registry = proj.registry || []
+const registryByName = new Map()
+for (const e of registry) {
+  if (!e || !e.name) continue
+  const add = (k) => {
+    const nk = String(k || '').toLowerCase().trim()
+    if (nk && !registryByName.has(nk)) registryByName.set(nk, e)
+  }
+  add(e.name)
+  for (const s of e.synonyms || []) add(s)
+}
+function lookupRegistry(name) {
+  return registryByName.get(String(name || '').toLowerCase().trim()) || null
+}
+
+// Structured direct-dependency record -- forces uniform output from the deps-extraction agent
+// (see start of Synthesize phase below) so it can be resolved against the registry in code
+// rather than parsed back out of free text.
+const DEPENDENCY_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    dependencies: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          name: { type: 'string', description: 'commonly-known project/library name' },
+          relation: { type: 'string', enum: ['build-dependency', 'test-dependency', 'runtime-dependency'] },
+          criticality: { type: 'string', enum: ['critical', 'optional'] },
+          repo: { type: 'string', description: 'source repo URL, best effort; only used if this dependency has no projects.yml entry yet' },
+          home: { type: 'string', description: 'homepage URL, best effort; only used if this dependency has no projects.yml entry yet' },
+        },
+        required: ['name', 'relation', 'criticality'],
+      },
+    },
+  },
+  required: ['dependencies'],
+}
+
 // Parse owner/repo from URL for GitHub projects
 // e.g. https://github.com/llvm/llvm-project -> owner=llvm, repo=llvm-project
 // For non-GitHub projects (kernel.org, sourceware.org) ghOwner/ghRepo will be null
@@ -414,6 +463,29 @@ const fullContext = allFindings + '\n\n══════ VERIFICATIONS ══�
 
 // ── Phase 4: Synthesize ───────────────────────────────────────────────────
 phase('Synthesize')
+
+log(`Extracting structured dependency list for ${proj.name} ...`)
+const registryNames = registry.map(e => e && e.name).filter(Boolean).join(', ')
+const depsExtracted = await agent(`From the research findings below, list ONLY "${proj.name}"'s DIRECT dependencies (not transitive/indirect ones -- do not recurse) that matter for riscv64 readiness: build tools, libraries, or runtimes it links against, requires to build, or requires to run its test suite. Omit purely-documentation tooling (e.g. Doxygen) and platform-neutral dependencies with no bearing on riscv64 readiness.
+
+For each dependency:
+- "name": its commonly-known project name. If it matches (by name or common alias) one of these known projects.yml registry entries, use EXACTLY that entry's spelling: ${registryNames}
+- "relation": exactly one of build-dependency, test-dependency, runtime-dependency (if it serves more than one purpose, pick whichever is most consequential for riscv64 readiness -- usually build-dependency).
+- "criticality": critical or optional.
+- "repo"/"home": only if this dependency does NOT match a registry entry above and you know its source repository or homepage URL from the findings below.
+
+Findings:
+${fullContext.substring(0, 20000)}`, { schema: DEPENDENCY_SCHEMA, label: `${proj.name}:deps-structured`, phase: 'Synthesize' })
+
+const directDeps = (depsExtracted && depsExtracted.dependencies) || []
+const newRegistryEntries = []
+const dependencies = directDeps.map(d => {
+  const match = lookupRegistry(d.name)
+  if (!match) newRegistryEntries.push({ name: d.name, repo: d.repo || null, home: d.home || null })
+  return { name: match ? match.name : d.name, relation: d.relation, criticality: d.criticality }
+})
+const dependencyList = dependencies.map(d => `${d.name} (${d.relation}, ${d.criticality})`).join('; ') || 'none identified'
+
 log(`Synthesizing report for ${proj.name} (${fullContext.length} chars of findings) ...`)
 
 const report = await agent(`You are a highly technical, principal software engineer writing a fact-based assessment for engineering leadership at a chip company evaluating RISC-V investment. Write with precision. No hedging, no marketing language, no filler.
@@ -426,6 +498,7 @@ CRITICAL RULES:
 5. Your final text output IS the report. Do not call any tools. Just write the report text.
 6. Section 10 (Ecosystem Status) -- include only if the project has a significant ecosystem of packages, plugins, or extensions that must also be enabled on riscv64 (e.g., Python packages, npm packages, Kubernetes operators, Maven JARs). Skip it for system libraries, runtimes, and standalone tools that have no dependent package ecosystem.
 7. Section 13 (Readiness Assessment) -- invoke the /project-color-coding skill on this project to determine the color. That skill is the authoritative source for the color model and decision rules. Pass this project (name + repo + the research findings already gathered) to the skill. Take the skill's output fields directly: color, color_case, release_provider, optimization_gap. Write those values into the YAML frontmatter color: field, the **Readiness:** header field, and (for optimization-purpose projects only) the **Optimization level:** header field. Then write Section 13 using the skill's justification and pending-work notes.
+8. Section 9 (Dependencies) -- its table MUST include every dependency listed below under "Direct dependencies", using that EXACT name (do not rename or omit one), plus any additional indirect/recursed dependencies found via research. The direct/indirect distinction and the frontmatter dependencies: block are handled outside this prompt; just make sure Section 9's prose table is consistent with the direct list.
 
 READINESS COLOR MODEL (condensed reference -- the /project-color-coding skill is authoritative):
 
@@ -445,6 +518,7 @@ Step 2 (optimization-purpose projects only): assess RISC-V-specific code coverag
 Project: ${proj.name}
 Repository: ${proj.repo}
 Homepage: ${proj.home}
+Direct dependencies (must all appear in Section 9, using these exact names -- see rule 8): ${dependencyList}
 
 LIVE RESEARCH FINDINGS (${fullContext.length} chars -- use ONLY these as your source of facts):
 ${fullContext.substring(0, 90000)}
@@ -557,4 +631,26 @@ Before sizing: check what RISE has already done or funded. Do not size work alre
 
 Complete list of every source cited. Format: [descriptive text](URL).`, {label: `${proj.name}:synthesize`, phase: 'Synthesize'})
 
-return [{ name: proj.name, file: `project-reports/${slug}.md`, report, totalChars: fullContext.length }]
+// Splice the resolved, registry-canonical dependencies (extracted at the start of this phase)
+// into the frontmatter deterministically, rather than trusting the synthesize agent above to
+// transcribe them verbatim -- this is what guarantees dependencies: name: always matches a
+// projects.yml entry, the hard requirement the build-time generator enforces
+// (_plugins/dependency_graph_generator.rb).
+const depsYaml = dependencies.length
+  ? 'dependencies:\n' + dependencies.map(d =>
+      `  - name: ${d.name}\n    relation: ${d.relation}\n    criticality: ${d.criticality}\n`
+    ).join('')
+  : ''
+let finalReport = report.replace(/^---\n([\s\S]*?)\n---/, (match, body) => '---\n' + body + '\n' + depsYaml + '---')
+finalReport = finalReport.replace(
+  /\n## 1\. Project Overview/,
+  `\n{% include dependency-graph.html slug="dependencies" focus="${slug}" %}\n\n## 1. Project Overview`
+)
+
+return [{
+  name: proj.name,
+  file: `project-reports/${slug}.md`,
+  report: finalReport,
+  totalChars: fullContext.length,
+  new_registry_entries: newRegistryEntries,
+}]

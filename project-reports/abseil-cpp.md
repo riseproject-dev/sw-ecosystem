@@ -1,9 +1,19 @@
 ---
 title: Abseil-cpp
 parent: Project Reports
+color: grey
 categories:
   - libraries
+dependencies:
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="abseil-cpp" %}
 
 # Abseil-cpp
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>

@@ -4,7 +4,22 @@ parent: Project Reports
 categories:
   - ai-ml
   - python-packages
+dependencies:
+  - name: NumPy
+    relation: runtime-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: SciPy
+    relation: build-dependency
+    criticality: optional
+  - name: oneTBB
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="numba" %}
 
 # numba
 

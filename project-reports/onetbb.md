@@ -3,7 +3,28 @@ title: oneTBB
 parent: Project Reports
 categories:
   - libraries
+dependencies:
+  - name: glibc
+    relation: runtime-dependency
+    criticality: optional
+  - name: GCC
+    relation: runtime-dependency
+    criticality: critical
+  - name: gperftools
+    relation: build-dependency
+    criticality: optional
+  - name: SWIG
+    relation: build-dependency
+    criticality: optional
+  - name: doctest
+    relation: test-dependency
+    criticality: optional
+  - name: hwloc
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="onetbb" %}
 
 # oneTBB
 

@@ -4,7 +4,31 @@ parent: Project Reports
 categories:
   - libraries
   - browser
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Subzero
+    relation: build-dependency
+    criticality: optional
+  - name: marl
+    relation: build-dependency
+    criticality: critical
+  - name: SPIRV-Tools
+    relation: build-dependency
+    criticality: optional
+  - name: SPIRV-Headers
+    relation: build-dependency
+    criticality: optional
+  - name: glslang
+    relation: build-dependency
+    criticality: optional
+  - name: astc-encoder
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="swiftshader" %}
 
 # SwiftShader
 

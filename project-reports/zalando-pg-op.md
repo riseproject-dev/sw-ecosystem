@@ -2,7 +2,37 @@
 title: Zalando PG-op
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Kubernetes
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: PostgreSQL
+    relation: runtime-dependency
+    criticality: critical
+  - name: PgBouncer
+    relation: runtime-dependency
+    criticality: optional
+  - name: Patroni
+    relation: runtime-dependency
+    criticality: optional
+  - name: etcd
+    relation: runtime-dependency
+    criticality: critical
+  - name: WAL-G
+    relation: runtime-dependency
+    criticality: critical
+  - name: Prometheus
+    relation: runtime-dependency
+    criticality: optional
+  - name: Helm
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="zalando-pg-op" %}
 
 # Zalando PG-op
 

@@ -2,7 +2,25 @@
 title: Eclipse hawkBit
 parent: Project Reports
 color: green
+dependencies:
+  - name: OpenJDK
+    relation: runtime-dependency
+    criticality: critical
+  - name: pgjdbc
+    relation: runtime-dependency
+    criticality: optional
+  - name: MariaDB
+    relation: runtime-dependency
+    criticality: optional
+  - name: RabbitMQ
+    relation: runtime-dependency
+    criticality: optional
+  - name: BouncyCastle
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="eclipse-hawkbit" %}
 
 # Eclipse hawkBit
 

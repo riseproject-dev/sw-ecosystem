@@ -1,10 +1,26 @@
 ---
 title: libbpf
 parent: Project Reports
+color: grey
 categories:
   - libraries
   - perfmon
+dependencies:
+  - name: elfutils
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: zlib-ng
+    relation: build-dependency
+    criticality: optional
+  - name: dwarves
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="libbpf" %}
 
 # libbpf
 

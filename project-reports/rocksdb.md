@@ -1,7 +1,50 @@
 ---
 title: RocksDB
 parent: Project Reports
+color: orange
+dependencies:
+  - name: jemalloc
+    relation: build-dependency
+    criticality: optional
+  - name: liburing
+    relation: build-dependency
+    criticality: optional
+  - name: snappy
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: LZ4
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: libnuma
+    relation: build-dependency
+    criticality: optional
+  - name: bzip2
+    relation: build-dependency
+    criticality: optional
+  - name: gflags
+    relation: build-dependency
+    criticality: optional
+  - name: Facebook Folly
+    relation: build-dependency
+    criticality: optional
+  - name: glog
+    relation: build-dependency
+    criticality: optional
+  - name: fmt
+    relation: build-dependency
+    criticality: optional
+  - name: Boost
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="rocksdb" %}
 
 # RocksDB
 

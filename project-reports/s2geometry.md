@@ -1,7 +1,25 @@
 ---
 title: s2geometry
 parent: Project Reports
+dependencies:
+  - name: Abseil
+    relation: runtime-dependency
+    criticality: critical
+  - name: OpenSSL
+    relation: test-dependency
+    criticality: optional
+  - name: benchmark
+    relation: test-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: SWIG
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="s2geometry" %}
 
 # s2geometry
 

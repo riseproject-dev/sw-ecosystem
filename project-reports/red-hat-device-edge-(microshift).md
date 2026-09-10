@@ -2,7 +2,43 @@
 title: Red Hat Device Edge (MicroShift)
 parent: Project Reports
 color: red
+dependencies:
+  - name: Kubernetes
+    relation: runtime-dependency
+    criticality: critical
+  - name: CRI-O
+    relation: runtime-dependency
+    criticality: critical
+  - name: runc
+    relation: runtime-dependency
+    criticality: optional
+  - name: crun
+    relation: runtime-dependency
+    criticality: critical
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: critical
+  - name: etcd
+    relation: runtime-dependency
+    criticality: critical
+  - name: bbolt
+    relation: runtime-dependency
+    criticality: optional
+  - name: Open vSwitch
+    relation: runtime-dependency
+    criticality: critical
+  - name: CNI plugins
+    relation: runtime-dependency
+    criticality: optional
+  - name: golang.org/x/crypto
+    relation: build-dependency
+    criticality: optional
+  - name: Go
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="red-hat-device-edge-(microshift)" %}
 
 # Red Hat Device Edge (MicroShift)
 

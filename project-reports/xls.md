@@ -2,7 +2,61 @@
 title: xls
 parent: Project Reports
 color: orange
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Z3
+    relation: runtime-dependency
+    criticality: optional
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: gRPC
+    relation: runtime-dependency
+    criticality: critical
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: optional
+  - name: or-tools
+    relation: runtime-dependency
+    criticality: critical
+  - name: Bitwuzla
+    relation: runtime-dependency
+    criticality: critical
+  - name: BoringSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: re2
+    relation: runtime-dependency
+    criticality: optional
+  - name: GMP
+    relation: build-dependency
+    criticality: optional
+  - name: GNU MPFR
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: nlohmann/json
+    relation: build-dependency
+    criticality: optional
+  - name: riegeli
+    relation: build-dependency
+    criticality: critical
+  - name: Verilator
+    relation: test-dependency
+    criticality: optional
+  - name: Yosys
+    relation: test-dependency
+    criticality: optional
+  - name: Icarus Verilog
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="xls" %}
 
 # xls
 

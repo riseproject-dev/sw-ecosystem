@@ -2,7 +2,28 @@
 title: .NET
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib-ng
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: brotli
+    relation: build-dependency
+    criticality: optional
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="-net" %}
 
 # .NET
 

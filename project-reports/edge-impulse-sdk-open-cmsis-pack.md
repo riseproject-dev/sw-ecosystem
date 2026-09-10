@@ -2,7 +2,22 @@
 title: Edge Impulse SDK Open CMSIS Pack
 parent: Project Reports
 color: grey
+dependencies:
+  - name: TensorFlow Lite Micro (TFLM)
+    relation: build-dependency
+    criticality: critical
+  - name: FlatBuffers
+    relation: build-dependency
+    criticality: critical
+  - name: gemmlowp
+    relation: build-dependency
+    criticality: optional
+  - name: ruy
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="edge-impulse-sdk-open-cmsis-pack" %}
 
 # Edge Impulse SDK Open CMSIS Pack
 

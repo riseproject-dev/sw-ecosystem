@@ -2,7 +2,34 @@
 title: MediaPipe
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: XNNPACK
+    relation: build-dependency
+    criticality: critical
+  - name: LiteRT
+    relation: build-dependency
+    criticality: critical
+  - name: BoringSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenCV
+    relation: build-dependency
+    criticality: optional
+  - name: Halide
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" focus="mediapipe" %}
 
 # MediaPipe
 
