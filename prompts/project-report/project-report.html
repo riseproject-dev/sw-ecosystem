@@ -244,8 +244,9 @@
   <li><code class="language-plaintext highlighter-rouge">synonyms</code> (optional): alternate names the project appears under in the dependency graphs</li>
 </ul>
 
-<p>Only <code class="language-plaintext highlighter-rouge">name</code>, <code class="language-plaintext highlighter-rouge">repo</code>, and <code class="language-plaintext highlighter-rouge">home</code> are passed to the workflow; <code class="language-plaintext highlighter-rouge">report</code>/<code class="language-plaintext highlighter-rouge">synonyms</code> are registry
-bookkeeping. Pick a project whose entry has no <code class="language-plaintext highlighter-rouge">report:</code> field yet (it still needs a report).</p>
+<p>Only <code class="language-plaintext highlighter-rouge">name</code>, <code class="language-plaintext highlighter-rouge">repo</code>, <code class="language-plaintext highlighter-rouge">home</code>, and the full <code class="language-plaintext highlighter-rouge">projects.yml</code> array itself (as <code class="language-plaintext highlighter-rouge">registry</code>, see execution
+model below) are passed to the workflow; <code class="language-plaintext highlighter-rouge">report</code>/<code class="language-plaintext highlighter-rouge">synonyms</code> are registry bookkeeping. Pick a
+project whose entry has no <code class="language-plaintext highlighter-rouge">report:</code> field yet (it still needs a report).</p>
 
 <p>The output report path is derived from the name: <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>, where <code class="language-plaintext highlighter-rouge">slug</code> is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. “Apache Flink” -&gt; <code class="language-plaintext highlighter-rouge">project-reports/apache-flink.md</code>, “Open vSwitch” -&gt; <code class="language-plaintext highlighter-rouge">project-reports/open-vswitch.md</code>).</p>
 
@@ -266,19 +267,22 @@ bookkeeping. Pick a project whose entry has no <code class="language-plaintext h
 </h2>
     
 
-<p>Do not use <code class="language-plaintext highlighter-rouge">/deep-research</code> for this prompt – it loads instructions but does not self-execute. Instead, invoke the <code class="language-plaintext highlighter-rouge">Workflow</code> tool directly with the pre-built script at <code class="language-plaintext highlighter-rouge">prompts/project-report/project-report-workflow.js</code>. Pass one <code class="language-plaintext highlighter-rouge">projects.yml</code> entry as the single element of <code class="language-plaintext highlighter-rouge">args</code> (the <code class="language-plaintext highlighter-rouge">repo</code> and <code class="language-plaintext highlighter-rouge">home</code> fields map straight through; the script derives the output path from <code class="language-plaintext highlighter-rouge">name</code>):</p>
+<p>Do not use <code class="language-plaintext highlighter-rouge">/deep-research</code> for this prompt – it loads instructions but does not self-execute. Instead, invoke the <code class="language-plaintext highlighter-rouge">Workflow</code> tool directly with the pre-built script at <code class="language-plaintext highlighter-rouge">prompts/project-report/project-report-workflow.js</code>. Pass one <code class="language-plaintext highlighter-rouge">projects.yml</code> entry as the single element of <code class="language-plaintext highlighter-rouge">args</code> (the <code class="language-plaintext highlighter-rouge">repo</code> and <code class="language-plaintext highlighter-rouge">home</code> fields map straight through; the script derives the output path from <code class="language-plaintext highlighter-rouge">name</code>), plus the full parsed <code class="language-plaintext highlighter-rouge">projects.yml</code> as <code class="language-plaintext highlighter-rouge">registry</code> – the script has no filesystem access, so it can only resolve dependency names against the registry if the caller loads and passes it:</p>
 
 <div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Workflow</span><span class="p">({</span>
   <span class="na">args</span><span class="p">:</span> <span class="p">[{</span>
     <span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">&lt;project-name&gt;</span><span class="dl">"</span><span class="p">,</span>                        <span class="c1">// projects.yml: name</span>
     <span class="dl">"</span><span class="s2">repo</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-repository&gt;/</span><span class="dl">"</span><span class="p">,</span>         <span class="c1">// projects.yml: repo</span>
-    <span class="dl">"</span><span class="s2">home</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-homepage&gt;/</span><span class="dl">"</span>            <span class="c1">// projects.yml: home</span>
+    <span class="dl">"</span><span class="s2">home</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-homepage&gt;/</span><span class="dl">"</span><span class="p">,</span>           <span class="c1">// projects.yml: home</span>
+    <span class="dl">"</span><span class="s2">registry</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span> <span class="cm">/* the full parsed projects.yml array */</span> <span class="p">]</span>
   <span class="p">}],</span>
   <span class="na">scriptPath</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/abs/path/to/prompts/project-report/project-report-workflow.js</span><span class="dl">"</span>
 <span class="p">})</span>
 </code></pre></div></div>
 
-<p>The script derives the output path as <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>. To override it, add an absolute <code class="language-plaintext highlighter-rouge">"slug"</code> field to the args object. The script runs four phases sequentially (8 search agents, 4 fetch agents, 3 verify agents, 1 synthesize agent = 16 total). On completion the workflow returns a JSON object with <code class="language-plaintext highlighter-rouge">{name, file, report, totalChars}</code>. Write <code class="language-plaintext highlighter-rouge">report</code> to <code class="language-plaintext highlighter-rouge">file</code> and verify before committing.</p>
+<p>The script derives the output path as <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>. To override it, add an absolute <code class="language-plaintext highlighter-rouge">"slug"</code> field to the args object. The script runs four phases sequentially (8 search agents, 4 fetch agents, 3 verify agents, 1 dependency-structuring agent, 1 synthesize agent = 17 total). On completion the workflow returns a JSON object with <code class="language-plaintext highlighter-rouge">{name, file, report, totalChars, new_registry_entries}</code>. Write <code class="language-plaintext highlighter-rouge">report</code> to <code class="language-plaintext highlighter-rouge">file</code> and verify before committing.</p>
+
+<p><code class="language-plaintext highlighter-rouge">new_registry_entries</code> lists any direct dependency (found for Section 9 / the report’s own <code class="language-plaintext highlighter-rouge">dependencies:</code> frontmatter) whose name did not resolve against <code class="language-plaintext highlighter-rouge">registry</code> – i.e. it has no <code class="language-plaintext highlighter-rouge">projects.yml</code> entry yet. <strong>Before committing the report</strong>, add one new alphabetically-positioned entry (<code class="language-plaintext highlighter-rouge">name</code>/<code class="language-plaintext highlighter-rouge">repo</code>/<code class="language-plaintext highlighter-rouge">home</code>, best effort) to <code class="language-plaintext highlighter-rouge">projects.yml</code> for each item in this array – see <code class="language-plaintext highlighter-rouge">AGENTS.md</code>’s “After the workflow completes” section. This keeps the hard constraint enforced by <code class="language-plaintext highlighter-rouge">_plugins/dependency_graph_generator.rb</code> (every <code class="language-plaintext highlighter-rouge">dependencies: name:</code> in every report must match a <code class="language-plaintext highlighter-rouge">projects.yml</code> entry, or the site fails to build) from ever actually tripping in normal use.</p>
 
 <p>For a non-GitHub project (sourceware.org, kernel.org, googlesource.com), the <code class="language-plaintext highlighter-rouge">repo</code> URL is not a github.com URL and the script automatically switches to WebSearch + WebFetch instead of GitHub MCP tools. For a project with no <code class="language-plaintext highlighter-rouge">repo</code> at all, the script falls back to the <code class="language-plaintext highlighter-rouge">home</code> URL for web searches.</p>
 
@@ -374,7 +378,45 @@ bookkeeping. Pick a project whose entry has no <code class="language-plaintext h
 title: [PROJECT_NAME]
 parent: Project Reports
 color: [COLOR]
+dependencies:
+  - name: [DEPENDENCY_NAME]        ← projects.yml's own canonical `name:` spelling, never a synonym
+    relation: [build-dependency | test-dependency | runtime-dependency]
+    criticality: [critical | optional]
 ---
+
+&lt;!--
+  Renders an interactive dependency graph. Two callers:
+  - A stack report's own &lt;slug&gt;.graph.json (see prompts/stack-report/stack-report.md, Artifact 4):
+    {% include dependency-graph.html slug="&lt;vertical-slug&gt;" %}
+  - A project report, against the shared graph built by _plugins/dependency_graph_generator.rb from
+    every project-reports/*.md's `dependencies:` frontmatter, bounded to this project's own
+    dependency tree:
+    {% include dependency-graph.html slug="dependencies" subset="&lt;project-slug&gt;" %}
+
+  `slug` may be omitted on a stack-report page; it then defaults to page.slug. `subset`, when set,
+  bounds the entire instance -- initial view, search, and focus/reset alike -- to that node plus
+  its descendants only, never ancestors, so e.g. a project depended on by hundreds of others in the
+  shared graph doesn't pull all of them onto that project's own page; beyond that node's own direct
+  dependencies, only the runtime-dependency chain is included (a dependency's build/test tooling is
+  dropped -- see findDescendantsRuntimeOnlyBeyondRoot in dependency-graph.js). Omit `subset` to
+  leave the whole fetched graph in play (as stack reports, whose own graph.json is already scoped
+  to one vertical, do).
+
+  `focus`, when set, pre-selects that node on load instead of showing the whole graph unfocused --
+  no current caller passes it (a project report's own subset root has no ancestors within its own
+  subset barring a dependency cycle, so focusing it on load looks identical to leaving it
+  unfocused), but the search box still drives the same mechanism at runtime, and it remains
+  available to any future caller that wants a pre-selected node independent of subset.
+--&gt;
+&lt;link rel="stylesheet" href="/sw-ecosystem/assets/css/dependency-graph.css"&gt;
+&lt;div class="dependency-graph"
+     data-graph="dependencies.graph.json"
+     data-focus=""
+     data-subset="[SLUG]"&gt;&lt;/div&gt;
+&lt;p class="dg-json-link"&gt;&lt;a href="dependencies.graph.json"&gt;Raw dependency graph data (JSON)&lt;/a&gt;&lt;/p&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"&gt;&lt;/script&gt;
+&lt;script src="/sw-ecosystem/assets/js/dependency-graph.js"&gt;&lt;/script&gt;
+
 
 # [PROJECT_NAME]
 
@@ -386,7 +428,14 @@ color: [COLOR]
 **Audience:** Technical leadership, resource allocation strategy&lt;br/&gt;
 **Verification policy:** Every claim is cross-referenced to a primary upstream source.&lt;br/&gt;
 Items that could not be verified against a second source are marked [NEEDS VERIFICATION].&lt;br/&gt;
-</code></pre></div></div><hr />
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">dependencies:</code> lists every <em>direct</em> dependency from Section 9 (not transitive/indirect ones – the
+dependency graph derives those client-side). <code class="language-plaintext highlighter-rouge">[SLUG]</code> is this report’s own filename slug (matching
+<code class="language-plaintext highlighter-rouge">title</code>). The <code class="language-plaintext highlighter-rouge">project-report-workflow.js</code> script generates both automatically – one entry per direct
+dependency, <code class="language-plaintext highlighter-rouge">name</code> resolved against <code class="language-plaintext highlighter-rouge">projects.yml</code> – and splices them into its output deterministically,
+so this template only needs to be followed exactly when writing a report by hand. Every project report
+must include this graph; it is not optional.</p><hr />
 <h3 id="1-project-overview">
   
   
@@ -529,7 +578,12 @@ Items that could not be verified against a second source are marked [NEEDS VERIF
 </h3>
     
 
-<p>This section documents the dependency graph with respect to RISC-V. Apply the following process:</p>
+<p>This section documents the dependency graph with respect to RISC-V. Apply the following process.</p>
+
+<p>Every <em>direct</em> dependency named in Step 1 below must also appear in the header block’s <code class="language-plaintext highlighter-rouge">dependencies:</code>
+frontmatter (see above) – that structured list drives the rendered dependency graph. Indirect/recursed
+dependencies from Step 2 are prose-only; do not add them to <code class="language-plaintext highlighter-rouge">dependencies:</code> (the graph derives them
+client-side from direct edges alone).</p>
 
 <p><strong>Step 1 – Direct dependencies.</strong> List every significant direct dependency: build dependencies, runtime dependencies, and optional dependencies that affect performance or functionality. For each:</p>
 
