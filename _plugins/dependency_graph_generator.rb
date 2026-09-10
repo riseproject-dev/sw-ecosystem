@@ -58,7 +58,6 @@ module Jekyll
           edges << {
             "source" => source_id,
             "target" => target_id,
-            "type" => "explicit",
             "relation" => dep["relation"],
             "criticality" => dep["criticality"],
           }

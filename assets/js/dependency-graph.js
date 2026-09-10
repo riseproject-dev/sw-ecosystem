@@ -115,6 +115,15 @@
     return cls;
   }
 
+  // Solid = a hard runtime dependency. Dashed = build/test-time only, or (for stack-report graphs,
+  // whose `relation` is free text -- see prompts/stack-report/stack-report.md) any other relation
+  // that isn't purely about runtime, e.g. "requires-to-be-useful" or "build-and-runtime-dependency".
+  function edgeClass(relation) {
+    var r = (relation || '').toLowerCase();
+    var isRuntimeOnly = r.indexOf('runtime') !== -1 && r.indexOf('build') === -1 && r.indexOf('test') === -1;
+    return 'dg-edge ' + (isRuntimeOnly ? 'dg-edge-runtime' : 'dg-edge-other');
+  }
+
   function nodeTooltip(n) {
     var tip = n.name + ' - ' + (n.color || 'grey') + (n.criticality ? ' (' + n.criticality + ')' : '');
     if (n.release_provider && n.release_provider !== 'none') tip += '\nRelease: ' + n.release_provider;
@@ -174,7 +183,7 @@
     Object.keys(ds.edgeMap).forEach(function (eid) {
       var e = ds.edgeMap[eid];
       if (!visibleSet.has(e.source) || !visibleSet.has(e.target)) return;
-      links.push({ edgeId: eid, type: e.type, source: e.source, target: e.target });
+      links.push({ edgeId: eid, relation: e.relation, source: e.source, target: e.target });
       connected.add(e.source);
       connected.add(e.target);
     });
@@ -217,10 +226,10 @@
       '</div>' +
       '<div class="dg-canvas"><svg></svg></div>' +
       '<div class="dg-legend"></div>' +
-      '<p class="dg-instructions">Arrows point from a node to what it depends on. Solid = explicit dependency, ' +
-      'dashed = implicit ("needs it to be useful"). Scroll to zoom, drag to pan, click a node to open its ' +
-      'report/repo/home, search for a node to focus its subgraph (click the background or Reset view to ' +
-      'return), hover to highlight neighbors.</p>';
+      '<p class="dg-instructions">Arrows point from a node to what it depends on. Solid black = runtime ' +
+      'dependency, dashed black = build/test-time (or other non-runtime) dependency. Scroll to zoom, drag to ' +
+      'pan, click a node to open its report/repo/home, search for a node to focus its subgraph (click the ' +
+      'background or Reset view to return), hover to highlight neighbors.</p>';
     container.appendChild(wrap);
 
     renderLegend(wrap.querySelector('.dg-legend'));
@@ -245,7 +254,7 @@
         .attr('fill', fill)
         .attr('fill-opacity', fillOpacity);
     }
-    defineArrowhead('dg-arrowhead', '#ccc', 0.7);
+    defineArrowhead('dg-arrowhead', '#000', 0.7);
     defineArrowhead('dg-arrowhead-active', '#000', 1);
     var svgGroup = svg.append('g');
     var canvas = wrap.querySelector('.dg-canvas');
@@ -323,7 +332,7 @@
           edgeG.selectAll('line.dg-edge')
             .data(layout.links)
             .enter().append('line')
-            .attr('class', function (d) { return 'dg-edge dg-edge-' + d.type; })
+            .attr('class', function (d) { return edgeClass(d.relation); })
             .attr('data-edge-id', function (d) { return d.edgeId; })
             .attr('x1', function (d) { return d.source.x; })
             .attr('y1', function (d) { return d.source.y; })
