@@ -2,7 +2,31 @@
 title: Wabt
 parent: Project Reports
 color: orange
+dependencies:
+  - name: simde
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: PicoSHA2
+    relation: runtime-dependency
+    criticality: critical
+  - name: libuv
+    relation: runtime-dependency
+    criticality: optional
+  - name: uvwasi
+    relation: runtime-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: ply
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="wabt" %}
 
 # Wabt
 

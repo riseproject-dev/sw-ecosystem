@@ -2,7 +2,28 @@
 title: TinyGo
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: bdwgc
+    relation: runtime-dependency
+    criticality: optional
+  - name: musl
+    relation: runtime-dependency
+    criticality: optional
+  - name: picolibc
+    relation: runtime-dependency
+    criticality: optional
+  - name: Binaryen
+    relation: build-dependency
+    criticality: optional
+  - name: Wazero
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="tinygo" %}
 
 # TinyGo
 

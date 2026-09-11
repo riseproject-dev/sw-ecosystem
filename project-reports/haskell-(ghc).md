@@ -2,7 +2,40 @@
 title: Haskell (GHC)
 parent: Project Reports
 color: blue
+dependencies:
+  - name: GMP
+    relation: runtime-dependency
+    criticality: critical
+  - name: libffi
+    relation: runtime-dependency
+    criticality: critical
+  - name: ncurses
+    relation: runtime-dependency
+    criticality: optional
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
+  - name: libnuma
+    relation: runtime-dependency
+    criticality: optional
+  - name: elfutils
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: Python
+    relation: build-dependency
+    criticality: critical
+  - name: Perl
+    relation: build-dependency
+    criticality: critical
+  - name: autoconf
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="haskell-(ghc)" %}
 
 # Haskell (GHC)
 

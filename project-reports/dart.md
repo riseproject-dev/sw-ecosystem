@@ -2,7 +2,31 @@
 title: Dart
 parent: Project Reports
 color: blue
+dependencies:
+  - name: BoringSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: ICU
+    relation: runtime-dependency
+    criticality: critical
+  - name: double-conversion
+    relation: runtime-dependency
+    criticality: critical
+  - name: cpu_features
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: Binaryen
+    relation: build-dependency
+    criticality: optional
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="dart" %}
 
 # Dart
 

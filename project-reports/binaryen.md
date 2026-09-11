@@ -2,7 +2,25 @@
 title: Binaryen
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: mimalloc
+    relation: runtime-dependency
+    criticality: optional
+  - name: googletest
+    relation: test-dependency
+    criticality: optional
+  - name: fuzztest
+    relation: test-dependency
+    criticality: optional
+  - name: FP16
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="binaryen" %}
 
 # Binaryen
 

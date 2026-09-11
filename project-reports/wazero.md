@@ -2,7 +2,13 @@
 title: Wazero
 parent: Project Reports
 color: blue
+dependencies:
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="wazero" %}
 
 # Wazero
 

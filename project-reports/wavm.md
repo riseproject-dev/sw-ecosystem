@@ -2,7 +2,22 @@
 title: WAVM
 parent: Project Reports
 color: orange
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: LMDB
+    relation: runtime-dependency
+    criticality: optional
+  - name: BLAKE2
+    relation: runtime-dependency
+    criticality: optional
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="wavm" %}
 
 # WAVM
 

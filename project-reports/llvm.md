@@ -2,7 +2,25 @@
 title: llvm
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: libffi
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: libpfm4
+    relation: runtime-dependency
+    criticality: optional
+  - name: Z3
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="llvm" %}
 
 # llvm
 

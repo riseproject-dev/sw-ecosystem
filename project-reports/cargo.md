@@ -2,7 +2,31 @@
 title: cargo
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: critical
+  - name: libgit2
+    relation: runtime-dependency
+    criticality: critical
+  - name: libcurl
+    relation: runtime-dependency
+    criticality: critical
+  - name: SQLite
+    relation: runtime-dependency
+    criticality: optional
+  - name: BLAKE3
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib-rs
+    relation: runtime-dependency
+    criticality: critical
+  - name: gitoxide
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="cargo" %}
 
 # cargo
 

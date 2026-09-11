@@ -2,7 +2,25 @@
 title: emscripten
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Binaryen
+    relation: build-dependency
+    criticality: critical
+  - name: Node.js
+    relation: test-dependency
+    criticality: critical
+  - name: mimalloc
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="emscripten" %}
 
 # emscripten
 
