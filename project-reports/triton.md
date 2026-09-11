@@ -2,6 +2,22 @@
 title: Triton
 parent: Project Reports
 color: orange
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: CMake
+    relation: build-dependency
+    criticality: critical
+  - name: Python
+    relation: build-dependency
+    criticality: critical
+  - name: pybind11
+    relation: build-dependency
+    criticality: critical
+  - name: PyTorch
+    relation: test-dependency
+    criticality: critical
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="triton" %}

@@ -2,6 +2,25 @@
 title: HAMi
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: CUDA
+    relation: runtime-dependency
+    criticality: critical
+  - name: CMake
+    relation: build-dependency
+    criticality: critical
+  - name: golang.org/x/sys
+    relation: build-dependency
+    criticality: optional
+  - name: HAMi-core
+    relation: build-dependency
+    criticality: critical
+  - name: Docker
+    relation: build-dependency
+    criticality: optional
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="hami" %}

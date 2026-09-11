@@ -2,6 +2,22 @@
 title: SGLang
 parent: Project Reports
 color: orange
+dependencies:
+  - name: PyTorch
+    relation: runtime-dependency
+    criticality: critical
+  - name: CUDA
+    relation: build-dependency
+    criticality: critical
+  - name: FlashInfer
+    relation: runtime-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Docker
+    relation: build-dependency
+    criticality: optional
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="sglang" %}

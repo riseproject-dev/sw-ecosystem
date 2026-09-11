@@ -2,6 +2,46 @@
 title: MongoDB
 parent: Project Reports
 color: red
+dependencies:
+  - name: WiredTiger
+    relation: build-dependency
+    criticality: critical
+  - name: SpiderMonkey
+    relation: build-dependency
+    criticality: critical
+  - name: Bazel
+    relation: build-dependency
+    criticality: critical
+  - name: SCons
+    relation: build-dependency
+    criticality: optional
+  - name: Abseil
+    relation: build-dependency
+    criticality: critical
+  - name: Boost
+    relation: build-dependency
+    criticality: critical
+  - name: tcmalloc
+    relation: runtime-dependency
+    criticality: critical
+  - name: libunwind
+    relation: build-dependency
+    criticality: optional
+  - name: gRPC
+    relation: build-dependency
+    criticality: optional
+  - name: Protocol Buffers
+    relation: build-dependency
+    criticality: critical
+  - name: c-ares
+    relation: build-dependency
+    criticality: optional
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="mongodb" %}

@@ -2,6 +2,40 @@
 title: Milvus
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: CMake
+    relation: build-dependency
+    criticality: critical
+  - name: Rust
+    relation: build-dependency
+    criticality: critical
+  - name: RocksDB
+    relation: runtime-dependency
+    criticality: critical
+  - name: jemalloc
+    relation: runtime-dependency
+    criticality: critical
+  - name: simdjson
+    relation: build-dependency
+    criticality: optional
+  - name: Apache Arrow
+    relation: build-dependency
+    criticality: critical
+  - name: Conan
+    relation: build-dependency
+    criticality: critical
+  - name: xsimd
+    relation: build-dependency
+    criticality: critical
+  - name: Knowhere
+    relation: runtime-dependency
+    criticality: critical
+  - name: Tantivy
+    relation: runtime-dependency
+    criticality: critical
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="milvus" %}

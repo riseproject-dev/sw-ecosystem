@@ -2,6 +2,16 @@
 title: Tremor
 parent: Project Reports
 color: orange
+dependencies:
+  - name: Rust
+    relation: build-dependency
+    criticality: critical
+  - name: simd-json
+    relation: runtime-dependency
+    criticality: critical
+  - name: cross
+    relation: build-dependency
+    criticality: critical
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="tremor" %}

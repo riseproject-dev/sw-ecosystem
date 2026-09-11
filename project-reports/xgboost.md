@@ -2,6 +2,28 @@
 title: XGBoost
 parent: Project Reports
 color: orange
+dependencies:
+  - name: dmlc-core
+    relation: build-dependency
+    criticality: critical
+  - name: OpenMP
+    relation: runtime-dependency
+    criticality: critical
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: NCCL
+    relation: build-dependency
+    criticality: optional
+  - name: CUDA
+    relation: build-dependency
+    criticality: optional
+  - name: autoconf
+    relation: build-dependency
+    criticality: optional
+  - name: cibuildwheel
+    relation: build-dependency
+    criticality: optional
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="xgboost" %}
