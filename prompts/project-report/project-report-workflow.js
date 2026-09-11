@@ -641,7 +641,12 @@ const depsYaml = dependencies.length
       `  - name: ${d.name}\n    relation: ${d.relation}\n    criticality: ${d.criticality}\n`
     ).join('')
   : ''
-let finalReport = report.replace(/^---\n([\s\S]*?)\n---/, (match, body) => '---\n' + body + '\n' + depsYaml + '---')
+// `m` flag: the synthesize agent sometimes prepends a stray H1 (or other preamble) before the
+// real frontmatter fence, which would put the fence past absolute string position 0 -- match the
+// first '^---' at any LINE start instead of only at the start of the whole string, so the
+// dependency splice below isn't silently skipped whenever that defect occurs (it still always
+// targets the first, i.e. real, frontmatter block).
+let finalReport = report.replace(/^---\n([\s\S]*?)\n---/m, (match, body) => '---\n' + body + '\n' + depsYaml + '---')
 finalReport = finalReport.replace(
   /\n## 1\. Project Overview/,
   `\n{% include dependency-graph.html slug="dependencies" focus="${slug}" %}\n\n## 1. Project Overview`
