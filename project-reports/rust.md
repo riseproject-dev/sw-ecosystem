@@ -2,7 +2,31 @@
 title: Rust
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Wasmtime
+    relation: build-dependency
+    criticality: optional
+  - name: GCC
+    relation: build-dependency
+    criticality: optional
+  - name: jemalloc
+    relation: runtime-dependency
+    criticality: optional
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: xz
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="rust" %}
 
 # Rust
 

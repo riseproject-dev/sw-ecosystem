@@ -2,7 +2,43 @@
 title: Pyodide
 parent: Project Reports
 color: green
+dependencies:
+  - name: emscripten
+    relation: build-dependency
+    criticality: critical
+  - name: Python
+    relation: build-dependency
+    criticality: critical
+  - name: NumPy
+    relation: build-dependency
+    criticality: optional
+  - name: SciPy
+    relation: build-dependency
+    criticality: optional
+  - name: OpenBLAS
+    relation: build-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: build-dependency
+    criticality: critical
+  - name: libffi
+    relation: build-dependency
+    criticality: critical
+  - name: xz
+    relation: build-dependency
+    criticality: optional
+  - name: zstd
+    relation: build-dependency
+    criticality: optional
+  - name: zlib
+    relation: build-dependency
+    criticality: optional
+  - name: bzip2
+    relation: build-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="pyodide" %}
 
 # Pyodide
 

@@ -2,7 +2,28 @@
 title: WAMR
 parent: Project Reports
 color: yellow
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: asmjit
+    relation: build-dependency
+    criticality: optional
+  - name: simde
+    relation: runtime-dependency
+    criticality: optional
+  - name: BoringSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: libuv
+    relation: runtime-dependency
+    criticality: critical
+  - name: uvwasi
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="wamr" %}
 
 # WAMR
 

@@ -2,7 +2,25 @@
 title: Zig
 parent: Project Reports
 color: orange
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: zstd
+    relation: runtime-dependency
+    criticality: optional
+  - name: ncurses
+    relation: runtime-dependency
+    criticality: optional
+  - name: libxml2
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="zig" %}
 
 # Zig
 

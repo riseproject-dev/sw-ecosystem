@@ -2,7 +2,22 @@
 title: Wasmer
 parent: Project Reports
 color: green
+dependencies:
+  - name: Wasmtime
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
+  - name: corosensei
+    relation: runtime-dependency
+    criticality: critical
+  - name: libunwind
+    relation: runtime-dependency
+    criticality: critical
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="wasmer" %}
 
 # Wasmer
 

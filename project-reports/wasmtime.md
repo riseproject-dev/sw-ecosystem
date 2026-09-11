@@ -2,7 +2,28 @@
 title: Wasmtime
 parent: Project Reports
 color: green
+dependencies:
+  - name: regalloc2
+    relation: build-dependency
+    criticality: critical
+  - name: capstone
+    relation: runtime-dependency
+    criticality: optional
+  - name: ring
+    relation: runtime-dependency
+    criticality: optional
+  - name: rustls
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: sha2
+    relation: runtime-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="wasmtime" %}
 
 # Wasmtime
 

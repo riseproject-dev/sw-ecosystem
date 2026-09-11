@@ -2,7 +2,28 @@
 title: Kotlin
 parent: Project Reports
 color: orange
+dependencies:
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: libffi
+    relation: runtime-dependency
+    criticality: critical
+  - name: zlib
+    relation: runtime-dependency
+    criticality: optional
+  - name: OpenJDK
+    relation: runtime-dependency
+    criticality: critical
+  - name: WasmEdge
+    relation: test-dependency
+    criticality: optional
+  - name: Wasmtime
+    relation: test-dependency
+    criticality: optional
 ---
+
+{% include dependency-graph.html slug="dependencies" subset="kotlin" %}
 
 # Kotlin
 
