@@ -33,7 +33,7 @@ dependencies:
 # crosvm
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-28<br/>
 **Scope:** RISC-V (riscv64/linux) support status for crosvm<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -380,7 +380,7 @@ crosvm has no dependent package ecosystem. Section 10 is omitted.
 
 ## 14. Updates
 
-No updates yet - initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-08-28.
 
 ---
 

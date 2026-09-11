@@ -440,7 +440,7 @@ libjxl: Highway's RVV backend does not automatically benefit libjxl on riscv64. 
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-08-28.
 
 ---
 

@@ -9,7 +9,7 @@ color: red
 # KubeVirt
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** red<br/>
 **Scope:** RISC-V (riscv64/linux) support status for KubeVirt<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -266,7 +266,7 @@ Not applicable - KubeVirt has no dependent package ecosystem of its own that sep
 **Total estimated critical-path functional effort: roughly 11-20 person-weeks**, before accounting for elapsed calendar time consumed by upstream review cycles (the ARM64 precedent took ~11 months from PR open to merge), and excluding any work needed in the QEMU/libvirt dependency chain itself, which is sized separately in their own reports.
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-10.)
 
 ## 16. References
 

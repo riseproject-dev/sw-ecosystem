@@ -9,7 +9,7 @@ color: red
 # componentize-js
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** red<br/>
 **Scope:** RISC-V (riscv64/linux) support status for componentize-js<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -194,7 +194,7 @@ Not applicable - componentize-js has no significant dependent package ecosystem 
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-10.)
 
 ## 16. References
 

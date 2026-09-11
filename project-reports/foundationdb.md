@@ -23,7 +23,7 @@ dependencies:
 # FoundationDB
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** red<br/>
 **Scope:** RISC-V (riscv64/linux) support status for FoundationDB<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -276,7 +276,7 @@ FoundationDB does not have a significant dependent package ecosystem in the sens
 
 ## 15. Updates
 
-No updates yet - initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-09-11.
 
 ## 16. References
 

@@ -37,7 +37,7 @@ dependencies:
 # Kuasar
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Kuasar<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -271,7 +271,7 @@ Not applicable - see note on Section 10 omission below.
 | Distribution | Package Kuasar for riscv64 in a distro (e.g. Debian/Ubuntu) once functional build works | 1-2 | [Unassigned] | Low (blocked on Functional items) |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

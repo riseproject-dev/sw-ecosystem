@@ -22,7 +22,7 @@ dependencies:
 # AWS IoT Greengrass v2
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-07<br/>
 **Readiness:** red<br/>
 **Scope:** RISC-V (riscv64/linux) support status for AWS IoT Greengrass v2<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -264,7 +264,7 @@ Not applicable as a standalone section (see note on Section 10 below) - Nucleus'
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-07.)
 
 ## 16. References
 

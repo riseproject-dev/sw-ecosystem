@@ -7,7 +7,7 @@ color: yellow
 # WAMR
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** yellow<br/>
 **Scope:** RISC-V (riscv64/linux) support status for WAMR<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -307,7 +307,7 @@ RISE has done no work on WAMR (Section 12) - none of the estimates below can be 
 | Ecosystem | Distro packaging (Ubuntu/Debian, all architectures currently absent) | 3-6 | Contributor / distro maintainers | Low |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-10.)
 
 ## 16. References
 

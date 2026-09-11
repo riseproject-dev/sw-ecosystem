@@ -67,7 +67,7 @@ dependencies:
 # Vitess
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-30<br/>
 **Readiness:** Orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Vitess<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>

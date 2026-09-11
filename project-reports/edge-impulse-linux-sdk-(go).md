@@ -16,7 +16,7 @@ dependencies:
 # Edge Impulse Linux SDK (Go)
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Edge Impulse Linux SDK (Go)<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -223,7 +223,7 @@ Effort estimates above are rough order-of-magnitude and marked [NEEDS VERIFICATI
 
 ## 15. Updates
 
-No updates yet - initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-09-08.
 
 ## 16. References
 

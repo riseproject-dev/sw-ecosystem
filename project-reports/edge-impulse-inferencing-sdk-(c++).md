@@ -25,7 +25,7 @@ dependencies:
 # Edge Impulse Inferencing SDK (C++)
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** orange<br/>
 **Optimization level:** absent<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Edge Impulse Inferencing SDK (C++)<br/>
@@ -233,7 +233,7 @@ Not applicable - Section 10 omitted per instructions; this is a standalone SDK l
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

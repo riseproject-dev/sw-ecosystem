@@ -28,7 +28,7 @@ dependencies:
 # runwasi
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for runwasi<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -226,7 +226,7 @@ Not applicable -- runwasi has no dependent package ecosystem (Section 10 omitted
 | Performance | Track and consume upstream wasmtime Tier 3 -> Tier 2/1 progress on riscv64gc | N/A to runwasi directly | Upstream (bytecodealliance/wasmtime) | Informational |
 
 ## 15. Updates
-(No updates yet -- initial report dated 2026-06-17.)
+(No updates yet -- initial report dated 2026-09-08.)
 
 ## 16. References
 

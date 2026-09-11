@@ -34,7 +34,7 @@ dependencies:
 # WasmEdge
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-07<br/>
 **Readiness:** blue<br/>
 **Scope:** RISC-V (riscv64/linux) support status for WasmEdge<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -303,7 +303,7 @@ Not applicable - Section 10 is omitted per the report's own scoping rule: WasmEd
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-07.)
 
 ## 16. References
 

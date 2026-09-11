@@ -39,7 +39,7 @@ dependencies:
 # autofdo
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-28<br/>
 **Scope:** RISC-V (riscv64/linux) support status for autofdo<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -312,7 +312,7 @@ Not applicable in the traditional sense - see Section 10 note below. AutoFDO's "
 | Performance | Benchmark AutoFDO+Propeller impact on a riscv64 SPEC/Fleetbench-style workload once functional enablement lands | 2-4 (post-functional-enablement only) | Performance team | Low (blocked until 13.1 and CTR driver land) |
 
 ## 14. Updates
-(No updates yet -- initial report dated 2026-06-17.)
+(No updates yet -- initial report dated 2026-08-28.)
 
 ## 15. References
 

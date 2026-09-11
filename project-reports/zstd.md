@@ -24,7 +24,7 @@ dependencies:
 # zstd
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-06-17
+**Date:** 2026-08-28
 **Scope:** RISC-V (riscv64/linux) support status for zstd
 **Audience:** Technical leadership, resource allocation strategy
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
@@ -408,7 +408,7 @@ The highest-leverage action is the upstream engagement column: 5 person-weeks of
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-08-28.
 
 ---
 

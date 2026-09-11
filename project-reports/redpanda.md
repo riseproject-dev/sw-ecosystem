@@ -9,7 +9,7 @@ color: red
 # Redpanda
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** red<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Redpanda<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -238,7 +238,7 @@ Not applicable (Section 10).
 | Dependencies | Resolve hwloc riscv64 core-topology bugs (#650, #536) upstream | N/A - external dependency, track only | open-mpi/hwloc upstream | Medium |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-11.)
 
 ## 16. References
 

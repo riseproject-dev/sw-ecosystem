@@ -52,7 +52,7 @@ dependencies:
 # OpenCV
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-07<br/>
 **Readiness:** blue<br/>
 **Optimization level:** partial<br/>
 **Scope:** RISC-V (riscv64/linux) support status for OpenCV<br/>
@@ -347,7 +347,7 @@ Not applicable as a dedicated section per this report's scope rules - OpenCV's o
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-07.)
 
 ## 16. References
 

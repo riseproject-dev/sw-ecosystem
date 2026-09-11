@@ -32,7 +32,7 @@ dependencies:
 # GraalVM
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-06-17
+**Date:** 2026-08-28
 **Scope:** RISC-V (riscv64/linux) support status for GraalVM
 **Audience:** Technical leadership, resource allocation strategy
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items verified against only one source are marked [NEEDS VERIFICATION].
@@ -376,7 +376,7 @@ Mandrel (Red Hat's GraalVM distribution) will also require a separate packaging 
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-08-28.
 
 ---
 

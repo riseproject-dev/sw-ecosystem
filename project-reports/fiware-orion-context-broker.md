@@ -43,7 +43,7 @@ dependencies:
 # FIWARE Orion Context Broker
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for FIWARE Orion Context Broker<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -263,7 +263,7 @@ Not applicable - Section 10 was omitted; Orion has no dependent package ecosyste
 | Distribution | Package Orion for a Linux distribution (none currently package it, on any architecture) - a prerequisite independent of riscv64 | 2-4 | Upstream or distro packagers | Low (blocked on broader packaging decision, not riscv64-specific) |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

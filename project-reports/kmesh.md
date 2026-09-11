@@ -32,7 +32,7 @@ dependencies:
 # Kmesh
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Kmesh<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -276,7 +276,7 @@ Kmesh has no dependent package ecosystem of its own (Section 10 omitted per scop
 | Ecosystem (external) | Track Envoy riscv64 upstreaming for waypoint/L7 mode | not sizeable from this repo; external dependency | TBD | High (blocking for full feature parity) |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-11.)
 
 ## 16. References
 

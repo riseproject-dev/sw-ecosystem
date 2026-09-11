@@ -456,7 +456,7 @@ Not applicable. glibc is a system library. It has no dependent package ecosystem
 
 ## 14. Updates
 
-No updates yet - initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-08-28.
 
 ---
 

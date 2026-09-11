@@ -9,7 +9,7 @@ color: red
 # PaddlePaddle Lite
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-01<br/>
 **Readiness:** Red<br/>
 **Scope:** RISC-V (riscv64/linux) support status for PaddlePaddle Lite<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -280,7 +280,7 @@ The dominant risk is upstream acceptance. Both LoongArch PRs were closed without
 
 ## 15. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-09-01.
 
 ## 16. References
 

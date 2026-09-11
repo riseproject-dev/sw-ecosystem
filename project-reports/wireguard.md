@@ -19,7 +19,7 @@ dependencies:
 # WireGuard
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** Blue<br/>
 **Optimization level:** partial<br/>
 **Scope:** RISC-V (riscv64/linux) support status for WireGuard<br/>
@@ -266,7 +266,7 @@ Not applicable - WireGuard has no dependent package ecosystem of its own (no PyP
 
 ## 15. Updates
 
-No updates yet - initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-09-08.
 
 ## 16. References
 

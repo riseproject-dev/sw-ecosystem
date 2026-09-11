@@ -15,7 +15,7 @@ dependencies:
 # liburing
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-28<br/>
 **Scope:** RISC-V (riscv64/linux) support status for liburing<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -303,7 +303,7 @@ The PyPI `liburing` package (a separate Python binding project) ships only an x8
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-08-28.
 
 ---
 

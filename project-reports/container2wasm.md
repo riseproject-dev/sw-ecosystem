@@ -56,7 +56,7 @@ dependencies:
 # container2wasm
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** blue<br/>
 **Scope:** RISC-V (riscv64/linux) support status for container2wasm<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -334,7 +334,7 @@ Not applicable - see Section 10.
 | Governance | Reduce single-maintainer review bottleneck for riscv64-touching community PRs (#306, #64 open 1+ year each) | Not a sizeable engineering task - organizational/process issue | Data not available | Medium |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-10.)
 
 ## 16. References
 

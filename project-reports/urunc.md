@@ -29,7 +29,7 @@ dependencies:
 # urunc
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for urunc<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -308,7 +308,7 @@ Not applicable - urunc has no dependent package ecosystem (no PyPI/npm/Maven con
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-11.)
 
 ## 16. References
 

@@ -37,7 +37,7 @@ dependencies:
 # U-Boot
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** blue<br/>
 **Scope:** RISC-V (riscv64/linux) support status for U-Boot<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -361,7 +361,7 @@ Not applicable in the Section 10 sense (U-Boot has no dependent package ecosyste
 | Performance | Establish a baseline riscv64 boot-time benchmark (none currently exists) before any optimization roadmap is sized | Low-Medium (benchmarking harness + real-hardware or QEMU runs) | Whoever owns performance investment decisions | Low (contingent on whether boot-time matters for the target use case) |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

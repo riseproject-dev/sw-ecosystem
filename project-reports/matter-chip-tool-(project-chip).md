@@ -16,7 +16,7 @@ dependencies:
 # Matter / chip-tool (Project CHIP)
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Matter / chip-tool (Project CHIP)<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -237,7 +237,7 @@ Total estimated effort to reach a working, CI-verified riscv64 `chip-tool` build
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

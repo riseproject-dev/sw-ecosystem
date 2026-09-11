@@ -7,7 +7,7 @@ color: green
 # Wasmer
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** green<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Wasmer<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -270,7 +270,7 @@ Not applicable - see Section 10 note below. Wasmer is a standalone runtime/CLI/l
 | CI/CD | Reduce reliance on skip-listing (`tests/ignores.txt`) by triaging and fixing rather than excluding failing riscv64 tests | 3-6 (ongoing) | Test/QA engineer | Medium |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-10.)
 
 ## 16. References
 

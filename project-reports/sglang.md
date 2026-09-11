@@ -25,7 +25,7 @@ dependencies:
 # SGLang
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** orange<br/>
 **Optimization level:** partial<br/>
 **Scope:** RISC-V (riscv64/linux) support status for SGLang<br/>
@@ -242,7 +242,7 @@ Not applicable as a distinct section per the report's scope rules (SGLang is a s
 | Structural | Track CUDA-for-RISC-V maturity for the GPU serving path (external dependency, not directly actionable) | N/A - no SGLang-side work item exists | N/A | Monitor only |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-11.)
 
 ## 16. References
 

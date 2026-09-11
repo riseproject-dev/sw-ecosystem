@@ -32,7 +32,7 @@ dependencies:
 # ART
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-28<br/>
 **Scope:** RISC-V (riscv64/linux) support status for ART<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -540,7 +540,7 @@ NDK ABI stabilization is a Google decision and is not directly actionable by ext
 
 ## 14. Updates
 
-No updates -- initial report dated 2026-06-17.
+No updates -- initial report dated 2026-08-28.
 
 ---
 

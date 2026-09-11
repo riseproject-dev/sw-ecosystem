@@ -38,7 +38,7 @@ dependencies:
 # Inclavare Containers
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** grey<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Inclavare Containers<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -253,7 +253,7 @@ Given the grey/arch-exclusive grade and the fundamental hardware dependency iden
 
 ## 15. Updates
 
-(No updates yet -- initial report dated 2026-06-17.)
+(No updates yet -- initial report dated 2026-09-10.)
 
 ## 16. References
 

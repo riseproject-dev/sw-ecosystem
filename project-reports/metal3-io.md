@@ -22,7 +22,7 @@ dependencies:
 # metal3-io
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for metal3-io<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -252,7 +252,7 @@ Not applicable per Section 10 exclusion criteria - `baremetal-operator` has no d
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

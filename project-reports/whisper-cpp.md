@@ -28,7 +28,7 @@ dependencies:
 # whisper.cpp
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-07<br/>
 **Readiness:** yellow<br/>
 **Scope:** RISC-V (riscv64/linux) support status for whisper.cpp<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -264,7 +264,7 @@ whisper.cpp has no significant dependent package ecosystem of its own (Section 1
 | Performance | No whisper.cpp-specific work indicated; monitor upstream ggml/llama.cpp RVV/SpacemiT kernel progress for sync-in gains | N/A (tracked upstream) | ggml-org/llama.cpp | Low |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-07.)
 
 ## 16. References
 

@@ -29,7 +29,7 @@ dependencies:
 # wasm3
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** green<br/>
 **Scope:** RISC-V (riscv64/linux) support status for wasm3<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -293,7 +293,7 @@ Section 10 is omitted - wasm3 has no dependent package ecosystem (no PyPI packag
 
 ## 15. Updates
 
-No updates yet - initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-09-10.
 
 ## 16. References
 

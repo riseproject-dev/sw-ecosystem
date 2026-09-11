@@ -7,7 +7,7 @@ color: yellow
 # emscripten
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** yellow<br/>
 **Scope:** RISC-V (riscv64/linux) support status for emscripten<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -240,7 +240,7 @@ Not applicable - no dependent package ecosystem requiring separate riscv64 enabl
 | Dependency risk | Support mimalloc riscv64 fastpath PR review (#1299, #1319) | N/A (tracking only, not Emscripten-owned work) | mimalloc upstream | Low |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-10.)
 
 ## 16. References
 

@@ -7,7 +7,7 @@ color: yellow
 # Rust
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** yellow<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Rust<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -297,7 +297,7 @@ Not applicable as a distinct workstream in this report - rustc/cargo is a toolch
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-10.)
 
 ## 16. References
 

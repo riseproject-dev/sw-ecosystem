@@ -49,7 +49,7 @@ dependencies:
 # KeyDB
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-28<br/>
 **Scope:** RISC-V (riscv64/linux) support status for KeyDB<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -412,7 +412,7 @@ KeyDB has no significant dependent package ecosystem on the server side. The PyP
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-08-28.
 
 ---
 

@@ -31,7 +31,7 @@ dependencies:
 # Zephyr RTOS
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** yellow<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Zephyr RTOS<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -312,7 +312,7 @@ Not scored as a standalone section (Section 10 omitted - Zephyr does not have a 
 
 ## 15. Updates
 
-No updates yet - initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-09-08.
 
 ## 16. References
 

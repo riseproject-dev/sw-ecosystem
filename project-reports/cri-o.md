@@ -43,7 +43,7 @@ dependencies:
 # CRI-O
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for CRI-O<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -288,7 +288,7 @@ Not applicable - Section 10 is omitted per the report's scoping rule. CRI-O has 
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

@@ -22,7 +22,7 @@ dependencies:
 # KubeEdge
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-07<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for KubeEdge<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -259,7 +259,7 @@ Not applicable - KubeEdge has no dependent package ecosystem (Section 10 omitted
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-07.)
 
 ## 16. References
 

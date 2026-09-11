@@ -22,7 +22,7 @@ dependencies:
 # Edge Impulse SDK Open CMSIS Pack
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** grey<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Edge Impulse SDK Open CMSIS Pack<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -291,7 +291,7 @@ No further investment is recommended for this specific repository. A chip compan
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

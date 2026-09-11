@@ -17,7 +17,7 @@ dependencies:
 # Genode
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Genode<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -299,7 +299,7 @@ RISE has no existing involvement with Genode (Section 1, Section 12) - no RISE-f
 
 ## 15. Updates
 
-No updates yet - initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-09-11.
 
 ## 16. References
 

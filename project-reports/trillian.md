@@ -61,7 +61,7 @@ dependencies:
 # trillian
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-29<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for trillian<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -355,7 +355,7 @@ Not applicable. Trillian is a Go library/server with no dependent package ecosys
 
 ## 15. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-08-29.
 
 ## 16. References
 

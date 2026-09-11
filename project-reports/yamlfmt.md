@@ -9,7 +9,7 @@ color: orange
 # yamlfmt
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-30<br/>
 **Readiness:** Orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for yamlfmt<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -250,7 +250,7 @@ Total estimated effort: 0.3 person-weeks. This is among the lowest-cost riscv64 
 
 ## 15. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-08-30.
 
 ## 16. References
 

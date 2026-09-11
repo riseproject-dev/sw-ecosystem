@@ -32,7 +32,7 @@ dependencies:
 # ClickHouse
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** yellow<br/>
 **Scope:** RISC-V (riscv64/linux) support status for ClickHouse<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -265,7 +265,7 @@ Section 10 omitted: ClickHouse is a standalone database server with no dependent
 | Dependency | Audit/patch Abseil-cpp riscv64 SEGFAULT bugs consumed transitively via re2 | 2-4 (upstream Abseil, outside ClickHouse's direct control) | contributor | Medium |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-11.)
 
 ## 16. References
 

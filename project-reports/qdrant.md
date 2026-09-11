@@ -26,7 +26,7 @@ dependencies:
 # Qdrant
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** orange<br/>
 **Optimization level:** absent<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Qdrant<br/>
@@ -267,7 +267,7 @@ Not applicable - Section 10 was omitted because Qdrant has no dependent package 
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-11.)
 
 ## 16. References
 

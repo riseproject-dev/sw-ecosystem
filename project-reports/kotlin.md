@@ -7,7 +7,7 @@ color: orange
 # Kotlin
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-10<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Kotlin<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -220,7 +220,7 @@ Section 10 omitted: Kotlin is a language/compiler toolchain, not a project with 
 | Community engagement | Engage the Slack "Kotlin Native supporting RiscV" contributor group and any independent compiler-fork authors to assess upstreamable work | Data not available: no scoping estimate found | External sponsor / RISE liaison | Medium |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-10.)
 
 ## 16. References
 

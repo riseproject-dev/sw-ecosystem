@@ -23,7 +23,7 @@ dependencies:
 # DeepFlow
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** red<br/>
 **Scope:** RISC-V (riscv64/linux) support status for DeepFlow<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -288,7 +288,7 @@ Effort figures are order-of-magnitude estimates derived from the scope of code c
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-11.)
 
 ## 16. References
 

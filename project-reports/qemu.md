@@ -67,7 +67,7 @@ dependencies:
 # QEMU
 
 **Author:** Ludovic HENRY `<ludovic.henry@qti.qualcomm.com>`
-**Date:** 2026-06-17
+**Date:** 2026-08-28
 **Scope:** RISC-V (riscv64/linux) support status for QEMU
 **Audience:** Technical leadership, resource allocation strategy
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
@@ -490,7 +490,7 @@ Not applicable. QEMU is a standalone tool with no dependent package ecosystem of
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-08-28.
 
 ---
 

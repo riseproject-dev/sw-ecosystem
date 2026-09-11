@@ -17,7 +17,7 @@ dependencies:
 # Apache bRPC
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Apache bRPC<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -256,7 +256,7 @@ Not applicable - Section 10 is omitted because bRPC is a standalone C++ library/
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-11.)
 
 ## 16. References
 

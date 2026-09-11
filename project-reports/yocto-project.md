@@ -19,7 +19,7 @@ dependencies:
 # Yocto Project
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** blue<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Yocto Project<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -298,7 +298,7 @@ Not applicable in the PyPI/npm/Maven sense (Section 10 omitted - see below). The
 
 ## 15. Updates
 
-No updates yet - initial report dated 2026-06-17.
+No updates yet - initial report dated 2026-09-08.
 
 ## 16. References
 

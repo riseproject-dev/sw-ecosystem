@@ -14,7 +14,7 @@ dependencies:
 # libx264
 
 **Author:** Ludovic HENRY \<ludovic.henry@qti.qualcomm.com\><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-08-28<br/>
 **Scope:** RISC-V (riscv64/linux) support status for libx264<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items verified against only one source are marked [NEEDS VERIFICATION]. Contradictions between sources are cited explicitly.<br/>
@@ -380,7 +380,7 @@ Total estimated effort: 23-33 person-weeks for complete RVV optimization coverag
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-06-17.
+No updates yet -- initial report dated 2026-08-28.
 
 ---
 

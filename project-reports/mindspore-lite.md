@@ -55,7 +55,7 @@ dependencies:
 # MindSpore Lite
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-01<br/>
 **Readiness:** orange<br/>
 **Optimization level:** minimal<br/>
 **Scope:** RISC-V (riscv64/linux) support status for MindSpore Lite<br/>

@@ -19,7 +19,7 @@ dependencies:
 # OP-TEE
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** yellow<br/>
 **Scope:** RISC-V (riscv64/linux) support status for OP-TEE<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -290,7 +290,7 @@ Not applicable - OP-TEE has no dependent package ecosystem (Section 10 omitted; 
 Data not available for person-week estimates on any item above: no sizing/effort figures were found in any searched source (GitHub issues/PRs, RISE tracking issue, RISC-V International blog, RISC-V Summit Europe proceedings). All effort figures are marked [NEEDS VERIFICATION] pending direct estimation from engineers familiar with the OP-TEE codebase.
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

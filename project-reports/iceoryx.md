@@ -25,7 +25,7 @@ dependencies:
 # Iceoryx
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** yellow<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Iceoryx<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -241,7 +241,7 @@ Section 10 omitted per instructions: Iceoryx is a standalone C++ IPC middleware/
 
 ## 15. Updates
 
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-08.)
 
 ## 16. References
 

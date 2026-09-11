@@ -9,7 +9,7 @@ color: orange
 # sysdig
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for sysdig<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -218,7 +218,7 @@ Not applicable - Section 10 is omitted because sysdig has no dependent package e
 | Distribution | Publish official upstream riscv64 release artifacts once build is stable | 1 | draios/sysdig maintainer | Medium |
 
 ## 15. Updates
-(No updates yet - initial report dated 2026-06-17.)
+(No updates yet - initial report dated 2026-09-11.)
 
 ## 16. References
 

@@ -12,6 +12,7 @@ export const meta = {
 
 const proj = args[0]
 const ABORT_THRESHOLD = 1000
+const reportDate = new Date().toISOString().slice(0, 10)
 
 const slug = proj.slug || proj.name.toLowerCase().replace(/[\s.\/]+/g, '-')
 
@@ -538,7 +539,7 @@ color: [COLOR -- grey|green|blue|yellow|orange|red]
 # ${proj.name}
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** ${reportDate}<br/>
 **Readiness:** [color]<br/>
 [**Optimization level:** full|partial|minimal|absent   ← include ONLY for optimization-purpose projects; omit entirely otherwise]<br/>
 **Scope:** RISC-V (riscv64/linux) support status for ${proj.name}<br/>
@@ -625,7 +626,7 @@ Before sizing: check what RISE has already done or funded. Do not size work alre
 | Functional | ... | ... | ... | Critical/High/Medium/Low |
 
 ## 15. Updates
-(No updates yet -- initial report dated 2026-06-17.)
+(No updates yet -- initial report dated ${reportDate}.)
 
 ## 16. References
 

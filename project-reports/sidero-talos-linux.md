@@ -9,7 +9,7 @@ color: orange
 # Sidero Talos Linux
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-11<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Sidero Talos Linux<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -290,7 +290,7 @@ All effort figures above are engineering judgment estimates for scoping purposes
 
 ## 15. Updates
 
-No updates yet, initial report dated 2026-06-17.
+No updates yet, initial report dated 2026-09-11.
 
 ## 16. References
 

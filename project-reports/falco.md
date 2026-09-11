@@ -31,7 +31,7 @@ dependencies:
 # Falco
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-06-17<br/>
+**Date:** 2026-09-08<br/>
 **Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Falco<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
@@ -251,7 +251,7 @@ Not applicable -- see note on Section 10 omission below.
 | Dependency | Track/upstream OpenSSL AES/GHASH constant-time fix for riscv64 ([openssl#31080](https://github.com/openssl/openssl/issues/31080)) | N/A (external dependency, monitor only) | OpenSSL upstream | Medium |
 
 ## 15. Updates
-(No updates yet -- initial report dated 2026-06-17.)
+(No updates yet -- initial report dated 2026-09-08.)
 
 ## 16. References
 
