@@ -16,7 +16,7 @@
 
     .site-nav > ul.nav-list:first-child > li > a,
     
-    .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(10)) > a,
+    .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(263)) > a,
     .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
       background-image: none;
     }
@@ -26,14 +26,14 @@
       background-image: none;
     }
 
-    .site-nav > ul.nav-list:first-child > li:nth-child(4) > ul > li:nth-child(10) > a {
+    .site-nav > ul.nav-list:first-child > li:nth-child(3) > ul > li:nth-child(263) > a {
       font-weight: 600;
       text-decoration: none;
-    }.site-nav > ul.nav-list:first-child > li:nth-child(4) > button svg,
-    .site-nav > ul.nav-list:first-child > li:nth-child(4) > ul > li:nth-child(10) > button svg {
+    }.site-nav > ul.nav-list:first-child > li:nth-child(3) > button svg,
+    .site-nav > ul.nav-list:first-child > li:nth-child(3) > ul > li:nth-child(263) > button svg {
       transform: rotate(-90deg);
-    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(4) > ul.nav-list,
-    .site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(4) > ul.nav-list > li.nav-list-item:nth-child(10) > ul.nav-list {
+    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(3) > ul.nav-list,
+    .site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(3) > ul.nav-list > li.nav-list-item:nth-child(263) > ul.nav-list {
       display: block;
     }
   </style>
@@ -53,20 +53,20 @@
 
 
   <!-- Begin Jekyll SEO tag v2.9.0 -->
-<title>Technical Guide &amp; Advice for Porting Software to RISC-V | RISE Software Ecosystem</title>
+<title>XGBoost | RISE Software Ecosystem</title>
 <meta name="generator" content="Jekyll v4.4.1" />
-<meta property="og:title" content="Technical Guide &amp; Advice for Porting Software to RISC-V" />
+<meta property="og:title" content="XGBoost" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="RISC-V Software Ecosystem Status Reports and Readiness Assessments" />
 <meta name="twitter:description" property="og:description" content="RISC-V Software Ecosystem Status Reports and Readiness Assessments" />
-<link rel="canonical" href="https://riseproject-dev.github.io/sw-ecosystem/prompts/porting-advice/porting-advice.html" />
-<meta property="og:url" content="https://riseproject-dev.github.io/sw-ecosystem/prompts/porting-advice/porting-advice.html" />
+<link rel="canonical" href="https://riseproject-dev.github.io/sw-ecosystem/project-reports/xgboost.html" />
+<meta property="og:url" content="https://riseproject-dev.github.io/sw-ecosystem/project-reports/xgboost.html" />
 <meta property="og:site_name" content="RISE Software Ecosystem" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Technical Guide &amp; Advice for Porting Software to RISC-V" />
+<meta name="twitter:title" content="XGBoost" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","description":"RISC-V Software Ecosystem Status Reports and Readiness Assessments","headline":"Technical Guide &amp; Advice for Porting Software to RISC-V","url":"https://riseproject-dev.github.io/sw-ecosystem/prompts/porting-advice/porting-advice.html"}</script>
+{"@context":"https://schema.org","@type":"WebPage","description":"RISC-V Software Ecosystem Status Reports and Readiness Assessments","headline":"XGBoost","url":"https://riseproject-dev.github.io/sw-ecosystem/project-reports/xgboost.html"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -214,8 +214,8 @@
     <div class="main-content-wrap">
       <nav aria-label="Breadcrumb" class="breadcrumb-nav">
   <ol class="breadcrumb-nav-list">
-    <li class="breadcrumb-nav-list-item"><a href="/sw-ecosystem/prompts/">Prompts</a></li>
-    <li class="breadcrumb-nav-list-item"><span>Technical Guide & Advice for Porting Software to RISC-V</span></li>
+    <li class="breadcrumb-nav-list-item"><a href="/sw-ecosystem/project-reports/">Project Reports</a></li>
+    <li class="breadcrumb-nav-list-item"><span>XGBoost</span></li>
   </ol>
 </nav>
 
@@ -223,214 +223,74 @@
       <div id="main-content" class="main-content">
         <main>
           
-            <h1 id="technical-guide--advice-for-porting-open-source-software-to-risc-v">
+            <!--
+  Renders an interactive dependency graph. Two callers:
+  - A stack report's own <slug>.graph.json (see prompts/stack-report/stack-report.md, Artifact 4):
+    {% include dependency-graph.html slug="<vertical-slug>" %}
+  - A project report, against the shared graph built by _plugins/dependency_graph_generator.rb from
+    every project-reports/*.md's `dependencies:` frontmatter, bounded to this project's own
+    dependency tree:
+    {% include dependency-graph.html slug="dependencies" subset="<project-slug>" %}
+
+  `slug` may be omitted on a stack-report page; it then defaults to page.slug. `subset`, when set,
+  bounds the entire instance -- initial view, search, and focus/reset alike -- to that node plus
+  its descendants only, never ancestors, so e.g. a project depended on by hundreds of others in the
+  shared graph doesn't pull all of them onto that project's own page; beyond that node's own direct
+  dependencies, only the runtime-dependency chain is included (a dependency's build/test tooling is
+  dropped -- see findDescendantsRuntimeOnlyBeyondRoot in dependency-graph.js). Omit `subset` to
+  leave the whole fetched graph in play (as stack reports, whose own graph.json is already scoped
+  to one vertical, do).
+
+  `focus`, when set, pre-selects that node on load instead of showing the whole graph unfocused --
+  no current caller passes it (a project report's own subset root has no ancestors within its own
+  subset barring a dependency cycle, so focusing it on load looks identical to leaving it
+  unfocused), but the search box still drives the same mechanism at runtime, and it remains
+  available to any future caller that wants a pre-selected node independent of subset.
+-->
+<link rel="stylesheet" href="/sw-ecosystem/assets/css/dependency-graph.css" />
+
+<div class="dependency-graph" data-graph="dependencies.graph.json" data-focus="" data-subset="xgboost"></div>
+<p class="dg-json-link"><a href="dependencies.graph.json">Raw dependency graph data (JSON)</a></p>
+<script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"></script>
+
+<script src="/sw-ecosystem/assets/js/dependency-graph.js"></script>
+<h1 id="xgboost">
   
   
-    <a href="#technical-guide--advice-for-porting-open-source-software-to-risc-v" class="anchor-heading" aria-labelledby="technical-guide--advice-for-porting-open-source-software-to-risc-v"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Technical Guide &amp; Advice for Porting Open-Source Software to RISC-V
+    <a href="#xgboost" class="anchor-heading" aria-labelledby="xgboost"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> XGBoost
   
   
 </h1>
     
 
-<p><strong>Date:</strong> August 2026<br />
-<strong>Scope:</strong> Actionable advice, best practices, and anti-patterns derived from analyzing 147 open-source project status reports (<a href="file:///Users/gregsterling/repos/git/sw-ecosystem/reports">reports directory</a>).</p><hr />
-<h2 id="executive-summary">
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-06-17<br />
+<strong>Readiness:</strong> orange<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for XGBoost<br />
+<strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
+<h2 id="1-project-overview">
   
   
-    <a href="#executive-summary" class="anchor-heading" aria-labelledby="executive-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Executive Summary
+    <a href="#1-project-overview" class="anchor-heading" aria-labelledby="1-project-overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Project Overview
   
   
 </h2>
     
 
-<p>Porting software to RISC-V (<code class="language-plaintext highlighter-rouge">riscv64</code>) effectively requires navigating key architectural and ecosystem challenges: <strong>dynamic vector length (VLEN) variance</strong>, <strong>compiler ISA flag compatibility</strong>, <strong>runtime feature detection</strong>, <strong>PyPI wheel packaging</strong>, and <strong>native CI test gating</strong>.</p>
+<p>XGBoost (Extreme Gradient Boosting) is a C++ gradient-boosted decision tree library with Python, R, JVM (xgboost4j), and CLI bindings, distributed under the Apache License 2.0 (<a href="https://github.com/dmlc/xgboost/blob/master/LICENSE">LICENSE</a>). It is hosted under DMLC (“Distributed Machine Learning Community”), a loose GitHub-based collective of ML projects, not a chartered legal entity and not part of the Apache Software Foundation or Linux Foundation despite adopting an Apache-style process. Its fiscal host is <strong>Open Source Collective</strong>, a 501(c)(6) nonprofit that also hosts Babel, Vue, and Webpack (<code class="language-plaintext highlighter-rouge">doc/contrib/donate.rst</code>).</p>
 
-<p>This guide outlines actionable technical suggestions for open-source maintainers and contributors to ensure successful, production-grade RISC-V ports.</p><hr />
-<h2 id="1-build-system--compilation-infrastructure">
-  
-  
-    <a href="#1-build-system--compilation-infrastructure" class="anchor-heading" aria-labelledby="1-build-system--compilation-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Build System &amp; Compilation Infrastructure
-  
-  
-</h2>
-    
-<h3 id="a-avoid-hardcoding-fixed-vector-lengths-march-flags">
-  
-  
-    <a href="#a-avoid-hardcoding-fixed-vector-lengths-march-flags" class="anchor-heading" aria-labelledby="a-avoid-hardcoding-fixed-vector-lengths-march-flags"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> A. Avoid Hardcoding Fixed Vector Lengths (<code class="language-plaintext highlighter-rouge">march</code> flags)
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: Hardcoding static vector bit-width flags like <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zvl128b</code> causes compilation errors or runtime segfaults on hardware with different vector lengths (e.g. <code class="language-plaintext highlighter-rouge">VLEN=256</code> on SpacemiT X100/K1 chips).</li>
-  <li><strong>Evidence</strong>: In <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md">vLLM</a>, hardcoded <code class="language-plaintext highlighter-rouge">zvl128b</code> caused hard crashes on <code class="language-plaintext highlighter-rouge">VLEN=256</code> chips until <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md#2-port-history-and-upstreaming-timeline">PR #39478</a> introduced dynamic CMake VLEN parameterization.</li>
-  <li><strong>Best Practice</strong>: Use generic compiler vector flags (<code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>) and parameterize vector lengths in CMake/Meson (<code class="language-plaintext highlighter-rouge">-DVLLM_RVV_VLEN=&lt;N&gt;</code>), allowing runtime or build-time VLEN configuration.</li>
-</ul>
-<h3 id="b-handle--marchnative-gracefully-in-jit-compilers">
-  
-  
-    <a href="#b-handle--marchnative-gracefully-in-jit-compilers" class="anchor-heading" aria-labelledby="b-handle--marchnative-gracefully-in-jit-compilers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> B. Handle <code class="language-plaintext highlighter-rouge">-march=native</code> Gracefully in JIT Compilers
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: Pass-through flags like <code class="language-plaintext highlighter-rouge">-march=native</code> sent to GCC/g++ on RISC-V can cause compiler crashes because GCC requires explicit target ISA strings (starting with <code class="language-plaintext highlighter-rouge">rv64...</code>).</li>
-  <li><strong>Evidence</strong>: In <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md">PyTorch Inductor</a>, <code class="language-plaintext highlighter-rouge">-march=native</code> caused hard crashes until <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md#2-port-history-and-upstreaming-timeline">PR #167071</a> and <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md#2-port-history-and-upstreaming-timeline">PR #184297</a> added explicit RISC-V target handling (<code class="language-plaintext highlighter-rouge">cpp.march</code>).</li>
-  <li><strong>Best Practice</strong>: Add explicit architecture checks for <code class="language-plaintext highlighter-rouge">riscv64</code> in JIT code generators to pass valid target strings (e.g. <code class="language-plaintext highlighter-rouge">rv64gc</code> or <code class="language-plaintext highlighter-rouge">rv64gcv</code>).</li>
-</ul>
-<h3 id="c-automatically-guard-non-existent-x86arm-dependencies">
-  
-  
-    <a href="#c-automatically-guard-non-existent-x86arm-dependencies" class="anchor-heading" aria-labelledby="c-automatically-guard-non-existent-x86arm-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> C. Automatically Guard Non-Existent x86/ARM Dependencies
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: Build systems frequently attempt to compile x86-only submodules (e.g., FBGEMM, NNPACK, psimd, MKL) on RISC-V, resulting in build failures.</li>
-  <li><strong>Evidence</strong>: In <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md#53-recommended--duse_xoff-flags-for-riscv64">PyTorch Dependencies.cmake</a>, building on RISC-V required manually specifying <code class="language-plaintext highlighter-rouge">-DUSE_CUDA=OFF -DUSE_MKLDNN=OFF -DUSE_FBGEMM=OFF -DUSE_NNPACK=OFF</code>.</li>
-  <li><strong>Best Practice</strong>: Update project CMake/Meson allowlists so that when <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> is <code class="language-plaintext highlighter-rouge">riscv64</code>, architecture-specific submodules are automatically disabled without requiring manual user flags.</li>
-</ul><hr />
-<h2 id="2-runtime-hardware-feature-detection">
-  
-  
-    <a href="#2-runtime-hardware-feature-detection" class="anchor-heading" aria-labelledby="2-runtime-hardware-feature-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Runtime Hardware Feature Detection
-  
-  
-</h2>
-    
-<h3 id="a-use-kernel-hardware-probe-syscalls-sys_riscv_hwprobe">
-  
-  
-    <a href="#a-use-kernel-hardware-probe-syscalls-sys_riscv_hwprobe" class="anchor-heading" aria-labelledby="a-use-kernel-hardware-probe-syscalls-sys_riscv_hwprobe"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> A. Use Kernel Hardware Probe Syscalls (<code class="language-plaintext highlighter-rouge">sys_riscv_hwprobe</code>)
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: Scrape-parsing <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> for ISA strings is brittle because vendor Linux kernels and QEMU user-mode emulators often omit VLEN hint flags (like <code class="language-plaintext highlighter-rouge">zvl128b</code>), causing silent fallbacks to slow scalar code.</li>
-  <li><strong>Evidence</strong>: On Sophgo SG2044 hardware, <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md">vLLM</a> degraded to scalar performance because <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> lacked <code class="language-plaintext highlighter-rouge">zvl128b</code> flags, requiring a C++ fallback helper in <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md#2-port-history-and-upstreaming-timeline">PR #43179</a>.</li>
-  <li><strong>Best Practice</strong>: Use the Linux 6.4+ <code class="language-plaintext highlighter-rouge">sys_riscv_hwprobe()</code> syscall or the <code class="language-plaintext highlighter-rouge">cpuinfo</code> library API (<code class="language-plaintext highlighter-rouge">src/riscv/</code>) to query hardware vector and ISA capabilities dynamically at runtime.</li>
-</ul>
-<h3 id="b-validate-fp16bf16-vector-extension-support">
-  
-  
-    <a href="#b-validate-fp16bf16-vector-extension-support" class="anchor-heading" aria-labelledby="b-validate-fp16bf16-vector-extension-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> B. Validate FP16/BF16 Vector Extension Support
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: Unconditionally compiling with <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zvfh</code> without verifying CPU runtime support for <code class="language-plaintext highlighter-rouge">Zvfh</code> (half-precision vector) or <code class="language-plaintext highlighter-rouge">Zvfbfmin</code> (BFloat16 vector) causes illegal instruction exceptions (<code class="language-plaintext highlighter-rouge">SIGILL</code>) or numerical corruption.</li>
-  <li><strong>Evidence</strong>: In <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/xnnpack.md">XNNPACK</a>, unconditionally enabling <code class="language-plaintext highlighter-rouge">Zvfh</code> flags without a <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> check resulted in over 100 FP16 test failures (Issue <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/xnnpack.md#9-dependencies">#9886</a>).</li>
-  <li><strong>Best Practice</strong>: Gate FP16 (<code class="language-plaintext highlighter-rouge">Zvfh</code>) and BF16 (<code class="language-plaintext highlighter-rouge">Zvfbfmin</code>) vector code paths behind runtime ISA extension checks before dispatching vector kernels.</li>
-</ul><hr />
-<h2 id="3-rvv-10-vectorization--kernel-design">
-  
-  
-    <a href="#3-rvv-10-vectorization--kernel-design" class="anchor-heading" aria-labelledby="3-rvv-10-vectorization--kernel-design"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. RVV 1.0 Vectorization &amp; Kernel Design
-  
-  
-</h2>
-    
-<h3 id="a-support-scalable-vector-types-vfloat32m1_t-over-fixed-structs">
-  
-  
-    <a href="#a-support-scalable-vector-types-vfloat32m1_t-over-fixed-structs" class="anchor-heading" aria-labelledby="a-support-scalable-vector-types-vfloat32m1_t-over-fixed-structs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> A. Support Scalable Vector Types (<code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>) Over Fixed Structs
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: C++ SIMD abstractions (like PyTorch’s <code class="language-plaintext highlighter-rouge">Vectorized&lt;T&gt;</code>) often assume fixed 128-bit or 256-bit register layouts (<code class="language-plaintext highlighter-rouge">Vectorized::size()</code>), blocking vectorization on scalable vector architectures.</li>
-  <li><strong>Evidence</strong>: In <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md">PyTorch</a>, core RVV ATen vectorization (<a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md#43-rvv-aten-vectorization-work-in-progress">PR #175746</a>) stalled because template assumptions conflicted with scalable vector memory copies.</li>
-  <li><strong>Best Practice</strong>: Decouple SIMD vector register wrappers from fixed memory sizes. Use RVV C intrinsics with dynamic LMUL mappings (<code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, <code class="language-plaintext highlighter-rouge">vfloat32m2_t</code>) or C++ RVV intrinsic libraries like <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/highway.md">Google Highway</a>.</li>
-</ul>
-<h3 id="b-clamp-inputs-for-transcendental--polynomial-vector-kernels">
-  
-  
-    <a href="#b-clamp-inputs-for-transcendental--polynomial-vector-kernels" class="anchor-heading" aria-labelledby="b-clamp-inputs-for-transcendental--polynomial-vector-kernels"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> B. Clamp Inputs for Transcendental &amp; Polynomial Vector Kernels
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: Polynomial approximations for <code class="language-plaintext highlighter-rouge">exp()</code>, <code class="language-plaintext highlighter-rouge">tanh()</code>, or <code class="language-plaintext highlighter-rouge">erf()</code> using RVV vector fused multiply-accumulate (<code class="language-plaintext highlighter-rouge">vfmacc</code>) can overflow or produce <code class="language-plaintext highlighter-rouge">NaN</code> on large negative inputs via <code class="language-plaintext highlighter-rouge">-inf * 0.0 = NaN</code>.</li>
-  <li><strong>Evidence</strong>: In <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md">vLLM</a>, unclamped <code class="language-plaintext highlighter-rouge">FP32Vec16::exp()</code> produced <code class="language-plaintext highlighter-rouge">NaN</code> scores in attention softmax until <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/vllm.md#2-port-history-and-upstreaming-timeline">PR #40428</a> added input clamping to <code class="language-plaintext highlighter-rouge">[-87.33, 88.72]</code>.</li>
-  <li><strong>Best Practice</strong>: Always clamp input ranges in math function vector kernels before evaluating polynomial series.</li>
-</ul><hr />
-<h2 id="4-cicd-infrastructure--testing">
-  
-  
-    <a href="#4-cicd-infrastructure--testing" class="anchor-heading" aria-labelledby="4-cicd-infrastructure--testing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. CI/CD Infrastructure &amp; Testing
-  
-  
-</h2>
-    
-<h3 id="a-adopt-free-bare-metal-ci-runners-rise-runners">
-  
-  
-    <a href="#a-adopt-free-bare-metal-ci-runners-rise-runners" class="anchor-heading" aria-labelledby="a-adopt-free-bare-metal-ci-runners-rise-runners"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> A. Adopt Free Bare-Metal CI Runners (RISE Runners)
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: Relying solely on QEMU user-mode emulation in CI is slow, lacks real RVV 1.0 hardware validation, and often fails on binfmt setup in containerized runners.</li>
-  <li><strong>Evidence</strong>: In <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md">PyTorch</a>, in-tree native build PR <a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md#55-qemu-setup-in-ci-runners">#182278</a> failed due to QEMU container permission issues.</li>
-  <li><strong>Best Practice</strong>: Integrate free native RISC-V runners provided by the <strong><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners</a></strong> program (Scaleway EM-RV1 bare-metal servers, GitHub label <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>) into <code class="language-plaintext highlighter-rouge">.github/workflows/</code>.</li>
-</ul>
-<h3 id="b-use-out-of-tree-ci-relays-to-reduce-maintainer-burden">
-  
-  
-    <a href="#b-use-out-of-tree-ci-relays-to-reduce-maintainer-burden" class="anchor-heading" aria-labelledby="b-use-out-of-tree-ci-relays-to-reduce-maintainer-burden"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> B. Use Out-of-Tree CI Relays to Reduce Maintainer Burden
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: Mainstream maintainers hesitate to add non-blocking RISC-V CI jobs in-tree due to runner maintenance overhead.</li>
-  <li><strong>Evidence</strong>: The RISE project established <code class="language-plaintext highlighter-rouge">riseproject-dev/pytorch-ci</code> using GitHub workflow dispatch relays (<a href="file:///Users/gregsterling/repos/git/sw-ecosystem/project-reports/pytorch.md#72-out-of-tree-ci-riseproject-devpytorch-ci">PyTorch PR #181739</a>) to test pull requests on native hardware without burdening core maintainers.</li>
-  <li><strong>Best Practice</strong>: Use label-triggered workflow relays (<code class="language-plaintext highlighter-rouge">ciflow/riscv64</code>) so community runners can run test suites independently.</li>
-</ul><hr />
-<h2 id="5-packaging--governance">
-  
-  
-    <a href="#5-packaging--governance" class="anchor-heading" aria-labelledby="5-packaging--governance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Packaging &amp; Governance
-  
-  
-</h2>
-    
-<h3 id="a-publish-manylinux_2_31_riscv64-pypi-wheels">
-  
-  
-    <a href="#a-publish-manylinux_2_31_riscv64-pypi-wheels" class="anchor-heading" aria-labelledby="a-publish-manylinux_2_31_riscv64-pypi-wheels"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> A. Publish <code class="language-plaintext highlighter-rouge">manylinux_2_31_riscv64</code> PyPI Wheels
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: End users experience heavy friction when <code class="language-plaintext highlighter-rouge">pip install</code> fails to find binary wheels, triggering long C++/Rust compilation cycles.</li>
-  <li><strong>Best Practice</strong>: Add <code class="language-plaintext highlighter-rouge">manylinux_2_31_riscv64</code> wheel build stages using <code class="language-plaintext highlighter-rouge">cibuildwheel</code> or submit packages to the <strong><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Wheel Builder</a></strong>.</li>
-</ul>
-<h3 id="b-designate-named-risc-v-maintainers-codeowners">
-  
-  
-    <a href="#b-designate-named-risc-v-maintainers-codeowners" class="anchor-heading" aria-labelledby="b-designate-named-risc-v-maintainers-codeowners"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> B. Designate Named RISC-V Maintainers (<code class="language-plaintext highlighter-rouge">CODEOWNERS</code>)
-  
-  
-</h3>
-    
-<ul>
-  <li><strong>The Issue</strong>: Pull requests stall for months when maintainers have no explicit SLA or assignment for RISC-V code paths.</li>
-  <li><strong>Best Practice</strong>: Add a <code class="language-plaintext highlighter-rouge">RISC-V</code> section to <code class="language-plaintext highlighter-rouge">CODEOWNERS</code> and assign named community reviewers (e.g. from RISE member companies) to review and approve architecture-specific PRs promptly.</li>
-</ul><hr />
-<h2 id="summary-checklist-for-project-maintainers">
-  
-  
-    <a href="#summary-checklist-for-project-maintainers" class="anchor-heading" aria-labelledby="summary-checklist-for-project-maintainers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Summary Checklist for Project Maintainers
+<p><strong>Governance:</strong> documented in <a href="https://github.com/dmlc/xgboost/blob/master/doc/contrib/community.rst"><code class="language-plaintext highlighter-rouge">doc/contrib/community.rst</code></a> as an Apache-style, merit-based model: Contributors -&gt; Reviewers -&gt; Committers -&gt; PMC. New PMC/committer candidates require internal discussion and consensus (3+ “+1” votes, no vetoes without reasoned justification), and the PMC is instructed to “strive to only nominate new candidates outside of their own organization.” Major changes require an RFC and public discussion via GitHub Issues/Discussions.</p>
+
+<p><strong>Corporate maintainers</strong> (<code class="language-plaintext highlighter-rouge">CONTRIBUTORS.md</code>): PMC includes Tianqi Chen (creator, U. Washington), Yuan Tang (Red Hat), Nan Zhu (Uber), Hyunsu Cho (NVIDIA, primary CI administrator and Python package maintainer), Jiaming Yuan (secondary CI administrator, independent), Rory Mitchell (U. Waikato), Michael Benesty (independent). Committers include Tong He (Amazon AI), Sergei Lebedev (Criteo), Egor Smirnov (Intel), plus independents. CI infrastructure runs self-hosted Jenkins/GitHub Actions/RunsOn on AWS, administered by Hyunsu Cho (NVIDIA) and Jiaming Yuan. Sponsors at the “Sponsor” tier (funding, not platform support): NVIDIA, Intel, Comet, Databento.</p>
+
+<p><strong>Community stance on new ports:</strong> no <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, or <code class="language-plaintext highlighter-rouge">CODEOWNERS</code> file exists in the repository, and no documented policy or discussion on RISC-V (or new architecture ports generally) was found. No one appears to have ever proposed a RISC-V port to the project - this is an absence of engagement, not a rejection.</p>
+
+<p><strong>RISE membership:</strong> XGBoost is not listed as a member project on <a href="https://riseproject.dev/">riseproject.dev</a>, and RISE’s own project tracker (<code class="language-plaintext highlighter-rouge">riseproject-dev/sw-ecosystem</code>) carries XGBoost only as a <strong>queued</strong> project awaiting this report, not as a named funded initiative (unlike PyTorch, llama.cpp, IREE, oneDNN, or OpenBLAS, which RISE explicitly names as funded).</p>
+<h2 id="2-port-history-and-upstreaming-timeline">
+  
+  
+    <a href="#2-port-history-and-upstreaming-timeline" class="anchor-heading" aria-labelledby="2-port-history-and-upstreaming-timeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Port History and Upstreaming Timeline
   
   
 </h2>
@@ -439,44 +299,723 @@
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th style="text-align: left">Domain</th>
-      <th style="text-align: left">Best Practice Checklist</th>
-      <th style="text-align: left">Primary Benefit</th>
+      <th>Date</th>
+      <th>Event</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="text-align: left"><strong>Build System</strong></td>
-      <td style="text-align: left">✅ Parameterize VLEN; avoid fixed <code class="language-plaintext highlighter-rouge">-march=zvl128b</code>.</td>
-      <td style="text-align: left">Prevents segfaults on 256-bit vector hardware.</td>
+      <td>2019-12-18</td>
+      <td>Issue #5131 filed: R/CRAN build failure on Alpine Linux (musl) due to inadequate endian-detection macro cascade. Not RISC-V-related, but the prerequisite for #5232.</td>
+      <td><a href="https://github.com/dmlc/xgboost/issues/5131">dmlc/xgboost#5131</a></td>
     </tr>
     <tr>
-      <td style="text-align: left"><strong>Compiler Flags</strong></td>
-      <td style="text-align: left">✅ Handle RISC-V target strings in JIT compilers instead of <code class="language-plaintext highlighter-rouge">-march=native</code>.</td>
-      <td style="text-align: left">Fixes GCC/Clang JIT compilation crashes.</td>
+      <td>2020-01-27</td>
+      <td>PR #5232 merged: replaces a fragile compiler-macro cascade for endian detection (R/CRAN build) with an Autoconf <code class="language-plaintext highlighter-rouge">AC_RUN_IFELSE</code> runtime probe. The <em>replaced</em> macro cascade had listed <code class="language-plaintext highlighter-rouge">__RISCV__</code> alongside <code class="language-plaintext highlighter-rouge">__GLIBC__</code>/<code class="language-plaintext highlighter-rouge">__ANDROID__</code> as a platform routed through <code class="language-plaintext highlighter-rouge">&lt;endian.h&gt;</code>. This is a general portability fix, not a RISC-V port or enablement effort. Author: Hyunsu Cho (chyunsu3, NVIDIA).</td>
+      <td><a href="https://github.com/dmlc/xgboost/pull/5232">dmlc/xgboost#5232</a></td>
     </tr>
     <tr>
-      <td style="text-align: left"><strong>Feature Detection</strong></td>
-      <td style="text-align: left">✅ Use <code class="language-plaintext highlighter-rouge">sys_riscv_hwprobe</code> or <code class="language-plaintext highlighter-rouge">cpuinfo</code> API for runtime ISA detection.</td>
-      <td style="text-align: left">Avoids false-negative scalar fallbacks.</td>
+      <td>2020-02-20</td>
+      <td>v1.0.0 released, first release containing the PR #5232 merge commit (<code class="language-plaintext highlighter-rouge">0c74552</code>).</td>
+      <td><a href="https://github.com/dmlc/xgboost/releases">dmlc/xgboost releases</a></td>
     </tr>
     <tr>
-      <td style="text-align: left"><strong>Vector Kernels</strong></td>
-      <td style="text-align: left">✅ Clamp inputs to math functions (<code class="language-plaintext highlighter-rouge">exp()</code>, <code class="language-plaintext highlighter-rouge">tanh()</code>).</td>
-      <td style="text-align: left">Prevents NaN output corruption in attention layers.</td>
+      <td>Undated</td>
+      <td>Ubuntu 26.04 (“resolute”) and Debian sid begin shipping <code class="language-plaintext highlighter-rouge">libxgboost0</code>/<code class="language-plaintext highlighter-rouge">libxgboost-dev</code>/<code class="language-plaintext highlighter-rouge">python3-xgboost</code> for riscv64, built from unmodified-or-unknown-patch-status upstream source (downstream packaging, no corresponding upstream GitHub activity).</td>
+      <td><a href="https://packages.ubuntu.com/search?keywords=XGBoost&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a>, <a href="https://packages.debian.org/sid/science/xgboost">packages.debian.org</a></td>
     </tr>
     <tr>
-      <td style="text-align: left"><strong>CI Testing</strong></td>
-      <td style="text-align: left">✅ Integrate <strong>RISE RISC-V Runners</strong> (<code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>).</td>
-      <td style="text-align: left">Enables fast, native bare-metal PR testing.</td>
+      <td>2026-08-28</td>
+      <td>PR #408 “xgboost: add build-xgboost.yml for riscv64 wheels” merged in the separate <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> repository - a dedicated CI workflow builds an xgboost riscv64 wheel via <code class="language-plaintext highlighter-rouge">cibuildwheel</code>, running upstream’s own <code class="language-plaintext highlighter-rouge">test_basic.py</code>/<code class="language-plaintext highlighter-rouge">test_basic_models.py</code> test suite on RISE’s native <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> GitHub runners. <strong>This is third-party CI, not part of dmlc/xgboost.</strong></td>
+      <td>riseproject-dev/python-wheels PR #408 (internal, per research findings)</td>
     </tr>
     <tr>
-      <td style="text-align: left"><strong>Packaging</strong></td>
-      <td style="text-align: left">✅ Publish <code class="language-plaintext highlighter-rouge">manylinux_2_31_riscv64</code> PyPI wheels via <code class="language-plaintext highlighter-rouge">cibuildwheel</code>.</td>
-      <td style="text-align: left">Eliminates user build-from-source friction.</td>
+      <td>2026-08-28</td>
+      <td>PR #823 “docs: add xgboost” merged in <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> (docs entry for the published wheel).</td>
+      <td>riseproject-dev/python-wheels PR #823 (internal, per research findings)</td>
+    </tr>
+    <tr>
+      <td>2026-09-03</td>
+      <td>Issue #841 “xgboost riscv64 support” opened by luhenry in <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code>, tracking continued riscv64 support following #408.</td>
+      <td>riseproject-dev/python-wheels #841 (internal, per research findings)</td>
     </tr>
   </tbody>
 </table></div>
+
+<p><strong>Is it fully upstream?</strong> No. Every riscv64-relevant artifact currently traces to either (a) downstream distro packaging (Ubuntu, Debian) with no visible upstream GitHub activity, or (b) a third-party CI/wheel pipeline in RISE’s own <code class="language-plaintext highlighter-rouge">python-wheels</code> repository. Nothing riscv64-specific has been merged into, or even proposed to, <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code> itself.</p>
+<h2 id="3-upstream-support-tier">
+  
+  
+    <a href="#3-upstream-support-tier" class="anchor-heading" aria-labelledby="3-upstream-support-tier"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Upstream Support Tier
+  
+  
+</h2>
+    
+
+<p>No formal architecture/platform support-tier policy document exists (<code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, <code class="language-plaintext highlighter-rouge">docs/platforms/</code> - none present). Support tiers are inferred entirely from observed CI and release behavior.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Signal</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Upstream CI builds</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">main.yml</code>, <code class="language-plaintext highlighter-rouge">python_tests.yml</code>, etc.)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">main.yml</code>, <code class="language-plaintext highlighter-rouge">jvm_tests.yml</code>, <code class="language-plaintext highlighter-rouge">python_wheels_winarm64.yml</code>)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Upstream CI runs tests</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (no CI job exists)</td>
+    </tr>
+    <tr>
+      <td>Official PyPI wheel</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">manylinux2014_x86_64</code>)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">manylinux2014_aarch64</code>)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Official CRAN/JVM binaries</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Not checked separately; no evidence found</td>
+    </tr>
+    <tr>
+      <td>Distro package (Ubuntu 26.04 resolute)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">libxgboost0</code>, <code class="language-plaintext highlighter-rouge">libxgboost-dev</code>, <code class="language-plaintext highlighter-rouge">python3-xgboost</code>, 3.0.4-1build1) - <a href="https://packages.ubuntu.com/resolute/riscv64/libxgboost0">package page</a></td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Evidence: all 17 GitHub Actions workflow files in <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code> (<code class="language-plaintext highlighter-rouge">cccl_nightly.yml</code>, <code class="language-plaintext highlighter-rouge">ci_configure.yml</code>, <code class="language-plaintext highlighter-rouge">freebsd.yml</code>, <code class="language-plaintext highlighter-rouge">jvm_tests.yml</code>, <code class="language-plaintext highlighter-rouge">lint.yml</code>, <code class="language-plaintext highlighter-rouge">main.yml</code>, <code class="language-plaintext highlighter-rouge">misc.yml</code>, <code class="language-plaintext highlighter-rouge">pre-commit.yml</code>, <code class="language-plaintext highlighter-rouge">python_tests.yml</code>, <code class="language-plaintext highlighter-rouge">python_wheels_variants.yml</code>, <code class="language-plaintext highlighter-rouge">python_wheels_winarm64.yml</code>, <code class="language-plaintext highlighter-rouge">r_nold.yml</code>, <code class="language-plaintext highlighter-rouge">r_tests.yml</code>, <code class="language-plaintext highlighter-rouge">scorecards.yml</code>, <code class="language-plaintext highlighter-rouge">stale-prs.yml</code>, <code class="language-plaintext highlighter-rouge">sycl_tests.yml</code>, <code class="language-plaintext highlighter-rouge">windows.yml</code>) were read directly; none reference riscv64, while <code class="language-plaintext highlighter-rouge">aarch64</code>/<code class="language-plaintext highlighter-rouge">arm64</code> genuinely do appear in <code class="language-plaintext highlighter-rouge">main.yml</code>, <code class="language-plaintext highlighter-rouge">jvm_tests.yml</code>, and <code class="language-plaintext highlighter-rouge">python_wheels_winarm64.yml</code>, confirming the absence is real rather than a search-methodology gap. Official wheel platform tags per <a href="https://xgboost.readthedocs.io/en/stable/install.html">readthedocs install docs</a>: Linux x86_64/aarch64, Windows x86_64/aarch64, macOS x86_64/Apple Silicon - riscv64 is absent.</p>
+<h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
+  
+  
+    <a href="#4-technical-architecture-and-risc-v-specific-subsystems" class="anchor-heading" aria-labelledby="4-technical-architecture-and-risc-v-specific-subsystems"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Technical Architecture and RISC-V-Specific Subsystems
+  
+  
+</h2>
+    
+
+<p>XGBoost is not an optimization-purpose (ISA-tuning) project: its value proposition is the gradient-boosting algorithm and its API surface, not hand-tuned SIMD kernels. Its hot paths (histogram building, split finding) are portable C++ relying on the compiler’s auto-vectorizer (<code class="language-plaintext highlighter-rouge">#pragma omp simd</code>); the project has in fact <strong>removed</strong> its old experimental x86 AVX intrinsics path (<code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> treats <code class="language-plaintext highlighter-rouge">USE_AVX</code> as a hard <code class="language-plaintext highlighter-rouge">SEND_ERROR</code> deprecation), so even amd64 no longer receives hand-tuned SIMD for the core algorithm. There is no JIT, no cryptography, and no assembly anywhere in the tree.</p>
+
+<p>Exactly four components in the codebase (three in XGBoost proper, one in the vendored <code class="language-plaintext highlighter-rouge">dmlc-core</code> submodule) carry any architecture conditional at all:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>File</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CPU cache-size detection</td>
+      <td><code class="language-plaintext highlighter-rouge">src/common/cache_manager.cc</code></td>
+      <td>CPUID assembly (hand-tuned)</td>
+      <td>sysfs read / compiled defaults (generic)</td>
+      <td>sysfs read / compiled defaults (generic, same as arm64)</td>
+    </tr>
+    <tr>
+      <td>Memory prefetch hint</td>
+      <td><code class="language-plaintext highlighter-rouge">src/common/hist_util.cc</code>, <code class="language-plaintext highlighter-rouge">src/c_api/c_api.cc</code></td>
+      <td><code class="language-plaintext highlighter-rouge">_mm_prefetch</code> intrinsic</td>
+      <td><code class="language-plaintext highlighter-rouge">__builtin_prefetch</code> (GCC/Clang generic)</td>
+      <td><code class="language-plaintext highlighter-rouge">__builtin_prefetch</code> (GCC/Clang generic, same as arm64)</td>
+    </tr>
+    <tr>
+      <td>ctz/popcount bit ops</td>
+      <td><code class="language-plaintext highlighter-rouge">src/common/bitfield.h</code>, <code class="language-plaintext highlighter-rouge">include/xgboost/linalg.h</code></td>
+      <td><code class="language-plaintext highlighter-rouge">__builtin_ctz</code>/<code class="language-plaintext highlighter-rouge">__builtin_popcountll</code> (GCC/Clang) or MSVC intrinsics</td>
+      <td><code class="language-plaintext highlighter-rouge">__builtin_ctz</code>/<code class="language-plaintext highlighter-rouge">__builtin_popcountll</code></td>
+      <td>Same <code class="language-plaintext highlighter-rouge">__builtin_ctz</code>/<code class="language-plaintext highlighter-rouge">__builtin_popcountll</code> branch as amd64 GCC/Clang and arm64 - no ISA split here at all</td>
+    </tr>
+    <tr>
+      <td>Lock-free queue fences (vendored <code class="language-plaintext highlighter-rouge">dmlc-core</code>)</td>
+      <td><code class="language-plaintext highlighter-rouge">include/dmlc/concurrentqueue.h</code></td>
+      <td>weak-atomic x86 fence tuning</td>
+      <td>weak-atomic ARM fence tuning</td>
+      <td>generic <code class="language-plaintext highlighter-rouge">std::atomic</code> fence default</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>No <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory, no RVV intrinsics, no <code class="language-plaintext highlighter-rouge">.S</code> assembly files, and no <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> guards exist anywhere in <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code> (confirmed via full-text grep of HEAD <code class="language-plaintext highlighter-rouge">6c3fde7</code> and GitHub code search). riscv64 runs the identical generic/scalar fallback path that arm64, ppc64, and s390x already use - this is a universal non-x86_64 characteristic of the codebase, not an XGBoost-specific riscv64 gap.</p>
+
+<p>Two files in the separate <code class="language-plaintext highlighter-rouge">dmlc-core</code> submodule contain trivial <code class="language-plaintext highlighter-rouge">__RISCV__</code> preprocessor guards (not compute code):</p>
+<ul>
+  <li><a href="https://github.com/dmlc/dmlc-core/blob/main/include/dmlc/build_config_default.h"><code class="language-plaintext highlighter-rouge">dmlc-core/include/dmlc/build_config_default.h</code></a> - excludes <code class="language-plaintext highlighter-rouge">__RISCV__</code> from the default stack-trace-logging condition.</li>
+  <li><a href="https://github.com/dmlc/dmlc-core/blob/main/include/dmlc/endian.h"><code class="language-plaintext highlighter-rouge">dmlc-core/include/dmlc/endian.h</code></a> - includes <code class="language-plaintext highlighter-rouge">__RISCV__</code> in the glibc-style endianness-detection branch (<code class="language-plaintext highlighter-rouge">#elif defined(__GLIBC__) || ... || defined(__RISCV__)</code>).</li>
+</ul>
+
+<p><code class="language-plaintext highlighter-rouge">__RISCV__</code> is not a standard GCC/Clang predefined macro for RISC-V targets (the real one is <code class="language-plaintext highlighter-rouge">__riscv</code>), so neither guard actually triggers on a real riscv64 toolchain. This is functionally dead code, though not build-blocking: real riscv64 Linux is glibc-based, so the <code class="language-plaintext highlighter-rouge">endian.h</code> branch is still reached via the <code class="language-plaintext highlighter-rouge">__GLIBC__</code> condition in the same <code class="language-plaintext highlighter-rouge">#elif</code>, independent of the broken <code class="language-plaintext highlighter-rouge">__RISCV__</code> term.</p>
+
+<p>The one hardware-gated gap - CUDA/GPU acceleration - is unrelated to XGBoost’s own code: no CUDA Toolkit targets riscv64 as a host platform for any project, so <code class="language-plaintext highlighter-rouge">USE_CUDA=ON</code> is unreachable on riscv64 regardless of XGBoost’s own porting effort.</p>
+<h2 id="5-build-system-cross-compilation-and-toolchain">
+  
+  
+    <a href="#5-build-system-cross-compilation-and-toolchain" class="anchor-heading" aria-labelledby="5-build-system-cross-compilation-and-toolchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Build System, Cross-Compilation, and Toolchain
+  
+  
+</h2>
+    
+
+<p><strong>Standard CPU build</strong> (only viable path on riscv64 today, per <a href="https://github.com/dmlc/xgboost/blob/master/doc/build.rst"><code class="language-plaintext highlighter-rouge">doc/build.rst</code></a>):</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake -B build -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo -GNinja
+cd build &amp;&amp; ninja
+</code></pre></div></div>
+
+<p><strong>Toolchain requirements</strong> (<code class="language-plaintext highlighter-rouge">CMakeLists.txt:21-37</code>), all justified by C++17 language-feature use:</p>
+<ul>
+  <li>CMake &gt;= 3.18</li>
+  <li>GCC &gt;= 8.1, else <code class="language-plaintext highlighter-rouge">message(FATAL_ERROR "Need GCC 8.1 or newer to build XGBoost")</code></li>
+  <li>Clang &gt;= 9.0, else fatal error</li>
+  <li>AppleClang &gt;= 11.0 (Xcode 11.0), else fatal error</li>
+</ul>
+
+<p>No <code class="language-plaintext highlighter-rouge">-DUSE_X=OFF</code> flags are architecture-gated; the only documented options (<code class="language-plaintext highlighter-rouge">USE_CUDA</code>, <code class="language-plaintext highlighter-rouge">USE_NCCL</code>, <code class="language-plaintext highlighter-rouge">USE_DLOPEN_NCCL</code>, <code class="language-plaintext highlighter-rouge">HIDE_CXX_SYMBOLS</code>, <code class="language-plaintext highlighter-rouge">USE_OPENMP</code>) are generic.</p>
+
+<p><strong>No riscv64 toolchain file, Dockerfile, or cross-compilation doc ships with the project.</strong> <code class="language-plaintext highlighter-rouge">find . -iname "*toolchain*"</code> and <code class="language-plaintext highlighter-rouge">find . -iname "*riscv*"</code> both return empty in the repository. A user building for riscv64 must supply their own <code class="language-plaintext highlighter-rouge">CMAKE_TOOLCHAIN_FILE</code> and riscv64 GCC/Clang cross-compiler.</p>
+
+<p><strong>QEMU usage exists, but only for s390x</strong> (big-endian testing), not riscv64: <code class="language-plaintext highlighter-rouge">dmlc-core/.github/workflows/githubci.yml</code>’s <code class="language-plaintext highlighter-rouge">s390x_test</code> job uses <code class="language-plaintext highlighter-rouge">multiarch/qemu-user-static</code> + <code class="language-plaintext highlighter-rouge">docker://multiarch/ubuntu-core:s390x-focal</code>, invoking <code class="language-plaintext highlighter-rouge">dmlc-core/scripts/s390x/build_via_cmake.sh</code> under emulation. This pattern (Dockerfile + QEMU CI job) has no riscv64 counterpart anywhere in the tree.</p>
+
+<p><strong>Known build issue:</strong> the <code class="language-plaintext highlighter-rouge">__RISCV__</code>/<code class="language-plaintext highlighter-rouge">__riscv</code> macro mismatch described in Section 4 (cosmetically incorrect but not build-blocking on glibc-based riscv64 Linux, per the analysis above).</p>
+
+<p>RISE’s third-party pipeline (<code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels/.github/workflows/build-xgboost.yml</code>) builds successfully on RISE’s native <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> runners using <code class="language-plaintext highlighter-rouge">cibuildwheel</code> targeting <code class="language-plaintext highlighter-rouge">cp312-manylinux_riscv64</code>, after patching <code class="language-plaintext highlighter-rouge">pyproject.toml</code> to drop the NCCL/CUDA dependency declaration (not applicable on riscv64) - demonstrating the standard CMake build path does work on real riscv64 hardware with a standard GCC/Clang toolchain.</p>
+<h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
+  
+  
+    <a href="#6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64" class="anchor-heading" aria-labelledby="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. Feature Coverage and Gap Analysis vs arm64 and amd64
+  
+  
+</h2>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Core CPU training/inference (histogram, split-finding)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (generic scalar fallback, identical to arm64)</td>
+    </tr>
+    <tr>
+      <td>Official pip-installable wheel</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td><strong>No</strong> (functional gap: <code class="language-plaintext highlighter-rouge">pip install xgboost</code> fails to find a riscv64 wheel on official PyPI)</td>
+    </tr>
+    <tr>
+      <td>GPU/CUDA acceleration</td>
+      <td>Yes</td>
+      <td>Yes (where CUDA-capable ARM hardware exists)</td>
+      <td><strong>No</strong> - CUDA Toolkit does not target riscv64 as a host platform for any project; not an XGBoost-specific gap</td>
+    </tr>
+    <tr>
+      <td>Upstream CI test execution</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td><strong>No</strong> - no upstream riscv64 CI job exists at all</td>
+    </tr>
+    <tr>
+      <td>Distro package (apt)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (Ubuntu 26.04 resolute, Debian sid)</td>
+    </tr>
+    <tr>
+      <td>Hand-tuned SIMD/cache-detection veneer</td>
+      <td>Yes (CPUID, <code class="language-plaintext highlighter-rouge">_mm_prefetch</code>)</td>
+      <td>No (same generic fallback as riscv64)</td>
+      <td>No (generic fallback, same as arm64) - not a riscv64-specific deficit since amd64 is the only architecture with this veneer</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Performance gaps:</strong> Data not available: no riscv64-specific benchmark numbers for XGBoost were found in GitHub, web search, or the RISE blog (exhaustive search performed; the closest adjacent data point is a CatBoost-on-RISC-V vectorization paper, <a href="https://arxiv.org/abs/2405.11062">arXiv:2405.11062</a>, a different library). Since the CPU code is architecture-generic scalar/auto-vectorized C++ identical to arm64, no XGBoost-specific performance delta is expected beyond general riscv64-vs-amd64/arm64 hardware/compiler differences, but this has not been measured for XGBoost specifically.</p>
+
+<p><strong>Security hardening gaps:</strong> Data not available: this was not specifically researched for XGBoost on riscv64.</p>
+
+<p><strong>NaN/floating-point semantics issues:</strong> No open riscv64-specific NaN or floating-point correctness bug was found in the <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code> issue tracker (exhaustive search across multiple riscv-related queries returned zero matches).</p>
+<h2 id="7-cicd-infrastructure">
+  
+  
+    <a href="#7-cicd-infrastructure" class="anchor-heading" aria-labelledby="7-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7. CI/CD Infrastructure
+  
+  
+</h2>
+    
+
+<p><strong>No riscv64 CI exists in <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code> itself.</strong> Confirmed by directly reading all 17 workflow files’ content: zero occurrences of “riscv” in any of them. No trigger, runner, job, or QEMU step targets riscv64 anywhere in the repository (main repo or <code class="language-plaintext highlighter-rouge">dmlc-core</code> submodule); the only “riscv” text anywhere in the tree is the two dead <code class="language-plaintext highlighter-rouge">__RISCV__</code> preprocessor macros described in Section 4.</p>
+
+<p>A <strong>third-party</strong> pipeline exists in the separate <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> repository: <code class="language-plaintext highlighter-rouge">.github/workflows/build-xgboost.yml</code> builds an xgboost 3.4.1 riscv64 wheel via <code class="language-plaintext highlighter-rouge">cibuildwheel</code> (<code class="language-plaintext highlighter-rouge">cp312-manylinux_riscv64</code>), running on <strong>RISE’s own native <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> GitHub runners</strong> (real riscv64 hardware, not QEMU emulation, per RISE’s <a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">March 2026 runner-announcement blog post</a>), and it <strong>does run upstream’s own test suite</strong> (<code class="language-plaintext highlighter-rouge">test_basic.py</code>, <code class="language-plaintext highlighter-rouge">test_basic_models.py</code>) as part of the build. This is genuine build+test execution on riscv64, but it happens in RISE’s infrastructure, not XGBoost’s own CI.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Signal</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Upstream CI (dmlc/xgboost) build</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Upstream CI (dmlc/xgboost) test</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Release-blocking</td>
+      <td>Yes (part of <code class="language-plaintext highlighter-rouge">main.yml</code>)</td>
+      <td>Yes</td>
+      <td>N/A - no job exists</td>
+    </tr>
+    <tr>
+      <td>Third-party CI (RISE <code class="language-plaintext highlighter-rouge">python-wheels</code>) build+test</td>
+      <td>N/A (not needed)</td>
+      <td>N/A (not needed)</td>
+      <td>Yes, on native RISE riscv64 GitHub runners</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="8-distribution-and-release-status">
+  
+  
+    <a href="#8-distribution-and-release-status" class="anchor-heading" aria-labelledby="8-distribution-and-release-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8. Distribution and Release Status
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Official PyPI</strong> (<a href="https://pypi.org/pypi/xgboost/json"><code class="language-plaintext highlighter-rouge">pypi.org/pypi/xgboost/json</code></a>): no riscv64 wheel. Current version 3.4.1; wheel tags present are <code class="language-plaintext highlighter-rouge">macosx_*_x86_64</code> variants, <code class="language-plaintext highlighter-rouge">manylinux2014_x86_64</code>, <code class="language-plaintext highlighter-rouge">manylinux2014_aarch64</code>, <code class="language-plaintext highlighter-rouge">win_amd64</code>/<code class="language-plaintext highlighter-rouge">win32</code>, plus sdist.</li>
+  <li><strong>Ubuntu 26.04 (resolute)</strong>: <code class="language-plaintext highlighter-rouge">libxgboost0</code>, <code class="language-plaintext highlighter-rouge">libxgboost-dev</code>, <code class="language-plaintext highlighter-rouge">python3-xgboost</code> at 3.0.4-1build1, riscv64 among the listed architectures (alongside amd64, arm64, armhf, ppc64el, s390x) - confirmed via a live fetch of the specific package page <a href="https://packages.ubuntu.com/resolute/riscv64/libxgboost0"><code class="language-plaintext highlighter-rouge">packages.ubuntu.com/resolute/riscv64/libxgboost0</code></a>, which resolves to a real page with concrete package size (2,388.8 kB) and installed size (7,328.0 kB). A fourth package, <code class="language-plaintext highlighter-rouge">libxgboost-predictor-java</code> (0.3.1+dfsg-3), is <code class="language-plaintext highlighter-rouge">arch: all</code> (Java, not architecture-gated).</li>
+  <li><strong>Debian sid</strong>: also packages xgboost for riscv64, per <a href="https://packages.debian.org/sid/science/xgboost"><code class="language-plaintext highlighter-rouge">packages.debian.org/sid/science/xgboost</code></a>.</li>
+  <li><strong>RISE GitLab wheel index</strong> (third-party, not official PyPI, project 56254198): <code class="language-plaintext highlighter-rouge">xgboost-3.4.1-py3-none-manylinux_2_39_riscv64.whl</code> available at <a href="https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/xgboost/"><code class="language-plaintext highlighter-rouge">gitlab.com/api/v4/projects/56254198/packages/pypi/simple/xgboost/</code></a>.</li>
+  <li><strong>GitHub Releases (dmlc/xgboost)</strong>: Data not available - this session’s GitHub MCP access was scoped only to <code class="language-plaintext highlighter-rouge">riseproject-dev/sw-ecosystem</code>; <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code> release assets could not be checked. Flagged for retry with that repo attached.</li>
+  <li><strong>Arch Linux RISC-V</strong> (<code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code>): no evidence xgboost is packaged there (query returned no listing; direct path returned HTTP 404).</li>
+</ul>
+
+<p><strong>What a user must do today to get a working riscv64 binary:</strong> either (a) <code class="language-plaintext highlighter-rouge">apt install python3-xgboost</code> (or <code class="language-plaintext highlighter-rouge">libxgboost-dev</code>) on Ubuntu 26.04 (resolute) or Debian sid, (b) install from RISE’s GitLab package index via a non-default <code class="language-plaintext highlighter-rouge">--extra-index-url</code> (not discoverable through plain <code class="language-plaintext highlighter-rouge">pip install xgboost</code>), or (c) build from source with a self-supplied riscv64 GCC &gt;=8.1 or Clang &gt;=9.0 cross-toolchain, since XGBoost ships no toolchain file, Dockerfile, or riscv64 CI to validate the result.</p>
+<h2 id="9-dependencies">
+  
+  
+    <a href="#9-dependencies" class="anchor-heading" aria-labelledby="9-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9. Dependencies
+  
+  
+</h2>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dependency</th>
+      <th>Role</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
+      <th>Community/notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>dmlc-core</td>
+      <td>build-dependency, critical</td>
+      <td>Vendored git submodule, built from source alongside XGBoost (<code class="language-plaintext highlighter-rouge">BUILD_WITH_SYSTEM_DMLC=OFF</code> default); no riscv64-specific build issue found</td>
+      <td>N/A - exercised only via XGBoost’s own tests</td>
+      <td>N/A - statically bundled into <code class="language-plaintext highlighter-rouge">libxgboost</code></td>
+      <td>GitHub search <code class="language-plaintext highlighter-rouge">riscv64 repo:dmlc/dmlc-core</code> returned 0 results - no riscv64-specific problems reported, but also no riscv64 CI/validation in that repo</td>
+    </tr>
+    <tr>
+      <td>OpenMP</td>
+      <td>runtime-dependency, critical</td>
+      <td><code class="language-plaintext highlighter-rouge">find_package(OpenMP REQUIRED C CXX)</code> (<code class="language-plaintext highlighter-rouge">CMakeLists.txt:274</code>); standard on GCC/Clang riscv64 toolchains (libgomp) - [NEEDS VERIFICATION] this session, not independently confirmed against a package tracker</td>
+      <td>Not separately tracked; exercised transitively</td>
+      <td>Believed available via standard riscv64 toolchains</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>build-dependency, critical</td>
+      <td>GCC &gt;= 8.1 required for C++17 support (<code class="language-plaintext highlighter-rouge">CMakeLists.txt:21-37</code>, fatal error below that version); GCC riscv64 cross/native toolchains are standard on Ubuntu/Debian riscv64 ports</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>NCCL</td>
+      <td>build-dependency, optional</td>
+      <td>N/A - reachable only when <code class="language-plaintext highlighter-rouge">USE_CUDA=ON</code> (<code class="language-plaintext highlighter-rouge">CMakeLists.txt:131,284-286</code>); no CUDA Toolkit targets riscv64 as host, so this code path is unreachable on riscv64 regardless of NCCL’s own status</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>GitHub search <code class="language-plaintext highlighter-rouge">riscv64 repo:NVIDIA/nccl</code> returned 0 results - blocked upstream at the CUDA Toolkit level, not evaluated on its own merits</td>
+    </tr>
+    <tr>
+      <td>CUDA</td>
+      <td>build-dependency, optional</td>
+      <td>No CUDA Toolkit release targets riscv64 as a host architecture</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Hardware/vendor-driven gap identical for every project requiring CUDA on riscv64, not XGBoost-specific</td>
+    </tr>
+    <tr>
+      <td>autoconf</td>
+      <td>build-dependency, optional</td>
+      <td>Used only in the R/CRAN build path (<code class="language-plaintext highlighter-rouge">configure.ac</code>), introduced by PR #5232 (Section 2) to replace the fragile endian macro cascade; Autoconf itself is architecture-agnostic and runs on any Linux host, riscv64 included</td>
+      <td>Not separately tracked</td>
+      <td>N/A</td>
+      <td>No riscv64-specific issue found with this usage</td>
+    </tr>
+    <tr>
+      <td>cibuildwheel</td>
+      <td>build-dependency, optional</td>
+      <td>Used by upstream’s own <code class="language-plaintext highlighter-rouge">python_wheels_variants.yml</code>/<code class="language-plaintext highlighter-rouge">python_wheels_winarm64.yml</code> (targets x86_64/aarch64/winarm64 only, no riscv64 configuration upstream); separately used by RISE’s third-party <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels/.github/workflows/build-xgboost.yml</code>, which adds a <code class="language-plaintext highlighter-rouge">cp312-manylinux_riscv64</code> target running on RISE’s native riscv64 runners</td>
+      <td>Third-party (RISE) pipeline runs upstream’s own <code class="language-plaintext highlighter-rouge">test_basic.py</code>/<code class="language-plaintext highlighter-rouge">test_basic_models.py</code> under this riscv64 cibuildwheel target</td>
+      <td>RISE-hosted wheel published via this pipeline (not upstream PyPI)</td>
+      <td>Works in RISE’s fork of the workflow configuration; no riscv64 platform is configured in upstream’s own cibuildwheel jobs</td>
+    </tr>
+    <tr>
+      <td>pthreads (glibc Threads)</td>
+      <td>indirect (via <code class="language-plaintext highlighter-rouge">find_package(Threads REQUIRED)</code>, <code class="language-plaintext highlighter-rouge">CMakeLists.txt:265</code>)</td>
+      <td>Standard component of Ubuntu/Debian riscv64 glibc port</td>
+      <td>N/A - baseline libc</td>
+      <td>Green (assumed standard toolchain component) - [NEEDS VERIFICATION]</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>GoogleTest</td>
+      <td>indirect, test-only (<code class="language-plaintext highlighter-rouge">GOOGLE_TEST</code> option, default OFF; CPM-fetched if no system GTest)</td>
+      <td>Ubuntu 26.04 ships GoogleTest 1.17.0-1build1 (<code class="language-plaintext highlighter-rouge">arch: all</code>, explicitly lists riscv64) per this ecosystem’s <code class="language-plaintext highlighter-rouge">project-reports/reports/googletest.md</code> [NEEDS VERIFICATION - stored report not re-read this session]</td>
+      <td>One long-open low-severity bug: <code class="language-plaintext highlighter-rouge">GetThreadCount()</code> returns 0 on riscv64, <a href="https://github.com/google/googletest/issues/3756">google/googletest#3756</a>, does not affect assertion correctness</td>
+      <td>Green (source package, arch:all)</td>
+      <td>Maintainer stated riscv64 “not officially supported” per issue #3756</td>
+    </tr>
+    <tr>
+      <td>NumPy</td>
+      <td>indirect, Python runtime (<code class="language-plaintext highlighter-rouge">pyproject.toml</code> dependency)</td>
+      <td>Functional scalar port; builds via Debian sid and Ubuntu <code class="language-plaintext highlighter-rouge">python3-numpy</code>; riscv64 is Tier 3 per NEP 57 [NEEDS VERIFICATION - stored report not re-read this session]</td>
+      <td>Yellow-tier per that report: native riscv64 CI builds wheels but runs no tests; QEMU CI is non-blocking</td>
+      <td>No official PyPI riscv64 wheels yet (target: NumPy 2.6.0)</td>
+      <td><a href="https://github.com/numpy/numpy/issues/30216">numpy/numpy#30216</a> (PyPI wheel tracking)</td>
+    </tr>
+    <tr>
+      <td>SciPy</td>
+      <td>indirect, Python runtime (sparse-matrix input support)</td>
+      <td>No dedicated ecosystem project report exists to cite this session</td>
+      <td>Open riscv64 test-hang/failure issues under QEMU: <a href="https://github.com/scipy/scipy/issues/19378">scipy/scipy#19378</a>, <a href="https://github.com/scipy/scipy/issues/22839">scipy/scipy#22839</a>, <a href="https://github.com/scipy/scipy/issues/22753">scipy/scipy#22753</a></td>
+      <td>Not verified this session</td>
+      <td>10 riscv64-related issues found in scipy/scipy, several open</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>The GPU-only dependency chain (CCCL/Thrust/CUB/libcudacxx, RMM, nvcomp) is reachable only when <code class="language-plaintext highlighter-rouge">USE_CUDA=ON</code> and is therefore moot on riscv64 today for the same reason as NCCL and CUDA above - no evidence any of them has riscv64 activity, consistent with nobody having reached that code path.</p>
+<h2 id="11-known-bugs-and-active-issues">
+  
+  
+    <a href="#11-known-bugs-and-active-issues" class="anchor-heading" aria-labelledby="11-known-bugs-and-active-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11. Known Bugs and Active Issues
+  
+  
+</h2>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>N/A</td>
+      <td>No riscv64-specific issue exists in <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code></td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Exhaustive search (<code class="language-plaintext highlighter-rouge">"riscv64 performance"</code>, <code class="language-plaintext highlighter-rouge">"riscv64 bug"</code>, <code class="language-plaintext highlighter-rouge">"riscv nan floating"</code>, plain <code class="language-plaintext highlighter-rouge">"riscv"</code>, <code class="language-plaintext highlighter-rouge">"RISC-V is:issue"</code>) returned 0 genuinely relevant results against <code class="language-plaintext highlighter-rouge">repo:dmlc/xgboost</code>.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/googletest/issues/3756">google/googletest#3756</a></td>
+      <td><code class="language-plaintext highlighter-rouge">GetThreadCount()</code> returns 0 on riscv64</td>
+      <td>Open</td>
+      <td>Low</td>
+      <td>Indirect (test-only) dependency issue, does not affect XGBoost’s own test correctness.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/scipy/scipy/issues/19378">scipy/scipy#19378</a></td>
+      <td>riscv64 cross-compile tracking</td>
+      <td>Open</td>
+      <td>Medium (indirect dependency)</td>
+      <td>Affects the optional SciPy Python runtime dependency, not XGBoost’s core C++.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/scipy/scipy/issues/22839">scipy/scipy#22839</a></td>
+      <td>Tests hang under QEMU on riscv64</td>
+      <td>Open</td>
+      <td>Medium (indirect dependency)</td>
+      <td>Same as above.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/scipy/scipy/issues/22753">scipy/scipy#22753</a></td>
+      <td><code class="language-plaintext highlighter-rouge">special.sph_harm</code> NaN mismatch on riscv64</td>
+      <td>Open</td>
+      <td>Low/Medium (indirect dependency)</td>
+      <td>Correctness bug, but in SciPy, not XGBoost.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>No correctness bugs specific to XGBoost’s own code on riscv64 were found.</strong> All identified open issues belong to indirect Python dependencies (SciPy) or a test-only dependency (GoogleTest), not to XGBoost’s C++ core.</p>
+<h2 id="12-objections-and-upstream-blockers">
+  
+  
+    <a href="#12-objections-and-upstream-blockers" class="anchor-heading" aria-labelledby="12-objections-and-upstream-blockers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12. Objections and Upstream Blockers
+  
+  
+</h2>
+    
+
+<p><strong>Stated objections:</strong> none found. No PMC member, committer, or issue thread has ever weighed in for or against riscv64 support - there is no evidence anyone has proposed it.</p>
+
+<p><strong>Technical blockers:</strong></p>
+<ul>
+  <li>No upstream riscv64 toolchain file, Dockerfile, or CI job exists to validate a port (Section 5, 7).</li>
+  <li>The dead <code class="language-plaintext highlighter-rouge">__RISCV__</code> vs <code class="language-plaintext highlighter-rouge">__riscv</code> macro mismatch in vendored <code class="language-plaintext highlighter-rouge">dmlc-core</code> headers (Section 4) is cosmetically wrong but not build-blocking.</li>
+  <li>No CUDA Toolkit targets riscv64, permanently blocking GPU acceleration on this architecture until NVIDIA (or an alternative CUDA-compatible toolkit) ships one - outside XGBoost’s control.</li>
+</ul>
+
+<p><strong>Organizational blockers:</strong> the general RFC/public-discussion process (<code class="language-plaintext highlighter-rouge">doc/contrib/community.rst</code>) applies to any “major change,” which a new CI target likely qualifies as, requiring committer/reviewer sign-off and PMC consensus. No precedent-setting resistance was found; the one architecture-addition precedent in the record (PR #6200, “Added arm64 job in Travis-CI,” merged 2020-10-07) suggests the PMC has accepted new-architecture CI additions before.</p>
+
+<p><strong>Acceptance probability:</strong> [NEEDS VERIFICATION] - no direct evidence either way, but the combination of (a) a clean, working downstream build on Ubuntu/Debian, (b) a working, test-passing third-party build via RISE’s own CI on native riscv64 hardware, and (c) a low-friction historical precedent for adding new architecture CI (arm64, s390x in <code class="language-plaintext highlighter-rouge">dmlc-core</code>) suggests a well-formed upstream PR modeled on RISE’s <code class="language-plaintext highlighter-rouge">build-xgboost.yml</code> would have a reasonable chance of acceptance, but this is inference from indirect evidence, not a documented upstream signal.</p>
+<h2 id="13-readiness-assessment">
+  
+  
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro (Ubuntu 26.04 resolute and Debian sid ship riscv64 binaries built from source; RISE additionally hosts a third-party riscv64 wheel via its own GitLab package index, not upstream PyPI)</li>
+  <li><strong>Justification:</strong> No upstream riscv64 CI exists in <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code> - confirmed by directly reading all 17 GitHub Actions workflow files, none of which reference riscv64 (<a href="https://github.com/dmlc/xgboost/tree/master/.github/workflows">workflow directory</a>), and no official riscv64 wheel is published on PyPI (<a href="https://pypi.org/pypi/xgboost/json">pypi.org/pypi/xgboost/json</a>). This applies the distribution floor from the color model: Ubuntu 26.04 (resolute) ships working <code class="language-plaintext highlighter-rouge">libxgboost0</code>/<code class="language-plaintext highlighter-rouge">libxgboost-dev</code>/<code class="language-plaintext highlighter-rouge">python3-xgboost</code> riscv64 packages built from source (<a href="https://packages.ubuntu.com/resolute/riscv64/libxgboost0">package page</a>), and Debian sid does likewise (<a href="https://packages.debian.org/sid/science/xgboost">packages.debian.org</a>), but whether these packages apply riscv64-specific patches versus vanilla upstream source was not verified this session - per the color model, unknown patch status caps the floor at <strong>orange</strong> rather than yellow.</li>
+  <li><strong>Optimization gap:</strong> N/A. XGBoost is not an optimization-purpose project under the color model’s test (its value proposition is the gradient-boosting algorithm and API, not architecture-specific speed over a simpler reference implementation); its core CPU code uses the same portable, auto-vectorized C++ on riscv64 as it does on arm64, and even amd64 no longer carries hand-tuned SIMD for the core algorithm (Section 4). No optimization-level cap applies.</li>
+  <li><strong>Pending work that could change the grade:</strong> the <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> pipeline already builds and <em>tests</em> xgboost 3.4.1 on native riscv64 hardware via RISE’s own runners (merged PRs #408, #823; open tracking issue #841) - this is a working, test-passing artifact that could be upstreamed into <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code>’s own CI (e.g., as an addition to <code class="language-plaintext highlighter-rouge">python_wheels_variants.yml</code>, modeled on the existing arm64/winarm64 jobs) to move the color to blue (upstream CI passes, no upstream riscv64 PyPI wheel yet) or green (if the resulting wheel were also published to official PyPI). No such upstream PR currently exists.</li>
+</ul>
+<h2 id="14-investment-analysis">
+  
+  
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p><strong>What RISE has already done:</strong> built and tested an xgboost 3.4.1 riscv64 wheel end-to-end via its own native riscv64 GitHub runners in <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> (merged PRs #408, #823), published it to RISE’s GitLab wheel index, and opened a tracking issue (#841) for continued support. This proves functional buildability and basic test-suite passage on real riscv64 hardware. It has <strong>not</strong> touched <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code> itself: no upstream CI job, no upstream PyPI wheel, and no upstream PR of any kind exists. The scope below is sized to close that specific upstream gap, not to re-derive what RISE has already proven works.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
+  
+  
+</h3>
+    
+
+<p>Functional enablement is effectively already demonstrated downstream (Ubuntu, Debian, RISE wheel). Remaining upstream work is small: fix the dead <code class="language-plaintext highlighter-rouge">__RISCV__</code>/<code class="language-plaintext highlighter-rouge">__riscv</code> macro mismatch in vendored <code class="language-plaintext highlighter-rouge">dmlc-core</code> headers (cosmetic, not build-blocking, but should be corrected before claiming upstream riscv64 awareness), and validate the standard CMake build against a pinned riscv64 GCC/Clang toolchain in a reproducible environment.</p>
+<h3 id="142-performance-optimization">
+  
+  
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
+  
+  
+</h3>
+    
+
+<p>Not applicable as a distinct workstream: XGBoost’s core hot paths are already architecture-generic scalar/auto-vectorized C++ on every non-x86_64 architecture, including riscv64, and amd64 itself no longer carries hand-tuned SIMD for the core algorithm (its old AVX path is deprecated). There is no RISC-V-specific optimization gap to close because there is no comparable amd64/arm64 optimization tier being missed.</p>
+<h3 id="143-cicd-infrastructure">
+  
+  
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+
+<p>The primary gap. Add a native riscv64 job to <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code>’s own GitHub Actions (e.g., extending <code class="language-plaintext highlighter-rouge">python_wheels_variants.yml</code> with a <code class="language-plaintext highlighter-rouge">cp3xx-manylinux_riscv64</code> target, modeled directly on RISE’s proven <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels/.github/workflows/build-xgboost.yml</code>), running on RISE’s native riscv64 runners, executing the existing <code class="language-plaintext highlighter-rouge">test_basic.py</code>/<code class="language-plaintext highlighter-rouge">test_basic_models.py</code> suite, and publishing the resulting wheel to official PyPI. This also requires PMC/committer review per the project’s RFC process (Section 12).</p>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable - Section 10 is omitted per the report criteria; XGBoost is consumed directly via its own Python/R/JVM/C bindings rather than through a large dependent-package ecosystem that itself needs separate riscv64 enablement.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
+  
+  
+</h3>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>Work Item</th>
+      <th>Effort (person-weeks)</th>
+      <th>Owner</th>
+      <th>Priority</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Functional</td>
+      <td>Fix <code class="language-plaintext highlighter-rouge">__RISCV__</code>/<code class="language-plaintext highlighter-rouge">__riscv</code> macro mismatch in vendored <code class="language-plaintext highlighter-rouge">dmlc-core</code> headers</td>
+      <td>0.5</td>
+      <td>XGBoost/dmlc-core contributor</td>
+      <td>Low</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Validate standard CMake build against a pinned riscv64 GCC/Clang toolchain, document in <code class="language-plaintext highlighter-rouge">doc/build.rst</code></td>
+      <td>0.5</td>
+      <td>XGBoost contributor</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Add native riscv64 job to <code class="language-plaintext highlighter-rouge">dmlc/xgboost</code>’s own GitHub Actions (build + run existing test suite), modeled on RISE’s <code class="language-plaintext highlighter-rouge">build-xgboost.yml</code></td>
+      <td>1-2</td>
+      <td>XGBoost contributor + RISE (runner access)</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Upstream PR review/iteration with PMC (RFC process, Section 12)</td>
+      <td>1 (elapsed, low active effort)</td>
+      <td>XGBoost PMC + submitter</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Release</td>
+      <td>Publish official riscv64 wheel to PyPI once CI job exists (cibuildwheel config addition, reuses CI work above)</td>
+      <td>0.5</td>
+      <td>XGBoost contributor</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Optimization</td>
+      <td>None identified - no RISC-V-specific optimization gap exists relative to amd64/arm64</td>
+      <td>0</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>Ecosystem</td>
+      <td>Not applicable (Section 10 omitted)</td>
+      <td>0</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="15-updates">
+  
+  
+    <a href="#15-updates" class="anchor-heading" aria-labelledby="15-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 15. Updates
+  
+  
+</h2>
+    
+
+<p>No updates yet - initial report dated 2026-06-17.</p>
+<h2 id="16-references">
+  
+  
+    <a href="#16-references" class="anchor-heading" aria-labelledby="16-references"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 16. References
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="https://github.com/dmlc/xgboost">dmlc/xgboost repository</a></li>
+  <li><a href="https://xgboost.readthedocs.io/">XGBoost documentation homepage</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/tree/master/.github/workflows">dmlc/xgboost GitHub Actions workflows</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/blob/master/LICENSE">dmlc/xgboost LICENSE (Apache 2.0)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/blob/master/doc/contrib/community.rst">dmlc/xgboost doc/contrib/community.rst (governance model)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/blob/master/doc/contrib/donate.rst">dmlc/xgboost doc/contrib/donate.rst (fiscal host)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/blob/master/CONTRIBUTORS.md">dmlc/xgboost CONTRIBUTORS.md</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/blob/master/doc/build.rst">dmlc/xgboost doc/build.rst (build instructions)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/blob/master/doc/install.rst">dmlc/xgboost doc/install.rst (binary wheel platform table)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/blob/master/CMakeLists.txt">dmlc/xgboost CMakeLists.txt</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/pull/5232">PR #5232: Robust endian detection in CRAN xgboost build</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/issues/5131">Issue #5131: Compilation failure on Alpine Linux (prerequisite to #5232)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/issues/6243">Issue #6243: Wheel for arm64 (false-positive search hit, ARM64 not RISC-V)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/pull/6200">PR #6200: Added arm64 job in Travis-CI (architecture-addition precedent)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/pull/12499">PR #12499: Dependabot github-actions bump (riscv64 mention is unrelated changelog text)</a></li>
+  <li><a href="https://github.com/dmlc/dmlc-core/blob/main/include/dmlc/build_config_default.h">dmlc-core include/dmlc/build_config_default.h</a></li>
+  <li><a href="https://github.com/dmlc/dmlc-core/blob/main/include/dmlc/endian.h">dmlc-core include/dmlc/endian.h</a></li>
+  <li><a href="https://github.com/dmlc/dmlc-core/blob/main/.github/workflows/githubci.yml">dmlc-core .github/workflows/githubci.yml (s390x QEMU CI precedent)</a></li>
+  <li><a href="https://pypi.org/pypi/xgboost/json">PyPI xgboost package JSON API</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/riscv64/libxgboost0">Ubuntu resolute libxgboost0 riscv64 package page</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=XGBoost&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu package search: XGBoost, suite=resolute</a></li>
+  <li><a href="https://packages.debian.org/sid/science/xgboost">Debian sid xgboost package tracker</a></li>
+  <li><a href="https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/xgboost/">RISE GitLab wheel index for xgboost</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE blog: Announcing the RISE RISC-V Runners - free native RISC-V CI on GitHub</a></li>
+  <li><a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">RISE blog: Easy installation of binary Python packages on riscv64 devices</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel_builder tracker page</a></li>
+  <li><a href="https://riseproject.dev/">riseproject.dev homepage</a></li>
+  <li><a href="https://riseproject.dev/members/">riseproject.dev members page</a> [NEEDS VERIFICATION - exact URL path not independently re-confirmed this session]</li>
+  <li><a href="https://github.com/google/googletest/issues/3756">google/googletest#3756: GetThreadCount() returns 0 on riscv64</a></li>
+  <li><a href="https://github.com/numpy/numpy/issues/30216">numpy/numpy#30216: riscv64 PyPI wheel tracking</a></li>
+  <li><a href="https://github.com/OpenMathLib/OpenBLAS/issues/5811">OpenMathLib/OpenBLAS#5811: DGEMM correctness regression on RVV hardware</a></li>
+  <li><a href="https://github.com/scipy/scipy/issues/19378">scipy/scipy#19378: riscv64 cross-compile tracking</a></li>
+  <li><a href="https://github.com/scipy/scipy/issues/22839">scipy/scipy#22839: riscv64 tests hang under QEMU</a></li>
+  <li><a href="https://github.com/scipy/scipy/issues/22753">scipy/scipy#22753: special.sph_harm NaN mismatch on riscv64</a></li>
+  <li><a href="https://github.com/scipy/scipy/issues/21732">scipy/scipy#21732: QUERY - support for RISC-V? (closed)</a></li>
+  <li><a href="https://arxiv.org/abs/2405.11062">Kalyakina et al., Vectorization of Gradient Boosting of Decision Trees Prediction in the CatBoost Library for RISC-V Processors (arXiv:2405.11062)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/issues/10331">dmlc/xgboost#10331: XGBoost performance improvement using ARM SVE intrinsics (unrelated ARM feature request)</a></li>
+  <li><a href="https://github.com/dmlc/xgboost/issues/6697">dmlc/xgboost#6697: Introduced CPU performance gaps discussion (unrelated x86 regression)</a></li>
+</ul>
 
           
 
