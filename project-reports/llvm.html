@@ -223,7 +223,38 @@
       <div id="main-content" class="main-content">
         <main>
           
-            <h1 id="llvm">
+            <!--
+  Renders an interactive dependency graph. Two callers:
+  - A stack report's own <slug>.graph.json (see prompts/stack-report/stack-report.md, Artifact 4):
+    {% include dependency-graph.html slug="<vertical-slug>" %}
+  - A project report, against the shared graph built by _plugins/dependency_graph_generator.rb from
+    every project-reports/*.md's `dependencies:` frontmatter, bounded to this project's own
+    dependency tree:
+    {% include dependency-graph.html slug="dependencies" subset="<project-slug>" %}
+
+  `slug` may be omitted on a stack-report page; it then defaults to page.slug. `subset`, when set,
+  bounds the entire instance -- initial view, search, and focus/reset alike -- to that node plus
+  its descendants only, never ancestors, so e.g. a project depended on by hundreds of others in the
+  shared graph doesn't pull all of them onto that project's own page; beyond that node's own direct
+  dependencies, only the runtime-dependency chain is included (a dependency's build/test tooling is
+  dropped -- see findDescendantsRuntimeOnlyBeyondRoot in dependency-graph.js). Omit `subset` to
+  leave the whole fetched graph in play (as stack reports, whose own graph.json is already scoped
+  to one vertical, do).
+
+  `focus`, when set, pre-selects that node on load instead of showing the whole graph unfocused --
+  no current caller passes it (a project report's own subset root has no ancestors within its own
+  subset barring a dependency cycle, so focusing it on load looks identical to leaving it
+  unfocused), but the search box still drives the same mechanism at runtime, and it remains
+  available to any future caller that wants a pre-selected node independent of subset.
+-->
+<link rel="stylesheet" href="/sw-ecosystem/assets/css/dependency-graph.css" />
+
+<div class="dependency-graph" data-graph="dependencies.graph.json" data-focus="" data-subset="llvm"></div>
+<p class="dg-json-link"><a href="dependencies.graph.json">Raw dependency graph data (JSON)</a></p>
+<script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"></script>
+
+<script src="/sw-ecosystem/assets/js/dependency-graph.js"></script>
+<h1 id="llvm">
   
   
     <a href="#llvm" class="anchor-heading" aria-labelledby="llvm"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> llvm
