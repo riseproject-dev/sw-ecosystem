@@ -8,52 +8,52 @@ categories:
   - ai-ml
 dependencies:
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: oneDNN
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: XNNPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cpuinfo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SLEEF
-    relation: build-dependency
-    criticality: optional
+    relation: runtime-dependency
+    criticality: critical
   - name: FBGEMM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: NNPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: psimd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Gloo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pthreadpool
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: mimalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: ONNX (format/schema)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenMP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: NumPy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 
