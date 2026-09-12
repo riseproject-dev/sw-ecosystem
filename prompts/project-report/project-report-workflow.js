@@ -12,7 +12,9 @@ export const meta = {
 
 const proj = args[0]
 const ABORT_THRESHOLD = 1000
-const reportDate = new Date().toISOString().slice(0, 10)
+// Workflow scripts must be deterministic/resumable -- new Date()/Date.now() are disallowed at
+// the top level. The orchestrator computes today's date and passes it in via args instead.
+const reportDate = proj.reportDate
 
 const slug = proj.slug || proj.name.toLowerCase().replace(/[\s.\/]+/g, '-')
 
