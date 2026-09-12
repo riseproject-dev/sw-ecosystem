@@ -205,24 +205,17 @@
   // Re-run on every redraw (selection change, external-dependency toggle) since the visible node
   // set can change. dagre-d3's own `render()` performs the actual rank/position layout; this only
   // builds the graphlib.Graph it lays out.
-  function buildDagreGraph(ds, showExternal) {
+  function buildDagreGraph(ds) {
     var g = new dagreD3.graphlib.Graph({ directed: true })
       .setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 70 })
       .setDefaultEdgeLabel(function () { return {}; });
 
-    var visibleIds = ds.allNodeIds.filter(function (id) {
-      var n = ds.nodeMap[id].data;
-      return showExternal || n.in_scope !== false;
-    });
-    var visibleSet = new Set(visibleIds);
-
-    visibleIds.forEach(function (id) {
+    ds.allNodeIds.forEach(function (id) {
       var n = ds.nodeMap[id].data;
       g.setNode(id, { label: n.name, rx: 5, ry: 5, padding: 10, class: nodeClass(n) });
     });
     Object.keys(ds.edgeMap).forEach(function (eid) {
       var e = ds.edgeMap[eid];
-      if (!visibleSet.has(e.source) || !visibleSet.has(e.target)) return;
       g.setEdge(e.source, e.target, {
         edgeId: eid,
         style: edgeStyle(e.relation),
@@ -246,7 +239,6 @@
           '<input type="text" class="dg-search" placeholder="Search node...">' +
           '<div class="dg-search-results" hidden></div>' +
         '</div>' +
-        '<label class="dg-toggle"><input type="checkbox" class="dg-toggle-external"> Show external dependencies</label>' +
         '<button type="button" class="dg-reset" hidden>Reset view</button>' +
       '</div>' +
       '<div class="dg-canvas"><svg></svg></div>' +
@@ -264,7 +256,6 @@
     var canvas = wrap.querySelector('.dg-canvas');
     var searchInput = wrap.querySelector('.dg-search');
     var searchResults = wrap.querySelector('.dg-search-results');
-    var externalToggle = wrap.querySelector('.dg-toggle-external');
     var resetBtn = wrap.querySelector('.dg-reset');
 
     var zoomBehavior = d3.zoom().on('zoom', function () {
@@ -322,8 +313,7 @@
 
         function draw() {
           var ds = focusedSubgraph(selected, baseDs);
-          var showExternal = externalToggle.checked;
-          var g = buildDagreGraph(ds, showExternal);
+          var g = buildDagreGraph(ds);
 
           svgGroup.selectAll('*').remove();
           var renderFn = new dagreD3.render();
@@ -398,7 +388,6 @@
         document.addEventListener('click', function (evt) {
           if (!wrap.querySelector('.dg-search-wrap').contains(evt.target)) searchResults.hidden = true;
         });
-        externalToggle.addEventListener('change', draw);
         resetBtn.addEventListener('click', function () {
           selected = null;
           resetBtn.hidden = true;
