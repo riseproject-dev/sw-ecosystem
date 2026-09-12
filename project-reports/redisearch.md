@@ -4,46 +4,46 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: VectorSimilarity
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: ScalableVectorSearch
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cpu_features
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: hiredis
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libuv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snowball
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency
     criticality: optional
   - name: ahash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bumpalo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: crc32fast
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: serde
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: icu4x
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

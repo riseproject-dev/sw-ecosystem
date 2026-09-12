@@ -15,16 +15,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: libnuma
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: readline
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: systemd
     relation: runtime-dependency
     criticality: optional
   - name: RocksDB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

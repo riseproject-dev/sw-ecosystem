@@ -4,31 +4,31 @@ parent: Project Reports
 color: red
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FlatBuffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nlohmann/json
     relation: test-dependency
     criticality: optional
   - name: ANTLR4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: riegeli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

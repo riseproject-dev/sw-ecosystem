@@ -5,37 +5,37 @@ categories:
   - iaas
 dependencies:
   - name: Erlang/OTP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Elixir
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Ra
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Khepri
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Osiris
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Cowboy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Ranch
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: jose
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: lz4-java
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy-java
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

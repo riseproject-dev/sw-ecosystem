@@ -4,13 +4,13 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Lua
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
     relation: runtime-dependency
@@ -22,16 +22,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: libvalkey
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: linenoise
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: HdrHistogram_c
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fpconv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

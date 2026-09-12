@@ -23,7 +23,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Python
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpfm4
     relation: runtime-dependency

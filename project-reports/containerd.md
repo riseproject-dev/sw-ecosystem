@@ -12,34 +12,34 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: klauspost/compress
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: containerd/cgroups
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: CNI plugins
     relation: runtime-dependency
     criticality: optional
   - name: gRPC-Go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: bbolt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenTelemetry
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: erofs/go-erofs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Kubernetes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

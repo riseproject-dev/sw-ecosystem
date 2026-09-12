@@ -17,22 +17,22 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Highway
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libjxl
     relation: runtime-dependency
     criticality: optional
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libwebrtc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libaom
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: NSPR
     relation: runtime-dependency

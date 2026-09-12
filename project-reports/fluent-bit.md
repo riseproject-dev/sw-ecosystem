@@ -4,34 +4,34 @@ parent: Project Reports
 color: blue
 dependencies:
   - name: LuaJIT
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: simdutf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
     relation: runtime-dependency
     criticality: critical
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: WAMR
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: c-ares
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nghttp2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SQLite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

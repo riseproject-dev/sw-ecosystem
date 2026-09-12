@@ -16,10 +16,10 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: OpenTelemetry eBPF Instrumentation
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenTelemetry Go Instrumentation
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Docker
     relation: build-dependency

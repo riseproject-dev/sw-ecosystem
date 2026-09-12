@@ -7,40 +7,40 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: RocksDB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bzip2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: hiredis
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Lua
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: concurrentqueue
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: memkind
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: HdrHistogram_c
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

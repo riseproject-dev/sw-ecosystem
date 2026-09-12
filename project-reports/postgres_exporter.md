@@ -7,37 +7,37 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: lib/pq
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: prometheus/procfs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: prometheus/common
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: prometheus/exporter-toolkit
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/crypto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cespare/xxhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: coreos/go-systemd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: mdlayher/vsock
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: promu
     relation: build-dependency

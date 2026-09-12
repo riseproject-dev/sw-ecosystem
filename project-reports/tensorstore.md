@@ -7,106 +7,106 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: BLAKE3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: BoringSSL
     relation: runtime-dependency
     criticality: optional
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bzip2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: c-ares
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: c-blosc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: crc32c
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libcurl
     relation: runtime-dependency
     criticality: optional
   - name: dav1d
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gRPC
     relation: runtime-dependency
     criticality: critical
   - name: libaom
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libavif
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libjpeg-turbo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libtiff
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libwebp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libyuv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nghttp2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nlohmann/json
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: riegeli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: aws-s2n-tls
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: aws-c-common
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: aws-c-io
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: aws-c-http
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: aws-c-cal
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: aws-c-auth
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pybind11
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

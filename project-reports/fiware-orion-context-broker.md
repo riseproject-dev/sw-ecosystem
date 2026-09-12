@@ -28,7 +28,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libcurl
     relation: runtime-dependency

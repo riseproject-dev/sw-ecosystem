@@ -9,7 +9,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: kafel
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: minijail
     relation: runtime-dependency
@@ -18,16 +18,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: libmnl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libnftnl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: QEMU
     relation: runtime-dependency
     criticality: optional
   - name: libbpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: sanitizers
     relation: test-dependency

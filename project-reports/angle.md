@@ -6,28 +6,28 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: VulkanMemoryAllocator
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SPIRV-Tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: glslang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SPIRV-Cross
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: astc-encoder
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cpu_features
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: dawn
     relation: runtime-dependency
     criticality: optional
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpng
     relation: test-dependency

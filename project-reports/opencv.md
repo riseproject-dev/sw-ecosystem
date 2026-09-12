@@ -4,43 +4,43 @@ parent: Project Reports
 color: blue
 dependencies:
   - name: oneTBB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LAPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib-ng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libjpeg-turbo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libwebp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libtiff
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenJPEG
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FFmpeg
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenCL
     relation: runtime-dependency

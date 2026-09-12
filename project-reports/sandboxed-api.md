@@ -3,22 +3,22 @@ title: sandboxed-api
 parent: Project Reports
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libseccomp
     relation: runtime-dependency
     criticality: critical
   - name: libcap
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libunwind
     relation: runtime-dependency

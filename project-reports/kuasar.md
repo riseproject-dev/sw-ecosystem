@@ -13,22 +13,22 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: Cloud Hypervisor
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: StratoVirt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: youki
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: runc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: containerd
     relation: runtime-dependency
     criticality: critical
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

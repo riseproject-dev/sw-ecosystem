@@ -7,49 +7,49 @@ categories:
   - ai-ml
 dependencies:
   - name: PyTorch
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: NumPy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: oneDNN
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: tokenizers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: safetensors
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: HuggingFace Transformers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: sentencepiece
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: tiktoken
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: msgspec
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: BLAKE3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: outlines-core
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: numba
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: torchaudio
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: torchvision
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

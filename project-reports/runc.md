@@ -9,34 +9,34 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: libseccomp-golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: opencontainers/runtime-spec
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: opencontainers/cgroups
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: opencontainers/selinux
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CRIU
     relation: runtime-dependency
     criticality: optional
   - name: vishvananda/netlink
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: vishvananda/netns
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpathrs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: moby/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: coreos/go-systemd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

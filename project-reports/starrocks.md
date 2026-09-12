@@ -4,10 +4,10 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: GCC
     relation: build-dependency
@@ -16,46 +16,46 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: glog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gperftools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Apache Arrow
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: RocksDB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: brpc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Kerberos
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Cyrus SASL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: MariaDB Connector/C
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: hyperscan
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: croaringbitmap
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bitshuffle
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libserdes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pprof
     relation: runtime-dependency

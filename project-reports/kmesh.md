@@ -7,7 +7,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: cilium/ebpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LLVM
     relation: build-dependency
@@ -25,7 +25,7 @@ dependencies:
     relation: test-dependency
     criticality: critical
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

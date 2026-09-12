@@ -6,37 +6,37 @@ categories:
   - containers
 dependencies:
   - name: Kubernetes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: containerd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: runc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: etcd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: kine
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: flannel
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CNI plugins
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CoreDNS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Traefik
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: local-path-provisioner
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Helm
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
     relation: runtime-dependency

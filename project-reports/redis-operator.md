@@ -10,19 +10,19 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: controller-runtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: redis/go-redis
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gRPC-Go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenTelemetry
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

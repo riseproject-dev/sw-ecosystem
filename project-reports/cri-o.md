@@ -7,13 +7,13 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: containerd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: CRIU
     relation: runtime-dependency
     criticality: optional
   - name: libseccomp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: conmon
     relation: runtime-dependency
@@ -25,16 +25,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: klauspost/compress
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: containers/ocicrypt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: mattn/go-sqlite3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: ulikunitz/xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

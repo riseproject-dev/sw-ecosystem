@@ -471,7 +471,7 @@ const depsExtracted = await agent(`From the research findings below, list ONLY "
 
 For each dependency:
 - "name": its commonly-known project name. If it matches (by name or common alias) one of these known projects.yml registry entries, use EXACTLY that entry's spelling: ${registryNames}
-- "relation": exactly one of build-dependency, test-dependency, runtime-dependency (if it serves more than one purpose, pick whichever is most consequential for riscv64 readiness -- usually build-dependency).
+- "relation": exactly one of build-dependency, test-dependency, runtime-dependency. A dependency that is linked (statically or dynamically, or dlopen'd) at build time so that its code executes when the software actually runs is a runtime-dependency -- linking happening at build time does NOT make it a build-dependency (e.g. FFmpeg+libx264, PyTorch+OpenBLAS are both runtime-dependency, not build-dependency). Reserve build-dependency for tooling that contributes no code to the runtime artifact: compilers/toolchains, build-system generators (CMake, Meson, Autoconf, Ninja, Bazel), code/parser generators (Bison, Flex, protoc codegen, SWIG), doc generators (Doxygen, Sphinx). Reserve test-dependency for dependencies used only to build/run the test suite (GoogleTest, Catch2, pytest) that are never linked into the production runtime artifact.
 - "criticality": critical or optional.
 - "repo"/"home": only if this dependency does NOT match a registry entry above and you know its source repository or homepage URL from the findings below.
 
