@@ -10,19 +10,19 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: containerd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: runc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CRI-O
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libseccomp
     relation: runtime-dependency
     criticality: optional
   - name: virtiofsd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -4,46 +4,46 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: FastDDS (eProsima)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Fast-CDR
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: foonathan_memory
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CycloneDDS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Iceoryx
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: TLSF
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: yaml-cpp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libyaml
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: spdlog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: MCAP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

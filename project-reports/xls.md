@@ -10,13 +10,13 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gRPC
     relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: or-tools
     relation: runtime-dependency
@@ -31,19 +31,19 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: GMP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GNU MPFR
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nlohmann/json
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: riegeli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Verilator
     relation: test-dependency

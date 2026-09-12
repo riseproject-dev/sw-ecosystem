@@ -4,43 +4,43 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: liburing
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libnuma
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bzip2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gflags
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Facebook Folly
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: glog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fmt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

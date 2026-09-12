@@ -7,34 +7,34 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: Python
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: NumPy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SciPy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libffi
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bzip2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

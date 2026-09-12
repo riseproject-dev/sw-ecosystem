@@ -6,16 +6,16 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: golang.org/x/crypto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Linux-PAM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

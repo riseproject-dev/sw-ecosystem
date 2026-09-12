@@ -10,7 +10,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: cilium/ebpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

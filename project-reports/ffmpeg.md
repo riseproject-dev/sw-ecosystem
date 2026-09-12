@@ -6,34 +6,34 @@ categories:
   - android
 dependencies:
   - name: libx264
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libx265
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: dav1d
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libaom
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SVT-AV1
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libvpx
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libopus
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libvorbis
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libfdk-aac
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libmp3lame
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
     relation: runtime-dependency
@@ -42,22 +42,22 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: zlib-ng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bzip2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libxml2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libwebp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

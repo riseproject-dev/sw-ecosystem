@@ -16,10 +16,10 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GnuTLS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

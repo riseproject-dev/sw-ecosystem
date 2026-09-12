@@ -3,67 +3,67 @@ title: filament
 parent: Project Reports
 dependencies:
   - name: SPIRV-Tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: glslang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SPIRV-Cross
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: dawn
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: VulkanMemoryAllocator
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Basis Universal
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: draco
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libwebp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: meshoptimizer
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: smol-v
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: imgui
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: benchmark
     relation: test-dependency
     criticality: optional
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SDL2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: perfetto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: tinyexr
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cgltf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: stb
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: assimp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

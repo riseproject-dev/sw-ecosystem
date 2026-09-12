@@ -10,13 +10,13 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: libbpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cilium/ebpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Linux kernel
     relation: runtime-dependency
@@ -25,7 +25,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: opencontainers/runtime-spec
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Helm
     relation: build-dependency

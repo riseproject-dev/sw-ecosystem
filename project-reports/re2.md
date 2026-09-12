@@ -4,13 +4,13 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: glibc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: ICU
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: PCRE2
     relation: test-dependency

@@ -15,7 +15,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: libbpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libunwind
     relation: runtime-dependency

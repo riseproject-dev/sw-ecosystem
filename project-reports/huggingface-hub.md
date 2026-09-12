@@ -4,7 +4,7 @@ parent: Project Reports
 color: green
 dependencies:
   - name: hf-xet
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

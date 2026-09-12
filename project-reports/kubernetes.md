@@ -6,19 +6,19 @@ categories:
   - containers
 dependencies:
   - name: containerd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: runc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: etcd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: CNI plugins
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CoreDNS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CRIU
     relation: runtime-dependency

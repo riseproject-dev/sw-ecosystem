@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: illumos-joyent
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: GCC
     relation: build-dependency

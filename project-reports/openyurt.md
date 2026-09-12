@@ -4,13 +4,13 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Kubernetes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: etcd
     relation: runtime-dependency
     criticality: critical
   - name: gRPC-Go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: containerd
     relation: runtime-dependency

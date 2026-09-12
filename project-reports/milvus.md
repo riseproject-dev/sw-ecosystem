@@ -19,16 +19,16 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: simdjson
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Apache Arrow
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Conan
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: xsimd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Knowhere
     relation: runtime-dependency

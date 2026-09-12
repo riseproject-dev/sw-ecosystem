@@ -7,7 +7,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: QuickJS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Rust
     relation: build-dependency

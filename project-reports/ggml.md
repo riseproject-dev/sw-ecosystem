@@ -7,25 +7,25 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: oneDNN
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Intel MKL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: shaderc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CUDA
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ROCm
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: memkind
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

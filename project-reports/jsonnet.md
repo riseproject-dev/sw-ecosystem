@@ -3,10 +3,10 @@ title: jsonnet
 parent: Project Reports
 dependencies:
   - name: rapidyaml
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: nlohmann/json
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

@@ -17,7 +17,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: ISA-L
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: PMDK
     relation: runtime-dependency

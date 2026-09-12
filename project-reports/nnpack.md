@@ -6,13 +6,13 @@ categories:
   - ai-ml
 dependencies:
   - name: cpuinfo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pthreadpool
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: psimd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

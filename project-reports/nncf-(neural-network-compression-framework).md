@@ -10,28 +10,28 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: ONNX
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ONNX (format/schema)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: NumPy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SciPy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: scikit-learn
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: safetensors
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: torchvision
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: torchaudio
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

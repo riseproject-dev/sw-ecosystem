@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Edge Impulse FFI (Rust)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

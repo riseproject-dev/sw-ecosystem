@@ -7,13 +7,13 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: gRPC
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: go-sql-driver/mysql
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: MySQL
     relation: runtime-dependency
@@ -22,43 +22,43 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: klauspost/compress
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: modernc.org/sqlite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: shirou/gopsutil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: golang/snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pierrec/lz4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cespare/xxhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenTelemetry
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Consul
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: planetscale/vtprotobuf
     relation: build-dependency
     criticality: optional
   - name: filippo.io/edwards25519
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ebitengine/purego
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

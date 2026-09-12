@@ -4,7 +4,7 @@ parent: Project Reports
 color: red
 dependencies:
   - name: fbthrift
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
     relation: runtime-dependency
@@ -13,16 +13,16 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fmt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: glog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gflags
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
     relation: runtime-dependency
@@ -37,10 +37,10 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libunwind
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
     relation: runtime-dependency

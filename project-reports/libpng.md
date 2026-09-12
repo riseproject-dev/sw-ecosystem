@@ -7,10 +7,10 @@ categories:
   - android
 dependencies:
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zlib-ng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -5,10 +5,10 @@ categories:
   - debug
 dependencies:
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Python
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SWIG
     relation: build-dependency
@@ -32,7 +32,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Lua
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

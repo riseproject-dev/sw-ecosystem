@@ -6,28 +6,28 @@ categories:
   - browser
 dependencies:
   - name: GLib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: nghttp2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libpsl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SQLite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Kerberos
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GnuTLS
     relation: test-dependency

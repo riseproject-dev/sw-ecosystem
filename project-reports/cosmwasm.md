@@ -13,7 +13,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: ark-ff
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

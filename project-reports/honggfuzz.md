@@ -9,13 +9,13 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: capstone
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
     relation: runtime-dependency
     criticality: optional
   - name: libblocksruntime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

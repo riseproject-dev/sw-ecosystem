@@ -15,7 +15,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: CUDA
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SWIG
     relation: build-dependency

@@ -6,19 +6,19 @@ categories:
   - ai-ml
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: darts_clone
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: esaxx-rs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: tcmalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

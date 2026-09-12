@@ -6,7 +6,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
     relation: runtime-dependency
@@ -15,7 +15,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: elfutils
     relation: runtime-dependency
@@ -24,10 +24,10 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: glog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gflags
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: googletest
     relation: test-dependency

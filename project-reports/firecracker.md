@@ -4,40 +4,40 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: kvm-ioctls
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: linux-loader
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: vm-fdt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: vm-memory
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: vm-allocator
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: vm-superio
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: vmm-sys-util
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: vhost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: aws-lc-rs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gdbstub
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: userfaultfd
     relation: runtime-dependency
     criticality: optional
   - name: micro-http
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

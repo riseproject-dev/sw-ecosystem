@@ -4,52 +4,52 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: MariaDB Connector/C
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SQLite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: PCRE
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libcurl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libev
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cityhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libmicrohttpd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: prometheus-cpp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: coredumper
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libunwind
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

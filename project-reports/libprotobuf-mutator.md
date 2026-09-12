@@ -3,22 +3,22 @@ title: libprotobuf-mutator
 parent: Project Reports
 dependencies:
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: googletest
     relation: test-dependency
     criticality: optional
   - name: libxml2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

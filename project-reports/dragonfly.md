@@ -7,10 +7,10 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: liburing
     relation: runtime-dependency
@@ -19,16 +19,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SimSIMD
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gperftools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

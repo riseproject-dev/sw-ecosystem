@@ -7,7 +7,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: Kubernetes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: CNI plugins
     relation: runtime-dependency

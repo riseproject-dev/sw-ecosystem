@@ -8,37 +8,37 @@ categories:
   - data-analytics
 dependencies:
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: giflib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: lcms2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: HarfBuzz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FreeType
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fontconfig
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libffi
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libjpeg
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CUPS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libX11
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
     relation: runtime-dependency

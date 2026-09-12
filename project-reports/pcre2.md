@@ -6,7 +6,7 @@ categories:
   - libraries
 dependencies:
   - name: SLJIT
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

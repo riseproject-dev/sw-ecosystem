@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenCV
     relation: runtime-dependency
@@ -13,19 +13,19 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: CUDA
     relation: runtime-dependency
     criticality: critical
   - name: OSQP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Sophus
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fmt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: yaml-cpp
     relation: runtime-dependency

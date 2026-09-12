@@ -4,19 +4,19 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: PostgreSQL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Intel safestringlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

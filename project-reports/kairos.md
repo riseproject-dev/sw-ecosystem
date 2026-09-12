@@ -7,19 +7,19 @@ dependencies:
     relation: build-dependency
     criticality: optional
   - name: containerd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: runc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: go-tpm
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: go-tpm-tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: circl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
     relation: runtime-dependency

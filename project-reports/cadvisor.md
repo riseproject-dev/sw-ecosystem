@@ -4,10 +4,10 @@ parent: Project Reports
 color: grey
 dependencies:
   - name: runc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: containerd/cgroups
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: containerd
     relation: runtime-dependency
@@ -16,13 +16,13 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: gRPC-Go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libpfm4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

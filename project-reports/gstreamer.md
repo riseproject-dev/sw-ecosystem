@@ -6,40 +6,40 @@ categories:
   - browser
 dependencies:
   - name: GLib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: liborc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: FFmpeg
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GnuTLS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: dav1d
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib-ng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libopus
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libvpx
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libx264
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libx265
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

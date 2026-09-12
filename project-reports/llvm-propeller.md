@@ -6,22 +6,22 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency
     criticality: optional
   - name: elfutils
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: perf_data_converter
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

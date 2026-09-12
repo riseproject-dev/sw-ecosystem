@@ -6,25 +6,25 @@ categories:
   - browser
 dependencies:
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Subzero
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: marl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SPIRV-Tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SPIRV-Headers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: glslang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: astc-encoder
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

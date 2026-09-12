@@ -15,10 +15,10 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: sha2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -7,13 +7,13 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: llama.cpp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: bindgen
     relation: build-dependency
     criticality: critical
   - name: TensorRT-LLM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

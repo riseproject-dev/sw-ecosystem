@@ -7,28 +7,28 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: gomemcache
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: prometheus/procfs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cespare/xxhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/crypto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: coreos/go-systemd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

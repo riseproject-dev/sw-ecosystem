@@ -3,10 +3,10 @@ title: libultrahdr
 parent: Project Reports
 dependencies:
   - name: libjpeg-turbo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libheif
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

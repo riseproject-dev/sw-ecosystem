@@ -3,22 +3,22 @@ title: mpact-riscv
 parent: Project Reports
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency
     criticality: optional
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: linenoise
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ANTLR4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

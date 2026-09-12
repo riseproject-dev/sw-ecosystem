@@ -22,16 +22,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: brotli (Rust crate)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pyo3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SQLite
     relation: runtime-dependency

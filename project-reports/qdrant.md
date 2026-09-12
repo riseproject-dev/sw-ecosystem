@@ -7,19 +7,19 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: ring
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: rustls
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: jemalloc
     relation: runtime-dependency
     criticality: critical
   - name: shaderc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pprof-rs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

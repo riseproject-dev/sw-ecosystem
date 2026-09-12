@@ -42,16 +42,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: greenlet
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cryptography
     relation: runtime-dependency
     criticality: optional
   - name: lxml
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libffi
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Go
     relation: build-dependency

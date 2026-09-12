@@ -6,10 +6,10 @@ categories:
   - databases
 dependencies:
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ICU
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: readline
     relation: runtime-dependency

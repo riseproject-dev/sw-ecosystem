@@ -4,43 +4,43 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: wolfSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Mbed TLS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GPGME
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: p11-kit
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libarchive
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zchunk
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: librsync
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Lua
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

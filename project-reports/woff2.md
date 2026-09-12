@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: glibc
     relation: runtime-dependency

@@ -4,7 +4,7 @@ parent: Project Reports
 color: green
 dependencies:
   - name: regalloc2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: capstone
     relation: runtime-dependency

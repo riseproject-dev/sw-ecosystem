@@ -4,22 +4,22 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OSQP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenMP
     relation: runtime-dependency
     criticality: optional
   - name: assimp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fmt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

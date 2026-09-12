@@ -6,22 +6,22 @@ categories:
   - browser
 dependencies:
   - name: libyuv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libwebm
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Highway
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libjxl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libvmaf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: TensorFlow Lite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

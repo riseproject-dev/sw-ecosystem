@@ -8,7 +8,7 @@ categories:
   - android
 dependencies:
   - name: fiat-crypto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: googletest
     relation: test-dependency
@@ -17,7 +17,7 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: libunwind
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Wycheproof
     relation: test-dependency

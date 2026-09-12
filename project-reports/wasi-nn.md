@@ -4,7 +4,7 @@ parent: Project Reports
 color: green
 dependencies:
   - name: Wasmtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenVINO Runtime
     relation: runtime-dependency

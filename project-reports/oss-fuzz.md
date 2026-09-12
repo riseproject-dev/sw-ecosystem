@@ -6,7 +6,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: fuzztest
-    relation: build-dependency
+    relation: test-dependency
     criticality: critical
   - name: Bazelisk
     relation: build-dependency

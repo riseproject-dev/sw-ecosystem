@@ -13,10 +13,10 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: HAMi-core
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Docker
     relation: build-dependency

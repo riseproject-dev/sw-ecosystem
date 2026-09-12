@@ -6,7 +6,7 @@ categories:
   - browser
 dependencies:
   - name: Highway
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: HarfBuzz
     relation: runtime-dependency
@@ -30,16 +30,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Abseil
     relation: runtime-dependency
     criticality: critical
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: expat
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: PartitionAlloc
     relation: runtime-dependency
@@ -48,19 +48,19 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: VulkanMemoryAllocator
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: dawn
     relation: runtime-dependency
     criticality: optional
   - name: SPIRV-Tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SPIRV-Cross
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: wuffs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: angle
     relation: runtime-dependency

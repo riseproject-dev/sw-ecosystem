@@ -22,13 +22,13 @@ dependencies:
     relation: build-dependency
     criticality: optional
   - name: NumPy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gevent
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: dnspython
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

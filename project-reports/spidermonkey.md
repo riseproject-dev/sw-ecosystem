@@ -18,7 +18,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Highway
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libjxl
     relation: runtime-dependency
@@ -33,7 +33,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libsrtp
     relation: runtime-dependency

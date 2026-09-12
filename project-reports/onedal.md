@@ -5,16 +5,16 @@ categories:
   - libraries
 dependencies:
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: oneTBB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenMP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: oneDPL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Catch2
     relation: test-dependency

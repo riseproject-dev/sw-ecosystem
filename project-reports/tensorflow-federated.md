@@ -4,16 +4,16 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: TensorFlow
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gRPC
     relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: NumPy
     relation: runtime-dependency
@@ -25,10 +25,10 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: pybind11
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: federated_language
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ml_dtypes
     relation: runtime-dependency

@@ -3,22 +3,22 @@ title: gvisor
 parent: Project Reports
 dependencies:
   - name: libseccomp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cilium/ebpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gRPC-Go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: vishvananda/netlink
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: google/btree
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

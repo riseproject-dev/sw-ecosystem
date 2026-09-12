@@ -5,7 +5,7 @@ categories:
   - runtimes
 dependencies:
   - name: OpenJDK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LLVM
     relation: build-dependency
@@ -14,16 +14,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: musl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: glibc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

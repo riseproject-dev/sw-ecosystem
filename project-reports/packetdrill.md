@@ -3,7 +3,7 @@ title: packetdrill
 parent: Project Reports
 dependencies:
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -3,16 +3,16 @@ title: leveldb
 parent: Project Reports
 dependencies:
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: crc32c
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: tcmalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

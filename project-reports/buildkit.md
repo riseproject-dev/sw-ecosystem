@@ -11,13 +11,13 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: klauspost/compress
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bbolt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xxHash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

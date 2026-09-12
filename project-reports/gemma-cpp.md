@@ -3,19 +3,19 @@ title: gemma.cpp
 parent: Project Reports
 dependencies:
   - name: Highway
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: sentencepiece
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: nlohmann/json
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
     relation: runtime-dependency
     criticality: optional
   - name: cpp-httplib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: benchmark
     relation: test-dependency

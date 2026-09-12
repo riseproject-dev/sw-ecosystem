@@ -9,13 +9,13 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SciPy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: oneTBB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

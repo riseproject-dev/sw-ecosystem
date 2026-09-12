@@ -11,7 +11,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: gperftools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SWIG
     relation: build-dependency
@@ -20,7 +20,7 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: hwloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

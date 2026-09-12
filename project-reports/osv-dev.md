@@ -3,10 +3,10 @@ title: osv.dev
 parent: Project Reports
 dependencies:
   - name: gRPC
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

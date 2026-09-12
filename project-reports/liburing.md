@@ -6,7 +6,7 @@ categories:
   - libraries
 dependencies:
   - name: libbpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

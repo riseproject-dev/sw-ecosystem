@@ -6,34 +6,34 @@ categories:
   - databases
 dependencies:
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Lua
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: hiredis
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xxHash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: HdrHistogram_c
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: linenoise
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fpconv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: tre
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: systemd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

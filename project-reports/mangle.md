@@ -3,10 +3,10 @@ title: mangle
 parent: Project Reports
 dependencies:
   - name: ANTLR4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: klauspost/compress
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -13,10 +13,10 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: OpenMP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cpp-httplib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

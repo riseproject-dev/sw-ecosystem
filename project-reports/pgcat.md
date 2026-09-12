@@ -4,7 +4,7 @@ parent: Project Reports
 color: red
 dependencies:
   - name: rustls
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

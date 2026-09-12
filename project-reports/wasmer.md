@@ -4,10 +4,10 @@ parent: Project Reports
 color: green
 dependencies:
   - name: Wasmtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: corosensei
     relation: runtime-dependency

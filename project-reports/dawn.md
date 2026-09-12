@@ -3,16 +3,16 @@ title: dawn
 parent: Project Reports
 dependencies:
   - name: SwiftShader
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: angle
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

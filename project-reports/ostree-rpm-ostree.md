@@ -4,7 +4,7 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

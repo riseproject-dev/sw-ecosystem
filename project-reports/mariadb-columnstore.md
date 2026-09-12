@@ -4,7 +4,7 @@ parent: Project Reports
 color: red
 dependencies:
   - name: MariaDB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: snappy
     relation: runtime-dependency
@@ -13,10 +13,10 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Apache Thrift
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libcurl
     relation: runtime-dependency

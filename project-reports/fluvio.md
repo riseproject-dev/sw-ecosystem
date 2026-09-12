@@ -10,7 +10,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: musl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

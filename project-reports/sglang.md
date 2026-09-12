@@ -7,13 +7,13 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: CUDA
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: FlashInfer
     relation: runtime-dependency
     criticality: critical
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Docker
     relation: build-dependency

@@ -10,7 +10,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: Linux kernel
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: GNU make
     relation: build-dependency

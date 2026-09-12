@@ -4,10 +4,10 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Mbed TLS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: QCBOR
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

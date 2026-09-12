@@ -4,13 +4,13 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: SDL2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SDL2_image
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libxcb
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

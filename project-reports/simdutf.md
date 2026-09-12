@@ -5,10 +5,10 @@ categories:
   - libraries
 dependencies:
   - name: ICU
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: aklomp/base64
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -9,19 +9,19 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: gdbstub
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LLVM
     relation: build-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FFmpeg
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GDB
     relation: test-dependency

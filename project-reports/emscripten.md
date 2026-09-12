@@ -7,7 +7,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: Binaryen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Node.js
     relation: test-dependency
@@ -16,7 +16,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

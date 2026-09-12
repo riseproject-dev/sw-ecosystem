@@ -7,7 +7,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

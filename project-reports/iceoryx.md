@@ -13,7 +13,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: cpptoml
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

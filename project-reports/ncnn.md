@@ -4,40 +4,40 @@ parent: Project Reports
 color: blue
 dependencies:
   - name: Vulkan-Loader
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: glslang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SPIRV-Tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenMP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenCV
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FlatBuffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: XNNPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ruy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -11,16 +11,16 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: elfutils
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: pahole
     relation: build-dependency
     criticality: critical
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libcap
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: iproute2
     relation: runtime-dependency

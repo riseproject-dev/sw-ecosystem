@@ -3,13 +3,13 @@ title: atheris
 parent: Project Reports
 dependencies:
   - name: pybind11
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

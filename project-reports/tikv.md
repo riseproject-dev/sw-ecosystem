@@ -4,16 +4,16 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: RocksDB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gRPC
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Rust
     relation: build-dependency

@@ -6,10 +6,10 @@ categories:
   - ai-ml
 dependencies:
   - name: asmjit
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cpuinfo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenMP
     relation: runtime-dependency

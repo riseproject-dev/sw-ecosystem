@@ -7,19 +7,19 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: libc (Rust crate)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cc
     relation: build-dependency
     criticality: critical
   - name: goblin
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: picolibc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: vmm-sys-util
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: kvm-ioctls
     relation: runtime-dependency

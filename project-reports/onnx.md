@@ -6,37 +6,37 @@ categories:
   - ai-ml
 dependencies:
   - name: XNNPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cpuinfo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: mimalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pthreadpool
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FlatBuffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pybind11
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ONNX (format/schema)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

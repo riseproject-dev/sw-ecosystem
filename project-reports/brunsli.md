@@ -3,7 +3,7 @@ title: brunsli
 parent: Project Reports
 dependencies:
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: googletest
     relation: test-dependency

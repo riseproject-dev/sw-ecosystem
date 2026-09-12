@@ -5,7 +5,7 @@ categories:
   - libraries
 dependencies:
   - name: libgpg-error
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

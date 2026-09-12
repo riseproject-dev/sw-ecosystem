@@ -16,10 +16,10 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LAPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -7,28 +7,28 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: GEOS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: PROJ
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libxml2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: json-c
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GDAL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: protobuf-c
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SFCGAL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: PCRE2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

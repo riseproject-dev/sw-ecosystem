@@ -12,25 +12,25 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: astc-encoder
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Mesa
     relation: test-dependency
     criticality: optional
   - name: glslang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SPIRV-Tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

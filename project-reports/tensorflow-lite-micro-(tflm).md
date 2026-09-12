@@ -4,28 +4,28 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: FlatBuffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: kissfft
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ruy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gemmlowp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Pigweed
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: eyalroz_printf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: NumPy
     relation: test-dependency
     criticality: optional
   - name: TensorFlow
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

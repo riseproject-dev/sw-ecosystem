@@ -5,7 +5,7 @@ categories:
   - multimedia
 dependencies:
   - name: libogg
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

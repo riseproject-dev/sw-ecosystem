@@ -4,16 +4,16 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Rust
     relation: build-dependency
     criticality: critical
   - name: BLAKE3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: simdjson
     relation: runtime-dependency

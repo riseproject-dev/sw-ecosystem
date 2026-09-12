@@ -6,16 +6,16 @@ categories:
   - libraries
 dependencies:
   - name: xxHash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

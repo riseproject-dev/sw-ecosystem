@@ -13,16 +13,16 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: golang.org/x/crypto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: filippo.io/edwards25519
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

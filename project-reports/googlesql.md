@@ -3,34 +3,34 @@ title: googlesql
 parent: Project Reports
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gRPC
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: BoringSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ICU
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: riegeli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: farmhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: differential-privacy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nlohmann/json
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

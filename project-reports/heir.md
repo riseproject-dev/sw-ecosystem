@@ -6,25 +6,25 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: OpenFHE
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: tfhe-rs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: poulpy-ckks/poulpy-cpu-ref
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Lattigo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: or-tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency
@@ -33,10 +33,10 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: zlib-ng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: benchmark
     relation: test-dependency
@@ -45,7 +45,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: libffi
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

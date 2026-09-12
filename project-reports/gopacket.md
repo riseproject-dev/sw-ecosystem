@@ -3,10 +3,10 @@ title: gopacket
 parent: Project Reports
 dependencies:
   - name: libpcap
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: PF_RING
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/sys
     relation: runtime-dependency

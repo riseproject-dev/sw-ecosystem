@@ -7,10 +7,10 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: t-digest-c
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: RedisModulesSDK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -9,7 +9,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: libffi
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

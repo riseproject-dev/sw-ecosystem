@@ -3,13 +3,13 @@ title: mtail
 parent: Project Reports
 dependencies:
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: prometheus/procfs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

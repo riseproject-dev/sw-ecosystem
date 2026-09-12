@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Wasmtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: sha2
     relation: runtime-dependency

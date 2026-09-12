@@ -10,7 +10,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: QEMU
     relation: runtime-dependency

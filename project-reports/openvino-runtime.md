@@ -4,13 +4,13 @@ parent: Project Reports
 color: blue
 dependencies:
   - name: xbyak_riscv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: oneDNN
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: oneTBB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

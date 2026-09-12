@@ -8,7 +8,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: APR-util
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
     relation: runtime-dependency

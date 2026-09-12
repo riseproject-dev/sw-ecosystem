@@ -3,40 +3,40 @@ title: riegeli
 parent: Project Reports
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: BoringSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bzip2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: highwayhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: google-cloud-cpp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

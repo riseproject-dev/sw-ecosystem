@@ -13,7 +13,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: tokio
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

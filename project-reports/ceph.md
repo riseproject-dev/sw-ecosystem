@@ -5,34 +5,34 @@ categories:
   - software-defined-storage
 dependencies:
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: RocksDB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: liburing
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ISA-L
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SPDK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: DPDK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

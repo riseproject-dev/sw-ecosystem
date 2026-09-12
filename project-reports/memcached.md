@@ -15,19 +15,19 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: libseccomp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Lua
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: liburing
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: mcmc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xxHash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

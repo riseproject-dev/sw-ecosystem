@@ -7,7 +7,7 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: libpfm4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

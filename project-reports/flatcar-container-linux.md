@@ -4,10 +4,10 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Linux kernel
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: glibc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Go
     relation: build-dependency
@@ -25,16 +25,16 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: libseccomp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

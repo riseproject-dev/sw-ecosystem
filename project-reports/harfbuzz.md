@@ -12,19 +12,19 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GLib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Cairo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Graphite2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

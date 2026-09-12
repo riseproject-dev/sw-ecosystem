@@ -6,7 +6,7 @@ categories:
   - libraries
 dependencies:
   - name: xxHash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

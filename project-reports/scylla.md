@@ -4,13 +4,13 @@ parent: Project Reports
 color: red
 dependencies:
   - name: Seastar
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: DPDK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CMake
     relation: build-dependency

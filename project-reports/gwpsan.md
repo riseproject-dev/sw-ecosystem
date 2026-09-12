@@ -6,7 +6,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: DynamoRIO
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Abseil
     relation: test-dependency
@@ -18,7 +18,7 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

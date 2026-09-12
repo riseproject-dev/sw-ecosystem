@@ -7,22 +7,22 @@ categories:
   - ai-ml
 dependencies:
   - name: xbyak_riscv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenMP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: oneTBB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency
     criticality: optional
   - name: spdlog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

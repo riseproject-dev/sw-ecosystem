@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Envoy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Linux kernel
     relation: runtime-dependency
@@ -16,16 +16,16 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: cilium/ebpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: etcd
     relation: runtime-dependency
     criticality: optional
   - name: distroless
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

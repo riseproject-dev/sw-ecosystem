@@ -6,7 +6,7 @@ categories:
   - libraries
 dependencies:
   - name: Linux-PAM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

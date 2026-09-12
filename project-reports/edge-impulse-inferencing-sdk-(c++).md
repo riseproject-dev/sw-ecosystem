@@ -4,19 +4,19 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: TensorFlow Lite Micro (TFLM)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: ruy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gemmlowp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FlatBuffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: kissfft
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

@@ -4,13 +4,13 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: MariaDB Connector/C
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
     relation: runtime-dependency
     criticality: critical
   - name: PCRE2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
     relation: runtime-dependency
@@ -19,22 +19,22 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: GnuTLS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: tcmalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: librdkafka
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Jansson
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libmicrohttpd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -4,13 +4,13 @@ parent: Project Reports
 color: blue
 dependencies:
   - name: Mbed TLS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: musl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

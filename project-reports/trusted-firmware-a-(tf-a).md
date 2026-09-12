@@ -7,7 +7,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: Mbed TLS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: CMake
     relation: build-dependency
@@ -22,7 +22,7 @@ dependencies:
     relation: build-dependency
     criticality: optional
   - name: QCBOR
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

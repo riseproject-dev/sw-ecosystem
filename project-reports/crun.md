@@ -16,31 +16,31 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: BLAKE3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: wasmer
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: wasmtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: WasmEdge
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: WAMR
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Mono
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libkrun
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CRIU
     relation: runtime-dependency
     criticality: optional
   - name: libocispec
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

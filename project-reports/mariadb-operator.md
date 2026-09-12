@@ -4,28 +4,28 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Kubernetes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: controller-runtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cert-manager
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: golang.org/x/crypto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: klauspost/cpuid
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: klauspost/compress
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cespare/xxhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

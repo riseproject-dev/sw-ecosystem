@@ -6,28 +6,28 @@ categories:
   - browser
 dependencies:
   - name: Highway
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: lcms2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: skcms
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: sjpeg
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenEXR
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

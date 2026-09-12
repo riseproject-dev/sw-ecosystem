@@ -11,7 +11,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: GraalVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: glibc
     relation: runtime-dependency

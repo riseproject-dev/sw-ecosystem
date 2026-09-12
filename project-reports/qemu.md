@@ -7,58 +7,58 @@ categories:
   - iaas
 dependencies:
   - name: GLib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pixman
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: capstone
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GnuTLS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nettle
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: liburing
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libseccomp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libslirp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libcurl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: virglrenderer
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: spice-server
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libusb
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libssh
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSBI
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

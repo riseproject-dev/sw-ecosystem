@@ -3,16 +3,16 @@ title: draco
 parent: Project Reports
 dependencies:
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency
     criticality: optional
   - name: tinygltf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gulrak/filesystem
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

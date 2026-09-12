@@ -5,61 +5,61 @@ categories:
   - browser
 dependencies:
   - name: mimalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: ICU
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: HarfBuzz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: FreeType
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Cairo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libgcrypt
     relation: runtime-dependency
     criticality: critical
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libjpeg-turbo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libwebp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libavif
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libjxl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GStreamer
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
     relation: runtime-dependency
     criticality: optional
   - name: SQLite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libxml2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libsoup
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libepoxy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: woff2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

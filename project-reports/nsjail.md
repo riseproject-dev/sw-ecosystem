@@ -3,16 +3,16 @@ title: nsjail
 parent: Project Reports
 dependencies:
   - name: kafel
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libcap
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libnl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

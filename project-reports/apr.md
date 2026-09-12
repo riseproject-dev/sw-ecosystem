@@ -5,28 +5,28 @@ categories:
   - libraries
 dependencies:
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: expat
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libxml2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SQLite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: PostgreSQL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Cyrus SASL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenLDAP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: UUID library
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

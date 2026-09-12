@@ -4,10 +4,10 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: asmjit
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: simde
     relation: runtime-dependency

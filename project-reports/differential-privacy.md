@@ -3,22 +3,22 @@ title: differential-privacy
 parent: Project Reports
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
     relation: runtime-dependency
     criticality: critical
   - name: BoringSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency
     criticality: optional
   - name: gonum
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Apache Beam
     relation: runtime-dependency
@@ -33,7 +33,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: absl-py
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gRPC-Go
     relation: runtime-dependency

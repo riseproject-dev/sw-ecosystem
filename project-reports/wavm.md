@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LMDB
     relation: runtime-dependency

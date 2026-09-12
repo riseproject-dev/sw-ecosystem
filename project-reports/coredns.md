@@ -6,43 +6,43 @@ categories:
   - containers
 dependencies:
   - name: miekg/dns
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: quic-go/quic-go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/crypto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: klauspost/compress
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: klauspost/cpuid
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: minio/simdjson-go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: DataDog/go-libddwaf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: DataDog/dd-trace-go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: etcd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gRPC-Go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: automaxprocs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: oschwald/geoip2-golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

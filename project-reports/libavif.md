@@ -6,25 +6,25 @@ categories:
   - browser
 dependencies:
   - name: libaom
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: dav1d
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: rav1e
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SVT-AV1
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libgav1
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libyuv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libwebp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

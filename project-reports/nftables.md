@@ -3,13 +3,13 @@ title: nftables
 parent: Project Reports
 dependencies:
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: vishvananda/netlink
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: vishvananda/netns
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -4,19 +4,19 @@ parent: Project Reports
 color: blue
 dependencies:
   - name: QEMU
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: TinyEMU
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Linux kernel
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSBI
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: riscv-pk
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: GCC
     relation: build-dependency
@@ -25,13 +25,13 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: busybox
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: runc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: tini
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Wasmtime
     relation: test-dependency

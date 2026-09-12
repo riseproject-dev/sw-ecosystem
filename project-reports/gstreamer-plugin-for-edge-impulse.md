@@ -4,16 +4,16 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: GStreamer
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Cairo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Pango
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Edge Impulse Runner (Rust)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

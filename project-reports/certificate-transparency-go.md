@@ -3,13 +3,13 @@ title: certificate-transparency-go
 parent: Project Reports
 dependencies:
   - name: gRPC-Go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: golang.org/x/crypto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: trillian
     relation: runtime-dependency
@@ -18,10 +18,10 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: pgx
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: go-sql-driver/mysql
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

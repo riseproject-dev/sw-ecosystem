@@ -7,16 +7,16 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenJDK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: glibc
     relation: runtime-dependency
     criticality: critical
   - name: Rocky Linux
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

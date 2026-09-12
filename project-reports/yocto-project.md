@@ -7,7 +7,7 @@ dependencies:
     relation: test-dependency
     criticality: critical
   - name: OpenSBI
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Rust
     relation: build-dependency

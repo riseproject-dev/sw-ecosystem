@@ -3,22 +3,22 @@ title: seesaw
 parent: Project Reports
 dependencies:
   - name: libnl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: miekg/dns
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fsnotify/fsnotify
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang/glog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: goconf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: godebug
     relation: test-dependency

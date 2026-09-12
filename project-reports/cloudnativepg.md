@@ -10,16 +10,16 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: controller-runtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Kubernetes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: pgx
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gRPC-Go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: barman-cloud
     relation: runtime-dependency

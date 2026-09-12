@@ -4,16 +4,16 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenCV
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nlohmann/json
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: yaml-cpp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -7,7 +7,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: golang.org/x/sys
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: bbolt
     relation: runtime-dependency
@@ -22,7 +22,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: ebitengine/purego
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

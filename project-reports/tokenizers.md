@@ -10,34 +10,34 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: pyo3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: rayon
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: ahash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: oniguruma
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fancy-regex
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: esaxx-rs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: daachorse
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: unicode-normalization-alignments
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: spm_precompiled
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: tokio
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

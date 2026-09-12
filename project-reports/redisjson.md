@@ -7,7 +7,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: redismodule-rs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bindgen
     relation: build-dependency
@@ -16,28 +16,28 @@ dependencies:
     relation: build-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: serde_json
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bson
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pest
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: regex (Rust crate)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: half
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: RediSearch
     relation: runtime-dependency
     criticality: optional
   - name: libc (Rust crate)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

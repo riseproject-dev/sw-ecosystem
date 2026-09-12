@@ -7,13 +7,13 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: ring
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libc (Rust crate)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: nix
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

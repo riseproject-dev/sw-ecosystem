@@ -4,16 +4,16 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: CMake
     relation: build-dependency
     criticality: critical
   - name: Python
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: pybind11
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: PyTorch
     relation: test-dependency

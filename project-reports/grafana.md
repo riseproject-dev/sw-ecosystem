@@ -13,7 +13,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenTelemetry
     relation: runtime-dependency

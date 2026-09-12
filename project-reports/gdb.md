@@ -42,7 +42,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: GNU Guile
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: babeltrace
     relation: runtime-dependency

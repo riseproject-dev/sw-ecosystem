@@ -4,10 +4,10 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: ggml
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: llama.cpp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenBLAS
     relation: runtime-dependency

@@ -12,7 +12,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

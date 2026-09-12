@@ -4,25 +4,25 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: wasmtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: aws-lc-rs
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: rustls
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: sha2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: flate2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: async-nats
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: tokio
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

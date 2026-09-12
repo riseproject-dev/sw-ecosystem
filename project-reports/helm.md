@@ -10,16 +10,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: klauspost/compress
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: wazero
     relation: runtime-dependency
     criticality: optional
   - name: Kubernetes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: oras-go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: distribution/distribution
     relation: test-dependency

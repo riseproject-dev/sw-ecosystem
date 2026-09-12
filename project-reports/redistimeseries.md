@@ -4,25 +4,25 @@ parent: Project Reports
 color: red
 dependencies:
   - name: cpu_features
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: hiredis
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libevent
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LibMR
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: dragonbox
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fast_double_parser
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: RedisModulesSDK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: minunit
     relation: test-dependency

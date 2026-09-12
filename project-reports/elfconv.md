@@ -7,16 +7,16 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: Remill
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Intel XED
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: glog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gflags
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: emscripten
     relation: build-dependency

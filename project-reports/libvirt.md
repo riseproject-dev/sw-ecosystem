@@ -5,31 +5,31 @@ categories:
   - iaas
 dependencies:
   - name: GLib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: GnuTLS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libxml2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: QEMU
     relation: runtime-dependency
     criticality: critical
   - name: libcurl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: readline
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libcap
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libselinux
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libnl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Python
     relation: build-dependency

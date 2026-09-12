@@ -29,7 +29,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: os-maven-plugin
     relation: build-dependency

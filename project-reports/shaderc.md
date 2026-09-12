@@ -3,16 +3,16 @@ title: shaderc
 parent: Project Reports
 dependencies:
   - name: glslang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SPIRV-Tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SPIRV-Headers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

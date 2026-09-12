@@ -16,7 +16,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Binaryen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Wazero
     relation: runtime-dependency

@@ -9,16 +9,16 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: go-sev-guest
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: go-configfs-tsm
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: go-eventlog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

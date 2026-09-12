@@ -3,16 +3,16 @@ title: google-authenticator-libpam
 parent: Project Reports
 dependencies:
   - name: Linux-PAM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: glibc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libqrencode
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libselinux
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

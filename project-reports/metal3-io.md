@@ -4,16 +4,16 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Kubernetes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: controller-runtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: etcd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

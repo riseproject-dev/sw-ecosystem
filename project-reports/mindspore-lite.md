@@ -4,49 +4,49 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: oneDNN
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: FlatBuffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
     relation: runtime-dependency
     criticality: optional
   - name: libjpeg-turbo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: sentencepiece
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenCV
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gRPC
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: re2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ICU
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SQLite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: glog
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

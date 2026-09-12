@@ -7,10 +7,10 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: chzyer/readline
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: ianlancetaylor/demangle
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GNU binutils
     relation: runtime-dependency

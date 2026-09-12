@@ -27,7 +27,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -7,10 +7,10 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: cpuinfo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Python
     relation: runtime-dependency
@@ -22,13 +22,13 @@ dependencies:
     relation: build-dependency
     criticality: optional
   - name: BoringSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: oneDNN (DNNL)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Zephyr RTOS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -5,19 +5,19 @@ categories:
   - libraries
 dependencies:
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bzip2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: HarfBuzz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

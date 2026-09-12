@@ -7,7 +7,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: Wasmtime
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: GCC
     relation: build-dependency

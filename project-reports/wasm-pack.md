@@ -16,7 +16,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: ureq
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: binary-install
     relation: build-dependency

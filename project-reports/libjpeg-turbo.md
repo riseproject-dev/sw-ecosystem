@@ -6,10 +6,10 @@ categories:
   - android
 dependencies:
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libspng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: JNA
     relation: runtime-dependency

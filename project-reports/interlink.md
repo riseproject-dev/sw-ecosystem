@@ -16,10 +16,10 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: virtual-kubelet
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: gRPC-Go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

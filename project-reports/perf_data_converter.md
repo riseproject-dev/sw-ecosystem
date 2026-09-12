@@ -3,10 +3,10 @@ title: perf_data_converter
 parent: Project Reports
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

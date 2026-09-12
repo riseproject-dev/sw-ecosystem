@@ -4,19 +4,19 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: pyo3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: fancy-regex
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: regex (Rust crate)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: rustc-hash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bstr
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: setuptools-rust
     relation: build-dependency

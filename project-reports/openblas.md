@@ -16,10 +16,10 @@ dependencies:
     relation: build-dependency
     criticality: optional
   - name: OpenMP
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LAPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

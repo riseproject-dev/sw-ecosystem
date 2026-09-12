@@ -13,31 +13,31 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: snappy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bzip2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: liburing
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: oneTBB
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Facebook Folly
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

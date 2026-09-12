@@ -3,10 +3,10 @@ title: osv-scalibr
 parent: Project Reports
 dependencies:
   - name: containerd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Docker
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

@@ -4,49 +4,49 @@ parent: Project Reports
 color: red
 dependencies:
   - name: TensorFlow
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Halide
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LiteRT
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: XNNPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenCV
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cpuinfo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pthreadpool
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: BoringSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libcurl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FlatBuffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: NumPy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

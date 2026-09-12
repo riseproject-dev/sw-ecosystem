@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: Linux kernel
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zstd
     relation: runtime-dependency

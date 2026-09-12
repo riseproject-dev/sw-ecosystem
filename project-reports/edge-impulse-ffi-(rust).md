@@ -4,34 +4,34 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: TensorFlow Lite Micro (TFLM)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: TensorFlow Lite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: XNNPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cpuinfo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ruy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FlatBuffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: farmhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: pthreadpool
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ONNX
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Apache TVM / microTVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -8,7 +8,7 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: Valgrind
-    relation: build-dependency
+    relation: test-dependency
     criticality: optional
 ---
 

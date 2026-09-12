@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: dmlc-core
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenMP
     relation: runtime-dependency
@@ -13,10 +13,10 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: NCCL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CUDA
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: autoconf
     relation: build-dependency

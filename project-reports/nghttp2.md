@@ -11,37 +11,37 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: ngtcp2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nghttp3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: jemalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libevent
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: c-ares
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libbpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libxml2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Jansson
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: systemd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

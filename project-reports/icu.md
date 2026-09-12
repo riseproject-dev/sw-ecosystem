@@ -9,7 +9,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: double-conversion
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: glibc
     relation: runtime-dependency

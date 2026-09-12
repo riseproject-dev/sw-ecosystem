@@ -3,10 +3,10 @@ title: amber
 parent: Project Reports
 dependencies:
   - name: shaderc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SPIRV-Tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: googletest
     relation: test-dependency
@@ -24,13 +24,13 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: DirectXShaderCompiler (DXC)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: clspv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LLVM
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

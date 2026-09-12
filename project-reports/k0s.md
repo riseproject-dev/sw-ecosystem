@@ -6,37 +6,37 @@ categories:
   - containers
 dependencies:
   - name: Kubernetes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: containerd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: runc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: etcd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: kine
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: CoreDNS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: kube-router
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Envoy
     relation: runtime-dependency
     criticality: optional
   - name: Helm
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: keepalived
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: konnectivity
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: sonobuoy
     relation: test-dependency
@@ -45,7 +45,7 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: iptables
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

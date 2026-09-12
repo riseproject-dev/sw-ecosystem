@@ -4,7 +4,7 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: DPDK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Linux kernel
     relation: runtime-dependency
@@ -13,7 +13,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: rdma-core
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

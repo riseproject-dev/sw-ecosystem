@@ -6,10 +6,10 @@ categories:
   - libraries
 dependencies:
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib-ng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ICU
     relation: runtime-dependency

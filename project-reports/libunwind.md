@@ -7,10 +7,10 @@ categories:
   - debug
 dependencies:
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

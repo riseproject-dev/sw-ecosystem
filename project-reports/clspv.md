@@ -6,10 +6,10 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: SPIRV-Tools
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: SPIRV-Headers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: amber
     relation: test-dependency

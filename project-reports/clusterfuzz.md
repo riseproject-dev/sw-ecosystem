@@ -18,16 +18,16 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: gRPC
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cryptography
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: psutil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Redis
     relation: runtime-dependency

@@ -19,7 +19,7 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Binaryen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: LLVM
     relation: build-dependency

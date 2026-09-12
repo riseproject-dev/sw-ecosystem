@@ -7,7 +7,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: JsonCpp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

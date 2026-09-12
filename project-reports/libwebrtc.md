@@ -6,52 +6,52 @@ categories:
   - browser
 dependencies:
   - name: BoringSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libsrtp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libvpx
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libaom
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: dav1d
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libgav1
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: FFmpeg
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libjpeg-turbo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libyuv
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: crc32c
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cpuinfo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: XNNPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

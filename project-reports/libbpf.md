@@ -7,13 +7,13 @@ categories:
   - perfmon
 dependencies:
   - name: elfutils
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib-ng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: dwarves
     relation: build-dependency

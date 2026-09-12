@@ -6,43 +6,43 @@ categories:
   - containers
 dependencies:
   - name: bytedance/sonic
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: klauspost/compress
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: andybalholm/brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: quic-go/quic-go
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gRPC
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: OpenTelemetry
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: golang.org/x/crypto
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: go-jose/go-jose
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: wazero
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ebitengine/purego
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: prometheus/client_golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SPIFFE / SPIRE
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: tjfoc/gmsm
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

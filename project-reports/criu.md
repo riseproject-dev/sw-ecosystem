@@ -9,7 +9,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libnl
     relation: runtime-dependency
@@ -18,7 +18,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: libcap
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: UUID library
     relation: runtime-dependency
@@ -30,13 +30,13 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: libbpf
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libselinux
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libdrm
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

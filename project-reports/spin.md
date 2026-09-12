@@ -4,7 +4,7 @@ parent: Project Reports
 color: red
 dependencies:
   - name: ring
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Wasmtime
     relation: runtime-dependency

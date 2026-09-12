@@ -9,7 +9,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: kafel
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

@@ -16,7 +16,7 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: Wasker
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

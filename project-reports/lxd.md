@@ -16,7 +16,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: libseccomp-golang
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LXC
     relation: runtime-dependency

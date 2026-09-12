@@ -3,13 +3,13 @@ title: silifuzz
 parent: Project Reports
 dependencies:
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: fuzztest
-    relation: build-dependency
+    relation: test-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency
@@ -18,22 +18,22 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: libpfm4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: capstone
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Unicorn Engine
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: linux-syscall-support
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cityhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

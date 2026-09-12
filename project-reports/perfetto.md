@@ -3,22 +3,22 @@ title: perfetto
 parent: Project Reports
 dependencies:
   - name: libunwindstack
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: PCRE2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Protocol Buffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gRPC
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: googletest
     relation: test-dependency

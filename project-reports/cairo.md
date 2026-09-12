@@ -3,19 +3,19 @@ title: Cairo
 parent: Project Reports
 dependencies:
   - name: pixman
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: FreeType
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: fontconfig
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libpng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

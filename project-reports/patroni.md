@@ -7,16 +7,16 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: psycopg
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: cryptography
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: psutil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: PyYAML
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: etcd
     relation: runtime-dependency

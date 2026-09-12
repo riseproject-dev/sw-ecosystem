@@ -6,7 +6,7 @@ categories:
   - perfmon
 dependencies:
   - name: Python
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

@@ -22,13 +22,13 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: Boost
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: asn1c
     relation: build-dependency
     criticality: critical
   - name: JsonCpp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: googletest
     relation: test-dependency

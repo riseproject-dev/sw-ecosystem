@@ -7,7 +7,7 @@ dependencies:
     relation: build-dependency
     criticality: critical
   - name: containerd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: libseccomp
     relation: test-dependency

@@ -22,7 +22,7 @@ dependencies:
     relation: test-dependency
     criticality: optional
   - name: ply
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

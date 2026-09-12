@@ -9,37 +9,37 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib-ng
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: brotli
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nghttp2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: ngtcp2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: nghttp3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: c-ares
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libssh2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libidn2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libpsl
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

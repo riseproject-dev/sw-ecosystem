@@ -7,40 +7,40 @@ categories:
   - ai-ml
 dependencies:
   - name: libffi
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: OpenSSL
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: bzip2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: xz
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libmpdec
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: expat
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: SQLite
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: mimalloc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: LLVM
     relation: build-dependency
     criticality: optional
   - name: glibc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
 ---
 

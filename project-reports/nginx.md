@@ -8,19 +8,19 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: PCRE2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zlib
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: libxslt
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Perl
     relation: build-dependency
     criticality: optional
   - name: LuaJIT
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

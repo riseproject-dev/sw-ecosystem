@@ -7,13 +7,13 @@ categories:
   - ai-ml
 dependencies:
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: Highway
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: PocketFFT
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Cython
     relation: build-dependency

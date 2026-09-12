@@ -4,25 +4,25 @@ parent: Project Reports
 color: yellow
 dependencies:
   - name: libc (Rust crate)
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: serde
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: serde_json
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: hashbrown
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: tempfile
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: memmap2
     relation: runtime-dependency
     criticality: optional
   - name: pyo3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

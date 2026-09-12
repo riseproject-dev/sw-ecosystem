@@ -16,10 +16,10 @@ dependencies:
     relation: runtime-dependency
     criticality: optional
   - name: OpenBLAS
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: oneDNN
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

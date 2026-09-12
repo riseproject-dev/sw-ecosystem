@@ -10,16 +10,16 @@ dependencies:
     relation: runtime-dependency
     criticality: critical
   - name: LZ4
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: zstd
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: UMASH
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: FastLanes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

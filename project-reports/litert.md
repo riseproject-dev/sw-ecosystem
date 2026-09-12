@@ -6,34 +6,34 @@ categories:
   - ai-ml
 dependencies:
   - name: TensorFlow
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: XNNPACK
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: cpuinfo
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: ruy
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Abseil
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: FlatBuffers
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: Eigen
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: gemmlowp
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: farmhash
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: sentencepiece
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 

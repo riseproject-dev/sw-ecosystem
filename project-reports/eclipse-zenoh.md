@@ -4,40 +4,40 @@ parent: Project Reports
 color: orange
 dependencies:
   - name: ring
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: rustls
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: quinn
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: critical
   - name: io-uring
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: flate2
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: lz4_flex
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: rsa
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: sha3
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: aes
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: x509-parser
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: buddy_system_allocator
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
   - name: talc
-    relation: build-dependency
+    relation: runtime-dependency
     criticality: optional
 ---
 
