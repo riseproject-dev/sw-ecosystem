@@ -35,6 +35,10 @@ jobs:
           base=$(ruby -ryaml -e "puts YAML.load_file('_config.yml')['baseurl']")
           echo "value=${base}/pr-preview/pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
 
+      - name: Test
+        if: github.event.action != 'closed'
+        run: bundle exec rake test
+
       # A preview is served one path segment deeper (.../pr-preview/pr-<N>/) than the
       # production site, so it needs its own baseurl or every internal link/asset
       # would point at production.
@@ -63,6 +67,8 @@ jobs:
         with:
           ruby-version: "3.4"
           bundler-cache: true
+      - name: Test
+        run: bundle exec rake test
       - name: Build site
         run: bundle exec jekyll build --destination _site
         env:

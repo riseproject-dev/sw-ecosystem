@@ -4,10 +4,6 @@
 
 generate a per-project report covering metadata about the project, port history and timeline, upstream support tiers, technical architecture and RISC-V specific subsystems, gap analysis to x86 and aarch64, and more
 
-### `stack-report/`
-
-generate a cross-project reports targetting software workloads like databases, agentic-ai on CPU, and more; also the necessary tools to visualize and make it usable by humans
-
 ### `aiml-status/`
 
 what is the status of Agentic AI with langchain, vllm, and PyTorch for the RISC-V architecture, and what works today, and what does not work?

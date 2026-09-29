@@ -1,5 +1,5 @@
 /*
- * Renders <slug>.graph.json (see prompts/stack-report/stack-report.md, Artifact 4) as an
+ * Renders a Jekyll-generated <slug>.graph.json as an
  * interactive dependency graph: a top-to-bottom layered DAG (dagre-d3 + d3 v5, both loaded via
  * CDN in _includes/dependency-graph.html -- no build step), with zoom/pan, click-a-node to open
  * its report/repo/home, hover to highlight neighbors, a search box (which can also focus a node's
@@ -69,9 +69,8 @@
     return out;
   }
 
-  // True for a "runtime-dependency" relation, and (since stack-report graphs give `relation` as
-  // free text -- see prompts/stack-report/stack-report.md) anything else that reads as purely
-  // about runtime, e.g. not "build-and-runtime-dependency". Shared by edgeStyle (solid vs. dashed
+  // True for a "runtime-dependency" relation, including anything else that reads as purely about
+  // runtime, e.g. not "build-and-runtime-dependency". Shared by edgeStyle (solid vs. dashed
   // stroke) and findDescendantsRuntimeOnlyBeyondRoot below, so "renders as a solid runtime edge"
   // and "counts as runtime for subset traversal" never disagree.
   function isRuntimeRelation(relation) {
@@ -156,8 +155,7 @@
   }
 
   // A node's `report` is baked in at generation time as a production URL, e.g.
-  // "/sw-ecosystem/project-reports/<slug>.html" (see stack-report-workflow.js reportUrl(), or for
-  // the shared project-dependency graph, _plugins/dependency_graph_generator.rb), or is null when
+  // "/sw-ecosystem/project-reports/<slug>.html" (see _plugins/dependency_graph_generator.rb), or is null when
   // no per-project report exists (the click handler then falls back to repo/home).
   // A PR preview is served one level deeper, at ".../pr-preview/pr-<N>/stack-reports/..." or
   // ".../pr-preview/pr-<N>/project-reports/...", so a bare production link would incorrectly
@@ -179,9 +177,8 @@
     return cls;
   }
 
-  // Solid black = a hard runtime dependency. Dashed black = build/test-time only, or (for
-  // stack-report graphs, whose `relation` is free text -- see prompts/stack-report/stack-report.md)
-  // any other relation that isn't purely about runtime, e.g. "requires-to-be-useful" or
+  // Solid black = a hard runtime dependency. Dashed black = build/test-time only, or any other
+  // relation that isn't purely about runtime, e.g. "requires-to-be-useful" or
   // "build-and-runtime-dependency". Returned as an inline style string, not a CSS class, because
   // dagre-d3 applies an edge's `class` option to the outer <g class="edgePath">, not the <path>
   // that actually carries the stroke.

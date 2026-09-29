@@ -21,8 +21,8 @@ const slug = proj.slug || proj.name.toLowerCase().replace(/[\s.\/]+/g, '-')
 // ── Project registry (projects.yml) lookup ──────────────────────────────────────────────────
 // proj.registry (optional): the parsed projects.yml (repo root) -- an array of
 //   { name, repo?, home?, report?, synonyms? } entries. The operator loads it and passes it in
-//   (this script is sandboxed with no filesystem access). Mirrors registryByName/lookupRegistry
-//   in stack-report-workflow.js: index every entry by its canonical name AND each synonym
+//   (this script is sandboxed with no filesystem access). Index every entry by its canonical name
+//   AND each synonym
 //   (normalized, case-insensitive), so a dependency named by any known spelling resolves to the
 //   single canonical entry -- used below to write Section 9's direct dependencies into
 //   frontmatter using projects.yml's own `name:` spelling, never an ad-hoc one.
@@ -652,7 +652,7 @@ const depsYaml = dependencies.length
 let finalReport = report.replace(/^---\n([\s\S]*?)\n---/m, (match, body) => '---\n' + body + '\n' + depsYaml + '---')
 finalReport = finalReport.replace(
   /\n## 1\. Project Overview/,
-  `\n{% include dependency-graph.html slug="dependencies" focus="${slug}" %}\n\n## 1. Project Overview`
+  `\n{% include dependency-graph.html slug="dependencies" subset="${slug}" %}\n\n## 1. Project Overview`
 )
 
 return [{
