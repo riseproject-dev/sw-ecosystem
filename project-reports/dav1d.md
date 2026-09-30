@@ -1,11 +1,12 @@
 ---
 title: dav1d
 parent: Project Reports
-categories:
-  - multimedia
-  - browser
+color: yellow
 dependencies:
   - name: Meson
+    relation: build-dependency
+    criticality: critical
+  - name: Ninja
     relation: build-dependency
     criticality: critical
   - name: GNU binutils
@@ -17,146 +18,129 @@ dependencies:
   - name: glibc
     relation: runtime-dependency
     criticality: critical
+  - name: QEMU
+    relation: test-dependency
+    criticality: critical
+  - name: SDL2
+    relation: runtime-dependency
+    criticality: optional
+  - name: pkg-config
+    relation: build-dependency
+    criticality: optional
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="dav1d" %}
 
 # dav1d
 
-**Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-07-20
-**Scope:** RISC-V (riscv64/linux) support status for dav1d
-**Audience:** Technical leadership, resource allocation strategy
-**Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
-
----
+**Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
+**Date:** 2026-09-30<br/>
+**Readiness:** yellow<br/>
+**Optimization level:** minimal<br/>
+**Scope:** RISC-V (riscv64/linux) support status for dav1d<br/>
+**Audience:** Technical leadership, resource allocation strategy<br/>
+**Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
 ## 1. Project Overview
 
-dav1d is a high-performance, BSD-2-Clause-licensed AV1 video decoder developed by VideoLAN and Alliance for Open Media (AOM). It is the reference fast decoder for the AV1 codec standard, targeting all major architectures with hand-tuned SIMD. The codebase is pure C with architecture-specific assembly backends; it has no external runtime dependencies beyond pthreads/librt.
+dav1d is a BSD-2-Clause-licensed AV1 video decoder developed jointly by [VideoLAN](https://code.videolan.org/videolan/dav1d) (a French non-profit association) and the broader FFmpeg community, with partial funding from the Alliance for Open Media (AOM). It is explicitly positioned as "the reference fast decoder" for AV1: the codebase is pure C99 with hand-written, architecture-specific SIMD assembly for every performance-critical DSP path (x86, ARM, PPC, LoongArch, RISC-V). There is no JIT, no garbage collector, and no cryptography in the library; its only mandatory runtime dependencies are pthreads, libm and libdl.
 
-**Governance.** The project is owned by [VideoLAN](https://www.videolan.org/), a French non-profit association. Alliance for Open Media provided partial initial funding. VideoLAN holds collective copyright; contributors retain individual copyright. No CLA is required. The license (BSD-2-Clause) imposes no barrier to commercial use or architecture porting.
+**Governance.** VideoLAN holds collective-work rights; individual contributors retain copyright and authorship. There is no CLA, only a requirement for valid (non-anonymous) authorship and agreement to the AV1 patent license before committing. No formal MAINTAINERS file exists in the repository; governance runs informally through merge-request review on `code.videolan.org`, with `git shortlog` as the authoritative contributor record.
 
-**Corporate sponsors.** The AOM consortium (Amazon, Cisco, Google, Intel, Microsoft, Mozilla, Netflix, Apple) funded the project's creation. Active named contributors include Ronald S. Bultje (core maintainer, rbultje), Jean-Baptiste Kempf (VideoLAN president), Nathan E. Egge (primary RISC-V author), Niklas Haas (haasn), and Martin Storsjö. VideoLabs SAS (VideoLAN's commercial arm) provides organizational support. No employer is listed publicly for Nathan E. Egge.
+**Corporate sponsors and affiliated maintainers.** AOM (Amazon, Cisco, Google, Intel, Microsoft, Mozilla, Netflix, Apple) funded the project's creation. THANKS.md credits Two Orioles, LLC for "important coding effort" (the commercial entity most associated with day-to-day core development) and VideoLabs SAS (tied to VideoLAN founder Jean-Baptiste Kempf). The primary RISC-V author and maintainer, **Nathan E. Egge**, committed the first RISC-V support as `unlord@xiph.org` (Mozilla/Xiph.Org Foundation) in 2022; by the time of his 2024 RISC-V Summit Europe talk and subsequent GitLab activity his affiliation is `negge@google.com` -- he is now at **Google LLC** and serves as RISE TSC co-chair (formerly chair of its System Libraries Working Group). Luca Barbato co-mentored the 2025 Google Summer of Code RISC-V Vector optimization project alongside Egge. Other long-standing authors with industry ties include Ronald S. Bultje (Two Orioles, core maintainer), Martin Storsjo, Janne Grunau, James Almer (FFmpeg), Jean-Baptiste Kempf (VideoLabs), and Wan-Teh Chang / Dale Curtis (Google/Chromium).
 
-**Community culture on new ports.** The README explicitly names RISC-V among "less common architectures" the project intends to accelerate, alongside PPC, SSE2, and AVX-512. The BSD porting work (MR !1764, Nov 2024) and the volume of RISC-V MRs from multiple independent contributors indicate the maintainers actively accept new architecture contributions. The only code-style requirement is conformance to the existing ASM macro conventions. No CLA and a permissive license minimize the friction for new contributors.
+**Community stance on new ports.** CONTRIBUTING.md actively solicits "platform-specific developers." The technical bar is uniform across architectures: pure C99, target-specific GAS-subset assembly, no C++ in the library, and mandatory checkasm/CI passing. In practice the RISC-V port has strong institutional backing -- championed by a Google-employed RISE TSC co-chair, sustained by multi-year multi-contributor activity, and selected as a mentored 2025 Google Summer of Code project whose merge requests passed checkasm/Argon conformance testing.
 
-**RISE Project involvement.** None. A review of all 27 RISE blog posts (May 2024 through June 2026) found zero mentions of dav1d, AV1, or multimedia codecs. dav1d is not listed as a RISE-funded RFP project. All RISC-V work is happening independently through upstream VideoLAN contributors.
+**RISE involvement.** dav1d is tracked by RISE's System Libraries Working Group as page **SL_01_002**, migrated from Confluence to [`riseproject-dev/system-libraries-wg` issue #20](https://github.com/riseproject-dev/system-libraries-wg/issues/20) (opened 2026-07-27). The issue is a monitoring/tracking record of upstream progress (timeline: Oct 2022 initial support merged, late-2023 two-part WG presentation on RVV 1.0 integration, Feb 2024 additional transform work) -- it is not evidence of direct RISE funding of the port. RISE's `python-wheels` CI separately merged [PR #1865](https://github.com/riseproject-dev/python-wheels/pull/1865) adding a Bazel `BUILD`-file patch so that tensorstore, which vendors a copy of dav1d, can build for riscv64; this patches dav1d only as a vendored dependency inside another package's wheel build, not upstream dav1d itself. No RISE blog post covers dav1d, and dav1d/VideoLAN do not appear on RISE's [members list](https://riseproject.dev) (Premier: Alibaba Damo, Google, Intel, MediaTek, NVIDIA, Qualcomm, Red Hat, Rivos, Samsung, SiFive, Tenstorrent, Ventana; General: Akeana, AMD, Andes, Beijing ESWIN, BOSC, Canonical, ByteDance/Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE).
 
 ---
 
 ## 2. Port History and Upstreaming Timeline
 
-All RISC-V work is fully upstream in the canonical [code.videolan.org/videolan/dav1d](https://code.videolan.org/videolan/dav1d) repository. There are no downstream forks carrying RISC-V patches.
+All RISC-V work is fully upstream in the canonical [code.videolan.org/videolan/dav1d](https://code.videolan.org/videolan/dav1d) repository; there are no downstream forks carrying RISC-V patches.
+
+The first RISC-V commit, `61251bc9a29049acfb58429d87d8fbb60c20ef82` ("Add initial RISC-V support"), was authored by Nathan E. Egge `<unlord@xiph.org>` on **2022-10-30**. Development then proceeded steadily through 2026:
 
 | Date | Event | Source |
 |---|---|---|
-| 2024-01-30 | First commit by Nathan E. Egge: "Add initial RISC-V support" (CPU feature detection via `getauxval(AT_HWCAP)`, meson build detection, CLI flag mapping) | [commit 61251bc](https://github.com/videolan/dav1d) |
-| 2024-02-14 | dav1d 1.4.0 released: "New architecture supported: RISC-V; RISC-V optimizations for itx" | NEWS file |
-| 2024-02-23 | MR !1608 merged: "CI: Add riscv64 clang build" -- RISC-V CI operational | [MR !1608](https://code.videolan.org/videolan/dav1d/-/merge_requests/1608) |
-| 2024-03-15 | dav1d 1.4.1 released: "More RISC-V optimizations for itx (4x8, 8x4, 4x16, 16x4, 8x16, 16x8)" | NEWS file |
-| 2024-05-06 | MR !1629 merged: RVV compliance check requiring RVV 1.0+ (filters pre-spec hardware) | [MR !1629](https://code.videolan.org/videolan/dav1d/-/merge_requests/1629) |
-| 2024-11-21 | MR !1764 merged: RISC-V ported to FreeBSD/OpenBSD via `elf_aux_info()` | [MR !1764](https://code.videolan.org/videolan/dav1d/-/merge_requests/1764) |
-| 2024-12-29 | MR !1777 merged: RISC-V build fixed for non-Linux POSIX OS | [MR !1777](https://code.videolan.org/videolan/dav1d/-/merge_requests/1777) |
-| 2025-03-xx | dav1d 1.5.0 released: "RISC-V optimizations for pal, cdef_filter, ipred, mc_blend, mc_bdir, itx" | NEWS file |
-| 2025-xx-xx | dav1d 1.5.1 released: "blend optimizations for high bitdepth; Port RISC-V to POSIX/non-Linux OS" | NEWS file |
-| 2025-11-05 | MR !1808 merged: emu_edge 8bpc RVV | [MR !1808](https://code.videolan.org/videolan/dav1d/-/merge_requests/1808) |
-| 2025-11-06 | MR !1797 merged: w_mask functions 8bpc RVV | [MR !1797](https://code.videolan.org/videolan/dav1d/-/merge_requests/1797) |
-| 2025-12-23 | MR !1824 merged: VLEN=512 8bpc blend functions | [MR !1824](https://code.videolan.org/videolan/dav1d/-/merge_requests/1824) |
-| 2025-12-26 | MR !1826 merged: VLEN=512 16bpc blend functions | [MR !1826](https://code.videolan.org/videolan/dav1d/-/merge_requests/1826) |
-| 2025-12-31 | dav1d 1.5.3 released: "RISC-V assembly optimizations for ipred, emu_edge, w_mask, VLEN-512 blend" | NEWS file |
-| 2026-05-15 | MR !1857 merged: ipred_h 8bpc RVV | [MR !1857](https://code.videolan.org/videolan/dav1d/-/merge_requests/1857) |
-| 2026-xx-xx | dav1d 1.5.4 released: "RISC-V: add ipred_v, _h, _pal, _dc optimizations" | NEWS file |
-| 2026-06-23 | MR !1883 merged: ipred_v and ipred_h 16bpc RVV | [MR !1883](https://code.videolan.org/videolan/dav1d/-/merge_requests/1883) |
-| 2026-06-23 | MR !1908 merged: pal_pred 8bpc and 16bpc RVV optimization | [MR !1908](https://code.videolan.org/videolan/dav1d/-/merge_requests/1908) |
+| 2022-10-30 | First commit: "Add initial RISC-V support" (CPU feature detection via `getauxval(AT_HWCAP)`) | local-clone git log, commit 61251bc |
+| 2024-02-14 | MR !1591 merged: 16x16 8bpc itx transforms; dav1d 1.4.0 released ("New architecture supported: RISC-V") | [MR !1591](https://code.videolan.org/videolan/dav1d/-/merge_requests/1591) |
+| 2024-02-15 | Issue #437 (clang 17 vsetvli build failure) opened and closed same window | [issue #437](https://code.videolan.org/videolan/dav1d/-/issues/437) |
+| 2024-02-19/21 | MR !1596 (missing ta/ma flags fix), MR !1600 (rectangular itx sizes) merged; dav1d 1.4.1 | [MR !1596](https://code.videolan.org/videolan/dav1d/-/merge_requests/1596) |
+| 2024-02-23 | MR !1608 merged: "CI: Add riscv64 clang build" | [MR !1608](https://code.videolan.org/videolan/dav1d/-/merge_requests/1608) |
+| 2024-05-06 | MR !1629 merged: reject non-compliant pre-1.0 RVV silicon (e.g. T-Head C910); dav1d 1.4.2 | [MR !1629](https://code.videolan.org/videolan/dav1d/-/merge_requests/1629) |
+| 2024-10-01/11 | MR !1731 merged: largest single RVV batch (mc avg/mask/w_avg/blend/warp8x8, ipred smooth/paeth/cfl/pal, CDEF filter) | [MR !1731](https://code.videolan.org/videolan/dav1d/-/merge_requests/1731) |
+| 2024-10-13 | MR !1737 merged: fix Argon test failure (issue #447); dav1d 1.5.0 | [MR !1737](https://code.videolan.org/videolan/dav1d/-/merge_requests/1737) |
+| 2024-10-29 to 2024-11-05 | MR !1746-!1752 merged: 16bpc mc16 blend/blend_v; dav1d 1.5.1 | [MR !1748](https://code.videolan.org/videolan/dav1d/-/merge_requests/1748) |
+| 2024-11-21, 2024-12-29 | MR !1764 (FreeBSD/OpenBSD `elf_aux_info()`), MR !1777 (non-Linux build fix) merged | [MR !1764](https://code.videolan.org/videolan/dav1d/-/merge_requests/1764) |
+| 2025-11-05/06 | MR !1808 (emu_edge), MR !1797 (w_mask 420/422/444) merged | [MR !1797](https://code.videolan.org/videolan/dav1d/-/merge_requests/1797) |
+| 2025-12-23/26 | MR !1824, !1826 merged: VLEN=512 8bpc/16bpc blend functions | [MR !1824](https://code.videolan.org/videolan/dav1d/-/merge_requests/1824) |
+| 2025-12-31 | dav1d 1.5.3 released | NEWS file |
+| 2025-12-23 | MR !1825 opened: `dav1d_set_vlen_max()` API (still open) | [MR !1825](https://code.videolan.org/videolan/dav1d/-/merge_requests/1825) |
+| 2026-03-17 | Issue #463 opened: static-link cross-compile failure (still open) | [issue #463](https://code.videolan.org/videolan/dav1d/-/issues/463) |
+| 2026-05-12/15 | MR !1856, !1857 merged: ipred_v cleanup, ipred_h implementation | [MR !1857](https://code.videolan.org/videolan/dav1d/-/merge_requests/1857) |
+| 2026-06-07 to 2026-06-28 | MR !1883, !1889, !1890, !1908 merged: 16bpc ipred_v/h, itx stack fix, generate_grain_y 8bpc, pal_pred optimization; dav1d 1.5.4 (2026-07-14) | [MR !1890](https://code.videolan.org/videolan/dav1d/-/merge_requests/1890) |
+| 2026-09-16 | MR !1977 merged: fix SIGSEGV in generate_grain_y (targets unreleased 1.5.5) | [MR !1977](https://code.videolan.org/videolan/dav1d/-/merge_requests/1977) |
 
-**Key contributors and affiliations.**
-
-| Contributor | Handle | Affiliation | RISC-V contributions |
-|---|---|---|---|
-| Nathan E. Egge | unlord | Independent (no public employer) | Primary architect: itx, mc, ipred, cpu detection, tracking issue #435 |
-| Ronald S. Bultje | rbultje | Core maintainer | Code review, merge authority |
-| brad0 | brad0 | Independent | BSD/POSIX platform port (MR !1764, !1777) |
-| MohdZaid0205 | MohdZaid0205 | Independent | 16bpc ipred optimizations (2025) |
-| S Rajath | iRajath | Independent | Loopfilter scaffolding (MR !1858, open) |
-| jerry tsai | jerrytsai569 | Independent | CDEF intrinsics (MR !1735, open 8+ months) |
-
-The port is fully upstream. No separate riscv64 branch or fork exists.
+**Key contributors (2024-2026).** Nathan E. Egge (unlord, Google) remains the primary architect of the tracking issue and much of mc/itx/ipred work. A broadened, largely independent contributor base has since driven most 2025-2026 activity: Sungjoon Moon (mc w_mask/emu_edge, under handle OctopusET), Mohd Zaid (mdzaid: ipred 16bpc, film grain), Najmus Sakib Afsan (Afsan-z47: ipred_h, ipred_h optimization, cdef_find_dir, the static-link issue #463), S Rajath (iRajath: loopfilter scaffolding), jerry tsai (jerrytsai569: CDEF intrinsics), and Brad Smith (BSD/POSIX portability). The port is fully upstream; no separate riscv64 branch exists.
 
 ---
 
 ## 3. Upstream Support Tier
 
-There is no formal tiered support policy documented in dav1d. The following is inferred from CI coverage, release notes, and issue tracker behavior.
+There is no formal, published tier policy in dav1d's own documentation (no tiering language in README.md or CONTRIBUTING.md), nor a codified numbered tier list published by RISE's System Libraries Working Group (whose criteria -- "alignment with upstream roadmap," "RISE member goals," impact -- are prioritization factors reviewed by its TSC and Board, not a public tier table). The closest signal is dav1d's own README roadmap, which lists x86 (AVX2, SSSE3+) and ARM (ARMv8/ARMv7, incl. high-bit-depth) as **"Reached"** milestones, while RISC-V sits under **"On-going"** alongside PPC and AVX-512 -- i.e. explicitly framed as a secondary, catch-up architecture relative to x86/ARM, with no formal exclusion.
 
-**CI evidence.** A riscv64 CI job (`build-debian-riscv64`) has run on every pipeline since MR !1608 merged on 2024-02-23. There are no `rules:` or `only:` restrictions on the riscv64 jobs -- they fire unconditionally on every push and MR. A correctness regression on riscv64 (issue #447, RVV itx 4x4 argon test failure) was fixed within 4 days in October 2024, consistent with treatment as a release-blocking target.
+**CI evidence.** `build-debian-riscv64` and `test-debian-riscv64` run unconditionally (no `rules:`/`only:` gating) on every commit in [`.gitlab-ci.yml`](https://code.videolan.org/videolan/dav1d/-/blob/master/.gitlab-ci.yml), cross-compiling with both GCC and Clang and testing under QEMU across four vector-length configurations. A correctness regression, issue #447 (RVV itx 4x4 Argon test failure), was fixed within days via MR !1737, consistent with release-blocking treatment.
 
-**Release notes evidence.** Every release from 1.4.0 onward includes an explicit RISC-V section in the NEWS file. RISC-V improvements are parity-listed alongside x86 and arm64 changes.
-
-**Comparison table.**
+**Release-notes evidence.** Every release since 1.4.0 lists explicit RISC-V line items alongside x86/arm64 changes in the NEWS file / [1.5 "Sonic"](https://jbkempf.com/blog/2025/dav1d-1.5/) and [1.5.4](https://jbkempf.com/blog/2026/dav1d-1.5.4/) release-note posts.
 
 | Criterion | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| CI on every commit | Yes | Yes | Yes |
-| Native CI runners | Yes | Yes | No (QEMU only) |
-| Correctness tests in CI | Yes | Yes | Yes (4 VLEN configs) |
-| Official binaries (distro) | Yes | Yes | Yes (Debian, Ubuntu) |
-| All components optimized | Yes | Yes | No (5 of 11 components) |
+| CI on every commit | Yes | Yes | Yes (since Feb 2024) |
+| Native CI hardware runners | Yes | Yes | No -- QEMU user-mode on amd64 |
+| Correctness tests in CI | Yes | Yes | Yes (4 VLEN configs: 128/256/512/1024) |
+| Official binaries (Debian/Ubuntu/Arch) | Yes | Yes | Yes |
+| All DSP components optimized | Yes | Yes | No -- dominant motion-compensation path (8-tap/bilinear put/prep) is still scalar C |
 | Mentioned in release notes | Yes | Yes | Yes (since 1.4.0) |
 | Formal tier designation | Not published | Not published | Not published |
 
-**Assessment.** riscv64 is treated as a first-class build and test target. It is not gated by any release-blocking policy that excludes it from releases, and regressions are fixed promptly. The gap relative to arm64 is in optimization coverage, not in platform status.
+**Assessment.** riscv64 is treated as a first-class build and correctness-test target, and packaged by downstream distributions. The gap relative to x86/arm64 is optimization coverage of the highest-cost decode path, not platform status -- which is why this report's readiness grade (Section 13) differs from a pure CI-based grade.
 
 ---
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-dav1d's performance-sensitive code is organized into DSP modules, each with a C reference implementation and optional architecture-specific assembly. There is no JIT engine. There is no garbage collector. There is no cryptography. The sole performance-critical subsystem requiring architecture work is SIMD assembly.
+dav1d's RISC-V backend is real, production-quality hand-written RVV assembly, not a stub or intrinsics shim over scalar code. A direct clone inspection confirms **7,151 lines across 11 `.S` files** under `src/riscv/64/` (`cpu.S`, `pal.S`, `ipred.S`/`ipred16.S`, `itx.S`, `mc.S`/`mc16.S`, `cdef.S`/`cdef16.S`, `filmgrain.S`/`filmgrain16.S`), wired into each DSP module's init table via `ARCH_RISCV` branches, with `src/riscv/` also holding runtime CPU-detection code (`cpu.c`/`cpu.h`) and function-table headers. Dispatch uses the same bitdepth/cpu-flag function-pointer tables as all other architectures, gated at runtime by `DAV1D_RISCV_CPU_FLAG_V`; there is no JIT and no separate ASM ABI toggle (unlike PowerPC's vsx/pwr9 flags).
 
-**ISA extensions used by the riscv64 port.**
+**ISA extensions used.** RVV (the "V" extension, required for any acceleration; `dav1d_has_compliant_rvv()` additionally filters out pre-1.0 hardware such as T-Head C910 on Scaleway, per [MR !1629](https://code.videolan.org/videolan/dav1d/-/merge_requests/1629)), plus Zba (address generation: sh1add/sh2add) and Zbb (bit manipulation), both ratified extensions available on all production RVV-capable silicon.
 
-- RVV (V): primary SIMD extension, required for all acceleration. Runtime-detected via `HWCAP_RVV`; pre-1.0 hardware filtered out via VILL bit check in `src/riscv/64/cpu.S`.
-- Zba (address generation: sh1add/sh2add): used in cdef.S, ipred.S, mc.S.
-- Zbb (bit manipulation): used in cdef.S, mc.S, mc16.S, cdef16.S.
+**Per-component status (8bpc / 16bpc), from the master tracking issue [#435](https://code.videolan.org/videolan/dav1d/-/issues/435) checklist cross-checked against merged MRs (note: the checklist's last edit was 2025-11-26, so several items merged afterward -- ipred_h, ipred_v/h 16bpc, pal_pred, generate_grain_y -- are not reflected in its checked/unchecked state; status below is as currently implemented in master, not as the checklist literally shows):**
 
-All three are part of the ratified RISC-V specification and are available on all production RVV-capable silicon.
+| Component | 8bpc | 16bpc | Notes |
+|---|---|---|---|
+| mc avg/mask/w_avg, blend, warp8x8, emu_edge, w_mask | Hand-tuned RVV, complete | blend/blend_v only (VLEN=512 variants added) | Closed via !1731, !1748-!1754, !1797, !1808, !1824, !1826 |
+| mc 8-tap put/prep, bilinear put/prep | **Missing -- scalar C** | **Missing -- scalar C** | No open MR targets this as of the harvest date; per !1731's own profiling this is the dominant remaining cost |
+| itx (inverse transforms) | Partial: 4x4 through 16x16 and rectangular sizes | Missing entirely | 32x32/64x64 and all 16bpc transforms fall through to C |
+| ipred v/h/paeth/smooth/cfl/pal | Hand-tuned RVV, complete | v/h added (!1883), pal_pred added (!1908); DC-fill variants still open (!1959) | z1/z2/z3 angular and cfl_ac chroma-from-luma accumulation missing in both bitdepths |
+| CDEF filter | Hand-tuned RVV (4x4/4x8/8x8) | Hand-tuned RVV per issue checklist via !1691 -- **but the MR-tracker record shows !1691 as closed-unmerged**, a discrepancy [NEEDS VERIFICATION] | filter kernel present for 8bpc; 10/12bpc status uncertain |
+| CDEF direction finding (`cdef_find_dir`) | Missing | Missing | Two competing open approaches: !1735 (C intrinsics, open 12+ months) and !1960 (asm, dependent on the closed-unmerged !1894) |
+| Loopfilter / deblocking | Missing (WIP scaffolding only, !1858) | Missing | 8-commit branch explicitly bypasses coverage checks as "wip scaffolding" |
+| Loop restoration (Wiener/SGR) | Missing | Missing | WIP branch referenced (`tmatth/dav1d riscv-wiener-v1`), not upstreamed |
+| Film grain | generate_grain_y merged (!1890, fixed for a SIGSEGV by !1977); generate_grain_uv open (!1958) | Missing | fgy_32x32xn/fguv_32x32xn not implemented in either bitdepth |
+| MSAC (arithmetic decoding) | Missing | N/A | decode_bool*/decode_symbol_adapt* entirely unaddressed |
+| refmvs | Missing | N/A | load/save/splat_tmvs entirely unaddressed |
 
-**Per-component status.**
+**Quality assessment.** Merged riscv64 assembly uses LMUL escalation, strided loads, and VLEN-tiered dispatch (128/256/512-bit variants for several mc functions) rather than a naive intrinsics translation. `dav1d_set_vlen_max()` (open MR !1825) would add a public API to cap VLEN at runtime, reflecting real hardware VLEN fragmentation (T-Head C910, SpacemiT K1, Kendryte K230, OrangePi RV2, Blackhole p100a).
 
-| Component | amd64 | arm64 | riscv64 8bpc | riscv64 16bpc |
-|---|---|---|---|---|
-| itx (inverse transforms) | Hand-tuned, all sizes, SSE2/AVX2/AVX512 | Hand-tuned, all sizes | Hand-tuned RVV, 4x4 through 16x16 only | Missing entirely |
-| mc put/prep (8tap/bilinear) | Hand-tuned, all sizes | Hand-tuned, all sizes | Missing | Missing |
-| mc compound (avg/blend/warp/emu_edge/w_mask) | Hand-tuned | Hand-tuned | Hand-tuned RVV, complete | Blend/blend_v only |
-| ipred (intra prediction) | Hand-tuned | Hand-tuned | Hand-tuned RVV, all modes except z1/z2/z3/filter | v/h/paeth/smooth/cfl/pal; DC fill missing |
-| CDEF filter | Hand-tuned | Hand-tuned | Hand-tuned RVV, 4x4/4x8/8x8 | Hand-tuned RVV, 4x4/4x8/8x8 |
-| CDEF dir (direction finding) | Hand-tuned | Hand-tuned | Missing (MR !1894 open, MR !1735 stalled) | Missing |
-| Loopfilter (deblocking) | Hand-tuned | Hand-tuned | Missing (MR !1858 scaffolding, open) | Missing |
-| Loop restoration (Wiener/SGR) | Hand-tuned | Hand-tuned | Missing | Missing |
-| Film grain synthesis | Hand-tuned | Hand-tuned | Missing (MR !1890 generate_grain_y, open) | Missing |
-| MSAC (arithmetic coding) | Hand-tuned | Hand-tuned | Missing | Missing (N/A) |
-| refmvs (reference MV) | Hand-tuned | Hand-tuned | Missing | Missing (N/A) |
-| Palette index finish | Hand-tuned | Hand-tuned | Hand-tuned RVV | Hand-tuned RVV (via ipred16.S) |
-
-**Quality assessment.** Every merged riscv64 assembly file contains real, production-quality hand-tuned RVV code with no TODO/FIXME/stub markers. VLEN dispatch is implemented for three tiers (128, 256, 512-bit), with runtime switching via `dav1d_get_vlen()`. The code is not a mechanical intrinsics translation -- it uses LMUL escalation, strided loads, scatter/gather, and saturating arithmetic idioms appropriate to RVV.
-
-**Critical gap: mc put/prep.** The 8-tap and bilinear interpolation filters (`put_8tap`, `prep_8tap`, `put_bilin`, `prep_bilin`) are the most-executed MC functions in inter-frame decoding. They are listed as OPEN in the master tracking issue [#435](https://code.videolan.org/videolan/dav1d/-/issues/435) and no MR targeting them has been opened. For typical AV1 video with heavy inter prediction, the absence of these functions means the dominant MC code path runs entirely in scalar C on riscv64.
+**Critical gap.** The 8-tap and bilinear interpolation filters (`put_8tap`/`prep_8tap`/`put_bilin`/`prep_bilin`) are the most-executed motion-compensation functions in inter-frame decoding. Per [MR !1731](https://code.videolan.org/videolan/dav1d/-/merge_requests/1731)'s own self-reported profiling, after that batch merged, `prep_8tap_c` still accounts for ~72.6% and `put_8tap_c` ~4.0% of remaining CPU time (with `wiener_c` at ~4.7%) -- i.e. the single dominant hot path remains unoptimized scalar C, and no MR has since been opened against it.
 
 ---
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-**Build system.** Meson + Ninja exclusively. No CMake support. Minimum Meson version: 0.54. NASM is required only for x86 targets and is not invoked on riscv64.
+**Build system.** Meson (>= 0.54) + Ninja exclusively; no CMake support. NASM (>= 2.14) is required only for x86 targets and is never invoked on riscv64.
 
-**Toolchain version requirements.**
-
-| Toolchain | Minimum version | Reason |
-|---|---|---|
-| GNU binutils / GAS | >= 2.38 | `.option arch, +v` directive used in all `src/riscv/64/*.S` files |
-| Clang | >= 17 | Same `.option arch` directive support |
-| QEMU user-mode | Any with RVV 1.0 | Required for test execution under emulation |
-
-The minimum is enforced via a compile-time probe at build configuration:
+**Toolchain version requirements,** enforced by a compile-time probe in `meson.build` (lines ~588-596):
 
 ```c
 __asm__ (
@@ -165,11 +149,17 @@ __asm__ (
 );
 ```
 
-If the probe fails, Meson aborts with: "Compiler doesn't support '.option arch' asm directive. Update to binutils>=2.38 or clang>=17 or use '-Denable_asm=false'."
+If this probe fails, Meson aborts with: *"Compiler doesn't support '.option arch' asm directive. Update to binutils>=2.38 or clang>=17 or use '-Denable_asm=false'."*
 
-Both version thresholds are satisfied by any distribution released after 2022. Debian bookworm ships binutils 2.40; Debian sid ships 2.43. The constraint is not a practical barrier on any supported distro.
+| Toolchain | Minimum | Reason |
+|---|---|---|
+| GNU binutils / GAS | >= 2.38 | `.option arch, +v` directive used in all `src/riscv/64/*.S` files |
+| Clang | >= 17 | Same directive; earlier Clang integrated assemblers reject it (see issue #437 below) |
+| QEMU user-mode | RVV 1.0-capable | Required to run/test cross-compiled binaries on amd64 build hosts |
 
-**Cross-compilation (GCC)** -- official crossfile `package/crossfiles/riscv64-linux.meson`:
+Both thresholds are satisfied by any distribution released after 2022 (Debian bookworm ships binutils 2.40, sid ships 2.43); this is not a practical barrier on any currently supported distro.
+
+**Official cross-files** (`package/crossfiles/riscv64-linux.meson`, GCC):
 
 ```ini
 [binaries]
@@ -186,324 +176,296 @@ cpu = 'riscv64'
 endian = 'little'
 ```
 
-**Cross-compilation (Clang)** -- official crossfile `package/crossfiles/riscv64-linux-clang.meson`:
+`riscv64-linux-clang.meson` is identical except `c = 'clang'`, `cpp = 'clang++'`, and `c_args`/`c_link_args = '-target riscv64-linux-gnu'`.
 
-```ini
-[binaries]
-ar = 'riscv64-linux-gnu-ar'
-strip = 'riscv64-linux-gnu-strip'
-exe_wrapper = ['qemu-riscv64', '-L', '/usr/riscv64-linux-gnu/']
-
-[properties]
-c_args = '-target riscv64-linux-gnu'
-c_link_args = '-target riscv64-linux-gnu'
-
-[host_machine]
-cpu_family = 'riscv64'
-cpu = 'riscv64'
-```
-
-**Build commands.**
+**Build commands** (from `.gitlab-ci.yml`, `build-debian-riscv64` job):
 
 ```
-mkdir build && cd build
-meson setup .. --buildtype release \
-  --cross-file ../package/crossfiles/riscv64-linux.meson \
-  -Dtrim_dsp=false
-ninja
+meson setup build --buildtype release -Dtrim_dsp=false --werror \
+    --cross-file package/crossfiles/${CROSSFILE}.meson
+ninja -C build
+cd build && meson test -v
 ```
 
-To disable RVV assembly (e.g., toolchain older than binutils 2.38):
-
-```
-meson setup .. -Denable_asm=false --cross-file ...
-```
+Test job additionally passes `-Dtestdata_tests=true -Dlogging=false` and runs `meson test -v --timeout-multiplier 10` to compensate for QEMU emulation slowness. To disable RVV assembly entirely (e.g. on a pre-2.38-binutils toolchain): `-Denable_asm=false`.
 
 **Known build failures.**
 
-- [Issue #463](https://code.videolan.org/videolan/dav1d/-/issues/463) (OPEN, 2026-03-17): Static cross-compilation failure with `riscv-gnu-toolchain` (riscv64-unknown-linux-gnu) using `--default-library=static`. Meson cannot run test binaries via `qemu-riscv64` without the dynamic linker prefix. Workaround: prepend `CFLAGS='-static'` to the meson setup invocation. No upstream fix merged.
-
-- [Issue #437](https://code.videolan.org/videolan/dav1d/-/issues/437) (CLOSED, 2024-02-15): Clang 17 failed to assemble `itx.S` due to missing tail/mask agnostic flags (ta/ma) in `vsetvli` instructions. Fixed same day in [MR !1596](https://code.videolan.org/videolan/dav1d/-/merge_requests/1596), released in 1.4.1.
+- [Issue #463](https://code.videolan.org/videolan/dav1d/-/issues/463) (**open**, 2026-03-17): static cross-compilation with a `riscv64-unknown-linux-gnu-gcc` toolchain (`riscv-gnu-toolchain` 2026.03.13) fails Meson's sanity check with *"Executables created by c compiler ... are not runnable"* under `--default-library=static`. Root cause (implied): the sanity-check binary still links dynamically against target libgcc/libc, which the `qemu-riscv64` exe_wrapper cannot resolve without a matching sysroot. Workaround confirmed by the reporter: `CFLAGS='-static' meson setup ...`. No fix merged as of the harvest date.
+- [Issue #437](https://code.videolan.org/videolan/dav1d/-/issues/437) (**closed**, opened and closed within 3 days, 2024-02-15 to 2024-02-18): Clang 17's integrated assembler rejected `vsetvli` instructions in `riscv64_itx.S` lacking explicit tail-agnostic/mask-agnostic (`ta`/`ma`) operands, which GNU `as` accepts via implicit defaults. Fixed in [MR !1596](https://code.videolan.org/videolan/dav1d/-/merge_requests/1596), released in 1.4.1.
+- Downstream (not upstream GitLab): OpenBSD ports' `multimedia/dav1d` failed on riscv64 because llvm-16 did not support `.option arch` directives (fixed by moving to llvm-17); separately, because OpenBSD's riscv64 kernel at the time lacked Vector-extension support, disabling dav1d assembly on riscv64 was used as a workaround on that platform ([mail-archive thread](https://www.mail-archive.com/ports@openbsd.org/msg130547.html)).
 
 ---
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
-**Functional gaps (cannot execute correctly without C fallback).**
-
-All items listed below fall back silently to the C reference implementation. The fallback is always functionally correct; the impact is performance only.
+All gaps below fall back silently and correctly to the C reference implementation; the impact is performance only, not functional correctness.
 
 | Function group | riscv64 status | arm64 status | Impact |
 |---|---|---|---|
-| mc put/prep (8tap, bilinear) | Missing | Complete | High: dominant inter-frame decode path |
-| Loopfilter / deblocking | Missing | Complete | High: runs on every decoded frame |
-| Loop restoration (Wiener, SGR) | Missing | Complete | Medium: codec-dependent, off by default |
-| Film grain synthesis | Missing (generate_grain_y partial, unmerged) | Complete | Low-medium: film grain tracks only |
-| MSAC arithmetic coding | Missing | Complete | Medium: entropy decode is a consistent fraction of decode time |
-| refmvs (reference MV storage/retrieval) | Missing | Complete | Medium: present in all inter-coded content |
-| itx 32x32, 64x64, large rects | Missing | Complete | Medium: larger block sizes used in intra |
-| itx all sizes 16bpc | Missing | Complete | Medium: affects HDR/10-bit content |
-| CDEF direction finding | Missing (two competing open MRs) | Complete | Low-medium: quality metric, not decode correctness |
-| mc compound 16bpc (except blend) | Partial | Complete | Low-medium: affects 16bpc content |
-| ipred DC fill 16bpc | Missing | Complete | Low: DC fill is a minor intra mode |
-| ipred z1/z2/z3/filter_intra | Missing | Complete | Low-medium: directional intra modes |
+| mc put/prep (8-tap, bilinear) | Missing | Complete | **High** -- dominant inter-frame decode path (~72-76% of remaining CPU time per !1731 profiling) |
+| Loopfilter / deblocking | Missing (scaffolding only, !1858) | Complete | High -- runs on every decoded frame |
+| MSAC arithmetic coding | Missing | Complete | Medium-high -- entropy decode is a consistent fraction of decode time |
+| refmvs | Missing | Complete | Medium -- present in all inter-coded content |
+| itx 32x32/64x64 and large rectangles | Missing | Complete | Medium -- larger intra block sizes |
+| itx, all sizes, 16bpc | Missing | Complete | Medium -- affects HDR/10-bit content |
+| Loop restoration (Wiener, SGR) | Missing | Complete | Medium -- content-dependent, can be disabled |
+| Film grain (uv, fgy/fguv application) | Partial (y-plane generation only) | Complete | Low-medium -- film-grain content only |
+| CDEF direction finding | Missing (two competing open MRs) | Complete | Low-medium -- quality metric, not decode correctness |
+| mc compound, 16bpc (beyond blend) | Missing | Complete | Low-medium -- affects 16bpc content |
+| ipred angular (z1/z2/z3), DC 16bpc, cfl_ac | Missing | Complete | Low-medium |
 
-**Performance benchmarks (cycle counts, microbenchmark via `checkasm`).**
+**Representative performance data (checkasm microbenchmarks, real riscv64 silicon).**
 
-The following data comes from actual RISC-V silicon: Kendryte K230 (VLEN=128) and SpacemiT K1 / Banana Pi BPI-F3 (VLEN=256).
-
-mc compound functions (8bpc, Kendryte K230, VLEN=128):
+mc compound, 8bpc, Kendryte K230 (VLEN=128):
 
 | Function | C cycles | RVV cycles | Speedup |
 |---|---|---|---|
-| avg_w8 | 1054.9 | 139.1 | 7.58x |
 | avg_w32 | 13734.3 | 1226.3 | 11.20x |
 | w_mask_444_w32 | 33229.6 | 3289.2 | 10.10x |
-| w_mask_420_w64 | 81934.2 | 11243.9 | 7.29x |
 | emu_edge_w16 | 1447.9 | 287.6 | 5.03x |
 | warp_8x8_8bpc | 4549.7 | 2504.7 | 1.82x |
 
-mc compound functions (8bpc, SpacemiT K1, VLEN=256, selected):
+mc compound, 8bpc, SpacemiT K1 (VLEN=256): `w_mask_444_w64` 14.49x, `w_mask_420_w64` 12.01x, `emu_edge_w64` 4.41x vs C.
 
-| Function | C cycles | RVV cycles | Speedup |
-|---|---|---|---|
-| w_mask_444_w64 | 70695.9 | 4879.0 | 14.49x |
-| w_mask_420_w64 | 72313.0 | 6020.9 | 12.01x |
-| emu_edge_w64 | 4917.2 | 1115.0 | 4.41x |
+GSoC 2025 headline results ([final report](https://seoulsaram.org/articles/GSoC25/final-report/)): w_mask up to 16x (SpacemiT K1) / 9x (K230); emu_edge up to 5x; all changes passed checkasm and Argon conformance. End-to-end full-decode impact of the largest merged batch ([MR !1731](https://code.videolan.org/videolan/dav1d/-/merge_requests/1731), Bosphorus 1080p): baseline 8.97 fps -> 10.09 fps, a ~12.5% real-decode throughput gain from one MR, with the same MR's own profiling showing `prep_8tap_c`/`put_8tap_c` still dominant afterward.
 
-blend 16bpc, VLEN=512, Blackhole p100a:
+**Regressions at narrow widths (real, self-reported):** `intra_pred_dc_w4_16bpc_rvv` in open MR !1959 measured 220.0 cycles vs 138.3 for C (0.62x, i.e. slower than C), only turning positive from w16 (1.89x) upward. Open MR !1910 (ipred_h LMUL optimization) shows a minor regression at w4-w32 on VLEN=256 hardware (e.g. w4: 10.10x -> 10.01x vs C) traded for an improvement at w64 (6.21x -> 6.58x) -- an open, unresolved trade-off. This narrow-width overhead pattern (fixed vector-setup cost outweighing benefit below ~w8-w16) recurs across multiple RVV kernels.
 
-| Function | RVV ticks | Speedup vs C |
-|---|---|---|
-| blend_w16 | 189.6 | 11.11x |
-| blend_h_w128 | 151.5 | 49.50x |
+**Security hardening.** Data not available: no RISC-V-specific hardening flags (shadow stack, CFI) were found in the research.
 
-ipred h/v 16bpc (SpacemiT X60, VLEN=256):
-
-| Function | C ticks | RVV ticks | Speedup |
-|---|---|---|---|
-| ipred_h_w16 | 968.2 | 114.2 | 8.28x |
-| ipred_v_w16 | 516.0 | 67.6 | 7.34x |
-
-pal_pred 8bpc (hardware not specified in source data [NEEDS VERIFICATION]):
-
-| Function | C ticks | RVV ticks | Speedup |
-|---|---|---|---|
-| pal_pred_w64 | 8066.4 | 756.0 | 10.67x |
-| pal_pred_w4 | 171.8 | 211.6 | 0.79x |
-
-Note: pal_pred_w4 shows a regression (0.79x). RVV overhead at narrow widths is a documented pattern across multiple dav1d RVV functions; the break-even width is typically w8 or w16.
-
-**Summary of performance posture.** For implemented functions on VLEN=256 hardware, per-primitive speedups range from 4x to 14x. The dominant performance gap on real video is the missing mc put/prep path, not the per-primitive numbers.
-
-**Security hardening gaps.** Data not available: no RISC-V-specific security hardening flags (shadow stack, CFI, etc.) were examined in the research.
-
-**Floating-point semantics.** dav1d is an integer-only AV1 decoder. No floating-point arithmetic is used in any decode path. This is not a gap; it is a design property of AV1 and dav1d.
+**Floating-point / NaN semantics.** Not applicable -- dav1d is an integer-only AV1 decoder; no floating-point arithmetic appears in any decode path.
 
 ---
 
 ## 7. CI/CD Infrastructure
 
-**CI platform.** dav1d uses GitLab CI exclusively. There is no `.github/workflows/` directory and no GitHub Actions configuration. The canonical CI definition is `.gitlab-ci.yml` at `code.videolan.org/videolan/dav1d`.
+dav1d uses **GitLab CI exclusively**; there is no `.github/workflows/` directory. The canonical definition is [`.gitlab-ci.yml`](https://code.videolan.org/videolan/dav1d/-/blob/master/.gitlab-ci.yml), independently confirmed by direct fetch (via the GitHub mirror raw content, since `code.videolan.org` itself is behind an Anubis anti-bot wall).
 
-**riscv64 CI jobs.**
+**`build-debian-riscv64`** (build stage): extends `.debian-amd64-common` (an **amd64** Docker runner, image `registry.videolan.org/dav1d-debian-unstable:20260622120900`), sets `QEMU_CPU: rv64,v=true,vext_spec=v1.0,vlen=256,elen=64`, and runs a `parallel: matrix:` of two cross-files (`riscv64-linux` for GCC, `riscv64-linux-clang` for Clang).
 
-Two jobs exist, both unconditional (no `rules:` or `only:` restrictions):
+**`test-debian-riscv64`** (test stage): `needs: ["build-debian-riscv64"]`, runs with `-Dtestdata_tests=true --timeout-multiplier 10`, matrixed over four `QEMU_CPU` vector-length configurations (vlen=128/256/512/1024, each with `rvv_ta_all_1s=on, rvv_ma_all_1s=on, rvv_vl_half_avl=on`).
 
-`build-debian-riscv64`: Runs on amd64 Docker runner with image `registry.videolan.org/dav1d-debian-unstable:20260622120900`. Cross-compiles via a matrix of two crossfiles (GCC and Clang). Sets `QEMU_CPU=rv64,v=true,vext_spec=v1.0,vlen=256,elen=64`. Runs `meson test -v`.
-
-`test-debian-riscv64`: Depends on `build-debian-riscv64`. Runs the full test suite with `--timeout-multiplier 10` across a matrix of four QEMU vector lengths: vlen=128, 256, 512, 1024. Uses GCC crossfile only.
-
-**CI comparison table.**
+No `rules:`/`only:` restrictions gate either job -- they run on every commit and merge request.
 
 | Criterion | amd64 | arm64 | riscv64 |
 |---|---|---|---|
 | CI exists | Yes | Yes | Yes (since Feb 2024) |
 | Native hardware runners | Yes | Yes | No -- QEMU user-mode on amd64 |
 | Toolchains tested | GCC, Clang | GCC, Clang | GCC, Clang |
-| Vector width variants tested | N/A (fixed ISA) | N/A | vlen=128/256/512/1024 |
-| Correctness test suite runs | Yes | Yes | Yes |
+| Vector-width variants tested | N/A | N/A | vlen=128/256/512/1024 |
 | Fires on every commit | Yes | Yes | Yes |
-| RISE runners | N/A | N/A | No |
+| RISE-provided runners | N/A | N/A | No |
 
-**RISE runner involvement.** None. The CI runner is an amd64 Docker runner running QEMU user-mode emulation. There are no RISE-provided riscv64 hardware runners in dav1d's CI.
-
-**Key observation.** All riscv64 testing is emulated. The four-way VLEN test matrix provides coverage of the dispatch tiers, but no CI run executes on physical riscv64 silicon. Benchmark data from real hardware (K230, SpacemiT K1, Blackhole p100a) comes from contributor-supplied results in MR descriptions, not from automated CI.
+**Key observation.** All riscv64 CI is QEMU-emulated; no pipeline run executes on physical riscv64 silicon, so performance regressions (e.g. the warp_8x8 1.82x-speedup ceiling, or the narrow-width regressions in !1910/!1959) are not detectable in CI -- the real-hardware benchmark numbers throughout this report come from contributor-supplied MR descriptions (Kendryte K230, SpacemiT K1/X60, Banana Pi BPI-F3, OrangePi RV2, Blackhole p100a), not from automated CI infrastructure. There is no RISE-provided riscv64 hardware in dav1d's runner pool.
 
 ---
 
 ## 8. Distribution and Release Status
 
-**Upstream binaries.** dav1d does not publish prebuilt riscv64 binaries. GitHub Releases contains only a source tarball for the ancient 0.1.0 version. The canonical release mechanism is source tarballs distributed via `code.videolan.org`; users are expected to build from source or use distribution packages.
+**Upstream binaries.** dav1d does not publish prebuilt riscv64 (or any architecture's) binaries; the canonical release mechanism is source tarballs from `code.videolan.org`. Users build from source or consume distribution packages.
 
-**Distribution package status.**
+**PyPI.** No PyPI package named `dav1d` (or plausible variants: `dav1d-py`, `pydav1d`, `python-dav1d`, `dav1dpy`) exists at all -- confirmed via repeated HTTP 404 from `pypi.org/pypi/dav1d/json`. This is not a riscv64-specific gap; the "wheel" distribution model is simply not applicable to this C library. RISE's own wheel-builder index (`riseproject.gitlab.io/python/wheel_builder/`) does not list dav1d among its ~70 tracked packages, consistent with this.
+
+**Distribution packages (riscv64 confirmed directly).**
 
 | Distribution | Version | riscv64 status | Source |
 |---|---|---|---|
-| Debian sid | 1.5.3-1+b2 | Built and installable; builder rv-manda-04; status "Maybe-Successful" (Debian terminology for log-parse ambiguity, not a failure) | [Debian buildd](https://buildd.debian.org/status/package.php?p=dav1d&suite=sid) |
-| Ubuntu 24.04 (Noble) | 1.4.1-1build1 | Native riscv64 .deb in universe; also libdav1d-dev, libdav1d7, libheif-plugin-dav1d | [packages.ubuntu.com/noble/dav1d](https://packages.ubuntu.com/noble/dav1d) |
-| Arch Linux RISC-V | Unknown version | Not in FTBFS list (absence is a positive signal, but version not confirmed) | archriscv.felixc.at |
-| Fedora RISC-V | Unknown | Data not available: koji.fedoraproject.org and dl.fedoraproject.org blocked by Anubis bot protection during research | -- |
-| PyPI | N/A | dav1d does not exist as a PyPI package (HTTP 404) | pypi.org/pypi/dav1d/json |
+| Ubuntu 26.04 "resolute" | 1.5.3-1 | `dav1d`, `libdav1d-dev`, `libdav1d7` (plus `libheif-plugin-dav1d`, `librust-dav1d-dev`, `librust-dav1d-sys-dev`) all build for riscv64 alongside amd64/arm64/armhf/i386/ppc64el/s390x | [packages.ubuntu.com](https://packages.ubuntu.com/search?keywords=dav1d&suite=resolute&searchon=names) |
+| Arch Linux RISC-V | 1.5.4-1 | `dav1d-1.5.4-1-riscv64.pkg.tar.zst`, `dav1d-doc`, `gst-plugin-dav1d`, `vlc-plugin-dav1d` confirmed present in the live `extra/` repo directory listing | [archriscv.felixc.at/repo/extra/](https://archriscv.felixc.at) |
+| Ubuntu 24.04 "noble" | 1.4.1-1build1 | Native riscv64 `.deb` in universe | packages.ubuntu.com/noble/dav1d |
+| Debian sid | 1.5.3-1+b2 | Built; builder rv-manda-04; log-parse status "Maybe-Successful" | [Debian buildd](https://buildd.debian.org/status/package.php?p=dav1d&suite=sid) |
+| Fedora RISC-V | Unknown | Data not available: `koji.fedoraproject.org`/`dl.fedoraproject.org` were blocked by Anubis-style bot protection during research | -- |
 
-**To get a working binary on riscv64.** Install `dav1d` from the system package manager on Debian/Ubuntu. For the latest upstream code (post-1.5.3), build from source using the crossfile procedure in Section 5. The static cross-compilation issue (#463) requires the `CFLAGS='-static'` workaround if building statically.
+Arch's riscv64 build (1.5.4-1) is newer than Ubuntu resolute's (1.5.3-1), consistent with the September 2026 package snapshot.
+
+**To get a working binary on riscv64.** Install `dav1d`/`libdav1d-dev` from Debian/Ubuntu or Arch Linux RISC-V. For the latest upstream code, build from source using the crossfile procedure in Section 5; apply the `CFLAGS='-static'` workaround if statically linking (issue #463).
 
 ---
 
 ## 9. Dependencies
 
-dav1d is deliberately minimal. It has no external runtime library dependencies with riscv64 issues. There is no JIT engine, no crypto library, no compression library, and no memory allocator dependency.
+dav1d is deliberately minimal at runtime. The dependency table below covers all direct dependencies plus indirect ones surfaced during research (mainly the optional `dav1dplay` example's GPU-rendering chain).
 
-| Dependency | Role | riscv64 build | riscv64 test | riscv64 release | Notes |
-|---|---|---|---|---|---|
-| Meson >= 0.54 | Build system | Supported; `riscv64` is a recognized `cpu_family` | N/A | Available on Debian riscv64 | No issues |
-| GNU binutils >= 2.38 | RVV assembly (GAS) | Debian bookworm ships 2.40, sid ships 2.43 | Tested via CI + QEMU | Debian binutils 2.43 available on riscv64 | Hard minimum for RVV ASM |
-| Clang >= 17 | Alternative assembler | LLVM 17+ ships on Debian/Ubuntu riscv64 | CI `riscv64-linux-clang` job | Available | Hard minimum if using Clang path |
-| NASM >= 2.14 | x86 SIMD only | Not applicable to riscv64 | Not applicable | Not applicable | Never invoked on riscv64 |
-| pthreads / librt | Multithreading | Standard on all Linux riscv64 toolchains | Tested | Available | No issues |
-| RVV 1.0 CPU (runtime) | SIMD acceleration | Build falls back gracefully if absent (-Denable_asm=false) | CI tests vlen=128/256/512/1024 | dav1d 1.4.0+ | Missing RVV causes silent C fallback, not a build failure |
+| Dependency | Role | Criticality | riscv64 build | riscv64 test | riscv64 release | Notes |
+|---|---|---|---|---|---|---|
+| Meson | Build system (>= 0.54) | Critical (build) | Pure-Python, arch-independent; `riscv64` is a recognized `cpu_family` | N/A (build tool) | Ships `Architecture: all` on Debian/Ubuntu -- trivially available on riscv64 in practice, though a project-graph query snapshot lacked an explicit riscv64 binding (a data-coverage artifact, not a real gap) | None |
+| Ninja | Default Meson backend, implicit and required | Critical (build) | Builds natively on riscv64 (portable C++) | No dedicated upstream riscv CI; built/tested via Debian/Ubuntu riscv64 autobuilders | Found in Ubuntu 26.04 riscv64 (resolute) | None |
+| GNU binutils | RVV assembly (GAS); `.option arch, +v` directive support | Critical (build) | Requires >= 2.38 (Debian bookworm ships 2.40, sid 2.43) | Tested via CI + QEMU | Available on riscv64 | Hard minimum; unmet-toolchain fallback is `-Denable_asm=false` (loses RVV) |
+| LLVM | Alternative assembler/compiler path (Clang) | Optional (build) | Requires Clang >= 17 for the same `.option arch` directive; historical build break below 17 (issue #437) | CI `riscv64-linux-clang` job matrix | Available on Debian/Ubuntu riscv64 | Only needed if building with the Clang cross-file |
+| glibc | Provides pthreads, libm, libdl -- dav1d's only truly required runtime libs | Critical (runtime) | Mature, Tier-1-class riscv64 port | Extensively tested (Debian/Ubuntu riscv64 porterbox, upstream glibc riscv CI) | Found in Ubuntu 26.04 riscv64 (resolute) | None |
+| QEMU | `exe_wrapper` for meson's riscv64 cross-file (`qemu-riscv64 -L /usr/riscv64-linux-gnu/`); dav1d's own CI test harness | Critical (test) | N/A -- host-side emulation tool | Extensively exercised; this is literally dav1d's riscv64 test mechanism, matrixed across 4 VLEN configs | Found in Ubuntu 26.04 riscv64 (resolute) | None |
+| SDL2 | Optional: `dav1dplay` example player (`enable_examples` defaults false) | Optional (runtime) | riscv64 support since ~2.24; builds cleanly | Not part of dav1d's own CI matrix; community-level testing only | Found in Ubuntu 26.04 riscv64 (resolute) | Not on the critical path -- off by default |
+| pkg-config | Dependency discovery used by Meson for `dependency('sdl2')`, `dependency('vulkan')`, `dependency('threads')`, etc. | Optional (build) | Native riscv64 builds | Standard, well-tested tool | Found in Ubuntu 26.04 riscv64 (resolute) | None |
+| NASM (indirect, x86 only) | x86/x86_64 SIMD assembler, gated behind `host_machine.cpu_family().startswith('x86')` | N/A on riscv64 | N/A -- never invoked on this architecture | N/A | Found in Ubuntu 26.04 riscv64 (resolute) as a host tool, but irrelevant here | Not a real riscv64 dependency |
+| libplacebo (indirect) | Optional GPU-accelerated rendering backend for `dav1dplay`, pulled in only when SDL2 is found | Optional (runtime) | Meson-based portable C; builds on riscv64 | Limited real-hardware coverage vs. x86/ARM | Found in Ubuntu 26.04 riscv64 (resolute) | Depends on Vulkan for its accelerated path |
+| Vulkan (indirect) | Used by `dav1dplay` via libplacebo when a Vulkan ICD is present | Optional (runtime) | Loader/headers build fine on riscv64 | Loader-level: fine. Real hardware-accelerated ICDs on riscv64 boards are still scarce | Found in Ubuntu 26.04 riscv64 (resolute) | Affects only the optional, disabled-by-default example player, not `libdav1d`/the `dav1d` CLI |
+| Doxygen (indirect) | Optional docs generation (`enable_docs` defaults false) | Optional (build) | Builds/runs on riscv64 | Standard tool, routinely built by Debian/Ubuntu | Found in Ubuntu 26.04 riscv64 (resolute) | Off by default |
+| Graphviz (indirect) | Optional, used by Doxygen for diagrams when docs are enabled | Optional (build) | Builds/runs on riscv64 | Standard tool | Found in Ubuntu 26.04 riscv64 (resolute) | Off by default |
 
-No dependencies recurse into riscv64-specific issues. The project is self-contained.
+**Bottom line.** No dependency in this table has an unmet critical riscv64 gap. The only real caveat is immature Vulkan GPU-driver (ICD) availability on riscv64 hardware, which affects only the optional `dav1dplay` example, not `libdav1d` or the `dav1d` CLI decoder.
 
 ---
 
 ## 11. Known Bugs and Active Issues
 
-**Open correctness and build bugs.**
+**Open.**
 
 | ID | Title | Status | Severity | Notes |
 |---|---|---|---|---|
-| [#463](https://code.videolan.org/videolan/dav1d/-/issues/463) | Failed to build with static linking for riscv64 | Open (2026-03-17) | Medium | Static cross-compile with riscv64-unknown-linux-gnu fails; CFLAGS='-static' workaround confirmed; no fix merged |
+| [#435](https://code.videolan.org/videolan/dav1d/-/issues/435) | RVV SIMD (master tracker) | Open (created 2024-02-02, last updated 2025-11-26) | High (scope) | Enumerates remaining work: 8-tap/bilinear mc, deblock, loop restoration, MSAC, refmvs, most film grain and 16bpc paths. Checklist is stale relative to master -- several items (ipred_h, 16bpc ipred_v/h, pal_pred, generate_grain_y) have since merged but are not reflected as checked |
+| [#463](https://code.videolan.org/videolan/dav1d/-/issues/463) | Failed to build with static linking for riscv64 | Open (2026-03-17) | Medium | Static cross-compile with `riscv64-unknown-linux-gnu-gcc` fails Meson's sanity check; `CFLAGS='-static'` workaround confirmed; no fix merged |
 
-**Closed correctness bugs.**
+**Closed.**
 
 | ID | Title | Closed | Notes |
 |---|---|---|---|
-| [#447](https://code.videolan.org/videolan/dav1d/-/issues/447) | RVV itx 4x4 does not pass the argon tests | 2024-10-13 | Correctness regression in RVV inverse transform 4x4; fixed within 4 days |
-| [#437](https://code.videolan.org/videolan/dav1d/-/issues/437) | dav1d 1.4.0 asm fails to build on riscv64 with clang 17 | 2024-02-15 | Missing ta/ma flags in vsetvli; fixed same day in MR !1596 |
+| [#447](https://code.videolan.org/videolan/dav1d/-/issues/447) [NEEDS VERIFICATION -- referenced in the existing analysis but not independently re-fetched in this pass] | RVV itx 4x4 does not pass the Argon tests | 2024-10-13 | Fixed within days via MR !1737 |
+| [#437](https://code.videolan.org/videolan/dav1d/-/issues/437) | dav1d 1.4.0 asm fails to build on riscv64 with clang 17 (not gas) | 2024-02-18 | Missing ta/ma flags in `vsetvli`; fixed in MR !1596, released 1.4.1 |
 
-**Open feature/optimization tracking.**
+**Open merge requests (RISC-V, 7 total, verified via GitLab API against the `search=riscv` MR list of 61: 7 open / 37 merged / 17 closed-unmerged):**
 
-| ID | Title | Status | Notes |
+| MR | Title | Author | Notes |
 |---|---|---|---|
-| [#435](https://code.videolan.org/videolan/dav1d/-/issues/435) | RVV SIMD master tracker | Open (2024-02-02) | 26 of 120 checklist items complete; last updated 2025-11-26 |
-| [MR !1825](https://code.videolan.org/videolan/dav1d/-/merge_requests/1825) | riscv64: Add dav1d_set_vlen_max() API call | Open MR (2025-12-23) | Awaiting review by rbultje; enables safe VLEN capping on buggy hardware; 5 discussion notes |
-| [MR !1858](https://code.videolan.org/videolan/dav1d/-/merge_requests/1858) | riscv/loopfilter: Add basic RVV scaffolding | Open MR (2026-03-23) | Initial scaffolding only; no optimized kernels yet; pipeline passing |
-| [MR !1890](https://code.videolan.org/videolan/dav1d/-/merge_requests/1890) | riscv64/filmgrain: generate_grain_y 8bpc RVV | Open MR (2026-06-07) | First film grain function; 8bpc only |
-| [MR !1894](https://code.videolan.org/videolan/dav1d/-/merge_requests/1894) | riscv/cdef: Implement cdef_find_dir* for vlen>=256 | Open MR (2026-06-14) | Requires rebase before merge; pure asm approach |
-| [MR !1735](https://code.videolan.org/videolan/dav1d/-/merge_requests/1735) | riscv64/cdef: filter and dir intrinsic functions | Open MR (2024-10-09) | Open 8+ months; C intrinsics approach; may be superseded by !1894 for the dir portion |
+| [!1960](https://code.videolan.org/videolan/dav1d/-/merge_requests/1960) | riscv/cdef: Implement cdef_find_dir | Najmus Sakib Afsan | Depends on closed-unmerged !1894; K230 benchmark 2.65x/2.78x vs C, self-reported 5.7% timing noise |
+| [!1959](https://code.videolan.org/videolan/dav1d/-/merge_requests/1959) | riscv64/ipred: ipred_dc, all variants, 16bpc | Mohd Zaid | w4 shows a 0.62x regression (slower than C); net win from w16 up |
+| [!1958](https://code.videolan.org/videolan/dav1d/-/merge_requests/1958) | riscv64/filmgrain: generate_grain_uv, 8bpc | Mohd Zaid | First chroma film-grain progress; speedup scales with AR order (1.1x-3.0x) |
+| [!1910](https://code.videolan.org/videolan/dav1d/-/merge_requests/1910) | riscv/ipred_h: minimum-LMUL optimization | Najmus Sakib Afsan | Mixed results: minor regression w4-w32 on VLEN=256, improvement at w64 |
+| [!1858](https://code.videolan.org/videolan/dav1d/-/merge_requests/1858) | riscv/loopfilter: basic RVV scaffolding | S Rajath | WIP only; coverage checks explicitly bypassed for scaffolding code |
+| [!1825](https://code.videolan.org/videolan/dav1d/-/merge_requests/1825) | riscv64: add `dav1d_set_vlen_max()` API call | Nathan E. Egge | Submitted 2025-12-23, assigned to Ronald S. Bultje, still unreviewed/unmerged as of the harvest date |
+| [!1735](https://code.videolan.org/videolan/dav1d/-/merge_requests/1735) | riscv64/cdef: filter and dir intrinsic functions | jerry tsai | Open 12+ months; C-intrinsics approach, competes with !1960/!1894 for the `dir` portion |
 
-**Blocking relationship note.** MR !1825 (vlen_max API) has been pending review since December 2025. It is a prerequisite for correct behavior on hardware that reports a VLEN but behaves incorrectly at that width. The companion VLEN=512 blend MRs (!1824, !1826) were merged without it; they rely on the same runtime dispatch that !1825 is intended to make safe.
+No open MR targets the 8-tap/bilinear `mc put`/`prep` gap identified as the dominant remaining decode cost.
 
 ---
 
 ## 12. Objections and Upstream Blockers
 
-**No stated objections to riscv64 support.** The maintainers have accepted every riscv64 MR that met code style requirements. The README explicitly identifies RISC-V as a target architecture. Maintainer review latency (MR !1735 open 8+ months, MR !1825 open 6+ months) appears to reflect bandwidth constraints, not rejection of the platform.
+**No stated objections to riscv64 support.** Every riscv64 MR meeting code-style requirements has been merged historically; the README explicitly names RISC-V as a target architecture, and review latency (!1735 open 12+ months, !1825 open since December 2025) reflects maintainer bandwidth, not platform rejection.
 
 **Technical blockers.**
 
-1. **mc put/prep absent, no open MR.** The 8-tap and bilinear interpolation filters are the highest-impact missing functions and the oldest items in the tracking checklist. No contributor has opened an MR targeting them. This is a contributor gap, not a maintainer objection.
+1. **mc put/prep absent, no contributor assigned.** The highest-impact gap (Section 4) has no open MR. This is a contributor-supply gap, not a maintainer objection.
+2. **MR !1825 (`dav1d_set_vlen_max()`) stalled since December 2025.** Assigned to Ronald S. Bultje but unmerged. This is a structurally important open API change, since dav1d's RVV kernels increasingly branch on detected VLEN at runtime (128/256/512-bit variants exist for several mc functions) and real hardware varies widely (T-Head C910, SpacemiT K1, Kendryte K230, OrangePi RV2).
+3. **Competing CDEF-direction approaches.** !1735 (intrinsics, 12+ months old) and !1960 (asm, dependent on the closed-unmerged !1894) both target `cdef_find_dir`; neither is merged. Resolution requires a maintainer decision or one MR absorbing the other.
+4. **No native CI runners.** All riscv64 CI runs under QEMU emulation; correctness is covered across 4 VLEN configs, but performance regressions (e.g. the warp_8x8 1.82x speedup ceiling, or narrow-width regressions in open MRs !1910/!1959) are undetectable in CI and rely on contributor-supplied hardware benchmarks.
 
-2. **MR !1825 (vlen_max API) stalled.** Assigned to rbultje with 5 review comments but no merge after 6 months. Until merged, callers cannot cap VLEN at runtime. On hardware with VLEN discrepancies, the VLEN=512 code paths (merged in !1824, !1826) may produce incorrect output [NEEDS VERIFICATION -- the specific hardware failure mode was not demonstrated in the research data, only the motivation stated in the MR description].
+**Organizational blockers.** None identified. VideoLAN accepts contributions without a CLA; the BSD-2-Clause license imposes no constraint on commercial use.
 
-3. **Competing CDEF dir approaches.** MR !1735 (C intrinsics, open 8+ months) and MR !1894 (pure asm, 12 days old, needs rebase) both target `cdef_find_dir`. Neither is ready to merge. Resolution requires either a maintainer decision on approach or one MR absorbing the other.
-
-4. **No native CI runners.** All CI runs under QEMU. Performance regressions are not detectable in CI. Correctness is covered; performance validation requires hardware.
-
-**Organizational blockers.** None identified. VideoLAN accepts contributions without CLA. BSD-2-Clause license imposes no constraint on commercial use or hardware deployment.
-
-**Acceptance probability for new contributions.** High, based on the track record of merges since February 2024. The primary bottleneck is contributor supply for the remaining gaps (mc put/prep, loopfilter kernels, loop restoration, MSAC), not maintainer resistance.
+**Acceptance probability for new contributions.** High, based on the merge track record since 2022 and the breadth of independent contributors active through 2026. The bottleneck is contributor supply against the remaining gaps (mc put/prep, loopfilter, MSAC, loop restoration), not maintainer resistance.
 
 ---
 
-## 13. Investment Analysis
+## 13. Readiness Assessment
 
-RISE has no prior investment in dav1d. All prior riscv64 work was done by independent contributors (primarily Nathan E. Egge) without RISE funding. The full scope below is uncontested.
+- **Color:** yellow (optimization-minimal -- the primary CI-based grade is blue, capped to yellow by the optimization modifier)
+- **Release provider:** distro
+- **Optimization-purpose project:** yes
+- **Optimization level:** minimal
 
-### 13.1 Functional Enablement
+**Operations lacking RISC-V implementations.** The 8-tap and bilinear motion-compensation `put`/`prep` kernels -- the dominant inter-frame decode cost (~72-76% of remaining CPU time per [MR !1731](https://code.videolan.org/videolan/dav1d/-/merge_requests/1731)'s own profiling of `prep_8tap_c`/`put_8tap_c`) -- remain entirely unoptimized scalar C on riscv64, with no open MR targeting them. Deblocking/loopfilter, MSAC entropy decoding, loop restoration, and most film-grain and 16bpc paths remain unimplemented per the open master tracking issue [#435](https://code.videolan.org/videolan/dav1d/-/issues/435). The RVV (V) extension is already used for everything that is implemented; closing the remaining gap is a matter of authoring additional RVV kernels for the above operations, not adopting a new ISA extension -- Zba/Zbb (already in use) would likely remain sufficient for the address-generation/bit-manipulation needs of an 8-tap kernel.
 
-The dominant functional gap is mc put/prep (8-tap and bilinear interpolation). This is the hot path for all inter-frame decoding. No MR has been opened; no contributor is publicly working on it. Enabling this gap requires authoring and upstreaming ~600-800 lines of hand-tuned RVV assembly per bitdepth, validated against checkasm with real hardware.
+**Justification.** dav1d's GitLab CI (`.gitlab-ci.yml`) runs `build-debian-riscv64` and `test-debian-riscv64` jobs unconditionally on every commit, cross-compiling with GCC and Clang and running the full test suite under QEMU across VLEN=128/256/512/1024 ([source](https://code.videolan.org/videolan/dav1d/-/blob/master/.gitlab-ci.yml)), and upstream publishes only source tarballs (no riscv64 binaries), with Debian/Ubuntu packaging the riscv64 builds instead ([packages.ubuntu.com](https://packages.ubuntu.com/search?keywords=dav1d&suite=resolute&searchon=names)) -- on CI evidence alone this would be a blue grade. But dav1d is explicitly positioned as "the reference fast decoder" with hand-tuned SIMD as its value proposition, and its own profiling data ([MR !1731](https://code.videolan.org/videolan/dav1d/-/merge_requests/1731)) shows that after the largest merged RVV optimization batch, `prep_8tap_c`/`put_8tap_c` motion compensation is still entirely unoptimized scalar C on riscv64, and deblocking, MSAC, loop restoration, and most film grain/16bpc paths remain unimplemented per the open master tracking issue [#435](https://code.videolan.org/videolan/dav1d/-/issues/435). Because the single most-executed hot path is uncovered, this is a "minimal" optimization gap, which caps the grade at yellow.
 
-Secondary functional gaps: loopfilter (deblocking), MSAC (arithmetic decoding), refmvs, loop restoration. MR !1858 (loopfilter scaffolding) is open but contains no optimized kernels. MSAC and refmvs have no open MRs.
+**Pending work that could change the grade.** No open MR yet targets the critical 8-tap/bilinear `mc put`/`prep` gap. Relevant open MRs: [!1960](https://code.videolan.org/videolan/dav1d/-/merge_requests/1960) (cdef_find_dir), [!1959](https://code.videolan.org/videolan/dav1d/-/merge_requests/1959) (ipred_dc 16bpc), [!1958](https://code.videolan.org/videolan/dav1d/-/merge_requests/1958) (filmgrain generate_grain_uv), [!1910](https://code.videolan.org/videolan/dav1d/-/merge_requests/1910) (ipred_h LMUL optimization), [!1858](https://code.videolan.org/videolan/dav1d/-/merge_requests/1858) (loopfilter RVV scaffolding, WIP-only), [!1825](https://code.videolan.org/videolan/dav1d/-/merge_requests/1825) (dav1d_set_vlen_max API, stalled in review since December 2025). RISE's System Libraries Working Group tracks dav1d's RISC-V progress as an ecosystem-readiness item ([system-libraries-wg issue #20](https://github.com/riseproject-dev/system-libraries-wg/issues/20)) but has not funded the port directly -- work is led by Nathan Egge (now at Google) plus a growing set of independent contributors, and was a mentored 2025 Google Summer of Code project. RISE's `python-wheels` CI separately merged a Bazel-build patch adding riscv64 support to a vendored copy of dav1d inside tensorstore ([PR #1865](https://github.com/riseproject-dev/python-wheels/pull/1865)), unrelated to upstream dav1d itself.
 
-### 13.2 Performance Optimization
+---
 
-Existing RVV implementations have known optimization headroom:
+## 14. Investment Analysis
 
-- warp_8x8 achieves only 1.82x speedup on K230 and 1.34x on BPI-F3 -- substantially below the 5-10x typical for other mc functions. The function uses scatter/gather (`vluxseg8ei32.v`), which is expensive on current microarchitectures.
-- pal_pred_w4 shows a 0.79x regression (slower than C) at narrow width. This is a known RVV overhead pattern.
-- MR !1740 (vnclip optimization) showed 5-10% per-transform improvement on itx functions, indicating micro-optimization headroom remains.
-- The `dav1d_set_vlen_max()` API (MR !1825) needs a reviewer push to get merged.
-- VLEN-tiered dispatch is only implemented for mc compound functions. Other modules (ipred, cdef) use a single code path regardless of hardware VLEN.
+RISE has no prior direct investment in dav1d itself. Its only touchpoint is the tracking issue in `system-libraries-wg` (monitoring, not funding) and the unrelated tensorstore Bazel patch in `python-wheels`. All riscv64 code in dav1d to date was authored by independent/Google-affiliated contributors without RISE funding. The scope below is therefore uncontested.
 
-### 13.3 CI/CD Infrastructure
+### 14.1 Functional Enablement
 
-All riscv64 CI runs under QEMU. No performance regression detection is possible. Adding a native riscv64 hardware runner (e.g., a SpacemiT K1 or SiFive HiFive Unmatched board) to the VideoLAN GitLab runner pool would enable:
+The dominant functional gap is mc put/prep (8-tap and bilinear interpolation), the hot path for all inter-frame decoding, with no MR open against it. This requires authoring and upstreaming hand-tuned RVV assembly per bitdepth, validated against checkasm and Argon conformance on real hardware.
 
-- Cycle-accurate performance benchmarks in CI
-- Detection of warp_8x8-class performance regressions before merge
-- Validation of VLEN dispatch correctness on physical silicon at each tier
+Secondary functional gaps: loopfilter/deblocking (scaffolding-only MR !1858 needs to progress to real kernels), MSAC arithmetic decoding (no open MR), loop restoration (Wiener/SGR, no open MR against upstream, only an unmerged personal WIP branch), refmvs (no open MR), and the remaining film-grain/16bpc-itx/CDEF-direction items already tracked by open MRs !1958/!1959/!1960/!1735.
 
-This requires runner hardware and a VideoLAN runner registration, not code changes.
+### 14.2 Performance Optimization
 
-### 13.4 Ecosystem Enablement
+Existing RVV implementations have known headroom:
 
-dav1d has no dependent package ecosystem requiring separate enablement work (no plugins, no language bindings with riscv64 gaps). Section 10 is omitted per the report rules.
+- `warp_8x8` achieves only 1.82x on K230 (VLEN=128), well below the 5-14x typical for other mc functions -- likely due to its use of expensive scatter/gather (`vluxseg8ei32.v`).
+- Narrow-width regressions are a recurring pattern: `pal_pred_w4` and `intra_pred_dc_w4_16bpc` both run slower than C, and open MR !1910 shows a similar trade-off unresolved for `ipred_h`.
+- VLEN-tiered dispatch (128/256/512-bit variants) is implemented only for select mc compound functions; ipred and CDEF use a single code path regardless of detected VLEN.
+- MR !1825 (`dav1d_set_vlen_max()`) needs a reviewer push to unblock a structurally important VLEN-safety API that has sat since December 2025.
 
-### 13.5 Summary Table
+### 14.3 CI/CD Infrastructure
+
+All riscv64 CI runs under QEMU; no performance regression is detectable pre-merge. Adding a native riscv64 hardware runner (e.g. a SpacemiT K1 or similar board) to VideoLAN's GitLab runner pool would enable cycle-accurate performance benchmarks in CI, catch warp_8x8-class regressions before merge, and validate VLEN-dispatch correctness on physical silicon. This is a runner-registration/logistics item, not a code change.
+
+### 14.4 Ecosystem Enablement
+
+Not applicable -- dav1d has no dependent package ecosystem requiring separate riscv64 enablement (no plugins, no language-binding packages with riscv64-specific gaps beyond the already-packaged `librust-dav1d-dev`/`librust-dav1d-sys-dev`). Section 10 is omitted per the report scope rules.
+
+### 14.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
 | Functional | mc put/prep: 8-tap and bilinear RVV, 8bpc | 6-8 | Contributor | Critical |
 | Functional | mc put/prep: 8-tap and bilinear RVV, 16bpc | 4-6 | Contributor | High |
-| Functional | Loopfilter (deblocking) RVV kernels, 8bpc | 6-8 | Contributor | Critical |
+| Functional | Loopfilter (deblocking) RVV kernels, 8bpc (build on !1858 scaffolding) | 6-8 | Contributor | Critical |
 | Functional | Loopfilter RVV kernels, 16bpc | 4-6 | Contributor | High |
-| Functional | MSAC arithmetic coding RVV | 4-6 | Contributor | High |
+| Functional | MSAC arithmetic-coding RVV | 4-6 | Contributor | High |
 | Functional | Loop restoration (Wiener + SGR) RVV | 6-8 | Contributor | Medium |
 | Functional | refmvs load/save/splat_tmvs RVV | 2-3 | Contributor | Medium |
-| Functional | Film grain complete (MR !1890 + remainder) | 4-6 | Contributor | Low |
-| Functional | CDEF dir: resolve !1735 vs !1894 and merge | 1-2 | Contributor + reviewer | Medium |
-| Functional | MR !1825 (vlen_max API): maintainer review push | 0.5 | Reviewer (rbultje) | High |
-| Performance | mc warp_8x8 optimization (1.3x is below floor) | 2-4 | Contributor | Medium |
-| Performance | VLEN-tiered dispatch for ipred and cdef modules | 2-4 | Contributor | Medium |
-| Performance | itx 32x32/64x64 and large rect transforms | 4-6 | Contributor | Medium |
-| CI/CD | Native riscv64 hardware runner in VideoLAN GitLab | 1-2 (logistics) | VideoLAN + RISE | High |
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
+| Functional | Film grain: land !1958 (generate_grain_uv) and fgy/fguv application kernels | 4-6 | Contributor + reviewer | Medium |
+| Functional | CDEF dir: resolve !1735 vs !1960/!1894 and merge | 1-2 | Contributor + reviewer | Medium |
+| Functional | Merge review push for MR !1825 (vlen_max API) | 0.5 | Reviewer (Ronald S. Bultje) | High |
+| Performance | mc warp_8x8 optimization (1.82x is below the typical mc floor) | 2-4 | Contributor | Medium |
+| Performance | VLEN-tiered dispatch for ipred and CDEF modules | 2-4 | Contributor | Medium |
+| Performance | itx 32x32/64x64 and large rectangular transforms | 4-6 | Contributor | Medium |
+| Performance | Resolve narrow-width regressions in !1910/!1959 before merge | 1-2 | Contributor | Medium |
+| CI/CD | Native riscv64 hardware runner in VideoLAN GitLab pool | 1-2 (logistics) | VideoLAN + RISE | High |
 
 ---
 
 ## 15. References
 
-- [videolan/dav1d GitHub mirror](https://github.com/videolan/dav1d)
 - [code.videolan.org/videolan/dav1d -- canonical repository](https://code.videolan.org/videolan/dav1d)
+- [github.com/videolan/dav1d -- read-only GitHub mirror](https://github.com/videolan/dav1d)
 - [GitLab Issue #435 -- RVV SIMD master tracker](https://code.videolan.org/videolan/dav1d/-/issues/435)
 - [GitLab Issue #437 -- clang 17 vsetvli build failure](https://code.videolan.org/videolan/dav1d/-/issues/437)
-- [GitLab Issue #447 -- RVV itx 4x4 argon test failure](https://code.videolan.org/videolan/dav1d/-/issues/447)
 - [GitLab Issue #463 -- static linking failure for riscv64](https://code.videolan.org/videolan/dav1d/-/issues/463)
-- [MR !1591 -- riscv64/itx: Add 16x16 8bpc transforms (foundational itx batch)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1591)
-- [MR !1596 -- riscv64/itx: fix missing tail/mask agnostic flags](https://code.videolan.org/videolan/dav1d/-/merge_requests/1596)
+- [.gitlab-ci.yml -- riscv64 CI job definitions](https://code.videolan.org/videolan/dav1d/-/blob/master/.gitlab-ci.yml)
+- [MR !1591 -- riscv64/itx: 16x16 8bpc transforms](https://code.videolan.org/videolan/dav1d/-/merge_requests/1591)
+- [MR !1596 -- riscv64/itx: missing tail/mask agnostic flags](https://code.videolan.org/videolan/dav1d/-/merge_requests/1596)
+- [MR !1600 -- riscv64/itx: rectangular transform sizes](https://code.videolan.org/videolan/dav1d/-/merge_requests/1600)
 - [MR !1608 -- CI: Add riscv64 clang build](https://code.videolan.org/videolan/dav1d/-/merge_requests/1608)
 - [MR !1629 -- riscv: Check for standards compliant RVV 1.0+](https://code.videolan.org/videolan/dav1d/-/merge_requests/1629)
+- [MR !1690 -- checkasm: fix RISC-V vector clobbering](https://code.videolan.org/videolan/dav1d/-/merge_requests/1690)
+- [MR !1731 -- RVV Optimization batch (profiling data)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1731)
 - [MR !1735 -- riscv64/cdef: filter and dir intrinsic functions (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1735)
+- [MR !1737 -- riscv: Fix Argon test failure](https://code.videolan.org/videolan/dav1d/-/merge_requests/1737)
 - [MR !1764 -- riscv: Enable FreeBSD/OpenBSD elf_aux_info() support](https://code.videolan.org/videolan/dav1d/-/merge_requests/1764)
+- [MR !1777 -- riscv: Fix building on non-Linux OS's](https://code.videolan.org/videolan/dav1d/-/merge_requests/1777)
 - [MR !1797 -- riscv64/mc: Add w_mask functions](https://code.videolan.org/videolan/dav1d/-/merge_requests/1797)
 - [MR !1808 -- riscv64/mc: Add emu_edge function](https://code.videolan.org/videolan/dav1d/-/merge_requests/1808)
-- [MR !1824 -- riscv64/mc: Add VLEN=512 8bpc blend functions](https://code.videolan.org/videolan/dav1d/-/merge_requests/1824)
+- [MR !1824 -- riscv64/mc: VLEN=512 8bpc blend functions](https://code.videolan.org/videolan/dav1d/-/merge_requests/1824)
 - [MR !1825 -- riscv64: Add dav1d_set_vlen_max() API call (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1825)
-- [MR !1826 -- riscv64/mc16: Add VLEN=512 16bpc blend functions](https://code.videolan.org/videolan/dav1d/-/merge_requests/1826)
-- [MR !1857 -- riscv64/ipred_h: Implement ipred_h in RISC-V asm](https://code.videolan.org/videolan/dav1d/-/merge_requests/1857)
-- [MR !1858 -- riscv/loopfilter: Add basic RVV scaffolding (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1858)
+- [MR !1826 -- riscv64/mc16: VLEN=512 16bpc blend functions](https://code.videolan.org/videolan/dav1d/-/merge_requests/1826)
+- [MR !1856 -- riscv64/ipred_v: remove redundant vxrm set inst.](https://code.videolan.org/videolan/dav1d/-/merge_requests/1856)
+- [MR !1857 -- riscv64/ipred_h: implement ipred_h in RISC-V asm](https://code.videolan.org/videolan/dav1d/-/merge_requests/1857)
+- [MR !1858 -- riscv/loopfilter: basic RVV scaffolding (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1858)
 - [MR !1883 -- riscv64/ipred: ipred_v and ipred_h 16bpc RVV](https://code.videolan.org/videolan/dav1d/-/merge_requests/1883)
-- [MR !1889 -- riscv64/itx: Match stack allocation of 16x16 itx](https://code.videolan.org/videolan/dav1d/-/merge_requests/1889)
-- [MR !1890 -- riscv64/filmgrain: generate_grain_y 8bpc RVV (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1890)
-- [MR !1894 -- riscv/cdef: Implement cdef_find_dir* for vlen>=256 (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1894)
-- [MR !1908 -- riscv64/ipred: pal_pred 8bpc and 16bpc RVV](https://code.videolan.org/videolan/dav1d/-/merge_requests/1908)
+- [MR !1889 -- riscv64/itx: match stack allocation of 16x16 itx](https://code.videolan.org/videolan/dav1d/-/merge_requests/1889)
+- [MR !1890 -- riscv64/filmgrain: generate_grain_y 8bpc RVV](https://code.videolan.org/videolan/dav1d/-/merge_requests/1890)
+- [MR !1908 -- riscv64/ipred: pal_pred 8/16bpc RVV](https://code.videolan.org/videolan/dav1d/-/merge_requests/1908)
+- [MR !1910 -- riscv/ipred_h: minimum-LMUL optimization (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1910)
+- [MR !1958 -- riscv64/filmgrain: generate_grain_uv 8bpc (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1958)
+- [MR !1959 -- riscv64/ipred: ipred_dc 16bpc, all variants (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1959)
+- [MR !1960 -- riscv/cdef: implement cdef_find_dir (open)](https://code.videolan.org/videolan/dav1d/-/merge_requests/1960)
+- [MR !1977 -- riscv/filmgrain: fix SIGSEGV in generate_grain_y](https://code.videolan.org/videolan/dav1d/-/merge_requests/1977)
+- [dav1d 1.5 "Sonic" release notes](https://jbkempf.com/blog/2025/dav1d-1.5/)
+- [dav1d 1.5.4 release notes](https://jbkempf.com/blog/2026/dav1d-1.5.4/)
+- [GSoC 2025 final report -- RVV optimization for dav1d](https://seoulsaram.org/articles/GSoC25/final-report/)
+- [RISC-V Summit Europe 2024 -- Nathan Egge slide deck](https://riscv-europe.org/summit/2024/media/proceedings/plenary/Wed-11-45-Nathan-Egge.pdf)
+- [Video Dev Days Nov 2024 -- Nathan Egge slide deck](https://people.videolan.org/~negge/vdd24.pdf)
+- [Ubuntu 26.04 "resolute" dav1d packages](https://packages.ubuntu.com/search?keywords=dav1d&suite=resolute&searchon=names)
+- [Ubuntu 24.04 "noble" dav1d package](https://packages.ubuntu.com/noble/dav1d)
 - [Debian buildd status for dav1d](https://buildd.debian.org/status/package.php?p=dav1d&suite=sid)
-- [Ubuntu 24.04 Noble dav1d package](https://packages.ubuntu.com/noble/dav1d)
+- [Arch Linux RISC-V package repository (extra)](https://archriscv.felixc.at)
+- [RISE Project -- System Libraries WG issue #20 (dav1d tracking)](https://github.com/riseproject-dev/system-libraries-wg/issues/20)
+- [RISE python-wheels PR #1865 -- tensorstore riscv64 build (vendored dav1d patch)](https://github.com/riseproject-dev/python-wheels/pull/1865)
+- [RISE Project members](https://riseproject.dev)
 - [RISE Project blog](https://riseproject.dev/blog)
