@@ -264,11 +264,13 @@
   
 </h1>
     
-<p><strong>Author:</strong> Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;
-<strong>Date:</strong> 2026-07-20
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for elfutils
-<strong>Audience:</strong> Technical leadership, resource allocation strategy
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items verified against only one source are marked [NEEDS VERIFICATION].</p><hr />
+
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> blue<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for elfutils<br />
+<strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -281,117 +283,19 @@
 <p>elfutils is the canonical ELF and DWARF processing library suite on Linux. It provides:</p>
 
 <ul>
-  <li><strong>libelf</strong>: Low-level ELF file read/write (replaces libelf from BFD)</li>
+  <li><strong>libelf</strong>: low-level ELF file read/write (an alternative to BFD’s libelf)</li>
   <li><strong>libdw</strong>: DWARF consumer (CFI, line tables, type info, abbreviations)</li>
-  <li><strong>libdwfl</strong>: Higher-level debugger integration layer (module loading, stack unwinding, live process inspection via ptrace)</li>
-  <li><strong>libcpu</strong>: Per-architecture disassemblers (used by eu-objdump)</li>
-  <li><strong>Command-line tools</strong>: eu-strip, eu-readelf, eu-objdump, eu-stack, eu-elflint, eu-nm, eu-addr2line, debuginfod/debuginfod-find</li>
+  <li><strong>libdwfl</strong>: higher-level debugger integration layer (module loading, stack unwinding, live process inspection via ptrace)</li>
+  <li><strong>libcpu</strong>: per-architecture disassemblers (used by eu-objdump)</li>
+  <li><strong>debuginfod</strong>: a source/debuginfo distribution server, client library, and CLI</li>
+  <li><strong>Command-line tools</strong>: eu-strip, eu-readelf, eu-objdump, eu-stack, eu-elflint, eu-nm, eu-addr2line, debuginfod-find</li>
 </ul>
 
-<p>The project is the ELF/DWARF backend for systemtap, perf annotation, bpftrace symbol resolution, GDB’s build-ID index, RPM debuginfo packaging, Fedora/Red Hat’s debuginfod infrastructure, and several Linux kernel profiling tools. It is not affiliated with any foundation. Hosting is on <a href="https://sourceware.org/elfutils/">sourceware.org</a>, which is Red Hat infrastructure. The governance model is mailing-list review plus maintainer push: Mark Wielaard (mark@klomp.org) is the gatekeeper; approval is signaled by “Looks good. Pushed.” All patches go to <code class="language-plaintext highlighter-rouge">elfutils-devel@sourceware.org</code>. There is no formal contributor agreement or CLA.</p>
+<p>The project is the ELF/DWARF backend for systemtap, perf symbol annotation, bpftrace symbol resolution, GDB’s build-ID index, RPM debuginfo packaging, Fedora/Red Hat’s debuginfod infrastructure, and several kernel profiling tools.</p>
 
-<p>Corporate contributors identified in RISC-V-related commits: Red Hat, SUSE, SiFive (copyright in riscv_retval.c). No public governance document lists a formal tiered support policy. Acceptance of new architecture backends is permissive: the RISC-V backend was merged in 2018 before riscv64 CI hardware existed.</p>
+<p>elfutils is hosted on <a href="https://sourceware.org/elfutils/">sourceware.org</a> (git, Bugzilla, mailing list, Patchwork), not GitHub; unofficial read-only GitHub mirrors exist (e.g. <code class="language-plaintext highlighter-rouge">sailfishos-mirror/elfutils</code>, <code class="language-plaintext highlighter-rouge">fedora-riscv/elfutils</code>) but carry no project activity of their own. Since 2023, Sourceware is a member project of the Software Freedom Conservancy, which acts as fiscal sponsor and legal/governance host. Sourceware’s own governance is a Project Leadership Committee (PLC) of 8 people with a rule that no more than 2 members may work for the same employer (members include Mark J. Wielaard, Ian Lance Taylor, Tom Tromey, Jon Turney, Elena Zannoni, Frank Ch. Eigler, Christopher Faylor, Ian Kelling). Day-to-day elfutils maintenance is informal and mailing-list-driven (<code class="language-plaintext highlighter-rouge">elfutils-devel@sourceware.org</code>), led in practice by <strong>Mark J. Wielaard</strong> (Red Hat), who is also a Sourceware PLC member. There is no MAINTAINERS or CODEOWNERS file in the repository (confirmed by a direct clone); only AUTHORS, THANKS, CONTRIBUTING, CONDUCT and SECURITY exist. Patches use a Linux-kernel-style <code class="language-plaintext highlighter-rouge">Signed-off-by</code> DCO process; there is no CLA. License is dual GPLv2+/LGPLv3+ for the libraries and backends, GPLv3+ for the command-line utilities.</p>
 
-<p>elfutils is not a member project of the RISE Project. No RISE blog posts, working group deliverables, or wheel builder entries reference elfutils.</p><hr />
-<h2 id="2-port-history-and-upstreaming-timeline">
-  
-  
-    <a href="#2-port-history-and-upstreaming-timeline" class="anchor-heading" aria-labelledby="2-port-history-and-upstreaming-timeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Port History and Upstreaming Timeline
-  
-  
-</h2>
-    
-
-<p>All RISC-V work is fully upstream. There are no downstream-only patches in any major distribution (Debian, Ubuntu, Arch Linux RISC-V carry no riscv64-specific patches for elfutils).</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Event</th>
-      <th>Source</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>2018-04-19</td>
-      <td>Initial RISC-V backend: riscv_reloc.def, riscv_symbol.c, riscv_regs.c, riscv_cfi.c, test binary hello_riscv64.ko.bz2. Author: Andreas Schwab (SUSE Labs).</td>
-      <td><a href="https://sourceware.org/elfutils/">commit, elfutils NEWS 0.171</a></td>
-    </tr>
-    <tr>
-      <td>2018-09</td>
-      <td>elfutils 0.174 released: riscv64 core file support added</td>
-      <td><a href="https://sourceware.org/elfutils/">sourceware.org/elfutils</a></td>
-    </tr>
-    <tr>
-      <td>2018-11</td>
-      <td>elfutils 0.175: ADD/SUB relocation handling for RISC-V</td>
-      <td><a href="https://sourceware.org/elfutils/">sourceware.org/elfutils</a></td>
-    </tr>
-    <tr>
-      <td>2019</td>
-      <td>elfutils 0.176: riscv_retval.c (return value location), riscv64_corenote.c</td>
-      <td><a href="https://sourceware.org/elfutils/">sourceware.org/elfutils</a></td>
-    </tr>
-    <tr>
-      <td>~2020</td>
-      <td>elfutils 0.178: RISC-V disassembler (libcpu/riscv_disasm.c) added</td>
-      <td><a href="https://sourceware.org/elfutils/">sourceware.org/elfutils</a></td>
-    </tr>
-    <tr>
-      <td>2022-08</td>
-      <td>Andreas Schwab: sync elf.h for EF_RISCV_RVE, EF_RISCV_TSO, STO_RISCV_VARIANT_CC, SHT_RISCV_ATTRIBUTES, PT_RISCV_ATTRIBUTES, DT_RISCV_VARIANT_CC; implement segment/section/dynamic tag handlers; fix elflint for PT_RISCV_ATTRIBUTES; readelf SHT_RISCV_ATTRIBUTES display</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git">sourceware.org git</a></td>
-    </tr>
-    <tr>
-      <td>2023-06-17</td>
-      <td>Tests: fix run-strip-reloc.sh for RISC-V ELF relocation sections</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=127e3831c169851e796496582213a94965337696">commit 127e3831</a></td>
-    </tr>
-    <tr>
-      <td>2023-06-26</td>
-      <td>Add IRELATIVE, PLT32, SET_ULEB128, SUB_ULEB128 to riscv_reloc.def (psABI sync)</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=485b87a2e53045d2284a6649d529ab3aaa22e127">commit 485b87a2</a></td>
-    </tr>
-    <tr>
-      <td>2024-Q1</td>
-      <td>Sync elf.h: add NT_RISCV_CSR, NT_RISCV_VECTOR note types</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git">sourceware.org git</a></td>
-    </tr>
-    <tr>
-      <td>2024-03-19</td>
-      <td>riscv_retval.c: partial implementation of flatten_aggregate (Bug 31142). Author: Mark Wielaard</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=669b648111d3bc27cd4756879f5fe5a18515de77">commit 669b648</a></td>
-    </tr>
-    <tr>
-      <td>2024-07-31</td>
-      <td>Remove seven obsolete relocations from riscv_reloc.def. Authors: Andreas Schwab/Aaron Merey</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=46c5c98ee7ce2108f51ca8ecb0e81d55797c8470">commit 46c5c98e</a></td>
-    </tr>
-    <tr>
-      <td>2024-12-30</td>
-      <td>riscv_symbol.c: fix false elflint warning for <em>GLOBAL_OFFSET_TABLE</em> with .got.plt layout. Author: Mark Wielaard</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=a4ece6a521c181e43854a5691d8c2828d326a925">commit a4ece6a5</a></td>
-    </tr>
-    <tr>
-      <td>2025-06-03</td>
-      <td>riscv_disasm.c: extend mnebuf to 50 chars, fixing _FORTIFY_SOURCE abort on wide illegal instructions (Bug 33006). Author: Mark Wielaard</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=07bd923cea4b883ca2357e9fc80babcedd242b37">commit 07bd923c</a></td>
-    </tr>
-    <tr>
-      <td>2025-11-24</td>
-      <td>Fix const-correctness in riscv_disasm.c (C23 bsearch const void* issue). Authors: Andreas Schwab/Aaron Merey</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=4a5cf8be906d5991e7527e69e3f2ceaa74811301">commit 4a5cf8be</a></td>
-    </tr>
-    <tr>
-      <td>2026-05-31</td>
-      <td>riscv_disasm.c: fix two out-of-bounds reads in CSR mnemonic array lookups. Author: Aaron Merey</td>
-      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=003d1c8bc8be6c45fc39eb1b886def17482ed3a5">commit 003d1c8b</a></td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p><strong>Key contributors by organization:</strong></p>
+<p><strong>Corporate affiliations of key RISC-V contributors</strong> (no single corporate sponsor, but concentrated in a few companies):</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -404,33 +308,169 @@
   <tbody>
     <tr>
       <td>Andreas Schwab</td>
-      <td>SUSE Labs</td>
-      <td>Initial RISC-V backend author; most prolific RISC-V contributor</td>
+      <td>SUSE</td>
+      <td>Authored the original RISC-V backend (2018); most prolific RISC-V contributor (10 commits to the riscv backend)</td>
     </tr>
     <tr>
       <td>Mark Wielaard</td>
-      <td>Red Hat-adjacent (personal domain)</td>
-      <td>Primary maintainer; merger, flatten_aggregate, disasm fixes</td>
+      <td>Red Hat</td>
+      <td>Lead maintainer; merged flatten_aggregate and disassembler fixes</td>
     </tr>
     <tr>
-      <td>Aaron Merey</td>
-      <td>Red Hat</td>
-      <td>Disassembler fixes, const-correctness</td>
+      <td>Jim Wilson</td>
+      <td>SiFive (at the time)</td>
+      <td>3 commits improving riscv64 core-file/return-value support, Dec 2018</td>
     </tr>
     <tr>
       <td>William Cohen</td>
       <td>Red Hat</td>
-      <td>Bug tracking (Bug 27925)</td>
+      <td>LP64/LP64F ABI return-value support, 2021</td>
     </tr>
     <tr>
-      <td>Jim Wilson</td>
-      <td>Formerly SiFive/Google</td>
-      <td>riscv_retval.c initial authorship (SiFive copyright 2018)</td>
+      <td>Ilya Leoshkevich</td>
+      <td>IBM</td>
+      <td>lvalue/rvalue reference return support, 2023</td>
+    </tr>
+    <tr>
+      <td>Ulrich Drepper</td>
+      <td>Independent (formerly Red Hat/Google/Akamai)</td>
+      <td>Added the RISC-V disassembler, 2019</td>
+    </tr>
+    <tr>
+      <td>Aaron Merey</td>
+      <td>Red Hat</td>
+      <td>Disassembler fixes, const-correctness, CSR out-of-bounds fixes</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The port is fully upstream. No patches live outside the mainline <code class="language-plaintext highlighter-rouge">sourceware.org/git/elfutils.git</code> tree.</p><hr />
+<p>For comparison, the later LoongArch backend was contributed by Loongson engineers (Youling Tang, Liwei Ge) following the same “company engineer submits a patch series, gets it merged” pattern used for RISC-V. elfutils has no formal architecture-tiering policy and no RFC/vote/foundation-approval gate for new backends: a new architecture is accepted through ordinary patch review on <code class="language-plaintext highlighter-rouge">elfutils-devel</code>.</p>
+
+<p><strong>RISE Project involvement:</strong> elfutils is not a RISE member or backed project. A full inventory of all 35 RISE blog posts (May 2024 to Sep 2026, via the site’s sitemap) and the site’s own search contain zero mentions of elfutils, libdw, libelf, or debuginfod. elfutils is also not listed on RISE’s Python wheel_builder page (79 packages tracked, elfutils absent), and a check of the <code class="language-plaintext highlighter-rouge">riseproject-dev/system-libraries-wg</code> GitHub issue tracker (18 issues) found zero elfutils references. The only concrete, verifiable touchpoint found is indirect: <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> PR #2398 (“pystack: Add version 1.7.1”) compiles elfutils from source as a native build dependency of pystack’s nanobind C++ extension (which links against libdw/libelf), built and tested on RISE’s own bare-metal RISC-V Runners (<code class="language-plaintext highlighter-rouge">riseproject-dev/riscv-runner</code>, Scaleway EM-RV1 hardware). That PR explicitly notes there is no riscv64 equivalent of the <code class="language-plaintext highlighter-rouge">elfutils-aarch64-signal-frame.patch</code> used for AArch64 native-unwind support, i.e. a documented per-architecture native-unwind gap surfaces even in this downstream consumer. This is an incidental build dependency inside RISE’s Python package pipeline, not a funded or tracked RISE project.</p>
+<h2 id="2-port-history-and-upstreaming-timeline">
+  
+  
+    <a href="#2-port-history-and-upstreaming-timeline" class="anchor-heading" aria-labelledby="2-port-history-and-upstreaming-timeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Port History and Upstreaming Timeline
+  
+  
+</h2>
+    
+
+<p>All RISC-V work is fully upstream. No downstream-only patches were found in Debian, Ubuntu, or Arch Linux RISC-V packaging for elfutils.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Event</th>
+      <th>Source</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2018-04-19</td>
+      <td>First RISC-V commit (<code class="language-plaintext highlighter-rouge">470aba95790b52d70b6bd78b4c4a481ab791a4c9</code>, “Add support for RISC-V”): initial riscv64 backend module, <code class="language-plaintext highlighter-rouge">backends/riscv_init.c</code>. Author: Andreas Schwab (SUSE).</td>
+      <td><a href="https://sourceware.org/elfutils/">Governance/history research, direct clone</a></td>
+    </tr>
+    <tr>
+      <td>2018-Q2/Q3</td>
+      <td>Initial backend files follow: riscv_reloc.def, riscv_symbol.c, riscv_regs.c, riscv_cfi.c.</td>
+      <td><a href="https://sourceware.org/elfutils/">elfutils homepage</a></td>
+    </tr>
+    <tr>
+      <td>2018-12</td>
+      <td>Jim Wilson (SiFive): 3 commits improving riscv64 core-file and return-value support.</td>
+      <td>Contributor-history research</td>
+    </tr>
+    <tr>
+      <td>2019-09-07</td>
+      <td>Ulrich Drepper posts the RISC-V disassembler patch (<code class="language-plaintext highlighter-rouge">libcpu/riscv_disasm.c</code>, ~1501 lines, rv32/rv64, compressed+standard encodings, float/system instructions). Reviewed by Mark Wielaard and Jim Wilson (SiFive), who flags the deliberate exclusion of the then-unstable Vector and Bit-Manipulation extensions.</td>
+      <td><a href="https://sourceware.org/pipermail/elfutils-devel/2019q3/001999.html">2019q3 thread</a></td>
+    </tr>
+    <tr>
+      <td>2019-11-27</td>
+      <td>elfutils 0.178 released, confirmed shipping the RISC-V disassembler per the release announcement.</td>
+      <td><a href="https://sourceware.org/legacy-ml/elfutils-devel/2019-q4/msg00219.html">Release announcement</a></td>
+    </tr>
+    <tr>
+      <td>2022-10 to 11</td>
+      <td>Andreas Schwab / Mark Wielaard: PT_RISCV_ATTRIBUTES / SHT_RISCV_ATTRIBUTES object-attribute support (elf.h sync, elflint zero-p_memsz handling, readelf attribute printing via a new <code class="language-plaintext highlighter-rouge">has_gnu_attributes</code> ebl flag). Root RFC thread authored by Mark Wielaard, not Andreas Schwab as earlier summarized; final committed diff text was not independently retrievable (Bugzilla/gitweb blocked by anti-bot protection), so the mechanism is confirmed via mailing-list discussion, not the literal merged patch.</td>
+      <td><a href="https://sourceware.org/pipermail/elfutils-devel/2022q4/005408.html">RFC thread</a></td>
+    </tr>
+    <tr>
+      <td>2022-11-02</td>
+      <td>elfutils 0.188 released; <code class="language-plaintext highlighter-rouge">SHT_RISCV_ATTRIBUTES</code> confirmed present in <code class="language-plaintext highlighter-rouge">src/readelf.c</code> at the 0.188 tag, absent at 0.187.</td>
+      <td>Source-diff verification</td>
+    </tr>
+    <tr>
+      <td>2021</td>
+      <td>William Cohen (Red Hat): LP64/LP64F ABI return-value support.</td>
+      <td>Contributor-history research</td>
+    </tr>
+    <tr>
+      <td>2023-06-17</td>
+      <td>Test fix: <code class="language-plaintext highlighter-rouge">run-strip-reloc.sh</code> updated for RISC-V ELF relocation sections.</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=127e3831c169851e796496582213a94965337696">Commit 127e3831</a></td>
+    </tr>
+    <tr>
+      <td>2023-06-26</td>
+      <td>psABI sync: add IRELATIVE, PLT32, SET_ULEB128, SUB_ULEB128 to riscv_reloc.def.</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=485b87a2e53045d2284a6649d529ab3aaa22e127">Commit 485b87a2</a></td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>Ilya Leoshkevich (IBM): lvalue/rvalue reference return support.</td>
+      <td>Contributor-history research</td>
+    </tr>
+    <tr>
+      <td>2024-03-19</td>
+      <td>Bugzilla backends/31142 fixed (“riscv pass_by_flattened_arg not implemented”): partial <code class="language-plaintext highlighter-rouge">flatten_aggregate</code> implementation in <code class="language-plaintext highlighter-rouge">riscv_retval.c</code> for same-base-type struct members. SiFive’s Palmer Dabbelt (RISC-V psABI maintainer) reviewed and flagged that the psABI also allows a struct with one float and one integer member to be split across an FP and a GP register, a case the initial patch did not handle; Mark Wielaard acknowledged the gap and committed to extending the implementation. Author: Mark Wielaard.</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=669b648111d3bc27cd4756879f5fe5a18515de77">Commit 669b6481</a>, <a href="https://www.mail-archive.com/elfutils-devel@sourceware.org/msg06864.html">review thread</a></td>
+    </tr>
+    <tr>
+      <td>2024-03-19</td>
+      <td>elfutils 0.192 released; commit confirmed present (absent in the 0.191 tag source, present in 0.192).</td>
+      <td>Tag-diff verification</td>
+    </tr>
+    <tr>
+      <td>2024-07-31</td>
+      <td>Remove seven obsolete relocations from riscv_reloc.def. Authors: Andreas Schwab / Aaron Merey.</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=46c5c98ee7ce2108f51ca8ecb0e81d55797c8470">Commit 46c5c98e</a></td>
+    </tr>
+    <tr>
+      <td>2024-12-30</td>
+      <td>Fix false elflint <code class="language-plaintext highlighter-rouge">_GLOBAL_OFFSET_TABLE_</code> warning for RISC-V <code class="language-plaintext highlighter-rouge">.got.plt</code> layout (lld-linked binaries). Author: Mark Wielaard. First shipped in 0.193.</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=a4ece6a521c181e43854a5691d8c2828d326a925">Commit a4ece6a5</a></td>
+    </tr>
+    <tr>
+      <td>2025-05-27</td>
+      <td>Bug tools/33006 opened (Xiaoguo Li, CUPL; Xudong Cao, UCAS), against elfutils 0.192: AddressSanitizer-detected stack buffer overflow in <code class="language-plaintext highlighter-rouge">riscv_disasm.c:1308</code> (<code class="language-plaintext highlighter-rouge">mnebuf</code> overflow disassembling crafted illegal instructions up to 24 bytes). Mark Wielaard’s first triage closed it NOTABUG, characterizing it as a <code class="language-plaintext highlighter-rouge">_FORTIFY_SOURCE</code>-triggered <code class="language-plaintext highlighter-rouge">snprintf</code> truncation rather than an exploitable overflow; the reporter reopened and reproduced on current main before the fix.</td>
+      <td><a href="https://www.mail-archive.com/elfutils-devel@sourceware.org/msg08170.html">Bug report thread</a></td>
+    </tr>
+    <tr>
+      <td>2025-06-03</td>
+      <td>Bug 33006 fixed: <code class="language-plaintext highlighter-rouge">mnebuf</code> enlarged to 50 chars. Author: Mark Wielaard. First shipped in elfutils 0.194 (confirmed present in the 0.194 tag shortlog; tag dated 2025-10-25).</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=07bd923cea4b883ca2357e9fc80babcedd242b37">Commit 07bd923c</a></td>
+    </tr>
+    <tr>
+      <td>2025-11-24</td>
+      <td>Fix const-correctness in <code class="language-plaintext highlighter-rouge">riscv_disasm.c</code> (C23 <code class="language-plaintext highlighter-rouge">bsearch</code> const-<code class="language-plaintext highlighter-rouge">void*</code> prototype mismatch broke clang <code class="language-plaintext highlighter-rouge">-Werror</code> builds for 0.191-0.194). Authors: Andreas Schwab / Aaron Merey. First shipped in 0.195.</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=4a5cf8be906d5991e7527e69e3f2ceaa74811301">Commit 4a5cf8be</a></td>
+    </tr>
+    <tr>
+      <td>2026-05-31</td>
+      <td>Fix two out-of-bounds reads in <code class="language-plaintext highlighter-rouge">riscv_disasm.c</code> CSR mnemonic lookup arrays (crafted-ELF triggerable). Author: Aaron Merey. Carried in the 0.196 changelog per the August 2026 release notes.</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=003d1c8bc8be6c45fc39eb1b886def17482ed3a5">Commit 003d1c8b</a></td>
+    </tr>
+    <tr>
+      <td>2026 (summer)</td>
+      <td>elfutils 0.196 released (current upstream release; confirmed via a direct repo clone showing <code class="language-plaintext highlighter-rouge">AC_INIT</code> version 0.196 with copyright lines through 2026, and the release announcement).</td>
+      <td><a href="http://www.mail-archive.com/elfutils-devel@sourceware.org/msg09512.html">0.196 release announcement</a></td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>No single master tracking bug for “the riscv64 port” exists; support was added incrementally across release cycles, each reviewed and merged directly to <code class="language-plaintext highlighter-rouge">master</code> by Mark Wielaard with no foundation approval gate.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -440,17 +480,9 @@
 </h2>
     
 
-<p>elfutils has no published formal tiering policy. There is no document analogous to GCC’s host/target tier list or LLVM’s tier policy. The effective tier is determined by:</p>
+<p>elfutils publishes no formal tiering policy (no document analogous to GCC’s host/target tier list or LLVM’s tier policy). The effective tier is determined in practice by whether a Buildbot CI worker exists for the architecture, whether it is listed as supported on the project homepage, and whether the maintainer accepts patches for it. riscv64 satisfies all three.</p>
 
-<ol>
-  <li>Whether a Buildbot CI worker exists for the architecture</li>
-  <li>Whether the architecture is listed on the project homepage as supported</li>
-  <li>Whether patches for the architecture are accepted by the maintainer</li>
-</ol>
-
-<p>riscv64 satisfies all three criteria as of 2021.</p>
-
-<p><strong>CI coverage comparison:</strong></p>
+<p>riscv64 is explicitly listed as a supported ELF backend architecture on the <a href="https://sourceware.org/elfutils/">elfutils homepage</a>. Releases are not formally gated on riscv64 CI passing (there is no documented release-blocking policy for any architecture), but the CI runs on every push regardless.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -459,39 +491,31 @@
       <th>Buildbot builder present</th>
       <th>Worker type</th>
       <th>Active</th>
-      <th>Passing</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>amd64/x86_64</td>
-      <td>Yes (multiple: Debian, Fedora, CentOS, openSUSE)</td>
+      <td>Yes (Debian, Fedora, CentOS, openSUSE builders)</td>
       <td>x86_64 VM</td>
-      <td>Yes</td>
       <td>Yes</td>
     </tr>
     <tr>
       <td>arm64</td>
-      <td>Yes (elfutils-debian-arm64)</td>
+      <td>Yes (Debian builder)</td>
       <td>arm64 VM</td>
-      <td>Yes</td>
       <td>Yes</td>
     </tr>
     <tr>
       <td>riscv64</td>
-      <td>Yes (elfutils-ubuntu-riscv, builder ID 274)</td>
-      <td>StarFive physical board, Linux 6.17 riscv64</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">elfutils-ubuntu-riscv</code>, <code class="language-plaintext highlighter-rouge">elfutils-try-ubuntu-riscv</code>)</td>
+      <td>5 physical StarFive VisionFive V2 boards</td>
       <td>Yes</td>
-      <td>Yes (331 builds, last pass 2026-06-21)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The <code class="language-plaintext highlighter-rouge">elfutils-debian-riscv</code> builder (ID 272) has only 2 builds (both 2023 failures) and is currently offline (no masterids). Only the Ubuntu-based riscv64 builder is active.</p>
-
-<p>riscv64 is listed as a first-class supported ELF backend on the <a href="https://sourceware.org/elfutils/">elfutils homepage</a>. Releases are not gated on riscv64 CI passing, but the CI exists and does gate tree health for the Ubuntu RISC-V platform.</p>
-
-<p>The project’s stance on riscv32 is explicitly limited: Mark Wielaard stated publicly that “we accept 32-bit RISC-V ELF files, but don’t know anything about how it handles calling conventions.” Only riscv64 ABIs (lp64, lp64f, lp64d) are implemented in riscv_retval.c and riscv_initreg.c. This report covers riscv64 only.</p><hr />
+<p>The project’s stance on riscv32 is explicitly limited: Mark Wielaard has stated that elfutils “accepts 32-bit RISC-V ELF files, but don’t know anything about how it handles calling conventions.” Only riscv64 ABIs (lp64, lp64f, lp64d) are implemented in <code class="language-plaintext highlighter-rouge">riscv_retval.c</code> and <code class="language-plaintext highlighter-rouge">riscv_initreg.c</code>. This report covers riscv64 only.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -501,9 +525,9 @@
 </h2>
     
 
-<p>elfutils is a pure C project. There is no JIT, no SIMD dispatch, no cryptographic implementation, and no assembly code in the source tree. All architecture-specific code lives in <code class="language-plaintext highlighter-rouge">backends/</code> (ELF/DWARF processing) and <code class="language-plaintext highlighter-rouge">libcpu/</code> (disassembly). There is no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory.</p>
+<p>elfutils is a pure C project: no JIT, no SIMD dispatch, no cryptographic implementation, and no assembly code anywhere in the source tree, for any architecture (this is a general project characteristic, not a riscv64-specific gap). Architecture-specific code lives in <code class="language-plaintext highlighter-rouge">backends/</code> (ELF/DWARF processing) and <code class="language-plaintext highlighter-rouge">libcpu/</code> (disassembly), using an <code class="language-plaintext highlighter-rouge">&lt;arch&gt;_*.c</code> filename-prefix convention rather than an <code class="language-plaintext highlighter-rouge">arch/riscv/</code> subdirectory.</p>
 
-<p><strong>RISC-V backend files (9 files):</strong></p>
+<p><strong>RISC-V backend files, independently reviewed against current upstream source (direct clone of <code class="language-plaintext highlighter-rouge">sourceware.org/git/elfutils.git</code>):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -511,68 +535,76 @@
       <th>File</th>
       <th>Purpose</th>
       <th>Quality</th>
-      <th>Gaps</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>riscv_regs.c</td>
-      <td>DWARF register name/number table (64 regs: 32 int + 32 FPU)</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_reloc.def</code></td>
+      <td>Relocation type table</td>
       <td>Full</td>
-      <td>None</td>
+      <td>Complete, including TLS and ADD/SUB relaxation relocations</td>
     </tr>
     <tr>
-      <td>riscv_cfi.c</td>
-      <td>DWARF CFI ABI defaults (callee-saved regs, CFA=SP, ra=reg1)</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_retval.c</code> (413 lines)</td>
+      <td>DWARF return-value location for lp64/lp64f/lp64d ABIs</td>
+      <td>Full for simple cases, partial overall</td>
+      <td>Correctly implements GPR/FPR passing, struct “flattening” for same-base-type members, pass-by-reference for large aggregates, and complex floats; mixed int+float structs, nested structs, and unions remain unimplemented (acknowledged partial in the 2024-03-19 commit)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">riscv_cfi.c</code></td>
+      <td>DWARF CFI ABI defaults</td>
       <td>Full</td>
-      <td>None</td>
+      <td>Correct CFA=sp, ra=x1, all callee-saved GPRs/FPRs (s0-s11, fs0-fs11) marked same-value</td>
     </tr>
     <tr>
-      <td>riscv_corenote.c + riscv64_corenote.c</td>
-      <td>Core dump note parsing (RV32 + RV64 via BITS macro)</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_regs.c</code></td>
+      <td>DWARF register name/number table</td>
       <td>Full</td>
-      <td>None</td>
+      <td>All 64 int+FP register names (x0-x31, f0-f31 with ABI aliases)</td>
     </tr>
     <tr>
-      <td>riscv_reloc.def</td>
-      <td>Relocation type table (psABI-current)</td>
-      <td>Full</td>
-      <td>None</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_symbol.c</code></td>
+      <td>Special symbol/ELF metadata validation, object attributes</td>
+      <td>Full, with one known bug</td>
+      <td><code class="language-plaintext highlighter-rouge">PT/SHT_RISCV_ATTRIBUTES</code>, <code class="language-plaintext highlighter-rouge">DT_RISCV_VARIANT_CC</code>, <code class="language-plaintext highlighter-rouge">_GLOBAL_OFFSET_TABLE_</code>/<code class="language-plaintext highlighter-rouge">__global_pointer$</code> handling correctly implemented; see SHT_RISCV_ATTRIBUTES stripping bug in Section 6/11</td>
     </tr>
     <tr>
-      <td>riscv_symbol.c</td>
-      <td>Special symbol/ELF metadata validation</td>
-      <td>Full with known bug</td>
-      <td>SHT_RISCV_ATTRIBUTES stripping via eu-strip –remove-comment (oerv-team #2074, not yet upstream)</td>
-    </tr>
-    <tr>
-      <td>riscv_retval.c</td>
-      <td>DWARF return value location for lp64/lp64f/lp64d ABIs</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_corenote.c</code> / <code class="language-plaintext highlighter-rouge">riscv64_corenote.c</code></td>
+      <td>Core-dump note parsing</td>
       <td>Partial</td>
-      <td>Complex heterogeneous aggregates unimplemented (mixed int+float fields, nested structs, unions)</td>
+      <td>Only <code class="language-plaintext highlighter-rouge">PRSTATUS</code> (integer registers + pc) is defined; unlike <code class="language-plaintext highlighter-rouge">aarch64_corenote.c</code>, <code class="language-plaintext highlighter-rouge">x86_64_corenote.c</code>, and <code class="language-plaintext highlighter-rouge">arm_corenote.c</code>, there is no <code class="language-plaintext highlighter-rouge">NT_FPREGSET</code> item set at all</td>
     </tr>
     <tr>
-      <td>riscv_initreg.c</td>
-      <td>Live register read via ptrace(PTRACE_GETREGSET)</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_initreg.c</code></td>
+      <td>Live register read via ptrace for debugger integration</td>
       <td>Partial</td>
-      <td>FPU register live-read explicitly unimplemented (comment: “FP registers not yet supported.”)</td>
+      <td>Fetches x0-x31 and PC via <code class="language-plaintext highlighter-rouge">PTRACE_GETREGSET</code>/<code class="language-plaintext highlighter-rouge">NT_PRSTATUS</code> correctly; source explicitly states “FP registers not yet supported,” no <code class="language-plaintext highlighter-rouge">NT_FPREGSET</code> fetch</td>
     </tr>
     <tr>
-      <td>riscv_reloc.def</td>
-      <td>Relocation types</td>
-      <td>Full</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>libcpu/riscv_disasm.c</td>
+      <td><code class="language-plaintext highlighter-rouge">libcpu/riscv_disasm.c</code> (1504 lines)</td>
       <td>Instruction disassembler</td>
       <td>Partial</td>
-      <td>No Zb*/Zv/B/J/H extension decode; symcb address resolution stubbed (TODO comment); instructions wider than 32 bits hex-dumped</td>
+      <td>Hand-decodes RV64 base integer, compressed 16-bit (C), multiply/divide (M), atomics (A), float/double (F/D), CSR and privileged instructions - this is real bit-level decoding, not a wrapper. No decode for the V (vector) or B (bitmanip) extensions (falls through to raw hex); several <code class="language-plaintext highlighter-rouge">// TODO translate address</code> sites mean branch/jump targets are not symbolized</td>
+    </tr>
+    <tr>
+      <td>(none: no <code class="language-plaintext highlighter-rouge">riscv_unwind.c</code>)</td>
+      <td>Frame-pointer fallback stack unwinding</td>
+      <td>Missing</td>
+      <td><code class="language-plaintext highlighter-rouge">backends/Makefile.am</code> lists no <code class="language-plaintext highlighter-rouge">riscv_unwind.c</code>, while x86_64, aarch64, s390, ppc64, and loongarch each ship one; riscv64 has no fallback when <code class="language-plaintext highlighter-rouge">.eh_frame</code>/CFI is unavailable and depends entirely on CFI-based unwinding</td>
+    </tr>
+    <tr>
+      <td>(none: no <code class="language-plaintext highlighter-rouge">riscv_auxv.c</code>)</td>
+      <td>Auxv name table</td>
+      <td>Missing, but not riscv-specific</td>
+      <td>Also absent on loongarch, csky, mips, hexagon, bpf - a general gap across newer ports rather than a riscv64 deficiency</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Comparison table: architecture-specific feature coverage</strong></p>
+<p>Code-coverage figures from the 0.196 LCOV report (single source, [NEEDS VERIFICATION]): <code class="language-plaintext highlighter-rouge">riscv_init.c</code> 91.7%, <code class="language-plaintext highlighter-rouge">riscv_regs.c</code> 97.1%, <code class="language-plaintext highlighter-rouge">riscv_retval.c</code> 55.2%, <code class="language-plaintext highlighter-rouge">riscv_symbol.c</code> 54.5%, <code class="language-plaintext highlighter-rouge">riscv_disasm.c</code> 82%, consistent with active CI exercising the backend and with <code class="language-plaintext highlighter-rouge">riscv_retval.c</code>’s known partial coverage of aggregate-return edge cases.</p>
+
+<p><strong>Comparison table:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -597,10 +629,16 @@
       <td>Full</td>
     </tr>
     <tr>
-      <td>Core note parsing</td>
+      <td>Core note parsing (integer)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (RV32+RV64)</td>
+      <td>Full</td>
+    </tr>
+    <tr>
+      <td>Core note parsing (FP registers)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Missing (no NT_FPREGSET)</td>
     </tr>
     <tr>
       <td>Relocation table</td>
@@ -609,45 +647,55 @@
       <td>Full (psABI-current)</td>
     </tr>
     <tr>
-      <td>Special symbol validation</td>
+      <td>Special symbol / object-attribute validation</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full with 1 known bug</td>
+      <td>Full, one known bug (SHT_RISCV_ATTRIBUTES stripping)</td>
     </tr>
     <tr>
-      <td>Return value location</td>
+      <td>Return-value location (simple aggregates)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Partial (homogeneous aggregates only)</td>
+      <td>Full</td>
     </tr>
     <tr>
-      <td>Live register read (ptrace)</td>
-      <td>Full (int+FPU)</td>
-      <td>Full (int+FPU)</td>
-      <td>Partial (int only, no FPU)</td>
+      <td>Return-value location (mixed/nested aggregates)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Partial (unimplemented)</td>
     </tr>
     <tr>
-      <td>Disassembler</td>
-      <td>Full (x86 + AVX/SSE decode)</td>
-      <td>Full (AArch64)</td>
-      <td>Partial (RV32I/C/M/A/F/D/Q, no Zb*/V)</td>
+      <td>Live register read (integer, ptrace)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full</td>
     </tr>
     <tr>
-      <td>Stack unwind (eu-stack)</td>
-      <td>Supported</td>
-      <td>Supported</td>
-      <td>Falls back to frame pointer or fails</td>
+      <td>Live register read (FPU, ptrace)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Missing</td>
     </tr>
     <tr>
-      <td>eu-stacktrace</td>
-      <td>Supported</td>
-      <td>Supported</td>
-      <td>Not supported (configure hard-blocks it)</td>
+      <td>Disassembler (base ISA)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full</td>
+    </tr>
+    <tr>
+      <td>Disassembler (vector/bitmanip extensions)</td>
+      <td>Full (AVX/SSE etc.)</td>
+      <td>Full (NEON/SVE)</td>
+      <td>Missing (V, B)</td>
+    </tr>
+    <tr>
+      <td>Frame-pointer fallback unwind</td>
+      <td>Present</td>
+      <td>Present</td>
+      <td>Missing</td>
     </tr>
   </tbody>
 </table></div>
-
-<p>Note on eu-stacktrace: <code class="language-plaintext highlighter-rouge">configure.ac</code> checks for <code class="language-plaintext highlighter-rouge">_ASM_X86_PERF_REGS_H</code> / <code class="language-plaintext highlighter-rouge">_ASM_ARM_PERF_REGS_H</code> / <code class="language-plaintext highlighter-rouge">_ASM_ARM64_PERF_REGS_H</code>. RISC-V is absent. <code class="language-plaintext highlighter-rouge">--enable-stacktrace</code> on riscv64 results in a configure error. This is a known architectural gap, not a dependency issue.</p><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -657,9 +705,11 @@
 </h2>
     
 
-<p>elfutils uses Autotools (autoconf 2.69+, automake 1.11+). There is no CMake build. No Dockerfile is shipped in the tarball or upstream source tree.</p>
+<p>elfutils uses GNU Autotools (autoconf 2.69+, automake 1.11+). There is no CMake build anywhere in the tree, and no Dockerfile exists in the elfutils repository (confirmed via a full root-tree listing: <code class="language-plaintext highlighter-rouge">backends, config, debuginfod, doc, lib, libasm, libcpu, libdw, libdwelf, libdwfl, libdwfl_stacktrace, libebl, libelf, m4, po, src, tests, .forgejo/workflows</code>, plus top-level README/NEWS/configure.ac). CI (<code class="language-plaintext highlighter-rouge">.forgejo/workflows/check-fedora.yaml</code>, <code class="language-plaintext highlighter-rouge">check-debian.yaml</code>) runs natively on x86_64 Sourceware runners, with no cross-compilation, containers, or per-architecture matrix.</p>
 
-<p><strong>Minimum toolchain requirements:</strong></p>
+<p><strong>No QEMU usage exists anywhere in the elfutils source tree or CI</strong> (a text search for “qemu” across the tree returns zero hits). riscv64 test coverage (<code class="language-plaintext highlighter-rouge">tests/testfile-riscv64-*</code>, <code class="language-plaintext highlighter-rouge">run-disasm-riscv64.sh</code>, etc.) uses pre-built binary fixtures checked into <code class="language-plaintext highlighter-rouge">tests/</code>; a comment in <code class="language-plaintext highlighter-rouge">run-readelf-mixed-corenote.sh</code> confirms the riscv64 core-dump fixture was generated natively “on a riscv64 machine,” not via emulation. QEMU only becomes relevant for a third party wanting to run the riscv64 test suite under emulation on a non-riscv64 build host (via <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code> + binfmt_misc), which is why it appears as an optional test-dependency in the tracked dependency list (Section 9) even though upstream’s own CI does not use it.</p>
+
+<p><strong>Toolchain requirements (from <code class="language-plaintext highlighter-rouge">configure.ac</code>):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -673,84 +723,63 @@
     <tr>
       <td>C compiler</td>
       <td>C11</td>
-      <td>configure.ac hard-errors if <code class="language-plaintext highlighter-rouge">ac_cv_prog_cc_c11</code> is absent</td>
+      <td><code class="language-plaintext highlighter-rouge">AC_PROG_CC</code> followed by a hard error if <code class="language-plaintext highlighter-rouge">ac_cv_prog_cc_c11</code> is absent</td>
     </tr>
     <tr>
       <td>stdatomic.h</td>
-      <td>GCC 4.9+</td>
-      <td>Hard error if absent; comment says “We need at least gcc 4.9+”</td>
-    </tr>
-    <tr>
-      <td>__thread (TLS)</td>
-      <td>Any GCC/clang with TLS</td>
+      <td>GCC 4.9+ / equivalent</td>
       <td>Hard error if absent</td>
     </tr>
     <tr>
       <td>Autoconf</td>
       <td>2.69</td>
-      <td>AC_PREREQ(2.69)</td>
+      <td><code class="language-plaintext highlighter-rouge">AC_PREREQ(2.69)</code></td>
     </tr>
     <tr>
       <td>Automake</td>
       <td>1.11</td>
-      <td>AM_INIT_AUTOMAKE gnits 1.11</td>
+      <td><code class="language-plaintext highlighter-rouge">AM_INIT_AUTOMAKE([gnits 1.11 ...])</code></td>
     </tr>
     <tr>
       <td>gettext</td>
       <td>0.19.6</td>
-      <td>AM_GNU_GETTEXT_VERSION</td>
+      <td><code class="language-plaintext highlighter-rouge">AM_GNU_GETTEXT_VERSION</code></td>
+    </tr>
+    <tr>
+      <td>C++ (optional)</td>
+      <td>C++20 preferred, falls back to C++11</td>
+      <td><code class="language-plaintext highlighter-rouge">AX_CXX_COMPILE_STDCXX(20, noext, optional)</code>, then <code class="language-plaintext highlighter-rouge">(11, noext, optional)</code></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>In practice GCC 5+ or clang 6+ is required for full C11 with stdatomic.h. GCC 4.9 is the absolute floor.</p>
+<p>C++11 is sufficient to build the debuginfod client/server if json-c, libarchive and sqlite3 are present. C++20 (plus <code class="language-plaintext highlighter-rouge">&lt;format&gt;</code> support, practically GCC 10+ or Clang 10+) is required only for <code class="language-plaintext highlighter-rouge">eu-stackprof</code>.</p>
 
-<p><strong>Native build on riscv64:</strong></p>
+<p><strong>Exact build commands, none riscv64-specific (from README and CI config):</strong></p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./configure --program-prefix=eu-
-make
-make install
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone git://sourceware.org/git/elfutils.git
+autoreconf -i -f &amp;&amp; ./configure --enable-maintainer-mode &amp;&amp; make &amp;&amp; make check
 </code></pre></div></div>
 
-<p><strong>Cross-compilation from x86_64 to riscv64:</strong></p>
+<p>CI’s actual sequence (<code class="language-plaintext highlighter-rouge">check-fedora.yaml</code>): <code class="language-plaintext highlighter-rouge">autoreconf -f -i</code>, <code class="language-plaintext highlighter-rouge">./configure --enable-maintainer-mode</code>, <code class="language-plaintext highlighter-rouge">make -j$(nproc)</code>, <code class="language-plaintext highlighter-rouge">make check -j$(nproc)</code>, <code class="language-plaintext highlighter-rouge">make rpmbuild</code>. None of these differ for riscv64; riscv backend code is unconditionally compiled into every build alongside all other architectures, with no per-architecture configure switch.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./configure \
-  --host=riscv64-linux-gnu \
-  CC=riscv64-linux-gnu-gcc \
-  CXX=riscv64-linux-gnu-g++
-make
+<p><strong>Cross-compiling to riscv64</strong> is not documented by elfutils itself (no mention in README, configure.ac, or CI). The standard autotools approach, inferred rather than upstream-documented:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./configure --host=riscv64-linux-gnu \
+  CC=riscv64-linux-gnu-gcc CXX=riscv64-linux-gnu-g++ \
+  --build=$(./config.guess)
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">make check</code> in a cross build requires QEMU binfmt_misc: set up <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code> with <code class="language-plaintext highlighter-rouge">QEMU_LD_PREFIX</code> pointing to the riscv64 sysroot. The INSTALL file documents this generically; no riscv64-specific QEMU wrapper is included in the source tree.</p>
+<p><strong>Two distinct riscv64-specific feature gates exist in <code class="language-plaintext highlighter-rouge">configure.ac</code>:</strong></p>
 
-<p><strong>Required <code class="language-plaintext highlighter-rouge">--disable</code> flag on riscv64:</strong></p>
+<ol>
+  <li><strong>eu-stacktrace</strong>: gated on the presence of an architecture-specific kernel perf_regs header (<code class="language-plaintext highlighter-rouge">_ASM_X86_PERF_REGS_H</code> / <code class="language-plaintext highlighter-rouge">_ASM_ARM_PERF_REGS_H</code> / <code class="language-plaintext highlighter-rouge">_ASM_ARM64_PERF_REGS_H</code>). No riscv64 equivalent exists, so <code class="language-plaintext highlighter-rouge">--enable-stacktrace</code> fails to configure on riscv64.</li>
+  <li><strong>eu-stackprof</strong>: gated by an explicit <code class="language-plaintext highlighter-rouge">case $host_cpu in i?86|x86_64|amd64|arm*|aarch64*) stackprof_arch_supported=yes ;; *) stackprof_arch_supported=no ;; esac</code> - riscv/riscv64 is not in that list. Passing <code class="language-plaintext highlighter-rouge">--enable-stackprof=yes</code> explicitly on riscv64 hard-fails configure (<code class="language-plaintext highlighter-rouge">AC_MSG_ERROR([Unable to build eu-stackprof, unsupported host cpu or missing linux &lt;perf_event.h&gt; with build_id or C++20 with &lt;format.h&gt;])</code>); leaving the default (<code class="language-plaintext highlighter-rouge">auto</code>) silently disables it.</li>
+</ol>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>--disable-stacktrace
-</code></pre></div></div>
+<p><strong>Musl riscv64 caveat:</strong> <code class="language-plaintext highlighter-rouge">argp</code>, <code class="language-plaintext highlighter-rouge">fts</code>, and <code class="language-plaintext highlighter-rouge">obstack</code> are absent from musl libc; configure fails unless <code class="language-plaintext highlighter-rouge">libargp</code>, <code class="language-plaintext highlighter-rouge">libfts</code>, and <code class="language-plaintext highlighter-rouge">libobstack</code> are installed and discovered via <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code>.</p>
 
-<p>This is mandatory. Without it, configure fails with: “stacktrace currently only supports x86/arm”. The Fedora RPM spec gates <code class="language-plaintext highlighter-rouge">--enable-stacktrace</code> with <code class="language-plaintext highlighter-rouge">%ifarch x86_64</code>.</p>
-
-<p><strong>Optional disables:</strong></p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>--disable-symbol-versioning   # if cross-toolchain .symver fails; breaks ABI
---disable-demangler           # if no libstdc++ for target
---disable-debuginfod          # if server deps (sqlite3, libmicrohttpd) unavailable
---disable-libdebuginfod       # if libcurl unavailable
-</code></pre></div></div>
-
-<p><strong>Musl riscv64 caveat:</strong> On musl-based systems, argp, fts, and obstack are absent from musl libc. configure will fail unless <code class="language-plaintext highlighter-rouge">libargp</code>, <code class="language-plaintext highlighter-rouge">libfts</code>, and <code class="language-plaintext highlighter-rouge">libobstack</code> packages are installed and found via <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code>.</p>
-
-<p><strong>Known build issue, now fixed:</strong> elfutils 0.191-0.194 failed to build under clang with <code class="language-plaintext highlighter-rouge">-Werror=incompatible-pointer-types-discards-qualifiers</code> in <code class="language-plaintext highlighter-rouge">libcpu/riscv_disasm.c</code> at line 1259. The root cause was a non-const <code class="language-plaintext highlighter-rouge">struct known_csrs *found</code> receiving the return value of <code class="language-plaintext highlighter-rouge">bsearch()</code> (which returns <code class="language-plaintext highlighter-rouge">const void *</code> per C11/C23). GCC was permissive; clang rejected it. Fixed in elfutils 0.195 (<a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=4a5cf8be906d5991e7527e69e3f2ceaa74811301">commit 4a5cf8be</a>, merged 2025-11-24). Distributions vendoring 0.191-0.194 and building with clang require either the patch or <code class="language-plaintext highlighter-rouge">-Wno-error=incompatible-pointer-types-discards-qualifiers</code>.</p>
-
-<p><strong>Fedora RPM spec <code class="language-plaintext highlighter-rouge">%build</code> section:</strong></p>
-
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">RPM_OPT_FLAGS</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">RPM_OPT_FLAGS</span><span class="p">/-Wall/</span><span class="k">}</span><span class="s2">"</span>
-<span class="nv">RPM_OPT_FLAGS</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">RPM_OPT_FLAGS</span><span class="k">}</span><span class="s2"> -Wformat"</span>
-%configure <span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">"</span><span class="nv">$RPM_OPT_FLAGS</span><span class="s2">"</span>
-%make_build
-</code></pre></div></div>
-
-<p><code class="language-plaintext highlighter-rouge">-Wall</code> is stripped because elfutils adds its own <code class="language-plaintext highlighter-rouge">-Werror</code> selectively; <code class="language-plaintext highlighter-rouge">-Wformat</code> is re-added for <code class="language-plaintext highlighter-rouge">-Werror=format-security</code>.</p><hr />
+<p><strong>Known, now-fixed build issue:</strong> elfutils 0.191-0.194 failed to build under clang with <code class="language-plaintext highlighter-rouge">-Werror=incompatible-pointer-types-discards-qualifiers</code> in <code class="language-plaintext highlighter-rouge">libcpu/riscv_disasm.c</code> (a non-const <code class="language-plaintext highlighter-rouge">struct known_csrs *found</code> receiving <code class="language-plaintext highlighter-rouge">bsearch()</code>’s <code class="language-plaintext highlighter-rouge">const void *</code> return per C11/C23; GCC was permissive, clang rejected it). Fixed in 0.195 (<a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=4a5cf8be906d5991e7527e69e3f2ceaa74811301">commit 4a5cf8be</a>, 2025-11-24). Distributions still vendoring 0.191-0.194 and building with clang need either the patch or <code class="language-plaintext highlighter-rouge">-Wno-error=incompatible-pointer-types-discards-qualifiers</code>; Ubuntu 26.04 resolute’s 0.194-4 package falls in this affected range (see Section 8).</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -760,21 +789,14 @@ make
 </h2>
     
 
-<p><strong>Functional gaps (features that do not work on riscv64):</strong></p>
+<p><strong>Functional gaps:</strong></p>
 
 <ol>
-  <li>
-    <p><strong>eu-stacktrace</strong>: Disabled at configure time. No RISC-V PMU register header is present. This is a permanent gap until a <code class="language-plaintext highlighter-rouge">_ASM_RISCV_PERF_REGS_H</code> equivalent is added to the kernel ABI and the elfutils configure check is updated.</p>
-  </li>
-  <li>
-    <p><strong>FPU live register read in debugger integration</strong>: <code class="language-plaintext highlighter-rouge">riscv_initreg.c</code> fetches x0-x31 and PC via <code class="language-plaintext highlighter-rouge">PTRACE_GETREGSET/NT_PRSTATUS</code>, but explicitly does not fetch FP registers. The source contains the comment “FP registers not yet supported.” This means <code class="language-plaintext highlighter-rouge">dwfl_thread_getframes()</code> cannot observe floating-point state when unwinding a live riscv64 process, which affects stack profiling tools (perf, bpftrace, systemtap) when the unwinder needs FP register state.</p>
-  </li>
-  <li>
-    <p><strong>Complex heterogeneous struct return value location</strong>: <code class="language-plaintext highlighter-rouge">riscv_retval.c</code> handles simple cases (one or two members of the same base type fitting in 1-2 registers). Mixed-type structs and nested aggregates are unimplemented. The upstream commit message (2024-03-19) explicitly labels this “partial implementation.” Tools relying on <code class="language-plaintext highlighter-rouge">dwfl_module_return_value_location</code> for struct-returning functions will get incorrect results for non-trivial aggregate types.</p>
-  </li>
-  <li>
-    <p><strong>eu-strip incorrectly removes SHT_RISCV_ATTRIBUTES</strong>: <code class="language-plaintext highlighter-rouge">eu-strip --remove-comment</code> strips the <code class="language-plaintext highlighter-rouge">.riscv.attributes</code> section (SHT_RISCV_ATTRIBUTES = 0x70000003). This section carries the ISA string and ABI metadata required by the RISC-V psABI. Stripping it breaks dynamic linker ABI compatibility checks and tools that inspect ABI compliance. This bug is tracked externally in <a href="https://github.com/openeuler-riscv/oerv-team/issues/2074">openeuler-riscv/oerv-team #2074</a> but has not yet been filed upstream or fixed in elfutils as of 2026-05-31.</p>
-  </li>
+  <li><strong>eu-stacktrace disabled</strong>: permanently gated off pending a kernel <code class="language-plaintext highlighter-rouge">_ASM_RISCV_PERF_REGS_H</code>-equivalent header; see Section 5.</li>
+  <li><strong>FPU live register read missing</strong>: <code class="language-plaintext highlighter-rouge">riscv_initreg.c</code> does not fetch FP registers via ptrace, so <code class="language-plaintext highlighter-rouge">dwfl_thread_getframes()</code> cannot observe floating-point state when unwinding a live riscv64 process. Affects FP-heavy code paths in perf/bpftrace/systemtap symbol resolution.</li>
+  <li><strong>Complex heterogeneous struct return-value location unimplemented</strong>: mixed int+float structs, nested structs, and unions give incorrect <code class="language-plaintext highlighter-rouge">dwfl_module_return_value_location</code> results on riscv64; SiFive’s Palmer Dabbelt specifically flagged the mixed-type case during review of the 2024-03-19 fix.</li>
+  <li><strong>eu-strip incorrectly strips <code class="language-plaintext highlighter-rouge">SHT_RISCV_ATTRIBUTES</code></strong>: <code class="language-plaintext highlighter-rouge">eu-strip --remove-comment</code> removes the <code class="language-plaintext highlighter-rouge">.riscv.attributes</code> section (type <code class="language-plaintext highlighter-rouge">SHT_RISCV_ATTRIBUTES</code> = 0x70000003), destroying RISC-V ISA/ABI metadata. Tracked only downstream in <a href="https://github.com/openeuler-riscv/oerv-team/issues/2074">openeuler-riscv/oerv-team #2074</a>; no upstream elfutils bug has been filed.</li>
+  <li><strong>No frame-pointer fallback unwinder</strong>: <code class="language-plaintext highlighter-rouge">riscv_unwind.c</code> does not exist for riscv64 (unlike x86_64, aarch64, s390, ppc64, loongarch), so unwinding fails entirely if CFI/<code class="language-plaintext highlighter-rouge">.eh_frame</code> data is missing or corrupt.</li>
 </ol>
 
 <p><strong>Feature matrix:</strong></p>
@@ -802,10 +824,16 @@ make
       <td>Full</td>
     </tr>
     <tr>
-      <td>Core file parsing</td>
+      <td>Core file parsing (integer regs)</td>
       <td>Full</td>
       <td>Full</td>
       <td>Full</td>
+    </tr>
+    <tr>
+      <td>Core file parsing (FP regs)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Missing</td>
     </tr>
     <tr>
       <td>Return value location (simple)</td>
@@ -832,15 +860,27 @@ make
       <td>Missing</td>
     </tr>
     <tr>
-      <td>Stack unwind (eu-stack)</td>
+      <td>CFI-based stack unwind (eu-stack)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Partial (no FPU state)</td>
+      <td>Full</td>
+    </tr>
+    <tr>
+      <td>Frame-pointer fallback unwind</td>
+      <td>Present</td>
+      <td>Present</td>
+      <td>Missing</td>
     </tr>
     <tr>
       <td>eu-stacktrace</td>
       <td>Full</td>
       <td>Partial</td>
+      <td>Not available</td>
+    </tr>
+    <tr>
+      <td>eu-stackprof</td>
+      <td>Full</td>
+      <td>Full</td>
       <td>Not available</td>
     </tr>
     <tr>
@@ -850,16 +890,16 @@ make
       <td>Full</td>
     </tr>
     <tr>
-      <td>Disassembly (extensions)</td>
-      <td>Full (AVX/SSE/etc.)</td>
-      <td>Full (NEON/SVE)</td>
-      <td>Partial (no Zb*/V/B/J)</td>
+      <td>Disassembly (vector/bitmanip extensions)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Missing</td>
     </tr>
     <tr>
       <td>eu-strip –remove-comment correctness</td>
       <td>Correct</td>
       <td>Correct</td>
-      <td>Bug: removes SHT_RISCV_ATTRIBUTES</td>
+      <td>Bug (strips SHT_RISCV_ATTRIBUTES)</td>
     </tr>
     <tr>
       <td>elflint GOT validation</td>
@@ -871,12 +911,12 @@ make
       <td>clang buildability</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Requires 0.195+ (pre-0.195 fails)</td>
+      <td>Requires 0.195+</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Security hardening gaps:</strong> None specific to riscv64. The disassembler buffer overflow (Bug 33006, fixed 2025-06-03) and the out-of-bounds reads (fixed 2026-05-31) were riscv64-specific correctness/security issues that are now resolved in 0.195.</p><hr />
+<p><strong>Security hardening:</strong> no riscv64-specific gaps remain open. The disassembler stack buffer overflow (Bug 33006) and the CSR mnemonic out-of-bounds reads were riscv64-specific security-relevant bugs, both fixed (0.194 and 0.196 respectively). Two general (non-riscv64) memory-safety CVEs in elfutils 0.192, CVE-2025-1352 (<code class="language-plaintext highlighter-rouge">__libdw_thread_tail</code>/<code class="language-plaintext highlighter-rouge">libdw_alloc.c</code>) and CVE-2025-1376 (<code class="language-plaintext highlighter-rouge">elf_strptr</code>/<code class="language-plaintext highlighter-rouge">libelf</code>), affect all architectures and are not RISC-V-specific.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -886,99 +926,60 @@ make
 </h2>
     
 
-<p><strong>Upstream CI (sourceware.org Buildbot):</strong></p>
+<p><strong>riscv64 CI exists and is active, independently re-verified this session by cloning the canonical CI config repository (<code class="language-plaintext highlighter-rouge">https://sourceware.org/git/builder.git</code>) and reading <code class="language-plaintext highlighter-rouge">builder/master.cfg</code> (7083 lines) directly at commit <code class="language-plaintext highlighter-rouge">2148972be9406234f13a8880acfb3d05a70971f6</code> (dated 2026-09-26, four days before this report):</strong></p>
+
+<ul>
+  <li><strong>Workers</strong> (lines 93-136): 5 physical riscv64 workers, <code class="language-plaintext highlighter-rouge">starfive-riscv</code> and <code class="language-plaintext highlighter-rouge">starfive-1</code> through <code class="language-plaintext highlighter-rouge">starfive-4</code>, each a StarFive VisionFive V2 board (8 GB RAM, 4 cores, donated by StarFive), grouped as <code class="language-plaintext highlighter-rouge">starfive_workers</code>. Live and wired into the config, not dead code.</li>
+  <li><strong>Builders</strong> (lines 2822-2836): <code class="language-plaintext highlighter-rouge">elfutils-ubuntu-riscv</code> (Buildbot builder id 274) and <code class="language-plaintext highlighter-rouge">elfutils-try-ubuntu-riscv</code>, both running on <code class="language-plaintext highlighter-rouge">starfive_workers</code>, tagged <code class="language-plaintext highlighter-rouge">["elfutils","ubuntu","riscv"]</code> / <code class="language-plaintext highlighter-rouge">["elfutils-try","ubuntu","riscv"]</code>.</li>
+  <li><strong>Schedulers</strong> (lines 718-765): <code class="language-plaintext highlighter-rouge">elfutils_scheduler</code> (<code class="language-plaintext highlighter-rouge">SingleBranchScheduler</code>, branch <code class="language-plaintext highlighter-rouge">main</code>) lists <code class="language-plaintext highlighter-rouge">elfutils-ubuntu-riscv</code>; <code class="language-plaintext highlighter-rouge">elfutils_try_scheduler</code> (<code class="language-plaintext highlighter-rouge">AnyBranchScheduler</code>, try-branch regex) lists <code class="language-plaintext highlighter-rouge">elfutils-try-ubuntu-riscv</code>. Every push to elfutils’ <code class="language-plaintext highlighter-rouge">main</code> branch and every try-branch push triggers a native riscv64 build+test.</li>
+  <li><strong>Build factory</strong> (<code class="language-plaintext highlighter-rouge">elfutils_factory</code>, lines 2532-2541): git checkout, <code class="language-plaintext highlighter-rouge">autoreconf</code>, <code class="language-plaintext highlighter-rouge">configure</code>, <code class="language-plaintext highlighter-rouge">make</code>, <code class="language-plaintext highlighter-rouge">make check</code> (full test suite), upload of <code class="language-plaintext highlighter-rouge">.trs</code>/<code class="language-plaintext highlighter-rouge">.log</code> results to Bunsen, then <code class="language-plaintext highlighter-rouge">make distclean</code> - run natively on the StarFive hardware, not emulated.</li>
+  <li><strong>Corroboration</strong>: mailing-list buildbot notifications (e.g. <code class="language-plaintext highlighter-rouge">elfutils-devel@sourceware.org</code> msg09439) show live build activity from <code class="language-plaintext highlighter-rouge">elfutils-ubuntu-riscv</code> on worker <code class="language-plaintext highlighter-rouge">starfive-2</code>; the 0.196 LCOV coverage report includes <code class="language-plaintext highlighter-rouge">backends/riscv_cfi.c.gcov.html</code>, indicating riscv-specific code is actively exercised by this CI.</li>
+</ul>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Builder</th>
-      <th>ID</th>
       <th>Architecture</th>
       <th>Worker</th>
       <th>Status</th>
-      <th>Recent builds</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>elfutils-ubuntu-riscv</td>
-      <td>274</td>
+      <td><code class="language-plaintext highlighter-rouge">elfutils-ubuntu-riscv</code> (id 274)</td>
       <td>riscv64 (native)</td>
-      <td>starfive-1 (StarFive board, Ubuntu 24.04, Linux 6.17 riscv64)</td>
-      <td>Active, passing</td>
-      <td>20/20 passes (#312-#331), last pass 2026-06-21</td>
+      <td>StarFive VisionFive V2 physical boards</td>
+      <td>Active, config-verified</td>
     </tr>
     <tr>
-      <td>elfutils-debian-riscv</td>
-      <td>272</td>
+      <td><code class="language-plaintext highlighter-rouge">elfutils-try-ubuntu-riscv</code></td>
+      <td>riscv64 (native)</td>
+      <td>Same StarFive boards</td>
+      <td>Active, config-verified</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">elfutils-debian-riscv</code> / <code class="language-plaintext highlighter-rouge">elfutils-try-debian-riscv</code></td>
       <td>riscv64</td>
-      <td>offline (masterids: [])</td>
-      <td>Inactive since 2023</td>
-      <td>2 builds total, both failures in 2023</td>
+      <td>Unclear</td>
+      <td>The Buildbot REST API lists builder ids 271/272 under these names, but neither appears in the current <code class="language-plaintext highlighter-rouge">master.cfg</code> text; likely a stale API entry or a builder defined outside this file. A separate claim, that this builder logged only 2 builds (both 2023 failures) and is now offline, could not be corroborated this session and is carried here only as [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>elfutils-debian-amd64</td>
-      <td>-</td>
-      <td>amd64</td>
+      <td><code class="language-plaintext highlighter-rouge">elfutils-debian-amd64</code> / <code class="language-plaintext highlighter-rouge">elfutils-fedora-x86_64</code></td>
+      <td>amd64/x86_64</td>
       <td>VM</td>
       <td>Active</td>
-      <td>Passing</td>
     </tr>
     <tr>
-      <td>elfutils-debian-arm64</td>
-      <td>-</td>
+      <td><code class="language-plaintext highlighter-rouge">elfutils-debian-arm64</code></td>
       <td>arm64</td>
       <td>VM</td>
       <td>Active</td>
-      <td>Passing</td>
-    </tr>
-    <tr>
-      <td>elfutils-fedora-x86_64</td>
-      <td>-</td>
-      <td>x86_64</td>
-      <td>VM</td>
-      <td>Active</td>
-      <td>Passing</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 CI runs on physical StarFive hardware administered by Mark Wielaard. Historical failures are visible: build #166 (2025-Q1) failed on starfive-4, fixed in #167 on starfive-2; build #212 (2025-Q3) failed on starfive-1, fixed in #213.</p>
-
-<p><strong>RISE runners:</strong> No involvement. elfutils is not a RISE member project, has no entries in the RISE runner matrix, and is not mentioned in any RISE blog post or working group deliverable.</p>
-
-<p><strong>CI comparison:</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Architecture</th>
-      <th>Builders present</th>
-      <th>Worker type</th>
-      <th>Gating releases</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>amd64/x86_64</td>
-      <td>Multiple (Debian, Fedora, CentOS, openSUSE)</td>
-      <td>VM</td>
-      <td>Yes</td>
-    </tr>
-    <tr>
-      <td>arm64</td>
-      <td>1 (Debian)</td>
-      <td>VM</td>
-      <td>Yes</td>
-    </tr>
-    <tr>
-      <td>riscv64</td>
-      <td>1 active (Ubuntu, StarFive hardware)</td>
-      <td>Physical board</td>
-      <td>Builds run; releases not formally gated</td>
-    </tr>
-  </tbody>
-</table></div><hr />
+<p><strong>RISE runners</strong>: elfutils’ own riscv64 CI does not run on RISE infrastructure; it runs on Sourceware’s own StarFive hardware. RISE’s RISC-V Runners (bare-metal Scaleway EM-RV1, <code class="language-plaintext highlighter-rouge">riseproject-dev/riscv-runner</code>) are used only downstream, to build and test the pystack Python wheel that compiles elfutils from source as a dependency (Section 1).</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -988,37 +989,45 @@ make
 </h2>
     
 
-<p><strong>Current upstream release:</strong> elfutils 0.195 (released 2026-04-15). Source: <a href="https://sourceware.org/elfutils/">sourceware.org/elfutils</a> (direct access blocked by Anubis; version confirmed via Debian and Ubuntu package metadata).</p>
+<p><strong>No upstream-published riscv64 (or any architecture-specific) binaries exist.</strong> elfutils’ own releases are source tarballs only; <code class="language-plaintext highlighter-rouge">sourceware.org/git/elfutils.git</code>’s web UI is behind an anti-bot (Anubis) wall that blocked direct verification of the release page, but this is consistent across every source checked and matches the project’s Autotools-only build model (Section 5). This is the central fact behind the project’s readiness color: build and test both pass natively, but the consumable riscv64 artifact always comes from a downstream distro rebuilding upstream source, not from elfutils itself.</p>
 
-<p><strong>Binary package availability:</strong></p>
+<p><strong>Current upstream version:</strong> 0.196, confirmed via a direct repository clone (AC_INIT version 0.196, copyright lines through 2026) and the <a href="http://www.mail-archive.com/elfutils-devel@sourceware.org/msg09512.html">0.196 release announcement</a>.</p>
+
+<p><strong>Binary package availability (verified via live HTTP fetches against each archive):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Distribution</th>
-      <th>Version</th>
-      <th>riscv64 status</th>
+      <th>Version (riscv64)</th>
+      <th>Status</th>
       <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Debian sid (unstable)</td>
-      <td>0.195-1</td>
-      <td>Installed (built on rv-osuosl-01, ~61 days ago as of research date)</td>
-      <td>riscv64 is a Debian sid/testing architecture only; not in Debian stable (bookworm)</td>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td>0.194-4 [ports]</td>
+      <td>Confirmed present, HTTP 200</td>
+      <td><a href="https://packages.ubuntu.com/search?keywords=elfutils&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a> live page shows architecture riscv64 explicitly, package size 544.8 kB, installed size 2,959.0 kB, real dependency chain to riscv64 libdw1t64/libelf1t64. Tagged <code class="language-plaintext highlighter-rouge">[ports]</code> (built via Ubuntu’s ports infrastructure rather than the primary archive) but is a real, signed, installable binary, not a placeholder. Lags upstream: missing both the 0.195 clang const-correctness fix and the 0.196 CSR out-of-bounds-read fix</td>
     </tr>
     <tr>
-      <td>Ubuntu 24.04 LTS</td>
-      <td>0.190-1.1build4</td>
-      <td>Available in ports pocket</td>
-      <td>Security-patched amd64/i386 at 0.190-1.1ubuntu0.1; riscv64 carries unpatched 0.190</td>
+      <td>Debian sid/testing</td>
+      <td>riscv64 build present</td>
+      <td>Confirmed present</td>
+      <td>Unmodified upstream source, no riscv64-specific packaging patches found</td>
     </tr>
     <tr>
       <td>Arch Linux RISC-V</td>
-      <td>Unknown</td>
-      <td>Likely present (no distro-specific patches in felixonmars/archriscv-packages for elfutils)</td>
-      <td>Direct package availability unverifiable from available sources [NEEDS VERIFICATION]</td>
+      <td><code class="language-plaintext highlighter-rouge">elfutils-0.196-1-riscv64.pkg.tar.zst</code></td>
+      <td>Confirmed present, HTTP 200</td>
+      <td><a href="https://archriscv.felixc.at/repo/core/">archriscv.felixc.at/repo/core/</a> live directory listing: signed package, 700,423 bytes, dated 2026-08-19 - the most current elfutils package of any distribution checked, matching current upstream 0.196</td>
+    </tr>
+    <tr>
+      <td>Ubuntu 24.04 LTS</td>
+      <td>0.190-1.1build4 (carried over, not independently re-checked this session)</td>
+      <td>Available in ports pocket</td>
+      <td>[NEEDS VERIFICATION]: not re-verified in this research pass</td>
     </tr>
     <tr>
       <td>Fedora</td>
@@ -1029,8 +1038,14 @@ make
     <tr>
       <td>PyPI</td>
       <td>N/A</td>
+      <td>No package named <code class="language-plaintext highlighter-rouge">elfutils</code> exists on PyPI for any architecture (<code class="language-plaintext highlighter-rouge">pypi.org/pypi/elfutils/json</code> returns HTTP 404)</td>
+      <td>elfutils is a C library/toolset, not a Python package; this is expected, not a gap</td>
+    </tr>
+    <tr>
+      <td>RISE GitLab wheel mirror</td>
       <td>N/A</td>
-      <td>elfutils has no PyPI package; it is a C library</td>
+      <td>302-redirects to the same PyPI 404</td>
+      <td>Consistent with elfutils having no PyPI presence</td>
     </tr>
     <tr>
       <td>OCI/container images</td>
@@ -1041,9 +1056,7 @@ make
   </tbody>
 </table></div>
 
-<p><strong>To get a working riscv64 binary:</strong> On Debian sid or Ubuntu 24.04+, <code class="language-plaintext highlighter-rouge">apt install elfutils</code> or <code class="language-plaintext highlighter-rouge">apt install libdw-dev</code> is sufficient. For the latest 0.195 on Ubuntu LTS, building from source or using the Debian sid package in a container is required.</p>
-
-<p><strong>Ubuntu LTS gap:</strong> Ubuntu 24.04 ships 0.190 for riscv64. Fixes for the clang const-correctness build failure (0.195), the disassembler buffer overflow (0.194), and the <em>GLOBAL_OFFSET_TABLE</em> elflint false positive (0.193) are absent from the Ubuntu LTS riscv64 package. Users relying on Ubuntu LTS riscv64 for clang-built environments will encounter build failures with elfutils 0.190 unless they backport the 0.195 patches.</p><hr />
+<p><strong>To get a working riscv64 binary today</strong>: <code class="language-plaintext highlighter-rouge">apt install elfutils</code> on Ubuntu 26.04 or Debian sid/testing (0.194-4, missing two post-0.194 correctness/security fixes), or <code class="language-plaintext highlighter-rouge">pacman -S elfutils</code> on Arch Linux RISC-V (0.196-1, fully current). There is no path to an upstream-published riscv64 binary; building from source is the only way to get exactly-current upstream on riscv64.</p>
 <h2 id="9-dependencies">
   
   
@@ -1053,138 +1066,144 @@ make
 </h2>
     
 
-<p>All external dependencies of elfutils build and release cleanly on riscv64. No dependency is a blocker for any elfutils functionality.</p>
+<p>All tracked elfutils build/runtime dependencies have riscv64 binaries present in the live Ubuntu 26.04 “resolute” archive, and elfutils itself (0.194-4) is built and released for riscv64 in that same suite, so no dependency currently blocks elfutils’ riscv64 availability on Ubuntu. Six of the twelve tracked dependencies already have their own dedicated RISC-V readiness reports in this repository; three have no report yet.</p>
 
-<p><strong>Critical dependency table:</strong></p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Relation</th>
+      <th>Criticality</th>
+      <th>Role in elfutils</th>
+      <th>riscv64 status (Ubuntu 26.04 resolute)</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>glibc</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>C runtime; also provides <code class="language-plaintext highlighter-rouge">argp</code> (CLI argument parsing) natively</td>
+      <td>Fully supported; tier-1 platform since glibc 2.27</td>
+      <td>musl systems need separate <code class="language-plaintext highlighter-rouge">libargp</code>/<code class="language-plaintext highlighter-rouge">libfts</code>/<code class="language-plaintext highlighter-rouge">libobstack</code></td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Build toolchain; C11 mandatory, C++20 optional for eu-stackprof</td>
+      <td>GCC 15.3.0 available in Debian sid</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>zlib</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>DEFLATE compression of <code class="language-plaintext highlighter-rouge">.zdebug</code>/<code class="language-plaintext highlighter-rouge">.zlib</code> sections; configure fails hard without it</td>
+      <td><code class="language-plaintext highlighter-rouge">zlib1g</code> 1:1.3.dfsg+really1.3.1-1ubuntu3, builds cleanly</td>
+      <td>None found. See status report at project-reports/zlib.md (rated blue)</td>
+    </tr>
+    <tr>
+      <td>bzip2</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td><code class="language-plaintext highlighter-rouge">.bz2</code>-compressed debug sections</td>
+      <td><code class="language-plaintext highlighter-rouge">libbz2-1.0</code> 1.0.8-6build2, builds cleanly</td>
+      <td>Distro-build verified only, not full upstream riscv64 CI. See status report at project-reports/bzip2.md (rated yellow)</td>
+    </tr>
+    <tr>
+      <td>xz</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td><code class="language-plaintext highlighter-rouge">.xz</code>-compressed debug sections, increasingly the toolchain default</td>
+      <td><code class="language-plaintext highlighter-rouge">liblzma5</code> 5.8.3-1, builds cleanly; upstream has a merged RISC-V BCJ filter</td>
+      <td>See status report at project-reports/xz.md (rated yellow despite the native filter - see that report for nuance)</td>
+    </tr>
+    <tr>
+      <td>zstd</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td><code class="language-plaintext highlighter-rouge">.zstd</code>-compressed debug sections; also used internally by debuginfod caching</td>
+      <td><code class="language-plaintext highlighter-rouge">libzstd1</code> 1.5.7+dfsg-3, builds cleanly, good coverage</td>
+      <td>None found. See status report at project-reports/zstd.md (rated blue)</td>
+    </tr>
+    <tr>
+      <td>libcurl</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>debuginfod federation (fetching from upstream debuginfod servers) and debuginfod-client</td>
+      <td><code class="language-plaintext highlighter-rouge">libcurl4t64</code> 8.18.0-1ubuntu2, builds cleanly</td>
+      <td>See status report at project-reports/libcurl.md (rated yellow, TLS-backend/optional-dep nuances)</td>
+    </tr>
+    <tr>
+      <td>libmicrohttpd</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>debuginfod’s embedded HTTP server (REST/webapi)</td>
+      <td><code class="language-plaintext highlighter-rouge">libmicrohttpd12t64</code>/<code class="language-plaintext highlighter-rouge">libmicrohttpd-dev</code> 1.0.1-2, builds cleanly</td>
+      <td>In RISC-V Ecosystem scope but no status report generated yet</td>
+    </tr>
+    <tr>
+      <td>SQLite</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>debuginfod’s index database backend</td>
+      <td><code class="language-plaintext highlighter-rouge">libsqlite3-0</code> 3.46.1-9, builds cleanly</td>
+      <td>See status report at project-reports/sqlite.md (rated yellow)</td>
+    </tr>
+    <tr>
+      <td>libarchive</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>debuginfod source-archive indexing (reads rpm/deb/tar/cpio to extract source+debug info)</td>
+      <td><code class="language-plaintext highlighter-rouge">libarchive13t64</code> 3.8.5-1ubuntu2, builds cleanly</td>
+      <td>In RISC-V Ecosystem scope but no status report generated yet</td>
+    </tr>
+    <tr>
+      <td>json-c</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>debuginfod metadata/webapi JSON handling and IMA verification</td>
+      <td><code class="language-plaintext highlighter-rouge">libjson-c5</code> 0.18+ds-3, builds cleanly</td>
+      <td>In RISC-V Ecosystem scope but no status report generated yet</td>
+    </tr>
+    <tr>
+      <td>QEMU</td>
+      <td>test-dependency</td>
+      <td>optional</td>
+      <td>Not used by elfutils’ own CI (tests natively on real riscv64 hardware) or in-tree (zero references found); relevant only to a third party cross-compiling elfutils and wanting to run <code class="language-plaintext highlighter-rouge">make check</code> under <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code>/binfmt_misc on a non-riscv64 host</td>
+      <td>N/A (not a build/runtime input of the shipped package)</td>
+      <td>None found</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Additional indirect/transitive dependencies identified during research:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Name</th>
       <th>Role</th>
-      <th>riscv64 Build</th>
-      <th>riscv64 Test</th>
-      <th>riscv64 Release</th>
-      <th>Blocking Issues</th>
+      <th>riscv64 status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>glibc</td>
-      <td>C runtime (mandatory)</td>
-      <td>Installed (Debian sid 2.42-17)</td>
-      <td>Tier-1 platform since glibc 2.27</td>
-      <td>Fully released</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>zlib</td>
-      <td>Compression of .debug sections (mandatory)</td>
-      <td>Installed (Debian sid)</td>
-      <td>Passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>bzip2</td>
-      <td>bzip2-compressed .debug sections (optional)</td>
-      <td>Installed (Debian sid 1.0.8)</td>
-      <td>Passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>xz/liblzma</td>
-      <td>LZMA-compressed .debug sections (optional)</td>
-      <td>Installed (Debian sid 5.8.3)</td>
-      <td>Passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>zstd/libzstd</td>
-      <td>zstd-compressed .debug sections (optional, added ~0.185)</td>
-      <td>Installed (Debian sid 1.5.7)</td>
-      <td>Passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>libcurl</td>
-      <td>debuginfod client (required for libdebuginfod)</td>
-      <td>Installed (Debian sid 8.21.0)</td>
-      <td>Passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>libmicrohttpd</td>
-      <td>debuginfod server (optional)</td>
-      <td>Installed (Debian sid 1.0.5)</td>
-      <td>Passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>sqlite3</td>
-      <td>debuginfod server index (optional)</td>
-      <td>Installed (Debian sid 3.53.2)</td>
-      <td>Passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>libarchive</td>
-      <td>debuginfod archive handling (optional)</td>
-      <td>Installed (Debian sid 3.8.7)</td>
-      <td>Passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>json-c</td>
-      <td>debuginfod IMA verification (optional)</td>
-      <td>Installed (Debian sid 0.18)</td>
-      <td>Passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
       <td>OpenSSL</td>
-      <td>TLS for debuginfod client via libcurl (transitive)</td>
-      <td>Well-supported on riscv64</td>
-      <td>CI passes</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>GCC</td>
-      <td>Build toolchain</td>
-      <td>GCC-15 installed (Debian sid 15.3.0); GCC-14 showed needs-build on Debian but superseded</td>
-      <td>N/A</td>
-      <td>Fully released</td>
-      <td>None (GCC-14 stale status resolved by GCC-15)</td>
+      <td>TLS backend used transitively via libcurl for debuginfod client connections</td>
+      <td>Well-supported on riscv64; CI passes</td>
     </tr>
     <tr>
       <td>libstdc++</td>
-      <td>C++ demangler (required unless –disable-demangler)</td>
-      <td>Present on riscv64</td>
-      <td>N/A</td>
-      <td>All major distros</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>argp/fts/obstack</td>
-      <td>POSIX extensions absent from musl</td>
-      <td>Available as standalone libs for glibc systems</td>
-      <td>N/A</td>
-      <td>Not applicable on glibc</td>
-      <td>On musl riscv64 these must be provided separately</td>
+      <td>C++ demangler support (unless <code class="language-plaintext highlighter-rouge">--disable-demangler</code>)</td>
+      <td>Present on riscv64 across major distros</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Notable: no dependency has a JIT, SIMD, crypto, or numerics component that creates riscv64-specific risk.</strong> elfutils itself has no JIT. zlib, bzip2, and zstd have optional SIMD acceleration but degrade gracefully to scalar on riscv64. None of their riscv64 scalar fallbacks are known to have correctness issues.</p><hr />
+<p>None of elfutils’ dependencies has a JIT, SIMD, or cryptographic implementation that creates riscv64-specific correctness risk: zlib, bzip2, xz, and zstd have optional SIMD-accelerated paths but degrade gracefully to scalar C on riscv64, and no riscv64 correctness issue in any of their scalar fallbacks was found.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1194,12 +1213,12 @@ make
 </h2>
     
 
-<p><strong>Active correctness issues:</strong></p>
+<p><strong>Active issues:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>ID / Reference</th>
+      <th>Reference</th>
       <th>Title</th>
       <th>Status</th>
       <th>Severity</th>
@@ -1209,80 +1228,105 @@ make
   <tbody>
     <tr>
       <td><a href="https://github.com/openeuler-riscv/oerv-team/issues/2074">openeuler-riscv/oerv-team #2074</a></td>
-      <td>eu-strip –remove-comment incorrectly strips .riscv.attributes section</td>
-      <td>Open (downstream investigation, not yet filed upstream)</td>
+      <td><code class="language-plaintext highlighter-rouge">eu-strip --remove-comment</code> incorrectly strips the <code class="language-plaintext highlighter-rouge">SHT_RISCV_ATTRIBUTES</code> (<code class="language-plaintext highlighter-rouge">.riscv.attributes</code>) section</td>
+      <td>Open, tracked downstream only</td>
       <td>High</td>
-      <td>SHT_RISCV_ATTRIBUTES removed by eu-strip; breaks RISC-V ABI metadata; psABI specifies this section must be preserved. No upstream elfutils fix as of 2026-05-31.</td>
+      <td>Destroys RISC-V ISA/ABI metadata; no upstream elfutils Bugzilla entry exists yet</td>
     </tr>
     <tr>
-      <td>Internal (no upstream bug ID)</td>
-      <td>riscv_retval.c: complex heterogeneous aggregates unimplemented</td>
-      <td>Not filed as a separate bug; acknowledged in 2024-03-19 commit message</td>
+      <td>No upstream bug ID</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_retval.c</code>: <code class="language-plaintext highlighter-rouge">flatten_aggregate</code> handles only same-base-type struct members</td>
+      <td>Open, acknowledged partial in the 2024-03-19 commit; mixed float+int gap specifically flagged by SiFive’s Palmer Dabbelt in review</td>
       <td>Medium</td>
-      <td>Affects <code class="language-plaintext highlighter-rouge">dwfl_module_return_value_location</code> for functions returning mixed int+float structs, nested structs, unions. Incorrect results silently returned.</td>
+      <td>Mixed int+float structs, nested structs, unions give incorrect <code class="language-plaintext highlighter-rouge">dwfl_module_return_value_location</code> results</td>
     </tr>
     <tr>
-      <td>Internal (no upstream bug ID)</td>
-      <td>riscv_initreg.c: FPU live registers not read</td>
-      <td>Not filed as a bug; marked TODO in source</td>
+      <td>No upstream bug ID</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_initreg.c</code>: FPU live registers not read via ptrace</td>
+      <td>Open, TODO comment in source (“FP registers not yet supported”)</td>
       <td>Medium</td>
-      <td><code class="language-plaintext highlighter-rouge">dwfl_thread_getframes()</code> cannot observe FPU state for live riscv64 processes. Affects bpftrace/perf symbol resolution in FP-heavy code.</td>
+      <td><code class="language-plaintext highlighter-rouge">dwfl_thread_getframes()</code> cannot see FP register state for live riscv64 processes</td>
+    </tr>
+    <tr>
+      <td>Architectural gap, not a bug</td>
+      <td><code class="language-plaintext highlighter-rouge">eu-stacktrace</code> hard-disabled on riscv64 at configure time (no perf_regs kernel header)</td>
+      <td>Permanent until a kernel ABI addition</td>
+      <td>-</td>
+      <td>See Section 5</td>
+    </tr>
+    <tr>
+      <td>Architectural gap, not a bug</td>
+      <td>No <code class="language-plaintext highlighter-rouge">riscv_unwind.c</code> frame-pointer fallback unwinder</td>
+      <td>Open</td>
+      <td>Medium</td>
+      <td>Unwinding fails entirely if <code class="language-plaintext highlighter-rouge">.eh_frame</code>/CFI data is unavailable</td>
+    </tr>
+    <tr>
+      <td>No upstream bug ID</td>
+      <td><code class="language-plaintext highlighter-rouge">libcpu/riscv_disasm.c</code> has no decode for V (vector) or B (bitmanip) extensions</td>
+      <td>Open</td>
+      <td>Low-Medium</td>
+      <td>Such instructions dump as raw hex in <code class="language-plaintext highlighter-rouge">eu-objdump</code></td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Resolved correctness issues (with release versions):</strong></p>
+<p>Upstream Bugzilla itself (bugs.sourceware.org) could not be queried directly in this or the prior research pass (blocked by Anubis anti-bot protection), so additional open riscv-tagged bugs may exist that were not surfaced by mailing-list/mirror search.</p>
+
+<p><strong>Resolved issues:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Bug ID</th>
+      <th>ID</th>
       <th>Title</th>
       <th>Fixed in</th>
+      <th>Commit</th>
       <th>Severity</th>
-      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><a href="https://sourceware.org/bugzilla/show_bug.cgi?id=33006">Bug 33006</a></td>
-      <td>Stack buffer overflow in riscv_disasm (mnebuf too small)</td>
-      <td>0.194 (<a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=07bd923cea4b883ca2357e9fc80babcedd242b37">commit 07bd923c</a>, 2025-06-03)</td>
+      <td>Stack buffer overflow in <code class="language-plaintext highlighter-rouge">riscv_disasm</code> (<code class="language-plaintext highlighter-rouge">mnebuf</code> too small for wide illegal instructions)</td>
+      <td>0.194 (2025-06-03)</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=07bd923cea4b883ca2357e9fc80babcedd242b37">07bd923c</a></td>
       <td>High</td>
-      <td>_FORTIFY_SOURCE abort on wide illegal RISC-V instructions; without hardening: UB stack write</td>
     </tr>
     <tr>
       <td><a href="https://sourceware.org/bugzilla/show_bug.cgi?id=31142">Bug 31142</a></td>
-      <td>riscv: pass_by_flattened_arg not implemented</td>
-      <td>0.192 (<a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=669b648111d3bc27cd4756879f5fe5a18515de77">commit 669b648</a>, 2024-03-19)</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv: pass_by_flattened_arg</code> not implemented</td>
+      <td>0.192 (2024-03-19)</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=669b648111d3bc27cd4756879f5fe5a18515de77">669b6481</a></td>
       <td>Medium</td>
-      <td>dwfl_module_return_value_location failed on struct-returning functions</td>
     </tr>
     <tr>
-      <td>(no Bugzilla ID)</td>
-      <td>riscv_disasm.c: two out-of-bounds reads in CSR mnemonic lookup</td>
-      <td>0.195 (<a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=003d1c8bc8be6c45fc39eb1b886def17482ed3a5">commit 003d1c8b</a>, 2026-05-31)</td>
-      <td>High</td>
-      <td>Off-by-one bounds on static arrays; triggerable by crafted ELF; security-relevant</td>
+      <td>No Bugzilla ID</td>
+      <td>Two out-of-bounds reads in <code class="language-plaintext highlighter-rouge">riscv_disasm.c</code> CSR mnemonic lookup arrays</td>
+      <td>0.196 (2026-05-31)</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=003d1c8bc8be6c45fc39eb1b886def17482ed3a5">003d1c8b</a></td>
+      <td>High (security-relevant, crafted-ELF triggerable)</td>
     </tr>
     <tr>
-      <td>(no Bugzilla ID)</td>
-      <td>riscv_disasm.c: const-correctness failure (clang -Werror)</td>
-      <td>0.195 (<a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=4a5cf8be906d5991e7527e69e3f2ceaa74811301">commit 4a5cf8be</a>, 2025-11-24)</td>
+      <td>No Bugzilla ID</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_disasm.c</code> const-correctness (clang <code class="language-plaintext highlighter-rouge">-Werror</code>/C23 <code class="language-plaintext highlighter-rouge">bsearch</code> prototype mismatch), broke clang builds for 0.191-0.194</td>
+      <td>0.195 (2025-11-24)</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=4a5cf8be906d5991e7527e69e3f2ceaa74811301">4a5cf8be</a></td>
       <td>Medium</td>
-      <td>Build failure with clang strict mode / C23 bsearch prototype; affected 0.191-0.194</td>
     </tr>
     <tr>
-      <td>(no Bugzilla ID)</td>
-      <td>elflint: false GOT warning for RISC-V binaries using .got.plt</td>
-      <td>0.193 (<a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=a4ece6a521c181e43854a5691d8c2828d326a925">commit a4ece6a5</a>, 2024-12-30)</td>
+      <td>No Bugzilla ID</td>
+      <td><code class="language-plaintext highlighter-rouge">elflint</code> false <code class="language-plaintext highlighter-rouge">_GLOBAL_OFFSET_TABLE_</code> warning for RISC-V <code class="language-plaintext highlighter-rouge">.got.plt</code> layout (lld-linked binaries)</td>
+      <td>0.193 (2024-12-30)</td>
+      <td><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=a4ece6a521c181e43854a5691d8c2828d326a925">a4ece6a5</a></td>
       <td>Low</td>
-      <td>False positive from eu-elflint for lld-linked RISC-V ELF</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Upstream Bugzilla (bugs.sourceware.org) was inaccessible during research due to Anubis bot protection. Additional open RISC-V bugs may exist that were not retrieved.</p><hr />
+<p>Not riscv-specific, for completeness: CVE-2025-1352 and CVE-2025-1376 in elfutils 0.192 are general memory-safety issues affecting all architectures.</p>
+
+<p><strong>Performance data</strong>: Data not available. No riscv64-vs-arm64/amd64 performance comparison for elfutils tools (eu-readelf, eu-strip, libdw parsing, debuginfod indexing) was found in any public source, including Phoronix’s extensive RISC-V hardware benchmark suite (SpacemiT K3/RVV, SiFive HiFive Unmatched, Scaleway EM-RV1, Ubuntu RISC-V evolution), which covers general CPU/SoC workloads but not ELF/DWARF tooling specifically. This is consistent with elfutils being I/O-bound (ELF/DWARF file parsing) with no hot, SIMD-acceleratable inner loops, making dedicated performance benchmarking low-value.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1292,87 +1336,97 @@ make
 </h2>
     
 
-<p><strong>No blockers exist for riscv64 in elfutils.</strong> The port is upstream, the CI is active, distributions ship packages, and the maintainer (Mark Wielaard) actively reviews and merges RISC-V patches.</p>
+<p>No blockers exist for riscv64 in elfutils. The port is fully upstream, CI is active and passing on dedicated hardware, distributions ship packages built from unmodified upstream source, and the maintainer (Mark Wielaard) has a track record of reviewing and merging RISC-V patches within days to weeks (both tracked Bugzilla bugs, 31142 and 33006, were resolved on this timescale).</p>
 
-<p><strong>Open gaps that require upstream contribution (not blocked by policy):</strong></p>
+<p><strong>Open gaps that require upstream contribution, not blocked by policy:</strong></p>
 
 <ol>
-  <li>
-    <p><strong>SHT_RISCV_ATTRIBUTES stripping bug</strong>: Requires an upstream bug report and a one-line fix in eu-strip to preserve sections of type SHT_RISCV_ATTRIBUTES. No organizational or technical objection is anticipated.</p>
-  </li>
-  <li>
-    <p><strong>FPU live register read in riscv_initreg.c</strong>: Requires implementing <code class="language-plaintext highlighter-rouge">PTRACE_GETREGSET/NT_FPREGSET</code> (or equivalent) for riscv64. The kernel API exists; it is a straightforward addition analogous to arm64’s implementation.</p>
-  </li>
-  <li>
-    <p><strong>Complex aggregate return value location</strong>: Requires completing <code class="language-plaintext highlighter-rouge">flatten_aggregate</code> in riscv_retval.c to handle heterogeneous structs per the LP64D psABI floating-point calling convention rules. This is moderate effort (100-200 lines) but requires careful testing against the RISC-V psABI spec.</p>
-  </li>
-  <li>
-    <p><strong>Disassembler extension coverage</strong>: Adding Zba/Zbb/Zbc/Zbs (bitmanip), Zicond (conditional ops), V (vector) decode to riscv_disasm.c. The disassembler is table-driven; adding extensions is mechanical but volume-intensive work.</p>
-  </li>
-  <li>
-    <p><strong>elfutils-debian-riscv builder offline</strong>: The Debian riscv64 Buildbot builder (ID 272) has been offline since 2023. Restoring it would require a Debian riscv64 build worker being registered with the sourceware Buildbot master. This is a maintenance/infrastructure gap, not a technical blocker.</p>
-  </li>
+  <li><strong>SHT_RISCV_ATTRIBUTES stripping bug</strong>: needs an upstream Bugzilla report (none filed as of this writing; tracked only in <a href="https://github.com/openeuler-riscv/oerv-team/issues/2074">openeuler-riscv/oerv-team #2074</a>) and a one-line fix in eu-strip to preserve sections of type SHT_RISCV_ATTRIBUTES.</li>
+  <li><strong>FPU live register read</strong>: requires implementing <code class="language-plaintext highlighter-rouge">PTRACE_GETREGSET</code>/<code class="language-plaintext highlighter-rouge">NT_FPREGSET</code> support in <code class="language-plaintext highlighter-rouge">riscv_initreg.c</code> (kernel struct <code class="language-plaintext highlighter-rouge">struct __riscv_d_ext_state</code>), analogous to the existing arm64 implementation.</li>
+  <li><strong>Complex aggregate return-value location</strong>: requires completing <code class="language-plaintext highlighter-rouge">flatten_aggregate</code> in <code class="language-plaintext highlighter-rouge">riscv_retval.c</code> for heterogeneous structs per the LP64D psABI floating-point calling convention, including the mixed int+float case Palmer Dabbelt (SiFive) specifically flagged in review.</li>
+  <li><strong>Disassembler extension coverage</strong>: table-driven addition of Zba/Zbb/Zbc/Zbs (bitmanip) and V (vector) decode to <code class="language-plaintext highlighter-rouge">riscv_disasm.c</code>; mechanical but volume-intensive.</li>
+  <li><strong>Frame-pointer fallback unwinder</strong>: a new <code class="language-plaintext highlighter-rouge">riscv_unwind.c</code>, modeled on the existing x86_64/aarch64/s390/ppc64/loongarch implementations.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">elfutils-debian-riscv</code>/<code class="language-plaintext highlighter-rouge">elfutils-try-debian-riscv</code> builder status is unclear</strong>: these builder ids appear in the Buildbot REST API but not in the current <code class="language-plaintext highlighter-rouge">master.cfg</code>; whether a Debian-based riscv64 builder is actually running today could not be confirmed this session and would need direct confirmation with the Sourceware infrastructure team before being scoped as investment.</li>
 </ol>
 
-<p><strong>Organizational stance:</strong> Mark Wielaard has accepted all RISC-V patches submitted with tests and mailing-list review. There is no stated objection to further RISC-V work. Patch turnaround on the mailing list is typically days to weeks.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Organizational stance</strong>: Mark Wielaard has accepted every RISC-V patch submitted with tests and mailing-list review to date; there is no stated objection to further RISC-V work.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no prior investment in elfutils. All existing RISC-V work was contributed by SUSE, Red Hat, and community contributors. The CI infrastructure (StarFive hardware) was provided independently of RISE.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> blue (N/A - blue has no sub-type; build = yes, test = yes, upstream-published riscv64 artifact = no)</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p>elfutils has active, passing native riscv64 CI: the sourceware.org Buildbot builder “elfutils-ubuntu-riscv” runs full autoreconf/configure/make/<code class="language-plaintext highlighter-rouge">make check</code> on 5 dedicated physical StarFive VisionFive V2 boards for every main-branch and try-branch push (<a href="https://builder.sourceware.org/buildbot/#/builders/274">builder.sourceware.org/buildbot/#/builders/274</a>), so build = yes and test = yes. However elfutils itself only ships source tarballs; it does not publish riscv64 (or any architecture-specific) binaries directly, so the consumable riscv64 package comes from downstream distros: Ubuntu 26.04 “resolute” ships elfutils 0.194-4 for riscv64 (<a href="https://packages.ubuntu.com/search?keywords=elfutils&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a>) and Debian sid/testing also carries a riscv64 build, both from unmodified upstream source with no riscv64-specific packaging patches found. Per the release-provider rule, this yields blue (build yes, test yes, upstream-published artifact no) rather than green, with the release provided by the distro, not upstream.</p>
+
+<p><strong>Pending work that could change the grade</strong> (non-blocking correctness gaps that do not affect the color but are worth tracking): <code class="language-plaintext highlighter-rouge">eu-strip --remove-comment</code> incorrectly strips the SHT_RISCV_ATTRIBUTES section (tracked only in a downstream GitHub issue, <a href="https://github.com/openeuler-riscv/oerv-team/issues/2074">openeuler-riscv/oerv-team #2074</a>, not yet filed upstream); <code class="language-plaintext highlighter-rouge">riscv_retval.c</code>’s <code class="language-plaintext highlighter-rouge">flatten_aggregate</code> handles only simple homogeneous-type struct returns (mixed int+float, nested structs, unions unimplemented, acknowledged partial in the 2024-03-19 commit); <code class="language-plaintext highlighter-rouge">riscv_initreg.c</code> does not read FPU live registers via ptrace; <code class="language-plaintext highlighter-rouge">eu-stacktrace</code> is permanently disabled on riscv64 pending a kernel perf_regs header. There is no RISE project funding or involvement in elfutils specifically; all RISC-V work to date is organic upstream contribution from SUSE, Red Hat, and SiFive engineers, with a responsive maintainer (two riscv64 Bugzilla bugs filed and fixed within days to weeks in 2024-2025).</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has no prior investment in elfutils. All existing RISC-V work was contributed organically by SUSE, Red Hat, SiFive, and IBM engineers; the CI hardware (StarFive boards) was donated independently of RISE. The only RISE touchpoint found is incidental: elfutils is compiled from source as a native build dependency of pystack in <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> PR #2398, using RISE’s RISC-V Runners as the execution environment, not as a funded improvement to elfutils itself.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p><strong>eu-strip SHT_RISCV_ATTRIBUTES fix:</strong> One-line fix in eu-strip. Requires understanding the <code class="language-plaintext highlighter-rouge">--remove-comment</code> code path, adding a check for <code class="language-plaintext highlighter-rouge">sh_type == SHT_RISCV_ATTRIBUTES</code>. Straightforward. Upstream bug report must be filed first (none exists yet).</p>
+<p><strong>eu-strip SHT_RISCV_ATTRIBUTES fix</strong>: a one-line fix in eu-strip’s <code class="language-plaintext highlighter-rouge">--remove-comment</code> path, adding a check for <code class="language-plaintext highlighter-rouge">sh_type == SHT_RISCV_ATTRIBUTES</code>. An upstream bug report must be filed first (none exists yet).</p>
 
-<p><strong>FPU live register read (riscv_initreg.c):</strong> Add <code class="language-plaintext highlighter-rouge">PTRACE_GETREGSET/NT_FPREGSET</code> support. The kernel struct is <code class="language-plaintext highlighter-rouge">struct __riscv_d_ext_state</code> (32 FP regs + fcsr). Implementation is analogous to arm64’s <code class="language-plaintext highlighter-rouge">riscv_initreg.c</code> peers. Requires a riscv64 Linux machine for testing.</p>
+<p><strong>FPU live register read (<code class="language-plaintext highlighter-rouge">riscv_initreg.c</code>)</strong>: add <code class="language-plaintext highlighter-rouge">PTRACE_GETREGSET</code>/<code class="language-plaintext highlighter-rouge">NT_FPREGSET</code> support (kernel struct <code class="language-plaintext highlighter-rouge">struct __riscv_d_ext_state</code>, 32 FP registers + fcsr), analogous to the existing arm64 peer implementation. Requires a riscv64 Linux machine for testing.</p>
 
-<p><strong>Complete flatten_aggregate in riscv_retval.c:</strong> Handle heterogeneous aggregates per LP64D psABI section 2.14. The existing code handles same-base-type structs only. Mixed int+float, nested structs, and union types need to be added. Tests require new test binaries for each aggregate pattern.</p>
-<h3 id="132-performance-optimization">
+<p><strong>Complete <code class="language-plaintext highlighter-rouge">flatten_aggregate</code> in <code class="language-plaintext highlighter-rouge">riscv_retval.c</code></strong>: handle heterogeneous aggregates per LP64D psABI section 2.14, including the mixed int+float split-register case SiFive flagged in review. New test binaries are needed for each aggregate pattern.</p>
+
+<p><strong>Frame-pointer fallback unwinder</strong>: a new <code class="language-plaintext highlighter-rouge">riscv_unwind.c</code>, modeled on the x86_64/aarch64/s390/ppc64/loongarch implementations already in the tree.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Data not available: no benchmark data comparing elfutils performance on riscv64 vs arm64 or amd64 was found in any public source. elfutils is primarily I/O-bound (ELF file parsing) with no hot SIMD-acceleratable inner loops. Performance investment is low-priority.</p>
-<h3 id="133-cicd-infrastructure">
+<p>Data not available: no benchmark data comparing elfutils performance on riscv64 vs arm64 or amd64 was found in any public source. elfutils is primarily I/O-bound with no hot SIMD-acceleratable inner loops. Performance investment is low priority.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p><strong>Restore elfutils-debian-riscv Buildbot worker:</strong> Coordinate with Debian riscv64 porter team and Mark Wielaard to re-register a Debian riscv64 build worker. The Ubuntu riscv64 builder is active but Debian-based testing catches different packaging/dependency issues.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>Not applicable. elfutils has no Python/npm/Maven/OCI package ecosystem. It is a C library consumed via system package managers. Section 10 is omitted per report rules.</p>
-<h3 id="135-summary-table">
+<p><strong>Confirm status of <code class="language-plaintext highlighter-rouge">elfutils-debian-riscv</code>/<code class="language-plaintext highlighter-rouge">elfutils-try-debian-riscv</code> builders</strong>: these builder ids appear in the Buildbot REST API but not in the current <code class="language-plaintext highlighter-rouge">master.cfg</code>; direct confirmation with the Sourceware infrastructure team is needed before this can be scoped as a restoration effort or ruled out entirely. The active <code class="language-plaintext highlighter-rouge">elfutils-ubuntu-riscv</code> builder already provides solid native riscv64 coverage; a second, Debian-based builder would primarily catch packaging/dependency differences rather than close a functional gap.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable: elfutils has no dependent Python/npm/Maven/OCI package ecosystem of its own; it is a C library consumed via system package managers. The one indirect ecosystem touchpoint found, elfutils being compiled from source inside pystack’s riscv64 wheel build (<code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> PR #2398), is a single downstream consumer’s build dependency, not a package ecosystem requiring separate riscv64 enablement work on elfutils’ side.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1391,7 +1445,7 @@ make
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Fix eu-strip SHT_RISCV_ATTRIBUTES stripping (file upstream bug, implement fix, test)</td>
+      <td>File upstream bug and fix eu-strip SHT_RISCV_ATTRIBUTES stripping</td>
       <td>1</td>
       <td>Chip company contributor</td>
       <td>Critical</td>
@@ -1409,6 +1463,13 @@ make
       <td>3</td>
       <td>Chip company contributor</td>
       <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Implement riscv_unwind.c frame-pointer fallback unwinder</td>
+      <td>2</td>
+      <td>Chip company contributor</td>
+      <td>Medium</td>
     </tr>
     <tr>
       <td>Functional</td>
@@ -1433,25 +1494,15 @@ make
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Restore elfutils-debian-riscv Buildbot worker</td>
+      <td>Confirm and, if needed, restore a Debian-based riscv64 Buildbot builder</td>
       <td>1</td>
-      <td>Chip company contributor + Debian porter team</td>
+      <td>Chip company contributor + Sourceware infra team</td>
       <td>Medium</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Total estimated effort: 17 person-weeks across all items. The two Critical/High functional items (SHT_RISCV_ATTRIBUTES fix + FPU live reg read) are 3 person-weeks and resolve the most user-visible correctness gaps. The aggregate return value work (3 weeks) resolves the remaining DWARF tooling correctness issue for struct-returning functions.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p>Total estimated effort: 19 person-weeks across all items. The three Critical/High functional items (SHT_RISCV_ATTRIBUTES fix, FPU live register read, complex aggregate return values) total 6 person-weeks and resolve the most user-visible correctness gaps in DWARF/debugger tooling on riscv64.</p>
 <h2 id="15-references">
   
   
@@ -1464,22 +1515,31 @@ make
 <ul>
   <li><a href="https://sourceware.org/elfutils/">elfutils project homepage</a></li>
   <li><a href="https://sourceware.org/git/?p=elfutils.git">elfutils git repository</a></li>
-  <li><a href="https://builder.sourceware.org/buildbot/#/builders/274">Buildbot: elfutils-ubuntu-riscv builder (ID 274)</a></li>
-  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=127e3831c169851e796496582213a94965337696">Commit 127e3831: tests: Use readelf -N -w in run-strip-reloc.sh (2023-06-17)</a></li>
-  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=485b87a2e53045d2284a6649d529ab3aaa22e127">Commit 485b87a2: backends: Update list of RISC-V relocations (2023-06-26)</a></li>
-  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=669b648111d3bc27cd4756879f5fe5a18515de77">Commit 669b6481: riscv: Partial implementation of flatten_aggregate (2024-03-19)</a></li>
-  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=46c5c98ee7ce2108f51ca8ecb0e81d55797c8470">Commit 46c5c98e: backends/riscv: Remove unused relocations (2024-07-31)</a></li>
+  <li><a href="https://builder.sourceware.org/buildbot/#/builders/274">Buildbot: elfutils-ubuntu-riscv builder (id 274)</a></li>
+  <li><a href="https://sourceware.org/pipermail/elfutils-devel/2019q3/001999.html">2019q3 thread: RISC-V disassembler</a></li>
+  <li><a href="https://sourceware.org/legacy-ml/elfutils-devel/2019-q4/msg00219.html">elfutils 0.178 release announcement</a></li>
+  <li><a href="https://sourceware.org/pipermail/elfutils-devel/2022q4/005408.html">PT_RISCV_ATTRIBUTES RFC thread</a></li>
+  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=127e3831c169851e796496582213a94965337696">Commit 127e3831: tests: use readelf -N -w in run-strip-reloc.sh (2023-06-17)</a></li>
+  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=485b87a2e53045d2284a6649d529ab3aaa22e127">Commit 485b87a2: backends: update list of RISC-V relocations (2023-06-26)</a></li>
+  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=669b648111d3bc27cd4756879f5fe5a18515de77">Commit 669b6481: riscv: partial implementation of flatten_aggregate (2024-03-19)</a></li>
+  <li><a href="https://www.mail-archive.com/elfutils-devel@sourceware.org/msg06864.html">Bug 31142 review thread (Palmer Dabbelt)</a></li>
+  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=46c5c98ee7ce2108f51ca8ecb0e81d55797c8470">Commit 46c5c98e: backends/riscv: remove unused relocations (2024-07-31)</a></li>
   <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=a4ece6a521c181e43854a5691d8c2828d326a925">Commit a4ece6a5: backends: check_special_symbol <em>GLOBAL_OFFSET_TABLE</em> (2024-12-30)</a></li>
+  <li><a href="https://www.mail-archive.com/elfutils-devel@sourceware.org/msg08170.html">Bug tools/33006 initial report</a></li>
+  <li><a href="https://www.mail-archive.com/elfutils-devel@sourceware.org/msg08208.html">Bug tools/33006 reopen</a></li>
   <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=07bd923cea4b883ca2357e9fc80babcedd242b37">Commit 07bd923c: libcpu: riscv_disasm use 50 char mnebuf (2025-06-03)</a></li>
-  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=4a5cf8be906d5991e7527e69e3f2ceaa74811301">Commit 4a5cf8be: Fix const-correctness issues in riscv_disasm.c (2025-11-24)</a></li>
-  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=003d1c8bc8be6c45fc39eb1b886def17482ed3a5">Commit 003d1c8b: riscv_disasm.c: Fix out-of-bounds reads (2026-05-31)</a></li>
+  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=4a5cf8be906d5991e7527e69e3f2ceaa74811301">Commit 4a5cf8be: fix const-correctness issues in riscv_disasm.c (2025-11-24)</a></li>
+  <li><a href="https://sourceware.org/git/?p=elfutils.git;a=commit;h=003d1c8bc8be6c45fc39eb1b886def17482ed3a5">Commit 003d1c8b: riscv_disasm.c: fix out-of-bounds reads (2026-05-31)</a></li>
+  <li><a href="http://www.mail-archive.com/elfutils-devel@sourceware.org/msg09512.html">elfutils 0.196 released announcement</a></li>
   <li><a href="https://sourceware.org/bugzilla/show_bug.cgi?id=31142">elfutils Bug 31142: riscv pass_by_flattened_arg not implemented</a></li>
-  <li><a href="https://sourceware.org/bugzilla/show_bug.cgi?id=33006">elfutils Bug 33006: Stack buffer overflow in riscv_disasm</a></li>
+  <li><a href="https://sourceware.org/bugzilla/show_bug.cgi?id=33006">elfutils Bug 33006: stack buffer overflow in riscv_disasm</a></li>
   <li><a href="https://github.com/openeuler-riscv/oerv-team/issues/2074">openeuler-riscv/oerv-team issue #2074: eu-strip –remove-comment incorrectly strips .riscv.attributes</a></li>
-  <li><a href="https://github.com/ROCm/TheRock/issues/5120">ROCm/TheRock issue #5120: elfutils 0.192 fails to build under amd-llvm/clang</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=elfutils">Debian buildd tracker for elfutils</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=elfutils&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 resolute elfutils package search</a></li>
   <li><a href="https://packages.ubuntu.com/noble/elfutils">Ubuntu 24.04 elfutils package (noble ports)</a></li>
+  <li><a href="https://archriscv.felixc.at/repo/core/">Arch Linux RISC-V core repository listing</a></li>
   <li><a href="https://builder.sourceware.org/buildbot/api/v2/builders?tags__contains=elfutils">sourceware.org Buildbot API: elfutils builders</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/pull/2398">riseproject-dev/python-wheels PR #2398: pystack: Add version 1.7.1</a></li>
+  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
 </ul>
 
           
