@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for Android Bionic<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for Bionic<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +280,80 @@
 </h2>
     
 
-<p>Android Bionic is the C library, math library, and dynamic linker shipped with Android. It replaces glibc and provides the ABI foundation for all native Android code. The project is hosted exclusively on Google infrastructure at <a href="https://android.googlesource.com/platform/bionic">android.googlesource.com/platform/bionic</a> and is governed entirely by Google. All OWNERS-file entries are Google employees. There is no independent foundation, technical steering committee, or external maintainer with commit authority.</p>
+<p>Android Bionic is the C library, math library, and dynamic linker shipped with Android. It replaces glibc and provides the ABI foundation for all native Android code. The project is hosted exclusively on Google infrastructure at <a href="https://android.googlesource.com/platform/bionic">android.googlesource.com/platform/bionic</a> and is governed entirely by Google as part of AOSP. There is no independent foundation, technical steering committee, or CLA-based external maintainer program, and no <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> file. Governance runs through a Gerrit <code class="language-plaintext highlighter-rouge">OWNERS</code> file requiring Code-Review+2 from a listed Google owner before any change can merge.</p>
 
 <p>License: BSD 2-clause for core AOSP-authored files. BSD 3-clause for SiFive-authored RISC-V string assembly (<code class="language-plaintext highlighter-rouge">memcpy.S</code> and related). Upstream-ported BSD components (FreeBSD, OpenBSD, NetBSD) carry their original 2- or 3-clause BSD licenses. There is no Apache 2.0 umbrella for this library.</p>
 
-<p>The dominant maintainer is Elliott Hughes (enh@google.com, Google). Additional OWNERS are Christopher Ferris, Dan Albert, Ryan Prichard, and three other Google employees. All external contributions require Code-Review+2 from a listed Google owner before submission.</p><hr />
+<p><strong>Current OWNERS-file authority (verified directly against the live file):</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Person</th>
+      <th>Email</th>
+      <th>Company</th>
+      <th>Scope</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Elliott Hughes</td>
+      <td>enh@google.com</td>
+      <td>Google</td>
+      <td>Full owner (dominant maintainer)</td>
+    </tr>
+    <tr>
+      <td>Christopher Ferris</td>
+      <td>cferris@google.com</td>
+      <td>Google</td>
+      <td>Full owner</td>
+    </tr>
+    <tr>
+      <td>Chia-hung Duan</td>
+      <td>chiahungduan@google.com</td>
+      <td>Google</td>
+      <td>Full owner</td>
+    </tr>
+    <tr>
+      <td>Dan Albert</td>
+      <td>danalbert@google.com</td>
+      <td>Google</td>
+      <td>Full owner</td>
+    </tr>
+    <tr>
+      <td>Ryan Prichard</td>
+      <td>rprichard@google.com</td>
+      <td>Google</td>
+      <td>Full owner</td>
+    </tr>
+    <tr>
+      <td>Yabin Cui</td>
+      <td>yabinc@google.com</td>
+      <td>Google</td>
+      <td>Full owner</td>
+    </tr>
+    <tr>
+      <td>Florian Mayer</td>
+      <td>fmayer@google.com</td>
+      <td>Google</td>
+      <td>Per-file only (<code class="language-plaintext highlighter-rouge">docs/mte.md</code>)</td>
+    </tr>
+    <tr>
+      <td>Peter Collingbourne</td>
+      <td>pcc@google.com</td>
+      <td>Google</td>
+      <td>Per-file only (<code class="language-plaintext highlighter-rouge">docs/mte.md</code>)</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>100 percent of OWNERS-file authority sits with Google employees. No non-Google company holds commit or review authority.</p>
+
+<p><strong>Non-owner corporate contributors to the riscv64 port</strong> (contribution only, no merge authority): Alibaba/DAMO Academy (original RFC and the SOB-chain patches that followed it: Mao Han, Xia Lifang, Chen Guoyin, Wang Chen, Lu Xufan) and SiFive (15-file RVV string-assembly contribution, BSD 3-clause, credited to Yun Hsiang).</p>
+
+<p><strong>Community culture on new ports:</strong> entirely Google-internal decision-making. There is no external review board or foundation process for accepting a new Bionic architecture port. The Alibaba RFC is the precedent for the actual mechanism: an outside company can propose a port, but Google unilaterally decides the acceptance terms (here, forcing a rewrite from an 85+ patch-set monolithic RFC into atomic, individually reviewable Gerrit changes under Google review) and retains all merge authority throughout.</p>
+
+<p>Google itself is a Premier Member of the RISE Project (riseproject.dev/members), alongside Alibaba Damo, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, and Tenstorrent. The RISE System Libraries Working Group (now consolidated into an “Enablement and Optimization Working Group”) lists “Android, C runtimes” in scope, but no funded RISE RFP deliverable names Bionic specifically. See Section 12 for the full detail on this, including a one-line tracking stub that should not be read as an independent RISE commitment.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -293,11 +363,11 @@
 </h2>
     
 
-<p>The riscv64 port originated with a monolithic RFC submitted by a team from Alibaba (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2142912">Change #2142912</a>, filed 2022-06-30, 85+ patch sets, abandoned 2022-11-30). Elliott Hughes declined to merge it as a single patch due to binary blob policy and code style, and instead broke it into individually reviewable changes starting October 2022.</p>
+<p>The riscv64 port originated with a monolithic RFC submitted by a team from Alibaba (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2142912">Change #2142912</a>, filed 2022-06-30, 85+ patch sets). Elliott Hughes declined to merge it as a single patch due to binary-blob policy and code-style concerns, and instead broke it into individually reviewable changes starting October 2022; the RFC itself was abandoned 2022-11-30. The Alibaba team’s Signed-off-by attribution (Mao Han, Xia Lifang, Chen Guoyin, Wang Chen, Lu Xufan) was preserved across the split, derived commits, after the Alibaba team raised the point in the RFC review thread and Hughes agreed.</p>
 
-<p>The original RFC carries Signed-off-by credits from: Mao Han, Xia Lifang, Chen Guoyin, Wang Chen, and Lu Xufan (all Alibaba). The split changes preserve these SOB chains. The Alibaba team expressed concern in the RFC review thread that attribution be preserved; Elliott Hughes acknowledged this and kept SOB chains in all derived commits.</p>
+<p>Gerrit change statuses below were independently re-verified this cycle against the Gerrit REST API (<code class="language-plaintext highlighter-rouge">android-review.googlesource.com/changes/&lt;id&gt;/detail</code>); a handful of <code class="language-plaintext highlighter-rouge">merged_at</code> dates in earlier reporting were off by one to three days from Gerrit’s actual <code class="language-plaintext highlighter-rouge">submitted</code> timestamp and are corrected here.</p>
 
-<p><strong>Foundation phase (Oct-Nov 2022):</strong></p>
+<p><strong>Foundation phase (Sept-Nov 2022):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -316,12 +386,12 @@
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/2239865">2239865</a></td>
       <td>Initial import of the risc-v uapi headers</td>
-      <td>2022-10-01</td>
+      <td>2022-10-03</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/2240295">2240295</a></td>
       <td>Add riscv64 to the map files</td>
-      <td>2022-10-04</td>
+      <td>2022-10-05</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/2245796">2245796</a></td>
@@ -405,17 +475,17 @@
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/2657071">2657071</a></td>
       <td>Add riscv_hwprobe to the seccomp allowlist</td>
-      <td>2023-07-13</td>
+      <td>2023-07-14</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/2679530">2679530</a></td>
       <td>riscv64: add sys/hwprobe.h</td>
-      <td>2023-07-27</td>
+      <td>2023-07-28</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/2681597">2681597</a></td>
       <td>riscv64: use vdso for __riscv_hwprobe()</td>
-      <td>2023-07-29</td>
+      <td>2023-08-01</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/2695693">2695693</a></td>
@@ -449,17 +519,17 @@
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/3047343">3047343</a></td>
       <td>[RISC-V] Add misaligned load store tests</td>
-      <td>2024-04-20</td>
+      <td>2024-04-24</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/3094537">3094537</a></td>
       <td>Add riscv64 implementation of __get_bionic_tcb_for_thread()</td>
-      <td>2024-05-17</td>
+      <td>2024-05-20</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/3199470">3199470</a></td>
       <td>libc.map.txt: remove the two riscv64 special cases</td>
-      <td>2024-07-30</td>
+      <td>2024-08-01</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/3279653">3279653</a></td>
@@ -469,24 +539,28 @@
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/3408180">3408180</a></td>
       <td>libc: remove riscv64 mem<em>/str</em> ifuncs and fallbacks</td>
-      <td>2024-12-11</td>
+      <td>2024-12-12</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/3472473">3472473</a></td>
       <td>Clean up the riscv64 assembler slightly</td>
-      <td>2025-01-31</td>
+      <td>2025-02-03</td>
     </tr>
     <tr>
       <td><a href="https://android-review.googlesource.com/c/platform/bionic/+/3472474">3472474</a></td>
       <td>riscv64: remove unused file</td>
-      <td>2025-01-31</td>
+      <td>2025-02-01</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The last meaningful merge is from January 2025. Activity since then has been quiet. No master tracking issue exists. The original RFC (#2142912) was the umbrella; it was abandoned once the atomic changes landed. No Google Issue Tracker bug is publicly accessible.</p>
+<p>The last merged riscv64-topic commit to <code class="language-plaintext highlighter-rouge">platform/bionic</code> is from February 2025. All 30 merged changes above are confirmed still <code class="language-plaintext highlighter-rouge">MERGED</code> in Gerrit, with none reverted or reopened.</p>
 
-<p><strong>First release:</strong> Android 14 (API 34, released October 2023) was the first Android version with official riscv64 support. All foundation changes merged between September 2022 and August 2023 shipped in Android 14.</p><hr />
+<p><strong>The only open riscv64-topic Gerrit change</strong> is <a href="https://android-review.googlesource.com/c/platform/bionic/+/2320311">#2320311</a>, “Disable Rust dep.”, a one-line change to <code class="language-plaintext highlighter-rouge">apex/Android.bp</code>. Owner: Ulya Trofimovich (Google). Created 2022-11-29. Confirmed via direct Gerrit REST fetch: status is still <code class="language-plaintext highlighter-rouge">NEW</code>/work-in-progress, last updated 2024-06-10, with no activity since. Full comment thread: Elliott Hughes asked on 2022-11-30 “do you still need this? (crash_dump isn’t rust, so i’m a bit confused about what needs to be fixed here…)”; Trofimovich replied on 2023-01-19 “Not sure, I needed it to progress with the build a long time ago. I’ll reevaluate this.”; reviewer Xin Li set Presubmit-Ready+1 on 2023-07-12 and then removed themselves as reviewer on 2024-06-10, clearing that vote. The question was never conclusively answered and the change has sat unmerged and unresolved for over two years.</p>
+
+<p>No master or umbrella tracking issue for the riscv64 Bionic port exists. The original RFC (#2142912) was the closest thing to one and was abandoned once split into atomic changes.</p>
+
+<p><strong>First release:</strong> Android 14 (API 34, released October 2023) was the first Android version with official riscv64 support. All foundation-phase changes merged between September 2022 and August 2023 shipped in Android 14. Merges landing near the Android 15 (~Oct 2024) and Android 16 (~mid-2025) branch cuts are noted [NEEDS VERIFICATION] for exact ship version, since “first release” here means “first AOSP platform version whose source tree contains the commit,” not a shipping consumer device, and no branch-manifest cross-check was performed.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -496,11 +570,60 @@
 </h2>
     
 
-<p>AOSP publishes no formal architecture tier policy analogous to Rust or LLVM tier definitions. Architectures present in the tree (arm, arm64, x86, x86_64, riscv64) are implicitly supported by Google product decisions. The riscv64 port was initiated and is maintained by an internal Google engineer.</p>
+<p>AOSP publishes no formal architecture-tier policy analogous to Rust or LLVM tier definitions. Architectures present in the tree (arm, arm64, x86, x86_64, riscv64) are implicitly supported by Google product decisions, and the riscv64 port was initiated and is maintained by an internal Google engineer (Elliott Hughes) as first-class in-tree source.</p>
 
-<p>The NDK riscv64 ABI is explicitly described as provisional. NDK r27 (2024) was the first release to include a riscv64 sysroot; the release notes state: “A RISC-V sysroot (AKA riscv64, or rv64) has been added. It is <strong>not</strong> supported.” Its stated purpose is OS vendor bringup only. <code class="language-plaintext highlighter-rouge">meta/abis.json</code> sets <code class="language-plaintext highlighter-rouge">"default": false</code> for riscv64.</p>
+<p>The NDK riscv64 ABI, however, is explicitly provisional. NDK r27 (2024) was the first release to include a riscv64 sysroot; its release notes state: “A RISC-V sysroot (AKA riscv64, or rv64) has been added. It is <strong>not</strong> supported.” Its stated purpose is OS-vendor bringup only, and <code class="language-plaintext highlighter-rouge">meta/abis.json</code> sets <code class="language-plaintext highlighter-rouge">"default": false</code> for riscv64.</p>
 
-<p>In short: the architecture is in the tree as first-class source code, but the NDK ABI contract for riscv64 is not finalized and ABI breaks remain possible.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>amd64/x86_64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>In-tree source</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Official first-class architecture</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (source-level)</td>
+    </tr>
+    <tr>
+      <td>NDK sysroot supported</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (explicitly marked unsupported)</td>
+    </tr>
+    <tr>
+      <td>ABI finalized</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>16 KiB page size</td>
+      <td>Yes (NDK r27+)</td>
+      <td>Yes (NDK r27+)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>riscv64 CI gating merges</td>
+      <td>n/a</td>
+      <td>n/a</td>
+      <td>No (Section 7)</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>The architecture is in the tree as first-class source code, but the NDK ABI contract for riscv64 is not finalized and ABI breaks remain possible for anything built against it today.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -518,27 +641,17 @@
 </h3>
     
 
-<p>All 5 files are hand-written RISC-V assembly:</p>
+<p>Directory listing independently re-verified this cycle against <code class="language-plaintext highlighter-rouge">android.googlesource.com/platform/bionic/+/master/libc/arch-riscv64/bionic/</code>; contents unchanged. All 5 files are hand-written RISC-V assembly:</p>
 
 <ul>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">syscall.S</code></strong>: shuffles C args into RISC-V registers (a7 = syscall number, a0-a5 = arguments), issues <code class="language-plaintext highlighter-rouge">ecall</code>, routes errors via <code class="language-plaintext highlighter-rouge">__set_errno_internal</code>. riscv64 was the first primary-only architecture in Bionic (no 32-bit companion) and the first that post-dates the kernel’s 64-bit time syscall work, requiring special-casing in the seccomp filter and syscall stub generators.</p>
-  </li>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">setjmp.S</code></strong>: saves 29 words – ra, sp, gp, s0-s11, fs0-fs11, and signal mask. Uses XOR cookie mangling and a checksum. Shadow Call Stack (SCS): only the low bits of gp are saved, deliberately avoiding storing a full SCS pointer gadget. The jmp_buf was enlarged twice: once to accommodate the x18-to-gp SCS register switch (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2526530">#2526530</a>), and once proactively in anticipation of future Zsslpcfi hardware SCS requirements (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2719577">#2719577</a>). The commit message for the second increase notes: “musl and glibc only have the minimum needed (which I think means they’ll need an ABI break to support SCS unless they just use a callee-saved general purpose register), but since we can’t do ABI breaks after we ship, let’s play it safe.”</p>
-  </li>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">__bionic_clone.S</code></strong>: implements <code class="language-plaintext highlighter-rouge">clone(2)</code>, sets up child stack, pushes fn and arg, issues <code class="language-plaintext highlighter-rouge">ecall</code>, zeroes fp and ra in child then tail-calls <code class="language-plaintext highlighter-rouge">__start_thread</code>.</p>
-  </li>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">vfork.S</code></strong>: temporarily sets <code class="language-plaintext highlighter-rouge">cached_pid_=0</code> and <code class="language-plaintext highlighter-rouge">vforked_=1</code> in TLS, issues <code class="language-plaintext highlighter-rouge">clone(CLONE_VM|CLONE_VFORK|SIGCHLD)</code> via <code class="language-plaintext highlighter-rouge">ecall</code>.</p>
-  </li>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">_exit_with_stack_teardown.S</code></strong>: issues <code class="language-plaintext highlighter-rouge">munmap</code> then <code class="language-plaintext highlighter-rouge">exit</code> syscall; ignores munmap failure.</p>
-  </li>
+  <li><strong><code class="language-plaintext highlighter-rouge">syscall.S</code></strong>: shuffles C args into RISC-V registers (a7 = syscall number, a0-a5 = arguments), issues <code class="language-plaintext highlighter-rouge">ecall</code>, routes errors via <code class="language-plaintext highlighter-rouge">__set_errno_internal</code>. riscv64 was the first primary-only architecture in Bionic (no 32-bit companion) and the first that post-dates the kernel’s 64-bit time syscall work, requiring special-casing in the seccomp filter and syscall stub generators.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">setjmp.S</code></strong>: saves 29 words (ra, sp, gp, s0-s11, fs0-fs11, and signal mask). Uses XOR cookie mangling and a checksum. Shadow Call Stack (SCS): only the low bits of gp are saved, deliberately avoiding storing a full SCS pointer gadget. The jmp_buf was enlarged twice: once for the x18-to-gp SCS register switch (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2526530">#2526530</a>), and once proactively for future Zisslpcfi hardware SCS requirements (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2719577">#2719577</a>). The commit message for the second increase: “musl and glibc only have the minimum needed… but since we can’t do ABI breaks after we ship, let’s play it safe.”</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">__bionic_clone.S</code></strong>: implements <code class="language-plaintext highlighter-rouge">clone(2)</code>, sets up child stack, pushes fn and arg, issues <code class="language-plaintext highlighter-rouge">ecall</code>, zeroes fp and ra in child then tail-calls <code class="language-plaintext highlighter-rouge">__start_thread</code>.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">vfork.S</code></strong>: temporarily sets <code class="language-plaintext highlighter-rouge">cached_pid_=0</code> and <code class="language-plaintext highlighter-rouge">vforked_=1</code> in TLS, issues <code class="language-plaintext highlighter-rouge">clone(CLONE_VM|CLONE_VFORK|SIGCHLD)</code> via <code class="language-plaintext highlighter-rouge">ecall</code>.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">_exit_with_stack_teardown.S</code></strong>: issues <code class="language-plaintext highlighter-rouge">munmap</code> then <code class="language-plaintext highlighter-rouge">exit</code> syscall; ignores munmap failure.</li>
 </ul>
 
-<p><strong>Frame pointer ABI note:</strong> Change <a href="https://android-review.googlesource.com/c/platform/bionic/+/2298684">#2298684</a> added a workaround for the RISC-V frame record layout, in which the frame pointer points past both saved values (return address at <code class="language-plaintext highlighter-rouge">frame[-1]</code>, previous FP at <code class="language-plaintext highlighter-rouge">frame[-2]</code>), differing from most other architectures. The commit message states: “I can’t find this documented anywhere, other than people observing that RISC-V appears to behave in this way.” The reviewer (Lifang Xia, Alibaba) pointed to <a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/18">psABI issue #18</a> and noted that GCC 7.2 already implemented this convention. The LLVM workaround reference is <a href="https://reviews.llvm.org/D87579">D87579</a>.</p>
+<p><strong>Frame pointer ABI note:</strong> Change <a href="https://android-review.googlesource.com/c/platform/bionic/+/2298684">#2298684</a> added a workaround for the RISC-V frame record layout, in which the frame pointer points past both saved values (return address at <code class="language-plaintext highlighter-rouge">frame[-1]</code>, previous FP at <code class="language-plaintext highlighter-rouge">frame[-2]</code>). The commit message states: “I can’t find this documented anywhere, other than people observing that RISC-V appears to behave in this way.” The reviewer (Lifang Xia, Alibaba) pointed to <a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/18">psABI issue #18</a> and noted GCC 7.2 already implemented this convention. LLVM’s corresponding workaround is <a href="https://reviews.llvm.org/D87579">D87579</a>.</p>
 <h3 id="42-shadow-call-stack-register-evolution">
   
   
@@ -548,7 +661,7 @@
 </h3>
     
 
-<p>The SCS register was initially x18, chosen due to LLVM constraints at the time. It was switched to gp (x3) in April 2023 (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2526531">#2526531</a>) because gp is effectively unused in the Android RISC-V ABI (the kernel does not touch it, and Android does not use GP relaxation). This freed x18 for application code. The switch required a compiler change; the commit message notes: “untested, obviously, for lack of a suitable compiler.”</p>
+<p>The SCS register was initially x18, constrained by LLVM at the time. It was switched to gp (x3) in April 2023 (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2526531">#2526531</a>) because gp is effectively unused in the Android RISC-V ABI, freeing x18 for application code.</p>
 <h3 id="43-rvv-optimized-string-functions-libcarch-riscv64string-15-files">
   
   
@@ -558,9 +671,9 @@
 </h3>
     
 
-<p>All 15 files are hand-written RISC-V Vector (RVV) assembly, co-credited to SiFive, Inc. (2023). The contribution originates from <a href="https://github.com/sifive/sifive-libc">sifive/sifive-libc</a> under BSD 3-clause license. They were introduced in <a href="https://android-review.googlesource.com/c/platform/bionic/+/2606625">#2606625</a> by Yun Hsiang (SiFive).</p>
+<p>Directory listing re-verified this cycle; contents unchanged (15 files: <code class="language-plaintext highlighter-rouge">memchr.S</code>, <code class="language-plaintext highlighter-rouge">memcmp.S</code>, <code class="language-plaintext highlighter-rouge">memcpy.S</code>, <code class="language-plaintext highlighter-rouge">memmove.S</code>, <code class="language-plaintext highlighter-rouge">memset.S</code>, <code class="language-plaintext highlighter-rouge">stpcpy.S</code>, <code class="language-plaintext highlighter-rouge">strcat.S</code>, <code class="language-plaintext highlighter-rouge">strchr.S</code>, <code class="language-plaintext highlighter-rouge">strcmp.S</code>, <code class="language-plaintext highlighter-rouge">strcpy.S</code>, <code class="language-plaintext highlighter-rouge">strlen.S</code>, <code class="language-plaintext highlighter-rouge">strncat.S</code>, <code class="language-plaintext highlighter-rouge">strncmp.S</code>, <code class="language-plaintext highlighter-rouge">strncpy.S</code>, <code class="language-plaintext highlighter-rouge">strnlen.S</code>). All are hand-written RISC-V Vector (RVV) assembly, contributed by SiFive, Inc. (originating from <a href="https://github.com/sifive/sifive-libc">sifive/sifive-libc</a>, BSD 3-clause), introduced in <a href="https://android-review.googlesource.com/c/platform/bionic/+/2606625">#2606625</a> by Yun Hsiang.</p>
 
-<p>These implementations are compiled unconditionally when the V extension is enabled. There is no IFUNC dispatch for riscv64 in <code class="language-plaintext highlighter-rouge">bionic_ifuncs.h</code>; RISC-V falls into the default empty-args case (no hwcap argument passed to resolvers, unlike aarch64). The ifunc resolver calling convention was corrected in <a href="https://android-review.googlesource.com/c/platform/bionic/+/2695693">#2695693</a> to match glibc: first argument is hwcap, second is null. That commit notes: “I actually went away and looked at a sample of top apps to see how many are using ifuncs currently. The result? Zero.”</p>
+<p>These implementations are compiled unconditionally (confirmed via <code class="language-plaintext highlighter-rouge">libc/Android.bp</code>: a plain <code class="language-plaintext highlighter-rouge">srcs:</code> list for the riscv64 block, with no cflags/march conditionals and no runtime dispatch mechanism). There is no IFUNC dispatch for riscv64 in <code class="language-plaintext highlighter-rouge">bionic_ifuncs.h</code>; the ifunc resolver calling convention was corrected in <a href="https://android-review.googlesource.com/c/platform/bionic/+/2695693">#2695693</a> to match glibc (hwcap as first argument, null as second). That commit’s author notes: “I actually went away and looked at a sample of top apps to see how many are using ifuncs currently. The result? Zero.”</p>
 
 <p>Key RVV techniques used:</p>
 
@@ -573,35 +686,37 @@
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">memcpy</code>, <code class="language-plaintext highlighter-rouge">memset</code></td>
-      <td><code class="language-plaintext highlighter-rouge">vsetvli</code> + <code class="language-plaintext highlighter-rouge">vle8.v</code>/<code class="language-plaintext highlighter-rouge">vse8.v</code>, LMUL=8; includes <code class="language-plaintext highlighter-rouge">__memcpy_chk</code>, <code class="language-plaintext highlighter-rouge">__memset_chk</code></td>
+      <td>memcpy, memset</td>
+      <td>vsetvli + vle8.v/vse8.v, LMUL=8; includes __memcpy_chk, __memset_chk</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">memchr</code></td>
-      <td><code class="language-plaintext highlighter-rouge">vle8ff.v</code> (fault-only-first load), <code class="language-plaintext highlighter-rouge">vmseq.vx</code>, <code class="language-plaintext highlighter-rouge">vfirst.m</code></td>
+      <td>memchr</td>
+      <td>vle8ff.v (fault-only-first load), vmseq.vx, vfirst.m</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">strlen</code></td>
-      <td><code class="language-plaintext highlighter-rouge">vle8ff.v</code>, <code class="language-plaintext highlighter-rouge">vmseq.vi</code>, <code class="language-plaintext highlighter-rouge">vfirst.m</code>, <code class="language-plaintext highlighter-rouge">csrr vl</code></td>
+      <td>strlen</td>
+      <td>vle8ff.v, vmseq.vi, vfirst.m, csrr vl</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">strcmp</code></td>
-      <td>Progressive LMUL ramp-up (mf2 to m4); dual <code class="language-plaintext highlighter-rouge">vfirst.m</code> for null vs. mismatch</td>
+      <td>strcmp</td>
+      <td>Progressive LMUL ramp-up (mf2 to m4); dual vfirst.m for null vs. mismatch</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">strcpy</code></td>
-      <td>Fault-first load + <code class="language-plaintext highlighter-rouge">vmsif.m</code> masked store</td>
+      <td>strcpy</td>
+      <td>Fault-first load + vmsif.m masked store</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">memcmp</code></td>
-      <td><code class="language-plaintext highlighter-rouge">vmsne.vv</code> + <code class="language-plaintext highlighter-rouge">vfirst.m</code> to find first differing byte</td>
+      <td>memcmp</td>
+      <td>vmsne.vv + vfirst.m to find first differing byte</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">stpcpy</code>, <code class="language-plaintext highlighter-rouge">strcat</code>, <code class="language-plaintext highlighter-rouge">strchr</code>, <code class="language-plaintext highlighter-rouge">strncat</code>, <code class="language-plaintext highlighter-rouge">strncmp</code>, <code class="language-plaintext highlighter-rouge">strncpy</code>, <code class="language-plaintext highlighter-rouge">strnlen</code></td>
-      <td>Dedicated <code class="language-plaintext highlighter-rouge">.S</code> files using same RVV pattern</td>
+      <td>stpcpy, strcat, strchr, strncat, strncmp, strncpy, strnlen</td>
+      <td>Dedicated .S files using the same RVV pattern</td>
     </tr>
   </tbody>
 </table></div>
+
+<p>No dedicated V-extension variant sits outside this scalar/RVV-hybrid set; further vector-extension enablement (beyond what these 15 files already cover) is tracked as open work (<a href="https://github.com/google/android-riscv64/issues/92">android-riscv64#92</a>).</p>
 <h3 id="44-dynamic-linker-linkerarchriscv64-2-files">
   
   
@@ -611,18 +726,14 @@
 </h3>
     
 
+<p>Directory listing re-verified this cycle; contents unchanged.</p>
+
 <ul>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">begin.S</code></strong>: linker entry point. Sets <code class="language-plaintext highlighter-rouge">.cfi_undefined ra</code>, passes <code class="language-plaintext highlighter-rouge">sp</code> to <code class="language-plaintext highlighter-rouge">__linker_init</code>, jumps to the returned entry point.</p>
-  </li>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">tlsdesc_resolver.S</code></strong>: implements the RISC-V TLSDESC (TLS Descriptor) protocol with four entry points (<code class="language-plaintext highlighter-rouge">tlsdesc_resolver_static</code>, <code class="language-plaintext highlighter-rouge">tlsdesc_resolver_dynamic</code>, <code class="language-plaintext highlighter-rouge">tlsdesc_resolver_dynamic_slow_path</code>, <code class="language-plaintext highlighter-rouge">tlsdesc_resolver_unresolved_weak</code>). The slow path spills 35 general-purpose registers plus all RVV vector registers (<code class="language-plaintext highlighter-rouge">v0</code>, <code class="language-plaintext highlighter-rouge">v8</code>, <code class="language-plaintext highlighter-rouge">v16</code>, <code class="language-plaintext highlighter-rouge">v24</code> via <code class="language-plaintext highlighter-rouge">vlenb</code>-scaled offsets) before calling <code class="language-plaintext highlighter-rouge">__tls_get_addr</code>.</p>
-  </li>
+  <li><strong><code class="language-plaintext highlighter-rouge">begin.S</code></strong>: linker entry point. Sets <code class="language-plaintext highlighter-rouge">.cfi_undefined ra</code>, passes <code class="language-plaintext highlighter-rouge">sp</code> to <code class="language-plaintext highlighter-rouge">__linker_init</code>, jumps to the returned entry point.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">tlsdesc_resolver.S</code></strong>: implements the RISC-V TLSDESC protocol with four entry points (<code class="language-plaintext highlighter-rouge">tlsdesc_resolver_static</code>, <code class="language-plaintext highlighter-rouge">tlsdesc_resolver_dynamic</code>, <code class="language-plaintext highlighter-rouge">tlsdesc_resolver_dynamic_slow_path</code>, <code class="language-plaintext highlighter-rouge">tlsdesc_resolver_unresolved_weak</code>). The slow path spills 35 general-purpose registers plus all RVV vector registers (v0, v8, v16, v24 via vlenb-scaled offsets) before calling <code class="language-plaintext highlighter-rouge">__tls_get_addr</code>.</li>
 </ul>
 
-<p>TLSDESC relocation types were added in <a href="https://android-review.googlesource.com/c/platform/bionic/+/2752785">#2752785</a> after the RISC-V psABI standardized them (<a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/94">psABI issue #94</a>). This resolved <a href="https://github.com/google/android-riscv64/issues/3">android-riscv64#3</a>.</p>
-
-<p>Full relocation coverage verified: <code class="language-plaintext highlighter-rouge">R_RISCV_64</code>, <code class="language-plaintext highlighter-rouge">R_RISCV_JUMP_SLOT</code>, <code class="language-plaintext highlighter-rouge">R_RISCV_RELATIVE</code>, <code class="language-plaintext highlighter-rouge">R_RISCV_IRELATIVE</code>, <code class="language-plaintext highlighter-rouge">R_RISCV_COPY</code>, all TLS variants (<code class="language-plaintext highlighter-rouge">DTPMOD64</code>, <code class="language-plaintext highlighter-rouge">DTPREL64</code>, <code class="language-plaintext highlighter-rouge">TPREL64</code>), and <code class="language-plaintext highlighter-rouge">TLSDESC</code>.</p>
+<p>TLSDESC relocation types were added in <a href="https://android-review.googlesource.com/c/platform/bionic/+/2752785">#2752785</a> after the RISC-V psABI standardized them (<a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/94">psABI issue #94</a>), resolving <a href="https://github.com/google/android-riscv64/issues/3">android-riscv64#3</a>. Full relocation coverage: R_RISCV_64, R_RISCV_JUMP_SLOT, R_RISCV_RELATIVE, R_RISCV_IRELATIVE, R_RISCV_COPY, all TLS variants (DTPMOD64, DTPREL64, TPREL64), and TLSDESC.</p>
 <h3 id="45-libm-libmfenv-riscv64c">
   
   
@@ -632,9 +743,7 @@
 </h3>
     
 
-<p>Implements all <code class="language-plaintext highlighter-rouge">fenv.h</code> functions via inline RISC-V CSR instructions (<code class="language-plaintext highlighter-rouge">frcsr</code>/<code class="language-plaintext highlighter-rouge">fscsr</code>, <code class="language-plaintext highlighter-rouge">frflags</code>/<code class="language-plaintext highlighter-rouge">fsrm</code>/<code class="language-plaintext highlighter-rouge">frrm</code>). <code class="language-plaintext highlighter-rouge">feenableexcept</code> correctly returns -1 (RISC-V hardware has no FP trap-on-exception support). <code class="language-plaintext highlighter-rouge">fegetexcept</code> returns 0. Higher-level math functions (<code class="language-plaintext highlighter-rouge">fma</code>, <code class="language-plaintext highlighter-rouge">fmax</code>, <code class="language-plaintext highlighter-rouge">fmin</code>, <code class="language-plaintext highlighter-rouge">llrint</code>, <code class="language-plaintext highlighter-rouge">lround</code>, <code class="language-plaintext highlighter-rouge">round</code> family) are handled via clang compiler builtins, the same policy used for arm64.</p>
-
-<p>There is no equivalent of <code class="language-plaintext highlighter-rouge">libarm-optimized-routines</code> for RISC-V. The generic C math from FreeBSD/NetBSD is used for functions not covered by clang builtins.</p>
+<p>Implements all <code class="language-plaintext highlighter-rouge">fenv.h</code> functions via inline RISC-V CSR instructions (frcsr/fscsr, frflags/fsrm/frrm). <code class="language-plaintext highlighter-rouge">feenableexcept</code> correctly returns -1 (RISC-V hardware has no FP trap-on-exception support). <code class="language-plaintext highlighter-rouge">fegetexcept</code> returns 0. Higher-level math functions (fma, fmax, fmin, lrint, llrint, lround, round) are handled via clang compiler builtins, matching arm64 policy. There is no equivalent of <code class="language-plaintext highlighter-rouge">libarm-optimized-routines</code> for RISC-V; generic C math from FreeBSD/NetBSD is used for functions not covered by clang builtins.</p>
 <h3 id="46-kernel-uapi-headers-libckerneluapiasm-riscvasm-39-files">
   
   
@@ -644,22 +753,7 @@
 </h3>
     
 
-<p>Auto-generated from the Linux kernel. Notable entries:</p>
-
-<ul>
-  <li><strong><code class="language-plaintext highlighter-rouge">hwcap.h</code></strong>: <code class="language-plaintext highlighter-rouge">COMPAT_HWCAP_ISA_*</code> bits (I, M, A, F, D, C, V).</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">hwprobe.h</code></strong>: <code class="language-plaintext highlighter-rouge">struct riscv_hwprobe</code> with 48+ <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_EXT_*</code> constants (Zba, Zbb, Zbs, V, Zvbb, Zvkb, Zfh, ZTSO, ZACAS, etc.) and misaligned access performance keys.</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">ptrace.h</code></strong>: RISC-V ptrace register layout.</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">unistd_64.h</code></strong>: riscv64 syscall numbers.</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">elf.h</code></strong>: riscv64 ELF machine and relocation types.</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">sigcontext.h</code></strong>, <strong><code class="language-plaintext highlighter-rouge">ucontext.h</code></strong>: signal frame register save layout.</li>
-</ul>
-
-<p><code class="language-plaintext highlighter-rouge">__riscv_hwprobe()</code> was moved to the vDSO in <a href="https://android-review.googlesource.com/c/platform/bionic/+/2681597">#2681597</a> to avoid a full syscall round-trip for capability probes.</p>
-
-<p>One unique syscall entry in <code class="language-plaintext highlighter-rouge">SYSCALLS.TXT</code>:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>__riscv_flush_icache:riscv_flush_icache(void*, void*, unsigned long) riscv64
-</code></pre></div></div>
+<p>Auto-generated from the Linux kernel. Notable entries: <code class="language-plaintext highlighter-rouge">hwcap.h</code> (COMPAT_HWCAP_ISA_* bits for I, M, A, F, D, C, V), <code class="language-plaintext highlighter-rouge">hwprobe.h</code> (struct riscv_hwprobe with 48+ RISCV_HWPROBE_EXT_* constants including Zba, Zbb, Zbs, V, Zvbb, Zvkb, Zfh, ZTSO, ZACAS), <code class="language-plaintext highlighter-rouge">ptrace.h</code>, <code class="language-plaintext highlighter-rouge">unistd_64.h</code>, <code class="language-plaintext highlighter-rouge">elf.h</code>, <code class="language-plaintext highlighter-rouge">sigcontext.h</code>, <code class="language-plaintext highlighter-rouge">ucontext.h</code>. <code class="language-plaintext highlighter-rouge">__riscv_hwprobe()</code> was moved to the vDSO in <a href="https://android-review.googlesource.com/c/platform/bionic/+/2681597">#2681597</a> to avoid a full syscall round-trip. One unique SYSCALLS.TXT entry: <code class="language-plaintext highlighter-rouge">__riscv_flush_icache:riscv_flush_icache(void*, void*, unsigned long) riscv64</code>.</p>
 <h3 id="47-api-additions-android-v--api-35">
   
   
@@ -669,11 +763,17 @@
 </h3>
     
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">__riscv_flush_icache(void* start, void* end, unsigned long flags)</code> in <code class="language-plaintext highlighter-rouge">&lt;sys/cachectl.h&gt;</code>. The range is currently ignored per a Linux 6.12 note. Flag: <code class="language-plaintext highlighter-rouge">SYS_RISCV_FLUSH_ICACHE_LOCAL = 1UL</code>.</li>
-  <li><code class="language-plaintext highlighter-rouge">__riscv_hwprobe(struct riscv_hwprobe* pairs, size_t pair_count, size_t cpu_count, unsigned long* cpus, unsigned int flags)</code> in <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code>.</li>
-  <li><code class="language-plaintext highlighter-rouge">__riscv_hwprobe_t</code> function pointer typedef for use in riscv64 ifunc resolvers.</li>
-</ul><hr />
+<p><code class="language-plaintext highlighter-rouge">__riscv_flush_icache(void* start, void* end, unsigned long flags)</code> in <code class="language-plaintext highlighter-rouge">&lt;sys/cachectl.h&gt;</code>; <code class="language-plaintext highlighter-rouge">__riscv_hwprobe(struct riscv_hwprobe* pairs, size_t pair_count, size_t cpu_count, unsigned long* cpus, unsigned int flags)</code> in <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code>; <code class="language-plaintext highlighter-rouge">__riscv_hwprobe_t</code> function-pointer typedef for riscv64 ifunc resolvers. <code class="language-plaintext highlighter-rouge">docs/status.md</code> mentions riscv64 exactly once, for these two additions.</p>
+<h3 id="48-known-open-correctness-gap-page-fault-readwrite-disambiguation">
+  
+  
+    <a href="#48-known-open-correctness-gap-page-fault-readwrite-disambiguation" class="anchor-heading" aria-labelledby="48-known-open-correctness-gap-page-fault-readwrite-disambiguation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.8 Known open correctness gap: page-fault read/write disambiguation
+  
+  
+</h3>
+    
+
+<p><a href="https://github.com/google/android-riscv64/issues/118">android-riscv64#118</a> (open): the kernel cannot distinguish read vs. write for page faults on riscv64. x86_64, i386, ARM, and AArch64 all extract fault-type from architecture registers; riscv64 has no equivalent path and falls through to <code class="language-plaintext highlighter-rouge">ReadOrWrite::UNKNOWN</code>. Referenced Gerrit change: <a href="https://android-review.googlesource.com/c/platform/system/core/+/2812873">system/core/+/2812873</a>. This is a genuine platform-level correctness gap, not merely a performance item.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -691,18 +791,15 @@
 </h3>
     
 
-<p>Android Bionic uses Soong (<code class="language-plaintext highlighter-rouge">Android.bp</code> files) exclusively. There are no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, no <code class="language-plaintext highlighter-rouge">configure</code> scripts, and no <code class="language-plaintext highlighter-rouge">-DUSE_X=OFF</code> flags anywhere in the repository. The build is driven via:</p>
+<p>Android Bionic uses Soong (<code class="language-plaintext highlighter-rouge">Android.bp</code> files) exclusively. There is no CMakeLists.txt, no configure script, and no <code class="language-plaintext highlighter-rouge">-DUSE_X=OFF</code>-style flag anywhere in the repository (re-confirmed by direct fetch this cycle). The build is driven via:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>source build/envsetup.sh
-lunch &lt;target&gt;
+lunch aosp_cf_x86_64_phone-trunk_staging-userdebug
+cd bionic
 mm
 </code></pre></div></div>
 
-<p>The NDK’s <code class="language-plaintext highlighter-rouge">android.toolchain.cmake</code> contains one riscv64 line:</p>
-<div class="language-cmake highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">elseif</span><span class="p">(</span>ANDROID_TOOLCHAIN_NAME MATCHES <span class="s2">"^riscv64-"</span><span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span>CMAKE_ANDROID_ARCH_ABI riscv64<span class="p">)</span>
-</code></pre></div></div>
-<p>This is for NDK users building third-party code, not for building Bionic itself.</p>
+<p>For wide-impact changes: <code class="language-plaintext highlighter-rouge">make checkbuild</code> (“a regular make will not build the entire tree; just the minimum number of projects” required). The NDK’s <code class="language-plaintext highlighter-rouge">android.toolchain.cmake</code> contains one riscv64-relevant line (<code class="language-plaintext highlighter-rouge">elseif(ANDROID_TOOLCHAIN_NAME MATCHES "^riscv64-") set(CMAKE_ANDROID_ARCH_ABI riscv64)</code>) for third-party NDK consumers building against Bionic, not for building Bionic itself.</p>
 <h3 id="52-toolchain">
   
   
@@ -712,23 +809,9 @@ mm
 </h3>
     
 
-<p>Android is Clang/LLVM-only. GCC was fully removed before riscv64 was added; NDK r23 removed <code class="language-plaintext highlighter-rouge">libgcc</code> entirely, replacing it with LLVM’s <code class="language-plaintext highlighter-rouge">libunwind</code> and <code class="language-plaintext highlighter-rouge">libclang_rt</code>. No GCC minimum version applies.</p>
+<p>Android is Clang/LLVM-only. GCC was fully removed before riscv64 was added; NDK r23 removed <code class="language-plaintext highlighter-rouge">libgcc</code> entirely, replacing it with LLVM’s <code class="language-plaintext highlighter-rouge">libunwind</code> and <code class="language-plaintext highlighter-rouge">libclang_rt</code>, so no GCC minimum version applies at all. NDK toolchain tags: NDK r27/r27c use <code class="language-plaintext highlighter-rouge">clang-r522817</code>/<code class="language-plaintext highlighter-rouge">clang-r522817c</code>; NDK r28 uses <code class="language-plaintext highlighter-rouge">clang-r530567b</code>. No explicit minimum Clang version string is documented in the Bionic repository for riscv64; version pinning happens indirectly via these NDK toolchain prebuilt tags rather than a documented minimum.</p>
 
-<p>NDK versions and their clang tags:</p>
-<ul>
-  <li>NDK r27 / r27c: <code class="language-plaintext highlighter-rouge">clang-r522817</code> / <code class="language-plaintext highlighter-rouge">clang-r522817c</code></li>
-  <li>NDK r28: <code class="language-plaintext highlighter-rouge">clang-r530567b</code></li>
-</ul>
-
-<p>No explicit Clang minimum version is documented in the Bionic repository for riscv64. The Android LLVM toolchain follows LLVM main with approximately 3-4 updates per year.</p>
-
-<p>Known LLVM bug for riscv64: frame pointer addresses were implemented incorrectly. Bionic applies a <code class="language-plaintext highlighter-rouge">-16</code> byte offset workaround in <code class="language-plaintext highlighter-rouge">android_unsafe_frame_pointer_chase.cpp</code>. Reference: <a href="https://reviews.llvm.org/D87579">LLVM D87579</a>.</p>
-
-<p>Shadow Call Stack is enabled for riscv64 in tests via:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>riscv64: {
-    cflags: ["-fsanitize=shadow-call-stack"],
-}
-</code></pre></div></div>
+<p>Known LLVM bug for riscv64: frame pointer addresses were implemented incorrectly. Bionic applies a -16 byte offset workaround in <code class="language-plaintext highlighter-rouge">android_unsafe_frame_pointer_chase.cpp</code> (<a href="https://reviews.llvm.org/D87579">LLVM D87579</a>). Shadow Call Stack is enabled for riscv64 in tests via <code class="language-plaintext highlighter-rouge">cflags: ["-fsanitize=shadow-call-stack"]</code>.</p>
 <h3 id="53-riscv64-source-layout-in-build-files">
   
   
@@ -738,19 +821,7 @@ mm
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">libc/Android.bp</code> references:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">arch-riscv64/bionic/</code>: <code class="language-plaintext highlighter-rouge">__bionic_clone.S</code>, <code class="language-plaintext highlighter-rouge">_exit_with_stack_teardown.S</code>, <code class="language-plaintext highlighter-rouge">setjmp.S</code>, <code class="language-plaintext highlighter-rouge">syscall.S</code>, <code class="language-plaintext highlighter-rouge">vfork.S</code></li>
-  <li><code class="language-plaintext highlighter-rouge">arch-riscv64/string/</code>: 15 RVV assembly files</li>
-  <li>Version script: <code class="language-plaintext highlighter-rouge">libc.riscv64.map</code></li>
-</ul>
-
-<p><code class="language-plaintext highlighter-rouge">linker/Android.bp</code>:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>riscv64: {
-    srcs: [":linker_sources_riscv64"],
-}
-</code></pre></div></div>
-<p>Files: <code class="language-plaintext highlighter-rouge">arch/riscv64/begin.S</code>, <code class="language-plaintext highlighter-rouge">arch/riscv64/tlsdesc_resolver.S</code>, <code class="language-plaintext highlighter-rouge">arch/riscv64/linker_wrapper_begin.S</code>. Uses <code class="language-plaintext highlighter-rouge">linker.generic.map</code> version script (same as arm64/x86/x86_64).</p>
+<p><code class="language-plaintext highlighter-rouge">libc/Android.bp</code>: <code class="language-plaintext highlighter-rouge">arch-riscv64/bionic/</code> (5 files) and <code class="language-plaintext highlighter-rouge">arch-riscv64/string/</code> (15 RVV files); version script <code class="language-plaintext highlighter-rouge">libc.riscv64.map</code>. <code class="language-plaintext highlighter-rouge">linker/Android.bp</code>: <code class="language-plaintext highlighter-rouge">riscv64: { srcs: [":linker_sources_riscv64"] }</code>, mapping to <code class="language-plaintext highlighter-rouge">arch/riscv64/begin.S</code>, <code class="language-plaintext highlighter-rouge">arch/riscv64/tlsdesc_resolver.S</code>, <code class="language-plaintext highlighter-rouge">arch/riscv64/linker_wrapper_begin.S</code>; uses the shared <code class="language-plaintext highlighter-rouge">linker.generic.map</code> version script (same as arm64/x86/x86_64).</p>
 <h3 id="54-page-size">
   
   
@@ -760,17 +831,17 @@ mm
 </h3>
     
 
-<p>riscv64 does not support 16 KiB page sizes in the NDK (unlike arm64 and x86_64, which gained 16 KiB support in NDK r27/r28).</p>
-<h3 id="55-host-testing">
+<p>riscv64 does not support 16 KiB page sizes in the NDK, unlike arm64 and x86_64, which gained 16 KiB support in NDK r27/r28.</p>
+<h3 id="55-host-testing-and-qemu">
   
   
-    <a href="#55-host-testing" class="anchor-heading" aria-labelledby="55-host-testing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Host testing
+    <a href="#55-host-testing-and-qemu" class="anchor-heading" aria-labelledby="55-host-testing-and-qemu"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Host testing and QEMU
   
   
 </h3>
     
 
-<p>The <code class="language-plaintext highlighter-rouge">build/run-on-host.sh</code> script gates its logic on <code class="language-plaintext highlighter-rouge">TARGET_ARCH = x86 -o TARGET_ARCH = x86_64</code>. For any other <code class="language-plaintext highlighter-rouge">TARGET_ARCH</code>, including riscv64, it prints <code class="language-plaintext highlighter-rouge">"$0 not supported on TARGET_ARCH=$TARGET_ARCH"</code> and exits. No QEMU invocation or riscv64 emulator setup script exists anywhere in the repository.</p>
+<p><code class="language-plaintext highlighter-rouge">build/run-on-host.sh</code> (the only host-execution script in the repository) has exactly one <code class="language-plaintext highlighter-rouge">TARGET_ARCH</code> conditional: <code class="language-plaintext highlighter-rouge">if [ ${TARGET_ARCH} = x86 -o ${TARGET_ARCH} = x86_64 ]</code>. Any other value, including riscv64, causes it to print <code class="language-plaintext highlighter-rouge">"$0 not supported on TARGET_ARCH=$TARGET_ARCH"</code> and exit; this was re-confirmed by direct fetch this cycle. No QEMU invocation or riscv64 emulator setup script exists anywhere in the Bionic repository itself. QEMU is used only indirectly, via Cuttlefish, for riscv64 Android emulation testing outside Bionic’s own tree: QEMU &gt;= 8.1 is required, QEMU 9.0 fixes the V extension, and QEMU 9.2 adds V-extension speedups. This is inferred from external Cuttlefish/emulator context, not documented inside the Bionic repo.</p>
 <h3 id="56-infrastructure-dockerfile">
   
   
@@ -780,7 +851,7 @@ mm
 </h3>
     
 
-<p>The NDK provides one Dockerfile (<code class="language-plaintext highlighter-rouge">infra/docker/Dockerfile</code>) based on Ubuntu 14.04 (Trusty). It installs only <code class="language-plaintext highlighter-rouge">bison</code>, <code class="language-plaintext highlighter-rouge">build-essential</code>, <code class="language-plaintext highlighter-rouge">curl</code>, <code class="language-plaintext highlighter-rouge">flex</code>, <code class="language-plaintext highlighter-rouge">git</code>, <code class="language-plaintext highlighter-rouge">make</code>, <code class="language-plaintext highlighter-rouge">pbzip2</code>, <code class="language-plaintext highlighter-rouge">python</code>, <code class="language-plaintext highlighter-rouge">python-pip</code>, <code class="language-plaintext highlighter-rouge">texinfo</code>, <code class="language-plaintext highlighter-rouge">uuid-runtime</code>, and <code class="language-plaintext highlighter-rouge">zip</code>. It contains no riscv64 toolchain packages, no QEMU, and no cross-compiler. It predates riscv64 support and has not been updated.</p><hr />
+<p>The NDK provides one Dockerfile (<code class="language-plaintext highlighter-rouge">infra/docker/Dockerfile</code>), based on Ubuntu 14.04 (Trusty), installing only bison, build-essential, curl, flex, git, make, pbzip2, python, python-pip, texinfo, uuid-runtime, and zip. It contains no riscv64 toolchain, no QEMU, and no cross-compiler, and predates riscv64 support.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -826,11 +897,11 @@ mm
       <td>Hardware SCS</td>
       <td>Via Pointer Authentication (future)</td>
       <td>N/A</td>
-      <td>Via Zsslpcfi (future)</td>
-      <td>Neither is deployed; both tracked as open issues</td>
+      <td>Via Zisslpcfi (future)</td>
+      <td>Neither is deployed; both tracked as open issues (#14, #15)</td>
     </tr>
     <tr>
-      <td>RVV/NEON/SSE string ops</td>
+      <td>String/mem ops</td>
       <td>NEON in libarm-optimized-routines</td>
       <td>SSE/AVX via generic</td>
       <td>RVV in arch-riscv64/string/</td>
@@ -841,7 +912,7 @@ mm
       <td>hwcap passed to resolvers</td>
       <td>hwcap passed</td>
       <td>hwcap passed (fixed Aug 2023)</td>
-      <td>Fixed in #2695693; zero top apps use ifuncs on any arch as of Aug 2023</td>
+      <td>Fixed in #2695693; measured zero top apps using ifuncs on any arch as of Aug 2023</td>
     </tr>
     <tr>
       <td>TLSDESC</td>
@@ -862,14 +933,21 @@ mm
       <td>Supported</td>
       <td>Supported</td>
       <td>Not supported (hardware limitation)</td>
-      <td>feenableexcept returns -1; correctly documented</td>
+      <td>feenableexcept returns -1; correctly documented behavior, not a bug</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">__memcmp16</code> (String.compareTo)</td>
+      <td>__memcmp16 (String.compareTo)</td>
       <td>Hand-written asm</td>
       <td>Hand-written asm</td>
       <td>Portable C fallback</td>
-      <td>Open bug <a href="https://github.com/google/android-riscv64/issues/161">android-riscv64#161</a></td>
+      <td>Open, <a href="https://github.com/google/android-riscv64/issues/161">android-riscv64#161</a></td>
+    </tr>
+    <tr>
+      <td>Page-fault read/write disambiguation</td>
+      <td>Supported</td>
+      <td>Supported</td>
+      <td>Not supported</td>
+      <td>Open, <a href="https://github.com/google/android-riscv64/issues/118">android-riscv64#118</a>; falls through to UNKNOWN</td>
     </tr>
     <tr>
       <td>libm optimized routines</td>
@@ -889,11 +967,20 @@ mm
       <td>LTO ABI correctness</td>
       <td>OK</td>
       <td>OK</td>
-      <td>Bug (open, #61)</td>
+      <td>Bug (open, <a href="https://github.com/google/android-riscv64/issues/61">#61</a>)</td>
       <td>-mcpu/-march not correctly propagated during LTO</td>
     </tr>
+    <tr>
+      <td>Rust build-flag parity</td>
+      <td>Full CPU-variant LD flags</td>
+      <td>Full</td>
+      <td>Partial (fixed, closed Aug 2025)</td>
+      <td><a href="https://github.com/google/android-riscv64/issues/166">android-riscv64#166</a>: C/C++ builds got CPU-variant flags, Rust LinkFlags initially only got arch-level flags</td>
+    </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p>Data not available: quantitative delta for any function pair (memcpy, strlen, strcmp) between riscv64 and arm64.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -903,20 +990,58 @@ mm
 </h2>
     
 
-<p>No riscv64 CI is evidenced in any CI configuration file in the repository. The following files were examined and contain no riscv64 references:</p>
+<p>No riscv64-specific CI exists in the Bionic source repository, confirmed by direct fetch of every relevant file, re-verified across multiple independent passes this cycle with matching results each time:</p>
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">/TEST_MAPPING</code>: lists three test groups (<code class="language-plaintext highlighter-rouge">presubmit</code>, <code class="language-plaintext highlighter-rouge">hwasan-presubmit</code>, <code class="language-plaintext highlighter-rouge">kernel-presubmit</code>) with 16+ architecture-neutral test suite names. No riscv64 architecture tag, no riscv64-specific runner.</li>
-  <li><code class="language-plaintext highlighter-rouge">/PREUPLOAD.cfg</code>: only <code class="language-plaintext highlighter-rouge">clang_format</code>, an AOSP SHA validation hook, and a notice updater.</li>
-  <li><code class="language-plaintext highlighter-rouge">/build/run-on-host.sh</code>: explicitly handles only x86 and x86_64; riscv64 causes an immediate exit.</li>
-  <li><code class="language-plaintext highlighter-rouge">/build/</code> directory: three files total (<code class="language-plaintext highlighter-rouge">coverage.sh</code>, <code class="language-plaintext highlighter-rouge">NOTICE</code>, <code class="language-plaintext highlighter-rouge">run-on-host.sh</code>). No CI pipeline files.</li>
-  <li>No <code class="language-plaintext highlighter-rouge">.github/</code> directory exists (returns 404).</li>
-  <li><code class="language-plaintext highlighter-rouge">ci.android.com</code>: no riscv64 build targets visible.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">TEST_MAPPING</code></strong>: three top-level keys only (<code class="language-plaintext highlighter-rouge">presubmit</code>, <code class="language-plaintext highlighter-rouge">hwasan-presubmit</code>, <code class="language-plaintext highlighter-rouge">kernel-presubmit</code>), no riscv64 or architecture-specific tags of any kind.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">PREUPLOAD.cfg</code></strong>: only <code class="language-plaintext highlighter-rouge">clang_format</code>, an AOSP SHA-verification hook, and <code class="language-plaintext highlighter-rouge">tools/update_notice.sh</code>; no architecture-specific hooks.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">build/run-on-host.sh</code></strong>: the only <code class="language-plaintext highlighter-rouge">TARGET_ARCH</code> conditional gates on x86/x86_64; riscv64 falls through unhandled and exits.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">/build/</code> directory</strong>: three files total (<code class="language-plaintext highlighter-rouge">coverage.sh</code>, <code class="language-plaintext highlighter-rouge">NOTICE</code>, <code class="language-plaintext highlighter-rouge">run-on-host.sh</code>); no CI pipeline files.</li>
+  <li><strong>Repository root listing</strong>: no <code class="language-plaintext highlighter-rouge">.github/</code>, no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, no <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, no buildbot configuration of any kind.</li>
+  <li><strong>lore.kernel.org</strong>: Bionic has no LKML/lore.kernel.org presence at all; it is not a kernel-mailing-list project.</li>
+  <li><strong>External CI search</strong>: a WebSearch substitute for “Bionic riscv64 CI buildbot jenkins gitlab” surfaced only an unrelated <code class="language-plaintext highlighter-rouge">bionic-build-status</code> Jenkins mailing list from 2015-2016 (pre-riscv64 era, referencing flounder/grouper/hammerhead Nexus devices on arm/arm64/x86 only). No riscv64 CI system for Bionic exists anywhere it was possible to check.</li>
 </ul>
 
-<p>The riscv64 architecture source code in <code class="language-plaintext highlighter-rouge">libc/arch-riscv64/</code> is not CI. No dedicated riscv64 CI configuration, no riscv64-specific TEST_MAPPING entries, and no riscv64 presubmit build targets were found in any configuration file.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Presubmit/CI gating</td>
+      <td>Yes (TEST_MAPPING)</td>
+      <td>Yes (TEST_MAPPING)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Host-execution test script support</td>
+      <td>Yes</td>
+      <td>No (also not in run-on-host.sh’s x86/x86_64 gate)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>External buildbot/Jenkins/GitLab CI</td>
+      <td>Unknown, not the focus of this report</td>
+      <td>Unknown</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>ci.android.com build-only column</td>
+      <td>Presumed yes</td>
+      <td>Presumed yes</td>
+      <td>[NEEDS VERIFICATION] – page is JS-rendered, could not be fetched directly</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>Testing known to occur: basic functionality verified on Cuttlefish (QEMU-based Android emulator). QEMU &gt;= 8.1 is required; QEMU 9.0 fixes the V extension; QEMU 9.2 adds speedups for V. Boot to Android home screen takes approximately 10 minutes even on fast Xeon hardware. No physical hardware CI is documented.</p><hr />
+<p><strong>Unresolved point:</strong> whether <code class="language-plaintext highlighter-rouge">ci.android.com</code>’s branch grid currently runs an <code class="language-plaintext highlighter-rouge">aosp_cf_riscv64_phone</code> build-only column. This page renders via JavaScript and returns no static content via direct fetch across every attempt made this cycle, so it is correctly left [NEEDS VERIFICATION] rather than asserted either way. A 2023-10 Google Open Source blog post says canary builds “will soon be available on Android’s public CI” (future tense) and gives a local <code class="language-plaintext highlighter-rouge">lunch aosp_cf_riscv64_phone-userdebug</code> build command; this is a local-build instruction, not confirmed evidence of an active CI pipeline.</p>
+
+<p>Testing known to occur: functional verification on Cuttlefish (QEMU-based Android emulator). QEMU &gt;= 8.1 required; QEMU 9.0 fixes the V extension; QEMU 9.2 adds V-extension speedups. Boot to Android home screen takes approximately 10 minutes even on fast Xeon hardware. No physical hardware CI is documented. <a href="https://github.com/google/android-riscv64/issues/163">android-riscv64#163</a> (open) reports Cuttlefish crashing with signal 11 on GCP Debian 11 VMs (suspected EGL/Vulkan/display driver incompatibility) – an infrastructure issue, not Bionic code, but one that blocks the QEMU/Cuttlefish validation path Bionic testing relies on.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -926,9 +1051,18 @@ mm
 </h2>
     
 
-<p><strong>In Android:</strong> riscv64 is a first-class source target in AOSP <code class="language-plaintext highlighter-rouge">main</code> since October 2022. Android 14 (API 34, October 2023) was the first release with official riscv64 support. NDK r27 (2024) was the first NDK release with a riscv64 sysroot; it is explicitly marked unsupported and not built by default.</p>
+<p><strong>In Android:</strong> riscv64 is a first-class source target in AOSP <code class="language-plaintext highlighter-rouge">main</code> since October 2022. Android 14 (API 34, October 2023) was the first release with official riscv64 support. NDK r27 (2024) was the first NDK release with a riscv64 sysroot; it is explicitly marked “not supported,” intended for OS-vendor bringup only (<code class="language-plaintext highlighter-rouge">meta/abis.json</code> sets <code class="language-plaintext highlighter-rouge">"default": false</code>).</p>
 
-<p><strong>As a standalone package in Linux distributions:</strong> Android Bionic does not exist as a standalone binary package in PyPI, Debian, Ubuntu, Arch Linux RISC-V, or Repology. The only packaged form is <code class="language-plaintext highlighter-rouge">android-bionic-uapi</code> in GNU Guix (version 7.1.2_r36), which is a headers-only package copying <code class="language-plaintext highlighter-rouge">libc/kernel/uapi</code> headers. It produces no compiled binary for any architecture, including riscv64. GNU Guix does not officially support riscv64 as a host system in its mainline distribution.</p><hr />
+<p><strong>As a standalone package in Linux distributions:</strong> confirmed via direct package-index checks that Android Bionic does not exist as a standalone binary package anywhere:</p>
+
+<ul>
+  <li><strong>Ubuntu 26.04 “resolute”</strong>: no package literally named <code class="language-plaintext highlighter-rouge">bionic</code>, <code class="language-plaintext highlighter-rouge">python3-bionic</code>, or <code class="language-plaintext highlighter-rouge">libbionic</code> exists (checked via the official package search and confirmed by direct curl after two WebFetch 503s). The only name matches are unrelated wallpaper-theme packages whose names merely end in <code class="language-plaintext highlighter-rouge">-bionic</code>, referencing Ubuntu 18.04’s “Bionic Beaver” codename: <code class="language-plaintext highlighter-rouge">budgie-wallpapers-bionic</code>, <code class="language-plaintext highlighter-rouge">ubuntu-mate-wallpapers-bionic</code>, <code class="language-plaintext highlighter-rouge">ubuntu-wallpapers-bionic</code>, <code class="language-plaintext highlighter-rouge">ubuntukylin-wallpapers-bionic</code>, <code class="language-plaintext highlighter-rouge">ubuntustudio-wallpapers-bionic</code>, <code class="language-plaintext highlighter-rouge">xubuntu-community-wallpapers-bionic</code>, <code class="language-plaintext highlighter-rouge">xubuntu-wallpapers-bionic</code>. One of these (<code class="language-plaintext highlighter-rouge">ubuntu-wallpapers-bionic</code>) was checked directly: its only build is <code class="language-plaintext highlighter-rouge">Architecture: all</code>, not riscv64-specific and not the same project.</li>
+  <li><strong>Arch Linux RISC-V</strong> (archriscv.felixc.at): no listing for a “bionic” package of any kind.</li>
+  <li><strong>PyPI</strong>: <code class="language-plaintext highlighter-rouge">bionic</code> resolves to Uber’s unrelated Python dataflow-orchestration framework (latest 0.11.1, pure-Python wheels/sdist, no platform-specific tags, no riscv64 in any filename). This is a name collision, not evidence about Android Bionic.</li>
+  <li><strong>GNU Guix</strong>: the only packaged form anywhere is <code class="language-plaintext highlighter-rouge">android-bionic-uapi</code> (version 7.1.2_r36), which is headers-only, copying <code class="language-plaintext highlighter-rouge">libc/kernel/uapi</code> headers, and produces no compiled binary for any architecture including riscv64. Guix does not officially support riscv64 as a host system in its mainline distribution either.</li>
+</ul>
+
+<p>There is no channel, upstream or downstream, where a riscv64 Bionic binary can be obtained today. A user who wants working riscv64 Bionic must build AOSP <code class="language-plaintext highlighter-rouge">main</code> from source and target <code class="language-plaintext highlighter-rouge">aosp_cf_riscv64_phone</code>, running under Cuttlefish/QEMU; there is no installable package or prebuilt image path.</p>
 <h2 id="9-dependencies">
   
   
@@ -943,172 +1077,95 @@ mm
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>riscv64 Build Status</th>
-      <th>Key Notes</th>
+      <th>Relation</th>
+      <th>Criticality</th>
+      <th>riscv64 Status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>libc (Bionic)</td>
-      <td>Core C library</td>
-      <td>Builds; dedicated arch-riscv64/ assembly</td>
-      <td>NDK ABI not finalized; ABI breaks still possible</td>
+      <td>LLVM</td>
+      <td>Sole compiler/toolchain (GCC fully removed)</td>
+      <td>Build-dependency</td>
+      <td>Critical</td>
+      <td>Builds; open LTO ABI/-mcpu/-march propagation bug (<a href="https://github.com/google/android-riscv64/issues/61">android-riscv64#61</a>); frame-pointer bug worked around in Bionic itself (<a href="https://reviews.llvm.org/D87579">LLVM D87579</a>)</td>
     </tr>
     <tr>
-      <td>libm (Bionic)</td>
-      <td>Math library</td>
-      <td>Builds; fenv-riscv64.c with CSR inline asm</td>
-      <td>No libarm-optimized-routines equivalent; generic C math</td>
+      <td>libunwind</td>
+      <td>Stack unwinding for linker/exception handling; REGISTERS_RISCV defined</td>
+      <td>Runtime-dependency</td>
+      <td>Critical</td>
+      <td>Builds; official LLVM docs do not list riscv64 as officially supported, relies on DWARF metadata [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>libdl (Bionic)</td>
-      <td>Dynamic linker interface</td>
-      <td>Builds; same ABI as other arches</td>
-      <td>No riscv64-specific issues</td>
-    </tr>
-    <tr>
-      <td>linker/linker64</td>
-      <td>ELF dynamic linker</td>
-      <td>Builds; begin.S + tlsdesc_resolver.S</td>
-      <td>TLS descriptor ABI correctness depends on toolchain alignment</td>
-    </tr>
-    <tr>
-      <td>libstdc++ (Bionic)</td>
-      <td>Minimal C++ ABI</td>
-      <td>Builds (pure C++, no arch asm)</td>
-      <td>No riscv64-specific issues</td>
-    </tr>
-    <tr>
-      <td>llvm-libc</td>
-      <td>Selected libc function implementations</td>
-      <td>Builds; included as whole_static_libs</td>
-      <td>LLVM libc riscv64 support not listed in official platform docs; gaps possible [NEEDS VERIFICATION]</td>
-    </tr>
-    <tr>
-      <td>Scudo (LLVM compiler-rt)</td>
-      <td>Default hardened allocator</td>
-      <td>Builds via generic Linux platform layer</td>
-      <td>No riscv64-specific tuning; allocator parameters may not be optimal</td>
-    </tr>
-    <tr>
-      <td>jemalloc (libjemalloc5)</td>
-      <td>Alternate allocator</td>
-      <td>Builds via generic GCC atomic backends</td>
-      <td>quantum size and vaddr bits must be validated for riscv64</td>
-    </tr>
-    <tr>
-      <td>GWP-ASan</td>
-      <td>Guard-page heap sampler</td>
-      <td>Builds (pure C++, platform-agnostic)</td>
-      <td>PerfectlyRightAlign option noted as potentially architecture-incompatible [NEEDS VERIFICATION]</td>
-    </tr>
-    <tr>
-      <td>libunwind (LLVM)</td>
-      <td>Stack unwinding</td>
-      <td>Builds; REGISTERS_RISCV defined</td>
-      <td>Official docs do not list riscv64 as supported; relies on DWARF metadata</td>
+      <td>Linux kernel</td>
+      <td>Syscall ABI / UAPI headers (39 files in libc/kernel/uapi/asm-riscv/)</td>
+      <td>Runtime-dependency</td>
+      <td>Critical</td>
+      <td>riscv64 UAPI header set leaner than arm64; some subsystem headers possibly missing; page-fault read/write type not exposed to userspace (<a href="https://github.com/google/android-riscv64/issues/118">android-riscv64#118</a>, open)</td>
     </tr>
     <tr>
       <td>zlib</td>
       <td>Compression (APK/ZIP loading)</td>
-      <td>Builds (pure C, no arch exclusions)</td>
-      <td>No RVV optimizations; generic C only</td>
+      <td>Runtime-dependency</td>
+      <td>Optional</td>
+      <td>Builds (pure C, no arch exclusions); no RVV optimizations, generic C only, no known correctness blockers</td>
     </tr>
     <tr>
-      <td>libbase (Android platform)</td>
-      <td>Utility library; used by linker</td>
-      <td>Builds via generic rules</td>
-      <td>No riscv64-specific issues</td>
+      <td>jemalloc</td>
+      <td>Alternate heap allocator for low-memory configs</td>
+      <td>Runtime-dependency</td>
+      <td>Optional</td>
+      <td>Builds via generic GCC atomic backends; quantum-size/vaddr-bits assumptions for riscv64 not formally validated [NEEDS VERIFICATION]; open, unresolved upstream question on Scudo-vs-jemalloc tuning (<a href="https://github.com/google/android-riscv64/issues/164">android-riscv64#164</a>, closed without resolution)</td>
     </tr>
     <tr>
-      <td>liblog (Android)</td>
-      <td>Logging; used by linker internals</td>
-      <td>Builds (no arch exclusions in Android.bp)</td>
-      <td>No riscv64-specific issues</td>
+      <td>ICU</td>
+      <td>Unicode/timezone data, via libicu4x_bionic Rust FFI</td>
+      <td>Runtime-dependency</td>
+      <td>Optional</td>
+      <td>Builds; ICU4C does not list riscv64 as officially tested, correctness not formally validated [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>Linux kernel UAPI headers</td>
-      <td>Syscall interface</td>
-      <td>39 files in libc/kernel/uapi/asm-riscv/</td>
-      <td>Header set leaner than arm64; specialized subsystem headers may be missing</td>
+      <td>LLVM libc</td>
+      <td>Selected libc function implementations, linked as whole_static_libs</td>
+      <td>Runtime-dependency</td>
+      <td>Optional</td>
+      <td>Builds; riscv64 support not documented in official LLVM-libc platform docs, gaps possible [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>libarm-optimized-routines</td>
-      <td>High-performance ARM string/math</td>
-      <td>Not applicable (ARM-only)</td>
-      <td>riscv64 uses arch-riscv64/string/ instead</td>
+      <td>Scudo</td>
+      <td>Default hardened allocator (part of LLVM compiler-rt)</td>
+      <td>Runtime-dependency</td>
+      <td>Critical</td>
+      <td>Builds via generic Linux platform layer; no riscv64-specific tuning, allocator parameters not validated as optimal; subject of the same open jemalloc-comparison question above</td>
     </tr>
     <tr>
-      <td>ICU / libicu4x_bionic</td>
-      <td>Unicode/timezone (Rust FFI)</td>
-      <td>Builds; riscv64 listed as Rust FFI target</td>
-      <td>ICU4C does not list riscv64 as officially tested; correctness not formally validated [NEEDS VERIFICATION]</td>
+      <td>Rust</td>
+      <td>Used for select components (e.g. crash_dump-adjacent build config)</td>
+      <td>Build-dependency</td>
+      <td>Optional</td>
+      <td>riscv64 C/C++ builds get CPU-variant compiler flags but Rust’s LinkFlags historically only got architecture-level flags, a parity gap (<a href="https://github.com/google/android-riscv64/issues/166">android-riscv64#166</a>, closed 2025-08-26); separately, an open Gerrit change (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2320311">#2320311</a>) proposes disabling a Rust dependency for riscv64 apex builds, unresolved since 2022</td>
+    </tr>
+    <tr>
+      <td>QEMU</td>
+      <td>Emulation backend for Cuttlefish-based riscv64 Android testing</td>
+      <td>Test-dependency</td>
+      <td>Critical</td>
+      <td>QEMU &gt;= 8.1 required; 9.0 fixes the V extension; 9.2 adds V-extension speedups; Cuttlefish itself has an open GCP/Debian-11 crash bug (<a href="https://github.com/google/android-riscv64/issues/163">android-riscv64#163</a>) that blocks this validation path on that specific host configuration</td>
+    </tr>
+    <tr>
+      <td>googletest</td>
+      <td>Test framework for bionic unit tests (e.g. sys_ptrace_test.cpp)</td>
+      <td>Test-dependency</td>
+      <td>Critical</td>
+      <td>Builds and runs under Cuttlefish/QEMU; specific riscv64 test-coverage gap open (<a href="https://github.com/google/android-riscv64/issues/5">android-riscv64#5</a>, needs an instruction writing &gt;64 bits)</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-<h3 id="rise-project">
-  
-  
-    <a href="#rise-project" class="anchor-heading" aria-labelledby="rise-project"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> RISE Project
-  
-  
-</h3>
-    
+</table></div>
 
-<p>Google is a Premier Member of the RISE Project (riseproject.dev) with a Governing Board seat. SiFive and DAMO Academy (Alibaba) are also Premier Members. Andes Technology, ByteDance, Canonical, ISCAS, and others are General Members.</p>
+<p><strong>Additional dependencies identified via source/build-file inspection, not in the direct-dependency list above but load-bearing for the port:</strong> <code class="language-plaintext highlighter-rouge">libbase</code> and <code class="language-plaintext highlighter-rouge">liblog</code> (Android platform utility libraries used by the linker, build via generic rules, no riscv64-specific issues found); <code class="language-plaintext highlighter-rouge">libarm-optimized-routines</code> (not applicable to riscv64; it is ARM-only, and riscv64 uses <code class="language-plaintext highlighter-rouge">arch-riscv64/string/</code> instead, meaning there is no RVV-optimized-routines equivalent for the functions this library would otherwise cover on arm64 – see Section 13.2).</p>
 
-<p>Android Bionic does not appear in any RISE blog post (all 27 posts checked, May 2024 through June 2026). It does not appear in any of the 16 funded RFP projects (RP001-RP016). The System Libraries Working Group (elected lead: Ruinland Chuan-Tzu Tsai, Andes Technology) lists “Android, C runtimes, musl-libc, glibc, Linux/FreeBSD, and Linux distribution bootstrapping” as its scope, which covers Bionic. No dedicated Android Bionic funding or deliverable is publicly documented. This WG is being consolidated into an “Enablement/Optimization WG” effective June 25, 2026.</p>
-<h3 id="contributor-origins">
-  
-  
-    <a href="#contributor-origins" class="anchor-heading" aria-labelledby="contributor-origins"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Contributor origins
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Organization</th>
-      <th>Contribution</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Google (Elliott Hughes lead)</td>
-      <td>All OWNERS-file authority; majority of merged changes</td>
-    </tr>
-    <tr>
-      <td>Alibaba (Mao Han, Xia Lifang, et al.)</td>
-      <td>Original RFC and SOB chain attribution; errno=4095 fix</td>
-    </tr>
-    <tr>
-      <td>SiFive (Yun Hsiang)</td>
-      <td>RVV-optimized string functions (15 files, BSD 3-clause)</td>
-    </tr>
-    <tr>
-      <td>ISCAS</td>
-      <td>Listed in SOB chains of foundation commits</td>
-    </tr>
-    <tr>
-      <td>Paul Kirth</td>
-      <td>TLS Descriptor prototype (2024)</td>
-    </tr>
-    <tr>
-      <td>George Burgess IV (Google)</td>
-      <td>Removal of riscv64 ifunc fallback overhead (Dec 2024)</td>
-    </tr>
-  </tbody>
-</table></div><hr />
+<p>A dependency-graph query against Ubuntu 26.04 riscv64 package availability and transitive <code class="language-plaintext highlighter-rouge">hasDependency</code> chains for each of the above was planned for this cycle but the project-graph MCP server was unreachable (<code class="language-plaintext highlighter-rouge">CONNECTION_CLOSED</code>) every time it was attempted. This is a tool/connection failure, not an empty result, and should be re-run once that server is reachable rather than treated as “no riscv64 packages found” for any of the above.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1117,155 +1174,12 @@ mm
   
 </h2>
     
-<h3 id="open-issues-at-githubcomgoogleandroid-riscv64">
-  
-  
-    <a href="#open-issues-at-githubcomgoogleandroid-riscv64" class="anchor-heading" aria-labelledby="open-issues-at-githubcomgoogleandroid-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Open issues at <a href="https://github.com/google/android-riscv64">github.com/google/android-riscv64</a>
-  
-  
-</h3>
-    
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Issue</th>
-      <th>Title</th>
-      <th>Category</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/167">#167</a></td>
-      <td>Support vector regalloc for RISC-V backend in ART</td>
-      <td>Performance (ART)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/165">#165</a></td>
-      <td>ART: revisit intrinsics to use V and B</td>
-      <td>Performance (ART)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/161">#161</a></td>
-      <td>ART: implement custom <code class="language-plaintext highlighter-rouge">__memcmp16</code>?</td>
-      <td>Performance gap – <code class="language-plaintext highlighter-rouge">String.compareTo()</code> uses portable C fallback on riscv64; all other architectures have hand-written asm</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/153">#153</a></td>
-      <td>Implement MethodHandleInvokeExact intrinsic for riscv64</td>
-      <td>Correctness/Performance (ART)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/148">#148</a></td>
-      <td>ART: Implement optimizations with Zbs extension</td>
-      <td>Performance (ART)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/147">#147</a></td>
-      <td>ART: implement BitstringTypeCheck for RISC-V</td>
-      <td>Correctness (ART)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/141">#141</a></td>
-      <td>ART: unimplemented intrinsics</td>
-      <td>Performance gap – full list in <code class="language-plaintext highlighter-rouge">code_generator_riscv64.h</code> under <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED_INTRINSIC_LIST_RISCV64</code>; these fall back to slower non-optimized paths</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/62">#62</a></td>
-      <td>Enable -msave-restore at -Oz</td>
-      <td>Code-size/performance (compiler)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/61">#61</a></td>
-      <td>Fix ABI and mcpu/march for LTO</td>
-      <td>Correctness bug (labeled <code class="language-plaintext highlighter-rouge">bug</code>) – references LLVM patches D132843, D71387, D72245, D102582, D106347</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/60">#60</a></td>
-      <td>Investigate the status of SLP vectorizer</td>
-      <td>Performance (compiler vectorization)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/59">#59</a></td>
-      <td>frameworks/av: optimization</td>
-      <td>Performance (media framework)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/58">#58</a></td>
-      <td>Fix platform:Android bugs in llvm-project</td>
-      <td>Correctness/Performance (labeled <code class="language-plaintext highlighter-rouge">bug</code>)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/53">#53</a></td>
-      <td>kernel: crypto optimization</td>
-      <td>Performance (kernel/security)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/39">#39</a></td>
-      <td>external/skia: optimization</td>
-      <td>Performance</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/37">#37</a></td>
-      <td>external/libpng: optimization</td>
-      <td>Performance</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/36">#36</a></td>
-      <td>external/boringssl: optimization</td>
-      <td>Performance</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/35">#35</a></td>
-      <td>external/libjpeg-turbo: optimization</td>
-      <td>Performance</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/34">#34</a></td>
-      <td>external/libmpeg2: optimization</td>
-      <td>Performance</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/33">#33</a></td>
-      <td>external/libhevc/: optimization</td>
-      <td>Performance</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/32">#32</a></td>
-      <td>external/libavc/: optimization</td>
-      <td>Performance</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/29">#29</a></td>
-      <td>external/flac/: need V optimization</td>
-      <td>Performance (V extension)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/15">#15</a></td>
-      <td>security: hardware CFI (“landing pads”) support</td>
-      <td>Correctness/Security (ABI)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/14">#14</a></td>
-      <td>security: hardware shadow call stack</td>
-      <td>Correctness/Security</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/13">#13</a></td>
-      <td>external/aac: inline assembler</td>
-      <td>Performance</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/android-riscv64/issues/5">#5</a></td>
-      <td>bionic/tests/sys_ptrace_test.cpp: add instruction writing &gt; 64 bits</td>
-      <td>Correctness (test gap)</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="recently-closed-issues-relevant-to-bionic">
+<p><strong>Tracker status:</strong> 60 open issues on <a href="https://github.com/google/android-riscv64/issues">github.com/google/android-riscv64</a> as of 2026-09-30; no open issue postdates 2025-09-11 (#167 is the newest).</p>
+<h3 id="correctness-bugs-open">
   
   
-    <a href="#recently-closed-issues-relevant-to-bionic" class="anchor-heading" aria-labelledby="recently-closed-issues-relevant-to-bionic"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Recently closed issues relevant to Bionic
+    <a href="#correctness-bugs-open" class="anchor-heading" aria-labelledby="correctness-bugs-open"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Correctness bugs, open
   
   
 </h3>
@@ -1281,24 +1195,251 @@ mm
   </thead>
   <tbody>
     <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/118">#118</a></td>
+      <td>Kernel: can’t distinguish read vs. write for page faults on rv64</td>
+      <td>x86_64/i386/ARM/AArch64 all extract fault-type from arch registers; riscv64 has no equivalent, falls through to ReadOrWrite::UNKNOWN. References Gerrit <a href="https://android-review.googlesource.com/c/platform/system/core/+/2812873">system/core/+/2812873</a></td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/61">#61</a></td>
+      <td>Fix ABI and -mcpu/-march propagation for LTO</td>
+      <td>Labeled bug, llvm. References LLVM patches D132843, D71387, D72245, D102582, D106347</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/58">#58</a></td>
+      <td>Fix platform:Android bugs in llvm-project</td>
+      <td>Labeled bug, llvm</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/15">#15</a></td>
+      <td>Hardware CFI (Zisslpcfi landing pads) not supported</td>
+      <td>Security/correctness (ABI)</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/14">#14</a></td>
+      <td>Hardware Shadow Call Stack not supported</td>
+      <td>Security/correctness</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/112">#112</a></td>
+      <td>Add CTS test for Zimop</td>
+      <td>Test-coverage gap for “may-be-operation” instructions</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/5">#5</a></td>
+      <td>bionic sys_ptrace_test.cpp needs an instruction writing &gt;64 bits</td>
+      <td>Test-coverage gap</td>
+    </tr>
+  </tbody>
+</table></div>
+<h3 id="performance-bugs-and-gaps-open">
+  
+  
+    <a href="#performance-bugs-and-gaps-open" class="anchor-heading" aria-labelledby="performance-bugs-and-gaps-open"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Performance bugs and gaps, open
+  
+  
+</h3>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Issue</th>
+      <th>Title</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/167">#167</a></td>
+      <td>Support vector regalloc for RISC-V backend in ART</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/165">#165</a></td>
+      <td>ART: revisit intrinsics to use V and B extensions</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/161">#161</a></td>
+      <td>ART: implement custom __memcmp16 (portable-C fallback vs. hand-written asm on all other arches)</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/153">#153</a></td>
+      <td>Implement MethodHandleInvokeExact intrinsic for riscv64</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/148">#148</a></td>
+      <td>ART: implement optimizations with Zbs extension</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/147">#147</a></td>
+      <td>ART: implement BitstringTypeCheck for RISC-V</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/141">#141</a></td>
+      <td>ART: unimplemented intrinsics (full list in code_generator_riscv64.h, UNIMPLEMENTED_INTRINSIC_LIST_RISCV64)</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/140">#140</a></td>
+      <td>external/brotli: optimization (“impossible?”)</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/71">#71</a></td>
+      <td>Enable V/vector-crypto in clang driver defaults once working in Cuttlefish</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/69">#69</a></td>
+      <td>LLVM function multi-versioning for riscv64</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/68">#68</a></td>
+      <td>Binary-size/fixup analysis, aosp aarch64 vs riscv64 (proposal only, no data yet)</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/67">#67</a></td>
+      <td>Compiler-stats comparison aarch64 vs riscv64: spill counts, inlining (proposal only, no data yet)</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/66">#66</a></td>
+      <td>external/libaom: optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/62">#62</a></td>
+      <td>Enable -msave-restore at -Oz</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/60">#60</a></td>
+      <td>Investigate the status of SLP vectorizer</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/59">#59</a></td>
+      <td>frameworks/av: optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/53">#53</a></td>
+      <td>Kernel: crypto optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/39">#39</a></td>
+      <td>external/skia: optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/37">#37</a></td>
+      <td>external/libpng: optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/36">#36</a></td>
+      <td>external/boringssl: optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/35">#35</a></td>
+      <td>external/libjpeg-turbo: optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/34">#34</a></td>
+      <td>external/libmpeg2: optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/33">#33</a></td>
+      <td>external/libhevc: optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/32">#32</a></td>
+      <td>external/libavc: optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/29">#29</a></td>
+      <td>external/flac: need V optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/13">#13</a></td>
+      <td>external/aac: inline assembler</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/2">#2</a></td>
+      <td>Scudo CRC32 optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/163">#163</a></td>
+      <td>Cuttlefish fails with signal 11 on GCP Debian 11 (infra, blocks the QEMU/Cuttlefish validation path, not Bionic code itself)</td>
+    </tr>
+  </tbody>
+</table></div>
+<h3 id="profilingtoolingdocumentation-open-lower-severity-still-tracked">
+  
+  
+    <a href="#profilingtoolingdocumentation-open-lower-severity-still-tracked" class="anchor-heading" aria-labelledby="profilingtoolingdocumentation-open-lower-severity-still-tracked"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Profiling/tooling/documentation, open (lower severity, still tracked)
+  
+  
+</h3>
+    
+
+<p><a href="https://github.com/google/android-riscv64/issues/97">#97</a> (what PMUs would be useful for simpleperf); <a href="https://github.com/google/android-riscv64/issues/100">#100</a>-<a href="https://github.com/google/android-riscv64/issues/103">#103</a> (NDK docs gaps: ABI/cpu-features guides, CDD, not yet updated for riscv64); <a href="https://github.com/google/android-riscv64/issues/75">#75</a> (kernel: missing hardware breakpoint support); <a href="https://github.com/google/android-riscv64/issues/70">#70</a> (CTS test for core-feature homogeneity).</p>
+<h3 id="recently-closed-issues-relevant-to-bionic">
+  
+  
+    <a href="#recently-closed-issues-relevant-to-bionic" class="anchor-heading" aria-labelledby="recently-closed-issues-relevant-to-bionic"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Recently closed issues relevant to Bionic
+  
+  
+</h3>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Issue</th>
+      <th>Title</th>
+      <th>Opened</th>
+      <th>Closed status</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/168">#168</a></td>
+      <td>Prebuilt android OS Image for RISCV</td>
+      <td>2025-10-04</td>
+      <td>Closed</td>
+      <td>User support request for a flashable image for the Banana Pi BPI-F3; not a Bionic code issue</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/166">#166</a></td>
+      <td>Missing CPU Variant LD flags in Rust LinkFlags</td>
+      <td>2025-08-26</td>
+      <td>Closed</td>
+      <td>riscv64 C/C++ builds get CPU-variant compiler flags but Rust’s LinkFlags only got architecture-level flags; reporter MrArtemSid points at riscv64_device.go</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/android-riscv64/issues/164">#164</a></td>
+      <td>Question about malloc performance</td>
+      <td>2025-04-08</td>
+      <td>Closed, no resolution visible</td>
+      <td>Alibaba contributor (MaoHan001) compares Scudo vs. jemalloc (memset overhead, prefetching, mmap frequency) and asks about tuning Scudo’s zero_contents; directly relevant to Section 9’s allocator discussion</td>
+    </tr>
+    <tr>
       <td><a href="https://github.com/google/android-riscv64/issues/162">#162</a></td>
       <td>Structure accesses with NDK r27 produce more instructions than expected</td>
-      <td>Missed optimization: 3-byte struct read generates 3x lbu instead of 1x lhu + 1x lbu; LLVM backend not exploiting <code class="language-plaintext highlighter-rouge">zbb</code></td>
+      <td>Closed</td>
+      <td>Missed optimization: 3-byte struct read generates 3x lbu instead of 1x lhu + 1x lbu; LLVM backend not exploiting Zbb</td>
+      <td> </td>
     </tr>
     <tr>
       <td><a href="https://github.com/google/android-riscv64/issues/160">#160</a></td>
-      <td><code class="language-plaintext highlighter-rouge">$x.*</code> symbol in libc.so</td>
-      <td><code class="language-plaintext highlighter-rouge">$x.0</code> at 6.37% cpu-cycles in profiling; compiler mapping symbols obscure real hotspot names</td>
+      <td>$x.* symbol in libc.so</td>
+      <td>2025-03-06</td>
+      <td>Closed</td>
+      <td>simpleperf cpu-cycles profile showed $x.0 at 6.37%, __svfscanf at 3.71%, $x.5 at 1.48%; $x.* entries are compiler-generated mapping symbols, not real functions, so this is a profiling-infrastructure gap, not an identified hotspot</td>
     </tr>
     <tr>
       <td><a href="https://github.com/google/android-riscv64/issues/111">#111</a></td>
       <td>clang driver: enable fast unaligned access for android</td>
+      <td>Closed</td>
       <td>Fast unaligned access was not enabled by default</td>
+      <td> </td>
     </tr>
     <tr>
       <td><a href="https://github.com/google/android-riscv64/issues/8">#8</a></td>
-      <td>what’s the ifunc story? hwcap.h</td>
-      <td>Linux kernel hwcap.h lacked V extension bit at filing; ifunc dispatch fragmented by Zb* sub-extension proliferation</td>
+      <td>What’s the ifunc story? hwcap.h</td>
+      <td>Closed</td>
+      <td>Linux kernel hwcap.h lacked the V extension bit at filing; ifunc dispatch fragmented by Zb* sub-extension proliferation</td>
+      <td> </td>
     </tr>
   </tbody>
 </table></div>
@@ -1311,7 +1452,7 @@ mm
 </h3>
     
 
-<p><a href="https://android-review.googlesource.com/c/platform/bionic/+/2320311">Change #2320311</a> – “Disable Rust dep.” (topic: riscv). Created 2022-11-29. Status: New/WIP. Last activity: 2024-06-10. Owner: Ulya Trofimovich (Google). One unresolved comment from Elliott Hughes asking whether the change is still needed. The reviewer (Xin Li) removed themselves in June 2024 and activity ceased. This is a one-line change to <code class="language-plaintext highlighter-rouge">apex/Android.bp</code> disabling a Rust dependency; the motivation may no longer apply.</p>
+<p><a href="https://android-review.googlesource.com/c/platform/bionic/+/2320311">Change #2320311</a>, “Disable Rust dep.” (topic: riscv). Confirmed still <code class="language-plaintext highlighter-rouge">NEW</code>/work-in-progress as of its last update (2024-06-10), unmerged, with the reviewer’s own uncertainty about whether it is still needed left unresolved. See Section 2 for the full comment thread.</p>
 <h3 id="benchmark-data">
   
   
@@ -1321,15 +1462,15 @@ mm
 </h3>
     
 
-<p>No public benchmark numbers with exact figures exist for Android Bionic on riscv64. The only performance-adjacent quantitative data found:</p>
+<p>No comparative arm64-vs-riscv64 or absolute-throughput benchmark suite exists publicly for Bionic. The only quantitative performance data found anywhere, across multiple independent search passes:</p>
 
 <ul>
-  <li>QEMU emulation: boot to Android home screen takes approximately 10 minutes on fast Xeon hardware. QEMU &gt;= 8.1 required; QEMU 9.0 fixes the V extension; QEMU 9.2 adds V speedups.</li>
-  <li>Profiling artifact (<a href="https://github.com/google/android-riscv64/issues/160">#160</a>): <code class="language-plaintext highlighter-rouge">$x.0</code> consumed 6.37% of cpu-cycles from <code class="language-plaintext highlighter-rouge">libc.so</code> during cpu-cycles profiling. The symbol is a compiler-generated mapping symbol, not a real function name. This represents a profiling infrastructure gap, not a benchmark result.</li>
-  <li>No arm64 vs. riscv64 comparative benchmark data is publicly available from any accessible source.</li>
+  <li><strong>simpleperf profiling breakdown</strong> (<a href="https://github.com/google/android-riscv64/issues/160">#160</a>): a cpu-cycles report of <code class="language-plaintext highlighter-rouge">libc.so</code> showed <code class="language-plaintext highlighter-rouge">$x.0</code> at 6.37 percent, <code class="language-plaintext highlighter-rouge">__svfscanf</code> at 3.71 percent, <code class="language-plaintext highlighter-rouge">$x.5</code> at 1.48 percent. Since <code class="language-plaintext highlighter-rouge">$x.*</code> entries are compiler-generated mapping symbols rather than real functions, this is evidence of a profiling-infrastructure gap, not an identified, attributable hotspot.</li>
+  <li><strong>Cuttlefish/QEMU boot time</strong>: approximately 10 minutes to boot to the Android home screen on fast Xeon hardware. QEMU &gt;= 8.1 required; 9.0 fixes the V extension; 9.2 adds V-extension speedups.</li>
+  <li><strong>Malloc allocator comparison</strong> (<a href="https://github.com/google/android-riscv64/issues/164">#164</a>): qualitative only, no percentages or timing numbers. Reporter describes three scenarios comparing Scudo vs. jemalloc (Scudo’s memset-on-init overhead for large allocations; jemalloc’s better prefetching on contiguous access; Scudo’s advantage with many small allocations due to jemalloc’s mmap-induced page faults).</li>
 </ul>
 
-<p>Data not available: riscv64 vs. arm64 performance comparison for any libc function (memcpy, strlen, strcmp, or others). Data not available: riscv64 vs. arm64 application-level performance for any Android workload.</p><hr />
+<p>Data not available: riscv64 vs. arm64 performance comparison for any specific libc function (memcpy, strlen, strcmp, or others). Data not available: riscv64 vs. arm64 application-level performance for any Android workload. No RISE Project blog post (35 posts checked, spanning 2024-05-15 through 2026-09-28) is dedicated to Bionic or contains Bionic-specific benchmark data.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1339,93 +1480,100 @@ mm
 </h2>
     
 
-<p><strong>1. NDK ABI not finalized.</strong> The Android NDK riscv64 ABI is explicitly described as provisional. ABI breaks are acknowledged as possible. Application binaries built today may be ABI-incompatible with future Android riscv64 releases. This is the single largest blocking item for production deployment. Tracked at <a href="https://github.com/google/android-riscv64">github.com/google/android-riscv64</a>.</p>
+<p><strong>1. NDK ABI not finalized.</strong> Explicitly provisional per NDK release notes; ABI breaks are acknowledged as possible. Application binaries built today may be ABI-incompatible with future Android riscv64 releases. This is the single largest blocking item for production deployment.</p>
 
-<p><strong>2. No CI for riscv64.</strong> No CI configuration file in the repository targets riscv64. The only on-host build/test script (<code class="language-plaintext highlighter-rouge">run-on-host.sh</code>) explicitly exits for non-x86 targets. There are no riscv64 build targets on <code class="language-plaintext highlighter-rouge">ci.android.com</code>. Regressions can merge undetected.</p>
+<p><strong>2. No CI for riscv64.</strong> No CI configuration file in the repository targets riscv64 (Section 7). The only on-host build/test script explicitly exits for non-x86 targets. Regressions can merge undetected; the only detection mechanism is manual Cuttlefish/QEMU testing.</p>
 
-<p><strong>3. LTO ABI correctness bug (open, labeled <code class="language-plaintext highlighter-rouge">bug</code>, <a href="https://github.com/google/android-riscv64/issues/61">#61</a>).</strong> <code class="language-plaintext highlighter-rouge">-mcpu</code>/<code class="language-plaintext highlighter-rouge">-march</code> flags are not correctly propagated during LTO. This is a build-system/compiler interaction bug that can silently produce incorrect binaries when LTO is enabled.</p>
+<p><strong>3. LTO ABI correctness bug</strong> (open, labeled bug, <a href="https://github.com/google/android-riscv64/issues/61">#61</a>). -mcpu/-march flags are not correctly propagated during LTO, a build-system/compiler interaction bug that can silently produce incorrect binaries when LTO is enabled.</p>
 
-<p><strong>4. <code class="language-plaintext highlighter-rouge">__memcmp16</code> missing asm (<a href="https://github.com/google/android-riscv64/issues/161">#161</a>, open).</strong> <code class="language-plaintext highlighter-rouge">String.compareTo()</code> uses a portable C fallback on riscv64. All other architectures have hand-written assembler. This is a measurable performance gap for Java string-heavy workloads.</p>
+<p><strong>4. Page-fault read/write disambiguation missing</strong> (open, <a href="https://github.com/google/android-riscv64/issues/118">#118</a>). A genuine platform-level correctness gap versus every other supported architecture, not merely a performance shortfall.</p>
 
-<p><strong>5. Unimplemented ART intrinsics (<a href="https://github.com/google/android-riscv64/issues/141">#141</a>, open).</strong> The full list lives in <code class="language-plaintext highlighter-rouge">code_generator_riscv64.h</code> under <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED_INTRINSIC_LIST_RISCV64</code>. These fall back to slower non-optimized paths. The gap is larger than on arm64 or x86_64.</p>
+<p><strong>5. __memcmp16 missing asm</strong> (open, <a href="https://github.com/google/android-riscv64/issues/161">#161</a>). String.compareTo() uses a portable C fallback on riscv64; every other architecture has hand-written assembler. A measurable performance gap for Java string-heavy workloads.</p>
 
-<p><strong>6. Hardware security features not deployed.</strong> Hardware CFI via Zisslpcfi landing pads (<a href="https://github.com/google/android-riscv64/issues/15">#15</a>) and hardware Shadow Call Stack via Zsslpcfi (<a href="https://github.com/google/android-riscv64/issues/14">#14</a>) are open with no target date. The current software SCS via gp register is a stop-gap.</p>
+<p><strong>6. Unimplemented ART intrinsics</strong> (open, <a href="https://github.com/google/android-riscv64/issues/141">#141</a>). The gap is larger than on arm64 or x86_64; these fall back to slower non-optimized paths.</p>
 
-<p><strong>7. QEMU-only testing.</strong> No physical hardware CI path exists. QEMU 9.0+ is required for correct V extension behavior. Emulator boot time is approximately 10 minutes. Results on real hardware may differ substantially.</p>
+<p><strong>7. Hardware security features not deployed.</strong> Hardware CFI via Zisslpcfi landing pads (<a href="https://github.com/google/android-riscv64/issues/15">#15</a>) and hardware Shadow Call Stack via Zisslpcfi (<a href="https://github.com/google/android-riscv64/issues/14">#14</a>) are open with no target date; the current software SCS via the gp register is a stop-gap.</p>
 
-<p><strong>8. No RISC-V libm optimization library.</strong> <code class="language-plaintext highlighter-rouge">libarm-optimized-routines</code> provides highly tuned math and string routines for arm64. There is no equivalent for riscv64. Math performance relies on FreeBSD/NetBSD generic C and clang builtins.</p>
+<p><strong>8. QEMU-only testing, and the validation path itself is unreliable.</strong> No physical hardware CI path exists. QEMU 9.0+ is required for correct V extension behavior. Boot time is approximately 10 minutes. Cuttlefish itself is failing on at least one common cloud host configuration (<a href="https://github.com/google/android-riscv64/issues/163">#163</a>, open, GCP Debian 11), meaning the primary validation mechanism for riscv64 changes has its own open reliability gap.</p>
 
-<p><strong>9. Profiling infrastructure gap.</strong> Compiler-generated <code class="language-plaintext highlighter-rouge">$x.*</code> mapping symbols in <code class="language-plaintext highlighter-rouge">libc.so</code> obscure real function names during cpu-cycles profiling (<a href="https://github.com/google/android-riscv64/issues/160">#160</a>). This makes hotspot analysis unreliable.</p>
+<p><strong>9. No RISC-V libm optimization library.</strong> <code class="language-plaintext highlighter-rouge">libarm-optimized-routines</code> provides highly tuned math and string routines for arm64; there is no equivalent for riscv64. Math performance relies on FreeBSD/NetBSD generic C and clang builtins.</p>
 
-<p><strong>10. Google-controlled governance.</strong> All OWNERS-file entries are Google employees. External contributors cannot merge without Google Code-Review+2. There is no path for non-Google parties to hold commit authority regardless of contribution volume or quality.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>10. Profiling infrastructure gap.</strong> Compiler-generated $x.* mapping symbols in libc.so obscure real function names during cpu-cycles profiling (<a href="https://github.com/google/android-riscv64/issues/160">#160</a>), making hotspot analysis unreliable until fixed.</p>
+
+<p><strong>11. Google-controlled governance, single point of contribution risk.</strong> All OWNERS-file entries are Google employees (Section 1). External contributors, including the companies that have already contributed substantial riscv64 code (Alibaba, SiFive), cannot merge without Google Code-Review+2. There is no path for a non-Google party to hold commit authority regardless of contribution volume or quality. The one open Gerrit change (<a href="https://android-review.googlesource.com/c/platform/bionic/+/2320311">#2320311</a>) has sat unresolved for over two years partly because of exactly this dynamic: the non-Google submitter never got a clear answer from the Google owner and no third party can force resolution.</p>
+
+<p><strong>12. RISE involvement is nominal, not substantive.</strong> The System Libraries Working Group’s stated scope covers “Android, C runtimes,” and its elected lead (Ruinland Chuan-Tzu Tsai, Andes Technology) has a stated background in Android and C-runtime work, but no funded RISE RFP deliverable names Bionic specifically. A tracking stub exists (<code class="language-plaintext highlighter-rouge">riseproject-dev/system-libraries-wg</code> issue #1, titled “bionic,” body text “Android’s C library.”, status “Done”) but it contains no technical content, no linked PRs, and no scope beyond the one sentence; its author’s GitHub handle is consistent with this report’s own byline, so it should not be read as an independent RISE commitment to Bionic without further corroboration. No RISE blog post (35 checked) covers Bionic.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> orange (no-upstream-ci-no-distro)</li>
+  <li><strong>Release provider:</strong> none</li>
+</ul>
+
+<p>No riscv64 upstream CI exists: <code class="language-plaintext highlighter-rouge">TEST_MAPPING</code> has no riscv64/architecture tags, <code class="language-plaintext highlighter-rouge">PREUPLOAD.cfg</code> has no arch-specific hooks, and the only host-execution script, <a href="https://android.googlesource.com/platform/bionic/+/refs/heads/main/build/run-on-host.sh"><code class="language-plaintext highlighter-rouge">build/run-on-host.sh</code></a>, gates on <code class="language-plaintext highlighter-rouge">TARGET_ARCH = x86 -o TARGET_ARCH = x86_64</code> and exits unsupported for riscv64, confirmed by direct fetch of the repo root; no <code class="language-plaintext highlighter-rouge">.github/</code>/CI config of any kind exists. No distribution ships a compiled riscv64 Bionic package to trigger the distro floor: Ubuntu 26.04 “resolute” has no <code class="language-plaintext highlighter-rouge">bionic</code>/<code class="language-plaintext highlighter-rouge">python3-bionic</code>/<code class="language-plaintext highlighter-rouge">libbionic</code> package (only unrelated <code class="language-plaintext highlighter-rouge">*-wallpapers-bionic</code> theme packages), and the only packaged form anywhere is GNU Guix’s <code class="language-plaintext highlighter-rouge">android-bionic-uapi</code>, which is headers-only and produces no compiled binary. Google’s own NDK r27 riscv64 sysroot exists but is explicitly documented as “not supported” (OS-vendor bringup only, <code class="language-plaintext highlighter-rouge">meta/abis.json</code> sets <code class="language-plaintext highlighter-rouge">default: false</code>), so it does not count as a consumable upstream release either, hence <code class="language-plaintext highlighter-rouge">release_provider: none</code> rather than <code class="language-plaintext highlighter-rouge">upstream</code>. This is not “broken” (extensive, functional riscv64 source exists and boots under Cuttlefish/QEMU) and not “unknown” (thoroughly researched), so red and grey are both ruled out, leaving orange as the correct primary grade. Neither of the two listed orange subtypes applies exactly: no distro packages Bionic at all, so “downstream-only” does not apply, and Bionic is not an optimization-purpose project (its value proposition is being the platform C library, not out-competing a reference implementation on speed), so “optimization-absent” does not apply either. This is the base Step-1 “no upstream CI, no test, no release” row.</p>
+
+<p><strong>Pending work that could change the grade:</strong> <a href="https://github.com/google/android-riscv64/issues/61">android-riscv64#61</a> (LTO ABI/-mcpu propagation bug, open) is the most CI/toolchain-adjacent open issue that, if resolved alongside an actual CI gate being stood up, would move the grade. Whether <code class="language-plaintext highlighter-rouge">ci.android.com</code> runs a build-only <code class="language-plaintext highlighter-rouge">aosp_cf_riscv64_phone</code> column remains [NEEDS VERIFICATION] (JS-rendered page, not independently confirmable); if it does and can be verified, that would materially change the CI finding. The RISE Project System Libraries Working Group lists “Android, C runtimes” in scope and Google is a RISE Premier Member, but no funded RFP deliverable names Bionic specifically; the bare one-line tracking stub (<code class="language-plaintext highlighter-rouge">riseproject-dev/system-libraries-wg</code> issue #1) has status “Done” but no technical content and should not be read as an independent RISE commitment without further corroboration. No master/umbrella riscv64-CI tracking issue exists; the closest historical analog (RFC #2142912) was abandoned once split into atomic Gerrit changes.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE’s demonstrated contribution model for this project is direct code contribution by member companies rather than RFP-funded work: SiFive’s 15-file RVV string-assembly contribution is the precedent, already accepted and merged. No RISE-funded deliverable currently covers any of the gaps below, so none of this sizing double-counts RISE-covered work.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The core Bionic riscv64 port is complete. The five essential libc assembly files (syscall, setjmp, clone, vfork, exit), the dynamic linker entry and TLSDESC resolver, and all fenv functions are present and production-quality. Functional gaps relative to arm64 are confined to ART intrinsics and <code class="language-plaintext highlighter-rouge">__memcmp16</code>. No functional blocker exists for running Android on riscv64 hardware today – the NDK ABI being provisional is a stability/compatibility risk, not an execution blocker.</p>
-
-<p>Investment required for functional parity: implement <code class="language-plaintext highlighter-rouge">__memcmp16</code> in RVV assembly (closes <a href="https://github.com/google/android-riscv64/issues/161">#161</a>); address unimplemented ART intrinsics (<a href="https://github.com/google/android-riscv64/issues/141">#141</a>). Neither item is in Bionic directly – <code class="language-plaintext highlighter-rouge">__memcmp16</code> lives in ART, and the intrinsics are in ART’s code generator.</p>
-<h3 id="132-performance-optimization">
+<p>The core Bionic riscv64 port is complete. The five essential libc assembly files (syscall, setjmp, clone, vfork, exit), the dynamic linker entry and TLSDESC resolver, and all fenv functions are present and production-quality. Functional gaps relative to arm64 are confined to: the page-fault read/write disambiguation gap in the kernel-facing path (<a href="https://github.com/google/android-riscv64/issues/118">#118</a>), ART intrinsics, and __memcmp16. No functional blocker prevents running Android on riscv64 hardware today; the NDK ABI being provisional is a stability/compatibility risk, not an execution blocker. <code class="language-plaintext highlighter-rouge">__memcmp16</code> and the ART intrinsics live outside Bionic itself, in ART’s code generator.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>Identified performance gaps with no current owner:</p>
-
-<ol>
-  <li>No RISC-V equivalent of <code class="language-plaintext highlighter-rouge">libarm-optimized-routines</code> for math functions. Generic C math is measurably slower than NEON-tuned routines for trigonometric, exponential, and rounding functions.</li>
-  <li><code class="language-plaintext highlighter-rouge">__memcmp16</code> portable C fallback vs. hand-written asm (quantitative gap: data not available).</li>
-  <li>Unimplemented ART intrinsics (quantitative gap: data not available).</li>
-  <li>Profiling infrastructure gap (<code class="language-plaintext highlighter-rouge">$x.*</code> symbols) prevents identifying and fixing additional hotspots in <code class="language-plaintext highlighter-rouge">libc.so</code>.</li>
-  <li>SLP vectorizer effectiveness (<a href="https://github.com/google/android-riscv64/issues/60">#60</a>) – not yet characterized.</li>
-  <li>zlib has no RVV optimizations. Generic C only.</li>
-  <li>Multiple media/codec libraries have open optimization issues: boringssl (<a href="https://github.com/google/android-riscv64/issues/36">#36</a>), libjpeg-turbo (<a href="https://github.com/google/android-riscv64/issues/35">#35</a>), libmpeg2 (<a href="https://github.com/google/android-riscv64/issues/34">#34</a>), libhevc (<a href="https://github.com/google/android-riscv64/issues/33">#33</a>), libavc (<a href="https://github.com/google/android-riscv64/issues/32">#32</a>), flac (<a href="https://github.com/google/android-riscv64/issues/29">#29</a>), libpng (<a href="https://github.com/google/android-riscv64/issues/37">#37</a>).</li>
-</ol>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>No riscv64 CI exists. This is the highest-risk structural gap: the architecture has no automated regression detection. Any change to Bionic can silently break riscv64. Establishing even a build-only CI for riscv64 would provide a meaningful regression signal. A test-execution CI requires either physical hardware or a maintained QEMU integration (QEMU 9.0+ for V extension correctness).</p>
-
-<p>This is unlikely to be addressed by Google for a non-product architecture. It is a direct investment opportunity for a company with riscv64 hardware.</p>
-<h3 id="134-ecosystem-enablement">
+<p>Identified performance gaps with no current owner: no RISC-V equivalent of <code class="language-plaintext highlighter-rouge">libarm-optimized-routines</code> for math functions; <code class="language-plaintext highlighter-rouge">__memcmp16</code> portable-C fallback vs. hand-written asm (quantitative gap: data not available); unimplemented ART intrinsics (quantitative gap: data not available); the $x.* profiling-symbol gap that prevents identifying further hotspots in libc.so; SLP vectorizer effectiveness (<a href="https://github.com/google/android-riscv64/issues/60">#60</a>), not yet characterized; zlib has no RVV optimizations; multiple media/codec libraries have open optimization issues (boringssl #36, libjpeg-turbo #35, libmpeg2 #34, libhevc #33, libavc #32, flac #29, libpng #37, skia #39, libaom #66, brotli #140, AAC #13).</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>The RISE System Libraries WG covers Android/Bionic in its stated scope, but no funded project exists. SiFive has already demonstrated the pattern: contributing production-quality RVV string assembly (15 files) that was accepted and merged. This is the established contribution model.</p>
+<p>No riscv64 CI exists. This is the highest-risk structural gap: the architecture has no automated regression detection, and the informal validation path that does exist (Cuttlefish/QEMU) itself has an open reliability bug on a common cloud host (<a href="https://github.com/google/android-riscv64/issues/163">#163</a>). Establishing even a build-only CI for riscv64 would provide a meaningful regression signal; a test-execution CI requires either physical hardware or a maintained QEMU 9.2+ integration. This is unlikely to be addressed by Google for a non-shipping-product architecture and is a direct investment opportunity for a company with riscv64 hardware.</p>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
 
-<p>The LTO ABI correctness bug (<a href="https://github.com/google/android-riscv64/issues/61">#61</a>) is a compiler/build-system issue that benefits all Android riscv64 users. It has LLVM patch references (D132843 et al.) but is still open.</p>
-<h3 id="135-summary-table">
+<p>The RISE System Libraries WG covers Android/Bionic in its stated scope, but no funded project exists (Section 12). SiFive has already demonstrated the effective pattern: contributing production-quality RVV string assembly (15 files) that was accepted and merged under Google’s OWNERS-gated review. This is the established, and currently only proven, contribution model for outside parties. The LTO ABI correctness bug (<a href="https://github.com/google/android-riscv64/issues/61">#61</a>) is a compiler/build-system issue that benefits all Android riscv64 users; it has LLVM patch references (D132843 et al.) but remains open.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1451,7 +1599,14 @@ mm
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Implement <code class="language-plaintext highlighter-rouge">__memcmp16</code> in RVV asm (<a href="https://github.com/google/android-riscv64/issues/161">#161</a>)</td>
+      <td>Fix page-fault read/write disambiguation on riscv64 (<a href="https://github.com/google/android-riscv64/issues/118">#118</a>)</td>
+      <td>2-4</td>
+      <td>Kernel/Bionic</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Implement __memcmp16 in RVV asm (<a href="https://github.com/google/android-riscv64/issues/161">#161</a>)</td>
       <td>1-2</td>
       <td>ART/Bionic</td>
       <td>High</td>
@@ -1465,7 +1620,7 @@ mm
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Hardware CFI / Zsslpcfi support (<a href="https://github.com/google/android-riscv64/issues/15">#15</a>, <a href="https://github.com/google/android-riscv64/issues/14">#14</a>)</td>
+      <td>Hardware CFI / Zisslpcfi support (<a href="https://github.com/google/android-riscv64/issues/15">#15</a>, <a href="https://github.com/google/android-riscv64/issues/14">#14</a>)</td>
       <td>8-20</td>
       <td>Bionic/compiler/kernel</td>
       <td>High (long-lead)</td>
@@ -1479,7 +1634,7 @@ mm
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Fix <code class="language-plaintext highlighter-rouge">$x.*</code> profiling symbol gap in libc.so (<a href="https://github.com/google/android-riscv64/issues/160">#160</a>)</td>
+      <td>Fix $x.* profiling symbol gap in libc.so (<a href="https://github.com/google/android-riscv64/issues/160">#160</a>)</td>
       <td>1-2</td>
       <td>LLVM/Bionic</td>
       <td>Medium</td>
@@ -1488,7 +1643,7 @@ mm
       <td>Performance</td>
       <td>RVV-optimized zlib</td>
       <td>4-8</td>
-      <td>External (zlib/upstream)</td>
+      <td>External (zlib upstream)</td>
       <td>Medium</td>
     </tr>
     <tr>
@@ -1507,8 +1662,8 @@ mm
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Media codec library optimizations (#32, #33, #34, #37, #29)</td>
-      <td>20-40 total</td>
+      <td>Media codec library optimizations (#32, #33, #34, #37, #29, #66, #140)</td>
+      <td>24-48 total</td>
       <td>External libraries</td>
       <td>Low-Medium</td>
     </tr>
@@ -1528,14 +1683,21 @@ mm
     </tr>
     <tr>
       <td>CI/CD</td>
+      <td>Fix Cuttlefish/GCP crash blocking QEMU validation (<a href="https://github.com/google/android-riscv64/issues/163">#163</a>)</td>
+      <td>2-4</td>
+      <td>Cuttlefish/infra</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
       <td>Establish riscv64 test CI on hardware or QEMU 9.2+</td>
       <td>8-16</td>
-      <td>chip company with hardware</td>
+      <td>Chip company with hardware</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Extend <code class="language-plaintext highlighter-rouge">run-on-host.sh</code> to support riscv64</td>
+      <td>Extend run-on-host.sh to support riscv64</td>
       <td>1-2</td>
       <td>Bionic</td>
       <td>Medium</td>
@@ -1555,17 +1717,7 @@ mm
       <td>Blocking</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1577,29 +1729,43 @@ mm
 
 <ul>
   <li><a href="https://android.googlesource.com/platform/bionic">Android Bionic repository</a></li>
-  <li><a href="https://android-review.googlesource.com/q/project:platform/bionic+topic:riscv">Android Bionic Gerrit review</a></li>
+  <li><a href="https://android-review.googlesource.com/q/project:platform/bionic+topic:riscv">Android Bionic Gerrit review, topic:riscv</a></li>
   <li><a href="https://github.com/google/android-riscv64/issues">google/android-riscv64 issue tracker</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2142912">RFC #2142912 – Add riscv64 support (abandoned)</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2245796">Change #2245796 – riscv64 syscall stub and seccomp filter generation</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2254947">Change #2254947 – riscv64: add bionic assembler and string functions (first commit)</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2298684">Change #2298684 – Add a hack for a RISC-V bug (frame pointer)</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2427910">Change #2427910 – riscv64 SCS support</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2526531">Change #2526531 – riscv64: switch from x18 to gp for shadow call stack</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2606625">Change #2606625 – Implement RVV version mem* and str* for riscv64 (SiFive)</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2681597">Change #2681597 – riscv64: use vdso for __riscv_hwprobe()</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2695693">Change #2695693 – riscv64: fix ifuncs, improve the ifunc tests</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2752785">Change #2752785 – Add the risc-v TLSDESC relocations</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/3408180">Change #3408180 – libc: remove riscv64 mem<em>/str</em> ifuncs and fallbacks</a></li>
-  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2320311">Change #2320311 – Disable Rust dep. (only open riscv64 WIP change)</a></li>
-  <li><a href="https://github.com/google/android-riscv64/issues/61">android-riscv64#61 – Fix ABI and mcpu/march for LTO</a></li>
-  <li><a href="https://github.com/google/android-riscv64/issues/161">android-riscv64#161 – ART: implement custom __memcmp16?</a></li>
-  <li><a href="https://github.com/google/android-riscv64/issues/141">android-riscv64#141 – ART: unimplemented intrinsics</a></li>
-  <li><a href="https://github.com/google/android-riscv64/issues/160">android-riscv64#160 – $x.* symbol in libc.so</a></li>
-  <li><a href="https://reviews.llvm.org/D87579">LLVM D87579 – RISC-V frame pointer workaround</a></li>
-  <li><a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/18">RISC-V psABI issue #18 – frame pointer convention</a></li>
-  <li><a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/94">RISC-V psABI issue #94 – TLSDESC relocations</a></li>
-  <li><a href="https://riseproject.dev/2025/03/31/working-group-lead-election-results/">RISE Project working group election results (March 2025)</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2142912">RFC #2142912, Add riscv64 support (abandoned)</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2237209">Change #2237209, Add riscv64 to the list of uapi architectures</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2245796">Change #2245796, riscv64 syscall stub and seccomp filter generation</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2254947">Change #2254947, riscv64: add bionic assembler and string functions (first commit)</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2298684">Change #2298684, Add a hack for a RISC-V bug (frame pointer)</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2427910">Change #2427910, riscv64 SCS support</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2526531">Change #2526531, riscv64: switch from x18 to gp for shadow call stack</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2606625">Change #2606625, Implement RVV version mem<em>/str</em> for riscv64 (SiFive)</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2681597">Change #2681597, riscv64: use vdso for __riscv_hwprobe()</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2695693">Change #2695693, riscv64: fix ifuncs, align calling convention</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2752785">Change #2752785, Add the risc-v TLSDESC relocations</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/3408180">Change #3408180, libc: remove riscv64 mem<em>/str</em> ifuncs and fallbacks</a></li>
+  <li><a href="https://android-review.googlesource.com/c/platform/bionic/+/2320311">Change #2320311, Disable Rust dep. (only open riscv64 WIP change)</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/5">android-riscv64#5, sys_ptrace_test.cpp needs an instruction writing &gt;64 bits</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/61">android-riscv64#61, Fix ABI and mcpu/march for LTO</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/92">android-riscv64#92, Enable v extension</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/118">android-riscv64#118, Kernel: can’t distinguish read vs write for page faults on rv64</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/140">android-riscv64#140, external/brotli optimization</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/141">android-riscv64#141, ART: unimplemented intrinsics</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/160">android-riscv64#160, $x.* symbol in libc.so</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/161">android-riscv64#161, ART: implement custom __memcmp16?</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/163">android-riscv64#163, Cuttlefish fails with signal 11 on GCP Debian 11</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/164">android-riscv64#164, Question about malloc performance</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/166">android-riscv64#166, Missing CPU Variant LD flags in Rust LinkFlags</a></li>
+  <li><a href="https://github.com/google/android-riscv64/issues/168">android-riscv64#168, Prebuilt android OS Image for RISCV</a></li>
+  <li><a href="https://reviews.llvm.org/D87579">LLVM D87579, RISC-V frame pointer workaround</a></li>
+  <li><a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/18">RISC-V psABI issue #18, frame pointer convention</a></li>
+  <li><a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/94">RISC-V psABI issue #94, TLSDESC relocations</a></li>
+  <li><a href="https://riseproject.dev/members">RISE Project members</a></li>
+  <li><a href="https://riseproject.dev/2025/03/31/working-group-lead-election-results/">RISE Project, Working Group Lead Election Results (2025-03-31)</a></li>
+  <li><a href="https://riseproject.dev/2026/05/04/rise-project-working-group-elections-results/">RISE Project, Working Group Elections Results (2026-05-04)</a></li>
+  <li><a href="https://riseproject.dev/2026/07/30/rise-working-groups-move-their-project-tracking-to-github/">RISE Project, RISE Working Groups Move Their Project Tracking to GitHub (2026-07-30)</a></li>
+  <li><a href="https://github.com/riseproject-dev/system-libraries-wg/issues/1">riseproject-dev/system-libraries-wg, issue #1 “bionic”</a></li>
   <li><a href="https://github.com/sifive/sifive-libc">sifive/sifive-libc (source of RVV string contributions)</a></li>
+  <li><a href="https://opensource.googleblog.com/2023/10/android-and-risc-v-what-you-need-to-know.html">Android and RISC-V: what you need to know (Google Open Source blog, 2023-10)</a></li>
 </ul>
 
           
