@@ -683,7 +683,13 @@ const depsYaml = dependencies.length
 // look untidy). Strip anything before the first '^---' line outright, rather than just
 // working around its position with a regex flag.
 const fmStart = report.search(/^---\s*$/m)
-const reportFromFm = fmStart > 0 ? report.slice(fmStart) : report
+let reportFromFm = fmStart > 0 ? report.slice(fmStart) : report
+// The agent sometimes also wraps the whole frontmatter block in a stray markdown code fence
+// (e.g. "```yaml" before it), despite the frontmatter being given to it as raw text with no
+// fence -- the fmStart search above already lands past the opening fence (it matches the
+// inner '---'), so only the matching closing fence right after frontmatter's closing '---'
+// needs to be stripped here.
+reportFromFm = reportFromFm.replace(/^(---\n[\s\S]*?\n---)\n```[ \t]*\n/, '$1\n')
 // The agent also sometimes writes its own `dependencies:` block into the frontmatter --
 // especially likely during a refresh, where it may copy the EXISTING REPORT's frontmatter
 // structure verbatim. Strip any such block(s) before splicing in the deterministic,
