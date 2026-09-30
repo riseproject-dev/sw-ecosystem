@@ -1,9 +1,38 @@
 ---
 title: Linux RAS
 parent: Project Reports
-categories:
-  - perfmon
-  - debug
+color: orange
+dependencies:
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: Rust
+    relation: build-dependency
+    criticality: optional
+  - name: bindgen
+    relation: build-dependency
+    criticality: optional
+  - name: dwarves
+    relation: build-dependency
+    criticality: critical
+  - name: OpenSBI
+    relation: runtime-dependency
+    criticality: critical
+  - name: ACPICA
+    relation: runtime-dependency
+    criticality: critical
+  - name: QEMU
+    relation: test-dependency
+    criticality: critical
+  - name: EDK2
+    relation: test-dependency
+    criticality: optional
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="linux-ras" %}
@@ -11,18 +40,17 @@ categories:
 # Linux RAS
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
+**Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Linux RAS<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
----
-
 ## 1. Project Overview
 
-Linux RAS (Reliability, Availability, Serviceability) is a kernel subsystem, not a standalone project. Its scope covers:
+Linux RAS (Reliability, Availability, Serviceability) is not an independent, foundation-governed project. It is a kernel subsystem built into mainline Linux, covering:
 
-- The `drivers/ras/` top-level subsystem toggle and trace event infrastructure
+- The `drivers/ras/` top-level subsystem toggle and trace-event infrastructure
 - The EDAC (Error Detection and Correction) framework (`drivers/edac/`)
 - ACPI APEI (Advanced Platform Error Interface) and GHES (Generic Hardware Error Source) (`drivers/acpi/apei/`)
 - Architecture-specific glue connecting hardware error signals to the above frameworks
@@ -31,481 +59,308 @@ Homepage: [https://www.kernel.org/doc/html/latest/admin-guide/ras.html](https://
 
 Repository: [https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git)
 
-**Governance:** Linux kernel standard model. No separate foundation. Decisions made by subsystem maintainers on the linux-edac mailing list (linux-edac@vger.kernel.org). Primary maintainers: Tony Luck (Intel) and Borislav Petkov (AMD). ACPI APEI reviewer list includes Rafael J. Wysocki, Tony Luck, Borislav Petkov, Hanjun Guo (Huawei), Mauro Carvalho Chehab (Huawei), and Shuai Xue (Alibaba). The RISC-V RAS patch series is delegated to Paul Walmsley on the linux-riscv patchwork project.
+**Governance:** Standard Linux kernel maintainer-tree model. Patches flow through `linux-edac@vger.kernel.org` (RAS/EDAC) and `linux-acpi@vger.kernel.org` (APEI/GHES), are reviewed by subsystem maintainers, and are pulled by Linus Torvalds each merge window. There is no dedicated RAS foundation, corporate steering body, or formal community-membership tiering. ACPI APEI maintainers/reviewers: Rafael J. Wysocki, Tony Luck (Intel), Borislav Petkov (AMD/kernel.org), Hanjun Guo (Huawei), Mauro Carvalho Chehab (kernel.org), Shuai Xue (Alibaba). RISC-V ACPI is maintained by Sunil V L (Ventana Micro Systems). `arch/riscv` itself, which any RAS glue must pass through, is maintained by Paul Walmsley, Palmer Dabbelt, and Albert Ou, with Alexandre Ghiti as reviewer; the documented acceptance policy (`Documentation/arch/riscv/patch-acceptance.rst`) favors ratified/frozen ISA extensions and well-tested code over experimental churn - a generally welcoming but methodical, conservative stance toward new architecture-enablement work.
 
-**License:** GPL-2.0 (SPDX identifier, added 2017-11-02).
+**License:** GPL-2.0-only (SPDX), standard kernel-wide licensing.
 
-**First RAS commit:** 2014-06-11, SHA `76ac8275f296b49c58f684825543bf4eb85d43d0`, by Chen Gong (Intel), creating the unified RAS trace event stub.
+**First RAS commit:** 2014-06-11, SHA `76ac8275f296b49c58f684825543bf4eb85d43d0`, by Chen Gong (Intel), creating the unified RAS trace-event stub. [NEEDS VERIFICATION - single-source, not independently re-confirmed in this pass]
 
-**RISE membership:** Linux RAS is not a RISE member. RISE membership is organization-based. RISE Premier Members include Andes Technology, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, DAMO Academy (Alibaba), and Tenstorrent. General Members include Canonical, ByteDance, ISCAS, Microchip Technology Germany, SpacemiT, ZTE, and others. No RISE blog post or public workstream references Linux RAS by name. No RISE Python wheel builder entry for any RAS tooling exists.
+**Corporate involvement in the RISC-V port:** Lead submitter is Qualcomm (Himanshu Chauhan, formerly at Ventana Micro Systems). Co-developing/reviewing organizations: SiFive (Paul Walmsley, Clement Leger) and Ventana Micro Systems (Sunil V L - QEMU/EDK2 enablement). Alibaba (Ruidong Tian) submits the complementary Hardware Error Exception (HEE) track. General RAS-subsystem maintainers additionally work for AMD, Intel, Huawei.
 
----
+**RISE project relevance:** RISE (riseproject.dev, an LF Europe-hosted, RISC-V International-affiliated industry consortium) has no tracked involvement with Linux RAS. Exhaustive checks found no RISE blog post (all posts through 2026-09-28 reviewed), no riseproject-dev GitHub repo (all 52 repos checked), no RISE wiki/Confluence page, and no RISE Python wheel-builder entry referencing "Linux RAS" or RAS. The only RAS-adjacent RISE artifact is a single line in the RISE Confluence wiki's EDK2 QEMU Server Reference Platform spec listing the reference board's RAS level as "UNSPECIFIED" for v1 - not a funded workstream. Qualcomm and SiFive, the two organizations driving the upstream RAS patch series, are both RISE Premier Members (alongside Alibaba Damo, Google, MediaTek, NVIDIA, Red Hat, Tenstorrent), so the work aligns loosely with RISE's broader kernel-ecosystem goals without being a tracked RISE deliverable.
 
 ## 2. Port History and Upstreaming Timeline
 
-### 2.1 What is in mainline today
+| Date | Event | Author / Org | Status | Source |
+|---|---|---|---|---|
+| 2014-06-11 | First generic RAS trace-event commit | Chen Gong, Intel | Merged (not RISC-V) | [NEEDS VERIFICATION] |
+| 2025-02-06/07 | RFC 0/5 "initial support for GHES" | Rui Qi, ByteDance | Closed/superseded - folded into Chauhan's more comprehensive RERI/RAS design after Chauhan replied citing his own in-progress work | [list.infradead.org](http://lists.infradead.org/pipermail/linux-riscv/2025-February/065900.html) |
+| 2025-02-27 | "Add RAS support for RISC-V architecture" RFC v1 (10 patches) | Himanshu Chauhan, Ventana Micro | Superseded | [lkml.iu.edu](https://lkml.iu.edu/2502.3/08133.html), [patchew.org](https://patchew.org/linux/20250227123628.2931490-1-hchauhan@ventanamicro.com/) |
+| 2025-09-10 | "Handle synchronous hardware error exception" RFC 0/5 (HEE track) | Ruidong Tian, Alibaba | Superseded | [lkml.org](https://lkml.org/lkml/2025/9/10/599) |
+| 2025-10-29 | RAS support RFC v2 (10 patches, aligned to SBI SSE v7) | Himanshu Chauhan, Ventana Micro | Superseded | [lkml.iu.edu](https://lkml.iu.edu/2510.3/12913.html) |
+| 2026-01-09 | RAS support v3 (RFC tag dropped, aligned to SSE v8) | Himanshu Chauhan, Qualcomm | Superseded - Changes Requested (Paul Walmsley) | [ratatoskr.run](https://ratatoskr.run/lkml/2026/01/3360004/t) |
+| 2026-02-02 | "riscv: add hardware error trap handler support" v1 (standalone trap-handler stub) | Rui Qi | **Merged** - queued for v7.1 by Paul Walmsley on 2026-02-12 | [lkml.iu.edu](https://lkml.iu.edu/hypermail/linux/kernel/2602.0/00841.html) |
+| 2026-05-08 | "riscv: log Hardware Error Exception via APEI" PATCH 0/3 (HEE + APEI firmware-first) | Ruidong Tian, Alibaba | **Open**, not yet merged | [ratatoskr.run](https://ratatoskr.run/linux-acpi/2026/05/8036628/t) |
+| 2026-05-13 | RAS support v4 (10 patches, rebased to v7.1-rc3) | Himanshu Chauhan, Qualcomm | Superseded by v5 | [ratatoskr.run](https://ratatoskr.run/linux-riscv/2026/05/9002795/t), [LWN](https://lwn.net/Articles/1072622/), [Phoronix](https://www.phoronix.com/news/RISC-V-RAS-RERI-Linux-Patches) |
+| 2026-06-14 | Linux v7.1 released, includes Rui Qi's hardware-error trap handler | - | Shipped | Kernel release schedule |
+| 2026-09-11 | SBI SSE kernel patches v10 refinement posted (generic notification substrate) | Clement Leger, Rivos | Under review | (per corroborated tree state, `arch/riscv/include/asm/sbi.h`) |
+| 2026-09-24 | RAS support v5 (9 patches, rebased to v7.3-rc3, based on SSE v10) | Himanshu Chauhan, Qualcomm | **Open** - current, most recent, no replies yet as of 2026-09-30 | msg-id `20260924073714.1650588-1-himanshu.chauhan@oss.qualcomm.com` |
 
-The following RISC-V RAS-adjacent components are merged into mainline Linux:
-
-| File | Type | RAS Relevance |
-|---|---|---|
-| `arch/riscv/kernel/traps.c` | C | Hardware error trap mapped to `SIGBUS`/`BUS_MCEERR_AR` via `DO_ERROR_INFO` macro for exception cause code 19 |
-| `arch/riscv/kernel/entry.S` | Assembly | Exception vector table entry: `RISCV_PTR do_trap_hardware_error` at cause 19 |
-| `arch/riscv/kernel/crash_save_regs.S` | Assembly | Saves 31 GPRs plus `CSR_STATUS`, `CSR_TVAL`, `CSR_CAUSE`, and PC into `pt_regs` for kdump |
-| `arch/riscv/kernel/crash_dump.c` | C | `copy_oldmem_page()` for reading memory from a crashed kernel during kdump recovery |
-| `arch/riscv/kernel/vmcore_info.c` | C | `arch_crash_save_vmcoreinfo()` recording phys_ram_base, PAGE_OFFSET, VMALLOC_END, VA_BITS, VMEMMAP, MODULES_VADDR, KASLR offset, satp register value |
-| `arch/riscv/kernel/bugs.c` | C | GhostWrite vulnerability mitigation for T-Head XTheadVector CPUs; exposes `cpu_show_ghostwrite()` sysfs reporting "Not affected" / "Mitigation: xtheadvector disabled" / "Vulnerable" |
-| `arch/riscv/errata/sifive/errata_cip_453.S` | Assembly | Workaround for SiFive CIP-453 (bad address sign-extension in fault handlers) |
-| `arch/riscv/errata/sifive/errata.c` | C | CIP-453 (marchid `0x8000000000000007`, mimpid `0x20181004`-`0x20191105`) and CIP-1200 TLB coherency bug (sets `tlb_flush_all_threshold = 0`); applied via `patch_text_nosync` |
-| `arch/riscv/errata/thead/errata.c` | C | GhostWrite (all T-Head C9xx cores with xtheadvector), CMO non-coherent DMA workaround, MAE, PMU errata |
-| `arch/riscv/errata/andes/errata.c` | C | AX45MP non-coherent I/O (absent hardware coherency port); detected via SBI extension `0x0900031E`; sets `riscv_cbom_block_size = 1` |
-| `drivers/edac/sifive_edac.c` | C | SiFive Composable Cache L2/L3 ECC; handles `SIFIVE_CCACHE_ERR_TYPE_UE` (uncorrectable) and `SIFIVE_CCACHE_ERR_TYPE_CE` (correctable); depends on `EDAC=y && SIFIVE_CCACHE` |
-
-`arch/riscv/Kconfig` unconditionally selects `EDAC_SUPPORT` and `GENERIC_CPU_VULNERABILITIES`. It does **not** select `HAVE_ACPI_APEI` or `ARCH_SUPPORTS_MEMORY_FAILURE`.
-
-### 2.2 What is NOT in mainline
-
-The following components are entirely absent from mainline:
-
-- `HAVE_ACPI_APEI` Kconfig select in `arch/riscv/Kconfig` -- patch 09/10 of v4 adds `select HAVE_ACPI_APEI if ACPI`; confirmed absent from current tree (zero `APEI` hits in mainline riscv Kconfig)
-- `ioremap_cache` macro in `arch/riscv/include/asm/io.h`
-- `arch_apei_get_mem_attribute` in `arch/riscv/include/asm/acpi.h`
-- Fixmap indices for GHES (`FIX_APEI_GHES_IRQ`, `FIX_APEI_GHES_SSE_LOW_PRIORITY`, `FIX_APEI_GHES_SSE_HIGH_PRIORITY`) in `arch/riscv/include/asm/fixmap.h`
-- `ACPI_HEST_NOTIFY_SSE = 12` in `include/acpi/actbl1.h`; mainline still has `ACPI_HEST_NOTIFY_RESERVED = 12`
-- SSE GHES registration code (`riscv_sbi_sse.c`, ~162 lines, new file)
-- CPER processor type strings for RISC-V in `drivers/firmware/efi/cper.c`
-- HEST SSE notification handlers (`ghes_sse_lo_callback`, `ghes_sse_hi_callback`) in `drivers/acpi/apei/ghes.c`
-- `CONFIG_ACPI_APEI`, `CONFIG_ACPI_APEI_GHES`, `CONFIG_ACPI_APEI_ERST_DEBUG` in `arch/riscv/configs/defconfig`
-- Any GHES/HEE synchronous exception path (Alibaba series)
-- `ARCH_SUPPORTS_MEMORY_FAILURE` (blocks `RAS_CEC`, `ACPI_APEI_MEMORY_FAILURE`, and kernel memory error recovery)
-- Any RISC-V-specific EDAC driver beyond SiFive (no Qualcomm, Alibaba T-Head, StarFive, or generic driver)
-
-### 2.3 Active patch series timeline
-
-| Series | Author | Org | Date | State | Patches |
-|---|---|---|---|---|---|
-| "Add RAS support" RFC v1 | Himanshu Chauhan | Ventana Micro | 2025-02-27 | New/Stale | 10 |
-| "initial GHES support" | Rui Qi | ByteDance | 2025-02-06 | **Rejected** | 5 |
-| "Handle HEE" RFC | Ruidong Tian | Alibaba | 2025-09-10 | RFC | 5 |
-| "Add RAS support" RFC v2 | Himanshu Chauhan | Ventana Micro | 2025-10-29 | RFC/Archived | 10 |
-| "Add RAS support" v3 | Himanshu Chauhan | Qualcomm | 2026-01-09 | Changes Requested | 10 |
-| "log HEE via APEI" | Ruidong Tian | Alibaba | 2026-05-08 | New | 3 |
-| "Add RAS support" v4 | Himanshu Chauhan | Qualcomm | 2026-05-13 | New (one Reviewed-by) | 10 |
-
----
+**Is it fully upstream? No.** The only RISC-V RAS-relevant code that has actually landed in `torvalds/linux.git` is: the minimal hardware-error trap handler (mcause 19 -> `SIGBUS`/`BUS_MCEERR_AR`, shipped v7.1), the SiFive L2/L3 EDAC driver, SiFive/T-Head/Andes errata workarounds, kdump support, and (as generic infrastructure, not RAS-specific) the SBI SSE notification layer. The subsystem's flagship value proposition - ACPI APEI/GHES firmware-first error reporting via RERI (Qualcomm) or via HEE (Alibaba) - remains unmerged as two parallel, competing proposals.
 
 ## 3. Upstream Support Tier
 
-Linux RAS for RISC-V has no assigned upstream support tier. The subsystem MAINTAINERS file has no `RISCV RAS` or `EDAC RISCV` entry. The only RISC-V-adjacent EDAC entry is `EDAC_SIFIVE`, which covers one specific SoC family.
+No formal upstream support tier exists for RISC-V RAS. The kernel `MAINTAINERS` file has no `RISCV RAS` or `EDAC RISCV` entry; the only RISC-V-adjacent EDAC entry is `EDAC_SIFIVE`, scoped to one SoC family. The patchwork delegate for the series, Paul Walmsley (pjw), returned "Changes Requested" on v3 (2026-01-09); no Acked-by has been issued for v4 or v5.
 
-The patch series delegate on patchwork is Paul Walmsley (pjw). His review action on v3 was "Changes Requested" (2026-01-09). No Acked-by has been issued for any revision. The series has four revisions spanning 16 months with no merge.
-
----
+| | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| `HAVE_ACPI_APEI` selected | Yes | Yes | No |
+| `ACPI_APEI_GHES` buildable | Yes | Yes | No |
+| CI exercising RAS functionality | Partial (x86 MCE paths) | Partial | None (no KernelCI, no rasdaemon-ci coverage) |
+| Official release including RAS support | Every distro kernel | Every distro kernel | None - feature absent from mainline |
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-### 4.1 Notification mechanism
+### 4.1 Notification mechanisms
 
-RISC-V has no NMI. The Qualcomm series uses **Supervisor Software Events (SSE)** from RISC-V SBI v3.0 (chapter 19) as the hardware error notification vector. Each GHES entry is registered with the SSE layer; SSE events serve as notification vectors. Two priority levels are defined: lo and hi, each with a `DEFINE_RAW_SPINLOCK`, both delegating to a shared `__ghes_sse_callback(fixmap_idx)`.
+RISC-V has no NMI. Two competing notification mechanisms are proposed:
 
-The Alibaba series adds a parallel path using the **Hardware Error Exception (HEE)**, which is a synchronous exception at mcause=19. The HEE path calls `ghes_notify_hee()`, runs `irq_work_run()` if IRQs were enabled, and falls through to `die()` if no fixup is possible.
+- **SSE (Supervisor Software Events)** - used by the Qualcomm/Chauhan RERI series. Defined in RISC-V SBI v3.0 chapter 19. Each GHES entry registers with the SSE layer at lo/hi priority, both delegating to `__ghes_sse_callback(fixmap_idx)`. Already merged in OpenSBI. The SBI SSE kernel-side notification layer itself (Clement Leger, Rivos) is corroborated as present in `arch/riscv/include/asm/sbi.h` in the current tree, with a v10 refinement posted 2026-09-11 - i.e., the generic notification substrate the RAS series depends on is largely in place; what remains unmerged is the RAS-specific consumer (RERI decode plus GHES/SSE wiring).
+- **HEE (Hardware Error Exception)** - used by the Alibaba/Tian series. A synchronous exception at mcause=19, analogous to arm64's SEA (Synchronous External Abort). The minimal trap-handler stub (raise `SIGBUS`/`BUS_MCEERR_AR` on HEE, no firmware-first reporting) is merged (Linux v7.1). The follow-on that wires HEE into APEI/GHES for firmware-first CPER reporting (`CONFIG_ACPI_APEI_HEE`, new HEST notification type 13) is still open (PATCH 0/3, 2026-05-08).
 
-These two approaches cover different hardware error categories:
-- SSE: asynchronous, firmware-first, analogous to ARM64 SDEI
-- HEE: synchronous, CPU trap at mcause=19, analogous to ARM64 SEA (Synchronous External Abort)
-
-The two series are designed to be stacked (Alibaba takes HEST notify value 13 after Qualcomm takes 12) but neither formally declares the other as a prerequisite, and there is no coordinated review thread merging them.
+These paths are designed to coexist (SSE covers asynchronous/firmware-first events, HEE covers synchronous CPU traps) but have not been submitted as a single coordinated series; see Bug 3 in Section 11 for the resulting HEST-notify-value conflict.
 
 ### 4.2 Specification basis
 
-The series is based on:
-- RISC-V RERI (RAS Error-record Register Interface) v1.0, ratified 2024-05-24
-- ACPI ECR for HEST changes: [https://mantis.uefi.org/mantis/view.php?id=2522](https://mantis.uefi.org/mantis/view.php?id=2522)
-- RISC-V CPER Table ECR: [https://mantis.uefi.org/mantis/view.php?id=2551](https://mantis.uefi.org/mantis/view.php?id=2551)
-- SSE kernel patches v8 by Clement Leger (Rivos Inc.): [https://lore.kernel.org/all/20251105082639.342973-1-cleger@rivosinc.com/](https://lore.kernel.org/all/20251105082639.342973-1-cleger@rivosinc.com/)
+- RISC-V RERI (RAS Error-record Register Interface) v1.0
+- ACPI ECR for HEST changes: [Mantis #2522](https://mantis.uefi.org/mantis/view.php?id=2522)
+- RISC-V CPER Table ECR: [Mantis #2551](https://mantis.uefi.org/mantis/view.php?id=2551)
+- SBI SSE kernel patches (Clement Leger, Rivos), v8 -> v10 (posted 2026-09-11)
 
-SSE is already merged in OpenSBI. The SSE kernel patches are a prerequisite for the Qualcomm RAS series and must be merged first.
+### 4.3 Files touched by the Qualcomm v4/v5 series (diffstat confirmed for v4; v5 reduced the patch count from 10 to 9, exact per-file diffstat for v5 not independently captured - data not available beyond the cover-letter summary)
 
-### 4.3 Files modified in v4 (305 lines added, 12 lines removed across 11 files)
+- `arch/riscv/Kconfig` (+1: `select HAVE_ACPI_APEI if ACPI`)
+- `arch/riscv/configs/defconfig` (+3: `CONFIG_ACPI_APEI=y`, `CONFIG_ACPI_APEI_GHES=y`, `CONFIG_ACPI_APEI_ERST_DEBUG=y`)
+- `arch/riscv/include/asm/acpi.h`, `fixmap.h`, `io.h`
+- `arch/riscv/kernel/acpi.c`
+- `drivers/acpi/apei/Kconfig`, `ghes.c`
+- `drivers/firmware/efi/cper.c` (adds "RISC-V" processor-type string, "RV32/RV32E"/"RV64" ISA strings)
+- `drivers/firmware/riscv/riscv_sbi_sse.c`, `include/linux/riscv_sbi_sse.h` (new files)
+- `include/acpi/actbl1.h` (inserts `ACPI_HEST_NOTIFY_SSE = 12`)
 
-- `arch/riscv/Kconfig` (+1 line: `select HAVE_ACPI_APEI if ACPI`)
-- `arch/riscv/configs/defconfig` (+3 lines: `CONFIG_ACPI_APEI=y`, `CONFIG_ACPI_APEI_GHES=y`, `CONFIG_ACPI_APEI_ERST_DEBUG=y`)
-- `arch/riscv/include/asm/acpi.h` (+16)
-- `arch/riscv/include/asm/fixmap.h` (+8)
-- `arch/riscv/include/asm/io.h` (+3)
-- `arch/riscv/kernel/acpi.c` (+12)
-- `drivers/acpi/apei/Kconfig` (+5: new `CONFIG_ACPI_APEI_SSE` depending on `RISCV && RISCV_SBI_SSE && ACPI_APEI_GHES`)
-- `drivers/acpi/apei/ghes.c` (+101, -12)
-- `drivers/firmware/efi/cper.c` (+3: adds `"RISC-V"` to `proc_type_strs[]` and `"RV32/RV32E"` + `"RV64"` to `proc_isa_strs[]`)
-- `drivers/firmware/riscv/riscv_sbi_sse.c` (+146, new file)
-- `include/linux/riscv_sbi_sse.h` (+16, new file)
-- `include/acpi/actbl1.h` (+3, -1: inserts `ACPI_HEST_NOTIFY_SSE = 12`)
-
-### 4.4 Testing infrastructure (out-of-tree)
-
-- QEMU with RERI emulation: [https://github.com/ventanamicro/qemu.git](https://github.com/ventanamicro/qemu.git) (branch: dev-upstream) [NEEDS VERIFICATION]
-- EDK2 HEST table generation: [https://github.com/ventanamicro/edk2.git](https://github.com/ventanamicro/edk2.git) (branch: dev-upstream) [NEEDS VERIFICATION]
-- OpenSBI with RAS agent and CPER records
-
-Sample kernel output from error injection via devmem (from v4 cover letter):
+Sample injected-TLB-error output from the v4/v5 QEMU+OpenSBI+EDK2 test rig:
 
 ```
-[   34.370282] {1}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 1
-[   34.371375] {1}[Hardware Error]: event severity: recoverable
-[   34.373357] {1}[Hardware Error]:   processor_type: 3, RISCV
-[   34.373806] {1}[Hardware Error]:   processor_isa: 6, RISCV64
-[   34.374294] {1}[Hardware Error]:   error_type: 0x02
-[   34.374845] {1}[Hardware Error]:   TLB error
+{1}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 1
+{1}[Hardware Error]: event severity: recoverable
+{1}[Hardware Error]:   processor_type: 3, RISCV
+{1}[Hardware Error]:   processor_isa: 6, RISCV64
+{1}[Hardware Error]:   error_type: 0x02
+{1}[Hardware Error]:   TLB error
 ```
 
----
+This is functional validation on an emulated RERI device, not a performance benchmark, and has never run against real silicon.
+
+### 4.4 Relevance of the JIT/SIMD/crypto rubric
+
+This is an error-reporting plumbing feature wired to firmware (SBI/ACPI), not a computational kernel. There is no assembly-level RAS code (`.S` files), no JIT backend, and no SIMD dispatch relevant to RAS. The "hand-tuned / intrinsics / scalar fallback / missing" optimization taxonomy used for compute kernels does not map onto this subsystem; RISC-V RAS is binary: the ACPI APEI/GHES capability is either present or absent, and today it is absent.
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-### 5.1 Build system
+The kernel uses Kbuild (GNU Make + Kconfig), not CMake and not autoconf. There is no Dockerfile or containerized build image anywhere in `torvalds/linux.git`.
 
-The Linux kernel uses Kbuild (GNU Make), not CMake. All feature control is via `CONFIG_` symbols set through `make menuconfig`, `make defconfig`, or a `.config` file.
-
-### 5.2 Cross-compilation commands
-
-With GCC:
 ```bash
+# GCC toolchain
 make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- defconfig
-make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j$(nproc)
-```
+make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j$(nproc) Image
 
-With Clang/LLVM:
-```bash
+# Clang/LLVM toolchain
 make ARCH=riscv LLVM=1 defconfig
-make ARCH=riscv LLVM=1 -j$(nproc)
+make ARCH=riscv LLVM=1 -j$(nproc) Image
 ```
 
-`LLVM=1` sets `CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump READELF=llvm-readelf STRIP=llvm-strip`.
+Output: `arch/riscv/boot/Image`.
 
-### 5.3 Toolchain version requirements
+**Toolchain minimums** (`Documentation/process/changes.rst`, general kernel-wide floor):
 
-Global minimums from `scripts/min-tool-version.sh` (kernel 7.1.0):
-
-| Tool | Minimum | Notes |
+| Tool | Minimum | riscv64-specific constraint |
 |---|---|---|
-| GCC | 8.1.0 | No riscv-specific override |
-| Clang/LLVM | 17.0.1 | See RISC-V-specific constraints below |
-| Binutils | 2.30.0 | See RISC-V-specific constraints below |
-| Rust (optional) | 1.85.0 | riscv64 only (no 32-bit Rust support) |
-| bindgen (Rust) | 0.71.1 | |
+| GCC | 8.1.0 | `GCC_VERSION < 110300` triggers `TOOLCHAIN_NEEDS_OLD_ISA_SPEC` (`-Wa,-misa-spec=2.2` workaround for zicsr/zifencei handling); GCC 12+ recommended |
+| Clang/LLVM | 17.0.1 | LLVM < 18.0.0 breaks DWARF5 debug info when using the integrated assembler/LLD (`ARCH_HAS_BROKEN_DWARF5`); LLVM 18+ recommended |
+| Binutils | 2.30.0 | `AS_VERSION >= 23600` (2.36+) needed for explicit zicsr/zifencei; `LD_VERSION >= 23800` (2.38+) for Vector extension linking; `LD_VERSION >= 23900` (2.39+) for Zba/Zbc/Zbkb; 2.39+ recommended |
+| Rust (optional) | 1.85.0 | riscv64-only; requires `RUSTC_SUPPORTS_RISCV && CC_IS_CLANG && 64BIT` - Rust-for-Linux on RISC-V needs Clang, not GCC |
+| bindgen (optional) | 0.71.1 | Rust FFI binding generator, needed only if Rust-for-Linux is enabled |
 
-RISC-V-specific toolchain constraints from `arch/riscv/Kconfig` and `arch/riscv/Makefile`:
-
-- **GCC < 11.3.0:** Does not support `zicsr` and `zifencei` extensions via `-march=`. The kernel detects `GCC_VERSION < 110300` and passes `-Wa,-misa-spec=2.2` as a workaround (`TOOLCHAIN_NEEDS_OLD_ISA_SPEC`). GCC 11.3+ is required to avoid this path.
-- **Binutils >= 2.38:** Removed Zicsr/Zifencei from base `I` extension. When `AS_VERSION >= 23600`, the kernel automatically appends `_zicsr_zifencei` to the `-march=` string.
-- **Binutils >= 2.39:** Required for `TOOLCHAIN_HAS_ZBB`, `ZBA`, `ZBC`, `ZBKB` B/K extensions (`LD_VERSION >= 23900`).
-- **Binutils >= 2.38:** Required for Vector extension (`TOOLCHAIN_HAS_V`, `LD_VERSION >= 23800`).
-- **LLVM < 18.0.0:** DWARF5 debug info is broken when using LLVM integrated assembler and LLD both below 18.0.0 (`ARCH_HAS_BROKEN_DWARF5`). LLVM 18.0.0 fixes this.
-- **Rust on RISC-V:** Requires Clang (not GCC). `select HAVE_RUST if RUSTC_SUPPORTS_RISCV && CC_IS_CLANG`. `RUSTC_SUPPORTS_RISCV` additionally `depends on 64BIT`.
-
-Practical recommendation: GCC 12+ / Binutils 2.39+ / LLVM 18+.
-
-### 5.4 Key CONFIG symbols for RAS/EDAC on riscv64
+**QEMU usage** is driven by KUnit's own harness, not a standalone documented QEMU guide (checked `Documentation/arch/riscv/boot.rst` and `boot-image-header.rst`: neither contains build/QEMU examples). The actual config lives in `tools/testing/kunit/qemu_configs/riscv.py`:
 
 ```
-CONFIG_EDAC=y
-CONFIG_EDAC_SUPPORT=y           # auto-selected by arch/riscv/Kconfig
-CONFIG_EDAC_SIFIVE=y            # SiFive SoC only; depends on EDAC=y && SIFIVE_CCACHE
-CONFIG_ACPI=y
-CONFIG_ACPI_APEI=y              # requires patch 09/10 to be merged first
-CONFIG_ACPI_APEI_GHES=y
-CONFIG_ACPI_APEI_EINJ=y         # error injection (debug; needs DEBUG_FS)
-CONFIG_ACPI_APEI_PCIEAER=y
+qemu-system-riscv64 -machine virt -cpu rv64 \
+  -bios /usr/share/qemu/opensbi-riscv64-generic-fw_dynamic.bin \
+  -kernel arch/riscv/boot/Image \
+  -append "console=ttyS0" -nographic
 ```
 
-`CONFIG_ACPI_APEI` and `CONFIG_ACPI_APEI_GHES` are not in `arch/riscv/configs/defconfig` today; they are added by patch 10/10 of v4.
+Testing of the RAS/RERI series specifically uses QEMU (RERI emulation), OpenSBI (RAS agent / CPER records), EDK2 (HEST/GHES ACPI table generation), and `devmem` for error injection; none of this is in mainline QEMU's default RERI support, which is confirmed absent (see Section 7).
 
----
+**Known build-affecting facts:** `arch/riscv/Kconfig` today does not select `HAVE_ACPI_APEI`, so `CONFIG_ACPI_APEI`/`CONFIG_ACPI_APEI_GHES` cannot be enabled on riscv64 at all until patch 09/10 (or its v5 equivalent) merges.
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
-
-### 6.1 Mainline feature matrix
 
 | Feature | amd64 | arm64 | riscv64 |
 |---|---|---|---|
 | `EDAC` framework | Yes | Yes | Yes (framework only) |
-| Vendor EDAC drivers | Extensive | Extensive (a72, thunderx, xgene, etc.) | SiFive only |
-| `ACPI_APEI` / `GHES` | Yes | Yes | No (patch pending) |
-| `HAVE_ACPI_APEI` Kconfig select | Yes | Yes | No (pending v4 patch 09/10) |
+| Vendor EDAC drivers | Extensive | Extensive | SiFive only |
+| `ACPI_APEI` / `GHES` | Yes | Yes | No - `HAVE_ACPI_APEI` not selected |
 | `ARCH_SUPPORTS_MEMORY_FAILURE` | Yes | Yes | No |
-| `RAS_CEC` (Correctable Errors Collector) | Yes | No | No (depends on `X86_MCE`) |
+| `RAS_CEC` | Yes | No | No (depends on `X86_MCE`) |
 | `MEMORY_FAILURE` | Yes | Yes | No |
 | MCE/MCA framework | Yes (x86) | No | No |
-| CPER processor type/ISA strings | Yes | Yes | No (pending v4 patch 07/10) |
-| Firmware-first error notification | APEI/GHES | SDEI/SEA | SSE/HEE (pending) |
+| CPER processor type/ISA strings | Yes | Yes | No (pending) |
+| Synchronous hardware-error trap -> SIGBUS | Yes (#MC) | Yes (SEA) | Yes - merged v7.1 (bare trap only, no firmware-first CPER decode yet) |
+| Firmware-first error notification | APEI/GHES | SDEI/SEA | Pending (SSE and HEE tracks, both unmerged for the APEI-integration piece) |
 | Crash dump (kdump) | Yes | Yes | Yes |
-| CPU vulnerability sysfs | Yes | Yes | Yes (GhostWrite) |
-| Vendor errata runtime patching | Yes | Yes | Yes (SiFive, T-Head, Andes) |
+| CPU vulnerability sysfs | Yes | Yes | Yes (GhostWrite mitigation) |
+| Vendor errata runtime patching | Yes | Yes | Yes (SiFive CIP-453/CIP-1200, T-Head GhostWrite/CMO, Andes AX45MP) |
 | PCIe AER | Yes | Yes | Yes (architecture-agnostic) |
 
-### 6.2 AMD/x86-specific components: not applicable to riscv64
+AMD-specific components (`AMD_ATL`, `RAS_FMPM`, `EDAC_DECODE_MCE`) are `depends on X86_64`/`X86_MCE` and categorically not applicable to riscv64; no action item follows from their absence.
 
-- `AMD_ATL` (Address Translation Library): explicitly `depends on X86_64`
-- `RAS_FMPM` (FRU Memory Poison Manager): depends on `AMD_ATL && ACPI_APEI`
-- `EDAC_DECODE_MCE`: depends on `X86_MCE`
+**Functional gap:** riscv64 cannot report firmware-detected hardware errors (memory, cache, interconnect) through the standard ACPI APEI/GHES path at all today - the only path available is the bare synchronous trap added in v7.1, which delivers a signal but no structured CPER error record.
 
-No action required for these components.
-
-### 6.3 Components blocked by missing `HAVE_ACPI_APEI`
-
-All of the following are unavailable on riscv64 until `select HAVE_ACPI_APEI if ACPI` is added to `arch/riscv/Kconfig`:
-
-- `ACPI_APEI`, `ACPI_APEI_GHES`, `ACPI_APEI_EINJ`, `ACPI_APEI_ERST`
-- `EDAC_GHES` (depends on `ACPI_APEI_GHES`)
-- `ACPI_APEI_MEMORY_FAILURE`
-
-This single Kconfig line is patch 09/10 of the Qualcomm v4 series.
-
-### 6.4 Components blocked by missing `ARCH_SUPPORTS_MEMORY_FAILURE`
-
-- `MEMORY_FAILURE` (kernel memory error recovery, soft-offline)
-- `RAS_CEC` (per-page correctable error cache; also blocked by `X86_MCE`)
-- `ACPI_APEI_MEMORY_FAILURE`
-
-No RISC-V patch series addressing `ARCH_SUPPORTS_MEMORY_FAILURE` was found in the research data.
-
----
+**Performance gap:** Data not available - no benchmark exists comparing GHES/EDAC error-handling latency or SSE notification round-trip time between riscv64 and arm64/amd64, because the feature is not yet merged on riscv64.
 
 ## 7. CI/CD Infrastructure
 
-### 7.1 linux-riscv patchwork CI
+**In the kernel git tree itself, there is no CI configuration for any architecture.** A direct fetch of `git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/` (HTTP 200, actual content, not a bot-block page) shows the complete top-level listing contains no `.github/`, no `.gitlab-ci.yml`, no `.cirrus.yml`, and no other CI config file; the GitHub read-only mirror also returns HTTP 404 for `.github/workflows/ci.yml`. This is true of mainline Linux generally, not specific to RAS or riscv64.
 
-All patches submitted to the linux-riscv patchwork project are automatically checked by a bot named "bjorn" (bjorn@kernel.org). Confirmed check names from verbatim patchwork page reads:
+Separately, the kernel.org **patchwork** system runs an external bot ("bjorn") against every submission to the linux-riscv project, reporting checks including `bjorn/build-rv64-gcc-allmodconfig`, `bjorn/build-rv64-clang-allmodconfig`, `bjorn/pre-ci_am` (apply check), `bjorn/checkpatch`, and others. [NEEDS VERIFICATION - this detail is carried from prior research and was not independently re-fetched in the most recent verification pass; the underlying bjorn CI infrastructure itself was not publicly inspectable.] Per the available evidence, every revision of the Qualcomm RAS series (RFC v1 through v4, and reportedly v5) has failed `bjorn/pre-ci_am` ("Failed to apply series"), which blocks the downstream riscv64 build jobs from running at all.
 
-- `bjorn/build-rv32-defconfig`
-- `bjorn/build-rv64-clang-allmodconfig`
-- `bjorn/build-rv64-gcc-allmodconfig`
-- `bjorn/build-rv64-nommu-k210-defconfig`
-- `bjorn/build-rv64-nommu-k210-virt`
-- `bjorn/checkpatch`
-- `bjorn/dtb-warn-rv64`
-- `bjorn/header-inline`
-- `bjorn/kdoc`
-- `bjorn/module-param`
-- `bjorn/pre-ci_am` (series apply check; blocks all downstream CI when it fails)
-- `bjorn/verify-fixes`
-- `bjorn/verify-signedoff`
+**KernelCI** runs 15 riscv64 jobs (`kbuild-gcc-14-riscv`, `kbuild-clang-21-riscv`, plus LAVA boot tests on StarFive VisionFive 2/v1, Allwinner D1 Nezha, SpacemiT K1 Banana Pi F3, and Eswin HiFive Premier P550) but none are RAS-specific; `drivers/ras/Kconfig` has zero riscv64 references and `tools/testing/selftests/riscv/` has no RAS/EDAC/GHES/APEI tests.
 
-All four revisions of the Qualcomm series (RFC v1, RFC v2, v3, v4) have failed `bjorn/pre-ci_am` ("Failed to apply series"). This check runs before the build jobs; when it fails, the riscv64 build jobs do not run.
+**rasdaemon-ci** (`mchehab/rasdaemon-ci`), the dedicated CI for the userspace RAS daemon, was directly checked across all its workflow files (`linux-kernel.yml`, `pipeline.yml`, `publish-results.yml`, `qemu-fuzz.yml`, `qemu-image.yml`, `qemu-tests.yml`, `qemu.yml`, `rasdaemon.yml`): the architecture matrix contains only `x86_64` and `aarch64`, no `riscv64` entry anywhere. Its own documentation explicitly lists RERI (RISC-V Error Report Interface) testing as "not implemented" because QEMU has no RERI event producer or injection mechanism, flagged as a "planned RISC-V test" pending QEMU support.
 
-The underlying CI infrastructure (GitHub Actions, GitLab CI, custom scripts, runner configuration) was not publicly accessible for verification.
+| | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| In-tree kernel CI config | None (none for any arch) | None | None |
+| Patchwork bot build checks | Yes | Yes | Yes (build only; RAS series specifically fails apply) |
+| KernelCI RAS-specific tests | No | No | No |
+| rasdaemon-ci arch coverage | Yes | Yes | No - explicitly absent, "not implemented" |
 
-### 7.2 KernelCI riscv64 coverage
-
-KernelCI (`kernelci-pipeline`) includes 15 riscv64 jobs: `kbuild-gcc-14-riscv` and `kbuild-clang-21-riscv` variants, plus baseline boot tests via LAVA labs on five real hardware platforms:
-
-| Platform | Board |
-|---|---|
-| jh7110-starfive-visionfive-2-v1-3b | StarFive VisionFive 2 |
-| jh7100-starfive-visionfive-v1 | StarFive VisionFive v1 |
-| sun20i-d1-nezha | Allwinner D1 Nezha |
-| spacemit-k1-bananapi-f3 | SpacemiT K1 Banana Pi F3 |
-| eic7700-hifive-premier-p550 | Eswin HiFive Premier P550 |
-
-No RAS-specific CI jobs (kselftest, EINJ injection, GHES validation, EDAC functional tests) exist for riscv64 in any tracked KernelCI configuration. The `drivers/ras/Kconfig` in mainline has zero riscv64 references. The `tools/testing/selftests/riscv/` directory contains abi, cfi, hwprobe, mm, sigreturn, and vector tests but no RAS, EDAC, GHES, or APEI tests.
-
-The riscv tree (`git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git`) is tracked by KernelCI with `riscv_fixes` and `riscv_for-next` build targets. No dedicated RAS maintainer tree (Tony Luck, Borislav Petkov, James Morse) is tracked by KernelCI for riscv64.
-
----
+No RISE-provided runner involvement with RAS CI was found in any source.
 
 ## 8. Distribution and Release Status
 
-"Linux RAS" does not exist as a standalone userspace package under that name. The associated userspace daemon is `rasdaemon`.
+"Linux RAS" is not distributed as a standalone package under that name on any channel: PyPI (`linux-ras`) returns HTTP 404 on both the JSON and simple index; the GitLab RISE wheel builder redirects to the same 404; Ubuntu 26.04 "resolute" package search returns no `linux-ras`/`python3-linux-ras`/`liblinux-ras` match (the only substring hits are unrelated arm64-only `linux-raspi*` Raspberry Pi kernel packages); Arch Linux RISC-V (archriscv.felixc.at) has no matching package. This is expected: RAS is compiled into the kernel image itself, not shipped as a separate artifact.
 
-| Distribution | Package | riscv64 Available | Version |
-|---|---|---|---|
-| Debian sid/testing | rasdaemon | Yes (status: Installed, built on rv-manda-03) | 0.8.4-1 |
-| Ubuntu 24.04 Noble | rasdaemon | Yes (binary in universe) | 0.8.0-2 |
-| Arch Linux RISC-V | rasdaemon | Not found | -- |
-| PyPI | linux-ras | No (HTTP 404) | -- |
-| RISE wheel builder | linux-ras | No (redirect to 404) | -- |
+The relevant userspace consumer is `rasdaemon`, which reads kernel RAS/EDAC/MCE trace events. It **is** packaged for riscv64 in Ubuntu 26.04 "resolute" (v0.8.4-1), with its full dependency chain (`libc6`, `libsqlite3-0`, `sqlite3`, `libtraceevent1`, `libpci3`, `perl`, `libdbd-sqlite3-perl`, `init-system-helpers`) resolving cleanly on riscv64. `mcelog`, listed in the kernel's own minimal-requirements doc, is absent from the archive entirely - a global, project-wide deprecation in favor of rasdaemon, not a riscv64-specific gap.
 
-`rasdaemon` is a userspace daemon that reads kernel RAS error traces via the tracing subsystem. Its availability on Debian/Ubuntu riscv64 reflects that the package builds cleanly; it does not imply the underlying kernel APEI/GHES infrastructure is functional on riscv64 hardware, because that infrastructure is not yet merged.
-
-No mainline kernel release includes riscv64 APEI/GHES support. All RAS patch series targeting riscv64 are unmerged as of 2026-06-17.
-
----
+**What a user must do to get working RAS on riscv64 today:** nothing produces a working result, because the firmware-first APEI/GHES capability that `rasdaemon` is meant to consume does not exist in mainline riscv64 kernels. A user gets only the bare `SIGBUS`/`BUS_MCEERR_AR` signal from the v7.1 trap handler on a genuine hardware error, with no structured error record, no EDAC reporting beyond SiFive L2/L3, and no `rasdaemon` functional validation possible end-to-end.
 
 ## 9. Dependencies
 
-| Dependency | Role | riscv64 Build Status | riscv64 Test Status | Blocking Issues |
-|---|---|---|---|---|
-| `RAS` (core) | Top-level subsystem toggle; architecture-agnostic bool | Builds | Not systematically tested | None |
-| `EDAC` (framework) | Error Detection and Correction framework; depends on `EDAC_SUPPORT` (auto-selected for riscv) | Builds | Limited (SiFive hardware only) | No generic riscv64 EDAC driver |
-| `EDAC_SIFIVE` | SiFive L2 cache ECC via EDAC | Builds (requires `SIFIVE_CCACHE`) | Tested on SiFive hardware | Vendor-specific only |
-| `ACPI_APEI` / `ACPI_APEI_GHES` | ACPI APEI / GHES firmware-first error reporting | Does not build | Not tested | `HAVE_ACPI_APEI` not defined in riscv arch (pending v4 patch 09/10) |
-| `MEMORY_FAILURE` | Kernel memory error recovery (soft-offline) | Does not build | Not tested | `ARCH_SUPPORTS_MEMORY_FAILURE` not selected by riscv |
-| `RAS_CEC` | Per-page correctable error cache | Does not build | Not tested | Depends on `X86_MCE` and `MEMORY_FAILURE`; both blocked |
-| `EDAC_GHES` | EDAC driver consuming GHES error records | Does not build | Not tested | Blocked by `ACPI_APEI_GHES` which requires `HAVE_ACPI_APEI` |
-| `AMD_ATL`, `RAS_FMPM` | AMD address translation, poison manager | Does not build | Not applicable | Explicitly `depends on X86_64`; categorically not applicable |
-| `PCIEAER` | PCIe Advanced Error Reporting | Builds | Limited | Architecture-agnostic; functional where PCIe hardware exists |
-| SSE kernel patches (Clement Leger, Rivos Inc.) | SBI SSE notification layer; prerequisite for Qualcomm RAS series | Out-of-tree | Not tested | Must merge before Qualcomm RAS v4 can be considered for merge |
-| ACPICA PR [#1170](https://github.com/acpica/acpica/pull/1170) | Upstream ACPICA modification to add `ACPI_HEST_NOTIFY_SSE = 12` | Out-of-tree | Not tested | Rafael Wysocki flagged that `include/acpi/actbl1.h` is ACPICA-owned; kernel patch 03/10 cannot merge until ACPICA accepts the change |
+| Dependency | Role | riscv64 Build Status | riscv64 Test Status | riscv64 Release Status | Notes |
+|---|---|---|---|---|---|
+| GCC | Build-dependency, critical | Builds on riscv64; `gcc-14` v14.3.0 packaged in Ubuntu 26.04 resolute | First-class riscv64 porter architecture | Released | GCC < 11.3 triggers a zicsr/zifencei ISA-spec workaround (`TOOLCHAIN_NEEDS_OLD_ISA_SPEC`); GCC 12+ recommended |
+| GNU binutils | Build-dependency, critical | Builds; v2.46 packaged in Ubuntu 26.04 resolute | First-class riscv64 porter architecture | Released | AS >= 2.36 required for explicit zicsr/zifencei; LD >= 2.38 for Vector extension; LD >= 2.39 for Zba/Zbc/Zbkb |
+| LLVM | Build-dependency, critical | Builds via `make LLVM=1` | Supported alt-toolchain path | Released (distro-packaged clang/lld) | LLVM < 18.0.0 breaks DWARF5 debug info on riscv64 (`ARCH_HAS_BROKEN_DWARF5`); minimum 17.0.1, 18+ recommended |
+| Rust | Build-dependency, optional | Builds; `rustc` v1.93.1 packaged in Ubuntu 26.04 resolute | Requires Clang, not GCC, on riscv64 (`CC_IS_CLANG` gate); combination not independently verified here | Released | Needed only if Rust-for-Linux is enabled alongside RAS code; `RUSTC_SUPPORTS_RISCV` additionally requires `64BIT` |
+| bindgen | Build-dependency, optional | Builds; v0.72.1 packaged in Ubuntu 26.04 resolute | Not RAS-specific tested | Released | Rust FFI binding generator for Rust-for-Linux |
+| dwarves | Build-dependency, critical | Builds; v1.31 packaged in Ubuntu 26.04 resolute. Binary `dwarves` package itself ships only for amd64/arm64, but `pahole` - the tool actually used by kernel CI - is the riscv64-built binary | Works as part of standard kernel BTF-generation CI (`CONFIG_DEBUG_INFO_BTF`) | Released | Used by CI builds of the RAS/EDAC patch series for BTF debug info |
+| OpenSBI | Runtime-dependency, critical | SSE (Supervisor Software Events), the notification mechanism the Qualcomm RAS series depends on, is already merged in OpenSBI | Used in all QEMU+OpenSBI+EDK2 functional tests of the RAS series | Released (upstream) | Provides the RAS agent / CPER record generation in the v4/v5 test rig |
+| ACPICA | Runtime-dependency, critical | Out-of-tree as far as the kernel's copy of `include/acpi/actbl1.h` is concerned | Not tested | Not released for this feature | **Primary merge blocker**: Rafael Wysocki flagged that the new `ACPI_HEST_NOTIFY_SSE`/HEE notification-type constants must land in upstream ACPICA first; author confirmed [ACPICA PR #1170](https://github.com/acpica/acpica/pull/1170) is open and unmerged as of 2026-09-30 |
+| QEMU | Test-dependency, critical | Mainline QEMU has no RERI event producer or injection mechanism; RERI testing is used only via a Ventana Micro fork | rasdaemon-ci explicitly lists RERI as "not implemented," a "planned RISC-V test" pending QEMU support | Not released for RERI | Confirmed absent from both rasdaemon-ci's test matrix and mainline QEMU |
+| EDK2 | Test-dependency, optional | Used out-of-tree (Ventana Micro fork) to generate HEST/GHES ACPI tables for the QEMU test rig | Functional in the v4/v5 cover-letter demo only | Not released upstream for this purpose | [NEEDS VERIFICATION] |
+| rasdaemon | Userspace consumer of kernel RAS/EDAC/MCE trace events | Builds on riscv64 (Ubuntu 26.04 resolute, v0.8.4-1), full dep chain resolves | Not end-to-end validated - blocked on upstream GHES/APEI, not on rasdaemon itself | Released (universe) | The direct userspace target of this whole subsystem |
+| mcelog | Legacy x86 MCE decoder, listed in kernel's minimal-requirements doc | Absent from Ubuntu archive entirely | N/A | Not released, any arch | Global upstream deprecation in favor of rasdaemon, not riscv64-specific |
+| edac-utils | Legacy EDAC userspace reporting tool | Builds on riscv64 (v0.18+git16-g8fdc1d4-3) | Not systematically tested | Released (universe) | Largely superseded by rasdaemon/sysfs |
+| acpica-tools (iasl) | ACPI AML compiler/disassembler for authoring/validating DSDT/SSDT/HEST tables | Builds on riscv64 (v20251212-1) | Not RAS-specific tested | Released (universe) | Used to build the HEST tables the RAS series depends on |
+| kexec-tools | Userspace side of kdump | Builds on riscv64 (v1:2.0.32-3ubuntu1) | Not RAS-specific tested | Released (main) | Consumes already-mainlined `crash_dump.c`/`vmcore_info.c` |
+| makedumpfile | Post-mortem vmcore analysis | Builds on riscv64 (v1:1.7.7-1) | Not RAS-specific tested | Released (main/universe) | RAS-triggered crash/kdump analysis |
+| crash | Interactive vmcore/live-kernel debugger | Builds on riscv64 (v9.0.1+~16.3-1ubuntu1) | Not RAS-specific tested | Released (universe) | Post-mortem RAS/EDAC state inspection |
+| ipmitool | BMC out-of-band hardware error/health reporting | Builds on riscv64 (v1.8.19-10ubuntu1) | Not RAS-specific tested | Released (main) | Server-platform RAS-adjacent tooling |
 
----
-
-## 10. Ecosystem Status
-
-### 10.1 Corporate contributors
-
-Three organizations have submitted RISC-V RAS patches:
-
-- **Qualcomm (via Himanshu Chauhan, formerly Ventana Micro):** Primary and most active contributor. Four revisions of a 10-patch series. Author moved from Ventana Micro to Qualcomm between RFC v2 and v3. Qualcomm is a RISE Premier Member. The v4 series received an internal Qualcomm Reviewed-by (Sunil V L) on 2026-06-09.
-- **Alibaba (Ruidong Tian):** Two separate submissions targeting the synchronous HEE path. RFC in 2025-09, narrowed to 3-patch series in 2026-05. Also contributing related patches: `copy_mc_to_{kernel,user}` support and HWPOISON signal fix. Alibaba (DAMO Academy) is a RISE Premier Member.
-- **ByteDance (Rui Qi):** One rejected 5-patch RFC (2025-02-06). Rejected due to CI build failures. ByteDance is a RISE General Member.
-
-No ARM, SiFive, Red Hat, Canonical, or other RISE member has contributed to the RAS RISC-V series based on the available research data.
-
-### 10.2 Coordination status
-
-The Qualcomm series and Alibaba series are designed to be stacked but operate as independent submissions. Anup Patel reviewed the Alibaba RFC v1 (2025-09-10) and pointed to the Qualcomm series as the baseline. The Alibaba May 2026 series cites Qualcomm v3 in its cover letter. However, the two series have not been submitted as a combined or coordinated single series, and neither has an explicit `Depends-on:` tag for the other.
-
-### 10.3 Performance benchmarks
-
-None exist. No published benchmarks compare RISC-V vs. arm64 for Linux RAS/GHES/EDAC error-handling latency or throughput. No RISE blog post addresses this. No patch submission includes latency figures or error-injection benchmark results. This is expected given the feature is not yet merged, but it means there is no data to inform performance optimization targets.
-
----
+Of the full candidate toolchain/userspace list checked against Ubuntu 26.04 "resolute," only `mcelog` is absent, and that is a global archive removal, not a riscv64-specific gap. The build/test/toolchain chain needed to compile and package RAS-adjacent code is not the blocker for this project; the blocker is entirely upstream kernel-side (`arch/riscv/Kconfig` not selecting `HAVE_ACPI_APEI`, plus the unmerged ACPICA PR #1170 dependency).
 
 ## 11. Known Bugs and Active Issues
 
-### Bug 1: `memcpy_mc` symbol not exported (blocks modular NVDIMM)
+| ID | Title | Status | Severity | Notes |
+|---|---|---|---|---|
+| Bug 1 | `memcpy_mc` symbol not exported, blocks modular NVDIMM | Under review (patch: "riscv: add copy_mc_to_{kernel,user} support"; Ruidong Tian, Alibaba, 2026-05-08) | High - correctness/link failure | `modpost` fails with `ERROR: "memcpy_mc" [drivers/nvdimm/libnvdimm.ko] undefined!` reproduced on `linus/master`, v6.16-rc1, and `next-20260508`. Without native `copy_mc_*` hooks, an access to poisoned memory takes the kernel down instead of recovering. Additional CI failures on `rv64-clang-allmodconfig`, `rv64-gcc-allmodconfig`, both `nommu-k210` configs |
+| Bug 2 | HWPOISON faults signal wrong code (`BUS_ADRERR` instead of `BUS_MCEERR_AR`) | Under review (patch: "riscv: mm: Add proper handling for HWPOISON faults", RESEND; Ruidong Tian, Alibaba, originally 2025-09-30, resent 2026-05-08) | High - correctness, affects all existing RAS tooling on RISC-V | Before: `signal 7 code 2 addr 0x7fff95bdc400`. After: `signal 7 code 4 addr 0x7fff95bdc400`. `si_addr_lsb` was also unpopulated. Userspace RAS managers (rasdaemon, mcelog) that branch on `BUS_MCEERR_AR` vs `BUS_ADRERR` currently get incorrect recovery signals on RISC-V. Build checks passed; checkpatch (style) flagged |
+| Bug 3 | HEST notify-value conflict between the Qualcomm and Alibaba series | Unresolved, no coordinated patch posted | Medium - integration risk if merged out of order | Qualcomm assigns `ACPI_HEST_NOTIFY_SSE = 12`; Alibaba assigns `ACPI_HEST_NOTIFY_HEE = 13`. If the Alibaba series applies without Qualcomm's, `HEE` would collide with the current `RESERVED = 12`. The two series must be merged in a coordinated order or reconciled into one |
+| Bug 4 | Two SiFive EDAC drivers (DDR controller, Bus Error Unit) stalled since 2020 | Unmerged, appears stalled | Low | [NEEDS VERIFICATION - single patchwork search result, not independently re-confirmed] |
 
-- **Patch:** "riscv: add copy_mc_to_{kernel,user} support to enable MC fault tolerance"
-- **Author:** Ruidong Tian (Alibaba), 2026-05-08
-- **Message-ID:** `20260508062439.3000014-1-tianruidong@linux.alibaba.com`
-- **State:** Under Review
-- **Error from kernel test robot:**
-  ```
-  ERROR: modpost: "memcpy_mc" [drivers/nvdimm/libnvdimm.ko] undefined!
-  ERROR: modpost: "memcpy_mc" [drivers/nvdimm/nd_pmem.ko] undefined!
-  ```
-  Reproduced on `linus/master`, `v6.16-rc1`, and `next-20260508`.
-- **Impact:** All modular NVDIMM/pmem drivers (persistent memory, DAX/CXL paths) will fail to link on RISC-V. The fix is adding `EXPORT_SYMBOL_GPL`. Without native `copy_mc_*` hooks, RISC-V falls back to the generic implementation which has no exception-table entry on the load side; an access to poisoned memory takes the kernel down.
-- **Additional CI failures on this patch:** `rv64-clang-allmodconfig`, `rv64-gcc-allmodconfig`, both `nommu-k210` configs, checkpatch warnings.
-
-### Bug 2: HWPOISON signals wrong code (BUS_ADRERR instead of BUS_MCEERR_AR)
-
-- **Patch:** "riscv: mm: Add proper handling for HWPOISON faults" (RESEND)
-- **Author:** Ruidong Tian (Alibaba); originally 2025-09-30, resent 2026-05-08
-- **Message-ID (resend):** `20260508062215.2997173-1-tianruidong@linux.alibaba.com`
-- **State:** Under Review; delegate pjw
-- **Bug:** `VM_FAULT_HWPOISON` and `VM_FAULT_HWPOISON_LARGE` were previously dispatched as `VM_FAULT_SIGBUS`, sending signal 7 with code 2 (`BUS_ADRERR`). The correct code is 4 (`BUS_MCEERR_AR`). `si_addr_lsb` (log2 of corrupted page size) was not populated.
-- **Evidence from ras-tools testing:**
-  - Before patch: `signal 7 code 2 addr 0x7fff95bdc400`
-  - After patch: `signal 7 code 4 addr 0x7fff95bdc400`
-- **Impact:** Userspace RAS managers (mcelog, rasdaemon) that distinguish `BUS_MCEERR_AR` from `BUS_ADRERR` to decide recovery action receive incorrect signal information on RISC-V. This is a correctness bug affecting all existing RAS tooling on RISC-V. Build checks (rv32/rv64 gcc/clang, nommu) passed; checkpatch failure (style) flagged by CI.
-
-### Bug 3: HEST notify value conflict between Qualcomm and Alibaba series
-
-The two active 2026 series both modify `include/acpi/actbl1.h`:
-- Qualcomm v4: assigns `ACPI_HEST_NOTIFY_SSE = 12`, sets `RESERVED = 13`
-- Alibaba May 2026: assigns `ACPI_HEST_NOTIFY_HEE = 13`, sets `RESERVED = 14`
-
-If the Alibaba series is applied without the Qualcomm series, `ACPI_HEST_NOTIFY_HEE` would conflict with the existing `RESERVED = 12` value. The two series must be merged in order, or reconciled into a single series with both values assigned together. No coordinated resolution has been posted to the mailing list based on available research.
-
-### Bug 4: Two SiFive EDAC drivers (DDR controller, Bus Error Unit) stalled since 2020
-
-Two SiFive-specific EDAC drivers submitted by Yash Shah in 2020 remain in unmerged state on patchwork (linux-edac). [NEEDS VERIFICATION -- source is a single patchwork search result with no additional confirmation]
-
----
+No kernel.org Bugzilla entries exist for this work; it is tracked purely via LKML/lore mailing-list threads, consistent with general kernel practice.
 
 ## 12. Objections and Upstream Blockers
 
-### Blocker 1: CI pre-apply failure on all four revisions
+**Blocker 1 - CI pre-apply failure.** Every revision of the Qualcomm series through v4 (and reportedly v5) has failed the patchwork `bjorn/pre-ci_am` apply check, which blocks the riscv64 build jobs from running at all. [NEEDS VERIFICATION for v5 specifically - not independently re-confirmed this pass]
 
-Every revision of the Qualcomm series (RFC v1 through v4) has failed `bjorn/pre-ci_am` ("Failed to apply series"). This is the immediate hard block on merge. The riscv64 build jobs (`bjorn/build-rv64-clang-allmodconfig`, `bjorn/build-rv64-gcc-allmodconfig`) do not run when pre-apply fails. The root cause of the apply failure is not documented in the available research data (the lore mbox content was not accessible due to bot protection on kernel.org pages).
+**Blocker 2 - ACPICA upstream dependency (primary/active blocker).** `include/acpi/actbl1.h` is ACPICA-owned; Rafael Wysocki required that the new SSE (and now HEE) HEST notification-type constants go through upstream ACPICA first. [ACPICA PR #1170](https://github.com/acpica/acpica/pull/1170) is open and unmerged as of 2026-09-30. Neither the Qualcomm patch 3/10 (SSE) nor Alibaba's HEE constant can be finalized in the kernel tree until this lands.
 
-### Blocker 2: ACPICA upstream dependency
+**Blocker 3 - SSE kernel patches (largely resolved).** The Qualcomm series depends on the SBI SSE notification layer (Clement Leger, Rivos), which the current tree confirms is present in `arch/riscv/include/asm/sbi.h`, with a v10 refinement posted 2026-09-11. This dependency is no longer a hard blocker for the RAS series in the way it was previously; remaining coordination is a version-alignment matter rather than a missing-prerequisite one.
 
-Rafael Wysocki flagged (2026-05-13) that `include/acpi/actbl1.h` is ACPICA-owned and that modifications must go through upstream ACPICA per `Documentation/driver-api/acpi/linuxized-acpica.rst`. Himanshu Chauhan confirmed (2026-05-18) that ACPICA PR [#1170](https://github.com/acpica/acpica/pull/1170) was raised. Status of that PR as of the research cutoff: open, under review. Patch 03/10 cannot be accepted into mainline until ACPICA merges the change and the kernel is synchronized.
+**Blocker 4 - No maintainer Acked-by.** Paul Walmsley returned "Changes Requested" on v3; no Acked-by exists for v4 or v5.
 
-### Blocker 3: SSE kernel patches must merge first
+**Blocker 5 - No `ARCH_SUPPORTS_MEMORY_FAILURE`.** No patch series addresses this for riscv64. Without it, `MEMORY_FAILURE`, `RAS_CEC`, and `ACPI_APEI_MEMORY_FAILURE` remain unavailable, limiting even a fully-merged GHES stack to detection/logging without kernel-level memory-error recovery.
 
-The Qualcomm RAS series depends on SSE kernel patches v8 by Clement Leger (Rivos Inc.): [https://lore.kernel.org/all/20251105082639.342973-1-cleger@rivosinc.com/](https://lore.kernel.org/all/20251105082639.342973-1-cleger@rivosinc.com/). The SSE patches provide the SBI SSE notification layer that the RAS series registers with. Their merge status is not documented in the available research data.
+**Blocker 6 - Competing approaches, partially reconciled.** SSE (Qualcomm) and HEE (Alibaba) serve different error categories and are meant to coexist; the HEE trap-handler stub did merge independently (v7.1), showing the two tracks can progress separately at the margins. But the fuller APEI-integration pieces of both (Qualcomm's GHES/SSE wiring, Alibaba's HEE-via-APEI) remain unmerged and uncoordinated, with the HEST-notify-value conflict (Bug 3) unresolved.
 
-### Blocker 4: No maintainer Acked-by
+**Acceptance probability:** Moderate-to-good once the ACPICA PR lands - reviewers (Wysocki, Sunil V L, Anup Patel) are engaged and constructive rather than rejecting the design; v4 already carries one internal Reviewed-by. The gating item is external (ACPICA), not a design objection.
 
-Paul Walmsley (pjw), the linux-riscv maintainer delegated on this series, returned "Changes Requested" on v3 (2026-01-09). No Acked-by has been issued for v4. The actual comment text from Walmsley on v3 was not accessible (lore mbox behind bot protection).
+## 13. Readiness Assessment
 
-### Blocker 5: No `ARCH_SUPPORTS_MEMORY_FAILURE`
+- **Color:** orange (downstream-only - approximate; no upstream CI or test coverage for the core riscv64 RAS/GHES/APEI functionality, and no distro can supply it since it is absent from mainline)
+- **Release provider:** none
 
-No patch series in the research data addresses `ARCH_SUPPORTS_MEMORY_FAILURE` for RISC-V. Without this, `MEMORY_FAILURE`, `RAS_CEC`, and `ACPI_APEI_MEMORY_FAILURE` remain unavailable, limiting the RAS stack to error detection and logging without kernel-level memory error recovery.
+**Justification:** Mainline riscv64 has only a minimal RAS surface merged (bare hardware-error trap -> `SIGBUS`/`BUS_MCEERR_AR`, shipped in Linux v7.1; the SiFive L2/L3 EDAC driver; vendor errata workarounds; kdump support), but the subsystem's core value proposition - ACPI APEI/GHES firmware-first error reporting - cannot even be built on riscv64 today, since `arch/riscv/Kconfig` does not select `HAVE_ACPI_APEI` (see [arch/riscv/Kconfig](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/riscv/Kconfig)), and no CI anywhere (KernelCI, rasdaemon-ci) exercises RAS-specific functionality on riscv64 (see [kernel RAS admin guide](https://www.kernel.org/doc/html/latest/admin-guide/ras.html)). This matches the orange criterion of "no upstream CI / no test / no release of the feature" rather than red, since nothing merged is confirmed broken - the flagship GHES/APEI capability is simply absent/unimplemented for this architecture, still blocked in patch review.
 
-### Blocker 6: Competing approaches without reconciliation
+**Pending work that could change the grade:** The Qualcomm/Ventana "Add RAS support for RISC-V architecture" series remains open and unmerged through five revisions (RFC v1, 2025-02; RFC v2, 2025-10; v3, 2026-01; v4, 2026-05; v5, 2026-09-24, 9 patches, rebased to v7.3-rc3, based on SSE v10, no replies yet as of this writing), blocked primarily on the external ACPICA PR #1170 for the new SSE HEST notification type, and reportedly failing CI pre-apply on prior revisions. Alibaba's complementary "log HEE via APEI" 3-patch follow-on (Ruidong Tian, 2026-05-08) is also open and unmerged. Either series landing - and in particular the ACPICA PR merging - would materially improve the riscv64 RAS CI/build/release picture and should be the trigger for re-grading.
 
-The SSE (Qualcomm) and HEE (Alibaba) approaches serve different error categories and are meant to coexist. However, they have not been submitted as a joint series and have no formal dependency tracking. A maintainer reviewing both must either accept them independently with coordinated ordering or require a joint series. No evidence of coordination beyond Alibaba citing Qualcomm v3 in a cover letter was found.
+## 14. Investment Analysis
 
----
+RISE has no tracked funded work on Linux RAS (see Section 1); no sizing below duplicates RISE-funded effort.
 
-## 13. Investment Analysis
+### 14.1 Functional Enablement
 
-### 13.1 Functional Enablement
+The primary gap is the absent APEI/GHES capability. The Qualcomm v5 series (currently 9 patches) is the most mature candidate and carries at least one internal Reviewed-by, but is blocked on the external ACPICA PR #1170 and has a history of CI pre-apply failures. The Alibaba HEE-via-APEI series (3 patches) is complementary and covers the synchronous-exception path with firmware-first reporting; its merge is independent of but should be coordinated with Qualcomm's (Bug 3).
 
-The primary gap is the absence of APEI/GHES support. The Qualcomm v4 series (10 patches, 305 lines net) addresses this and is the most mature work available. The series has a Reviewed-by from Sunil V L (2026-06-09) but is blocked on CI apply failures and two external dependencies (ACPICA upstream, SSE kernel patches). The Alibaba HEE series (3 patches, 178 lines net) covers synchronous exceptions and is complementary.
+### 14.2 Performance Optimization
 
-### 13.2 Performance Optimization
+Not applicable in the conventional sense - this is error-reporting plumbing, not a compute kernel. Data not available: no benchmark for GHES error-handling latency, EDAC interrupt overhead, or SSE notification round-trip time on any RISC-V platform exists in any accessible source, because the feature has not merged.
 
-No baseline performance data exists for RISC-V RAS paths. Data not available: no benchmark for GHES error handling latency, EDAC interrupt overhead, or SSE notification round-trip time on any RISC-V platform has been published in any accessible source.
+### 14.3 CI/CD Infrastructure
 
-### 13.3 CI/CD Infrastructure
+No RAS-specific functional CI exists for riscv64 in KernelCI, in the patchwork bjorn bot, or in rasdaemon-ci (which explicitly marks RERI testing "not implemented" pending a QEMU RERI event producer). Establishing it requires, in order: (a) landing GHES/APEI support in mainline, (b) an EINJ-equivalent or RERI error-injection mechanism for RISC-V in QEMU or on real hardware, and (c) a test job added to KernelCI or an equivalent CI system.
 
-The bjorn CI system runs riscv64 build jobs on every patch but runs no RAS-specific functional tests. There are no kselftest RAS tests for RISC-V. There is no EINJ-based error injection test in the riscv64 test suite. KernelCI boots riscv64 on five real hardware platforms but has no RAS test cases. Adding RAS functional CI would require: (a) GHES/APEI merged into mainline, (b) EINJ or equivalent error injection mechanism for RISC-V hardware or QEMU, and (c) test job configuration in KernelCI or the bjorn CI system.
+### 14.4 Ecosystem Enablement
 
-### 13.4 Ecosystem Enablement
+The two Alibaba correctness patches (memcpy_mc export, HWPOISON signal-code fix; Section 11 Bugs 1-2) are prerequisites for any correct RAS behavior at the kernel-userspace boundary on riscv64 - `BUS_MCEERR_AR` signaling is required for rasdaemon and mcelog-class tools to function correctly, and the missing `EXPORT_SYMBOL_GPL` for `memcpy_mc` must be fixed before any persistent-memory workload on RISC-V is safe from silent kernel crashes on poisoned-memory access.
 
-The two HWPOISON/copy_mc patches from Alibaba (see Bugs 1 and 2 above) are prerequisite for correct RAS behavior at the kernel-userspace boundary. `BUS_MCEERR_AR` signaling is required for rasdaemon and mcelog to function correctly. The missing `EXPORT_SYMBOL_GPL` for `memcpy_mc` must be fixed before any persistent memory workload on RISC-V is safe.
-
-### 13.5 Summary Table
+### 14.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
-| Functional | Resolve v4 CI pre-apply failure and rebase to current mainline | 1-2 | Qualcomm (Himanshu Chauhan) | Critical |
-| Functional | Land ACPICA PR [#1170](https://github.com/acpica/acpica/pull/1170) and synchronize kernel patch 03/10 | 1-2 (coordination) | Qualcomm + ACPICA maintainers | Critical |
-| Functional | Confirm SSE kernel patches (Clement Leger) merge status and resolve dependency | 1 (tracking) | Rivos / Qualcomm | Critical |
+| Functional | Land ACPICA PR #1170 and synchronize kernel patch 03/10 (or v5 equivalent) | 1-2 (coordination) | Qualcomm + ACPICA maintainers | Critical |
+| Functional | Resolve CI pre-apply failure and get v5 through `bjorn/pre-ci_am` and riscv64 build jobs | 1-2 | Qualcomm (Himanshu Chauhan) | Critical |
 | Functional | Add `EXPORT_SYMBOL_GPL` for `memcpy_mc` (Bug 1) | < 1 | Alibaba (Ruidong Tian) | High |
 | Functional | Fix HWPOISON `BUS_MCEERR_AR` signal code (Bug 2) | < 1 | Alibaba (Ruidong Tian) | High |
-| Functional | Add `ARCH_SUPPORTS_MEMORY_FAILURE` for RISC-V and implement memory error recovery path | 4-8 | Unassigned | High |
-| Functional | Coordinate Qualcomm (SSE) and Alibaba (HEE) series into unified submission or agreed ordering | 2-4 | Qualcomm + Alibaba | High |
-| Functional | Write and upstream EDAC driver for Qualcomm RISC-V SoC (no upstream driver exists for Qualcomm riscv64 platforms) | 8-16 | Qualcomm | Medium |
-| CI/CD | Add RAS kselftest cases for riscv64 (HWPOISON signal validation, EINJ basic) | 4-8 | Unassigned | Medium |
-| CI/CD | Add GHES functional test job to KernelCI or bjorn CI for riscv64 (requires QEMU RERI emulation or hardware with error injection) | 4-8 | Unassigned | Medium |
-| Ecosystem | Upstream QEMU RERI emulation patches (currently in Ventana Micro fork) | 4-8 | Qualcomm / community | Medium |
-| Ecosystem | Validate rasdaemon functionality end-to-end on riscv64 once APEI/GHES merged | 1-2 | Unassigned | Low |
-| Performance | Establish baseline measurements for GHES error handling latency and SSE notification round-trip on riscv64 | 2-4 | Unassigned | Low |
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
-
----
+| Functional | Reconcile HEST notify-value conflict (Bug 3) between Qualcomm and Alibaba series into a coordinated merge order | 1-2 | Qualcomm + Alibaba | High |
+| Functional | Add `ARCH_SUPPORTS_MEMORY_FAILURE` for RISC-V and a memory-error recovery path | 4-8 | Unassigned | High |
+| Functional | Upstream a mainline QEMU RERI event producer/injection mechanism (currently only in a Ventana Micro fork) | 4-8 | Qualcomm / community | Medium |
+| Functional | Write and upstream an EDAC driver for Qualcomm RISC-V SoCs (none exists today) | 8-16 | Qualcomm | Medium |
+| CI/CD | Add RAS kselftest cases for riscv64 (HWPOISON signal validation, EINJ-equivalent) | 4-8 | Unassigned | Medium |
+| CI/CD | Add a GHES functional test job to KernelCI once QEMU RERI support lands | 4-8 | Unassigned | Medium |
+| CI/CD | Add riscv64 to rasdaemon-ci's test matrix once RERI/GHES is mainline-usable | 2-4 | Unassigned | Low |
+| Ecosystem | Validate rasdaemon functionality end-to-end on riscv64 once APEI/GHES merges | 1-2 | Unassigned | Low |
+| Performance | Establish baseline GHES error-handling latency / SSE round-trip measurements on riscv64 | 2-4 | Unassigned | Low |
 
 ## 15. References
 
-- [Patchwork linux-riscv APEI filter](https://patchwork.kernel.org/project/linux-riscv/list/?q=APEI&state=*&archive=both)
-- [v4 cover letter (Himanshu Chauhan, 2026-05-13)](https://patchwork.kernel.org/project/linux-riscv/cover/20260513084325.2176952-1-himanshu.chauhan@oss.qualcomm.com/)
-- [v4 patch 03/10 - Introduce SSE in HEST notification types](https://patchwork.kernel.org/project/linux-riscv/patch/20260513084325.2176952-4-himanshu.chauhan@oss.qualcomm.com/)
-- [v4 patch 08/10 - HEST SSE notification handlers](https://patchwork.kernel.org/project/linux-riscv/patch/20260513084325.2176952-9-himanshu.chauhan@oss.qualcomm.com/)
-- [v4 patch 09/10 - Select HAVE_ACPI_APEI](https://patchwork.kernel.org/project/linux-riscv/patch/20260513084325.2176952-10-himanshu.chauhan@oss.qualcomm.com/)
-- [v4 patch 10/10 - Enable APEI GHES in defconfig](https://patchwork.kernel.org/project/linux-riscv/patch/20260513084325.2176952-11-himanshu.chauhan@oss.qualcomm.com/)
-- [v3 cover letter (2026-01-09, Changes Requested)](https://patchwork.kernel.org/project/linux-riscv/cover/20260109090224.3105465-1-himanshu.chauhan@oss.qualcomm.com/)
-- [Alibaba HEE series cover (2026-05-08)](https://patchwork.kernel.org/project/linux-riscv/cover/20260508082020.3368109-1-tianruidong@linux.alibaba.com/)
-- [Alibaba HEE patch 1/3 - Introduce HEE in HEST](https://patchwork.kernel.org/project/linux-riscv/patch/20260508082020.3368109-2-tianruidong@linux.alibaba.com/)
-- [Alibaba HEE patch 2/3 - HEST HEE handlers](https://patchwork.kernel.org/project/linux-riscv/patch/20260508082020.3368109-3-tianruidong@linux.alibaba.com/)
-- [Alibaba HEE patch 3/3 - collect hardware error on HEE](https://patchwork.kernel.org/project/linux-riscv/patch/20260508082020.3368109-4-tianruidong@linux.alibaba.com/)
-- [ByteDance rejected GHES RFC patch 1/5](https://patchwork.kernel.org/project/linux-riscv/patch/20250206131926.91289-2-qirui.001@bytedance.com/)
-- [Alibaba RFC "Handle synchronous HEE" cover (2025-09-10)](https://patchwork.kernel.org/project/linux-riscv/cover/20250910093347.75822-1-tianruidong@linux.alibaba.com/)
-- [copy_mc patch (Ruidong Tian, Bug 1)](https://patchwork.kernel.org/project/linux-riscv/patch/20260508062439.3000014-1-tianruidong@linux.alibaba.com/)
-- [HWPOISON signal fix (Ruidong Tian, Bug 2)](https://patchwork.kernel.org/project/linux-riscv/patch/20260508062215.2997173-1-tianruidong@linux.alibaba.com/)
+- [Linux kernel RAS documentation](https://www.kernel.org/doc/html/latest/admin-guide/ras.html)
+- [git.kernel.org - torvalds/linux.git](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git)
+- [arch/riscv/Kconfig (mainline)](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/riscv/Kconfig)
+- [RAS support for RISC-V, v4 cover letter (ratatoskr.run mirror)](https://ratatoskr.run/linux-riscv/2026/05/9002795/t)
+- [RAS support for RISC-V, v3 (ratatoskr.run mirror)](https://ratatoskr.run/lkml/2026/01/3360004/t)
+- [RAS support for RISC-V, RFC v2 (lkml.iu.edu mirror)](https://lkml.iu.edu/2510.3/12913.html)
+- [RAS support for RISC-V, RFC v1 (lkml.iu.edu mirror)](https://lkml.iu.edu/2502.3/08133.html)
+- [RAS support for RISC-V, RFC v1 (patchew.org mirror)](https://patchew.org/linux/20250227123628.2931490-1-hchauhan@ventanamicro.com/)
+- [Precursor GHES RFC discussion (lists.infradead.org)](http://lists.infradead.org/pipermail/linux-riscv/2025-February/065900.html)
+- [HEE synchronous hardware error exception RFC (lkml.org)](https://lkml.org/lkml/2025/9/10/599)
+- [HEE trap handler support v1 (lkml.iu.edu mirror)](https://lkml.iu.edu/hypermail/linux/kernel/2602.0/00841.html)
+- [HEE: log Hardware Error Exception via APEI, PATCH 0/3 (ratatoskr.run mirror)](https://ratatoskr.run/linux-acpi/2026/05/8036628/t)
+- [LWN: Add RAS support for RISC-V architecture](https://lwn.net/Articles/1072622/)
+- [LWN: related coverage](https://lwn.net/Articles/1053519/)
+- [Phoronix: Qualcomm Sends Out Linux Patches For RAS Support On RISC-V](https://www.phoronix.com/news/RISC-V-RAS-RERI-Linux-Patches)
+- [copy_mc_to_{kernel,user} support patch (Bug 1)](https://patchwork.kernel.org/project/linux-riscv/patch/20260508062439.3000014-1-tianruidong@linux.alibaba.com/)
+- [HWPOISON signal fix, RESEND (Bug 2)](https://patchwork.kernel.org/project/linux-riscv/patch/20260508062215.2997173-1-tianruidong@linux.alibaba.com/)
 - [ACPICA PR #1170](https://github.com/acpica/acpica/pull/1170)
-- [SSE kernel patches v8, Clement Leger (Rivos)](https://lore.kernel.org/all/20251105082639.342973-1-cleger@rivosinc.com/)
+- [SBI SSE kernel patches, Clement Leger (Rivos)](https://lore.kernel.org/all/20251105082639.342973-1-cleger@rivosinc.com/)
 - [ACPI ECR for HEST changes (UEFI Mantis 2522)](https://mantis.uefi.org/mantis/view.php?id=2522)
 - [RISC-V CPER Table ECR (UEFI Mantis 2551)](https://mantis.uefi.org/mantis/view.php?id=2551)
+- [Patchwork linux-riscv APEI filter](https://patchwork.kernel.org/project/linux-riscv/list/?q=APEI&state=*&archive=both)
 - [Patchwork linux-edac riscv filter](https://patchwork.kernel.org/project/linux-edac/list/?q=riscv&state=*&archive=both)
-- [Linux kernel RAS documentation](https://www.kernel.org/doc/html/latest/admin-guide/ras.html)
+- [rasdaemon-ci workflows (mchehab/rasdaemon-ci)](https://github.com/mchehab/rasdaemon-ci)
+- [PyPI linux-ras (404, confirmed absent)](https://pypi.org/pypi/linux-ras/json)
+- [RISE project blog](https://riseproject.dev/blog/)
+- [Documentation/process/changes.rst toolchain minimums, Documentation/kbuild/kbuild.rst, tools/testing/kunit/qemu_configs/riscv.py - read directly from git.kernel.org plain views](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/)
