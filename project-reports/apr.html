@@ -264,11 +264,47 @@
   
 </h1>
     
+
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for APR<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
+
+<!--
+  Renders an interactive dependency graph. Two callers:
+  - A stack report's generated root aggregation (see stack-report frontmatter `roots:`):
+    {% include dependency-graph.html slug="<vertical-slug>" %}
+  - A project report, against the shared graph built by _plugins/dependency_graph_generator.rb from
+    every project-reports/*.md's `dependencies:` frontmatter, bounded to this project's own
+    dependency tree:
+    {% include dependency-graph.html slug="dependencies" subset="<project-slug>" %}
+
+  `slug` may be omitted on a stack-report page; it then defaults to page.slug. `subset`, when set,
+  bounds the entire instance -- initial view, search, and focus/reset alike -- to that node plus
+  its descendants only, never ancestors, so e.g. a project depended on by hundreds of others in the
+  shared graph doesn't pull all of them onto that project's own page; beyond that node's own direct
+  dependencies, only the runtime-dependency chain is included (a dependency's build/test tooling is
+  dropped -- see findDescendantsRuntimeOnlyBeyondRoot in dependency-graph.js). Omit `subset` to
+  leave the whole fetched graph in play (as stack reports, whose own graph.json is already scoped
+  to one vertical, do).
+
+  `focus`, when set, pre-selects that node on load instead of showing the whole graph unfocused --
+  no current caller passes it (a project report's own subset root has no ancestors within its own
+  subset barring a dependency cycle, so focusing it on load looks identical to leaving it
+  unfocused), but the search box still drives the same mechanism at runtime, and it remains
+  available to any future caller that wants a pre-selected node independent of subset.
+-->
+<link rel="stylesheet" href="/sw-ecosystem/assets/css/dependency-graph.css" />
+
+<div class="dependency-graph" data-graph="dependencies.graph.json" data-focus="" data-subset="apr"></div>
+<p class="dg-json-link"><a href="dependencies.graph.json">Raw dependency graph data (JSON)</a></p>
+<script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/dagre-d3@0.6.4/dist/dagre-d3.min.js"></script>
+
+<script src="/sw-ecosystem/assets/js/dependency-graph.js"></script>
 <h2 id="1-project-overview">
   
   
@@ -280,23 +316,72 @@
 
 <p><a href="https://apr.apache.org/">Apache Portable Runtime (APR)</a> is a C library that provides a portable, platform-independent API for OS abstractions: threads, mutexes, atomic operations, memory pools, file I/O, network sockets, dynamic shared objects, and character encoding conversion. It is the foundation layer for Apache httpd and Apache Subversion. It is not a JIT, a runtime, or a language interpreter.</p>
 
-<p><strong>Governance:</strong> APR is a top-level subproject of the <a href="https://www.apache.org/">Apache Software Foundation (ASF)</a> with its own Project Management Committee (PMC). License: Apache-2.0. The commit model is “Commit Then Review” (CTR): patches are committed first, then reviewed; problematic commits can be reverted. Voting uses +1/+0/-0/-1; vetoes require written justification. There is no documented formal tier policy for new platform ports; new architectures are accepted implicitly when community members submit patches that pass review.</p>
+<p><strong>Governance:</strong> APR is a top-level project of the <a href="https://www.apache.org/">Apache Software Foundation (ASF)</a>, governed by its own Project Management Committee (PMC), under Apache-2.0 license. The commit model is Commit-Then-Review (CTR): patches land first, review/revert follows if needed. Voting uses +1/+0/-0/-1 with written justification required for vetoes. No <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, or <code class="language-plaintext highlighter-rouge">CODEOWNERS</code> file exists in the repository. Roster/release history lives in the <code class="language-plaintext highlighter-rouge">STATUS</code> file, which does not enumerate current PMC membership. No <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> file exists anywhere in the tree, so there is no published, formal architecture-tier support policy; new-platform acceptance is implicit and ad hoc, driven by whatever patches committers submit and review.</p>
 
-<p><strong>Committer base (as of trunk commit history and CHANGES file):</strong></p>
-<ul>
-  <li>Graham Leggett – most prolific recent contributor; no confirmed corporate affiliation.</li>
-  <li>Yann Ylavic – OpenSSL 3 compatibility, atomic API fixes; no confirmed corporate affiliation.</li>
-  <li>Ivan Zhakov – dominant committer as of May 2026, Windows work; no confirmed corporate affiliation.</li>
-  <li>Branko Cibej (“brainy”) – build system and test fixes; affiliated with Digiverse, a Slovenian independent consultancy.</li>
-  <li>Daniel Sahlberg – STATUS file maintenance; no confirmed corporate affiliation.</li>
-  <li>Additional named in CHANGES: Joe Orton, Ruediger Pluem, Jim Jagielski, Eric Covener, Lubos Uhliarik, Evgeny Kotkov, Sebastian Kemper, Nick Kew, Mladen Turk.</li>
-</ul>
+<p><strong>Committer base</strong> (from commit history since 2024-01-01):</p>
 
-<p>No committers are publicly affiliated with RISC-V ecosystem companies (Red Hat, NVIDIA, SiFive, Canonical, Qualcomm, Andes, etc.). Development is sustained by individual volunteers and independent consultants.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Contributor</th>
+      <th>Recent commits</th>
+      <th>Known corporate affiliation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Ivan Zhakov</td>
+      <td>161</td>
+      <td>None confirmed</td>
+    </tr>
+    <tr>
+      <td>Graham Leggett</td>
+      <td>50</td>
+      <td>None confirmed</td>
+    </tr>
+    <tr>
+      <td>Joe Orton</td>
+      <td>31</td>
+      <td>None confirmed</td>
+    </tr>
+    <tr>
+      <td>Yann Ylavic</td>
+      <td>17</td>
+      <td>None confirmed</td>
+    </tr>
+    <tr>
+      <td>Eric Covener</td>
+      <td>15</td>
+      <td>None confirmed</td>
+    </tr>
+    <tr>
+      <td>Branko Cibej</td>
+      <td>14</td>
+      <td>Digiverse (independent Slovenian consultancy)</td>
+    </tr>
+    <tr>
+      <td>Ruediger Pluem</td>
+      <td>13</td>
+      <td>None confirmed</td>
+    </tr>
+    <tr>
+      <td>Rainer Jung</td>
+      <td>8</td>
+      <td>None confirmed</td>
+    </tr>
+    <tr>
+      <td>Daniel Sahlberg</td>
+      <td>6</td>
+      <td>None confirmed</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>RISE Project membership:</strong> APR is not a member of the RISE Project. RISE premier members as of June 2026 include Andes Technology, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, DAMO Academy (Alibaba), and Tenstorrent. General members include Canonical, ByteDance, BOSC, SpacemiT, ZTE, and others. APR is absent from both tiers.</p>
+<p>No committer is publicly tied to a RISC-V-ecosystem company. Corporate sponsorship exists only at the ASF-foundation level, not APR-project-specific: Platinum tier includes Apple, AWS, Meta, Google, Huawei, Microsoft, Snowflake, VISA; Gold includes Aiven, Bloomberg, ByteDance, Cloudera, Confluent; Silver includes IBM, Red Hat, Amex, Capital One. This funds ASF infrastructure and legal overhead broadly, not APR development directly.</p>
 
-<p><strong>Community culture on new ports:</strong> The trajectory of removing legacy platforms (BeOS and Netware removed in May 2026) while maintaining broad POSIX support indicates the maintainers accept new POSIX-compliant architectures without special process, as long as patches are well-formed. The community is small, volunteer-driven, and has no stated corporate interest in RISC-V.</p><hr />
+<p><strong>RISE Project membership:</strong> APR is not a member of the RISE Project. Current RISE membership (<a href="https://riseproject.dev/members/">riseproject.dev/members</a>): Premier - Alibaba DAMO, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent. General - Akeana, Andes Technology, Beijing ESWIN Computing Technology, Beijing Institute of Open Source Chip, Canonical, Douyin Vision (ByteDance), Institute of Software Chinese Academy of Sciences (ISCAS), Microchip Technology, NextSilicon, Quintauris, SpacemiT, ZTE. There is no <code class="language-plaintext highlighter-rouge">/projects/</code> page on riseproject.dev (404); RISE tracks individual projects/RFPs via GitHub rather than a static list. APR is absent from every RISE channel checked (member list, blog archive, GitHub org, Python wheel builder).</p>
+
+<p><strong>Community culture on new ports:</strong> The trajectory of removing legacy platforms (BeOS and Netware) while relying on a generic GCC-builtins fallback for new POSIX architectures indicates new ports are accepted implicitly if a well-formed patch is submitted. No mailing-list thread, issue, or PR raising riscv64 was found. Reviewer bandwidth is limited: it is a small, largely volunteer/consultant-driven committer base with no dedicated tier-review process.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -316,9 +401,14 @@
   </thead>
   <tbody>
     <tr>
+      <td>2014-09-21</td>
+      <td>Commit <code class="language-plaintext highlighter-rouge">be286b1f</code> by Rainer Jung (“Update config.guess and config.sub from <a href="http://git.savannah.gnu.org/cgit/config.git">http://git.savannah.gnu.org/cgit/config.git</a>”) adds <code class="language-plaintext highlighter-rouge">riscv32 \| riscv64</code> to the recognized-triplet list in <code class="language-plaintext highlighter-rouge">build/config.sub</code>. This is a mechanical, vendored sync from the upstream GNU config project, repeated in later routine syncs (2016, 2017, 2019, 2021) by the same author. It is not APR-authored RISC-V port work.</td>
+      <td><a href="https://github.com/apache/apr/blob/trunk/build/config.sub">apache/apr build/config.sub</a></td>
+    </tr>
+    <tr>
       <td>Never</td>
-      <td>No RISC-V-specific commit exists in the repository history</td>
-      <td><a href="https://github.com/apache/apr/commits/trunk">GitHub commit search: riscv repo:apache/apr – 0 results</a></td>
+      <td>No commit message in the full history (3,109 commits scanned, <code class="language-plaintext highlighter-rouge">git log -i --grep=riscv</code>) is about RISC-V. No dedicated <code class="language-plaintext highlighter-rouge">atomic/unix/riscv.c</code>, <code class="language-plaintext highlighter-rouge">include/arch/riscv/</code>, or similar file has ever existed.</td>
+      <td>Local clone full-history search</td>
     </tr>
     <tr>
       <td>Never</td>
@@ -327,23 +417,18 @@
     </tr>
     <tr>
       <td>Never</td>
-      <td>No riscv64 issue filed in Apache JIRA</td>
-      <td><a href="https://issues.apache.org/jira/browse/APR">Apache APR JIRA</a></td>
-    </tr>
-    <tr>
-      <td>Never</td>
-      <td>No riscv64 PR filed</td>
+      <td>No riscv64 pull request filed</td>
       <td><a href="https://github.com/apache/apr/pulls">apache/apr pull requests</a></td>
     </tr>
     <tr>
       <td>Implicit</td>
-      <td>RISC-V handled silently by generic GCC <code class="language-plaintext highlighter-rouge">__sync_*</code>/<code class="language-plaintext highlighter-rouge">__atomic_*</code> builtins path since GCC gained riscv64 support</td>
+      <td>RISC-V handled silently by the generic GCC <code class="language-plaintext highlighter-rouge">__sync_*</code>/<code class="language-plaintext highlighter-rouge">__atomic_*</code> builtins path since GCC gained riscv64 support</td>
       <td><a href="https://github.com/apache/apr/tree/trunk/atomic/unix">atomic/unix/builtins.c</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>There is no dedicated RISC-V port. There are no key contributors for any RISC-V work. There is no tracking issue for a formal port. RISC-V support is entirely implicit – the generic fallback code path produces a functioning build on any POSIX architecture where GCC provides <code class="language-plaintext highlighter-rouge">__atomic_*</code> intrinsics.</p><hr />
+<p>There is no dedicated RISC-V port and no key contributor for any RISC-V work. There is no tracking issue for a formal port. The only string match for “riscv” in the project’s authored history is the mechanical config-triplet sync above; RISC-V support today is entirely implicit, via the generic fallback code path that produces a functioning build on any POSIX architecture where GCC provides <code class="language-plaintext highlighter-rouge">__atomic_*</code> intrinsics.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -353,7 +438,7 @@
 </h2>
     
 
-<p>APR has no published architecture support tier policy. The de facto tier is determined by what receives CI coverage and dedicated code. By that metric:</p>
+<p>APR has no published architecture support tier policy. The de facto tier is determined by what receives CI coverage and dedicated code:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -375,7 +460,7 @@
       <td>Dedicated arch header directory (<code class="language-plaintext highlighter-rouge">include/arch/</code>)</td>
       <td>No (via <code class="language-plaintext highlighter-rouge">unix/</code>)</td>
       <td>No (via <code class="language-plaintext highlighter-rouge">unix/</code>)</td>
-      <td>No (no <code class="language-plaintext highlighter-rouge">riscv/</code> subdir; only aix, os2, os390, unix, win32 exist)</td>
+      <td>No (only aix, os2, os390, unix, win32 exist)</td>
     </tr>
     <tr>
       <td>CI runner</td>
@@ -399,18 +484,12 @@
       <td>Downstream distro binary</td>
       <td>Debian, Ubuntu (primary)</td>
       <td>Debian, Ubuntu (primary)</td>
-      <td>Debian sid (debports), Ubuntu Noble</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--enable-nonportable-atomics</code> effect</td>
-      <td>Yes (enables hand-tuned asm)</td>
-      <td>None</td>
-      <td>None</td>
+      <td>Debian sid/trixie, Ubuntu Noble and 26.04 Resolute</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>amd64 has hand-tuned atomic assembly; arm64 and riscv64 both rely on the GCC builtins path. arm64 has a native CI runner; riscv64 has none. From upstream’s perspective, riscv64 is an untested architecture that happens to build and function correctly via the generic fallback path.</p><hr />
+<p>amd64 has hand-tuned atomic assembly; arm64 and riscv64 both rely on the GCC builtins path. arm64 has a native CI runner; riscv64 has none. From upstream’s perspective, riscv64 is an untested architecture that happens to build and function correctly via the generic fallback path, and that has now been independently confirmed to build cleanly downstream (Section 8).</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -420,27 +499,78 @@
 </h2>
     
 
-<p>APR has no JIT, no GC, and no SIMD dispatch. The only architecture-specific subsystem is <strong>atomic operations</strong> in <code class="language-plaintext highlighter-rouge">atomic/unix/</code>.</p>
+<p>APR has no JIT, no GC, and no SIMD dispatch. The only architecture-specific subsystem is atomic operations in <code class="language-plaintext highlighter-rouge">atomic/unix/</code>.</p>
 
-<p><strong>Atomic backend selection</strong> is controlled by <code class="language-plaintext highlighter-rouge">include/arch/unix/apr_arch_atomic.h</code>. The dispatch chain:</p>
+<p><strong>Files examined (full source read), <code class="language-plaintext highlighter-rouge">atomic/unix/</code>:</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Lines</th>
+      <th>Arch guard</th>
+      <th>Nature</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ia32.c</code></td>
+      <td>131</td>
+      <td><code class="language-plaintext highlighter-rouge">USE_ATOMICS_IA32</code> (<code class="language-plaintext highlighter-rouge">__i386__</code>/<code class="language-plaintext highlighter-rouge">__x86_64__</code>)</td>
+      <td>Hand-tuned inline asm (<code class="language-plaintext highlighter-rouge">cmpxchg</code>, <code class="language-plaintext highlighter-rouge">xadd</code>)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ppc.c</code></td>
+      <td>242</td>
+      <td><code class="language-plaintext highlighter-rouge">USE_ATOMICS_PPC</code> (<code class="language-plaintext highlighter-rouge">__powerpc__</code>/<code class="language-plaintext highlighter-rouge">__PPC__</code>/<code class="language-plaintext highlighter-rouge">__ppc__</code>)</td>
+      <td>Hand-tuned inline asm (<code class="language-plaintext highlighter-rouge">lwarx</code>/<code class="language-plaintext highlighter-rouge">stwcx</code>)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">s390.c</code></td>
+      <td>159</td>
+      <td><code class="language-plaintext highlighter-rouge">USE_ATOMICS_S390</code> (<code class="language-plaintext highlighter-rouge">__s390__</code>/<code class="language-plaintext highlighter-rouge">__s390x__</code>)</td>
+      <td>Hand-tuned inline asm</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">solaris.c</code></td>
+      <td>83</td>
+      <td><code class="language-plaintext highlighter-rouge">SOLARIS2&gt;=10</code></td>
+      <td>Solaris atomic_* API wrappers</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">builtins.c</code></td>
+      <td>139</td>
+      <td>none (arch-agnostic)</td>
+      <td>GCC <code class="language-plaintext highlighter-rouge">__atomic_*</code>/<code class="language-plaintext highlighter-rouge">__sync_*</code> intrinsics</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">builtins64.c</code></td>
+      <td>110</td>
+      <td>none (arch-agnostic)</td>
+      <td>Same, 64-bit ops</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">mutex.c</code> / <code class="language-plaintext highlighter-rouge">mutex64.c</code></td>
+      <td>206 / 185</td>
+      <td><code class="language-plaintext highlighter-rouge">#else</code> fallback, <code class="language-plaintext highlighter-rouge">#warning "using stubs for all atomic operations"</code></td>
+      <td>Genuine last-resort mutex-based stub, used only when no atomic builtins exist at all; irrelevant to riscv64 since GCC provides <code class="language-plaintext highlighter-rouge">__atomic_*</code> there</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Atomic backend selection</strong> is controlled by <code class="language-plaintext highlighter-rouge">include/arch/unix/apr_arch_atomic.h</code>:</p>
 
 <ol>
-  <li>If <code class="language-plaintext highlighter-rouge">HAVE_ATOMIC_BUILTINS</code> (compiler probe at configure time) – use <code class="language-plaintext highlighter-rouge">atomic/unix/builtins.c</code> (<code class="language-plaintext highlighter-rouge">USE_ATOMICS_BUILTINS</code>).</li>
-  <li>Else if <code class="language-plaintext highlighter-rouge">__i386__</code> or <code class="language-plaintext highlighter-rouge">__x86_64__</code> – <code class="language-plaintext highlighter-rouge">USE_ATOMICS_IA32</code> (hand-tuned inline asm in <code class="language-plaintext highlighter-rouge">ia32.c</code>).</li>
-  <li>Else if <code class="language-plaintext highlighter-rouge">__powerpc__</code>/<code class="language-plaintext highlighter-rouge">__PPC__</code>/<code class="language-plaintext highlighter-rouge">__ppc__</code> – <code class="language-plaintext highlighter-rouge">USE_ATOMICS_PPC</code> (<code class="language-plaintext highlighter-rouge">ppc.c</code>, 242 lines, <code class="language-plaintext highlighter-rouge">lwarx/stwcx</code> inline asm).</li>
-  <li>Else if <code class="language-plaintext highlighter-rouge">__s390__</code>/<code class="language-plaintext highlighter-rouge">__s390x__</code> – <code class="language-plaintext highlighter-rouge">USE_ATOMICS_S390</code> (<code class="language-plaintext highlighter-rouge">s390.c</code>).</li>
-  <li>Else – <code class="language-plaintext highlighter-rouge">USE_ATOMICS_GENERIC</code> (mutex-based fallback).</li>
+  <li>If <code class="language-plaintext highlighter-rouge">HAVE_ATOMIC_BUILTINS</code> (compiler probe at configure time) - use <code class="language-plaintext highlighter-rouge">atomic/unix/builtins.c</code> (<code class="language-plaintext highlighter-rouge">USE_ATOMICS_BUILTINS</code>).</li>
+  <li>Else if <code class="language-plaintext highlighter-rouge">__i386__</code> or <code class="language-plaintext highlighter-rouge">__x86_64__</code> - <code class="language-plaintext highlighter-rouge">USE_ATOMICS_IA32</code>.</li>
+  <li>Else if <code class="language-plaintext highlighter-rouge">__powerpc__</code>/<code class="language-plaintext highlighter-rouge">__PPC__</code>/<code class="language-plaintext highlighter-rouge">__ppc__</code> - <code class="language-plaintext highlighter-rouge">USE_ATOMICS_PPC</code>.</li>
+  <li>Else if <code class="language-plaintext highlighter-rouge">__s390__</code>/<code class="language-plaintext highlighter-rouge">__s390x__</code> - <code class="language-plaintext highlighter-rouge">USE_ATOMICS_S390</code>.</li>
+  <li>Else - <code class="language-plaintext highlighter-rouge">USE_ATOMICS_GENERIC</code> (mutex-based fallback).</li>
 </ol>
 
-<p>riscv64 falls into case 1 with any modern GCC (12+ as shipped in Debian Bookworm / Ubuntu 24.04). This means <code class="language-plaintext highlighter-rouge">atomic/unix/builtins.c</code> is compiled, which uses <code class="language-plaintext highlighter-rouge">__atomic_*</code> or <code class="language-plaintext highlighter-rouge">__sync_*</code> GCC built-in intrinsics.</p>
+<p><code class="language-plaintext highlighter-rouge">HAVE_ATOMIC_BUILTINS</code> is checked before any architecture-specific guard, so riscv64 (identically to arm64) resolves to <code class="language-plaintext highlighter-rouge">USE_ATOMICS_BUILTINS</code> under any modern GCC/Clang and never reaches an arch-specific branch or the mutex stub. A repository-wide search for <code class="language-plaintext highlighter-rouge">__riscv</code> across all <code class="language-plaintext highlighter-rouge">.c</code>/<code class="language-plaintext highlighter-rouge">.h</code>/<code class="language-plaintext highlighter-rouge">.S</code> files returns zero matches; a GitHub code search for <code class="language-plaintext highlighter-rouge">__riscv repo:apache/apr</code> also returns zero results. There is no <code class="language-plaintext highlighter-rouge">include/arch/riscv/</code> directory. riscv64 is therefore not a stub: it is a real, working, generic implementation, byte-for-byte the same code path arm64 uses.</p>
 
-<p><strong>Memory ordering:</strong> <code class="language-plaintext highlighter-rouge">builtins.c</code> defines <code class="language-plaintext highlighter-rouge">WEAK_MEMORY_ORDERING</code> as 0 (strong) only for <code class="language-plaintext highlighter-rouge">__i386__</code>, <code class="language-plaintext highlighter-rouge">__x86_64__</code>, <code class="language-plaintext highlighter-rouge">__s390__</code>, <code class="language-plaintext highlighter-rouge">__s390x__</code>. riscv64 is absent from this list and therefore gets <code class="language-plaintext highlighter-rouge">WEAK_MEMORY_ORDERING 1</code>. This is the correct setting for RISC-V’s weak memory model. It causes:</p>
-<ul>
-  <li>Atomic load operations to use <code class="language-plaintext highlighter-rouge">__sync_fetch_and_add(mem, 0)</code> (with a full barrier) rather than a plain dereference.</li>
-  <li>Store and exchange operations to use <code class="language-plaintext highlighter-rouge">__sync_synchronize()</code> barriers before the operation.</li>
-</ul>
-
-<p>This is functionally correct. It imposes a small but real performance overhead compared to a hand-tuned implementation that could use <code class="language-plaintext highlighter-rouge">fence.r.r</code> or <code class="language-plaintext highlighter-rouge">fence.w.w</code> for lighter barriers where TSO-equivalent ordering is not required.</p>
+<p><strong>Memory ordering:</strong> <code class="language-plaintext highlighter-rouge">builtins.c</code> sets <code class="language-plaintext highlighter-rouge">WEAK_MEMORY_ORDERING</code> to 0 (strong) only for <code class="language-plaintext highlighter-rouge">__i386__</code>, <code class="language-plaintext highlighter-rouge">__x86_64__</code>, <code class="language-plaintext highlighter-rouge">__s390__</code>, <code class="language-plaintext highlighter-rouge">__s390x__</code>. riscv64 is absent from this list and therefore gets <code class="language-plaintext highlighter-rouge">WEAK_MEMORY_ORDERING 1</code>, the correct setting for RISC-V’s weak memory model. This causes atomic loads to use <code class="language-plaintext highlighter-rouge">__sync_fetch_and_add(mem, 0)</code> (full barrier) rather than a plain dereference, and store/exchange operations to use <code class="language-plaintext highlighter-rouge">__sync_synchronize()</code> barriers. This is functionally correct but imposes a small overhead versus a hand-tuned implementation that could use lighter RISC-V fence variants where full sequential consistency is not required.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -454,7 +584,7 @@
   <tbody>
     <tr>
       <td>Atomic ops (32-bit)</td>
-      <td>Hand-tuned inline asm (<code class="language-plaintext highlighter-rouge">ia32.c</code>, <code class="language-plaintext highlighter-rouge">cmpxchg</code> etc.)</td>
+      <td>Hand-tuned inline asm (<code class="language-plaintext highlighter-rouge">ia32.c</code>)</td>
       <td>Scalar GCC builtins (<code class="language-plaintext highlighter-rouge">builtins.c</code>)</td>
       <td>Scalar GCC builtins (<code class="language-plaintext highlighter-rouge">builtins.c</code>)</td>
     </tr>
@@ -508,8 +638,6 @@
     </tr>
   </tbody>
 </table></div>
-
-<p><strong>No <code class="language-plaintext highlighter-rouge">__riscv</code>, <code class="language-plaintext highlighter-rouge">riscv64</code>, or <code class="language-plaintext highlighter-rouge">rvv</code> reference exists anywhere in the APR codebase.</strong> A GitHub code search returns 0 results. There is no <code class="language-plaintext highlighter-rouge">include/arch/riscv/</code> directory and no <code class="language-plaintext highlighter-rouge">atomic/unix/riscv.c</code> or <code class="language-plaintext highlighter-rouge">riscv.S</code> file.</p><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -519,7 +647,7 @@
 </h2>
     
 
-<p>APR supports two build systems: autotools (primary, required for Linux/Unix) and CMake (Windows-only, as explicitly stated in <code class="language-plaintext highlighter-rouge">README.cmake</code>). There are no riscv64-specific Dockerfiles or CMake toolchain files in the repository.</p>
+<p>APR supports two build systems: autotools (primary, required for Linux/Unix) and CMake, which <code class="language-plaintext highlighter-rouge">README.cmake</code> states explicitly is “currently intended only for Microsoft Windows” (<code class="language-plaintext highlighter-rouge">cmake_minimum_required(VERSION 3.5)</code>; <code class="language-plaintext highlighter-rouge">build/vcpkg/apr-2/portfile.cmake</code>’s configure block is gated <code class="language-plaintext highlighter-rouge">if (VCPKG_TARGET_IS_WINDOWS)</code>, and the non-Windows branch is the literal comment <code class="language-plaintext highlighter-rouge"># In development</code>). There is no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code> or <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code> (the repo has no <code class="language-plaintext highlighter-rouge">cmake/</code> directory at all) and no Dockerfile of any kind exists in the repository.</p>
 
 <p><strong>Native build on riscv64 (Debian/Ubuntu):</strong></p>
 
@@ -562,16 +690,16 @@ make <span class="nb">install</span>
 
 <p><strong>Minimum toolchain versions:</strong></p>
 <ul>
-  <li>GCC 7+: First version with stable riscv64-linux-gnu target in mainline GCC. Required to produce a working binary.</li>
-  <li>GCC 4.9+: Required for <code class="language-plaintext highlighter-rouge">__atomic_*</code> built-ins. Without this, <code class="language-plaintext highlighter-rouge">configure</code> selects <code class="language-plaintext highlighter-rouge">USE_ATOMICS_GENERIC</code>.</li>
-  <li>Clang 7+: Has riscv64 backend. No minimum is enforced in <code class="language-plaintext highlighter-rouge">configure.in</code>. [NEEDS VERIFICATION] – the exact Clang version at which <code class="language-plaintext highlighter-rouge">ap_cv__atomic_builtins</code> passes on riscv64 has not been tested.</li>
+  <li>GCC 7+: first version with a stable riscv64-linux-gnu target in mainline GCC. Required to produce a working binary.</li>
+  <li>GCC 4.9+: required for <code class="language-plaintext highlighter-rouge">__atomic_*</code> built-ins. Without this, <code class="language-plaintext highlighter-rouge">configure</code> selects <code class="language-plaintext highlighter-rouge">USE_ATOMICS_GENERIC</code>.</li>
+  <li>Clang 7+ has a riscv64 backend; no minimum is enforced in <code class="language-plaintext highlighter-rouge">configure.in</code>. [NEEDS VERIFICATION] - the exact Clang version at which <code class="language-plaintext highlighter-rouge">ap_cv__atomic_builtins</code> passes on riscv64 has not been tested.</li>
 </ul>
 
-<p><strong>QEMU usage:</strong> No QEMU usage is referenced anywhere in the APR repository. The upstream CI does not use QEMU for any architecture.</p>
+<p><strong>QEMU usage:</strong> none, anywhere in the repository (<code class="language-plaintext highlighter-rouge">grep -ril qemu .</code> returns nothing). Upstream CI does not use QEMU for any architecture.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">--enable-nonportable-atomics</code>:</strong> On riscv64 this flag is a no-op. The <code class="language-plaintext highlighter-rouge">configure.in</code> <code class="language-plaintext highlighter-rouge">case $host_cpu</code> block enumerates only <code class="language-plaintext highlighter-rouge">i[34]86</code> and <code class="language-plaintext highlighter-rouge">i[56]86</code> for the nonportable-atomics path; all other architectures fall through the <code class="language-plaintext highlighter-rouge">*)</code> wildcard without effect.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">--enable-nonportable-atomics</code>:</strong> on riscv64 this flag is a no-op. The <code class="language-plaintext highlighter-rouge">configure.in</code> <code class="language-plaintext highlighter-rouge">case $host_cpu</code> block enumerates only <code class="language-plaintext highlighter-rouge">i[34]86</code> and <code class="language-plaintext highlighter-rouge">i[56]86</code> for the nonportable-atomics path; all other architectures fall through the <code class="language-plaintext highlighter-rouge">*)</code> wildcard without effect.</p>
 
-<p><strong>Known build failures on riscv64:</strong> None filed in GitHub Issues or Apache JIRA. Debian sid builds and installs cleanly on native RISC-V hardware (see Section 8).</p><hr />
+<p><strong>Known build failures on riscv64:</strong> none filed in GitHub Issues. Debian sid builds and installs cleanly on native RISC-V hardware (rv-osuosl-02, see Section 8), with no patches to the upstream source.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -631,7 +759,7 @@ make <span class="nb">install</span>
       <td>Cross-compile <code class="language-plaintext highlighter-rouge">configure</code> automation</td>
       <td>Full (all probes pass natively)</td>
       <td>Full</td>
-      <td>Requires manual cache overrides (see Section 5)</td>
+      <td>Requires manual cache overrides (Section 5)</td>
       <td>Developer experience gap</td>
     </tr>
     <tr>
@@ -652,8 +780,8 @@ make <span class="nb">install</span>
       <td>Crypto (apr-util, delegated to OpenSSL)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Functional with caveats (see Section 9)</td>
-      <td>OpenSSL riscv64-specific bugs; not in APR itself</td>
+      <td>Functional with caveats (Section 9)</td>
+      <td>OpenSSL riscv64-specific issues, not in APR itself</td>
     </tr>
     <tr>
       <td>SIMD</td>
@@ -674,19 +802,14 @@ make <span class="nb">install</span>
       <td>Compiler/OS</td>
       <td>Compiler/OS</td>
       <td>Compiler/OS</td>
-      <td>None – no APR-specific hardening code</td>
+      <td>None: no APR-specific hardening code</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>There are no functional gaps between riscv64 and arm64 in APR. All APIs work. The gaps are:</p>
-<ol>
-  <li><strong>Performance:</strong> 32-bit atomics use the <code class="language-plaintext highlighter-rouge">builtins.c</code> generic path rather than a hand-tuned LR/SC or Zacas implementation. Overhead is minor in absolute terms; APR atomics are not on any hot path in production httpd deployments.</li>
-  <li><strong>Developer experience:</strong> Cross-compilation requires four manual <code class="language-plaintext highlighter-rouge">configure</code> cache overrides that amd64 and arm64 do not require when building natively.</li>
-  <li><strong>Upstream CI:</strong> No riscv64 CI exists, so upstream has no regression detection for RISC-V.</li>
-</ol>
+<p>There are no functional gaps between riscv64 and arm64 in APR. All APIs work. The gaps are performance (generic builtins path rather than hand-tuned LR/SC or Zacas atomics), developer experience (four manual configure cache overrides for cross-compilation), and upstream CI (none for riscv64).</p>
 
-<p>Data not available: Quantitative performance comparison between riscv64 and arm64 for APR atomic operations. No benchmarks have been published for this library on RISC-V.</p><hr />
+<p>Data not available: quantitative performance comparison between riscv64 and arm64 for APR atomic operations. No benchmarks have been published for this library on RISC-V; an exhaustive search of GitHub issues/PRs, the RISE blog, and general web search found no numeric riscv64 throughput/latency figures for APR.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -696,36 +819,41 @@ make <span class="nb">install</span>
 </h2>
     
 
-<p>APR has four GitHub Actions workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code>: <code class="language-plaintext highlighter-rouge">linux.yml</code>, <code class="language-plaintext highlighter-rouge">macos.yml</code>, <code class="language-plaintext highlighter-rouge">windows.yml</code>, <code class="language-plaintext highlighter-rouge">windows-vcpkg.yml</code>. The word “riscv” does not appear in any of them.</p>
+<p>APR has four GitHub Actions workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code>: <code class="language-plaintext highlighter-rouge">linux.yml</code>, <code class="language-plaintext highlighter-rouge">macos.yml</code>, <code class="language-plaintext highlighter-rouge">windows.yml</code>, <code class="language-plaintext highlighter-rouge">windows-vcpkg.yml</code>. Direct fetches of all four from <code class="language-plaintext highlighter-rouge">raw.githubusercontent.com</code> confirm the string “riscv” appears in none of them.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Workflow</th>
+      <th>Trigger</th>
       <th>Architectures tested</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>linux.yml</td>
-      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64), <code class="language-plaintext highlighter-rouge">ubuntu-22.04-arm</code> (arm64 native)</td>
+      <td><code class="language-plaintext highlighter-rouge">linux.yml</code></td>
+      <td>push (any branch/tag) + PR to trunk</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64), <code class="language-plaintext highlighter-rouge">ubuntu-22.04-arm</code> (arm64, native); an 18-19 entry build matrix across repeated read passes (minor entry-count discrepancy between passes, not architecture-relevant: both confirm only these two runner types)</td>
     </tr>
     <tr>
-      <td>macos.yml</td>
-      <td><code class="language-plaintext highlighter-rouge">macos-latest</code> (aarch64/x86_64)</td>
+      <td><code class="language-plaintext highlighter-rouge">macos.yml</code></td>
+      <td>push + PR to trunk</td>
+      <td><code class="language-plaintext highlighter-rouge">macos-latest</code></td>
     </tr>
     <tr>
-      <td>windows.yml</td>
-      <td><code class="language-plaintext highlighter-rouge">x64-windows</code>, <code class="language-plaintext highlighter-rouge">x86-windows</code>, <code class="language-plaintext highlighter-rouge">arm64</code> (via <code class="language-plaintext highlighter-rouge">windows-11-arm</code>)</td>
+      <td><code class="language-plaintext highlighter-rouge">windows.yml</code></td>
+      <td>push + PR to trunk</td>
+      <td><code class="language-plaintext highlighter-rouge">windows-latest</code>/<code class="language-plaintext highlighter-rouge">windows-11-arm</code>; x64/x86/arm64 vcpkg triplets</td>
     </tr>
     <tr>
-      <td>windows-vcpkg.yml</td>
-      <td><code class="language-plaintext highlighter-rouge">x64-windows</code>, <code class="language-plaintext highlighter-rouge">x86-windows</code></td>
+      <td><code class="language-plaintext highlighter-rouge">windows-vcpkg.yml</code></td>
+      <td>push to trunk</td>
+      <td><code class="language-plaintext highlighter-rouge">windows-latest</code>; x64/x86 static/dynamic triplets</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository.</p>
+<p>No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, <code class="language-plaintext highlighter-rouge">azure-pipelines.yml</code>, or <code class="language-plaintext highlighter-rouge">appveyor.yml</code> exists in the repository (all probed directly, HTTP 404). No fifth workflow file exists (12 plausible filenames probed, all 404).</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -776,7 +904,7 @@ make <span class="nb">install</span>
   </tbody>
 </table></div>
 
-<p>No RISE-provided riscv64 runners are used by APR. The RISE Project has no involvement with APR CI.</p><hr />
+<p>The only “riscv” hits anywhere in the repository are in <code class="language-plaintext highlighter-rouge">build/config.sub</code> (GNU autoconf CPU-triplet recognition) and <code class="language-plaintext highlighter-rouge">build/config.guess</code> (generic host-triplet auto-detection), both unmodified vendored GNU config scripts that never run on any GitHub Actions runner. No RISE-provided riscv64 runners are used by APR, and no funded RISE work on APR was found anywhere (RISE blog archive of 35 posts, RISE GitHub org of 26 repositories, RISE Python wheel builder listing of 80 packages: none mention APR).</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -786,7 +914,7 @@ make <span class="nb">install</span>
 </h2>
     
 
-<p>APR does not ship binary releases via GitHub. The ASF distributes source tarballs via <a href="https://downloads.apache.org/apr/">downloads.apache.org</a>. All binary packages for riscv64 are built and maintained exclusively by downstream Linux distributions.</p>
+<p>APR does not ship binary releases via GitHub: <code class="language-plaintext highlighter-rouge">apache/apr</code> has no GitHub Releases at all (“There aren’t any releases here”), for any architecture. The ASF distributes source tarballs via <a href="https://downloads.apache.org/apr/">downloads.apache.org</a>. All binary packages for riscv64 are built and maintained exclusively by downstream Linux distributions.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -814,13 +942,13 @@ make <span class="nb">install</span>
       <td>PyPI</td>
       <td>No</td>
       <td>N/A</td>
-      <td>APR is a C library; no PyPI package exists (HTTP 404)</td>
+      <td>APR is a C library; no <code class="language-plaintext highlighter-rouge">apr</code> project exists on PyPI (HTTP 404, confirmed on <code class="language-plaintext highlighter-rouge">/pypi/apr/json</code> and <code class="language-plaintext highlighter-rouge">/simple/apr/</code>)</td>
     </tr>
     <tr>
       <td>RISE wheel builder</td>
       <td>No</td>
       <td>N/A</td>
-      <td>APR is not listed</td>
+      <td>Redirects to the (nonexistent) PyPI project; nothing to mirror</td>
     </tr>
     <tr>
       <td>Debian stable (bookworm)</td>
@@ -832,13 +960,13 @@ make <span class="nb">install</span>
       <td>Debian sid (unstable)</td>
       <td>Yes</td>
       <td>1.7.6-3+b1</td>
-      <td>Status: Installed; built on rv-osuosl-02 (native RISC-V hardware at OSUOSL)</td>
+      <td>Built on rv-osuosl-02, native RISC-V hardware at OSUOSL; no patches to upstream source</td>
     </tr>
     <tr>
       <td>Debian trixie</td>
       <td>Yes</td>
       <td>1.7.5-1</td>
-      <td>Status: Installed across all architectures</td>
+      <td>Installed across all architectures</td>
     </tr>
     <tr>
       <td>Ubuntu 24.04 Noble</td>
@@ -847,16 +975,22 @@ make <span class="nb">install</span>
       <td><code class="language-plaintext highlighter-rouge">libapr1t64</code>, <code class="language-plaintext highlighter-rouge">libapr1-dev</code>, <code class="language-plaintext highlighter-rouge">libaprutil1t64</code>, <code class="language-plaintext highlighter-rouge">libaprutil1-dev</code> all riscv64-present</td>
     </tr>
     <tr>
+      <td>Ubuntu 26.04 Resolute</td>
+      <td>Yes</td>
+      <td>1.7.6-3</td>
+      <td><code class="language-plaintext highlighter-rouge">libapr1t64</code> and <code class="language-plaintext highlighter-rouge">libapr1-dev</code> both build for <code class="language-plaintext highlighter-rouge">amd64 arm64 armhf i386 ppc64el riscv64 s390x</code>; independently reconfirmed via a fresh, uncached HTTP-200 fetch of <a href="https://packages.ubuntu.com/search?keywords=apr&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a>. The companion <code class="language-plaintext highlighter-rouge">libaprutil1t64</code> also builds for riscv64, via the ports pocket (1.6.3-3ubuntu3) rather than the security pocket (1.6.3-3ubuntu3.1, amd64/arm64/i386 only)</td>
+    </tr>
+    <tr>
       <td>Ubuntu Noble (Rust binding)</td>
       <td>Yes (amd64 + riscv64 only)</td>
       <td><code class="language-plaintext highlighter-rouge">librust-apr-dev</code> 0.1.9-1</td>
-      <td>Available only on amd64 and riscv64 [NEEDS VERIFICATION – unusual platform subset]</td>
+      <td>Available only on amd64 and riscv64 [NEEDS VERIFICATION - unusual platform subset]</td>
     </tr>
     <tr>
       <td>Arch Linux riscv64</td>
       <td>Unconfirmed</td>
       <td>N/A</td>
-      <td>archriscv.felixc.at returned no usable search results; no patch record found in archriscv-packages repo; Arch official lists x86_64 only</td>
+      <td><code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code> lists no <code class="language-plaintext highlighter-rouge">apr</code>/<code class="language-plaintext highlighter-rouge">libapr</code> package; Arch official repos list x86_64 only</td>
     </tr>
     <tr>
       <td>Fedora riscv64</td>
@@ -867,14 +1001,9 @@ make <span class="nb">install</span>
   </tbody>
 </table></div>
 
-<p><strong>What a user must do to get a working binary:</strong></p>
+<p>Note on package naming: no package is named <code class="language-plaintext highlighter-rouge">apr</code>, <code class="language-plaintext highlighter-rouge">python3-apr</code>, or <code class="language-plaintext highlighter-rouge">libapr</code> in Debian/Ubuntu; the actual binary package names are <code class="language-plaintext highlighter-rouge">libapr1t64</code> / <code class="language-plaintext highlighter-rouge">libapr1-dev</code>, a result of the 64-bit-time_t (<code class="language-plaintext highlighter-rouge">t64</code>) package-renaming transition. A naive exact-name lookup for <code class="language-plaintext highlighter-rouge">apr</code>/<code class="language-plaintext highlighter-rouge">libapr</code> would miss the real, riscv64-available packages.</p>
 
-<ul>
-  <li>On Debian sid or Ubuntu Noble: <code class="language-plaintext highlighter-rouge">apt install libapr1-dev libaprutil1-dev</code> – riscv64 packages are present in the standard repositories.</li>
-  <li>On other distributions or for production use: build from ASF source tarballs using the commands in Section 5.</li>
-</ul>
-
-<p>The Debian rv-osuosl-02 build confirms the full toolchain works on native RISC-V hardware with no patches to the upstream source.</p><hr />
+<p><strong>What a user must do to get a working binary:</strong> on Debian sid/trixie or Ubuntu Noble/26.04, <code class="language-plaintext highlighter-rouge">apt install libapr1-dev libaprutil1-dev</code>; riscv64 packages are present in the standard repositories. On other distributions, or for production use tied to a specific ASF release, build from the ASF source tarball using the commands in Section 5.</p>
 <h2 id="9-dependencies">
   
   
@@ -884,7 +1013,7 @@ make <span class="nb">install</span>
 </h2>
     
 
-<p>APR-util (the companion library providing database, XML, LDAP, and crypto APIs) pulls in the dependencies below. APR core itself depends only on the C runtime, pthreads, and <code class="language-plaintext highlighter-rouge">libdl</code>.</p>
+<p>APR core depends only on the C runtime, pthreads, <code class="language-plaintext highlighter-rouge">libdl</code>, and a working GCC toolchain (with autoconf needed only when building from a git/SVN checkout rather than a released tarball). APR-util, the companion library providing database, XML, LDAP, and crypto APIs, pulls in the optional runtime dependencies below.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -899,89 +1028,89 @@ make <span class="nb">install</span>
   </thead>
   <tbody>
     <tr>
+      <td>GCC</td>
+      <td>Build-dependency (critical): compiler; also the source of the <code class="language-plaintext highlighter-rouge">__atomic_*</code>/<code class="language-plaintext highlighter-rouge">__sync_*</code> builtins APR’s atomic layer relies on for every non-hand-tuned architecture, including riscv64</td>
+      <td>GCC 7+ required for a working riscv64-linux-gnu target; GCC 4.9+ required for atomic builtins</td>
+      <td>N/A (toolchain, not a runtime dependency)</td>
+      <td>Mature riscv64 GCC packages across all major distributions</td>
+      <td>None specific to APR’s use</td>
+    </tr>
+    <tr>
+      <td>autoconf</td>
+      <td>Build-dependency (optional): only needed to run <code class="language-plaintext highlighter-rouge">./buildconf</code> from a git/SVN checkout (requires autoconf, libtool, python); not needed when building from an ASF release tarball, which ships a pre-generated <code class="language-plaintext highlighter-rouge">configure</code></td>
+      <td>N/A (build-time only)</td>
+      <td>N/A</td>
+      <td>Mature riscv64 packages across all major distributions</td>
+      <td>None</td>
+    </tr>
+    <tr>
       <td>OpenSSL</td>
-      <td>Crypto backend for apr-util (<code class="language-plaintext highlighter-rouge">APU_HAVE_CRYPTO</code>); AES, SHA, PRNG, random entropy</td>
-      <td>Builds; dedicated <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> target in <code class="language-plaintext highlighter-rouge">Configurations/10-main.conf</code></td>
-      <td>Self-hosted CI runner (<code class="language-plaintext highlighter-rouge">linux-riscv64</code>), gated to upstream repo only; intermittent failures reported</td>
-      <td><code class="language-plaintext highlighter-rouge">libssl-dev</code> 3.6.3-1 in Debian sid/riscv64</td>
-      <td>6+ open riscv64-specific issues (see below); none block the default non-vectorized build</td>
+      <td>Crypto backend for apr-util (<code class="language-plaintext highlighter-rouge">APU_HAVE_CRYPTO</code>): AES, SHA, PRNG, random entropy</td>
+      <td>Builds; dedicated <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> target in <code class="language-plaintext highlighter-rouge">Configurations/10-main.conf</code>, hand-tuned riscv64 asm/intrinsics (SHA256, Zknd/Zkne)</td>
+      <td>Self-hosted <code class="language-plaintext highlighter-rouge">linux-riscv64</code> CI runner, gated to the upstream repo only; intermittent flakes reported</td>
+      <td><code class="language-plaintext highlighter-rouge">libssl-dev</code> 3.6.3-1, Debian sid/riscv64</td>
+      <td>See issue table below</td>
     </tr>
     <tr>
       <td>expat</td>
-      <td>XML parsing backend for apr-util; default on non-Windows</td>
+      <td>XML parsing backend for apr-util (default on non-Windows)</td>
       <td>Builds; pure C, no SIMD</td>
-      <td>No riscv64 CI in libexpat’s own workflow (x86_64 and MinGW only)</td>
-      <td><code class="language-plaintext highlighter-rouge">libexpat1-dev</code> 2.8.1-1 in Debian sid/riscv64</td>
-      <td>None</td>
+      <td>No riscv64 CI in libexpat’s own workflows (x86_64 and MinGW only)</td>
+      <td><code class="language-plaintext highlighter-rouge">libexpat1-dev</code> 2.8.1-1, Debian sid/riscv64</td>
+      <td>None found</td>
     </tr>
     <tr>
       <td>libxml2</td>
-      <td>Alternative XML backend for apr-util (<code class="language-plaintext highlighter-rouge">APR_XML_BACKEND=libxml2</code>)</td>
+      <td>Alternative XML backend (<code class="language-plaintext highlighter-rouge">APR_XML_BACKEND=libxml2</code>)</td>
       <td>Builds; pure C</td>
       <td>No riscv64-specific CI observed</td>
-      <td>Available in Debian sid/riscv64</td>
-      <td>None known</td>
+      <td>Available, Debian sid/riscv64</td>
+      <td>None found</td>
     </tr>
     <tr>
-      <td>SQLite3</td>
-      <td>DBD backend for apr-util’s <code class="language-plaintext highlighter-rouge">apr_dbd</code></td>
+      <td>SQLite</td>
+      <td>DBD backend for <code class="language-plaintext highlighter-rouge">apr_dbd</code></td>
       <td>Builds; pure C, no SIMD</td>
       <td>No dedicated riscv64 CI in SQLite’s own test suite</td>
-      <td><code class="language-plaintext highlighter-rouge">libsqlite3-dev</code> 3.53.2-1 in Debian sid/riscv64</td>
-      <td>None</td>
+      <td><code class="language-plaintext highlighter-rouge">libsqlite3-dev</code> 3.53.2-1, Debian sid/riscv64</td>
+      <td>None found</td>
     </tr>
     <tr>
-      <td>PostgreSQL (libpq)</td>
-      <td>DBD backend for apr-util’s <code class="language-plaintext highlighter-rouge">apr_dbd</code></td>
-      <td>Builds; no arch-specific code in libpq client</td>
-      <td>No riscv64 CI observed in postgres/postgres GitHub repo; PostgreSQL buildfarm riscv64 coverage unknown</td>
-      <td><code class="language-plaintext highlighter-rouge">libpq-dev</code> 18.4-1 in Debian sid/riscv64</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>iconv (glibc)</td>
-      <td>Character encoding conversion; optional (<code class="language-plaintext highlighter-rouge">APU_HAVE_ICONV</code>)</td>
-      <td>Provided by glibc; riscv64 glibc port is mature</td>
-      <td>Covered by glibc’s own riscv64 CI</td>
-      <td><code class="language-plaintext highlighter-rouge">libc6-dev</code> in Debian sid/riscv64</td>
-      <td>None</td>
+      <td>PostgreSQL</td>
+      <td>DBD backend for <code class="language-plaintext highlighter-rouge">apr_dbd</code> (via libpq)</td>
+      <td>Builds; no arch-specific code in the libpq client</td>
+      <td>No riscv64 CI observed in postgres/postgres; buildfarm riscv64 coverage unknown</td>
+      <td><code class="language-plaintext highlighter-rouge">libpq-dev</code> 18.4-1, Debian sid/riscv64</td>
+      <td>None found</td>
     </tr>
     <tr>
       <td>Cyrus SASL</td>
       <td>Optional SASL authentication</td>
       <td>Builds; pure C</td>
-      <td>No riscv64-specific CI observed</td>
-      <td><code class="language-plaintext highlighter-rouge">libsasl2-dev</code> in Debian sid/riscv64</td>
-      <td>None</td>
+      <td>No riscv64-specific CI observed; one unrelated issue found (#618, Apple Silicon feature request, closed)</td>
+      <td><code class="language-plaintext highlighter-rouge">libsasl2-dev</code>, Debian sid/riscv64</td>
+      <td>None found</td>
     </tr>
     <tr>
-      <td>OpenLDAP (libldap)</td>
+      <td>OpenLDAP</td>
       <td>Optional LDAP support (<code class="language-plaintext highlighter-rouge">APR_HAS_LDAP</code>)</td>
       <td>Builds; pure C</td>
       <td>No riscv64-specific CI observed</td>
-      <td><code class="language-plaintext highlighter-rouge">libldap-dev</code> in Debian sid/riscv64</td>
-      <td>None</td>
+      <td><code class="language-plaintext highlighter-rouge">libldap-dev</code>, Debian sid/riscv64</td>
+      <td>Search not completed this cycle (rate-limited); not independently re-verified</td>
     </tr>
     <tr>
-      <td>libuuid (util-linux)</td>
-      <td>UUID generation; optional</td>
-      <td>Standard; works on riscv64</td>
+      <td>UUID library</td>
+      <td>UUID generation, optional (util-linux)</td>
+      <td>Standard; mature riscv64 glibc/util-linux support</td>
       <td>Standard glibc coverage</td>
-      <td>Part of <code class="language-plaintext highlighter-rouge">util-linux</code>; in Debian sid/riscv64</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>APR internal atomics</td>
-      <td>Lock-free atomics; no external dep</td>
-      <td>No riscv64-specific file; GCC builtins path used</td>
-      <td>Covered by APR’s own test suite when run on riscv64 natively</td>
-      <td>Part of <code class="language-plaintext highlighter-rouge">libapr1-dev</code> 1.7.6-3+b1 in Debian sid</td>
-      <td>None</td>
+      <td>Part of <code class="language-plaintext highlighter-rouge">util-linux</code>, Debian sid/riscv64</td>
+      <td>None found</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>OpenSSL riscv64 issues (the only dependency with tracked riscv64 bugs):</strong></p>
+<p><strong>OpenSSL riscv64 issues</strong> (the only dependency in this chain with tracked riscv64 GitHub activity; issues live in <code class="language-plaintext highlighter-rouge">openssl/openssl</code>, not <code class="language-plaintext highlighter-rouge">apache/apr</code>, and none block APR’s default, non-<code class="language-plaintext highlighter-rouge">no-deprecated</code> build):</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -993,49 +1122,64 @@ make <span class="nb">install</span>
   </thead>
   <tbody>
     <tr>
-      <td>#30763</td>
+      <td><a href="https://github.com/openssl/openssl/issues/30763">#30763</a></td>
       <td>Cross-compile with <code class="language-plaintext highlighter-rouge">no-deprecated</code> fails</td>
-      <td>Unmerged fix as of 2026-06-18; needs second reviewer</td>
+      <td>Carried over from prior baseline; not individually re-verified this cycle (rate-limited)</td>
     </tr>
     <tr>
-      <td>#30330</td>
+      <td><a href="https://github.com/openssl/openssl/issues/30330">#30330</a></td>
       <td>Backwards null-key check in <code class="language-plaintext highlighter-rouge">rv64i_zkne</code></td>
-      <td>Open</td>
+      <td>Open (carried over, not freshly re-confirmed this cycle)</td>
     </tr>
     <tr>
-      <td>#25334</td>
+      <td><a href="https://github.com/openssl/openssl/issues/25334">#25334</a></td>
       <td>Zknd and Zkne extensions must coexist</td>
+      <td>Open (carried over, not freshly re-confirmed this cycle)</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/23011">#23011</a></td>
+      <td>Unknown CSR <code class="language-plaintext highlighter-rouge">vlenb</code></td>
+      <td>Open (carried over, not freshly re-confirmed this cycle)</td>
+    </tr>
+    <tr>
+      <td>#29453</td>
+      <td>Use intrinsics, not inline asm</td>
       <td>Open</td>
     </tr>
     <tr>
-      <td>#23011</td>
-      <td>Unknown CSR <code class="language-plaintext highlighter-rouge">vlenb</code></td>
+      <td>#29269</td>
+      <td>Additional arch testing</td>
+      <td>Open</td>
+    </tr>
+    <tr>
+      <td>#28664</td>
+      <td>SHA256 performance</td>
       <td>Open</td>
     </tr>
     <tr>
       <td>#30880</td>
-      <td><code class="language-plaintext highlighter-rouge">test_lhash</code> intermittent flap in riscv64 CI</td>
-      <td>Open</td>
+      <td><code class="language-plaintext highlighter-rouge">test_lhash</code> intermittent flake in riscv64 CI</td>
+      <td>Open, independently reconfirmed this cycle</td>
     </tr>
     <tr>
       <td>#28550</td>
       <td>Deadlock in CI</td>
-      <td>Open</td>
+      <td>Closed since the prior baseline</td>
+    </tr>
+    <tr>
+      <td>#32229</td>
+      <td>RISC-V runner CI failures</td>
+      <td>Opened and closed 2026-08-06</td>
+    </tr>
+    <tr>
+      <td>#29357</td>
+      <td><code class="language-plaintext highlighter-rouge">no-deprecated</code> cross-compile fix</td>
+      <td>Closed since the prior baseline</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>None of these block a default APR build against OpenSSL on riscv64 unless the builder passes <code class="language-plaintext highlighter-rouge">no-deprecated</code> to the OpenSSL <code class="language-plaintext highlighter-rouge">./Configure</code> step. The constant-time AES/GHASH fallback issues are security-relevant in OpenSSL itself but do not affect APR’s use of the OpenSSL API.</p>
-
-<p>All other dependencies are pure-C libraries with no SIMD or JIT paths. The full APR + apr-util dependency chain resolves on Debian sid riscv64 as confirmed by the <code class="language-plaintext highlighter-rouge">libaprutil1t64</code> and all <code class="language-plaintext highlighter-rouge">libaprutil1-dbd-*</code> packages being present.</p><hr />
-<h2 id="10-section-omitted--apr-is-a-c-system-library-with-no-dependent-package-ecosystem-requiring-riscv64-enablement">
-  
-  
-    <a href="#10-section-omitted--apr-is-a-c-system-library-with-no-dependent-package-ecosystem-requiring-riscv64-enablement" class="anchor-heading" aria-labelledby="10-section-omitted--apr-is-a-c-system-library-with-no-dependent-package-ecosystem-requiring-riscv64-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. (Section omitted – APR is a C system library with no dependent package ecosystem requiring riscv64 enablement.)
-  
-  
-</h2>
-    <hr />
+<p>All other dependencies are pure-C libraries with no SIMD or JIT paths of their own. The full APR + apr-util dependency chain resolves on Debian sid riscv64, as confirmed by the <code class="language-plaintext highlighter-rouge">libaprutil1t64</code> and <code class="language-plaintext highlighter-rouge">libaprutil1-dbd-*</code> packages all being present alongside <code class="language-plaintext highlighter-rouge">libapr1t64</code>.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1045,7 +1189,7 @@ make <span class="nb">install</span>
 </h2>
     
 
-<p>No riscv64-specific bugs are filed for APR itself in any tracker searched.</p>
+<p>No riscv64-specific bugs are filed for APR itself in any tracker searched, and this was independently re-verified in this reporting cycle.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1067,8 +1211,13 @@ make <span class="nb">install</span>
       <td>0</td>
     </tr>
     <tr>
-      <td>Apache JIRA (APR project)</td>
-      <td>riscv</td>
+      <td>GitHub apache/apr pull requests</td>
+      <td>“riscv”, “riscv64”</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>GitHub apache/apr commits</td>
+      <td>“riscv”</td>
       <td>0</td>
     </tr>
     <tr>
@@ -1076,17 +1225,12 @@ make <span class="nb">install</span>
       <td>All open</td>
       <td>0 (“No reports found”)</td>
     </tr>
-    <tr>
-      <td>GitHub apache/apr PRs</td>
-      <td>“riscv”, “riscv64”</td>
-      <td>0</td>
-    </tr>
   </tbody>
 </table></div>
 
-<p>There are no correctness bugs, no performance bugs, and no open work items for riscv64 in APR upstream. The only live riscv64 bugs in the dependency tree are in OpenSSL (documented in Section 9).</p>
+<p>There are no correctness bugs, no performance bugs, and no open work items for riscv64 in APR upstream. The only live riscv64 bugs anywhere in the dependency tree are in OpenSSL (Section 9), and none of them block APR’s default build against OpenSSL on riscv64 unless the builder passes <code class="language-plaintext highlighter-rouge">no-deprecated</code> to OpenSSL’s <code class="language-plaintext highlighter-rouge">./Configure</code> step.</p>
 
-<p><strong>Architectural note:</strong> The <code class="language-plaintext highlighter-rouge">WEAK_MEMORY_ORDERING 1</code> path in <code class="language-plaintext highlighter-rouge">builtins.c</code> applies <code class="language-plaintext highlighter-rouge">__sync_synchronize()</code> before atomic stores and exchange operations on riscv64. This is conservative (functionally safe) but not tuned. A hand-written implementation could use finer-grained RISC-V fence variants (<code class="language-plaintext highlighter-rouge">fence.r.rw</code>, <code class="language-plaintext highlighter-rouge">fence.rw.w</code>) where full sequential consistency is not required. No bug has been filed for this; it is a performance gap, not a correctness bug.</p><hr />
+<p><strong>Architectural note:</strong> the <code class="language-plaintext highlighter-rouge">WEAK_MEMORY_ORDERING 1</code> path in <code class="language-plaintext highlighter-rouge">builtins.c</code> applies <code class="language-plaintext highlighter-rouge">__sync_synchronize()</code> before atomic stores and exchange operations on riscv64. This is conservative and functionally safe but not tuned; a hand-written implementation could use finer-grained RISC-V fence variants (for example <code class="language-plaintext highlighter-rouge">fence.r.rw</code>, <code class="language-plaintext highlighter-rouge">fence.rw.w</code>) where full sequential consistency is not required. No bug has been filed for this; it is a performance gap, not a correctness bug.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1096,69 +1240,85 @@ make <span class="nb">install</span>
 </h2>
     
 
-<p><strong>Stated objections:</strong> None. No maintainer has expressed any objection to riscv64 support. No mailing list discussion on the topic was found. The absence of any tracking issue means the topic has never been raised.</p>
+<p><strong>Stated objections:</strong> none. No maintainer has expressed any objection to riscv64 support, and no mailing-list discussion on the topic was found. The absence of any tracking issue means the topic has never been raised.</p>
 
-<p><strong>Technical blockers:</strong> None. APR builds and runs correctly on riscv64 today via the generic GCC builtins path. The Debian native build on rv-osuosl-02 is the existence proof.</p>
+<p><strong>Technical blockers:</strong> none. APR builds and runs correctly on riscv64 today via the generic GCC builtins path. The Debian native build on rv-osuosl-02, and the independently reconfirmed Ubuntu 26.04 Resolute build, are the existence proof.</p>
 
-<p><strong>Organizational blockers:</strong> None structural. The CTR commit model means a well-formed patch for a riscv64 atomic backend or CI addition would land without a pre-approval vote. The community is small, so reviewer bandwidth is limited; patches would need to be high quality on first submission.</p>
+<p><strong>Organizational blockers:</strong> none structural. The CTR commit model means a well-formed patch for a riscv64 atomic backend or CI addition would land without a pre-approval vote. The community is small, so reviewer bandwidth is limited; patches would need to be high quality on first submission.</p>
 
-<p><strong>Cross-compilation configure overrides:</strong> These are a developer-experience issue, not a blocker. The four required overrides are documented above. They could be eliminated by replacing <code class="language-plaintext highlighter-rouge">AC_TRY_RUN</code> probes with <code class="language-plaintext highlighter-rouge">AC_TRY_COMPILE</code> probes for the affected checks, which would be a clean upstream contribution.</p>
+<p><strong>Cross-compilation configure overrides:</strong> a developer-experience issue, not a blocker. The four required overrides (Section 5) are documented above and could be eliminated by replacing the affected <code class="language-plaintext highlighter-rouge">AC_TRY_RUN</code> probes with <code class="language-plaintext highlighter-rouge">AC_TRY_COMPILE</code> probes, a clean, low-risk upstream contribution.</p>
 
-<p><strong>Acceptance probability:</strong> High. APR explicitly uses a generic builtins fallback path for new architectures by design. A PR adding riscv64 to the CI matrix (QEMU or RISE runner) would have no technical objections; reviewer availability is the only risk.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability:</strong> high. APR explicitly uses a generic builtins fallback path for new architectures by design. A PR adding a riscv64 CI matrix entry (via QEMU or a RISE-provided runner) would face no technical objection; reviewer availability is the only risk. No such PR is currently open or proposed.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no funded work on APR. The entire riscv64 functional baseline comes from the generic GCC builtins path and downstream Debian packaging – neither required upstream effort.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> yellow (clean-distro-build)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li>Not an optimization-purpose project: APR is a general OS-portability library (threads, mutexes, atomics, file I/O, DSO) with no SIMD/crypto/numerics performance claim of its own, so no optimization level applies and the optimization gap is not applicable.</li>
+  <li><strong>Justification:</strong> APR has zero riscv64 upstream CI: only <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) and <code class="language-plaintext highlighter-rouge">ubuntu-22.04-arm</code> (arm64) runners exist in <a href="https://github.com/apache/apr/blob/trunk/.github/workflows/linux.yml">.github/workflows/linux.yml</a>, and <code class="language-plaintext highlighter-rouge">macos.yml</code>/<code class="language-plaintext highlighter-rouge">windows.yml</code>/<code class="language-plaintext highlighter-rouge">windows-vcpkg.yml</code> have no riscv reference, so the CI-only grade would be orange. The distribution floor raises this one notch to yellow (clean-distro-build): Debian sid/trixie and Ubuntu Noble/26.04 build and ship <code class="language-plaintext highlighter-rouge">libapr1t64</code>/<code class="language-plaintext highlighter-rouge">libapr1-dev</code> 1.7.6-3 for riscv64 from unmodified upstream source, confirmed via a native build on Debian’s rv-osuosl-02 riscv64 hardware with no patches to the upstream source.</li>
+  <li><strong>Pending work that could change the grade:</strong> no open riscv64 tracking issue, PR, or commit exists in <code class="language-plaintext highlighter-rouge">apache/apr</code> (confirmed via repeated GitHub issue, PR, and commit searches across this reporting cycle). No RISE involvement or funded work on APR was found. A low-effort upstream contribution, such as adding a riscv64 CI matrix entry using a RISE-provided runner, would raise this to blue or green, since the project already builds cleanly on riscv64 downstream; nothing of this kind is currently proposed.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has no funded work on APR. The entire riscv64 functional baseline comes from the generic GCC builtins path and downstream Debian/Ubuntu packaging; neither required upstream effort.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>APR is already functionally complete on riscv64. No functional gaps exist. No work is required to make APR run correctly on riscv64.</p>
-<h3 id="132-performance-optimization">
+<p>APR is already functionally complete on riscv64. No functional gaps exist and no work is required to make APR run correctly on riscv64.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>A dedicated <code class="language-plaintext highlighter-rouge">atomic/unix/riscv.c</code> (or <code class="language-plaintext highlighter-rouge">riscv64.c</code>) using hand-tuned LR/SC sequences from the A extension, or CAS instructions from Zacas, could reduce atomic operation overhead. The existing <code class="language-plaintext highlighter-rouge">ppc.c</code> (242 lines) is a suitable template. Practical impact on APR-using applications (httpd, Subversion) is expected to be low because APR atomic operations are not on hot paths in those applications. Data not available: measured overhead of the builtins path vs. a hand-tuned path on current RISC-V silicon.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Adding a riscv64 CI runner (QEMU-based or native via RISE-provided hardware) to <code class="language-plaintext highlighter-rouge">linux.yml</code> would provide upstream regression detection. This is the highest-value item because upstream currently has zero visibility into riscv64 behavior. A RISE runner contribution is the standard mechanism for this pattern.</p>
-<h3 id="134-ecosystem-enablement">
+<p>A dedicated <code class="language-plaintext highlighter-rouge">atomic/unix/riscv.c</code> (or <code class="language-plaintext highlighter-rouge">riscv64.c</code>) using hand-tuned LR/SC sequences from the A extension, or CAS instructions from Zacas, could reduce atomic-operation overhead. The existing <code class="language-plaintext highlighter-rouge">ppc.c</code> (242 lines) is a suitable template. Practical impact on APR-using applications (httpd, Subversion) is expected to be low, since APR atomic operations are not on hot paths in those applications. Data not available: measured overhead of the builtins path versus a hand-tuned path on current RISC-V silicon.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>Not applicable. APR is a system library; it has no dependent package ecosystem requiring separate enablement.</p>
-<h3 id="135-summary-table">
+<p>Adding a riscv64 CI runner (QEMU-based or native, via RISE-provided hardware) to <code class="language-plaintext highlighter-rouge">linux.yml</code> would provide upstream regression detection, currently absent entirely. This is the highest-value item, since upstream has zero visibility into riscv64 behavior today, and it is the specific change identified in Section 13 as sufficient to raise the readiness grade. A RISE runner contribution is the standard mechanism for this pattern.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable. APR is a system library with no dependent package ecosystem requiring separate enablement.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1177,24 +1337,24 @@ make <span class="nb">install</span>
   <tbody>
     <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 matrix entry to <code class="language-plaintext highlighter-rouge">linux.yml</code> using RISE-provided native runner or QEMU</td>
+      <td>Add a riscv64 matrix entry to <code class="language-plaintext highlighter-rouge">linux.yml</code> using a RISE-provided native runner or QEMU</td>
       <td>0.5</td>
       <td>RISE infra / APR committer</td>
-      <td>High – zero upstream regression detection today</td>
+      <td>High: zero upstream regression detection today, and the specific gap holding the grade at yellow</td>
     </tr>
     <tr>
       <td>Build system</td>
-      <td>Replace <code class="language-plaintext highlighter-rouge">AC_TRY_RUN</code> with <code class="language-plaintext highlighter-rouge">AC_TRY_COMPILE</code> for the four cross-compile probe overrides; eliminates need for manual cache vars</td>
+      <td>Replace <code class="language-plaintext highlighter-rouge">AC_TRY_RUN</code> with <code class="language-plaintext highlighter-rouge">AC_TRY_COMPILE</code> for the four cross-compile probe overrides, eliminating the need for manual cache variables</td>
       <td>1</td>
       <td>APR committer</td>
-      <td>Medium – developer experience; no functional impact</td>
+      <td>Medium: developer-experience improvement, no functional impact</td>
     </tr>
     <tr>
       <td>Performance</td>
       <td>Implement <code class="language-plaintext highlighter-rouge">atomic/unix/riscv.c</code> with LR/SC (A extension) and optional Zacas sequences; update <code class="language-plaintext highlighter-rouge">apr_arch_atomic.h</code> dispatch</td>
       <td>3-4</td>
       <td>C systems engineer with RISC-V ISA knowledge</td>
-      <td>Low – functional gap is absent; performance gap is minor for typical APR workloads</td>
+      <td>Low: functional gap is absent, performance gap is minor for typical APR workloads</td>
     </tr>
     <tr>
       <td>Functional</td>
@@ -1211,17 +1371,7 @@ make <span class="nb">install</span>
       <td>N/A</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1236,16 +1386,20 @@ make <span class="nb">install</span>
   <li><a href="https://github.com/apache/apr/pulls">apache/apr pull requests</a></li>
   <li><a href="https://github.com/apache/apr/tree/trunk/atomic/unix">apache/apr atomic/unix directory</a></li>
   <li><a href="https://github.com/apache/apr/tree/trunk/.github/workflows">apache/apr .github/workflows directory</a></li>
-  <li><a href="https://issues.apache.org/jira/browse/APR">Apache APR JIRA</a></li>
+  <li><a href="https://github.com/apache/apr/blob/trunk/build/config.sub">apache/apr build/config.sub</a></li>
   <li><a href="https://apr.apache.org/">Apache APR homepage</a></li>
   <li><a href="https://buildd.debian.org/status/package.php?p=apr&amp;suite=sid">Debian buildd status for apr (sid)</a></li>
   <li><a href="https://packages.ubuntu.com/noble/libapr1t64">Ubuntu Noble libapr1t64 package</a></li>
   <li><a href="https://packages.ubuntu.com/noble/libaprutil1t64">Ubuntu Noble libaprutil1t64 package</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=apr&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 Resolute package search: apr</a></li>
   <li><a href="https://riseproject.dev/">RISE Project homepage</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/30763">OpenSSL issue #30763 – cross-compile no-deprecated</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/30330">OpenSSL issue #30330 – rv64i_zkne null-key check</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/25334">OpenSSL issue #25334 – Zknd/Zkne coexistence</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/23011">OpenSSL issue #23011 – unknown CSR vlenb</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/30763">OpenSSL issue #30763, cross-compile no-deprecated</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/30330">OpenSSL issue #30330, rv64i_zkne null-key check</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/25334">OpenSSL issue #25334, Zknd/Zkne coexistence</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/23011">OpenSSL issue #23011, unknown CSR vlenb</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/30880">OpenSSL issue #30880, test_lhash flake</a></li>
 </ul>
 
           
