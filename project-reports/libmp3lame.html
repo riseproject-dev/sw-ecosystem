@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow (clean-distro-build)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for libmp3lame<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,15 +280,15 @@
 </h2>
     
 
-<p>LAME (“LAME Ain’t an MP3 Encoder”) is a widely-deployed open-source MP3 encoder implemented in C. The canonical upstream source is the <a href="https://sourceforge.net/projects/lame/">SourceForge SVN repository</a>, not the GitHub mirror referenced in this report. The most recent stable release is version 3.100 (October 2017). The most recent SVN commit is r6531 (2023-12-18). The project is in low-maintenance mode: no new release has been cut in over seven years.</p>
+<p>LAME (“LAME Ain’t an MP3 Encoder”) is a widely deployed open-source MP3 encoder implemented in C. The canonical upstream source is the <a href="https://sourceforge.net/projects/lame/">SourceForge SVN repository</a> (source-only distribution; “we provide source code only” per the project page). There is no GitHub presence for the canonical project - <code class="language-plaintext highlighter-rouge">gypified/libmp3lame</code> is a third-party GYP build-system wrapper (14 commits, last pushed 2013-04-01, packaging LAME 3.99.5) and is not upstream.</p>
 
-<p>The repository analyzed here, <a href="https://github.com/gypified/libmp3lame">gypified/libmp3lame</a>, is a third-party GYP build-system wrapper created by a single contributor (TooTallNate) in 2012. It has 14 commits total, was last pushed on 2013-04-01, and contains LAME 3.99.5. It is not the upstream project. It has 55 stars and 34 forks. All factual claims about LAME source code derive from the SourceForge SVN tree (current head r6531).</p>
+<p>The project was in low-maintenance mode for over seven years (last release 3.100, October 2017) until 2026, when it released <strong>3.101 on 2026-07-09</strong> and then <strong>4.0 on 2026-07-11</strong>, two days apart - the first releases since 2017. SVN trunk remains active after the 4.0 release: one live check found trunk at r6834 (2026-09-17), a second found r6835 (2026-09-19); both post-date the 4.0 release and this discrepancy (r6834 vs r6835) reflects two separate live reads on different days rather than a contradiction in the underlying data.</p>
 
-<p><strong>Governance:</strong> Informal. Founded by Mike Cheng (1998), later led by Mark Taylor, now maintained collaboratively by a small group of SourceForge committers (aleidinger, bouvigne, jaz001, rbrito, robert). No governance document, no MAINTAINERS file, no CODEOWNERS file, no formal foundation membership.</p>
+<p><strong>Governance:</strong> Informal, unchanged by the 4.0 release. Founded by Mike Cheng (1998), later led by Mark Taylor (who stepped down in early 2003), now run collaboratively by a small group of SourceForge committers (<code class="language-plaintext highlighter-rouge">aleidinger</code>, <code class="language-plaintext highlighter-rouge">bouvigne</code>, <code class="language-plaintext highlighter-rouge">jaz001</code>, <code class="language-plaintext highlighter-rouge">rbrito</code>, <code class="language-plaintext highlighter-rouge">robert</code>). No foundation, no governance document, no MAINTAINERS or CODEOWNERS file. <code class="language-plaintext highlighter-rouge">lame.sourceforge.io</code> could not be fetched directly (HTTP 403); governance details above are corroborated from the SourceForge project page, Wikipedia, and OpenHub rather than a direct read of that domain.</p>
 
-<p><strong>Corporate sponsors:</strong> None. Debian packaging maintainers (Fabian Greffrath, Reinhard Tartler, Debian Multimedia Maintainers) are community volunteers with no known corporate affiliation. LAME has no corporate backing upstream.</p>
+<p><strong>Corporate sponsors:</strong> None found. Debian packaging maintainers (Fabian Greffrath, Reinhard Tartler, the Debian Multimedia Maintainers team) and Alpine’s packager are community volunteers with no known corporate affiliation to LAME itself. libmp3lame does <strong>not</strong> appear on the <a href="https://riseproject.dev/members/">RISE (RISC-V Software Ecosystem) members list</a> (Premier: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent; General: Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, Institute of Software CAS, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE). RISE’s only connection to this project is indirect: it builds and publishes a third-party Python binding, <code class="language-plaintext highlighter-rouge">lameenc</code>, that statically links libmp3lame (see Section 12).</p>
 
-<p><strong>Community stance on new ports:</strong> Implicit acceptance. If the C code compiles and tests pass, the architecture is considered supported. Architecture-specific optimizations (NASM assembly for x86, SIMD) are opt-in extras contributed as patches to the SourceForge SVN tracker. Given low-maintenance mode status, response to new patch submissions would be slow.</p><hr />
+<p><strong>Community stance on new ports:</strong> Implicit acceptance, unchanged. No formal RFC/tiering process exists; if the portable C code compiles and tests pass, the architecture is treated as supported. Architecture-specific optimization (x86 NASM assembly, SSE/AVX/NEON intrinsics) is contributed ad hoc via the SourceForge patch tracker.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -317,21 +318,51 @@
       <td><a href="https://sourceforge.net/projects/lame/">SourceForge project page</a></td>
     </tr>
     <tr>
-      <td>2021-06-19</td>
-      <td>SVN r6506 – “Fix build on FreeBSD riscv (replace compile time arch detection by feature detection)” in <code class="language-plaintext highlighter-rouge">util.c</code></td>
-      <td>SourceForge SVN r6506 (committer: aleidinger, patch by arichardson/LLVM, submitted by Robert Clausecker)</td>
+      <td>2017-10-13</td>
+      <td>LAME 3.100 released</td>
+      <td><a href="https://sourceforge.net/projects/lame/files/lame/">SourceForge files</a></td>
     </tr>
     <tr>
-      <td>2023-12-18</td>
-      <td>SVN r6531 – most recent upstream commit</td>
-      <td><a href="https://sourceforge.net/projects/lame/">SourceForge SVN</a></td>
+      <td>2021-06-15</td>
+      <td>Patch #96 opened - “Fix build on riscv64/FreeBSD” (Robert Clausecker)</td>
+      <td><a href="https://sourceforge.net/p/lame/patches/96/">Patch #96</a></td>
+    </tr>
+    <tr>
+      <td>2021-06-19</td>
+      <td>Patch #96 committed to SVN trunk by Alexander Leidinger (“Committed. Thanks!”)</td>
+      <td><a href="https://sourceforge.net/p/lame/patches/96/">Patch #96</a></td>
+    </tr>
+    <tr>
+      <td>2026-07-09</td>
+      <td>LAME 3.101 released - first tagged release to contain the Patch #96 riscv64/FreeBSD fix</td>
+      <td><a href="https://sourceforge.net/projects/lame/files/lame/">SourceForge files</a></td>
+    </tr>
+    <tr>
+      <td>2026-07-11</td>
+      <td>LAME 4.0 released - GTK4 migration, new SIMD work (SSE2-by-default, AVX2, AVX-512, ARM NEON), security fixes</td>
+      <td><a href="https://sourceforge.net/projects/lame/files/lame/4.0/">SourceForge LAME 4.0 files</a></td>
+    </tr>
+    <tr>
+      <td>2026-07-27</td>
+      <td>RISE blog: “SALTyRN” post on auto-translating ARM NEON kernels to RVV via LLMs - methodologically adjacent, does not mention LAME</td>
+      <td><a href="https://riseproject.dev/2026/07/27/saltyrn-turning-neon-kernels-into-fast-verified-rvv-code-with-llms/">SALTyRN post</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-06</td>
+      <td>RISE’s <code class="language-plaintext highlighter-rouge">python-wheels</code> project publishes <code class="language-plaintext highlighter-rouge">lameenc</code> v1.8.4 riscv64 wheels (third-party binding, not libmp3lame itself)</td>
+      <td>riseproject-dev/python-wheels, <code class="language-plaintext highlighter-rouge">docs/packages/lameenc.yaml</code></td>
+    </tr>
+    <tr>
+      <td>2026-09-17 / 2026-09-19</td>
+      <td>SVN trunk at r6834 / r6835 (two independent live reads; see Section 1)</td>
+      <td>SourceForge SVN</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Key contributors to the RISC-V build fix:</strong> aleidinger (SVN committer), arichardson (LLVM contributor, patch author), Robert Clausecker (submitter). No corporate affiliation found for any of these contributors.</p>
+<p><strong>Key contributors to the sole RISC-V-specific change:</strong> Robert Clausecker (submitter, patch derived from LLVM’s <code class="language-plaintext highlighter-rouge">fpsetmask</code>/riscv64 fix at <a href="https://reviews.llvm.org/D89557">reviews.llvm.org/D89557</a>), Alexander Leidinger (SVN committer). No corporate affiliation was found for either.</p>
 
-<p><strong>Is riscv64 support fully upstream?</strong> Yes, in the sense that the sole RISC-V-related change (a build portability fix) is in the upstream SVN. No separate downstream patch tree exists. However, “upstream support” means only that the generic C path compiles cleanly – no architecture-specific optimization has been contributed.</p><hr />
+<p><strong>Is riscv64 support fully upstream?</strong> Yes, in the narrow sense that the one RISC-V-related change (a build-portability fix) is committed to upstream SVN and shipped in 3.101 and 4.0. No downstream riscv64-specific patch tree exists anywhere (see Section 13 for how this drives the readiness grade). “Upstream support” here means only that the generic C path compiles cleanly - no riscv64 architecture-specific optimization work exists or has been proposed.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -341,14 +372,13 @@
 </h2>
     
 
-<p>LAME has no formal tier policy. The project does not publish a supported-architectures list.</p>
+<p>LAME has no formal tier policy and publishes no supported-architectures list.</p>
 
 <p><strong>Evidence by category:</strong></p>
-
 <ul>
-  <li><strong>CI:</strong> No CI exists in gypified/libmp3lame (no <code class="language-plaintext highlighter-rouge">.github/</code> directory, no <code class="language-plaintext highlighter-rouge">.travis.yml</code>, no <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, no <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>). No riscv64 runner of any kind. The SourceForge upstream has no publicly visible CI.</li>
-  <li><strong>Release-blocking:</strong> No release has been cut since 3.100 (2017). Release cadence is effectively zero. There is no architecture-gated release criteria.</li>
-  <li><strong>Official binaries from upstream:</strong> None. The upstream project publishes source tarballs only.</li>
+  <li><strong>CI:</strong> None exists anywhere in the project. Direct reads of the SVN trunk file listing (<code class="language-plaintext highlighter-rouge">https://sourceforge.net/p/lame/svn/HEAD/tree/trunk/lame/</code>) confirm no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, <code class="language-plaintext highlighter-rouge">.github/workflows</code>, <code class="language-plaintext highlighter-rouge">appveyor.yml</code>, or <code class="language-plaintext highlighter-rouge">azure-pipelines.yml</code> anywhere in the tree. This was independently re-verified twice against the live tree (see Section 7).</li>
+  <li><strong>Release-blocking:</strong> No architecture-gated release criteria exist. 3.101 and 4.0 (2026-07-09 / 2026-07-11) are the first releases since 2017; riscv64 was not a gating factor for either.</li>
+  <li><strong>Official binaries from upstream:</strong> None. Source tarballs only, for every architecture including amd64.</li>
 </ul>
 
 <p><strong>Architecture comparison:</strong></p>
@@ -385,12 +415,12 @@
       <td>Distro binary package</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (Debian sid, Ubuntu 24.04)</td>
+      <td>Yes (Ubuntu 26.04 resolute, Debian sid/trixie, Arch Linux RISC-V)</td>
     </tr>
     <tr>
-      <td>SIMD acceleration</td>
-      <td>SSE/SSE2/3DNow (hand-tuned NASM + intrinsics)</td>
-      <td>None (scalar C)</td>
+      <td>SIMD acceleration (LAME 4.0)</td>
+      <td>SSE2 (default), AVX2, AVX-512</td>
+      <td>NEON</td>
       <td>None (scalar C)</td>
     </tr>
     <tr>
@@ -402,7 +432,7 @@
   </tbody>
 </table></div>
 
-<p>riscv64 is on par with arm64: both are scalar-only, both receive distro packages, neither has a formal upstream tier designation.</p><hr />
+<p>riscv64 is functionally on par with arm64 for buildability and packaging, but as of 4.0 it has fallen further behind on SIMD: arm64 now has a NEON path where it previously had none.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -412,24 +442,15 @@
 </h2>
     
 
-<p>LAME’s architecture-sensitive code is concentrated in two subdirectories:</p>
+<p>LAME’s architecture-sensitive code lives in two subdirectories, both C-intrinsics/asm only - there is no JIT backend of any kind in LAME.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">libmp3lame/i386/</code> (x86 NASM assembly, 9 files):</strong></p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">choose_table.nas</code> – Huffman table selection (x87/MMX)</li>
-  <li><code class="language-plaintext highlighter-rouge">cpu_feat.nas</code> – CPU feature detection (SSE, 3DNow)</li>
-  <li><code class="language-plaintext highlighter-rouge">fft.nas</code> – FFT base (x87)</li>
-  <li><code class="language-plaintext highlighter-rouge">fft3dn.nas</code> – FFT with 3DNow</li>
-  <li><code class="language-plaintext highlighter-rouge">fftfpu.nas</code> – FFT with FPU (x87)</li>
-  <li><code class="language-plaintext highlighter-rouge">fftsse.nas</code> – FFT with SSE</li>
-  <li><code class="language-plaintext highlighter-rouge">ffttbl.nas</code> – FFT twiddle tables</li>
-  <li><code class="language-plaintext highlighter-rouge">scalar.nas</code> – scalar operations</li>
-</ul>
+<p><strong><code class="language-plaintext highlighter-rouge">libmp3lame/i386/</code> (x86 NASM assembly):</strong> <code class="language-plaintext highlighter-rouge">choose_table.nas</code> (Huffman table selection), <code class="language-plaintext highlighter-rouge">cpu_feat.nas</code> (SSE/3DNow feature detection), <code class="language-plaintext highlighter-rouge">fft.nas</code>/<code class="language-plaintext highlighter-rouge">fft3dn.nas</code>/<code class="language-plaintext highlighter-rouge">fftfpu.nas</code>/<code class="language-plaintext highlighter-rouge">fftsse.nas</code>/<code class="language-plaintext highlighter-rouge">ffttbl.nas</code> (FFT variants), <code class="language-plaintext highlighter-rouge">scalar.nas</code>.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">libmp3lame/vector/</code> (SSE/SSE2 intrinsics):</strong></p>
+<p><strong><code class="language-plaintext highlighter-rouge">libmp3lame/vector/</code> (SIMD intrinsics, confirmed by direct fetch of the directory listing and <code class="language-plaintext highlighter-rouge">Makefile.am</code> as of the 4.0-era tree):</strong></p>
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">xmm_quantize_sub.c</code> (~175 lines) – xrpow quantization and Fast Hartley Transform via <code class="language-plaintext highlighter-rouge">__m128</code>; entire file wrapped in <code class="language-plaintext highlighter-rouge">#ifdef HAVE_XMMINTRIN_H</code></li>
-  <li><code class="language-plaintext highlighter-rouge">lame_intrin.h</code> (~36 lines) – SSE/SSE2 intrinsic declarations</li>
+  <li>x86/x86-64: <code class="language-plaintext highlighter-rouge">xmm_quantize_sub.c</code> (SSE, wrapped in <code class="language-plaintext highlighter-rouge">#ifdef HAVE_XMMINTRIN_H</code>), <code class="language-plaintext highlighter-rouge">avx2_*.c</code> (new in 4.0 - vectorized quantization, Huffman table search, VBR noise estimation), <code class="language-plaintext highlighter-rouge">avx512_quantize_lines.c</code> (new in 4.0)</li>
+  <li>ARM: <code class="language-plaintext highlighter-rouge">neon_choose_table.c</code> (new in 4.0)</li>
+  <li><strong>riscv64: no entry of any kind.</strong></li>
 </ul>
 
 <p><strong>Architecture-specific code comparison:</strong></p>
@@ -452,8 +473,8 @@
     </tr>
     <tr>
       <td>Quantization (xrpow)</td>
-      <td>SSE2 intrinsics (<code class="language-plaintext highlighter-rouge">xmm_quantize_sub.c</code>)</td>
-      <td>Generic C</td>
+      <td>SSE2 + AVX2 + AVX-512 intrinsics</td>
+      <td>NEON intrinsics (4.0+)</td>
       <td>Generic C</td>
     </tr>
     <tr>
@@ -465,17 +486,11 @@
     <tr>
       <td>Huffman coding</td>
       <td>NASM (<code class="language-plaintext highlighter-rouge">choose_table.nas</code>)</td>
-      <td>Generic C</td>
+      <td>NEON intrinsics (4.0+)</td>
       <td>Generic C</td>
     </tr>
     <tr>
       <td>RVV (RISC-V Vector) intrinsics</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>Zba/Zbb/Zbc extension usage</td>
       <td>N/A</td>
       <td>N/A</td>
       <td>None</td>
@@ -495,7 +510,7 @@
   </tbody>
 </table></div>
 
-<p>No RISC-V architecture directory, no <code class="language-plaintext highlighter-rouge">.S</code> RISC-V assembly files, no RVV intrinsics, and no ISA extension usage of any kind exist in the source tree as of r6531.</p><hr />
+<p><strong>Verdict (re-confirmed by direct fetch of the SVN tree, not just the changelog): SCALAR.</strong> Not “full” - zero hand-tuned riscv64 assembly exists. Not “partial” - zero RVV C intrinsics exist; the <code class="language-plaintext highlighter-rouge">vector/</code> dispatch layer branches only for x86 (SSE/AVX2/AVX-512) and ARM (NEON), with no riscv64 entry at all. Not “missing” - the library compiles and runs correctly via the portable reference C implementation, proven in production by Debian/Ubuntu/Arch riscv64 binary packages built from this exact source tree. riscv64 gets a complete, functional, entirely unoptimized encoder. The single riscv-specific commit in LAME’s history (Patch #96) exists only to unblock the build on riscv64/FreeBSD, not to accelerate encoding; no riscv branch of the optimization layer was ever started.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -505,9 +520,9 @@
 </h2>
     
 
-<p><strong>Build system:</strong> GNU Autotools (autoconf/automake). The GYP file (<code class="language-plaintext highlighter-rouge">libmp3lame.gyp</code>) in the GitHub mirror is an alternative build entry point for Node.js-based consumers, not the primary build system.</p>
+<p><strong>Build system:</strong> GNU Autotools (<code class="language-plaintext highlighter-rouge">configure</code>/<code class="language-plaintext highlighter-rouge">Makefile.am</code>, generated via <code class="language-plaintext highlighter-rouge">autogen.sh</code>). No CMake, no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> exists anywhere in the tree - confirmed directly against the SVN trunk file listing, which also confirms no Dockerfile and no QEMU documentation of any kind ship with the project.</p>
 
-<p><strong>Cross-compile command for riscv64:</strong></p>
+<p><strong>Cross-compile command for riscv64</strong> (standard autotools cross-compilation; no riscv64-specific configure flag is documented anywhere upstream):</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CC=riscv64-linux-gnu-gcc \
 CFLAGS="-O2" \
@@ -522,17 +537,11 @@ LDFLAGS="-Wl,--as-needed" \
   --prefix=/usr
 </code></pre></div></div>
 
-<p><strong>Why <code class="language-plaintext highlighter-rouge">--disable-nasm</code>:</strong> In <code class="language-plaintext highlighter-rouge">configure.in</code>, NASM support is hard-coded to i386 only. When <code class="language-plaintext highlighter-rouge">host_cpu</code> does not match <code class="language-plaintext highlighter-rouge">*86</code>, the configure script sets <code class="language-plaintext highlighter-rouge">CPUTYPE="no"</code> and silently skips NASM regardless of whether <code class="language-plaintext highlighter-rouge">--enable-nasm</code> is passed. Passing <code class="language-plaintext highlighter-rouge">--disable-nasm</code> explicitly avoids a PATH lookup for a nasm binary and makes the intent clear.</p>
+<p><strong>Why <code class="language-plaintext highlighter-rouge">--disable-nasm</code>:</strong> <code class="language-plaintext highlighter-rouge">configure.ac</code> hard-codes NASM eligibility to <code class="language-plaintext highlighter-rouge">*86</code> hosts; on any other <code class="language-plaintext highlighter-rouge">host_cpu</code>, <code class="language-plaintext highlighter-rouge">CPUTYPE</code> is forced to <code class="language-plaintext highlighter-rouge">"no"</code> and NASM is silently skipped regardless of <code class="language-plaintext highlighter-rouge">--enable-nasm</code>. <code class="language-plaintext highlighter-rouge">--disable-nasm</code> simply avoids an unnecessary <code class="language-plaintext highlighter-rouge">nasm</code> PATH lookup.</p>
 
-<p><strong>riscv64 falls into the <code class="language-plaintext highlighter-rouge">configure.in</code> default case:</strong></p>
+<p><strong>riscv64 falls into the <code class="language-plaintext highlighter-rouge">configure.ac</code> generic default case</strong> (no <code class="language-plaintext highlighter-rouge">TAKEHIRO_IEEE754_HACK</code>, no <code class="language-plaintext highlighter-rouge">USE_FAST_LOG</code> - those are enabled only for the x86_64 and powerpc cases).</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>x86_64|amd64   -&gt; CPUTYPE="no" (XMM enabled, TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
-*86             -&gt; CPUTYPE="i386" (x86 optimizations + NASM eligible)
-powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
-*               -&gt; CPUTYPE="no" (riscv64 falls here; no TAKEHIRO_IEEE754_HACK, no USE_FAST_LOG)
-</code></pre></div></div>
-
-<p><strong>Cross-compile sizeof warning:</strong> When <code class="language-plaintext highlighter-rouge">--host</code> differs from <code class="language-plaintext highlighter-rouge">--build</code>, <code class="language-plaintext highlighter-rouge">configure</code> cannot determine <code class="language-plaintext highlighter-rouge">sizeof(short)</code>, <code class="language-plaintext highlighter-rouge">sizeof(long)</code>, <code class="language-plaintext highlighter-rouge">WORDS_BIGENDIAN</code>, etc. via runtime probes. Manual <code class="language-plaintext highlighter-rouge">config.h</code> overrides are required:</p>
+<p><strong>Cross-compile <code class="language-plaintext highlighter-rouge">sizeof</code> overrides</strong> (needed because <code class="language-plaintext highlighter-rouge">--host</code> differs from <code class="language-plaintext highlighter-rouge">--build</code>, so <code class="language-plaintext highlighter-rouge">configure</code>’s runtime probes cannot run):</p>
 
 <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define SIZEOF_SHORT 2
 #define SIZEOF_INT 4
@@ -541,18 +550,18 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
 #define SIZEOF_FLOAT 4
 #define SIZEOF_DOUBLE 8
 #define SIZEOF_LONG_DOUBLE 16
-</span><span class="cm">/* riscv64 is little-endian -- do NOT define WORDS_BIGENDIAN */</span>
+</span><span class="cm">/* riscv64 is little-endian - do NOT define WORDS_BIGENDIAN */</span>
 </code></pre></div></div>
 
-<p>The <code class="language-plaintext highlighter-rouge">config/</code> directory contains pre-built <code class="language-plaintext highlighter-rouge">config.h</code> files for <code class="language-plaintext highlighter-rouge">linux/arm</code>, <code class="language-plaintext highlighter-rouge">linux/ia32</code>, <code class="language-plaintext highlighter-rouge">linux/x64</code>. No <code class="language-plaintext highlighter-rouge">config/linux/riscv64/config.h</code> exists. The closest template is <code class="language-plaintext highlighter-rouge">config/linux/arm/config.h</code> (both are little-endian, NASM disabled, 64-bit <code class="language-plaintext highlighter-rouge">SIZEOF_LONG</code>).</p>
+<p>No pre-built <code class="language-plaintext highlighter-rouge">config/linux/riscv64/config.h</code> exists in the tree; the closest template remains <code class="language-plaintext highlighter-rouge">config/linux/arm/config.h</code> (both little-endian, NASM disabled, 64-bit <code class="language-plaintext highlighter-rouge">SIZEOF_LONG</code>).</p>
 
-<p><strong>Toolchain requirement:</strong> No explicit GCC/Clang version minimum is documented. The project builds cleanly with GCC 10+ or Clang 12+ on riscv64 per Debian build records. Required cross package: <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>.</p>
+<p><strong>Toolchain requirement:</strong> No GCC/Clang minimum version is documented for riscv64 specifically. The library builds cleanly with GCC 10+ or Clang 12+ on riscv64 per Debian build records. Required cross package: <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>.</p>
 
-<p><strong>QEMU:</strong> No Dockerfile or QEMU documentation exists in the repository. Standard approach: <code class="language-plaintext highlighter-rouge">qemu-riscv64-static ./lame [args]</code> for static binary testing, or <code class="language-plaintext highlighter-rouge">dpkg-buildpackage -a riscv64</code> for Debian cross-builds using <code class="language-plaintext highlighter-rouge">binfmt_misc</code>.</p>
+<p><strong>QEMU:</strong> No Dockerfile or QEMU documentation exists upstream. Standard approach: <code class="language-plaintext highlighter-rouge">qemu-riscv64-static ./lame [args]</code> for static-binary testing, or <code class="language-plaintext highlighter-rouge">dpkg-buildpackage -a riscv64</code> under <code class="language-plaintext highlighter-rouge">binfmt_misc</code> for Debian-style cross-builds.</p>
 
-<p><strong>Known build failures:</strong> None documented for riscv64. The 2021 FreeBSD/riscv build fix (SVN r6506) resolved the only known riscv64 build issue.</p>
+<p><strong>Known build failures:</strong> None open. The sole historical riscv64 build failure (FreeBSD <code class="language-plaintext highlighter-rouge">fpsetenv()</code>/<code class="language-plaintext highlighter-rouge">fp_except_t</code> incompatibility) was fixed by Patch #96 in 2021 and has shipped since LAME 3.101 (2026-07-09). A stale marker (<code class="language-plaintext highlighter-rouge">BROKEN_riscv64= fails to compile: needs FP_X_INV from empty sys/riscv/include/ieeefp.h</code>) persists in the outdated <code class="language-plaintext highlighter-rouge">freebsd/freebsd-ports-gnome</code> mirror’s <code class="language-plaintext highlighter-rouge">audio/lame/Makefile</code>, but the <strong>official</strong> FreeBSD ports tree (<code class="language-plaintext highlighter-rouge">cgit.freebsd.org/ports/plain/audio/lame/Makefile</code>) carries no such marker and builds cleanly on riscv64; the ports-gnome marker should be treated as stale, not current status.</p>
 
-<p><strong>Files confirmed absent:</strong> <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code>, <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code>, <code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code>, <code class="language-plaintext highlighter-rouge">.ci/docker/</code>.</p><hr />
+<p><strong>Files confirmed absent:</strong> <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code>, <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code>, <code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code>, <code class="language-plaintext highlighter-rouge">.ci/docker/</code>.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -600,19 +609,19 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
     </tr>
     <tr>
       <td>SIMD-accelerated FFT</td>
-      <td>Yes (SSE/3DNow NASM)</td>
+      <td>Yes (NASM)</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
       <td>SIMD-accelerated quantization</td>
-      <td>Yes (SSE2 intrinsics)</td>
-      <td>No</td>
+      <td>Yes (SSE2/AVX2/AVX-512)</td>
+      <td>Yes (NEON, 4.0+)</td>
       <td>No</td>
     </tr>
     <tr>
       <td>IEEE754 fast-path (<code class="language-plaintext highlighter-rouge">TAKEHIRO_IEEE754_HACK</code>)</td>
-      <td>Yes (configure enables it for x86_64)</td>
+      <td>Yes</td>
       <td>No</td>
       <td>No</td>
     </tr>
@@ -637,15 +646,22 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
   </tbody>
 </table></div>
 
-<p><strong>Functional gaps:</strong> None. All features are available on riscv64 via the generic C path. There is no feature that is structurally disabled on RISC-V.</p>
+<p><strong>Functional gaps:</strong> None. All features are available on riscv64 via the generic C path; nothing is structurally disabled.</p>
 
-<p><strong>Performance gaps:</strong> Significant and unquantified. No benchmark data comparing riscv64 to amd64 or arm64 exists in any public source. The SIMD-accelerated paths (FFT, quantization) are exclusive to x86. Data not available: measured encoding throughput ratio between riscv64 and amd64.</p>
+<p><strong>Performance gaps:</strong> Significant and growing. LAME 4.0’s changelog (<code class="language-plaintext highlighter-rouge">doc/html/history.html</code>) gives exact x86/ARM figures with no riscv64/RVV equivalent anywhere:</p>
+<ul>
+  <li>SSE2 (now default on all x86 builds): “about 5 to 9 percent on a Xeon X5675, and 0 to 3 percent on a Core i7-10700.”</li>
+  <li>AVX2 on Core i7-10700: CBR ~16% faster with GCC, ~22% faster with MSVC; VBR ~6% faster with MSVC, “roughly unchanged with GCC.”</li>
+  <li>AVX-512: “about 6.5% of a <code class="language-plaintext highlighter-rouge">-b 320</code> encode on an Intel Ice Lake part.”</li>
+  <li>ARM NEON (new in 4.0): “about 3.5% of a <code class="language-plaintext highlighter-rouge">-b 320</code> encode and about 1% of a <code class="language-plaintext highlighter-rouge">-V</code> one.”</li>
+  <li>RISC-V/RVV: zero mentions in the changelog, zero files in <code class="language-plaintext highlighter-rouge">libmp3lame/vector/</code> or anywhere else in the tree.</li>
+</ul>
 
-<p><strong>Floating-point semantics:</strong> Bug #521 (open, filed 2025-11-04) documents a configure breakage in the Takehiro IEEE754 fast-path option. This option is not enabled on riscv64 (the configure case does not set <code class="language-plaintext highlighter-rouge">TAKEHIRO_IEEE754_HACK</code> for the generic fallback). The impact on riscv64 is neutral – riscv64 never uses this code path – but the underlying IEEE754 handling in the generic C path has not been specifically tested on riscv64 hardware.</p>
+<p>No third-party riscv64-vs-arm64/amd64 benchmark was found in two independent research passes (Phoronix and OpenBenchmarking.org both returned HTTP 403; comparable projects in this repository, e.g. <code class="language-plaintext highlighter-rouge">ffmpeg</code> and <code class="language-plaintext highlighter-rouge">filament</code>, independently report the same absence of codec/SIMD benchmark data on riscv64). <strong>Data not available: measured encoding throughput ratio between riscv64 and amd64/arm64.</strong> The gap is widening, not static - x86 and ARM both gained measurable speedups in 4.0 while riscv64 remains 100% scalar.</p>
 
-<p>Patch #72 (open since 2017-08-06) documents undefined behavior in bit-shifts. UB in shift operations has architecture-specific manifestations. No riscv64-specific report of this UB has been filed.</p>
+<p><strong>Floating-point semantics:</strong> Bug #521 (“Takehiro’s IEEE hack configure option broken”) is now <strong>closed-fixed</strong> (fix landed in the dev tree, targeted for 4.1); this code path is not enabled on riscv64 regardless (the generic-C <code class="language-plaintext highlighter-rouge">configure.ac</code> case never sets <code class="language-plaintext highlighter-rouge">TAKEHIRO_IEEE754_HACK</code>), so the fix is neutral for riscv64. Patch #72 (undefined behavior in signed left-shifts) is also now <strong>closed-fixed</strong> (2026-08-09, “similar fix done independently… will be in lame 4.1”). No riscv64-specific manifestation of either was ever filed.</p>
 
-<p><strong>Security hardening:</strong> The Debian build applies <code class="language-plaintext highlighter-rouge">DEB_BUILD_MAINT_OPTIONS = hardening=+all</code> universally across all architectures including riscv64. No architecture-specific hardening gaps are documented.</p><hr />
+<p><strong>Security hardening:</strong> LAME 4.0 fixed two issues, both architecture-agnostic in their code path: a stack buffer overflow in the Blade-compatible <code class="language-plaintext highlighter-rouge">lame_enc.dll</code> (<code class="language-plaintext highlighter-rouge">beInitStream()</code>, CVSS 8.4) - Windows-DLL-only, not relevant to riscv64 - and an integer underflow in the AIFF header parser (<code class="language-plaintext highlighter-rouge">parse_aiff_header()</code>, CVSS 5.5) causing an unbounded hang on crafted tiny files - this is generic C code and does affect riscv64 builds equally with every other architecture. No CVE IDs were assigned in the published changelog text.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -655,13 +671,11 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
 </h2>
     
 
-<p><strong>gypified/libmp3lame GitHub repository:</strong></p>
+<p><strong>Upstream SourceForge project:</strong> No CI of any kind exists, for any architecture. This was verified directly, twice, against the live SVN trunk file listing (<code class="language-plaintext highlighter-rouge">https://sourceforge.net/p/lame/svn/HEAD/tree/trunk/lame/</code>): directories are <code class="language-plaintext highlighter-rouge">ACM, Dll, debian, doc, dshow, frontend, include, libmp3lame, m4, mac, maintainer, misc, mpglib, po, test, vc_solution</code>; build/config files are <code class="language-plaintext highlighter-rouge">.clang-format, .gitignore, Makefile.am, Makefile.am.global, Makefile.in, Makefile.MSVC, configure, configure.ac, acinclude.m4, aclocal.m4, config.guess, config.sub, config.h.in, config.rpath, configMS.h, depcomp, install-sh, ltmain.sh, missing, test-driver, compile</code>. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, <code class="language-plaintext highlighter-rouge">.github/workflows</code>, <code class="language-plaintext highlighter-rouge">appveyor.yml</code>, or buildbot config is present. The project builds exclusively through manual local autotools invocation.</p>
 
-<p>No CI exists. The <code class="language-plaintext highlighter-rouge">.github/</code> directory does not exist. Checked and confirmed absent: <code class="language-plaintext highlighter-rouge">.github/workflows/</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>. This was confirmed via direct GitHub API query (<code class="language-plaintext highlighter-rouge">GET /repos/gypified/libmp3lame/contents/.github/workflows</code> returned HTTP 404) and via repository file tree inspection.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">gypified/libmp3lame</code> GitHub mirror:</strong> No CI either - <code class="language-plaintext highlighter-rouge">GET /repos/gypified/libmp3lame/contents/.github/workflows</code> returns HTTP 404; no <code class="language-plaintext highlighter-rouge">.travis.yml</code>, <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists.</p>
 
-<p><strong>Upstream SourceForge project:</strong> No publicly visible CI.</p>
-
-<p><strong>RISE Project:</strong> Zero RISE involvement. All 28 RISE blog posts (May 2024 - June 2026) were scanned; no mention of libmp3lame or audio encoding. The RISE wheel builder does not list libmp3lame. No RISE runner is configured anywhere.</p>
+<p><strong>RISE Project:</strong> No RISE runner or CI is configured for libmp3lame itself. RISE’s only riscv64 build infrastructure touching this codebase at all is the <code class="language-plaintext highlighter-rouge">build-lameenc.yml</code> GitHub Actions workflow in <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code>, which runs on RISE’s native <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> runner fleet - but it builds the third-party <code class="language-plaintext highlighter-rouge">lameenc</code> Python binding (which statically links a locally-compiled LAME 3.100), not libmp3lame’s own test suite or build. This is downstream packaging infrastructure for a different project, not CI for libmp3lame.</p>
 
 <p><strong>CI comparison:</strong></p>
 
@@ -676,25 +690,25 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
   </thead>
   <tbody>
     <tr>
-      <td>CI exists</td>
+      <td>CI exists (upstream)</td>
       <td>No</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>Automated build check</td>
+      <td>Automated build check (upstream)</td>
       <td>No</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>Automated test suite</td>
+      <td>Automated test suite (upstream)</td>
       <td>No</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>RISE runner</td>
+      <td>RISE runner (for libmp3lame itself)</td>
       <td>No</td>
       <td>No</td>
       <td>No</td>
@@ -703,12 +717,12 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
       <td>Distro buildbot (Debian buildd)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (rv-osuosl-02)</td>
+      <td>Yes</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The only automated build verification for riscv64 is the Debian buildd system, which builds the <code class="language-plaintext highlighter-rouge">lame</code> Debian source package on Debian infrastructure. This is distro-owned, not upstream-owned.</p><hr />
+<p>The only automated build verification for riscv64 anywhere in the chain is each distro’s own buildd infrastructure (Debian, Ubuntu, Arch Linux RISC-V), which builds the packaged <code class="language-plaintext highlighter-rouge">lame</code>/<code class="language-plaintext highlighter-rouge">libmp3lame</code> source unmodified. This is distro-owned, not upstream-owned, and produces no test-suite signal back to the LAME project.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -718,30 +732,51 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
 </h2>
     
 
-<p><strong>Upstream releases:</strong> None for riscv64. The gypified/libmp3lame GitHub repository has zero releases of any kind. The SourceForge upstream publishes source tarballs only; the last release was version 3.100 (October 2017).</p>
+<p><strong>Upstream releases:</strong> Source tarballs only, for every architecture including amd64. Current releases: 3.101 (2026-07-09) and 4.0 (2026-07-11), both containing the Patch #96 riscv64/FreeBSD build fix.</p>
 
-<p><strong>PyPI:</strong> No <code class="language-plaintext highlighter-rouge">libmp3lame</code> package exists on PyPI (HTTP 404). No wheels of any kind.</p>
+<p><strong>PyPI:</strong> No <code class="language-plaintext highlighter-rouge">libmp3lame</code> package exists (<code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/libmp3lame/json</code> returns HTTP 404) - expected, since libmp3lame is a C library, not a Python package. (A separate third-party Python binding, <code class="language-plaintext highlighter-rouge">lameenc</code>, which statically links libmp3lame, is covered in Section 12; it is not published by the libmp3lame project.)</p>
 
-<p><strong>Debian:</strong></p>
-<ul>
-  <li>sid (unstable): <code class="language-plaintext highlighter-rouge">lame</code> version <code class="language-plaintext highlighter-rouge">3.101~svn6531+dfsg-1</code>, status “Installed” on riscv64, built on host <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code>. Source: <a href="https://buildd.debian.org/status/package.php?p=lame&amp;suite=sid">Debian buildd tracker</a></li>
-  <li>trixie: <code class="language-plaintext highlighter-rouge">libmp3lame0</code> version <code class="language-plaintext highlighter-rouge">3.100-6+b3</code>, available for riscv64, installed size 500 kB. Source: <a href="https://packages.debian.org/trixie/libmp3lame0">Debian packages trixie</a></li>
-  <li>bookworm (stable): riscv64 is absent – not built for the bookworm release.</li>
-</ul>
+<p><strong>Ubuntu 26.04 “resolute”:</strong> Live-verified via direct byte-exact mirror fetch, not just the search page:</p>
 
-<p><strong>Ubuntu:</strong></p>
-<ul>
-  <li>24.04 Noble: <code class="language-plaintext highlighter-rouge">libmp3lame0</code> and <code class="language-plaintext highlighter-rouge">libmp3lame-dev</code> version <code class="language-plaintext highlighter-rouge">3.100-6build1</code>, architectures listed: <code class="language-plaintext highlighter-rouge">amd64 arm64 armhf i386 ppc64el riscv64 s390x</code>. Source: <a href="https://packages.ubuntu.com/search?keywords=libmp3lame&amp;suite=noble&amp;searchon=names&amp;section=all">Ubuntu packages search</a></li>
-</ul>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Package</th>
+      <th>Version</th>
+      <th>Architectures</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">libmp3lame-dev</code></td>
+      <td>3.101~svn6525+dfsg-2</td>
+      <td>amd64 arm64 armhf i386 ppc64el <strong>riscv64</strong> s390x</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">libmp3lame0</code></td>
+      <td>3.101~svn6525+dfsg-2</td>
+      <td>amd64 arm64 armhf i386 ppc64el <strong>riscv64</strong> s390x</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">libmp3lame-ocaml</code></td>
+      <td>0.3.7-4build2</td>
+      <td>amd64 arm64 armhf ppc64el <strong>riscv64</strong> s390x</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">libmp3lame-ocaml-dev</code></td>
+      <td>0.3.7-4build2</td>
+      <td>amd64 arm64 armhf ppc64el <strong>riscv64</strong> s390x</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>Arch Linux RISC-V:</strong> Status not determinable. The <a href="https://archriscv.felixc.at/">archriscv.felixc.at</a> portal was inaccessible via WebFetch, and the status page returned HTTP 404. Data not available: Arch Linux RISC-V package status for lame/libmp3lame.</p>
+<p><code class="language-plaintext highlighter-rouge">HEAD http://ports.ubuntu.com/pool/main/l/lame/libmp3lame-dev_3.101~svn6525+dfsg-2_riscv64.deb</code> returned HTTP 200, content-length 351786 bytes, exact byte match against the package index. The same pattern was confirmed for <code class="language-plaintext highlighter-rouge">libmp3lame0</code>.</p>
 
-<p><strong>What a user must do to get a working riscv64 binary:</strong></p>
-<ul>
-  <li>Debian trixie or sid: <code class="language-plaintext highlighter-rouge">apt install libmp3lame0 libmp3lame-dev</code> – works without any extra steps</li>
-  <li>Ubuntu 24.04+: same</li>
-  <li>All other distributions or custom builds: build from SourceForge source tarball using the autotools cross-compile procedure in Section 5 above</li>
-</ul><hr />
+<p><strong>Debian:</strong> sid/trixie ship <code class="language-plaintext highlighter-rouge">libmp3lame0</code>/<code class="language-plaintext highlighter-rouge">libmp3lame-dev</code> for riscv64 built from the same <code class="language-plaintext highlighter-rouge">3.101~svn6525+dfsg-2</code> source.</p>
+
+<p><strong>Arch Linux RISC-V</strong> (<code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code>): <code class="language-plaintext highlighter-rouge">repo/extra/</code> contains <code class="language-plaintext highlighter-rouge">lame-4.0-1-riscv64.pkg.tar.zst</code>; live <code class="language-plaintext highlighter-rouge">HEAD</code> request returned HTTP 200, content-length 319726, last-modified 2026-07-19. This confirms and extends the prior report’s “status not determinable” finding for Arch.</p>
+
+<p><strong>What a user must do to get a working riscv64 binary:</strong> Debian sid/trixie or Ubuntu 26.04+: <code class="language-plaintext highlighter-rouge">apt install libmp3lame0 libmp3lame-dev</code> - works with no extra steps. Arch Linux RISC-V: install <code class="language-plaintext highlighter-rouge">lame</code> from the <code class="language-plaintext highlighter-rouge">extra</code> repository. Any other distribution or custom build: build from the SourceForge source tarball using the autotools cross-compile procedure in Section 5.</p>
 <h2 id="9-dependencies">
   
   
@@ -751,13 +786,12 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
 </h2>
     
 
-<p><strong>Summary table:</strong></p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
+      <th>Criticality</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
       <th>riscv64 Release</th>
@@ -766,67 +800,110 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
   </thead>
   <tbody>
     <tr>
-      <td>libmpg123 (&gt;= 1.26.0)</td>
-      <td>Decoder backend (near-mandatory)</td>
-      <td>Yes (Debian sid v1.33.6-1, rv-osuosl-03)</td>
-      <td>No riscv64 failures reported</td>
-      <td>Debian sid, Ubuntu ports</td>
-      <td>Generic C path on riscv64; no SIMD</td>
+      <td>libmpg123</td>
+      <td>Runtime dependency (MP3 decode backend for the <code class="language-plaintext highlighter-rouge">lame</code>/<code class="language-plaintext highlighter-rouge">mp3rtp</code> frontend tools)</td>
+      <td>Critical</td>
+      <td>Yes - found in Ubuntu 26.04 resolute (<code class="language-plaintext highlighter-rouge">libmpg123-0t64</code>/<code class="language-plaintext highlighter-rouge">libmpg123-dev</code>, <code class="language-plaintext highlighter-rouge">PKG_CHECK_MODULES libmpg123 &gt;= 1.26.0</code>); <code class="language-plaintext highlighter-rouge">libmp3lame0</code> directly depends on <code class="language-plaintext highlighter-rouge">libmpg123-0t64</code> + <code class="language-plaintext highlighter-rouge">libc6</code></td>
+      <td>No riscv64 failures found</td>
+      <td>Debian sid/trixie, Ubuntu 26.04 resolute</td>
+      <td>Generic C path on riscv64, no SIMD; no open riscv64-specific bugs in its tracker</td>
     </tr>
     <tr>
-      <td>ncurses / termcap</td>
-      <td>VBR histogram display (optional)</td>
-      <td>Yes (Debian sid v6.6+20251231-1+b1, rv-osuosl-04)</td>
-      <td>No riscv64 failures</td>
-      <td>All major distros</td>
+      <td>ncurses</td>
+      <td>Runtime dependency (VBR histogram display in the <code class="language-plaintext highlighter-rouge">lame</code> frontend, probed via <code class="language-plaintext highlighter-rouge">termcap</code>/<code class="language-plaintext highlighter-rouge">curses</code>/<code class="language-plaintext highlighter-rouge">ncurses</code> in <code class="language-plaintext highlighter-rouge">configure.ac</code>)</td>
+      <td>Optional</td>
+      <td>Yes - found in Ubuntu 26.04 resolute (<code class="language-plaintext highlighter-rouge">libncurses6</code>/<code class="language-plaintext highlighter-rouge">libncurses-dev</code>)</td>
+      <td>No riscv64 failures found</td>
+      <td>Debian/Ubuntu riscv64</td>
       <td>No blocker</td>
     </tr>
     <tr>
-      <td>libsndfile (&gt;= 1.0.2)</td>
-      <td>Alternative audio file I/O (optional)</td>
-      <td>Yes (Debian sid v1.2.2-4+b1, rv-manda-02)</td>
-      <td>No riscv64 failures</td>
-      <td>Debian sid, Ubuntu</td>
+      <td>libsndfile</td>
+      <td>Runtime dependency (alternate audio file I/O backend, <code class="language-plaintext highlighter-rouge">PKG_CHECK_MODULES sndfile &gt;= 1.0.2</code>)</td>
+      <td>Optional</td>
+      <td>Yes - found in Ubuntu 26.04 resolute (<code class="language-plaintext highlighter-rouge">libsndfile1</code>/<code class="language-plaintext highlighter-rouge">libsndfile1-dev</code>)</td>
+      <td>No riscv64 failures found</td>
+      <td>Debian/Ubuntu riscv64</td>
       <td>No blocker</td>
     </tr>
     <tr>
-      <td>gtk+ 2.0 (&gt;= 1.2)</td>
-      <td>mp3x graphical analyzer (optional)</td>
-      <td>Yes (Debian sid v2.24.33-10+b1, rv-manda-04)</td>
-      <td>No riscv64 failures</td>
-      <td>Debian sid</td>
-      <td>GTK2 in maintenance mode; mp3x rarely built</td>
+      <td>GTK4</td>
+      <td>Runtime dependency (<code class="language-plaintext highlighter-rouge">mp3x</code> graphical analyzer frontend, <code class="language-plaintext highlighter-rouge">PKG_CHECK_MODULES gtk4 &gt;= 4.10</code>) - supersedes GTK2 as of the current <code class="language-plaintext highlighter-rouge">configure.ac</code> on trunk</td>
+      <td>Optional</td>
+      <td>Yes - found in Ubuntu 26.04 resolute (<code class="language-plaintext highlighter-rouge">libgtk-4-1</code>/<code class="language-plaintext highlighter-rouge">libgtk-4-dev</code>)</td>
+      <td>No riscv64-specific issues found</td>
+      <td>Debian/Ubuntu riscv64</td>
+      <td>GTK2 is no longer what current trunk builds against; the <code class="language-plaintext highlighter-rouge">mp3x</code> tool is rarely built by distro packages regardless</td>
     </tr>
     <tr>
-      <td>nasm</td>
-      <td>x86 SIMD assembler (build-time)</td>
+      <td>CMocka</td>
+      <td>Test dependency (build-time only, required solely when <code class="language-plaintext highlighter-rouge">--enable-unit-tests</code> is explicitly passed to <code class="language-plaintext highlighter-rouge">configure</code>)</td>
+      <td>Optional</td>
+      <td>Yes - found in Ubuntu 26.04 resolute (<code class="language-plaintext highlighter-rouge">libcmocka0</code>/<code class="language-plaintext highlighter-rouge">libcmocka-dev</code>)</td>
+      <td>Not itself under test (it is the test framework)</td>
+      <td>Debian/Ubuntu riscv64</td>
+      <td>Newly identified in the 4.0-era build; no effect on the default build when omitted</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Build dependency (compiler toolchain; <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> for cross-compilation)</td>
+      <td>Critical</td>
+      <td>Yes - LAME builds cleanly with GCC 10+ on riscv64 per Debian build records</td>
+      <td>N/A (toolchain, not a runtime artifact)</td>
+      <td>Available on all major riscv64 distros</td>
+      <td>No documented riscv64-specific minimum version or rationale exists upstream</td>
+    </tr>
+    <tr>
+      <td>autoconf</td>
+      <td>Build dependency (regenerates <code class="language-plaintext highlighter-rouge">configure</code> from <code class="language-plaintext highlighter-rouge">configure.ac</code>)</td>
+      <td>Optional</td>
+      <td>Yes - standard package on riscv64 distros</td>
+      <td>N/A</td>
+      <td>Debian/Ubuntu riscv64</td>
+      <td>Only needed when regenerating the build system; release tarballs ship a pre-generated <code class="language-plaintext highlighter-rouge">configure</code></td>
+    </tr>
+    <tr>
+      <td>automake</td>
+      <td>Build dependency (regenerates <code class="language-plaintext highlighter-rouge">Makefile.in</code> from <code class="language-plaintext highlighter-rouge">Makefile.am</code>)</td>
+      <td>Optional</td>
+      <td>Yes - standard package on riscv64 distros</td>
+      <td>N/A</td>
+      <td>Debian/Ubuntu riscv64</td>
+      <td>Same caveat as autoconf</td>
+    </tr>
+    <tr>
+      <td>nasm (indirect, x86 assembler)</td>
+      <td>Build-time, x86-only</td>
       <td>Not applicable on riscv64</td>
+      <td>Present as a riscv64 package in Ubuntu 26.04 resolute, but not used on the libmp3lame riscv64 build path - <code class="language-plaintext highlighter-rouge">configure.ac</code> forces <code class="language-plaintext highlighter-rouge">--disable-nasm</code>-equivalent behavior off <code class="language-plaintext highlighter-rouge">*86</code> hosts</td>
       <td>N/A</td>
       <td>N/A</td>
-      <td>configure silently skips on non-i386</td>
+      <td>Not a real riscv64 dependency of this project</td>
     </tr>
     <tr>
-      <td>libiconv</td>
-      <td>ID3 tag character encoding (optional)</td>
-      <td>Provided by glibc on riscv64</td>
+      <td>libm (indirect, math functions)</td>
+      <td>Mandatory, provided transitively by glibc</td>
+      <td>Critical</td>
+      <td>Bundled with glibc on all Debian/Ubuntu riscv64 builds</td>
+      <td>Fully exercised via glibc</td>
+      <td>Bundled with glibc</td>
+      <td>No blocker</td>
+    </tr>
+    <tr>
+      <td>libiconv (indirect, ID3 tag character encoding)</td>
+      <td>Optional</td>
+      <td>Optional</td>
+      <td>Provided by glibc on riscv64, no separate package needed</td>
       <td>Integrated</td>
       <td>Via glibc</td>
-      <td>No separate package needed</td>
-    </tr>
-    <tr>
-      <td>libm</td>
-      <td>Math functions (mandatory)</td>
-      <td>Part of glibc</td>
-      <td>Fully tested</td>
-      <td>All distros</td>
       <td>No blocker</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>libmpg123 deep-dive:</strong> This is the only near-mandatory dependency that has SIMD implications. libmpg123’s x86 and ARM SIMD paths are not compiled on riscv64 – it falls back to generic C, same as libmp3lame itself. No open riscv64-specific bugs exist in the mpg123 bug tracker (0 results). No functional blocker for riscv64 use.</p>
+<p><strong>libmpg123 deep-dive:</strong> The only near-mandatory dependency with SIMD implications. Its x86/ARM SIMD paths are not compiled on riscv64 either - it falls back to the same generic C approach as libmp3lame itself. No open riscv64-specific bugs exist in its tracker. No functional blocker. A dedicated status report for libmpg123 is tracked in this repository’s <code class="language-plaintext highlighter-rouge">projects.yml</code> but no report file exists for it yet, so its own readiness grade cannot be cited here.</p>
 
-<p><strong>SIMD dependency chain:</strong> The full SIMD acceleration chain (NASM assembly for FFT, SSE2 intrinsics for quantization) is x86-only throughout. Neither libmpg123 nor libmp3lame provides RVV acceleration. The entire encode/decode pipeline runs scalar C on riscv64.</p><hr />
+<p><strong>SIMD dependency chain:</strong> The acceleration chain across this dependency set (NASM/SSE2/AVX2/AVX-512 for libmp3lame, similarly x86-first optimization in libmpg123) is entirely x86-first, with ARM NEON now present in libmp3lame 4.0. No dependency in this chain provides RVV acceleration; the full encode/decode pipeline runs scalar C on riscv64 end to end.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -836,7 +913,7 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
 </h2>
     
 
-<p><strong>Upstream SourceForge tracker (relevant open items):</strong></p>
+<p><strong>Upstream SourceForge tracker, checked live 2026-09-30.</strong> Several items that were open as of the prior report pass have since closed, targeted at the unreleased 4.1:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -844,78 +921,48 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
       <th>ID</th>
       <th>Title</th>
       <th>Status</th>
-      <th>Severity</th>
       <th>riscv64 Relevance</th>
     </tr>
   </thead>
   <tbody>
     <tr>
+      <td>Bug #522</td>
+      <td>Heap-buffer-overflow in <code class="language-plaintext highlighter-rouge">lame_copy_inbuffer()</code></td>
+      <td>Closed-fixed</td>
+      <td>Architecture-agnostic memory-safety fix; benefits riscv64 equally with every other architecture</td>
+    </tr>
+    <tr>
       <td>Bug #521</td>
-      <td>“Takehiro’s IEEE hack configure option does not work”</td>
-      <td>Open (2025-11-04)</td>
-      <td>Medium</td>
-      <td>Low – this code path is not enabled on riscv64; riscv64 uses the generic C path</td>
+      <td>Takehiro’s IEEE hack configure option broken</td>
+      <td>Closed-fixed</td>
+      <td>None - this code path is never enabled on riscv64</td>
     </tr>
     <tr>
       <td>Bug #520</td>
-      <td>“[REQ] AVX512 optimizations”</td>
-      <td>Open (2025-08-28)</td>
-      <td>Performance</td>
-      <td>Indirect – reflects no SIMD beyond x86; riscv64 (lacking AVX512) is in the same scalar-only situation</td>
+      <td>[REQ] AVX512 optimizations</td>
+      <td>Closed</td>
+      <td>AVX2 and full AVX-512 work landed in the dev tree instead; no riscv64-equivalent request exists</td>
     </tr>
     <tr>
       <td>Bug #498</td>
-      <td>“Crash in lame in psymodel.c:calc_energy”</td>
-      <td>Open (2019-02-03)</td>
-      <td>High</td>
-      <td>Possible – NaN/floating-point crash in energy calculation; not confirmed RISC-V specific but affects generic C path</td>
-    </tr>
-    <tr>
-      <td>Bug #510</td>
-      <td>“ReplayGain values on Windows and Linux differ”</td>
-      <td>Open</td>
-      <td>Medium</td>
-      <td>Low – cross-platform numerical divergence; not RISC-V specific</td>
-    </tr>
-    <tr>
-      <td>Bug #522</td>
-      <td>“Heap-buffer-overflow in lame_copy_inbuffer()”</td>
-      <td>Open (2025-11-07)</td>
-      <td>High</td>
-      <td>Architecture-agnostic memory safety bug; affects all architectures including riscv64</td>
+      <td>Crash in <code class="language-plaintext highlighter-rouge">psymodel.c:calc_energy</code></td>
+      <td>Closed (2026-08-23)</td>
+      <td>Root cause: uninitialized float -&gt; NaN from malformed input; generic C fix, applies to riscv64</td>
     </tr>
     <tr>
       <td>Patch #72</td>
-      <td>“Fix undefined behavior on shifts”</td>
-      <td>Open (2017-08-06)</td>
-      <td>Medium</td>
-      <td>Medium – UB in bit-shifts has architecture-specific manifestations; no riscv64 report filed but not ruled out</td>
+      <td>Undefined behavior in signed left-shifts</td>
+      <td>Closed (2026-08-09)</td>
+      <td>Generic C fix; no riscv64-specific manifestation was ever filed</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>gypified/libmp3lame GitHub (total issue count: 1):</strong></p>
+<p><strong>Currently open bugs (11 total, none RISC-V-specific):</strong> #506 (VBR V0 psychoacoustic problem, 2020), #492 (20kHz clipping at CBR 320kbps, 2018), #485 (ID3 “Album Artist” unsupported, 2017), #455 (LAME tag weirdness since 3.99, 2017), #431 (resampler quality, 2012), #422 (lowpass differs per channel, 2012), #384 (low-bitrate quality regression vs 3.96, 2010), #359 (CBR rumble/distortion in 3.98.x, 2009), #330 (17kbps voice quality, 2009), #329 (wrong TLEN tag, 2009), #298 (<code class="language-plaintext highlighter-rouge">lame_enc.dll</code> crash, 2008).</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Title</th>
-      <th>Status</th>
-      <th>riscv64 Relevance</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>#1</td>
-      <td>“Fails for bitcode” (2015)</td>
-      <td>Open</td>
-      <td>None</td>
-    </tr>
-  </tbody>
-</table></div>
+<p><strong><code class="language-plaintext highlighter-rouge">gypified/libmp3lame</code> GitHub mirror (total issue count: 1):</strong> #1, “Fails for bitcode” (2015, open) - unrelated to riscv64.</p>
 
-<p>No correctness or performance bugs specific to riscv64 have been filed in either tracker.</p><hr />
+<p>No correctness or performance bug specific to riscv64 has ever been filed in either tracker.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -925,85 +972,93 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
 </h2>
     
 
-<p><strong>Technical blockers:</strong> None for functional use. The generic C path compiles and runs correctly on riscv64. The single historical RISC-V build blocker (SVN r6506, 2021 FreeBSD/riscv build fix) is already upstream.</p>
+<p><strong>Technical blockers:</strong> None for functional use. The generic C path compiles and runs correctly on riscv64. The single historical RISC-V build blocker (Patch #96, 2021) is already upstream and has shipped since 3.101.</p>
 
-<p><strong>Performance blockers:</strong> The SIMD gap is structural. All FFT and quantization acceleration is x86-only (NASM assembly + SSE2 intrinsics). Closing this gap requires:</p>
-<ol>
-  <li>Implementing equivalent routines using RVV (RISC-V Vector extension) intrinsics</li>
-  <li>Adding a configure detection path for riscv64 in <code class="language-plaintext highlighter-rouge">configure.in</code></li>
-  <li>Upstreaming to SourceForge SVN – a slow process given low-maintenance mode</li>
-</ol>
+<p><strong>Performance blockers:</strong> The SIMD gap is structural and, as of 4.0, has widened rather than closed - x86 gained AVX2/AVX-512 and ARM gained NEON, riscv64 gained nothing. Closing it requires: (1) implementing equivalent FFT/quantization routines using RVV intrinsics, following the same pattern as the new <code class="language-plaintext highlighter-rouge">avx2_*.c</code>/<code class="language-plaintext highlighter-rouge">avx512_quantize_lines.c</code>/<code class="language-plaintext highlighter-rouge">neon_choose_table.c</code> files in <code class="language-plaintext highlighter-rouge">libmp3lame/vector/</code>; (2) adding a riscv64 detection/dispatch path in <code class="language-plaintext highlighter-rouge">configure.ac</code>; (3) upstreaming to SourceForge SVN.</p>
 
-<p><strong>Organizational blockers:</strong> The project is in low-maintenance mode (last release 2017, last SVN commit 2023). Patch review throughput is low. A RVV optimization patch could wait months or years for review and merge. There is no corporate entity that can accelerate this.</p>
+<p><strong>RISE involvement - indirect only, does not close this gap:</strong> RISE does not work on libmp3lame itself. Its <code class="language-plaintext highlighter-rouge">python-wheels</code> project builds and publishes <code class="language-plaintext highlighter-rouge">lameenc</code> (a third-party Python binding, <a href="https://github.com/chrisstaite/lameenc">chrisstaite/lameenc</a>, LGPL-3.0-or-later) that statically links a locally-compiled LAME 3.100 for riscv64, on RISE’s own <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> GitHub Actions runner, published to <code class="language-plaintext highlighter-rouge">pypi.riseproject.dev</code>. Latest release: <code class="language-plaintext highlighter-rouge">lameenc-v1.8.4-20260906211002</code> (2026-09-06, commit <code class="language-plaintext highlighter-rouge">47f131b</code>), wheels for cp310-cp314t against <code class="language-plaintext highlighter-rouge">manylinux_2_39_riscv64</code>. This work includes a local, not-yet-upstreamed patch widening <code class="language-plaintext highlighter-rouge">license-files</code> in <code class="language-plaintext highlighter-rouge">lameenc</code>’s own <code class="language-plaintext highlighter-rouge">pyproject.toml</code> for LGPL compliance, and a separate <code class="language-plaintext highlighter-rouge">gpl-sources.tar</code> artifact - none of which touches libmp3lame’s own source, build system, or test suite. (Note: <code class="language-plaintext highlighter-rouge">riseproject.gitlab.io/python/wheel_builder/</code>, a 93-package index, does not list <code class="language-plaintext highlighter-rouge">lameenc</code> or <code class="language-plaintext highlighter-rouge">libmp3lame</code> - this appears to be a stale/partial mirror, since the live <code class="language-plaintext highlighter-rouge">pypi.riseproject.dev</code> index does carry <code class="language-plaintext highlighter-rouge">lameenc</code>.) No RISE blog post mentions libmp3lame, MP3, or audio encoding under any of the three site-search terms tried (<code class="language-plaintext highlighter-rouge">libmp3lame</code>, <code class="language-plaintext highlighter-rouge">mp3</code>, <code class="language-plaintext highlighter-rouge">lame</code>).</p>
 
-<p><strong>Stated objections:</strong> No upstream objections to RISC-V have been stated in any public forum. The implicit policy is that architecture support is granted if the code compiles.</p>
+<p><strong>Organizational blockers:</strong> The project resumed active maintenance in mid-2026 after seven years of dormancy (3.101 and 4.0 both released within days of each other, SVN trunk active through at least mid-September 2026), which somewhat lowers the “slow review” risk noted in earlier assessments of this project, though no riscv64-specific proposal has yet been submitted to test actual turnaround time.</p>
 
-<p><strong>Acceptance probability for a RVV patch:</strong> Likely eventual acceptance given the project’s implicit portability policy, but with indefinite timeline due to low maintainer activity. [NEEDS VERIFICATION] – no public statement from any upstream maintainer on RISC-V optimization interest.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Stated objections:</strong> None found in any public forum. The implicit policy remains that architecture support is granted if the code compiles.</p>
+
+<p><strong>Acceptance probability for an RVV patch:</strong> [NEEDS VERIFICATION] - no public statement from any upstream maintainer on RISC-V optimization interest. The renewed 2026 release cadence and the precedent of accepting AVX2/AVX-512/NEON work into 4.0 suggest a well-formed RVV patch would plausibly be reviewed, but this is inferred from general project behavior, not a direct statement.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no prior investment in libmp3lame. No RISE blog posts, no RISE wheel builder entry, no RISE runner configuration. All work sized here is net-new.</p>
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>Functional enablement is complete. libmp3lame builds and runs correctly on riscv64 via the generic C path. Debian and Ubuntu ship binary packages. No functional work is required.</p>
-<h3 id="132-performance-optimization">
-  
-  
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>The primary performance gap is the absence of RVV-accelerated FFT and quantization routines. The x86 codebase provides a clear reference: 9 NASM files for FFT variants and one SSE2 file for xrpow quantization. An equivalent RVV implementation would target the same mathematical operations.</p>
-
-<p>Specifics:</p>
 <ul>
-  <li>FFT acceleration using RVV floating-point vector operations: replacement for <code class="language-plaintext highlighter-rouge">fftsse.nas</code> and related files</li>
-  <li>xrpow quantization using RVV: replacement for <code class="language-plaintext highlighter-rouge">xmm_quantize_sub.c</code> (<code class="language-plaintext highlighter-rouge">#ifdef __riscv_vector</code> guard analogous to <code class="language-plaintext highlighter-rouge">#ifdef HAVE_XMMINTRIN_H</code>)</li>
-  <li>Fast logarithm and IEEE754 fast-path (<code class="language-plaintext highlighter-rouge">USE_FAST_LOG</code>, <code class="language-plaintext highlighter-rouge">TAKEHIRO_IEEE754_HACK</code>): configure.in currently enables these only for x86_64 and powerpc; a riscv64 case should be evaluated and added if safe</li>
+  <li><strong>Color:</strong> yellow (clean-distro-build)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li>No upstream CI of any kind exists for libmp3lame, confirmed by direct read of the SourceForge SVN trunk tree (<a href="https://sourceforge.net/p/lame/svn/HEAD/tree/trunk/lame/">https://sourceforge.net/p/lame/svn/HEAD/tree/trunk/lame/</a>) - no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, or <code class="language-plaintext highlighter-rouge">.github/workflows</code>. The distribution floor applies: Ubuntu 26.04 “resolute”, Debian sid/trixie, and Arch Linux RISC-V all ship working riscv64 binary packages (verified live via HTTP 200 / byte-exact mirror fetches, e.g. <a href="https://packages.ubuntu.com/search?keywords=libmp3lame&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com libmp3lame search</a>) built from unmodified upstream source. The only riscv64-relevant fix - SourceForge Patch #96, the <code class="language-plaintext highlighter-rouge">fpsetenv()</code>/FreeBSD build-portability fix - was committed to upstream SVN trunk in 2021, so no downstream riscv64-specific packaging patches were ever needed. This matches the “clean-distro-build” yellow sub-type rather than orange (downstream-only-with-patches) or grey.</li>
+  <li><strong>Pending work that could change the grade:</strong> LAME 4.0 was released 2026-07-11, unrelated to the color itself but material to the rest of this report’s factual content (GTK2 -&gt; GTK4, the new CMocka dependency, the 2026 bug-tracker churn). RISE’s involvement is only indirect - it builds the third-party <code class="language-plaintext highlighter-rouge">lameenc</code> Python binding for riscv64, not libmp3lame itself - and does not change libmp3lame’s own color. No open riscv64-specific patches or CI proposals exist upstream that would move the grade.</li>
+</ul>
+<h2 id="14-investment-analysis">
+  
+  
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing: RISE has made no investment in libmp3lame itself. Its only related work - the <code class="language-plaintext highlighter-rouge">lameenc</code> Python-binding wheel pipeline - covers a downstream consumer, not libmp3lame’s own source, build system, or CI, so none of the items below are already funded or in progress.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
+  
+  
+</h3>
+    
+
+<p>Complete. libmp3lame builds and runs correctly on riscv64 via the generic C path. Debian, Ubuntu, and Arch Linux RISC-V all ship working binary packages built from unmodified upstream source. No functional work is required.</p>
+<h3 id="142-performance-optimization">
+  
+  
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
+  
+  
+</h3>
+    
+
+<p>The primary gap is the absence of RVV-accelerated FFT and quantization routines, and this gap widened with 4.0’s new AVX2/AVX-512/NEON work. The updated 4.0 codebase gives a clearer reference set than before:</p>
+<ul>
+  <li>FFT acceleration using RVV floating-point vector operations, replacing the <code class="language-plaintext highlighter-rouge">fftsse.nas</code> family</li>
+  <li>xrpow quantization using RVV, following the pattern of the new <code class="language-plaintext highlighter-rouge">avx2_*.c</code>/<code class="language-plaintext highlighter-rouge">avx512_quantize_lines.c</code>/<code class="language-plaintext highlighter-rouge">neon_choose_table.c</code> files in <code class="language-plaintext highlighter-rouge">libmp3lame/vector/</code> (an <code class="language-plaintext highlighter-rouge">#ifdef __riscv_vector</code> guard analogous to <code class="language-plaintext highlighter-rouge">#ifdef HAVE_XMMINTRIN_H</code>)</li>
+  <li>Evaluating <code class="language-plaintext highlighter-rouge">USE_FAST_LOG</code>/<code class="language-plaintext highlighter-rouge">TAKEHIRO_IEEE754_HACK</code> for a riscv64 case in <code class="language-plaintext highlighter-rouge">configure.ac</code>, if numerically safe</li>
 </ul>
 
-<p>No published benchmark data is available to quantify the expected improvement. Data not available: measured throughput delta between scalar C and SIMD-accelerated paths on comparable workloads for riscv64.</p>
-<h3 id="133-cicd-infrastructure">
+<p>No published benchmark data exists to quantify the expected improvement, on riscv64 or in comparison to the newly measured x86/ARM figures in Section 6. <strong>Data not available: measured throughput delta between scalar C and SIMD-accelerated paths for riscv64.</strong></p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>No CI exists upstream or in the GitHub mirror. Adding riscv64 CI to the upstream project requires either contributing to the SourceForge project (which has no GitHub Actions or equivalent), or maintaining a fork with CI. The Debian buildd system provides build regression detection for the distro package but does not run the LAME test suite on riscv64.</p>
-
-<p>Minimum viable CI: a GitHub Actions workflow in a maintained fork with a <code class="language-plaintext highlighter-rouge">riscv64</code> QEMU matrix entry running <code class="language-plaintext highlighter-rouge">make check</code>.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>libmp3lame is a system library with no dependent package ecosystem that requires separate enablement (no PyPI packages, no npm packages, no Maven JARs). Distro packaging on Debian and Ubuntu already covers riscv64. No ecosystem work is required.</p>
-<h3 id="135-summary-table">
+<p>No CI exists upstream or in any mirror, for any architecture. Adding riscv64 CI requires either contributing CI to the SourceForge project directly (which has no GitHub Actions equivalent available) or maintaining a fork. The Debian buildd network and Arch Linux RISC-V’s own build infrastructure provide build-regression detection for their packages but run no LAME test suite on riscv64. Minimum viable CI: a GitHub Actions workflow in a maintained fork or third-party mirror with a riscv64 QEMU matrix entry running <code class="language-plaintext highlighter-rouge">make check</code>.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>libmp3lame is a system library with no dependent package ecosystem of its own that requires separate riscv64 enablement (no PyPI, npm, or Maven package published by the project). Distro packaging on Debian, Ubuntu, and Arch already covers riscv64. The one adjacent ecosystem artifact, <code class="language-plaintext highlighter-rouge">lameenc</code> (a third-party Python binding), is already built and published for riscv64 by RISE, independent of libmp3lame’s own release process. No ecosystem work is required for libmp3lame itself.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1029,53 +1084,36 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
     </tr>
     <tr>
       <td>Performance</td>
-      <td>RVV xrpow quantization (replace <code class="language-plaintext highlighter-rouge">xmm_quantize_sub.c</code>)</td>
+      <td>RVV xrpow quantization (parallel to the new <code class="language-plaintext highlighter-rouge">avx2_*.c</code>/<code class="language-plaintext highlighter-rouge">neon_choose_table.c</code> work)</td>
       <td>2-3</td>
       <td>RISE Enablement WG or community contributor</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Enable <code class="language-plaintext highlighter-rouge">TAKEHIRO_IEEE754_HACK</code> / <code class="language-plaintext highlighter-rouge">USE_FAST_LOG</code> for riscv64 in configure.in</td>
+      <td>Evaluate <code class="language-plaintext highlighter-rouge">TAKEHIRO_IEEE754_HACK</code> / <code class="language-plaintext highlighter-rouge">USE_FAST_LOG</code> for riscv64 in <code class="language-plaintext highlighter-rouge">configure.ac</code></td>
       <td>0.5</td>
       <td>Any contributor</td>
       <td>Low</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 QEMU CI to maintained fork</td>
+      <td>Add riscv64 QEMU CI to a maintained fork (no upstream CI system exists to extend)</td>
       <td>1</td>
       <td>RISE infra or distro maintainer</td>
       <td>Low</td>
     </tr>
     <tr>
-      <td>Bug fix</td>
-      <td>Investigate Patch #72 (UB in bit-shifts) for riscv64 manifestation</td>
-      <td>0.5</td>
-      <td>Any contributor</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>Bug fix</td>
-      <td>Triage Bug #498 (psymodel.c crash) on riscv64 hardware</td>
-      <td>0.5</td>
-      <td>Any contributor</td>
+      <td>Benchmarking</td>
+      <td>Produce a first riscv64 vs amd64/arm64 throughput benchmark (none exists anywhere today)</td>
+      <td>0.5-1</td>
+      <td>RISE Enablement WG or community contributor</td>
       <td>Low</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Investment justification:</strong> libmp3lame is a foundational codec library used by countless applications. The functional gap is zero. The performance gap is real but unquantified. Given the project’s low-maintenance mode and the absence of any published riscv64 performance regression report, the business case for RVV optimization investment is Medium priority, contingent on identifying a consumer application where MP3 encoding throughput on riscv64 is a demonstrated bottleneck.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p><strong>Investment justification:</strong> libmp3lame is a foundational codec library used by countless applications. The functional gap is zero; the distro floor (Section 13) already delivers working riscv64 binaries with no patches needed. The performance gap is real, unquantified, and widening as LAME 4.0 added AVX2/AVX-512/NEON paths with nothing for riscv64. Given the project’s newly-resumed but still small-team maintenance model, and the absence of any published riscv64 performance regression report or a demonstrated bottleneck in a real riscv64 consumer application, the business case for RVV optimization investment remains Medium priority at most, contingent on identifying such a consumer.</p>
 <h2 id="15-references">
   
   
@@ -1086,21 +1124,33 @@ powerpc         -&gt; CPUTYPE="no" (TAKEHIRO_IEEE754_HACK, USE_FAST_LOG)
     
 
 <ul>
-  <li><a href="https://github.com/gypified/libmp3lame">gypified/libmp3lame GitHub repository</a></li>
   <li><a href="https://sourceforge.net/projects/lame/">LAME upstream project on SourceForge</a></li>
   <li><a href="https://lame.sourceforge.io/">LAME homepage</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=lame&amp;suite=sid">Debian buildd tracker for lame (sid)</a></li>
-  <li><a href="https://packages.debian.org/trixie/libmp3lame0">Debian packages trixie – libmp3lame0</a></li>
-  <li><a href="https://packages.ubuntu.com/search?keywords=libmp3lame&amp;suite=noble&amp;searchon=names&amp;section=all">Ubuntu 24.04 Noble – libmp3lame package search</a></li>
-  <li><a href="https://riseproject.dev/">RISE Project homepage</a></li>
-  <li><a href="https://riseproject.dev/blog">RISE Project blog (all 28 posts scanned June 2026)</a></li>
-  <li><a href="https://archriscv.felixc.at/">Arch Linux RISC-V portal</a></li>
-  <li><a href="https://sourceforge.net/p/lame/bugs/521/">SourceForge LAME bug #521 – IEEE hack configure breakage</a></li>
-  <li><a href="https://sourceforge.net/p/lame/bugs/520/">SourceForge LAME bug #520 – AVX512 optimization request</a></li>
-  <li><a href="https://sourceforge.net/p/lame/bugs/498/">SourceForge LAME bug #498 – psymodel.c crash</a></li>
-  <li><a href="https://sourceforge.net/p/lame/bugs/522/">SourceForge LAME bug #522 – heap-buffer-overflow</a></li>
-  <li><a href="https://sourceforge.net/p/lame/patches/72/">SourceForge LAME patch #72 – undefined behavior in shifts</a></li>
+  <li><a href="https://sourceforge.net/projects/lame/files/lame/4.0/">LAME 4.0 release files</a></li>
+  <li><a href="https://sourceforge.net/p/lame/svn/HEAD/tree/trunk/lame/">SourceForge SVN trunk tree</a></li>
+  <li><a href="https://sourceforge.net/p/lame/svn/HEAD/tree/trunk/lame/doc/html/history.html">SourceForge SVN changelog/history.html</a></li>
+  <li><a href="https://sourceforge.net/p/lame/patches/96/">SourceForge LAME patch #96 - fix build on riscv64/FreeBSD</a></li>
+  <li><a href="https://reviews.llvm.org/D89557">reviews.llvm.org/D89557 - the LLVM fix Patch #96 was derived from</a></li>
+  <li><a href="https://sourceforge.net/p/lame/bugs/522/">SourceForge LAME bug #522 - heap-buffer-overflow</a></li>
+  <li><a href="https://sourceforge.net/p/lame/bugs/521/">SourceForge LAME bug #521 - IEEE hack configure breakage</a></li>
+  <li><a href="https://sourceforge.net/p/lame/bugs/520/">SourceForge LAME bug #520 - AVX512 optimization request</a></li>
+  <li><a href="https://sourceforge.net/p/lame/bugs/498/">SourceForge LAME bug #498 - psymodel.c crash</a></li>
+  <li><a href="https://sourceforge.net/p/lame/patches/72/">SourceForge LAME patch #72 - undefined behavior in shifts</a></li>
+  <li><a href="https://sourceforge.net/p/lame/bugs/">SourceForge LAME bug tracker</a></li>
+  <li><a href="https://github.com/gypified/libmp3lame">gypified/libmp3lame GitHub repository</a></li>
   <li><a href="https://github.com/gypified/libmp3lame/issues/1">gypified/libmp3lame issue #1</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=libmp3lame&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 resolute - libmp3lame package search</a></li>
+  <li><a href="https://packages.debian.org/trixie/libmp3lame0">Debian packages trixie - libmp3lame0</a></li>
+  <li><a href="https://archriscv.felixc.at/">Arch Linux RISC-V portal</a></li>
+  <li><a href="https://cgit.freebsd.org/ports/plain/audio/lame/Makefile">FreeBSD official ports Makefile (cgit)</a></li>
+  <li><a href="https://github.com/freebsd/freebsd-ports-gnome/blob/master/audio/lame/Makefile">Stale freebsd-ports-gnome mirror Makefile</a></li>
+  <li><a href="https://riseproject.dev/">RISE Project homepage</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members list</a></li>
+  <li><a href="https://riseproject.dev/wp-sitemap-posts-post-1.xml">RISE blog sitemap</a></li>
+  <li><a href="https://riseproject.dev/2026/07/27/saltyrn-turning-neon-kernels-into-fast-verified-rvv-code-with-llms/">RISE SALTyRN blog post - NEON to RVV kernel translation</a></li>
+  <li><a href="https://github.com/chrisstaite/lameenc">chrisstaite/lameenc - third-party Python binding built for riscv64 by RISE</a></li>
+  <li><a href="https://pypi.riseproject.dev/">pypi.riseproject.dev - lameenc riscv64 wheel index</a></li>
+  <li><a href="https://pypi.org/pypi/libmp3lame/json">PyPI JSON API - libmp3lame (404, no such package)</a></li>
 </ul>
 
           

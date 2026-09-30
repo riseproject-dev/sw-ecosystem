@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;<br />
-<strong>Date:</strong> 2026-07-20<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow (clean-distro-build)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for libavif<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,15 +280,72 @@
 </h2>
     
 
-<p>libavif is a C99 library for encoding and decoding AVIF (AV1 Image File Format) images. It is owned by the <a href="https://github.com/AOMediaCodec">AOMediaCodec</a> GitHub organization, an arm of the Alliance for Open Media (AOM), a nonprofit consortium structured as a subsidiary of the Joint Development Foundation. AOM was founded in September 2015 by Amazon, Cisco, Google, Intel, Microsoft, Mozilla, and Netflix. Current governing board members include Amazon, Apple, Cisco, Google, Intel, Meta, Microsoft, Mozilla, Netflix, Nvidia, Samsung, and Tencent. The project is licensed BSD 2-Clause.</p>
+<p>libavif is a C99 library for encoding and decoding AVIF (AV1 Image File Format) images. It is owned by the <a href="https://github.com/AOMediaCodec">AOMediaCodec</a> GitHub organization, an arm of the Alliance for Open Media (AOMedia), an industry consortium organized as a project of the Linux Foundation. AOMedia’s Steering Committee (12 companies: Amazon, Apple, Cisco, Google, Intel, Meta, Microsoft, Mozilla, Netflix, NVIDIA, Samsung, Tencent) sits above roughly 48 Promoter Members (Adobe, AMD, ARM, Broadcom, Disney, Lenovo, LG, Paramount, Roku, Snap, VideoLAN, and others). The project is licensed BSD 2-Clause (Copyright 2019 Joe Drago), with one bundled third-party file (<code class="language-plaintext highlighter-rouge">src/obu.c</code>, sourced from VideoLAN/dav1d) under its own BSD-style license.</p>
 
-<p>libavif is a thin framing library. It implements AVIF container logic (ISOBMFF/HEIF box parsing and writing), color management, and orchestration. All compute-intensive work – AV1 encode and decode, YUV/RGB conversion, scaling – is delegated to pluggable external codec libraries (libaom, dav1d, rav1e, SVT-AV1, libgav1) and color-space helpers (libyuv, libsharpyuv). This architecture is intentional and means libavif itself has no SIMD, no assembly, and no architecture-specific code for any architecture, including x86, ARM, or RISC-V.</p>
+<p>libavif is a thin framing library. It implements AVIF container logic (ISOBMFF/HEIF box parsing and writing), color management, and orchestration. All compute-intensive work, AV1 encode and decode, YUV/RGB conversion, scaling, is delegated to pluggable external codec libraries (libaom, dav1d, rav1e, SVT-AV1, libgav1) and color-space helpers (libyuv, libwebp’s libsharpyuv component). This architecture is intentional: libavif has no SIMD, no assembly, and no architecture-specific code for any architecture, including x86, ARM, or RISC-V, by design.</p>
 
-<p>The original author is Joe Drago. The most active committer as of June 2026 is Wan-Teh Chang (handle: wantehchang), a member of the AOMediaCodec organization with known affiliations to Google oss-fuzz. Other active contributors include Yannis Guyon (y-guyon) and Maryla Ustarroz-Calonge (maryla-uc). The project has no formal MAINTAINERS, CODEOWNERS, OWNERS, or CONTRIBUTORS file.</p>
+<p>Governance is informal. No <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, <code class="language-plaintext highlighter-rouge">CODEOWNERS</code>, <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code>, <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> file has ever existed in the repository’s history (checked against the full working tree and <code class="language-plaintext highlighter-rouge">git log --diff-filter=A</code> for those names). A <code class="language-plaintext highlighter-rouge">SECURITY.md</code> exists but covers only vulnerability reporting (90-day disclosure window), not general project governance or a platform-tier policy. Contributions are reviewed through ordinary GitHub PR review with no documented fast path for new-platform ports.</p>
 
-<p>The project operates under AOM’s royalty-free patent licensing framework (W3C rules), requiring contributors to disclose and license relevant patents. This makes libavif open to all implementors without royalty obligations.</p>
+<p>The project was founded by Joe Drago (jdrago@netflix.com at the time, now independent) in January 2019. Analysis of the full commit history (3,124 commits) shows Google is by far the dominant corporate sponsor of ongoing development:</p>
 
-<p>Neither libavif, AOMediaCodec, nor Alliance for Open Media are members of the RISE Project. RISE Premier Members include Andes Technology, Google, MediaTek, Nvidia, Qualcomm, Red Hat, SiFive, DAMO Academy (Alibaba), and Tenstorrent. libavif has no documented RISE engagement.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Contributor</th>
+      <th>Commits</th>
+      <th>Affiliation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Wan-Teh Chang</td>
+      <td>910</td>
+      <td>Google</td>
+    </tr>
+    <tr>
+      <td>Joe Drago</td>
+      <td>612 + 57</td>
+      <td>Founder; Netflix at project start, now independent</td>
+    </tr>
+    <tr>
+      <td>Yannis Guyon</td>
+      <td>500</td>
+      <td>Google</td>
+    </tr>
+    <tr>
+      <td>Vincent Rabaud</td>
+      <td>257 + 14</td>
+      <td>Google</td>
+    </tr>
+    <tr>
+      <td>Maryla Ustarroz-Calonge</td>
+      <td>123 + 33 + 30</td>
+      <td>Google</td>
+    </tr>
+    <tr>
+      <td>Vignesh Venkatasubramanian</td>
+      <td>105 + 29 + 11</td>
+      <td>Google</td>
+    </tr>
+    <tr>
+      <td>James Zern</td>
+      <td>22</td>
+      <td>Google</td>
+    </tr>
+    <tr>
+      <td>Ewout ter Hoeven</td>
+      <td>44</td>
+      <td>TU Delft (student)</td>
+    </tr>
+    <tr>
+      <td>Andreas Schneider</td>
+      <td>25</td>
+      <td>Independent</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>No AMD, Intel, Arm, or RISC-V-affiliated company shows meaningful commit activity. Neither libavif, AOMediaCodec, nor Alliance for Open Media are members of the RISE Project. RISE’s 20 listed members (8 Premier: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent; 12 General: Akeana, Andes Technology, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, Institute of Software Chinese Academy of Sciences, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE) include none related to libavif, AV1, or image codecs. No RISE blog post discussed libavif as of the most recent full RISE blog index check; a single, indirect mention (via libaom/Pillow, not libavif itself) appeared in a 2026-08-18 post, described in Section 1’s engagement summary below and detailed further in Section 14.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -307,26 +365,29 @@
   </thead>
   <tbody>
     <tr>
-      <td>(none)</td>
-      <td>No RISC-V-related issues, PRs, commits, or CHANGELOG entries have ever existed in the upstream repository</td>
-      <td>GitHub issues search <code class="language-plaintext highlighter-rouge">riscv repo:AOMediaCodec/libavif</code> (all states): 0 results; GitHub PR search <code class="language-plaintext highlighter-rouge">riscv</code> and <code class="language-plaintext highlighter-rouge">riscv64</code> (all states): 0 results; commit search: 0 results; CHANGELOG.md: no RISC-V mentions</td>
+      <td>2019-01-23</td>
+      <td>Project founded (first commit) by Joe Drago at Netflix</td>
+      <td>Full-history <code class="language-plaintext highlighter-rouge">git log</code> analysis of the repository, 3,124 commits from initial commit to current HEAD</td>
     </tr>
     <tr>
       <td>(none)</td>
-      <td>No tracking issue for a RISC-V port has been filed</td>
-      <td>GitHub issue search confirmed</td>
+      <td>No RISC-V-related issue, pull request, commit, or CHANGELOG entry has ever existed upstream</td>
+      <td><code class="language-plaintext highlighter-rouge">git log --grep</code> and <code class="language-plaintext highlighter-rouge">git log -S"riscv"</code> across full history: 0 matches; GitHub issue/PR/commit/code search for <code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">riscv64</code>, <code class="language-plaintext highlighter-rouge">risc-v</code>, <code class="language-plaintext highlighter-rouge">RVV</code> scoped to <code class="language-plaintext highlighter-rouge">AOMediaCodec/libavif</code>: <code class="language-plaintext highlighter-rouge">total_count: 0</code> on every query, independently re-run multiple times across this research</td>
+    </tr>
+    <tr>
+      <td>(none)</td>
+      <td>No tracking issue for a riscv64 port has been filed</td>
+      <td>GitHub issue search confirmed, re-verified independently</td>
     </tr>
     <tr>
       <td>Ongoing</td>
-      <td>Debian builds libavif for riscv64 as part of its generic port infrastructure, without any upstream changes</td>
-      <td><a href="https://buildd.debian.org/status/package.php?p=libavif&amp;suite=sid">Debian buildd riscv64, libavif 1.4.1-1+b1, status: Installed, builder rv-osuosl-03</a></td>
+      <td>Debian and Ubuntu build libavif for riscv64 as part of their generic port infrastructure, with no upstream libavif changes required</td>
+      <td><a href="https://buildd.debian.org/status/package.php?p=libavif">Debian buildd, riscv64, libavif16 1.4.2-1, status “Installed”</a>; <a href="https://launchpad.net/ubuntu/resolute/+source/libavif">Launchpad, Ubuntu resolute, libavif16 1.3.0-1ubuntu4, 8 architectures including riscv64</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>There is no “port history” in the traditional sense. libavif requires no porting because it is pure portable C99. The library compiles and runs on riscv64 without any upstream code changes. All riscv64 activity is downstream packaging work performed by Debian and Ubuntu maintainers.</p>
-
-<p>Key contributors to riscv64 availability: Debian riscv64 port team (builders rv-osuosl-03 and others). No individual upstream contributor has filed RISC-V-related changes.</p><hr />
+<p>There is no “port history” in the traditional sense. libavif requires no porting because it is pure portable C99; it compiles and runs on riscv64 without any upstream code changes. All riscv64 activity is downstream packaging work performed by Debian and Ubuntu maintainers. Recent upstream releases: v1.4.2 (2026-05-26), v1.4.1 (2026-03-20), v1.4.0 (2026-03-04), v1.3.0 (2025-05-09), v1.2.1 (2025-03-17); none of these releases’ notes, nor the CHANGELOG.md, mention RISC-V.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -336,11 +397,11 @@
 </h2>
     
 
-<p>libavif has no formal platform tier policy. The README describes the library as a “friendly, portable C implementation.” The CMake build system is architecture-agnostic with no platform tier enumeration. The only documented non-desktop platform port is Android JNI bindings (added in v0.10.0).</p>
+<p>libavif has no formal platform tier policy. The README describes the library as a portable C implementation; the CMake build system carries no platform-tier enumeration. The only documented non-desktop platform target is Android JNI bindings (added v0.10.0).</p>
 
-<p>The upstream CI matrix covers only <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64 GitHub-hosted runners) and <code class="language-plaintext highlighter-rouge">macos-latest</code>. All 23 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were read and grepped for “riscv” – zero matches. No cross-compilation, no QEMU, and no foreign-arch targets exist. riscv64 is not a release-blocking platform. The upstream does not ship per-architecture binaries at all: GitHub release assets are OS-level bundles (<code class="language-plaintext highlighter-rouge">linux-artifacts.zip</code>, <code class="language-plaintext highlighter-rouge">macOS-artifacts.zip</code>, <code class="language-plaintext highlighter-rouge">windows-artifacts.zip</code>) plus source archives.</p>
+<p>The upstream CI matrix is limited to <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64), <code class="language-plaintext highlighter-rouge">macos-latest</code>, <code class="language-plaintext highlighter-rouge">windows-latest</code>, and Android emulators. All 23 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were read twice in independent passes this research cycle, once via the GitHub API-backed listing and once by fetching every individual file’s raw content from <code class="language-plaintext highlighter-rouge">raw.githubusercontent.com</code> on the default branch and grepping case-insensitively for “riscv”: both passes found zero matches, in any job name, matrix entry, runner label, step name, env var, or comment. There is no cross-compilation, no QEMU, and no foreign-arch target in upstream CI for any architecture other than the host runners’ native amd64/arm64 (macOS).</p>
 
-<p>The only architecture-specific CMake handling in the upstream is an <code class="language-plaintext highlighter-rouge">if(DEFINED ANDROID_ABI OR DEFINED APPLE)</code> block. The only architecture-specific release note across the full CHANGELOG is “Only search for ASM_NASM language on x86_64 platforms” from v1.1.1 – this refers to the codec build system (libaom/SVT-AV1 NASM assembly), not to libavif’s own code.</p>
+<p>Upstream does not ship per-architecture release binaries at all: GitHub release assets are OS-level bundles (<code class="language-plaintext highlighter-rouge">linux-artifacts.zip</code>, <code class="language-plaintext highlighter-rouge">macOS-artifacts.zip</code>, <code class="language-plaintext highlighter-rouge">windows-artifacts.zip</code>) plus source archives, confirmed on the latest release (v1.4.2). riscv64 absence from GitHub release assets reflects the upstream’s release model, not a riscv64-specific gap.</p>
 
 <p><strong>Platform support comparison:</strong></p>
 
@@ -361,7 +422,7 @@
       <td>No</td>
     </tr>
     <tr>
-      <td>Release binary</td>
+      <td>Upstream per-arch release binary</td>
       <td>No (not the upstream’s model)</td>
       <td>No</td>
       <td>No</td>
@@ -385,7 +446,7 @@
       <td>Yes (Debian, Ubuntu)</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -395,16 +456,11 @@
 </h2>
     
 
-<p>libavif has no architecture-specific implementation layer for any architecture. There are zero files in the repository containing SIMD intrinsics, inline assembly, JIT backends, architecture dispatch tables, or architecture-specific CMake guards for x86, ARM, or RISC-V. The library’s own source tree (<code class="language-plaintext highlighter-rouge">src/</code>) is entirely portable C99.</p>
+<p>libavif has no architecture-specific implementation layer for any architecture, not amd64, not arm64, not riscv64. This was independently re-verified this cycle against a fresh clone of the repository (commit <code class="language-plaintext highlighter-rouge">873c1685af948efb5a65bccedd96b1910b496661</code>, not merely a GitHub search). Grepping <code class="language-plaintext highlighter-rouge">src/</code> (27 files, libavif’s own code) for <code class="language-plaintext highlighter-rouge">__ARM_NEON</code>, <code class="language-plaintext highlighter-rouge">arm_neon.h</code>, <code class="language-plaintext highlighter-rouge">__SSE</code>, <code class="language-plaintext highlighter-rouge">__AVX</code>, <code class="language-plaintext highlighter-rouge">immintrin.h</code>, and <code class="language-plaintext highlighter-rouge">__riscv</code> returns zero matches for any of them; no <code class="language-plaintext highlighter-rouge">neon/</code>, <code class="language-plaintext highlighter-rouge">sse/</code>, <code class="language-plaintext highlighter-rouge">avx/</code>, <code class="language-plaintext highlighter-rouge">riscv/</code>, or <code class="language-plaintext highlighter-rouge">simd/</code> subdirectory exists anywhere in the tree, and <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> carries no real architecture-conditional build logic.</p>
 
-<p>All performance-critical compute is delegated:</p>
+<p>The one place any architecture guard exists is the vendored, deliberately trimmed <code class="language-plaintext highlighter-rouge">third_party/libyuv/</code> fork (five files: <code class="language-plaintext highlighter-rouge">scale.c</code>, <code class="language-plaintext highlighter-rouge">scale_common.c</code>, <code class="language-plaintext highlighter-rouge">scale_any.c</code>, <code class="language-plaintext highlighter-rouge">row_common.c</code>, <code class="language-plaintext highlighter-rouge">planar_functions.c</code>), which contains none of upstream libyuv’s SIMD row-conversion files (no <code class="language-plaintext highlighter-rouge">row_neon*.cc</code>, <code class="language-plaintext highlighter-rouge">row_sse*.cc</code>, <code class="language-plaintext highlighter-rouge">row_avx*.cc</code>, <code class="language-plaintext highlighter-rouge">row_rvv.cc</code>, etc.). The single architecture conditional found (<code class="language-plaintext highlighter-rouge">scale_common.c:188</code>, <code class="language-plaintext highlighter-rouge">#if defined(__arm__) || defined(__aarch64__)</code>) is not SIMD: it selects a pure-C rounding-macro variant (<code class="language-plaintext highlighter-rouge">BLENDER</code>) for pixel-blend precision. riscv64 falls into the <code class="language-plaintext highlighter-rouge">#else</code> branch, compiling and running correctly as scalar C, identically to amd64. Per <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> (lines 440-452) this vendored path is only compiled when <code class="language-plaintext highlighter-rouge">AVIF_LIBYUV_ENABLED</code> is OFF; Debian and Ubuntu strip it and link the system libyuv instead, which does carry RVV kernels (see Section 9).</p>
 
-<ul>
-  <li><strong>AV1 encode/decode:</strong> libaom, dav1d, rav1e, SVT-AV1, libgav1 – each has its own SIMD infrastructure</li>
-  <li><strong>YUV/RGB conversion and scaling:</strong> libyuv (has RVV upstream) and libsharpyuv (no RVV)</li>
-</ul>
-
-<p>The vendored <code class="language-plaintext highlighter-rouge">third_party/libyuv/source/</code> copy in libavif contains only 5 architecture-neutral files (<code class="language-plaintext highlighter-rouge">planar_functions.c</code>, <code class="language-plaintext highlighter-rouge">row_common.c</code>, <code class="language-plaintext highlighter-rouge">scale.c</code>, <code class="language-plaintext highlighter-rouge">scale_any.c</code>, <code class="language-plaintext highlighter-rouge">scale_common.c</code>). Upstream libyuv has <code class="language-plaintext highlighter-rouge">row_rvv.cc</code> and <code class="language-plaintext highlighter-rouge">scale_rvv.cc</code> with RVV intrinsics, but these are not included in the vendored copy. When libavif is built against the system libyuv (as Debian does, stripping the vendored copy via <code class="language-plaintext highlighter-rouge">rm -rfv third_party/libyuv/</code>), the system libyuv’s RVV support is available if present.</p>
+<p>All performance-critical compute is delegated to external codec and color-conversion dependencies fetched at build time (<code class="language-plaintext highlighter-rouge">ext/*.cmd</code> scripts), out of this repository’s scope: libaom, dav1d, rav1e, SVT-AV1, libgav1 for AV1 encode/decode, and libyuv/libsharpyuv for YUV/RGB conversion and scaling.</p>
 
 <p><strong>Architecture-specific code comparison:</strong></p>
 
@@ -419,7 +475,7 @@
   </thead>
   <tbody>
     <tr>
-      <td>AVIF container/framing (src/*.c)</td>
+      <td>AVIF container/framing (<code class="language-plaintext highlighter-rouge">src/*.c</code>)</td>
       <td>scalar C</td>
       <td>scalar C</td>
       <td>scalar C</td>
@@ -434,19 +490,13 @@
       <td>AV1 decode (via dav1d)</td>
       <td>SSE2/AVX2</td>
       <td>NEON</td>
-      <td>RVV (merged, see Section 9)</td>
+      <td>RVV (merged upstream, see Section 9)</td>
     </tr>
     <tr>
-      <td>AV1 decode (via libaom)</td>
+      <td>AV1 decode/encode (via libaom)</td>
       <td>SSE/AVX</td>
       <td>NEON</td>
       <td>RVV partial (see Section 9)</td>
-    </tr>
-    <tr>
-      <td>AV1 encode (via libaom)</td>
-      <td>SSE/AVX</td>
-      <td>NEON</td>
-      <td>RVV partial</td>
     </tr>
     <tr>
       <td>AV1 encode (via rav1e)</td>
@@ -464,28 +514,16 @@
       <td>YUV conversion (system libyuv)</td>
       <td>SSE/AVX</td>
       <td>NEON</td>
-      <td>RVV (upstream libyuv has row_rvv.cc)</td>
+      <td>RVV (<code class="language-plaintext highlighter-rouge">row_rvv.cc</code>, <code class="language-plaintext highlighter-rouge">scale_rvv.cc</code> confirmed present upstream)</td>
     </tr>
     <tr>
-      <td>YUV conversion (libsharpyuv)</td>
+      <td>YUV conversion (libsharpyuv, part of libwebp)</td>
       <td>SSE2</td>
       <td>NEON</td>
       <td>scalar only</td>
     </tr>
     <tr>
-      <td>JIT</td>
-      <td>none</td>
-      <td>none</td>
-      <td>none</td>
-    </tr>
-    <tr>
-      <td>Crypto</td>
-      <td>none</td>
-      <td>none</td>
-      <td>none</td>
-    </tr>
-    <tr>
-      <td>GC barriers</td>
+      <td>JIT / crypto / GC barriers</td>
       <td>none</td>
       <td>none</td>
       <td>none</td>
@@ -493,7 +531,7 @@
   </tbody>
 </table></div>
 
-<p>The riscv64 scalar fallback is not a stub – it is the complete, correct implementation for libavif itself. The performance delta relative to amd64 and arm64 derives entirely from the codec and libyuv dependencies, not from libavif’s own code.</p><hr />
+<p>riscv64 is not “behind” amd64 or arm64 within libavif itself; it is treated identically, since none of the three carries hand-tuned or intrinsics code in this repository. The scalar fallback in libavif’s own code is the complete, correct implementation, not a stub. The performance delta relative to amd64 and arm64 derives entirely from the codec and libyuv dependencies, not from libavif’s own code.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -503,15 +541,10 @@
 </h2>
     
 
-<p><strong>Minimum CMake version:</strong> 3.22 (from <code class="language-plaintext highlighter-rouge">cmake_minimum_required(VERSION 3.22)</code> in <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>). Debian’s debhelper abstraction uses <code class="language-plaintext highlighter-rouge">cmake &gt;= 3.13</code> as its build dependency, but the upstream CMakeLists enforces 3.22.</p>
+<p><strong>Minimum CMake version:</strong> 3.22 (<code class="language-plaintext highlighter-rouge">cmake_minimum_required(VERSION 3.22)</code> in <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>). There are no upstream riscv64 toolchain files, no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, no QEMU usage instructions, and no cross-compilation documentation anywhere in the upstream repository; all cross-build knowledge lives in the downstream packaging layer (Debian). The <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> handling in the whole codebase is limited to four hits, none RISC-V-related: Android NDK branching in <code class="language-plaintext highlighter-rouge">cmake/Modules/LocalDav1d.cmake</code>, an Apple-only cross file, a NASM-requirement check for x86_64 in <code class="language-plaintext highlighter-rouge">cmake/Modules/LocalSvt.cmake</code>, and an Apple-arm64 check in <code class="language-plaintext highlighter-rouge">cmake/Modules/LocalRav1e.cmake</code>. No documented minimum GCC/Clang version exists, generic or architecture-specific.</p>
 
-<p>There are no upstream riscv64 toolchain files, no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, no QEMU usage instructions, and no cross-compilation documentation in the upstream repository. All cross-build knowledge is in the Debian packaging layer.</p>
+<p><strong>Debian riscv64 build (from <code class="language-plaintext highlighter-rouge">debian/rules</code>):</strong> the packaging pre-configure step strips the vendored libyuv tree (<code class="language-plaintext highlighter-rouge">rm -rfv third_party/libyuv/</code>) uniformly across all architectures, not specifically for riscv64, and links the system libyuv. CMake invocation:</p>
 
-<p><strong>Debian riscv64 build (libavif 1.4.1-1, from <code class="language-plaintext highlighter-rouge">debian/rules</code>):</strong></p>
-
-<p>Pre-configure step: the Debian package strips the vendored libyuv source tree (<code class="language-plaintext highlighter-rouge">rm -rfv third_party/libyuv/</code>) and uses the system libyuv instead.</p>
-
-<p>CMake invocation:</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake \
   -DAVIF_LIBYUV=SYSTEM \
   -DAVIF_BUILD_APPS=ON \
@@ -526,11 +559,9 @@
   -DAVIF_BUILD_TESTS=ON -DAVIF_GTEST=SYSTEM
 </code></pre></div></div>
 
-<p>All five codec backends (dav1d, AOM, SVT-AV1, libgav1, rav1e) are enabled on riscv64. This is determined by architecture conditionals in <code class="language-plaintext highlighter-rouge">debian/control</code> and <code class="language-plaintext highlighter-rouge">debian/rules</code>: riscv64 is explicitly enumerated in the allowed-arch lists for both <code class="language-plaintext highlighter-rouge">libgav1-dev</code> and <code class="language-plaintext highlighter-rouge">librav1e-dev</code>.</p>
+<p>All five codec backends are enabled on riscv64 (riscv64 is explicitly enumerated in the allowed-architecture lists for <code class="language-plaintext highlighter-rouge">libgav1-dev</code> and <code class="language-plaintext highlighter-rouge">librav1e-dev</code> in <code class="language-plaintext highlighter-rouge">debian/control</code>). Build hardening is <code class="language-plaintext highlighter-rouge">DEB_BUILD_MAINT_OPTIONS = hardening=+all</code>, the same policy as every other architecture.</p>
 
-<p>Build hardening: <code class="language-plaintext highlighter-rouge">DEB_BUILD_MAINT_OPTIONS = hardening=+all</code> (full hardening).</p>
-
-<p><strong>Cross-build history (amd64 host, riscv64 target):</strong></p>
+<p><strong>Cross-build history (Debian, riscv64):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -542,7 +573,12 @@
   </thead>
   <tbody>
     <tr>
-      <td>1.4.1-1</td>
+      <td>1.4.2-1</td>
+      <td>(current, “Installed” as of this research cycle)</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>1.4.1-1+b1</td>
       <td>2026-04-02</td>
       <td>PASS</td>
     </tr>
@@ -579,9 +615,7 @@
   </tbody>
 </table></div>
 
-<p>No cross-build failures have been recorded for libavif on riscv64. Build time for recent versions is approximately 54 minutes and 680 MB on Debian riscv64 builders – the bulk of this is SVT-AV1 compilation, not libavif itself.</p>
-
-<p>No known build failures exist for riscv64.</p><hr />
+<p>No cross-build failure has been recorded for libavif on riscv64 at any version. <a href="https://buildd.debian.org/status/package.php?p=libavif">Debian buildd confirms 1.4.2-1 “Installed” on riscv64, no exact build date surfaced beyond “most recently built” relative to the check date</a>. Build time for recent versions is approximately 54 minutes and 680 MB on Debian riscv64 builders; the bulk of this is SVT-AV1 compilation, not libavif itself.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -667,7 +701,7 @@
       <td>AV1 encode SIMD (libaom RVV)</td>
       <td>n/a</td>
       <td>n/a</td>
-      <td>Partial (convolution, CDEF; many stages scalar)</td>
+      <td>Partial (convolution, CDEF, wiener filter; many stages scalar)</td>
     </tr>
     <tr>
       <td>AV1 encode SIMD (rav1e)</td>
@@ -682,7 +716,7 @@
       <td>No</td>
     </tr>
     <tr>
-      <td>Sharp YUV SIMD (libsharpyuv)</td>
+      <td>Sharp YUV SIMD (libsharpyuv, part of libwebp)</td>
       <td>Yes (SSE2)</td>
       <td>Yes (NEON)</td>
       <td>No</td>
@@ -690,13 +724,13 @@
   </tbody>
 </table></div>
 
-<p><strong>Functional gaps:</strong> None. All features available on amd64 and arm64 are available on riscv64 at the libavif API level.</p>
+<p><strong>Functional gaps:</strong> None. Every feature available on amd64 and arm64 is available on riscv64 at the libavif API level.</p>
 
-<p><strong>Performance gaps:</strong> Significant for encode-heavy workloads. rav1e and SVT-AV1 have no RVV SIMD; these encoders will run substantially slower on riscv64 relative to amd64. libaom has partial RVV coverage (convolution, CDEF, wiener filter); many AV1 encode pipeline stages remain scalar. dav1d has the most complete RVV coverage among the codec backends and is the recommended decode path. No public benchmark figures exist for libavif or its backends on riscv64 hardware.</p>
+<p><strong>Performance gaps:</strong> Significant for encode-heavy workloads. rav1e and SVT-AV1 carry no RVV SIMD, so these encoders run substantially slower on riscv64 relative to amd64/arm64. libaom has partial RVV coverage (convolution, CDEF, wiener filter); many encode pipeline stages remain scalar. dav1d has the most complete RVV coverage among the codec backends and is the recommended decode path. No public quantified benchmark figures (fps, cycles, or percentage speedups) for libavif or its codec backends on riscv64 hardware were found anywhere: not in dav1d’s own NEWS/changelog (which lists feature names per release but no numbers, unlike some ARM NEWS entries that cite specific speedups), not on riseproject.dev, and not via general web search.</p>
 
 <p><strong>Security hardening gaps:</strong> None identified. Debian builds with <code class="language-plaintext highlighter-rouge">hardening=+all</code> on riscv64, the same policy as all other architectures.</p>
 
-<p><strong>Floating-point / NaN correctness:</strong> No issues reported. Zero riscv64-specific correctness bugs in the upstream tracker or Debian BTS.</p><hr />
+<p><strong>Floating-point / NaN correctness:</strong> No riscv64-specific correctness issues are open against libavif itself. One correctness concern exists at the dependency level and is architecture-relevant: <a href="https://gitlab.gnome.org/GNOME/libxml2/-/issues/971">libxml2 GitLab issue #971</a> (open, filed 2025-08-13) describes catalog code using double-checked locking that is unsafe on weak-memory architectures, which directly includes riscv64 and can silently read uninitialized data in multi-threaded catalog use; this affects libavif only through its optional libxml2 dependency (gain-map JPEG conversion path), not libavif’s own code.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -706,9 +740,7 @@
 </h2>
     
 
-<p>The upstream CI has no riscv64 coverage. All 23 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were read via the GitHub REST API and grepped for “riscv” – zero matches. Runners are exclusively <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64), <code class="language-plaintext highlighter-rouge">macos-latest</code>, <code class="language-plaintext highlighter-rouge">windows-latest</code>, and Android emulators. There is no QEMU-based cross-compilation, no foreign-arch matrix, and no RISE RISC-V runner integration.</p>
-
-<p>No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository.</p>
+<p>No riscv64 CI exists for libavif upstream. This was independently re-verified twice in this research cycle: once via the GitHub-hosted directory listing of <code class="language-plaintext highlighter-rouge">.github/workflows</code> (23 files, matching the prior count exactly, no additions or removals), and once by fetching the raw content of all 23 files individually from <code class="language-plaintext highlighter-rouge">raw.githubusercontent.com</code> on the <code class="language-plaintext highlighter-rouge">main</code> branch and grepping case-insensitively for “riscv” in every one: zero matches in any form (job name, matrix entry, runner label, step name, env var, comment). GitHub search tools (<code class="language-plaintext highlighter-rouge">search_issues</code>, <code class="language-plaintext highlighter-rouge">search_pull_requests</code>, <code class="language-plaintext highlighter-rouge">search_commits</code>, all scoped <code class="language-plaintext highlighter-rouge">repo:AOMediaCodec/libavif query:riscv</code>) were also independently re-run and returned <code class="language-plaintext highlighter-rouge">total_count: 0</code> on every call. Runners are exclusively <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64), <code class="language-plaintext highlighter-rouge">macos-latest</code>, <code class="language-plaintext highlighter-rouge">windows-latest</code>, and Android emulators. There is no QEMU-based cross-compilation, no foreign-arch matrix, and no RISE RISC-V runner integration anywhere in upstream CI. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository; a case-insensitive recursive grep for “riscv” across every <code class="language-plaintext highlighter-rouge">.yml</code> file and any <code class="language-plaintext highlighter-rouge">Jenkinsfile*</code> in the entire repository (not just <code class="language-plaintext highlighter-rouge">.github/workflows/</code>) also returned zero matches.</p>
 
 <p><strong>CI comparison:</strong></p>
 
@@ -752,16 +784,10 @@
       <td>Yes</td>
       <td>Yes (Debian, Ubuntu)</td>
     </tr>
-    <tr>
-      <td>Alpine build</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes (GTest disabled)</td>
-    </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 functional assurance currently relies entirely on Debian and Ubuntu distribution build infrastructure, not on upstream CI. This is a gap: regressions introduced in upstream main will not be caught until a new Debian/Ubuntu package is built and tested.</p><hr />
+<p>The riscv64 functional assurance for libavif currently relies entirely on Debian and Ubuntu distribution build infrastructure, not on upstream CI. This is the structural gap underlying the yellow/clean-distro-build grade (Section 13): regressions introduced upstream will not be caught until a new Debian/Ubuntu package is built and tested, with no automated upstream signal in between.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -771,19 +797,23 @@
 </h2>
     
 
-<p><strong>Upstream GitHub releases:</strong> No per-architecture binaries. The three release assets for each version (<code class="language-plaintext highlighter-rouge">linux-artifacts.zip</code>, <code class="language-plaintext highlighter-rouge">macOS-artifacts.zip</code>, <code class="language-plaintext highlighter-rouge">windows-artifacts.zip</code>) are OS-level bundles. riscv64 is not present because no per-arch binaries are produced at all. This is not a gap; it is the upstream’s release model.</p>
+<p><strong>Upstream GitHub releases:</strong> No per-architecture binaries for any version, confirmed on the v1.4.2 asset list (<code class="language-plaintext highlighter-rouge">linux-artifacts.zip</code>, <code class="language-plaintext highlighter-rouge">macOS-artifacts.zip</code>, <code class="language-plaintext highlighter-rouge">windows-artifacts.zip</code>, source zip/tar.gz). No asset filename contains “riscv” or “riscv64” for any release. This is the upstream’s release model, not a riscv64-specific omission.</p>
 
-<p><strong>PyPI:</strong> The package <code class="language-plaintext highlighter-rouge">libavif</code> does not exist on PyPI (HTTP 404). No Python wheels exist for any architecture.</p>
+<p><strong>PyPI:</strong> No project named <code class="language-plaintext highlighter-rouge">libavif</code> exists on PyPI. Both <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/libavif/json</code> and <code class="language-plaintext highlighter-rouge">https://pypi.org/simple/libavif/</code> return HTTP 404, confirmed independently across multiple passes this research cycle.</p>
 
-<p><strong>RISE wheel builder:</strong> Redirects to PyPI. libavif is absent because no PyPI package exists.</p>
+<p><strong>RISE wheel builder:</strong> <code class="language-plaintext highlighter-rouge">https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/libavif/</code> returns an HTTP 302 redirect to <code class="language-plaintext highlighter-rouge">https://pypi.org/simple/libavif/</code>, which is itself 404. No riscv64 wheel exists because no package exists.</p>
 
-<p><strong>Ubuntu 24.04 Noble:</strong> All four packages – <code class="language-plaintext highlighter-rouge">libavif-bin</code>, <code class="language-plaintext highlighter-rouge">libavif-dev</code>, <code class="language-plaintext highlighter-rouge">libavif-gdk-pixbuf</code>, <code class="language-plaintext highlighter-rouge">libavif16</code> – explicitly list riscv64 as a supported architecture. Version 1.0.4-1ubuntu3. Available in the <code class="language-plaintext highlighter-rouge">universe</code> component. Ubuntu also carries libavif in Jammy (0.9.3-3), Questing (1.3.0-1ubuntu1), and Resolute (1.3.0-1ubuntu4) for riscv64.</p>
+<p><strong>Debian sid/unstable:</strong> libavif16 1.4.2-1, status “Installed” on riscv64 per <a href="https://buildd.debian.org/status/package.php?p=libavif">Debian’s buildd status page</a>, consistent across all Debian architectures except <code class="language-plaintext highlighter-rouge">sparc64</code> (which shows a build failure unrelated to riscv64). <a href="https://packages.debian.org/unstable/libavif16">packages.debian.org</a> confirms the riscv64 architecture entry for the same version, package size 144.8 kB, installed size 270.0 kB.</p>
 
-<p><strong>Debian sid/testing:</strong> libavif 1.4.1-1+b1, status: Installed, built on native riscv64 hardware (builder rv-osuosl-03). All 18 Debian architectures show “Installed” status. The Debian riscv64 port is maintained by the standard Debian port infrastructure using multiple RISC-V builders (rv-osuosl-<em>, rv-manda-</em>, rv-mullvad-<em>, rv-plct-</em>, rv-mit-<em>, rv-rr44-</em>, rv-aurel32-*).</p>
+<p><strong>Ubuntu 26.04 (resolute):</strong> <a href="https://launchpad.net/ubuntu/resolute/+source/libavif">Launchpad’s build-and-publish records</a>, an authoritative primary source independent of packages.ubuntu.com, confirm libavif16 1.3.0-1ubuntu4 (uploaded 2026-03-17, published 2026-03-19) built for 8 architectures: amd64, amd64v3, arm64, armhf, i386, ppc64el, riscv64, s390x, consistent across <code class="language-plaintext highlighter-rouge">libavif-bin</code>, <code class="language-plaintext highlighter-rouge">libavif-dev</code>, <code class="language-plaintext highlighter-rouge">libavif-gdk-pixbuf</code>, <code class="language-plaintext highlighter-rouge">libavif16</code>. A separate live check of packages.ubuntu.com (after retrying past a stale cache and an intermittent HTTP 503) corroborated the same 8-package, riscv64-inclusive result for the resolute suite. Note Ubuntu resolute (1.3.0-1ubuntu4) has not yet picked up the 1.4.x series that Debian sid already carries (1.4.2-1); this is a packaging lag, not a riscv64-specific gap. A separate, unrelated legacy package confusingly named “libavifile” (a pre-2010 image-format project, not AV1/AVIF) is also built for riscv64 in the same suite and should not be conflated with libavif.</p>
 
-<p><strong>Arch Linux RISC-V:</strong> [NEEDS VERIFICATION] A prior search parsed the Arch Linux RISC-V community repository database and found <code class="language-plaintext highlighter-rouge">libavif-1.4.2-1-riscv64.pkg.tar.zst</code> packaged by Felix Yan. This could not be independently confirmed via WebFetch in the verification round.</p>
+<p><strong>Ubuntu 24.04 Noble:</strong> <code class="language-plaintext highlighter-rouge">libavif-bin</code>, <code class="language-plaintext highlighter-rouge">libavif-dev</code>, <code class="language-plaintext highlighter-rouge">libavif-gdk-pixbuf</code>, <code class="language-plaintext highlighter-rouge">libavif16</code> list riscv64 as a supported architecture at version 1.0.4-1ubuntu3, in the <code class="language-plaintext highlighter-rouge">universe</code> component; this was not independently re-checked this research cycle and is carried forward from prior packaging records.</p>
 
-<p><strong>To obtain a working riscv64 binary today:</strong> Install <code class="language-plaintext highlighter-rouge">libavif16</code> or <code class="language-plaintext highlighter-rouge">libavif-dev</code> via <code class="language-plaintext highlighter-rouge">apt</code> on Debian or Ubuntu riscv64. No manual build steps are required. All five codec backends are included.</p><hr />
+<p><strong>Arch Linux RISC-V:</strong> contradictory evidence exists. An earlier pass reported a parsed Arch Linux RISC-V community repository database entry for <code class="language-plaintext highlighter-rouge">libavif-1.4.2-1-riscv64.pkg.tar.zst</code>, packaged by Felix Yan. A later, independent adversarial check of the detailed status page <code class="language-plaintext highlighter-rouge">https://archriscv.felixc.at/.status/status.htm</code> found no match for “libavif” anywhere on that page. That status page appears to track porting/build progress rather than a full package index, so its silence is weaker evidence than a positive database hit would be, but the original claim could not be corroborated this cycle either. This is marked [NEEDS VERIFICATION]; the actual <code class="language-plaintext highlighter-rouge">core</code>/<code class="language-plaintext highlighter-rouge">extra</code>/<code class="language-plaintext highlighter-rouge">unsupported</code> repository file listings were not browsed directly in either pass.</p>
+
+<p><strong>Downstream consumer impact:</strong> <a href="https://gitlab.com">RISE’s <code class="language-plaintext highlighter-rouge">python-wheels</code> repository</a> (<code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code>) carries patches and CI specifically to make Pillow’s AVIF plugin build against libavif on riscv64 (forcing a generic AOM target, fixing a non-x86_64 cache libdir bug in libavif’s own install script, and disabling LTO to avoid a GCC LTO bug, <a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110812">gcc.gnu.org/PR110812</a>), building libavif from its GitHub source tarball as part of that pipeline. Separately, <code class="language-plaintext highlighter-rouge">torchcodec</code>’s riscv64 build explicitly disables AVIF support (<code class="language-plaintext highlighter-rouge">TORCHCODEC_BUILD_AVIF=0</code>) because upstream torchcodec’s libavif dependency is fetched only from an S3 bucket with no riscv64 build, a concrete instance of the “no upstream riscv64 release binary” gap propagating downstream even though distro packages exist.</p>
+
+<p><strong>To obtain a working riscv64 binary today:</strong> install <code class="language-plaintext highlighter-rouge">libavif16</code> or <code class="language-plaintext highlighter-rouge">libavif-dev</code> via <code class="language-plaintext highlighter-rouge">apt</code> on Debian or Ubuntu riscv64. No manual build steps are required, and all five codec backends are included in the Debian package.</p>
 <h2 id="9-dependencies">
   
   
@@ -793,131 +823,141 @@
 </h2>
     
 
-<p><strong>Summary table:</strong></p>
+<p>libavif is a thin ISOBMFF/HEIF framing layer with no SIMD of its own; all compute-heavy work is delegated to pluggable codec, color-conversion, and utility libraries selected via CMake options (<code class="language-plaintext highlighter-rouge">AVIF_CODEC_*</code>, <code class="language-plaintext highlighter-rouge">AVIF_LIBYUV</code>, etc.), each of which may be built as <code class="language-plaintext highlighter-rouge">SYSTEM</code>, <code class="language-plaintext highlighter-rouge">LOCAL</code>, or left <code class="language-plaintext highlighter-rouge">OFF</code>.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
+      <th>Relation / Criticality</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test/CI</th>
-      <th>riscv64 Release (Debian sid)</th>
+      <th>riscv64 Release</th>
       <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>libaom</td>
-      <td>AV1 encode + decode</td>
-      <td>Yes (generic C + partial RVV)</td>
-      <td>Unknown (no upstream riscv64 CI)</td>
-      <td>Yes, <code class="language-plaintext highlighter-rouge">libaom3</code> (v3.13.1, official port)</td>
-      <td>RVV: convolution, CDEF, wiener filter; many stages scalar</td>
+      <td>AV1 encode + decode, heaviest SIMD surface</td>
+      <td>runtime-dependency, optional</td>
+      <td>Builds; partial RVV (convolve, CDEF, wiener filter) via merged Andes Technology Gerrit changes; many stages still scalar</td>
+      <td>No upstream riscv64 CI (Gerrit/Jenkins bot runs x86/arm only)</td>
+      <td>Debian sid <code class="language-plaintext highlighter-rouge">libaom3</code> 3.13.1-2+b1 (installed); Ubuntu 24.04 ports 3.8.2-2build1</td>
+      <td>Open Gerrit change 208401 (stalled since 2026-03-18): <code class="language-plaintext highlighter-rouge">w==2</code>/<code class="language-plaintext highlighter-rouge">h==2</code> highbd-convolve RVV correctness bug affecting native RTCD=1 builds. Separately, a 2026-08-18 RISE blog post notes libaom’s RVV intrinsics require finalized-spec rounding-mode arguments that GCC 13 lacks, breaking Pillow’s AVIF support (a GCC-version/toolchain issue, worked around downstream with <code class="language-plaintext highlighter-rouge">-DAOM_TARGET_CPU=generic</code>)</td>
     </tr>
     <tr>
       <td>dav1d</td>
-      <td>AV1 decode (preferred fast path)</td>
-      <td>Yes (full RVV support merged)</td>
-      <td>Unknown (no upstream riscv64 CI)</td>
-      <td>Yes, <code class="language-plaintext highlighter-rouge">libdav1d7</code> (v1.5.3, official port)</td>
-      <td>Best RISC-V codec; see below</td>
-    </tr>
-    <tr>
-      <td>rav1e</td>
-      <td>AV1 encode (Rust encoder)</td>
-      <td>Yes (pure Rust scalar fallback)</td>
-      <td>Unknown</td>
-      <td>Yes, unofficial Debian port (v0.6.6)</td>
-      <td>Open upstream issue <a href="https://github.com/xiph/rav1e/issues/3402">#3402</a> for RVV ASM; unofficial port has no continuity guarantee</td>
-    </tr>
-    <tr>
-      <td>SVT-AV1</td>
-      <td>AV1 encode (scalable)</td>
-      <td>Yes (generic C)</td>
-      <td>Unknown</td>
-      <td>Yes, <code class="language-plaintext highlighter-rouge">libsvtav1enc2</code> (official port)</td>
-      <td>Intel-originated; x86 AVX2/AVX-512 centric; no RVV work; encode performance gap on riscv64</td>
+      <td>AV1 decode, preferred fast path</td>
+      <td>runtime-dependency, optional</td>
+      <td>Most complete RVV port of any libavif dependency (itx, cdef, ipred, mc_blend, w_mask, VLEN-512 paths); upstream RVV tracker lists roughly 26/120 checklist items done</td>
+      <td>CI runs under QEMU only, no native hardware runner; correctness covered, performance regressions undetectable in CI</td>
+      <td>Debian sid <code class="language-plaintext highlighter-rouge">libdav1d7</code> 1.5.3-1+b2 (“Maybe-Successful” build); Ubuntu 24.04 native riscv64 package</td>
+      <td>Open GitLab #463: static cross-link fails, needs <code class="language-plaintext highlighter-rouge">CFLAGS='-static'</code> workaround. Open MR !1825 (<code class="language-plaintext highlighter-rouge">dav1d_set_vlen_max()</code>), stalled 6+ months, blocking safe VLEN capping on non-conformant hardware</td>
     </tr>
     <tr>
       <td>libgav1</td>
-      <td>AV1 decode (Google C++ alternative)</td>
-      <td>Yes (C++ scalar)</td>
+      <td>AV1 decode, alternative C++ decoder</td>
+      <td>runtime-dependency, optional</td>
+      <td>No riscv64 SIMD at all; <code class="language-plaintext highlighter-rouge">src/dsp/</code> has only <code class="language-plaintext highlighter-rouge">arm/</code> and <code class="language-plaintext highlighter-rouge">x86/</code> subdirectories, pure scalar C++ on riscv64</td>
+      <td>Unknown, no riscv64 CI</td>
+      <td>Unofficial Debian port only, <code class="language-plaintext highlighter-rouge">libgav1-1</code> v0.18.0 (not an official architecture)</td>
+      <td>No riscv64 issue or PR exists anywhere; upstream has simply never addressed it. The canonical repository is <code class="language-plaintext highlighter-rouge">chromium.googlesource.com/codecs/libgav1</code>; the <code class="language-plaintext highlighter-rouge">google/libgav1</code> GitHub URL some tooling references is a stale 404</td>
+    </tr>
+    <tr>
+      <td>rav1e</td>
+      <td>AV1 encode, Rust</td>
+      <td>runtime-dependency, optional</td>
+      <td>Pure Rust scalar fallback only; no RISC-V asm/intrinsics</td>
       <td>Unknown</td>
-      <td>Yes, unofficial port <code class="language-plaintext highlighter-rouge">libgav1-1</code> (v0.18.0)</td>
-      <td>No riscv64 SIMD; unofficial Debian port</td>
+      <td>Unofficial Debian port only, v0.6.6, no continuity guarantee</td>
+      <td>Open, unanswered feature request <a href="https://github.com/xiph/rav1e/issues/3402">xiph/rav1e#3402</a> “RISC-V asm optimization” (filed October 2024, zero maintainer response as of this check). Affects only the encode path; decode is handled by dav1d</td>
+    </tr>
+    <tr>
+      <td>SVT-AV1</td>
+      <td>AV1 encode, scalable</td>
+      <td>runtime-dependency, optional</td>
+      <td>Generic C only; no RVV work at all; no <code class="language-plaintext highlighter-rouge">HAVE_RISCV_PLATFORM</code> CMake detection</td>
+      <td>No riscv64 CI</td>
+      <td>Debian sid 4.1.0+dfsg-1 (installed, continuous builds since 2022)</td>
+      <td>Open #2214: bundled third-party code blocks clean packaging (linked Fedora Bugzilla RH#2316282). Closed #2239: maintainer states “svt-av1 offers no ASM optimizations for those other platforms anyway”, an explicit statement of lack of interest, not a technical blocker</td>
     </tr>
     <tr>
       <td>libyuv</td>
-      <td>YUV conversion, color space</td>
-      <td>Yes; upstream has <code class="language-plaintext highlighter-rouge">row_rvv.cc</code> and <code class="language-plaintext highlighter-rouge">scale_rvv.cc</code></td>
+      <td>YUV/RGB color conversion, scaling</td>
+      <td>runtime-dependency, optional</td>
+      <td>Upstream has <code class="language-plaintext highlighter-rouge">source/row_rvv.cc</code> and <code class="language-plaintext highlighter-rouge">source/scale_rvv.cc</code> confirmed present in the tree</td>
       <td>Unknown</td>
-      <td>Yes, <code class="language-plaintext highlighter-rouge">libyuv0</code> (official port, v0.0.1922)</td>
-      <td>Debian strips vendored copy; system libyuv RVV support available if present</td>
+      <td>Debian <code class="language-plaintext highlighter-rouge">libyuv0</code> v0.0.1922 (official port)</td>
+      <td>No riscv64 issues found. libavif’s own vendored fallback copy lacks these RVV files; only the system package carries them, and Debian/Ubuntu packaging links the system copy</td>
     </tr>
     <tr>
-      <td>libsharpyuv (libwebp)</td>
-      <td>Sharp RGB-to-YUV conversion</td>
-      <td>Yes (scalar fallback)</td>
-      <td>Unknown</td>
-      <td>Yes, <code class="language-plaintext highlighter-rouge">libsharpyuv0</code> (official port, v1.5.0)</td>
-      <td>Only x86 SSE2 and ARM NEON SIMD; no RVV; quality unaffected, performance degraded</td>
+      <td>libwebp</td>
+      <td>Provides libsharpyuv, sharp RGB-to-YUV conversion</td>
+      <td>runtime-dependency, optional</td>
+      <td>Scalar fallback only; only x86 SSE2 and ARM NEON SIMD exist for libsharpyuv, no RVV path</td>
+      <td>N/A (scalar, correctness-only)</td>
+      <td>Debian <code class="language-plaintext highlighter-rouge">libsharpyuv0</code> v1.5.0 (official port), functionally correct, performance degraded on riscv64</td>
+      <td>No open issues; the question has never been raised upstream for riscv64</td>
     </tr>
     <tr>
-      <td>libpng</td>
-      <td>PNG support (apps/tests)</td>
-      <td>Yes</td>
-      <td>Standard</td>
-      <td>Yes</td>
-      <td>No issues</td>
+      <td>libxml2</td>
+      <td>XML parsing, optional gain-map JPEG conversion path</td>
+      <td>runtime-dependency, optional</td>
+      <td>Portable scalar C, compiles cleanly</td>
+      <td>No upstream riscv64 CI</td>
+      <td>Debian sid 2.15.3+dfsg-1; Ubuntu 24.04 ports 2.9.14 (security-patch lagging amd64 by 7 revisions)</td>
+      <td>Open GitLab #971 (filed 2025-08-13): catalog code uses double-checked locking unsafe on weak-memory architectures, directly affecting riscv64; can silently read uninitialized data in multi-threaded catalog use</td>
     </tr>
     <tr>
       <td>libjpeg-turbo</td>
-      <td>JPEG support (apps/tests)</td>
-      <td>Yes (scalar fallback)</td>
-      <td>Unknown</td>
-      <td>Yes</td>
-      <td>SSE/NEON SIMD paths skipped on riscv64</td>
+      <td>JPEG decode/encode for apps/tests, SIMD</td>
+      <td>runtime-dependency, optional</td>
+      <td>RVV merged in 3.1.90/3.2-beta1 (commit 9817c40); an IDCT/FDCT perf-tuning branch (<code class="language-plaintext highlighter-rouge">rvv-dct-opt</code>) is under review</td>
+      <td>Closed #710: 2 of 590 tests failed on QEMU riscv64 due to an FMA-rounding difference; workaround shipped</td>
+      <td>Distro packages (Ubuntu 2.1.5, Debian 1:3.1.3-4) predate the RVV merge by roughly 3.5 years; no riscv64 binary with SIMD exists yet, pending a 3.2.0 package</td>
+      <td>Closed #885 (won’t-implement): maintainer declines to add riscv64 to official release binaries regardless of free CI offers. Open #895: DCT/FDCT perf patch stalled on maintainer funding, “probably months”</td>
+    </tr>
+    <tr>
+      <td>libpng</td>
+      <td>PNG decode/encode for apps/tests</td>
+      <td>runtime-dependency, optional</td>
+      <td>RVV filter-row intrinsics (GCC &gt;= 13 / Clang &gt;= 14), released in 1.6.53 (December 2025) after a correctness fix</td>
+      <td>No automated riscv64 CI upstream; validated ad hoc on a Spacemit K1 by OpenCV (PR #771)</td>
+      <td>Debian sid 1.6.58-1; Ubuntu 26.04 Resolute 1.6.57-1 (post-fix); Ubuntu 24.04 Noble ships 1.6.43, which predates the RVV port entirely</td>
+      <td>All RISC-V issues closed (#705, #711, #769, plus PR #771); RVV is off by default, and the fix history (a silently wrong Paeth filter shipped and only caught by OpenCV’s test suite) shows structural CI-gap risk remains</td>
     </tr>
     <tr>
       <td>zlib</td>
-      <td>PNG compression</td>
-      <td>Yes</td>
-      <td>Standard</td>
-      <td>Yes</td>
-      <td>No issues</td>
+      <td>DEFLATE compression, used by libpng</td>
+      <td>runtime-dependency, optional</td>
+      <td>No SIMD paths at all; portable C compiles cleanly</td>
+      <td>No riscv64 test failures reported; no CI</td>
+      <td>Shipping everywhere: Ubuntu 24.04 zlib1g, Debian sid, Arch RISC-V, Alpine edge</td>
+      <td>Open PR #1099 (since 2025-10-28, zero maintainer response): working RVV Adler32 implementation, unreviewed; maintainer Mark Adler has a documented multi-year pattern of not reviewing architecture-SIMD PRs (a Power8 precedent dating to 2019)</td>
+    </tr>
+    <tr>
+      <td>googletest</td>
+      <td>Test framework for libavif’s own GTest suite (<code class="language-plaintext highlighter-rouge">AVIF_GTEST=SYSTEM</code>/<code class="language-plaintext highlighter-rouge">LOCAL</code>)</td>
+      <td>test-dependency, optional</td>
+      <td>Data not available: no riscv64-specific search was conducted for google/googletest in this research cycle</td>
+      <td>Data not available: no riscv64-specific search was conducted</td>
+      <td>Data not available: no riscv64-specific search was conducted</td>
+      <td>Pure C++ test scaffolding with no known architecture-specific code; used only to build and run libavif’s own conformance tests, not shipped in production builds</td>
     </tr>
   </tbody>
 </table></div>
+<h3 id="cross-cutting-observations">
+  
+  
+    <a href="#cross-cutting-observations" class="anchor-heading" aria-labelledby="cross-cutting-observations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Cross-cutting observations
+  
+  
+</h3>
+    
 
-<p><strong>Deep-dive: dav1d (AV1 decoder)</strong></p>
-
-<p>dav1d is the primary fast-decode backend and has the most complete RVV implementation among all libavif dependencies. RVV support was introduced in dav1d 1.4.0 and expanded through 1.5.4:</p>
-
-<ul>
-  <li>v1.4.0: itx (inverse transform) RVV</li>
-  <li>v1.4.1: additional itx shapes (4x8, 8x4, 4x16, 16x4, 8x16, 16x8)</li>
-  <li>v1.5.0: pal, cdef_filter, ipred, mc_blend, mc_bdir, itx</li>
-  <li>v1.5.1: blend for high bitdepth</li>
-  <li>v1.5.3: ipred, emu_edge, w_mask; VLEN-512 blend optimization</li>
-  <li>v1.5.4: ipred_v, ipred_h, ipred_pal, ipred_dc</li>
-</ul>
-
-<p>RVV support is detected at runtime via <code class="language-plaintext highlighter-rouge">HWCAP_RVV</code> and a compliance check via <code class="language-plaintext highlighter-rouge">dav1d_has_compliant_rvv()</code>. The dav1d roadmap lists RISC-V under “On-going” work alongside PPC and SSE2. No published fps or speedup numbers for RISC-V are available (unlike ARM entries in dav1d NEWS which cite specific speedup percentages).</p>
-
-<p><strong>Deep-dive: libaom (AV1 encoder/decoder)</strong></p>
-
-<p>libaom has RVV code in two locations:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">aom_dsp/riscv/mem_rvv.h</code>: vectorized memory loads/stores for image block processing (vle8, vle16, vle32, vlse8, vse8, vse16, vse32 intrinsics)</li>
-  <li><code class="language-plaintext highlighter-rouge">av1/common/riscv/</code>: 10 RVV-accelerated files covering cdef_block, convolve, compound_convolve, highbd_convolve, highbd_compound_convolve, wiener_convolve, highbd_wiener_convolve</li>
-</ul>
-
-<p>A <code class="language-plaintext highlighter-rouge">riscv-linux-gcc.cmake</code> cross-compilation toolchain file exists in the libaom source, confirming awareness of the architecture. No RVV speedup figures are published in commit messages or release notes. Many AV1 encode pipeline stages remain scalar on RISC-V.</p>
-
-<p><strong>Deep-dive: rav1e</strong></p>
-
-<p>Open feature request <a href="https://github.com/xiph/rav1e/issues/3402">xiph/rav1e#3402</a> (filed October 2024): “RISC-V asm optimization.” Status: open, no maintainer response. Only x86_64 (NASM/SSE2) and aarch64 (NEON) receive assembly-level optimization. rav1e’s Debian riscv64 package is an unofficial port with no continuity guarantee. This affects only the encode path; decode is handled by dav1d.</p><hr />
+<p>dav1d and libaom are the two genuinely RISC-V-invested dependencies (RVV kernels actively merged, RISE/Andes Technology engagement visible in the upstream commit trail). SVT-AV1, rav1e, and libgav1 have essentially zero RISC-V SIMD investment. libyuv already has RVV support in its upstream tree that is not obviously credited or tracked anywhere. The single most concrete cross-project correctness risk among these dependencies is libxml2 issue #971 (weak-memory catalog race): it is a genuine riscv64-specific bug, not merely a missing-optimization gap.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -940,29 +980,29 @@
   <tbody>
     <tr>
       <td>(none)</td>
-      <td>No riscv64-specific issues in upstream libavif tracker</td>
-      <td>–</td>
-      <td>–</td>
-      <td>GitHub issue search <code class="language-plaintext highlighter-rouge">riscv repo:AOMediaCodec/libavif</code> (all states): 0 results</td>
+      <td>No riscv64-specific issue exists in the upstream libavif tracker</td>
+      <td>-</td>
+      <td>-</td>
+      <td>GitHub issue search <code class="language-plaintext highlighter-rouge">riscv repo:AOMediaCodec/libavif</code> (all states), and semantic searches for <code class="language-plaintext highlighter-rouge">riscv64 performance</code> and <code class="language-plaintext highlighter-rouge">riscv64 bug</code>, independently re-run multiple times this cycle: 0 genuine matches each time (semantic-search false positives matched only unrelated s390x/arm64 issues, e.g. #731, #1085, #2406, #2718)</td>
     </tr>
     <tr>
       <td>(none)</td>
-      <td>No riscv64 Debian BTS reports for libavif</td>
-      <td>–</td>
-      <td>–</td>
-      <td>bugs.debian.org: “No reports found” for libavif on riscv64</td>
+      <td>No riscv64 Debian BTS report for libavif</td>
+      <td>-</td>
+      <td>-</td>
+      <td>bugs.debian.org: no reports found for libavif on riscv64</td>
     </tr>
     <tr>
       <td><a href="https://github.com/xiph/rav1e/issues/3402">xiph/rav1e#3402</a></td>
       <td>RISC-V asm optimization for rav1e</td>
-      <td>Open (Oct 2024, no response)</td>
-      <td>Medium (encode performance)</td>
-      <td>Affects rav1e encode backend only; no correctness impact</td>
+      <td>Open (filed October 2024, no maintainer response)</td>
+      <td>Medium (encode performance only)</td>
+      <td>Affects rav1e encode backend only; no correctness impact; decode path (dav1d) is unaffected</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No correctness bugs have been reported for libavif on riscv64. The Debian riscv64 build history shows zero failures since at least April 2025. Alpine riscv64 disables GTest (<code class="language-plaintext highlighter-rouge">AVIF_GTEST=OFF</code>), so the conformance test suite is not exercised there – this is a test coverage gap, not a known bug.</p><hr />
+<p>No correctness bug has been reported for libavif itself on riscv64. The Debian riscv64 build history shows zero cross-build failures across every recorded version. Alpine riscv64 disables GTest (<code class="language-plaintext highlighter-rouge">AVIF_GTEST=OFF</code>), leaving the conformance test suite unexercised there; Debian’s exact GTest posture on riscv64 was not independently confirmed this cycle and remains [NEEDS VERIFICATION]. This is a test-coverage gap, not a known defect.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -972,80 +1012,99 @@
 </h2>
     
 
-<p>There are no stated objections to RISC-V support in the upstream tracker, because no RISC-V-related discussions have ever occurred there. The project design eliminates the objections that commonly arise for architecture ports:</p>
+<p>No objections to RISC-V support have ever been raised in the upstream libavif tracker, because no RISC-V-related discussion has occurred there at all. The project’s architecture eliminates the objections that commonly arise for architecture ports:</p>
 
 <ul>
-  <li>No mandatory SIMD exists to implement</li>
-  <li>No assembly to translate</li>
-  <li>No JIT to port</li>
-  <li>No platform-specific detection logic to extend</li>
+  <li>No mandatory SIMD exists to implement.</li>
+  <li>No assembly exists to translate.</li>
+  <li>No JIT exists to port.</li>
+  <li>No platform-specific detection logic exists to extend.</li>
 </ul>
 
-<p>The only technical blockers are in the codec dependencies (dav1d, libaom, rav1e, SVT-AV1), not in libavif itself. dav1d already has merged RVV work. libaom has partial RVV coverage. rav1e has an open unanswered issue. SVT-AV1 has no RVV work and no open issue.</p>
+<p>The only technical blockers to riscv64 readiness live in the codec dependencies (dav1d, libaom, rav1e, SVT-AV1), not in libavif itself: dav1d has merged RVV work, libaom has partial RVV coverage with an open correctness bug (Gerrit 208401), rav1e has an open, unanswered feature request, and SVT-AV1 has no RVV work and, per its maintainer’s own words on #2239, no stated interest in adding any for non-x86 platforms.</p>
 
-<p>Acceptance probability for any upstream contribution to libavif itself (e.g., adding riscv64 CI): high. The project’s portability-first design philosophy and AOM’s broad membership make RISC-V additions uncontroversial. The only required upstream change is CI – no code changes are needed.</p><hr />
-<h2 id="13-investment-analysis">
+<p>Acceptance probability for an upstream contribution to libavif itself, such as adding a riscv64 CI job, is high. The project’s portability-first design and AOMedia’s broad membership make such an addition uncontroversial, and the only required upstream change is CI configuration; no code change is needed.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no existing or funded work on libavif as of June 2026. No RISE blog posts mention libavif.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> yellow (clean-distro-build)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Optimization-purpose project:</strong> No. libavif is a portable C99 ISOBMFF/HEIF framing layer with zero SIMD or assembly of its own by design; it delivers identical correctness and encode/decode outcomes with generic C, since all performance-critical work is delegated to pluggable codec dependencies (libaom, dav1d, rav1e, SVT-AV1, libgav1). The optimization-level axis therefore does not apply to libavif itself.</li>
+</ul>
+
+<p><strong>Justification:</strong> libavif ships compiled C, so the architecture-independent shortcut does not apply, and upstream carries zero riscv64 CI: all 23 GitHub Actions workflow files in <code class="language-plaintext highlighter-rouge">AOMediaCodec/libavif</code> were read and grepped with no “riscv” match, and GitHub issue, PR, commit, and code searches for riscv/riscv64/RVV all return 0 results (<a href="https://github.com/AOMediaCodec/libavif/tree/main/.github/workflows">.github/workflows directory</a>). With no upstream CI, the distribution floor applies: Debian (buildd, <code class="language-plaintext highlighter-rouge">libavif16</code> 1.4.2-1, status “Installed” on riscv64, <a href="https://buildd.debian.org/status/package.php?p=libavif">buildd.debian.org</a>) and Ubuntu (Launchpad, <code class="language-plaintext highlighter-rouge">libavif16</code> 1.3.0-1ubuntu4 published for riscv64 alongside 7 other architectures, <a href="https://launchpad.net/ubuntu/resolute/+source/libavif">launchpad.net</a>) both build libavif for riscv64 from source with no riscv64-specific patches in the packaging (the only packaging-level source change, stripping the vendored <code class="language-plaintext highlighter-rouge">third_party/libyuv</code> in favor of system libyuv, is applied uniformly across all architectures, not riscv64-specifically), and build history shows zero riscv64 cross-build failures recorded. That is a clean, unpatched distro build, which upgrades the project from “no CI” to yellow (clean-distro-build), with release_provider = distro rather than upstream.</p>
+
+<p><strong>Pending work that could change the grade:</strong> No open PR or issue inside <code class="language-plaintext highlighter-rouge">AOMediaCodec/libavif</code> itself touches riscv64; none exist. The project’s own knowledge-base report (<code class="language-plaintext highlighter-rouge">project-reports/libavif.md</code>, dated 2026-07-20) lists an unfunded, not-yet-started proposal to add a riscv64 CI job upstream (1 person-week, priority High) using a RISE runner, which would raise this grade to blue or green if implemented; no RISE engagement or funded work on libavif exists today. Separately, dependency-level RISC-V performance work is ongoing in dav1d (merged RVV) and partial in libaom, with an open, unanswered issue in rav1e (<a href="https://github.com/xiph/rav1e/issues/3402">xiph/rav1e#3402</a>) for RVV support; none of this affects libavif’s own CI-based color, but could matter if libavif’s optimization-purpose status is ever reconsidered.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has no existing or funded work on libavif itself as of this research cycle. The only real-world RISE touchpoint found is a single sentence in the 2026-08-18 blog post “PyTorch is available on riscv64!”: “libaom’s RVV intrinsics want finalised-spec rounding mode arguments that GCC 13 does not have, which breaks Pillow’s AVIF support.” That sentence is about libaom and Pillow, not libavif, and libavif is never named in it. The corresponding engineering artifacts live in <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code>: patches that force a generic AOM target, fix a non-x86_64 cache libdir bug in libavif’s install script, and disable LTO when building libavif as a Pillow dependency, plus CI workflows that build libavif from source as part of Pillow’s and pillow-avif-plugin’s riscv64 build pipeline. This is real, but it is downstream-consumer work, not investment in libavif’s own repository, CI, or codebase.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>No functional enablement work is required. libavif builds and runs correctly on riscv64 today with all features enabled. All five codec backends are enabled in Debian packaging. No upstream code changes are needed.</p>
-<h3 id="132-performance-optimization">
+<p>No functional enablement work is required. libavif builds and runs correctly on riscv64 today with all features enabled. All five codec backends are enabled in Debian packaging. No upstream code change is needed.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Performance on riscv64 is determined entirely by the codec and libyuv dependencies. Any performance investment should target those libraries, not libavif itself.</p>
+<p>Performance on riscv64 is determined entirely by the codec and color-conversion dependencies, not by libavif itself; any performance investment should target those libraries.</p>
 
 <ul>
-  <li>dav1d: RVV decode optimization is ongoing upstream; additional contributions are the highest-leverage work</li>
-  <li>libaom: RVV encode coverage is partial; expanding the set of accelerated stages (transform, rate control, in-loop filtering beyond CDEF/wiener) would reduce encode latency</li>
-  <li>rav1e: <a href="https://github.com/xiph/rav1e/issues/3402">xiph/rav1e#3402</a> is unanswered; RVV intrinsics work for at least DCT/IDCT would close the most significant gap</li>
-  <li>SVT-AV1: No open issue exists; filing one and initiating RVV work would be needed from scratch</li>
-  <li>libsharpyuv: No RVV; YUV conversion performance gap; adding <code class="language-plaintext highlighter-rouge">row_rvv.cc</code> analogous to libyuv’s would address this</li>
+  <li>dav1d: RVV decode optimization is ongoing upstream (roughly 26/120 tracker items done); additional contributions here are the highest-leverage performance work, and resolving GitLab #463 (static cross-link) and MR !1825 (<code class="language-plaintext highlighter-rouge">dav1d_set_vlen_max()</code>) would remove concrete blockers.</li>
+  <li>libaom: RVV encode coverage is partial; expanding accelerated stages (transform, rate control, in-loop filtering beyond CDEF/wiener) would reduce encode latency. Gerrit change 208401 (highbd-convolve correctness bug) should be resolved before further RVV expansion is built on top of it.</li>
+  <li>rav1e: <a href="https://github.com/xiph/rav1e/issues/3402">xiph/rav1e#3402</a> is unanswered; RVV intrinsics work for at least DCT/IDCT would close the most significant encode-path gap.</li>
+  <li>SVT-AV1: no open RVV issue exists and the maintainer has stated no interest in non-x86 ASM optimization (#2239); initiating this work would require first securing maintainer buy-in, not just filing a tracking issue.</li>
+  <li>libsharpyuv (libwebp): no RVV; adding a <code class="language-plaintext highlighter-rouge">row_rvv.cc</code>-style path analogous to libyuv’s would close this gap.</li>
+  <li>libpng: RVV support exists (1.6.53+) but ships disabled by default and both Ubuntu Noble and current distro packages lag behind it; no new engineering work is required here beyond packaging uptake.</li>
 </ul>
-<h3 id="133-cicd-infrastructure">
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>The only upstream CI gap attributable directly to libavif is the absence of a riscv64 CI job. Adding a RISE RISC-V runner to one workflow (e.g., <code class="language-plaintext highlighter-rouge">ci-unix-static.yml</code>) with <code class="language-plaintext highlighter-rouge">AVIF_GTEST=SYSTEM</code> enabled would provide continuous regression detection. This is a low-code change with high assurance value.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>libavif has no Python package on PyPI and no npm, Maven, or OCI artifact. There is no package ecosystem to enable. Section 10 is omitted accordingly.</p>
-<h3 id="135-summary-table">
+<p>The only upstream CI gap attributable directly to libavif is the absence of a riscv64 job. Adding a RISE RISC-V runner to one workflow (e.g., <code class="language-plaintext highlighter-rouge">ci-unix-static.yml</code>) with <code class="language-plaintext highlighter-rouge">AVIF_GTEST=SYSTEM</code> enabled would provide continuous regression detection and, per Section 13, would be sufficient by itself to raise the project’s color. This is a low-code-change, high-assurance-value item, sized at 1 person-week in the project’s own knowledge-base report.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>libavif has no Python, npm, Maven, or OCI package of its own; there is no dependent package ecosystem of libavif to enable, so Section 10 is omitted from this report. The relevant ecosystem exposure runs the other direction: libavif is consumed by Pillow’s AVIF plugin, where RISE has already funded the patches and CI needed to build libavif from source on riscv64 (Section 8, Section 14 introduction). No additional ecosystem-enablement work specific to libavif is indicated; any further investment here belongs to Pillow’s own readiness assessment, not this one.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1071,58 +1130,48 @@
     </tr>
     <tr>
       <td>Performance</td>
-      <td>dav1d: expand RVV coverage (additional ipred shapes, obmc, film grain)</td>
+      <td>dav1d: expand RVV coverage (additional ipred shapes, obmc, film grain); resolve GitLab #463 and MR !1825</td>
       <td>4-8</td>
       <td>RISE / VideoLAN</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>libaom: expand RVV coverage (transform stages, in-loop filters beyond CDEF/wiener)</td>
+      <td>libaom: resolve Gerrit 208401 correctness bug, then expand RVV coverage (transform stages, in-loop filters beyond CDEF/wiener)</td>
       <td>6-10</td>
-      <td>RISE / AOM</td>
+      <td>RISE / AOMedia</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>rav1e: initial RVV SIMD (DCT/IDCT, respond to issue #3402)</td>
+      <td>rav1e: initial RVV SIMD (DCT/IDCT), respond to issue #3402</td>
       <td>4-6</td>
       <td>RISE / Xiph</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>SVT-AV1: file riscv64 tracking issue, initial RVV survey</td>
+      <td>SVT-AV1: secure maintainer buy-in (per #2239), file riscv64 tracking issue, initial RVV survey</td>
       <td>2</td>
-      <td>RISE / Alliance for Open Source</td>
+      <td>RISE / Alliance for Open Media</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>libsharpyuv: add RVV path (row_rvv.cc analogous to libyuv)</td>
+      <td>libsharpyuv (libwebp): add RVV path (<code class="language-plaintext highlighter-rouge">row_rvv.cc</code> analogous to libyuv’s)</td>
       <td>2-3</td>
       <td>RISE / Google</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Testing</td>
-      <td>Enable GTest suite on Alpine riscv64 (investigate disablement reason)</td>
+      <td>Confirm and, if needed, enable GTest suite on Debian and Alpine riscv64 (investigate Alpine disablement reason)</td>
       <td>1</td>
       <td>Qualcomm</td>
       <td>Low</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1134,17 +1183,21 @@
 
 <ul>
   <li><a href="https://github.com/AOMediaCodec/libavif">AOMediaCodec/libavif GitHub repository</a></li>
-  <li><a href="https://github.com/AOMediaCodec/libavif/blob/main/CHANGELOG.md">libavif CHANGELOG.md</a></li>
   <li><a href="https://github.com/AOMediaCodec/libavif/tree/main/.github/workflows">libavif .github/workflows/ directory</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=libavif&amp;suite=sid">Debian buildd riscv64 status for libavif</a></li>
-  <li><a href="https://packages.ubuntu.com/search?keywords=libavif&amp;suite=noble">Ubuntu 24.04 Noble libavif packages</a></li>
-  <li><a href="https://raw.githubusercontent.com/videolan/dav1d/master/NEWS">videolan/dav1d NEWS file (RVV changelog)</a></li>
+  <li><a href="https://github.com/AOMediaCodec/libavif/releases">libavif releases</a></li>
+  <li><a href="https://buildd.debian.org/status/package.php?p=libavif">Debian buildd riscv64 status for libavif</a></li>
+  <li><a href="https://packages.debian.org/unstable/libavif16">Debian packages.debian.org, libavif16 (unstable)</a></li>
+  <li><a href="https://launchpad.net/ubuntu/resolute/+source/libavif">Ubuntu Launchpad, libavif source package, resolute</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=libavif&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu packages.ubuntu.com search, libavif</a></li>
+  <li><a href="https://pypi.org/pypi/libavif/json">PyPI, libavif (404, no package exists)</a></li>
+  <li><a href="https://github.com/xiph/rav1e/issues/3402">xiph/rav1e issue #3402: RISC-V asm optimization</a></li>
   <li><a href="https://aomedia.googlesource.com/aom/+/refs/heads/main/av1/common/riscv">libaom riscv/ convolution source directory</a></li>
   <li><a href="https://aomedia.googlesource.com/aom/+/refs/heads/main/aom_dsp/riscv">libaom riscv/ DSP memory helpers</a></li>
-  <li><a href="https://github.com/xiph/rav1e/issues/3402">xiph/rav1e issue #3402: RISC-V asm optimization</a></li>
-  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
-  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners announcement (March 2026)</a></li>
-  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE RISC-V Runners six-weeks update (May 2026)</a></li>
+  <li><a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110812">GCC LTO bug PR110812 (referenced in RISE Pillow/libavif patches)</a></li>
+  <li><a href="https://riseproject.dev">RISE Project</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE blog: PyTorch is available on riscv64! (2026-08-18, one-sentence libaom/Pillow mention)</a></li>
+  <li><a href="https://archriscv.felixc.at/.status/status.htm">Arch Linux RISC-V status page</a></li>
 </ul>
 
           

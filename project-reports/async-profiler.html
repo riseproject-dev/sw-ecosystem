@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;<br />
-<strong>Date:</strong> 2026-07-20<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for async-profiler<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +280,20 @@
 </h2>
     
 
-<p><a href="https://async-profiler.github.io/">async-profiler</a> is a low-overhead sampling profiler for JVM-based applications. It produces CPU flamegraphs and allocation profiles by combining Linux <code class="language-plaintext highlighter-rouge">perf_event_open(2)</code>, the HotSpot <code class="language-plaintext highlighter-rouge">AsyncGetCallTrace</code> API, and JVMTI callbacks. The project is hosted at <a href="https://github.com/async-profiler/async-profiler">github.com/async-profiler/async-profiler</a> under the Apache-2.0 license.</p>
+<p><a href="https://github.com/async-profiler/async-profiler">async-profiler</a> is a low-overhead sampling profiler for JVM-based applications. It produces CPU flamegraphs and allocation profiles by combining Linux <code class="language-plaintext highlighter-rouge">perf_event_open(2)</code>, the HotSpot <code class="language-plaintext highlighter-rouge">AsyncGetCallTrace</code> API, and JVMTI callbacks. The project is licensed Apache-2.0. The stated homepage, <a href="https://async-profiler.github.io/">async-profiler.github.io</a>, returns HTTP 404 and does not resolve to a live site; the GitHub repository and README are the project’s actual front door.</p>
 
-<p>The project is maintained by a single individual: <strong>Andrei Pangin</strong> (<code class="language-plaintext highlighter-rouge">apangin</code>), an independent Java Champion with a HotSpot background. He is the sole member of the <code class="language-plaintext highlighter-rouge">async-profiler</code> GitHub organization and the sole merge authority. There is no foundation affiliation, no formal governance document, and no corporate steering committee. The project is not a RISE member and has received no RISE funding.</p>
+<p>Governance is single-maintainer: <strong>Andrei Pangin</strong> (<code class="language-plaintext highlighter-rouge">apangin</code>), creator and sole merge authority, with no formal foundation affiliation, no written governance charter, and no corporate steering committee. There is no MAINTAINERS, OWNERS, or CODEOWNERS file, and no PLATFORMS.md/SUPPORT.md.</p>
 
-<p>The contributor base is heavily AWS/Amazon-dominated. The four highest-commit non-maintainer contributors (fandreuz, Baraa-Hasheesh, krk, benty-amzn) are all Amazon/AWS employees, accounting for 4 of the top-6 non-maintainer contributor slots.</p><hr />
+<p>There is strong circumstantial evidence of a de facto Amazon/AWS sponsorship, short of a formal “maintained by AWS” statement:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code>, <code class="language-plaintext highlighter-rouge">SECURITY.md</code>, and <code class="language-plaintext highlighter-rouge">CODE_OF_CONDUCT.md</code> are verbatim AWS open-source boilerplate (routing security reports to AWS/Amazon Security, adopting the Amazon Open Source Code of Conduct). These were added only in <strong>v4.0 (2025-04-08)</strong>; before that the project had no formal governance documents at all.</li>
+  <li>The org’s <code class="language-plaintext highlighter-rouge">.github</code> repository is a fork of <code class="language-plaintext highlighter-rouge">amzn/.github</code>.</li>
+  <li>Several contributors commit from <code class="language-plaintext highlighter-rouge">@amazon.com</code> addresses or <code class="language-plaintext highlighter-rouge">-amzn</code>-suffixed handles (e.g. <code class="language-plaintext highlighter-rouge">ruparev@amazon.com</code>, <code class="language-plaintext highlighter-rouge">vishalvc@amazon.com</code>, <code class="language-plaintext highlighter-rouge">benty-amzn</code>).</li>
+</ul>
+
+<p>Other identifiable corporate contributors (from commit-author domains): <strong>Johannes Bechberger</strong> (SAP), <strong>korniltsev-grafanista</strong> / Anatoly Korniltsev (Grafana), <strong>Long Yang</strong> (Alibaba), and <strong>Leslie Zhai</strong> (Loongson, author of the LoongArch64 port - notable as a case of a chip vendor contributing its own architecture’s port directly, which has not happened for riscv64). <code class="language-plaintext highlighter-rouge">zifeihan</code> (Alibaba) is the RISC-V contributor of record (see Section 2).</p>
+
+<p>Community culture on new architecture ports: <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> asks contributors to open an issue to discuss significant work before submitting a PR. There is no architecture-specific acceptance policy beyond that; in practice, riscv64, loongarch64, and ppc64le were all accepted as community contributions into a lower, non-officially-maintained tier (Section 3), at maintainer discretion, without becoming officially maintained. The project is not a member of the RISE Project (confirmed against <a href="https://riseproject.dev/">riseproject.dev/members</a> - Premier and General members are silicon vendors and infrastructure partners, not downstream software projects) and has received no RISE funding or blog coverage (Section 10 of this assessment’s underlying research; see Section 12).</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -303,36 +313,48 @@
   <tbody>
     <tr>
       <td>2022-09-02</td>
-      <td><a href="https://github.com/async-profiler/async-profiler/pull/644">PR #644</a> “Basic RISC-V support” opened by <code class="language-plaintext highlighter-rouge">shipilev</code> (Aleksey Shipilev, AWS)</td>
+      <td><a href="https://github.com/async-profiler/async-profiler/pull/644">PR #644</a> “Basic RISC-V support” opened by <code class="language-plaintext highlighter-rouge">shipilev</code> (Aleksey Shipilev). Built/tested on a HiFive Unmatched board, Ubuntu 22.04, JDK 20 (<code class="language-plaintext highlighter-rouge">-Xint</code>, C1 <code class="language-plaintext highlighter-rouge">-XX:TieredStopAtLevel=1</code>, default C2). Self-described as “basic”: not tested beyond toy examples, some features (stub pops) stubbed out.</td>
     </tr>
     <tr>
       <td>2022-09-05</td>
-      <td><code class="language-plaintext highlighter-rouge">apangin</code> blocks merge: “the project does not accept external code contributions at this moment. This is temporary.” No technical objection raised.</td>
+      <td><code class="language-plaintext highlighter-rouge">apangin</code> raises a maintenance-sustainability objection: “Currently, I can’t guarantee that ongoing development will keep the port functioning or even buildable.” <code class="language-plaintext highlighter-rouge">luhenry</code> offers cross-compilation testing help same day. No technical defect is cited.</td>
+    </tr>
+    <tr>
+      <td>2022-09-05 to 2022-11-28</td>
+      <td>PR dormant (~14.5 months from open to merge).</td>
     </tr>
     <tr>
       <td>2022-11-28</td>
-      <td><code class="language-plaintext highlighter-rouge">RealFYang</code> revives PR; <code class="language-plaintext highlighter-rouge">zifeihan</code> (Alibaba) adds missing <code class="language-plaintext highlighter-rouge">PROBE_SP_LIMIT</code> constant, shares passing <code class="language-plaintext highlighter-rouge">make test</code> output on riscv64 hardware</td>
+      <td><code class="language-plaintext highlighter-rouge">RealFYang</code> revives the thread, introducing <code class="language-plaintext highlighter-rouge">zifeihan</code> (Alibaba) as a contributor with real-world async-profiler experience on riscv64. <code class="language-plaintext highlighter-rouge">zifeihan</code> adds an <code class="language-plaintext highlighter-rouge">arch.h</code> patch and posts full smoke/allocation/library-load test results on riscv64 Ubuntu.</td>
+    </tr>
+    <tr>
+      <td>2022-11-29</td>
+      <td><code class="language-plaintext highlighter-rouge">apangin</code> states the operative blocker explicitly: “I have nothing against the content, however, the project does not accept external code contributions at this moment. This is temporary.”</td>
     </tr>
     <tr>
       <td>2023-11-26</td>
-      <td>PR #644 merged by <code class="language-plaintext highlighter-rouge">apangin</code> (merge commit <code class="language-plaintext highlighter-rouge">752b79ec4e4cc46c105dade93e1df1954fbbc638</code>). Follow-up fix commit <code class="language-plaintext highlighter-rouge">0d0f0f0</code> corrects <code class="language-plaintext highlighter-rouge">retval()</code> register mapping and adds missing interface methods.</td>
+      <td><code class="language-plaintext highlighter-rouge">apangin</code> merges PR #644 (merge commit <a href="https://github.com/async-profiler/async-profiler/commit/752b79ec4e4cc46c105dade93e1df1954fbbc638"><code class="language-plaintext highlighter-rouge">752b79e</code></a>) after verifying “in QEMU that <code class="language-plaintext highlighter-rouge">make test</code> passes,” and lands a same-day follow-up fix commit <a href="https://github.com/async-profiler/async-profiler/commit/0d0f0f0c670c2d4dbea6eb9a0284079f58e2fb91"><code class="language-plaintext highlighter-rouge">0d0f0f0</code></a> correcting <code class="language-plaintext highlighter-rouge">retval()</code> from <code class="language-plaintext highlighter-rouge">REG_RA</code> to <code class="language-plaintext highlighter-rouge">REG_A0</code> and adding <code class="language-plaintext highlighter-rouge">link()</code>, <code class="language-plaintext highlighter-rouge">jarg0()</code>, <code class="language-plaintext highlighter-rouge">method()</code>, <code class="language-plaintext highlighter-rouge">senderSP()</code>, <code class="language-plaintext highlighter-rouge">unwindStub()</code>/<code class="language-plaintext highlighter-rouge">unwindCompiled()</code>.</td>
     </tr>
     <tr>
-      <td>2024-01-21</td>
-      <td>v3.0 released. Changelog entry: “#644: RISC-V and LoongArch64 ports” under Features. First and only release to mention RISC-V.</td>
+      <td>2023-11-27</td>
+      <td><code class="language-plaintext highlighter-rouge">zifeihan</code> confirms success on a LicheePi-4A board and commits to ongoing maintenance of the riscv64 port.</td>
     </tr>
     <tr>
-      <td>2024-present</td>
-      <td>v4.0 through v4.4 (latest: v4.4, 2026-04-20): zero RISC-V mentions in any changelog.</td>
+      <td>2024-01-20</td>
+      <td><strong>v3.0</strong> tagged - first release containing the riscv64 port, alongside the LoongArch64 port (<a href="https://github.com/async-profiler/async-profiler">PR #770</a>, Leslie Zhai/Loongson, committed 2023-12-01). Changelog: “#644: RISC-V port.”</td>
     </tr>
     <tr>
       <td>2025-03-21</td>
-      <td><a href="https://github.com/async-profiler/async-profiler/pull/1185">PR #1185</a> “Fix compilation with source merging disabled” (fandreuz, AWS) opened, targeting riscv64. Closed without merge.</td>
+      <td><a href="https://github.com/async-profiler/async-profiler/pull/1185">PR #1185</a> “Fix compilation with source merging disabled” (fandreuz) opened and merged same day. This is <strong>not</strong> riscv64-specific: it fixes a <code class="language-plaintext highlighter-rouge">make MERGE=false</code> build failure (missing <code class="language-plaintext highlighter-rouge">&lt;cerrno&gt;</code> include for <code class="language-plaintext highlighter-rouge">errno</code>, missing <code class="language-plaintext highlighter-rouge">OS</code> class header) whose error log happened to enumerate <code class="language-plaintext highlighter-rouge">src/stackFrame_riscv64.cpp</code> among all per-architecture source files being compiled - that log text is the only reason this PR matches a “riscv”/”riscv64” search. First shipped in <strong>v4.0 (2025-04-08)</strong>.</td>
+    </tr>
+    <tr>
+      <td>2026-07-20</td>
+      <td><strong>v4.5</strong> (latest stable at research time). No riscv64-related changelog entries since v3.0.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The 14-month gap between PR submission (Sep 2022) and merge (Nov 2023) was caused by a maintainer-imposed contribution freeze, not by technical deficiencies in the patch. There is one merged RISC-V PR total in the repository’s history. No dedicated tracking issue was ever filed. The entire RISC-V port effort resolves through a single PR thread.</p><hr />
+<p>No standalone RISC-V tracking issue was ever filed (GitHub issue search for “riscv”/”riscv64” returns zero results, confirmed independently via the GitHub search API and the web issue-search UI). PR #644 is the sole substantive riscv64 PR and functions as the de facto tracking thread. A plain commit-message search for “riscv”/”riscv64” (which does not scan diffs or paths) also returns only the two PR #644 merge/fix commits. <strong>No riscv64-specific commit has landed since the November 2023 merge</strong>, through v4.5 (2026-07-20) - <code class="language-plaintext highlighter-rouge">zifeihan</code>’s 2023 maintenance commitment has not produced follow-up work in the public record.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -354,19 +376,19 @@
   </thead>
   <tbody>
     <tr>
-      <td><strong>Tier 1</strong> (officially maintained builds, CI, binary releases)</td>
+      <td><strong>Officially maintained builds</strong> (CI-built, tested, binaries in releases)</td>
       <td>x64, arm64</td>
       <td>x64, arm64</td>
     </tr>
     <tr>
-      <td><strong>Tier 2</strong> (other available ports, source-only, no CI, no binaries)</td>
+      <td><strong>Other available ports</strong> (community-contributed, source-only, no CI, no official binaries)</td>
       <td>x86, arm32, ppc64le, <strong>riscv64</strong>, loongarch64</td>
-      <td>–</td>
+      <td>-</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>riscv64 is classified as Tier 2. This is the same tier as ppc64le and loongarch64. It compiles and can run, but the project makes no guarantees about correctness, maintenance, or binary availability on riscv64.</p><hr />
+<p>riscv64 sits in the lower, community-maintained tier - the same tier as ppc64le and loongarch64 - not the officially maintained tier. This is consistent end to end with the CI evidence (Section 7) and release evidence (Section 8): the tiering is not aspirational labeling, it matches what actually gets built, tested, and shipped.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -375,10 +397,10 @@
   
 </h2>
     
-<h3 id="41-architecture-specific-file-inventory">
+<h3 id="41-architecture-specific-file-footprint">
   
   
-    <a href="#41-architecture-specific-file-inventory" class="anchor-heading" aria-labelledby="41-architecture-specific-file-inventory"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Architecture-Specific File Inventory
+    <a href="#41-architecture-specific-file-footprint" class="anchor-heading" aria-labelledby="41-architecture-specific-file-footprint"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Architecture-Specific File Footprint
   
   
 </h3>
@@ -387,75 +409,76 @@
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>File</th>
-      <th>Lines</th>
-      <th>Status</th>
+      <th>Arch</th>
+      <th>Files with arch guard</th>
+      <th>Dedicated stack-frame file LOC</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">src/arch.h</code> (riscv64 block)</td>
-      <td>19 of 204</td>
-      <td>Partial – PLT sizes are guesses</td>
+      <td>x86_64</td>
+      <td>8 (<code class="language-plaintext highlighter-rouge">safeAccess.cpp</code>, <code class="language-plaintext highlighter-rouge">dwarf.h</code>, <code class="language-plaintext highlighter-rouge">symbols_linux.cpp</code>, <code class="language-plaintext highlighter-rouge">stackFrame_x64.cpp</code>, <code class="language-plaintext highlighter-rouge">arch.h</code>, <code class="language-plaintext highlighter-rouge">tsc.h</code>, <code class="language-plaintext highlighter-rouge">vmStructs.cpp</code>, <code class="language-plaintext highlighter-rouge">os_macos.cpp</code>)</td>
+      <td>245 (0 stubs)</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">src/stackFrame_riscv64.cpp</code></td>
-      <td>110</td>
-      <td>Partial – 3 of the critical unwinding functions are stubs</td>
+      <td>aarch64</td>
+      <td>10 (adds <code class="language-plaintext highlighter-rouge">perfEvents_linux.cpp</code>, <code class="language-plaintext highlighter-rouge">dwarf.cpp</code>)</td>
+      <td>353 (0 stubs)</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">Makefile</code> (riscv64 lines)</td>
-      <td>2 of 328</td>
-      <td>Complete for build purposes</td>
+      <td>riscv64</td>
+      <td>3 (<code class="language-plaintext highlighter-rouge">symbols_linux.cpp</code>, <code class="language-plaintext highlighter-rouge">arch.h</code>, <code class="language-plaintext highlighter-rouge">stackFrame_riscv64.cpp</code>)</td>
+      <td>109</td>
+    </tr>
+    <tr>
+      <td>loongarch64 (community tier)</td>
+      <td>3</td>
+      <td>107</td>
+    </tr>
+    <tr>
+      <td>ppc64le (community tier)</td>
+      <td>3</td>
+      <td>101</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>For comparison, the mature ports have substantially larger and fully-implemented stackFrame files: <code class="language-plaintext highlighter-rouge">src/stackFrame_x64.cpp</code> (246 lines, zero stubs), <code class="language-plaintext highlighter-rouge">src/stackFrame_aarch64.cpp</code> (354 lines, zero stubs).</p>
-<h3 id="42-register-accessors-srcstackframe_riscv64cpp">
+<p>riscv64’s footprint is essentially identical in shape to loongarch64 (same template, same stub pattern) and roughly a third of aarch64’s - confirming it is a minimal community port rather than an independently engineered full implementation.</p>
+<h3 id="42-register-accessors-srcstackframe_riscv64cpp---fully-implemented">
   
   
-    <a href="#42-register-accessors-srcstackframe_riscv64cpp" class="anchor-heading" aria-labelledby="42-register-accessors-srcstackframe_riscv64cpp"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Register Accessors (<code class="language-plaintext highlighter-rouge">src/stackFrame_riscv64.cpp</code>)
-  
-  
-</h3>
-    
-
-<p>The following register accessors are fully implemented via <code class="language-plaintext highlighter-rouge">uc_mcontext.__gregs[]</code> mappings:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">pc()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_PC</code></li>
-  <li><code class="language-plaintext highlighter-rouge">sp()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_SP</code></li>
-  <li><code class="language-plaintext highlighter-rouge">fp()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_S0</code> (frame pointer)</li>
-  <li><code class="language-plaintext highlighter-rouge">retval()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_A0</code> (corrected in follow-up commit <code class="language-plaintext highlighter-rouge">0d0f0f0</code>; original PR had it mapped to <code class="language-plaintext highlighter-rouge">REG_RA</code> in error)</li>
-  <li><code class="language-plaintext highlighter-rouge">link()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_RA</code> (x1, return address)</li>
-  <li><code class="language-plaintext highlighter-rouge">arg0()</code> through <code class="language-plaintext highlighter-rouge">arg3()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_A0</code> + offset</li>
-  <li><code class="language-plaintext highlighter-rouge">jarg0()</code> -&gt; <code class="language-plaintext highlighter-rouge">arg1()</code> (Java calling convention: receiver occupies a0, first Java arg is at a1)</li>
-  <li><code class="language-plaintext highlighter-rouge">method()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG(31)</code> (x31/t6, used as JVM method register on RISC-V)</li>
-  <li><code class="language-plaintext highlighter-rouge">senderSP()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG(19)</code> (x19/s3)</li>
-</ul>
-<h3 id="43-stack-unwinding-stubs">
-  
-  
-    <a href="#43-stack-unwinding-stubs" class="anchor-heading" aria-labelledby="43-stack-unwinding-stubs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Stack Unwinding Stubs
+    <a href="#42-register-accessors-srcstackframe_riscv64cpp---fully-implemented" class="anchor-heading" aria-labelledby="42-register-accessors-srcstackframe_riscv64cpp---fully-implemented"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Register Accessors (<code class="language-plaintext highlighter-rouge">src/stackFrame_riscv64.cpp</code>) - Fully Implemented
   
   
 </h3>
     
 
-<p>The following functions are explicitly marked “Not yet implemented”:</p>
+<p>Correctly mapped via <code class="language-plaintext highlighter-rouge">ucontext.uc_mcontext.__gregs[]</code>: <code class="language-plaintext highlighter-rouge">pc()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_PC</code>, <code class="language-plaintext highlighter-rouge">sp()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_SP</code>, <code class="language-plaintext highlighter-rouge">fp()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_S0</code>, <code class="language-plaintext highlighter-rouge">retval()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_A0</code> (corrected from an erroneous <code class="language-plaintext highlighter-rouge">REG_RA</code> mapping in the same-day follow-up fix commit <code class="language-plaintext highlighter-rouge">0d0f0f0</code>), <code class="language-plaintext highlighter-rouge">link()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_RA</code> (x1), <code class="language-plaintext highlighter-rouge">arg0()</code>-<code class="language-plaintext highlighter-rouge">arg3()</code> -&gt; <code class="language-plaintext highlighter-rouge">REG_A0</code>+offset, <code class="language-plaintext highlighter-rouge">jarg0()</code> -&gt; <code class="language-plaintext highlighter-rouge">arg1()</code> (Java calling convention places the receiver in a0), <code class="language-plaintext highlighter-rouge">method()</code> -&gt; x31/t6, <code class="language-plaintext highlighter-rouge">senderSP()</code> -&gt; x19/s3.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">unwindPrologue()</code> – returns <code class="language-plaintext highlighter-rouge">false</code></li>
-  <li><code class="language-plaintext highlighter-rouge">unwindEpilogue()</code> – returns <code class="language-plaintext highlighter-rouge">false</code></li>
-  <li><code class="language-plaintext highlighter-rouge">adjustSP()</code> – no-op</li>
-</ul>
+<p><code class="language-plaintext highlighter-rouge">isSyscall()</code> detects the <code class="language-plaintext highlighter-rouge">ECALL</code> opcode (<code class="language-plaintext highlighter-rouge">0x00000073</code>); the source comment acknowledges RISC-V uses <code class="language-plaintext highlighter-rouge">ECALL</code> for both syscalls and debugger traps, so this “might technically mismatch” - no fix exists.</p>
+<h3 id="43-stack-unwinding---partial-with-explicit-stubs">
+  
+  
+    <a href="#43-stack-unwinding---partial-with-explicit-stubs" class="anchor-heading" aria-labelledby="43-stack-unwinding---partial-with-explicit-stubs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Stack Unwinding - Partial, With Explicit Stubs
+  
+  
+</h3>
+    
 
-<p>On x64 and aarch64, these three functions perform instruction-pattern scanning to reconstruct stack frames at function entry/exit boundaries where the frame pointer has not yet been established or has already been torn down. On riscv64, all three return immediately without unwinding. This causes dropped or corrupt frames during sampling of JIT-compiled Java methods at prologue and epilogue boundaries.</p>
-
-<p><code class="language-plaintext highlighter-rouge">unwindStub()</code> is partially implemented – it handles the itable, vtable, and InlineCacheBuffer cases by setting <code class="language-plaintext highlighter-rouge">pc = link()</code>. The x64 and aarch64 versions contain substantially more pattern-matching logic.</p>
-
-<p><code class="language-plaintext highlighter-rouge">isSyscall()</code> checks for opcode <code class="language-plaintext highlighter-rouge">0x00000073</code> (ECALL) but the source comment acknowledges: “RISC-V ISA uses ECALL for both syscalls and debugger calls, so this might technically mismatch.”</p>
+<p><code class="language-plaintext highlighter-rouge">src/stackFrame_riscv64.cpp</code> contains, verbatim:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bool StackFrame::unwindPrologue(...) {
+    // Not yet implemented
+    return false;
+}
+bool StackFrame::unwindEpilogue(...) {
+    // Not yet implemented
+    return false;
+}
+void StackFrame::adjustSP(...) {
+    // Not yet implemented
+}
+</code></pre></div></div>
+<p>On x64 and aarch64, these functions perform instruction-pattern scanning to reconstruct frames at JIT method entry/exit boundaries before the frame pointer is established or after it has been torn down. On riscv64 they are unconditional no-ops, identical to loongarch64’s stubs. <code class="language-plaintext highlighter-rouge">unwindStub()</code> is partially implemented (name-string matching for itable/vtable/InlineCacheBuffer cases only, setting <code class="language-plaintext highlighter-rouge">pc = link()</code>); it performs no instruction decoding, unlike the x64/aarch64 versions. <code class="language-plaintext highlighter-rouge">unwindAtomicStub()</code> returns <code class="language-plaintext highlighter-rouge">false</code> and is marked “Not needed” - aarch64 implements a real version of this.</p>
 <h3 id="44-architecture-constants-srcarchh">
   
   
@@ -465,31 +488,33 @@
 </h3>
     
 
-<p>The riscv64 block is guarded by <code class="language-plaintext highlighter-rouge">#elif defined(__riscv) &amp;&amp; (__riscv_xlen == 64)</code>. Key values:</p>
-
+<p>Guarded by <code class="language-plaintext highlighter-rouge">#elif defined(__riscv) &amp;&amp; (__riscv_xlen == 64)</code>:</p>
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">BREAKPOINT</code>: <code class="language-plaintext highlighter-rouge">0x9002</code> (C.EBREAK, compressed) when <code class="language-plaintext highlighter-rouge">__riscv_compressed</code> is defined; <code class="language-plaintext highlighter-rouge">0x00100073</code> (EBREAK, 32-bit) otherwise.</li>
-  <li><code class="language-plaintext highlighter-rouge">PLT_HEADER_SIZE = 24</code> and <code class="language-plaintext highlighter-rouge">PLT_ENTRY_SIZE = 24</code>: commented as “Best guess from examining readelf” – not derived from the official RISC-V psABI. Incorrect values would cause wrong attribution of calls through the PLT.</li>
-  <li><code class="language-plaintext highlighter-rouge">spinPause()</code>: empty no-op, comment “No architecture support”. Correct for RV64I base ISA; the <code class="language-plaintext highlighter-rouge">Zihintpause</code> extension is not assumed.</li>
-  <li><code class="language-plaintext highlighter-rouge">rmb()</code>: <code class="language-plaintext highlighter-rouge">asm volatile("fence" : : : "memory")</code> – correct.</li>
-  <li><code class="language-plaintext highlighter-rouge">PERF_REG_PC = 0</code>: correct; matches <code class="language-plaintext highlighter-rouge">PERF_REG_RISCV_PC = 0</code> in the Linux kernel.</li>
+  <li><code class="language-plaintext highlighter-rouge">BREAKPOINT</code>: <code class="language-plaintext highlighter-rouge">0x9002</code> (compressed <code class="language-plaintext highlighter-rouge">C.EBREAK</code>) when <code class="language-plaintext highlighter-rouge">__riscv_compressed</code> is defined, else <code class="language-plaintext highlighter-rouge">0x00100073</code> (standard <code class="language-plaintext highlighter-rouge">EBREAK</code>).</li>
+  <li><code class="language-plaintext highlighter-rouge">PLT_HEADER_SIZE = 24</code>, <code class="language-plaintext highlighter-rouge">PLT_ENTRY_SIZE = 24</code>: commented “Best guess from examining readelf” - not derived from the RISC-V psABI. Wrong values misattribute calls routed through the PLT.</li>
+  <li><code class="language-plaintext highlighter-rouge">spinPause()</code>: empty no-op, “No architecture support” - correct for base RV64I; does not assume <code class="language-plaintext highlighter-rouge">Zihintpause</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">rmb()</code>: <code class="language-plaintext highlighter-rouge">fence</code> instruction - correct.</li>
+  <li><code class="language-plaintext highlighter-rouge">PERF_REG_PC = 0</code> - correct, matches the Linux kernel’s <code class="language-plaintext highlighter-rouge">PERF_REG_RISCV_PC</code>.</li>
 </ul>
-<h3 id="45-components-with-no-risc-v-implementation">
+
+<p>Detects <code class="language-plaintext highlighter-rouge">__riscv_compressed</code> (the C extension) only. No RVV, Zba, or Zbb intrinsics are used anywhere in the codebase (confirmed by repository-wide search for <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, <code class="language-plaintext highlighter-rouge">rvv</code>: zero results). There is no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> subdirectory and no <code class="language-plaintext highlighter-rouge">.S</code> assembly file for riscv64 - all architecture-specific logic lives in <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> blocks inside shared multi-arch files plus the one dedicated stack-frame file.</p>
+<h3 id="45-subsystems-with-no-riscv64-implementation">
   
   
-    <a href="#45-components-with-no-risc-v-implementation" class="anchor-heading" aria-labelledby="45-components-with-no-risc-v-implementation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Components With No RISC-V Implementation
+    <a href="#45-subsystems-with-no-riscv64-implementation" class="anchor-heading" aria-labelledby="45-subsystems-with-no-riscv64-implementation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Subsystems With No riscv64 Implementation
   
   
 </h3>
     
 
 <ul>
-  <li><strong><code class="language-plaintext highlighter-rouge">src/tsc.h</code></strong>: x86 uses <code class="language-plaintext highlighter-rouge">rdtsc</code>; aarch64 uses <code class="language-plaintext highlighter-rouge">cntvct_el0</code>. riscv64 falls to the <code class="language-plaintext highlighter-rouge">#else</code> branch: <code class="language-plaintext highlighter-rouge">TSC_SUPPORTED = false</code>, <code class="language-plaintext highlighter-rouge">rdtsc() = 0</code>. RISC-V has the <code class="language-plaintext highlighter-rouge">cycle</code> CSR (Zicntr extension) but it is not implemented. JFR timestamp correlation is absent on RISC-V.</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">src/safeAccess.cpp</code></strong>: x86-64, i386, and aarch64 have inline-asm specializations for safe memory loads with fault isolation. riscv64 falls to the generic C path. This provides weaker fault-isolation guarantees.</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">src/vmStructs.cpp</code></strong>: The interpreter frame BCP offset (<code class="language-plaintext highlighter-rouge">_interpreter_frame_bcp_offset</code>) and entry frame call wrapper offset are set only for x86, aarch64, and arm32. No riscv64 branch exists. This likely causes <code class="language-plaintext highlighter-rouge">_has_stack_structs</code> to evaluate false on RISC-V, disabling interpreter-aware scope stack walking [NEEDS VERIFICATION].</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">src/symbols_linux.cpp</code></strong>: Contains a RISC-V-specific workaround: <code class="language-plaintext highlighter-rouge">#define R_GLOB_DAT -1</code> with comment “RISC-V does not have GLOB_DAT relocation, use something neutral, like the impossible relocation number.” This is present and handled.</li>
-  <li><strong>RVV / Zba / Zbb</strong>: No SIMD or bitmanip extension intrinsics are used anywhere in the codebase. Not applicable.</li>
-</ul><hr />
+  <li><strong>DWARF unwinding is structurally unavailable.</strong> <code class="language-plaintext highlighter-rouge">src/dwarf.h</code>’s <code class="language-plaintext highlighter-rouge">#if/#elif</code> chain sets <code class="language-plaintext highlighter-rouge">DWARF_SUPPORTED = true</code> only for <code class="language-plaintext highlighter-rouge">__x86_64__</code>, <code class="language-plaintext highlighter-rouge">__i386__</code>, <code class="language-plaintext highlighter-rouge">__aarch64__</code>; riscv64 falls to <code class="language-plaintext highlighter-rouge">#else</code> -&gt; <code class="language-plaintext highlighter-rouge">DWARF_SUPPORTED = false</code>. <code class="language-plaintext highlighter-rouge">profiler.cpp</code> hard-errors (“DWARF unwinding is not supported on this platform”) if a user requests <code class="language-plaintext highlighter-rouge">--cstack dwarf</code> on riscv64.</li>
+  <li><strong>VMStructs fast-path stack walking (CSTACK_VM) is disabled.</strong> <code class="language-plaintext highlighter-rouge">vmStructs.cpp</code>’s arch chain (<code class="language-plaintext highlighter-rouge">__x86_64__</code>/<code class="language-plaintext highlighter-rouge">__aarch64__</code>/<code class="language-plaintext highlighter-rouge">__arm__</code>) never sets <code class="language-plaintext highlighter-rouge">_interpreter_frame_bcp_offset</code> for riscv64 (nor ppc64le/loongarch64), so it retains its default <code class="language-plaintext highlighter-rouge">0</code>. <code class="language-plaintext highlighter-rouge">hasStackStructs()</code> is gated on <code class="language-plaintext highlighter-rouge">_interpreter_frame_bcp_offset != 0</code> and is therefore unconditionally <code class="language-plaintext highlighter-rouge">false</code> on riscv64 - the “prefer VMStructs” upgrade path never fires for any JVM version on riscv64. Net effect: riscv64 is left solely with the generic frame-pointer walker, whose own arch hooks (<code class="language-plaintext highlighter-rouge">unwindPrologue</code>/<code class="language-plaintext highlighter-rouge">unwindEpilogue</code>/<code class="language-plaintext highlighter-rouge">adjustSP</code>) are themselves the stubs described in 4.3.</li>
+  <li><strong>TSC (hardware cycle counter) absent.</strong> <code class="language-plaintext highlighter-rouge">tsc.h</code> defines <code class="language-plaintext highlighter-rouge">rdtsc()</code>/<code class="language-plaintext highlighter-rouge">TSC_SUPPORTED</code> only for x86/aarch64; riscv64 falls to <code class="language-plaintext highlighter-rouge">#else</code> (<code class="language-plaintext highlighter-rouge">TSC_SUPPORTED = false</code>, <code class="language-plaintext highlighter-rouge">rdtsc() = 0</code>, falls back to <code class="language-plaintext highlighter-rouge">clock_gettime</code>). The RISC-V <code class="language-plaintext highlighter-rouge">cycle</code> CSR (Zicntr extension, near-universal on Linux-booted riscv64 cores) is not used.</li>
+  <li><strong>SafeAccess fault-tolerant reads are scalar C, not hand-tuned asm.</strong> x86_64/i386/aarch64 have inline-asm implementations in <code class="language-plaintext highlighter-rouge">safeAccess.cpp</code>; riscv64 uses the generic <code class="language-plaintext highlighter-rouge">#else</code> branch (<code class="language-plaintext highlighter-rouge">void* ret = *ptr;</code>, a plain dereference wrapped in a compiler barrier).</li>
+  <li><strong>Interrupted-syscall (poll/epoll) restart workaround absent.</strong> x64/aarch64’s <code class="language-plaintext highlighter-rouge">checkInterruptedSyscall()</code> contains JDK-8237858-specific logic to restart <code class="language-plaintext highlighter-rouge">poll</code>/<code class="language-plaintext highlighter-rouge">ppoll</code>/<code class="language-plaintext highlighter-rouge">epoll_wait</code> when interrupted by the profiler’s signal. riscv64 (like arm/ppc64) uses the bare <code class="language-plaintext highlighter-rouge">return retval() == -EINTR;</code> with no restart logic - a tier-1-only feature, not riscv-unique, but absent.</li>
+  <li><strong>ELF relocation handling is correctly done</strong>, not a gap: <code class="language-plaintext highlighter-rouge">symbols_linux.cpp</code> documents that RISC-V has no <code class="language-plaintext highlighter-rouge">GLOB_DAT</code> relocation type and deliberately sets <code class="language-plaintext highlighter-rouge">R_GLOB_DAT = -1</code> as a sentinel - a considered design choice, confirmed present and correct.</li>
+</ul>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -499,79 +524,24 @@
 </h2>
     
 
-<p>The project uses a hand-written <code class="language-plaintext highlighter-rouge">Makefile</code> exclusively. There is no CMakeLists.txt, no BUILDING.md, no cross-compilation documentation.</p>
-<h3 id="51-native-build-on-a-riscv64-host">
-  
-  
-    <a href="#51-native-build-on-a-riscv64-host" class="anchor-heading" aria-labelledby="51-native-build-on-a-riscv64-host"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Native Build (on a riscv64 host)
-  
-  
-</h3>
-    
+<p>The project uses a single hand-written <code class="language-plaintext highlighter-rouge">Makefile</code> (328 lines) exclusively. Confirmed absent: <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> (no CMake anywhere in the project), <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, <code class="language-plaintext highlighter-rouge">docs/building.md</code>, <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code>, any <code class="language-plaintext highlighter-rouge">cmake/</code> directory, and any riscv64 Dockerfile (<code class="language-plaintext highlighter-rouge">docker/</code> contains only <code class="language-plaintext highlighter-rouge">alpine.Dockerfile</code>, <code class="language-plaintext highlighter-rouge">debian.Dockerfile</code>, <code class="language-plaintext highlighter-rouge">amazonlinux2023.Dockerfile</code>, <code class="language-plaintext highlighter-rouge">alpaquita.Dockerfile</code>, <code class="language-plaintext highlighter-rouge">code-check.Dockerfile</code>).</p>
 
+<p><strong>Native build (on a riscv64 host):</strong></p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make JAVA_HOME=&lt;path-to-jdk&gt;
 </code></pre></div></div>
+<p>The Makefile auto-detects <code class="language-plaintext highlighter-rouge">uname -m == riscv64</code> and sets <code class="language-plaintext highlighter-rouge">ARCH_TAG=riscv64</code>, controlling <code class="language-plaintext highlighter-rouge">make release</code> artifact naming (<code class="language-plaintext highlighter-rouge">async-profiler-&lt;version&gt;-linux-riscv64.tar.gz</code> - never actually produced in CI, see Section 8).</p>
 
-<p>The Makefile auto-detects <code class="language-plaintext highlighter-rouge">uname -m == riscv64</code> and sets <code class="language-plaintext highlighter-rouge">ARCH_TAG=riscv64</code>. This controls release artifact naming (produces <code class="language-plaintext highlighter-rouge">async-profiler-&lt;version&gt;-linux-riscv64.tar.gz</code> via <code class="language-plaintext highlighter-rouge">make release</code>).</p>
-<h3 id="52-cross-compilation-from-x86-64-host">
-  
-  
-    <a href="#52-cross-compilation-from-x86-64-host" class="anchor-heading" aria-labelledby="52-cross-compilation-from-x86-64-host"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Cross-Compilation (from x86-64 host)
-  
-  
-</h3>
-    
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make CROSS_COMPILE=riscv64-linux-gnu- JAVA_HOME=&lt;path-to-riscv64-jdk&gt;
+<p><strong>Cross-compilation (from x86-64 host), inferred from Makefile logic, not documented anywhere in the repo:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CROSS_COMPILE=riscv64-linux-gnu- ARCH_TAG=riscv64 JAVA_HOME=&lt;riscv64-jdk-path&gt; make
 </code></pre></div></div>
-
-<p>The Makefile rewrites all toolchain variables when <code class="language-plaintext highlighter-rouge">CROSS_COMPILE</code> is set:</p>
-
-<div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">CC</span>  <span class="o">:=</span> <span class="p">$(</span>CROSS_COMPILE<span class="p">)</span>gcc
-<span class="nv">CXX</span> <span class="o">:=</span> <span class="p">$(</span>CROSS_COMPILE<span class="p">)</span>g++
-<span class="nv">AS</span>  <span class="o">:=</span> <span class="p">$(</span>CROSS_COMPILE<span class="p">)</span>as
-<span class="nv">LD</span>  <span class="o">:=</span> <span class="p">$(</span>CROSS_COMPILE<span class="p">)</span>ld
-<span class="nv">STRIP</span>   <span class="o">:=</span> <span class="p">$(</span>CROSS_COMPILE<span class="p">)</span>strip
-<span class="nv">OBJCOPY</span> <span class="o">:=</span> <span class="p">$(</span>CROSS_COMPILE<span class="p">)</span>objcopy
-</code></pre></div></div>
-
-<p>Cross-compilation support is present in the Makefile and was offered during the PR #644 review thread (by <code class="language-plaintext highlighter-rouge">luhenry</code>). No official cross-compilation documentation exists in the repository.</p>
-
-<p>A known issue: the Makefile wraps <code class="language-plaintext highlighter-rouge">-momit-leaf-frame-pointer</code> with <code class="language-plaintext highlighter-rouge">ifneq ($(ARCH_TAG),riscv64)</code> – this flag is excluded for RISC-V because the compiler does not support it. This was added in PR #644.</p>
-
-<p>If the cross-compiler does not support <code class="language-plaintext highlighter-rouge">-fwhole-program</code> combined with <code class="language-plaintext highlighter-rouge">-fPIC -shared</code>, use <code class="language-plaintext highlighter-rouge">MERGE=false</code>:</p>
-
+<p>The Makefile rewrites <code class="language-plaintext highlighter-rouge">CC</code>, <code class="language-plaintext highlighter-rouge">CXX</code>, <code class="language-plaintext highlighter-rouge">AS</code>, <code class="language-plaintext highlighter-rouge">LD</code>, <code class="language-plaintext highlighter-rouge">STRIP</code>, <code class="language-plaintext highlighter-rouge">OBJCOPY</code> to <code class="language-plaintext highlighter-rouge">$(CROSS_COMPILE)&lt;tool&gt;</code> when <code class="language-plaintext highlighter-rouge">CROSS_COMPILE</code> is set - this is the project’s only cross-compilation mechanism, generic across all architectures, offered informally in the PR #644 review thread by <code class="language-plaintext highlighter-rouge">luhenry</code> but never written up as official guidance. If the cross-toolchain does not support <code class="language-plaintext highlighter-rouge">-fwhole-program -fPIC -shared</code> together, <code class="language-plaintext highlighter-rouge">MERGE=false</code> is the documented workaround:</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make CROSS_COMPILE=riscv64-linux-gnu- MERGE=false JAVA_HOME=&lt;path&gt;
 </code></pre></div></div>
-<h3 id="53-toolchain-requirements">
-  
-  
-    <a href="#53-toolchain-requirements" class="anchor-heading" aria-labelledby="53-toolchain-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Toolchain Requirements
-  
-  
-</h3>
-    
+<p>A known riscv64-specific Makefile rule: <code class="language-plaintext highlighter-rouge">-momit-leaf-frame-pointer</code> is excluded for <code class="language-plaintext highlighter-rouge">ARCH_TAG=riscv64</code> because the flag is unsupported on that target (added in PR #644).</p>
 
-<p>From the README (applies to all architectures):</p>
+<p><strong>Toolchain requirements</strong> (project-wide, no riscv64-specific override documented): GCC 7.5.0+ or Clang 7.0.0+ (GCC 7 is the first version with a stable riscv64 Linux target; Clang 7 added the riscv64 backend), JDK 11+. Compile flags applied uniformly, including <code class="language-plaintext highlighter-rouge">-Wno-psabi</code> (suppresses ABI-compatibility warnings GCC may emit for riscv64 due to evolving psABI revisions) and <code class="language-plaintext highlighter-rouge">-fno-omit-frame-pointer</code> (required since the frame-pointer walker is the only unwinding strategy available on riscv64, per Section 4.5).</p>
 
-<ul>
-  <li>GCC 7.5.0+ or Clang 7.0.0+ (GCC 7 is the first version with stable riscv64 Linux target; Clang 7 added the riscv64 backend)</li>
-  <li>JDK 11+ (build-time, for Java helper classes and converter JAR)</li>
-  <li>For cross-compilation: <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> / <code class="language-plaintext highlighter-rouge">g++-riscv64-linux-gnu</code> packages</li>
-</ul>
-
-<p>Key compile flags applied on all architectures including riscv64:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-O3 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fvisibility=hidden -std=c++11
--U_FORTIFY_SOURCE -Wl,-z,defs -static-libstdc++ -static-libgcc
--fdata-sections -ffunction-sections -Wl,--gc-sections
--Wno-psabi
--ldl -lpthread -lrt
-</code></pre></div></div>
-
-<p><code class="language-plaintext highlighter-rouge">-Wno-psabi</code> suppresses ABI-compatibility warnings that GCC may emit for riscv64 due to evolving psABI revisions.</p>
-
-<p>No riscv64 Docker builder image exists in the repository. The official ECR builder images (<code class="language-plaintext highlighter-rouge">public.ecr.aws/async-profiler/asprof-builder-{arm:latest,x86:latest}</code>) cover only arm64 and x86-64. No musl-based riscv64 static binary is produced or published.</p><hr />
+<p><strong>CI toolchain reality:</strong> <code class="language-plaintext highlighter-rouge">.github/workflows/build.yml</code> builds non-macOS targets with a static musl-gcc toolchain (<code class="language-plaintext highlighter-rouge">make COMMIT_TAG=$HASH CC=/usr/local/musl/bin/musl-gcc release coverage -j</code>), but this reusable workflow is invoked only for <code class="language-plaintext highlighter-rouge">linux-arm64</code> and <code class="language-plaintext highlighter-rouge">linux-x64</code> (Section 7) - there is no musl image or build path for riscv64 anywhere in the repository. No QEMU usage exists anywhere in the repo for any architecture; verification at PR #644 merge time was done manually by <code class="language-plaintext highlighter-rouge">apangin</code> (QEMU) and <code class="language-plaintext highlighter-rouge">zifeihan</code> (LicheePi-4A hardware), entirely outside CI.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -601,7 +571,7 @@
       <td><code class="language-plaintext highlighter-rouge">unwindStub</code></td>
       <td>Full</td>
       <td>Full</td>
-      <td>Partial (3 cases only)</td>
+      <td>Partial (name-match only, no decode)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">unwindPrologue</code></td>
@@ -619,7 +589,7 @@
       <td><code class="language-plaintext highlighter-rouge">unwindAtomicStub</code></td>
       <td>N/A</td>
       <td>Full</td>
-      <td>N/A</td>
+      <td><strong>Missing (“not needed”)</strong></td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">adjustSP</code></td>
@@ -628,16 +598,22 @@
       <td><strong>Missing (no-op)</strong></td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">isSyscall</code></td>
+      <td>DWARF unwinding</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Partial (ECALL ambiguity)</td>
+      <td><strong>Missing (<code class="language-plaintext highlighter-rouge">DWARF_SUPPORTED=false</code>, hard error)</strong></td>
+    </tr>
+    <tr>
+      <td>VMStructs fast-path (CSTACK_VM)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td><strong>Missing (<code class="language-plaintext highlighter-rouge">hasStackStructs()</code> always false)</strong></td>
     </tr>
     <tr>
       <td>TSC / <code class="language-plaintext highlighter-rouge">rdtsc</code></td>
       <td>Full (asm)</td>
       <td>Full (asm)</td>
-      <td><strong>Missing (returns 0)</strong></td>
+      <td><strong>Missing (returns 0, falls back to clock_gettime)</strong></td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">safeAccess</code></td>
@@ -646,16 +622,34 @@
       <td>Scalar C fallback</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">vmStructs</code> BCP offset</td>
+      <td><code class="language-plaintext highlighter-rouge">spinPause()</code></td>
+      <td>Full</td>
+      <td>Full</td>
+      <td><strong>Missing (no-op)</strong></td>
+    </tr>
+    <tr>
+      <td>Interrupted-syscall restart (JDK-8237858)</td>
       <td>Full</td>
       <td>Full</td>
       <td><strong>Missing</strong></td>
     </tr>
     <tr>
+      <td><code class="language-plaintext highlighter-rouge">isSyscall()</code></td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Partial (ECALL ambiguity acknowledged in source)</td>
+    </tr>
+    <tr>
       <td>PLT constants</td>
       <td>Verified</td>
       <td>Verified</td>
-      <td><strong>Guessed</strong></td>
+      <td><strong>Guessed (“best guess from readelf”)</strong></td>
+    </tr>
+    <tr>
+      <td>ELF relocation handling</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full (deliberate <code class="language-plaintext highlighter-rouge">R_GLOB_DAT=-1</code> sentinel)</td>
     </tr>
     <tr>
       <td>CI coverage</td>
@@ -673,12 +667,12 @@
       <td>Official support tier</td>
       <td>Tier 1</td>
       <td>Tier 1</td>
-      <td>Tier 2</td>
+      <td>Tier 2 (“other available port”)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 port is at roughly the same completeness level as ppc64le and loongarch64. Both of those architectures also have stub <code class="language-plaintext highlighter-rouge">unwindPrologue</code> and <code class="language-plaintext highlighter-rouge">unwindEpilogue</code>. riscv64 additionally lacks binary releases and CI coverage, and has no verified active maintainer posting upstream patches.</p><hr />
+<p>With DWARF and VMStructs both structurally unavailable, riscv64 is left with the generic frame-pointer walker as its only unwinding strategy, and that walker’s own architecture hooks are themselves unimplemented stubs - the practical effect is dropped or corrupt frames at JIT-compiled method prologue/epilogue boundaries, and no fallback strategy to compensate. No NaN-boxing or floating-point-correctness defect has been reported against async-profiler specifically; a well-documented class of RISC-V NaN-boxing bugs exists elsewhere in the ecosystem (e.g. Mozilla SpiderMonkey/Wasm bug 1975867, a Valgrind/VEX bug 503098) affecting exactly the kind of register/signal-context reading that async-profiler’s stack walker performs - this is a latent risk class worth flagging, not a confirmed async-profiler defect [NEEDS VERIFICATION].</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -688,52 +682,53 @@
 </h2>
     
 
-<p>riscv64 is completely absent from the CI configuration. This is confirmed by reading all 7 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code>:</p>
+<p><strong>No riscv64 CI exists.</strong> All 7 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were read directly from <code class="language-plaintext highlighter-rouge">raw.githubusercontent.com</code> and case-insensitively searched for “riscv”: <code class="language-plaintext highlighter-rouge">build.yml</code>, <code class="language-plaintext highlighter-rouge">clang-tidy-review.yml</code>, <code class="language-plaintext highlighter-rouge">code-check.yml</code>, <code class="language-plaintext highlighter-rouge">compare-binary-sizes.yml</code>, <code class="language-plaintext highlighter-rouge">integ.yml</code>, <code class="language-plaintext highlighter-rouge">linters.yml</code>, <code class="language-plaintext highlighter-rouge">test-and-publish-nightly.yml</code>. Zero matches in any file. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">build.yml</code> – no “riscv” string</li>
-  <li><code class="language-plaintext highlighter-rouge">test-and-publish-nightly.yml</code> – no “riscv” string</li>
-  <li><code class="language-plaintext highlighter-rouge">integ.yml</code> – no “riscv” string</li>
-  <li><code class="language-plaintext highlighter-rouge">code-check.yml</code> – no “riscv” string</li>
-  <li><code class="language-plaintext highlighter-rouge">clang-tidy-review.yml</code> – no “riscv” string</li>
-  <li><code class="language-plaintext highlighter-rouge">compare-binary-sizes.yml</code> – no “riscv” string</li>
-  <li><code class="language-plaintext highlighter-rouge">linters.yml</code> – no “riscv” string</li>
-</ul>
-
-<p>No Jenkinsfile, <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository.</p>
-
-<p>The CI matrix (<code class="language-plaintext highlighter-rouge">test-and-publish-nightly.yml</code>) covers exactly three build targets:</p>
+<p><code class="language-plaintext highlighter-rouge">test-and-publish-nightly.yml</code> (name: <code class="language-plaintext highlighter-rouge">CI</code>) is the master workflow, triggered on <code class="language-plaintext highlighter-rouge">push</code>, <code class="language-plaintext highlighter-rouge">pull_request</code>, and <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>, with an explicit, closed platform set:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Target</th>
+      <th>Job</th>
       <th>Runner</th>
-      <th>Container</th>
+      <th>Platform</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>linux-arm64</td>
-      <td>ubuntu-24.04-arm</td>
-      <td>arm:latest</td>
-    </tr>
-    <tr>
-      <td>linux-x64</td>
+      <td><code class="language-plaintext highlighter-rouge">build-jars</code></td>
       <td>ubuntu-latest</td>
-      <td>x86:latest</td>
+      <td>(platform-independent)</td>
     </tr>
     <tr>
+      <td><code class="language-plaintext highlighter-rouge">build-linux-arm64</code></td>
+      <td>ubuntu-24.04-arm</td>
+      <td>linux-arm64</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">build-linux-x64</code></td>
+      <td>ubuntu-latest</td>
+      <td>linux-x64</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">build-macos</code></td>
+      <td>macos-15</td>
       <td>macos</td>
-      <td>macos-15 (arm64) + macos-15-intel (x64)</td>
-      <td>–</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">integ-linux-x64</code>, <code class="language-plaintext highlighter-rouge">integ-linux-arm64</code>, <code class="language-plaintext highlighter-rouge">integ-macos</code></td>
+      <td>(matrices, Java 8/11/17/21/25)</td>
+      <td>same three platforms</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">publish-only-on-push</code></td>
+      <td>-</td>
+      <td>nightly release upload</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No QEMU emulation for riscv64, no cross-compilation, no riscv64 runner. There is no official guidance or repository script for QEMU-based riscv64 testing. Verification at PR #644 merge time was done manually by <code class="language-plaintext highlighter-rouge">apangin</code> via QEMU and by <code class="language-plaintext highlighter-rouge">zifeihan</code> on LicheePI-4A hardware.</p>
-
-<p>Any riscv64 regression introduced in any commit since v3.0 is invisible to CI. No automated gate exists.</p><hr />
+<p>No riscv64 build job, integration job, runner, container, or QEMU step exists anywhere in the matrix. This was independently re-verified adversarially against the raw file contents, not inferred from search snippets. The RISE Project’s own “RISE RISC-V Runners” (free, native RISC-V CI on GitHub, announced <a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">2026-03-24</a>) exists as infrastructure but has not been adopted by async-profiler - no workflow file references it. Any riscv64 regression introduced since the v3.0 merge is invisible to CI; there is no automated gate of any kind.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -742,83 +737,22 @@
   
 </h2>
     
-<h3 id="81-upstream-binary-releases">
-  
-  
-    <a href="#81-upstream-binary-releases" class="anchor-heading" aria-labelledby="81-upstream-binary-releases"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.1 Upstream Binary Releases
-  
-  
-</h3>
-    
 
-<p>Releases v4.2 (2025-10-19) through v4.4 (2026-04-20) and nightly (2026-06-11) ship exactly 7 assets per release:</p>
+<p><strong>GitHub Releases - no riscv64 asset, stable or nightly.</strong> v4.5 (latest stable, 2026-07-20) ships 9 assets: <code class="language-plaintext highlighter-rouge">async-profiler-4.5-linux-arm64.tar.gz</code>, <code class="language-plaintext highlighter-rouge">async-profiler-4.5-linux-arm64-debug.tar.gz</code>, <code class="language-plaintext highlighter-rouge">async-profiler-4.5-linux-x64.tar.gz</code>, <code class="language-plaintext highlighter-rouge">async-profiler-4.5-linux-x64-debug.tar.gz</code>, <code class="language-plaintext highlighter-rouge">async-profiler-4.5-macos.zip</code>, <code class="language-plaintext highlighter-rouge">async-profiler.jar</code>, <code class="language-plaintext highlighter-rouge">jfr-converter.jar</code>, and source (zip/tar.gz). No filename contains “riscv” or “riscv64.” The nightly release (build <code class="language-plaintext highlighter-rouge">4.5-a07608e</code>) was separately checked and shows the same pattern (arm64/x64/macos only, no riscv asset), confirming this is not a stable-only gap.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">async-profiler-X.Y-linux-arm64.tar.gz</code></li>
-  <li><code class="language-plaintext highlighter-rouge">async-profiler-X.Y-linux-arm64-debug.tar.gz</code></li>
-  <li><code class="language-plaintext highlighter-rouge">async-profiler-X.Y-linux-x64.tar.gz</code></li>
-  <li><code class="language-plaintext highlighter-rouge">async-profiler-X.Y-linux-x64-debug.tar.gz</code></li>
-  <li><code class="language-plaintext highlighter-rouge">async-profiler-X.Y-macos.zip</code></li>
-  <li><code class="language-plaintext highlighter-rouge">async-profiler.jar</code></li>
-  <li><code class="language-plaintext highlighter-rouge">jfr-converter.jar</code></li>
-</ul>
+<p><strong>PyPI.</strong> <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/async-profiler/json</code> returns HTTP 404, <code class="language-plaintext highlighter-rouge">{"message": "Not Found"}</code> - there is no PyPI project named <code class="language-plaintext highlighter-rouge">async-profiler</code> in any form (not merely lacking a riscv64 wheel). Confirmed independently via WebFetch and direct curl.</p>
 
-<p>No <code class="language-plaintext highlighter-rouge">linux-riscv64</code> asset exists in any release. Users must build from source. The <code class="language-plaintext highlighter-rouge">pom.xml</code> produces classified JARs only for linux-x64, linux-arm64, and macos.</p>
-<h3 id="82-linux-distribution-packages">
-  
-  
-    <a href="#82-linux-distribution-packages" class="anchor-heading" aria-labelledby="82-linux-distribution-packages"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.2 Linux Distribution Packages
-  
-  
-</h3>
-    
+<p><strong>RISE GitLab wheel builder.</strong> <code class="language-plaintext highlighter-rouge">https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/async-profiler/</code> redirects (HTTP 302) to <code class="language-plaintext highlighter-rouge">pypi.org/simple/async-profiler/</code>, which itself 404s - no package in either location.</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Distribution</th>
-      <th>Package status</th>
-      <th>riscv64 binary</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Debian</td>
-      <td>Not in package archive (tracker.debian.org returns 404)</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>Ubuntu</td>
-      <td>Not in any Ubuntu suite (packages.ubuntu.com returns no results)</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>Arch Linux (official)</td>
-      <td>Not in official repos (0 results via packages API)</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>Arch Linux (AUR)</td>
-      <td><code class="language-plaintext highlighter-rouge">async-profiler 4.4-1</code>, <code class="language-plaintext highlighter-rouge">async-profiler-bin 4.4-2</code>, <code class="language-plaintext highlighter-rouge">async-profiler-git</code> exist as build scripts</td>
-      <td><code class="language-plaintext highlighter-rouge">async-profiler-bin</code> explicitly downloads upstream x64/arm64 tarballs; would fail on riscv64</td>
-    </tr>
-    <tr>
-      <td>PyPI</td>
-      <td>HTTP 404 – package does not exist</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>RISE wheel builder</td>
-      <td>Not present in the RISE riscv64 wheel builder package list</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>Arch Linux RISC-V (archriscv.felixc.at)</td>
-      <td>Not present</td>
-      <td>None</td>
-    </tr>
-  </tbody>
-</table></div><hr />
+<p><strong>Ubuntu 26.04 (resolute).</strong> Direct search of <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> for <code class="language-plaintext highlighter-rouge">async-profiver</code>, <code class="language-plaintext highlighter-rouge">python3-async-profiler</code>, or <code class="language-plaintext highlighter-rouge">libasync-profiler</code> returns “Sorry, your search gave no results” - no package exists for any architecture, let alone riscv64.</p>
+
+<p><strong>Debian and official Arch Linux.</strong> Carried forward from prior research rather than freshly re-verified in this pass: Debian’s package tracker returns no entry, and the official Arch repositories return zero results via the packages API [NEEDS VERIFICATION - not independently re-run this cycle].</p>
+
+<p><strong>AUR (unofficial, Arch Linux).</strong> <code class="language-plaintext highlighter-rouge">async-profiler 4.4-1</code>, <code class="language-plaintext highlighter-rouge">async-profiler-bin 4.4-2</code>, and <code class="language-plaintext highlighter-rouge">async-profiler-git</code> exist as community build/wrapper scripts; <code class="language-plaintext highlighter-rouge">async-profiler-bin</code> explicitly downloads the upstream x64/arm64 tarballs and would fail on riscv64 since no such tarball exists [NEEDS VERIFICATION - single source, not re-checked this cycle].</p>
+
+<p><strong>Arch Linux RISC-V (archriscv.felixc.at).</strong> Contradictory evidence exists here. An initial pass characterized this channel as simply “not present.” A later, more careful pass found the project’s mirror has no browsable package-search UI, and direct directory probes (<code class="language-plaintext highlighter-rouge">~repo/extra/</code>, <code class="language-plaintext highlighter-rouge">repo/extra/os/riscv64/</code>, <code class="language-plaintext highlighter-rouge">repo/core/os/riscv64/</code> on <code class="language-plaintext highlighter-rouge">riscv.mirror.pkgbuild.com</code>) all returned 404 - this channel should be treated as <strong>unverified-by-listing</strong>, not a confirmed absence, since the expected browsing mechanism could not be reached. Given async-profiler is not a typical distro-packaged tool on any Arch architecture (normally consumed as an upstream tarball/jar), no positive evidence of an riscv64 package exists either way.</p>
+
+<p><strong>Bottom line:</strong> across every channel that could be directly queried (GitHub releases stable and nightly, PyPI, RISE wheel index, Ubuntu 26.04), there is zero evidence of any riscv64 binary or package for async-profiler. riscv64 support is source-build-only.</p>
 <h2 id="9-dependencies">
   
   
@@ -833,71 +767,65 @@
     <tr>
       <th>Dependency</th>
       <th>Role</th>
+      <th>Criticality</th>
       <th>riscv64 Build</th>
-      <th>riscv64 Runtime</th>
-      <th>Blocking Issues</th>
+      <th>riscv64 Test</th>
+      <th>riscv64 Release</th>
+      <th>Blocking issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Linux <code class="language-plaintext highlighter-rouge">perf_events</code> (<code class="language-plaintext highlighter-rouge">perf_event_open(2)</code>)</td>
-      <td>CPU sampling engine</td>
+      <td>linux-perf (<code class="language-plaintext highlighter-rouge">perf_events</code>, <code class="language-plaintext highlighter-rouge">perf_event_open(2)</code>)</td>
+      <td>Runtime dependency - CPU sampling engine</td>
+      <td>Critical</td>
       <td>Builds (kernel 5.4+)</td>
-      <td>Software counters functional; hardware PMU via SBI PMU driver; callchain frame-pointer path fixed in kernel 6.12 (2024-09-15)</td>
-      <td>PMU throttle IRQ-storm bug (ByteDance patch, no merge date); fixed counter stop bug (Alibaba patch, rejected, needs rework)</td>
+      <td>Software counters functional; hardware PMU via SBI PMU driver; frame-pointer callchain path fixed in kernel 6.12</td>
+      <td>Ships in Debian sid, Ubuntu, Arch riscv64</td>
+      <td>PMU throttle IRQ-storm bug (ByteDance patch, not upstream-merged); fixed-counter-stop bug (Alibaba patch, rejected by maintainer, needs rework). See <a href="../linux-perf">linux-perf status report</a>.</td>
     </tr>
     <tr>
-      <td>OpenJDK HotSpot (<code class="language-plaintext highlighter-rouge">AsyncGetCallTrace</code>, JVMTI, TLAB)</td>
-      <td>Java callstack unwinding; allocation profiling</td>
+      <td>OpenJDK (HotSpot: <code class="language-plaintext highlighter-rouge">AsyncGetCallTrace</code>, JVMTI, TLAB)</td>
+      <td>Runtime dependency - JIT backend, Java callstack unwinding, allocation profiling</td>
+      <td>Critical</td>
       <td>Builds; all JVM variants present</td>
-      <td>C1/C2/interpreter validated on HiFive Unmatched (JDK 20) and LicheePI-4A (PR #644)</td>
-      <td><code class="language-plaintext highlighter-rouge">unwindPrologue</code>/<code class="language-plaintext highlighter-rouge">unwindEpilogue</code> stubs produce incomplete frames at JIT boundary; no official riscv64 OpenJDK binary from upstream</td>
+      <td>C1/C2/interpreter validated ad hoc on HiFive Unmatched and LicheePi-4A hardware (PR #644); no native riscv64 CI in <code class="language-plaintext highlighter-rouge">openjdk/jdk</code> itself - only undocumented Adoptium/RISE testing on a Scaleway EM-RV1 instance</td>
+      <td>No official upstream riscv64 binary</td>
+      <td>async-profiler’s own <code class="language-plaintext highlighter-rouge">unwindPrologue</code>/<code class="language-plaintext highlighter-rouge">unwindEpilogue</code> stubs (Section 4.3) produce incomplete frames at JIT boundaries; the OpenJDK CI gap means regressions there also go undetected. See <a href="../openjdk">OpenJDK status report</a>.</td>
     </tr>
     <tr>
-      <td>GraalVM Native Image (<code class="language-plaintext highlighter-rouge">native-image</code>)</td>
-      <td><code class="language-plaintext highlighter-rouge">jfr-converter</code> binary only</td>
-      <td>Experimental/failing: LLVM backend calling convention not implemented on riscv64 (issue #13516); pthread crash on shutdown (#13386)</td>
-      <td>Not functional on riscv64</td>
-      <td>Fix PR #13826 open; <code class="language-plaintext highlighter-rouge">pthread_key_t</code> type mapping wrong (#13391 open); JDWP build failure (#12106)</td>
+      <td>GraalVM (Native Image <code class="language-plaintext highlighter-rouge">native-image</code>, <code class="language-plaintext highlighter-rouge">jfr-converter</code> helper only)</td>
+      <td>Runtime dependency</td>
+      <td>Optional</td>
+      <td>Experimental/failing: LLVM backend calling convention not implemented for riscv64</td>
+      <td>Not functional</td>
+      <td>No native-image riscv64 binary for <code class="language-plaintext highlighter-rouge">jfr-converter</code></td>
+      <td><a href="https://github.com/oracle/graal/issues/13516">oracle/graal#13516</a> (GraalCallingConvention missing in RISCVISelLowering.cpp, blocks all IR compilation), #13386 (pthread crash on shutdown), #13391 (pthread_key_t mapping); fix PR #13826 open. See <a href="../graalvm">GraalVM status report</a>.</td>
     </tr>
     <tr>
       <td>glibc (<code class="language-plaintext highlighter-rouge">libdl</code>, <code class="language-plaintext highlighter-rouge">libpthread</code>, <code class="language-plaintext highlighter-rouge">librt</code>)</td>
-      <td>Dynamic loading, thread support, POSIX timers</td>
+      <td>Runtime dependency - dynamic loading, thread support, POSIX timers</td>
+      <td>Critical</td>
       <td>Builds</td>
       <td>Functional; riscv64 glibc ships in Debian sid, Ubuntu, Arch riscv64</td>
-      <td>Known test suite failures in glibc riscv64 test suite but no production-blocking issues for async-profiler symbol use</td>
+      <td>Released, packaged</td>
+      <td>Known glibc riscv64 test-suite failures exist but are not production-blocking for async-profiler’s symbol use; both sourceware.org riscv64 Buildbot builders reported offline/failing, so regressions are not CI-gated upstream. See <a href="../glibc">glibc status report</a>.</td>
     </tr>
     <tr>
-      <td>GCC / Clang (build-time)</td>
-      <td>Compiles <code class="language-plaintext highlighter-rouge">libasyncProfiler.so</code> and <code class="language-plaintext highlighter-rouge">jattach</code></td>
-      <td>Builds; riscv64 backend stable in both</td>
+      <td>GCC</td>
+      <td>Build dependency - compiles <code class="language-plaintext highlighter-rouge">libasyncProfiler.so</code> and the bundled <code class="language-plaintext highlighter-rouge">jattach</code> helper</td>
+      <td>Critical</td>
+      <td>Builds; riscv64 backend stable since GCC 7.5.0</td>
+      <td>N/A (build-time only)</td>
       <td>N/A</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">jattach</code> (bundled in <code class="language-plaintext highlighter-rouge">src/jattach/</code>)</td>
-      <td>Dynamic attach to running JVMs</td>
-      <td>Builds; pure C, architecture-neutral</td>
-      <td>Functional; uses <code class="language-plaintext highlighter-rouge">/proc</code> ptrace and Unix sockets</td>
-      <td>None riscv64-specific</td>
+      <td>None riscv64-specific; Clang 7.0.0+ is an accepted alternative per the README.</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
+</table></div>
 
-<ul>
-  <li><strong>RISE project involvement:</strong> None. The RISE funded project list (RP001-RP016) contains no async-profiler entry. All 27 RISE blog posts (May 2024 - Jun 2026) contain zero mentions of async-profiler. The RISE riscv64 wheel builder does not include async-profiler.</li>
-  <li><strong>RISE member activity:</strong> <code class="language-plaintext highlighter-rouge">zifeihan</code> (Alibaba), a RISE General Member, contributed to PR #644 and committed to maintaining the riscv64 port in November 2023. No follow-up commits from <code class="language-plaintext highlighter-rouge">zifeihan</code> or any Alibaba contributor appear in v4.x.</li>
-  <li><strong>Published benchmarks:</strong> None. The only performance-adjacent statement on record is a comment from <code class="language-plaintext highlighter-rouge">zifeihan</code> in PR #644 that specjvm2008 results on riscv64 compared “favorably against linux-aarch64” – no numbers, no methodology, no hardware specification were published.</li>
-  <li><strong>Testing history:</strong> PR #644 validated smoke tests (smoke-test.sh, thread-smoke-test.sh, alloc-smoke-test.sh, load-library-test.sh, fdtransfer-smoke-test.sh) passing on LicheePI-4A hardware. Profiling modes <code class="language-plaintext highlighter-rouge">-Xint</code>, C1, and C2 were exercised. No structured performance study exists in any public source.</li>
-</ul><hr />
+<p><strong>GraalVM’s own riscv64 dependency chain</strong> (indirect, recursed one level): GraalVM Native Image’s riscv64 path is itself blocked by an LLVM 20.1.4 fork carrying the same calling-convention gap as #13516, a libffi 3.4.8 float-marshaling bug fixed only in 3.6.0, and a musl+GCC toolchain issue (<a href="https://github.com/oracle/graal">oracle/graal#8684</a>, no assignee). None of these are fixable from within async-profiler; they gate the <code class="language-plaintext highlighter-rouge">jfr-converter</code> helper JAR only, not the core profiling agent.</p>
+
+<p>The bundled <code class="language-plaintext highlighter-rouge">jattach</code> helper (<code class="language-plaintext highlighter-rouge">src/jattach/</code>, vendored source rather than an external dependency) is pure C, architecture-neutral, and builds and functions on riscv64 with no known issues; it uses <code class="language-plaintext highlighter-rouge">/proc</code> and Unix sockets and has no riscv-specific code path.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -915,53 +843,45 @@
 </h3>
     
 
-<p><strong>None.</strong> Zero open issues mentioning riscv, riscv64, or RISC-V exist in the async-profiler issue tracker or Discussions. This reflects absence of testing and usage at scale rather than absence of bugs.</p>
-<h3 id="112-documented-implementation-defects-from-source-code">
+<p><strong>None.</strong> Zero open issues mention riscv, riscv64, or RISC-V in the async-profiler tracker. This was independently confirmed via three separate methods: the GitHub search API (<code class="language-plaintext highlighter-rouge">total_count: 0</code> across repeated attempts, including after rate-limit retries), a direct GitHub web issue-search UI fetch (“Your search did not match any issues”), and a <code class="language-plaintext highlighter-rouge">riscv nan floating</code> query (0 matches - no NaN/floating-point correctness issue exists in this tracker for RISC-V). This reflects absence of testing and production usage at scale rather than confirmed absence of defects.</p>
+<h3 id="112-documented-implementation-defects-from-source-all-confirmed-by-direct-code-reading">
   
   
-    <a href="#112-documented-implementation-defects-from-source-code" class="anchor-heading" aria-labelledby="112-documented-implementation-defects-from-source-code"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Documented Implementation Defects (from source code)
+    <a href="#112-documented-implementation-defects-from-source-all-confirmed-by-direct-code-reading" class="anchor-heading" aria-labelledby="112-documented-implementation-defects-from-source-all-confirmed-by-direct-code-reading"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Documented Implementation Defects (from source, all confirmed by direct code reading)
   
   
 </h3>
     
 
 <ol>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">unwindPrologue</code> / <code class="language-plaintext highlighter-rouge">unwindEpilogue</code> / <code class="language-plaintext highlighter-rouge">adjustSP</code> are stubs</strong> (<code class="language-plaintext highlighter-rouge">stackFrame_riscv64.cpp</code>): Frames at JIT-compiled method prologue and epilogue boundaries are not recovered. This produces dropped or corrupt frames in Java callstack profiles for compiled code.</p>
-  </li>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">unwindCompiled()</code> returns false</strong> (present in the follow-up commit <code class="language-plaintext highlighter-rouge">0d0f0f0</code>): compiled Java stack unwinding is not implemented. [NEEDS VERIFICATION – this maps to the renamed interface replacing the older <code class="language-plaintext highlighter-rouge">popMethod()</code> API.]</p>
-  </li>
-  <li>
-    <p><strong>PLT constants are guesses</strong> (<code class="language-plaintext highlighter-rouge">arch.h</code>): <code class="language-plaintext highlighter-rouge">PLT_HEADER_SIZE = 24</code> and <code class="language-plaintext highlighter-rouge">PLT_ENTRY_SIZE = 24</code> are not derived from the RISC-V psABI specification. Incorrect values produce wrong attribution for calls routed through the PLT.</p>
-  </li>
-  <li>
-    <p><strong>TSC absent</strong> (<code class="language-plaintext highlighter-rouge">tsc.h</code>): <code class="language-plaintext highlighter-rouge">TSC_SUPPORTED = false</code>, <code class="language-plaintext highlighter-rouge">rdtsc() = 0</code> on riscv64. No JFR timestamp correlation. The <code class="language-plaintext highlighter-rouge">cycle</code> CSR (Zicntr extension) is available on most riscv64 targets but is not implemented.</p>
-  </li>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">vmStructs</code> BCP offset not set</strong>: Interpreter frame BCP offset is not defined for riscv64, likely disabling interpreter-aware scope stack walking.</p>
-  </li>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">isSyscall()</code> ECALL ambiguity</strong>: RISC-V uses the same <code class="language-plaintext highlighter-rouge">ECALL</code> opcode (<code class="language-plaintext highlighter-rouge">0x00000073</code>) for both syscalls and debugger traps. The source comment explicitly acknowledges “this might technically mismatch.” No fix exists.</p>
-  </li>
-  <li>
-    <p><strong><code class="language-plaintext highlighter-rouge">R_GLOB_DAT</code> workaround</strong>: RISC-V lacks the GLOB_DAT relocation type. A sentinel value of <code class="language-plaintext highlighter-rouge">-1</code> is used. This is present and handled but represents a divergence from the linker model used on other platforms.</p>
-  </li>
+  <li><code class="language-plaintext highlighter-rouge">unwindPrologue()</code>, <code class="language-plaintext highlighter-rouge">unwindEpilogue()</code>, <code class="language-plaintext highlighter-rouge">adjustSP()</code> are literal “Not yet implemented” stubs - frames at JIT-compiled method prologue/epilogue boundaries are not recovered (Section 4.3).</li>
+  <li>DWARF unwinding is structurally absent (<code class="language-plaintext highlighter-rouge">DWARF_SUPPORTED=false</code>); requesting <code class="language-plaintext highlighter-rouge">--cstack dwarf</code> on riscv64 produces a hard runtime error (Section 4.5).</li>
+  <li>VMStructs fast-path stack walking (<code class="language-plaintext highlighter-rouge">CSTACK_VM</code>) is confirmed disabled - <code class="language-plaintext highlighter-rouge">_interpreter_frame_bcp_offset</code> is never set for riscv64, so <code class="language-plaintext highlighter-rouge">hasStackStructs()</code> is unconditionally false (Section 4.5; this closes out what was an unverified hypothesis in earlier research).</li>
+  <li>PLT constants (<code class="language-plaintext highlighter-rouge">PLT_HEADER_SIZE</code>, <code class="language-plaintext highlighter-rouge">PLT_ENTRY_SIZE</code>) are acknowledged guesses, not derived from the RISC-V psABI - incorrect values misattribute PLT-routed calls.</li>
+  <li>TSC is absent (<code class="language-plaintext highlighter-rouge">TSC_SUPPORTED=false</code>, <code class="language-plaintext highlighter-rouge">rdtsc()=0</code>) - no JFR timestamp correlation on riscv64, despite the <code class="language-plaintext highlighter-rouge">cycle</code> CSR being available on essentially all Linux-booted riscv64 cores.</li>
+  <li><code class="language-plaintext highlighter-rouge">isSyscall()</code> has an acknowledged ECALL ambiguity (RISC-V uses the same opcode for syscalls and debugger traps); no fix exists.</li>
+  <li><code class="language-plaintext highlighter-rouge">R_GLOB_DAT = -1</code> sentinel workaround for RISC-V’s lack of a GLOB_DAT relocation is present and deliberate, not a defect.</li>
 </ol>
-<h3 id="113-general-open-issues-that-may-affect-risc-v">
+<h3 id="113-general-open-issues-potentially-relevant-to-riscv64">
   
   
-    <a href="#113-general-open-issues-that-may-affect-risc-v" class="anchor-heading" aria-labelledby="113-general-open-issues-that-may-affect-risc-v"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 General Open Issues That May Affect RISC-V
+    <a href="#113-general-open-issues-potentially-relevant-to-riscv64" class="anchor-heading" aria-labelledby="113-general-open-issues-potentially-relevant-to-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 General Open Issues Potentially Relevant to riscv64
   
   
 </h3>
     
 
-<ul>
-  <li><strong><a href="https://github.com/async-profiler/async-profiler/issues/1661">#1661</a></strong> “VM structs stack walker fails to walk after an interpreter method is retransformed/redefined” (Jan 2026) – stack walking correctness bug, not arch-specific but relevant given riscv64’s incomplete vmStructs implementation.</li>
-  <li><strong><a href="https://github.com/async-profiler/async-profiler/issues/1676">#1676</a></strong> “Unify <code class="language-plaintext highlighter-rouge">dwarf</code> and <code class="language-plaintext highlighter-rouge">vm</code> stack walking modes” (Feb 2026) – DWARF vs VM stack walker consolidation, particularly relevant for architectures lacking mature frame pointer unwinding.</li>
-  <li><strong><a href="https://github.com/async-profiler/async-profiler/issues/1756">#1756</a></strong> “Runtime attach fails on JVMs with many native libraries” (Jun 2026) – not arch-specific.</li>
-</ul><hr />
+<p>Carried from prior research, not independently re-queried this cycle [NEEDS VERIFICATION]: <a href="https://github.com/async-profiler/async-profiler/issues/1661">#1661</a> “VM structs stack walker fails to walk after an interpreter method is retransformed/redefined” (stack-walking correctness, relevant given riscv64’s disabled VMStructs path); <a href="https://github.com/async-profiler/async-profiler/issues/1676">#1676</a> “Unify dwarf and vm stack walking modes” (particularly relevant to architectures, like riscv64, lacking both DWARF and VMStructs); <a href="https://github.com/async-profiler/async-profiler/issues/1756">#1756</a> “Runtime attach fails on JVMs with many native libraries” (not architecture-specific).</p>
+<h3 id="114-performance-data">
+  
+  
+    <a href="#114-performance-data" class="anchor-heading" aria-labelledby="114-performance-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.4 Performance Data
+  
+  
+</h3>
+    
+
+<p>No benchmark comparing async-profiler overhead on riscv64 against arm64 or x86-64 exists in any public source - not in project docs, blog posts, or academic papers. The only performance-adjacent statement on record is <code class="language-plaintext highlighter-rouge">zifeihan</code>’s comment in PR #644 that SpecJVM2008 sampling results on riscv64 “compared favorably” against an aarch64 baseline - no numbers, methodology, or hardware specification were published. Data not available: async-profiler riscv64 vs. arm64/x64 sampling overhead, signal-delivery latency, or stack-walk time.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -971,127 +891,102 @@
 </h2>
     
 
-<p><strong>Objection 1: Single-maintainer bottleneck.</strong> All merges go through <code class="language-plaintext highlighter-rouge">apangin</code>. He imposed a contribution freeze in 2022 that held PR #644 for 14 months. There is no deputy maintainer, no written contribution policy, and no SLA for review turnaround. Any RISC-V patch submission is subject to the same unpredictable delay.</p>
+<p><strong>Single-maintainer bottleneck.</strong> All merges go through <code class="language-plaintext highlighter-rouge">apangin</code>. He raised a sustainability objection in September 2022 and, more concretely, stated in November 2022 that “the project does not accept external code contributions at this moment” - a policy stance, not a technical one - which held PR #644 for roughly 14 months. There is no deputy maintainer, no written contribution SLA, and no committed review turnaround; any future riscv64 patch is subject to the same unpredictable delay.</p>
 
-<p><strong>Objection 2: No committed riscv64 maintainer.</strong> <code class="language-plaintext highlighter-rouge">zifeihan</code> committed to maintaining the port in November 2023. No riscv64-related commits appear from any contributor through v4.4 (April 2026). The port has effectively been unattended for over two years since its introduction.</p>
+<p><strong>No active riscv64 maintainer since the 2023 merge.</strong> <code class="language-plaintext highlighter-rouge">zifeihan</code> (Alibaba) committed to ongoing maintenance in November 2023. No riscv64-specific commit from <code class="language-plaintext highlighter-rouge">zifeihan</code> or any other contributor has landed through v4.5 (2026-07-20). PR #1185 (2025-03-21), despite incidentally touching <code class="language-plaintext highlighter-rouge">stackFrame_riscv64.cpp</code> in a build log, is an unrelated general build fix, not riscv64 maintenance work.</p>
 
-<p><strong>Objection 3: GraalVM Native Image blocks <code class="language-plaintext highlighter-rouge">jfr-converter</code> on riscv64.</strong> The LLVM backend calling convention for riscv64 is not implemented (GraalVM issue #13516). Until this is resolved, the JFR recording post-processing tool (<code class="language-plaintext highlighter-rouge">jfr-converter</code>) cannot be compiled on riscv64. This is a GraalVM upstream dependency, not fixable within async-profiler.</p>
+<p><strong>GraalVM Native Image blocks <code class="language-plaintext highlighter-rouge">jfr-converter</code> on riscv64.</strong> The LLVM backend calling convention for riscv64 is unimplemented (<a href="https://github.com/oracle/graal/issues/13516">oracle/graal#13516</a>), compounded by a pthread shutdown crash (#13386) and a <code class="language-plaintext highlighter-rouge">pthread_key_t</code> mapping issue (#13391); a fix (PR #13826) is open but unmerged. This is an upstream GraalVM dependency, not fixable from within async-profiler, and is transitively deepened by GraalVM’s own riscv64 LLVM-fork and libffi issues (Section 9).</p>
 
-<p><strong>Objection 4: Linux PMU reliability.</strong> The SBI PMU driver on riscv64 has an IRQ-storm bug under high sampling rates (ByteDance patch, no upstream merge date) and a counter-stop bug (Alibaba patch, rejected by maintainer, pending rework). These affect the core CPU sampling engine at high frequencies.</p>
+<p><strong>Linux PMU reliability on riscv64.</strong> The SBI PMU driver has an IRQ-storm bug under high sampling rates (ByteDance patch exists, no upstream merge date found) and a counter-stop bug (Alibaba patch, rejected by the maintainer, pending rework). These affect the core CPU-sampling engine at high sampling frequencies, independent of async-profiler’s own code.</p>
 
-<p><strong>Objection 5: No binary distribution path.</strong> There is no Debian package, no Ubuntu package, no PyPI package, and no official upstream binary release for riscv64. End users on RISC-V hardware must build from source. This creates adoption friction that is independent of async-profiler itself and would require either upstream policy change or third-party packaging investment.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>No binary distribution path.</strong> No Debian package, no Ubuntu package, no PyPI package, and no official upstream binary release exists for riscv64 (Section 8). Users on RISC-V hardware must build from source with no official cross-compilation documentation. This adoption friction is largely independent of async-profiler’s own port quality and would require either an upstream CI/release policy change from <code class="language-plaintext highlighter-rouge">apangin</code> or third-party packaging investment.</p>
+
+<p><strong>No RISE Project involvement.</strong> Confirmed by checking the RISE blog (all 35 posts via sitemap, 2024-05-15 through 2026-09-28 - no title or checked body mentions async-profiler), the RISE Python wheel builder’s listed package set (70 packages, no profiler tooling), the RISE GitHub org (<code class="language-plaintext highlighter-rouge">riseproject-dev</code>, 26 repos, no async-profiler match), the RISE members list, and targeted web searches - none surface a connection. async-profiler is therefore not benefiting from any RISE-funded engineering, CI runner access, or ecosystem-integration work currently.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>These items unblock correct profiling on riscv64. All require upstream acceptance by <code class="language-plaintext highlighter-rouge">apangin</code>.</p>
-
-<p><strong>Implement <code class="language-plaintext highlighter-rouge">unwindPrologue</code>, <code class="language-plaintext highlighter-rouge">unwindEpilogue</code>, <code class="language-plaintext highlighter-rouge">adjustSP</code> in <code class="language-plaintext highlighter-rouge">stackFrame_riscv64.cpp</code></strong></p>
-
-<p>The highest-priority gap. These three functions determine whether frames at JIT-compiled method boundaries are correctly recovered. The aarch64 implementation in <code class="language-plaintext highlighter-rouge">stackFrame_aarch64.cpp</code> (354 lines) provides the reference. riscv64 has a simpler calling convention (no Thumb-equivalent variable-width prologue complexity), but the implementation requires detailed knowledge of the riscv64 frame layout as generated by HotSpot C1 and C2.</p>
-
-<p>Effort: 6-10 person-weeks. Requires a developer fluent in both the RISC-V ABI and HotSpot JIT code generation, plus access to riscv64 hardware or a reliable QEMU environment for iterative testing. Correctness cannot be validated without running full JVM workloads (e.g., SPECjvm2008, Renaissance benchmark suite) and comparing flamegraph output against known-good profiles.</p>
-
-<p><strong>Implement TSC via <code class="language-plaintext highlighter-rouge">cycle</code> CSR in <code class="language-plaintext highlighter-rouge">src/tsc.h</code></strong></p>
-
-<p>Adds JFR timestamp correlation. The <code class="language-plaintext highlighter-rouge">cycle</code> CSR is available on all Linux-booted riscv64 cores that expose Zicntr (virtually universal). The aarch64 implementation is a direct analogue (cntvct_el0 read via inline asm). Implementation is straightforward.</p>
-
-<p>Effort: 1-2 person-weeks.</p>
-
-<p><strong>Implement <code class="language-plaintext highlighter-rouge">vmStructs</code> interpreter frame BCP offset for riscv64</strong></p>
-
-<p>Required for interpreter-aware scope stack walking. Requires determining the correct frame offset value from the HotSpot riscv64 interpreter frame layout. This is a constant lookup against the OpenJDK source tree.</p>
-
-<p>Effort: 1-2 person-weeks.</p>
-
-<p><strong>Verify and correct PLT constants in <code class="language-plaintext highlighter-rouge">arch.h</code></strong></p>
-
-<p><code class="language-plaintext highlighter-rouge">PLT_HEADER_SIZE</code> and <code class="language-plaintext highlighter-rouge">PLT_ENTRY_SIZE</code> are currently guesses (24 bytes each). These must be confirmed against the RISC-V psABI and verified by inspecting actual PLT entries in riscv64 ELF binaries compiled by GCC and LLVM with current linker defaults (lld and GNU ld may produce different PLT layouts).</p>
-
-<p>Effort: 0.5 person-weeks.</p>
-
-<p><strong>Implement <code class="language-plaintext highlighter-rouge">safeAccess</code> inline asm for riscv64</strong></p>
-
-<p>Low priority – the C fallback is functional. An asm implementation with explicit fault handler registration would improve reliability for profiling memory-mapped regions that may be partially unmapped.</p>
-
-<p>Effort: 1-2 person-weeks.</p>
-<h3 id="132-performance-optimization">
-  
-  
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p><strong>Data not available:</strong> No benchmark comparing async-profiler overhead on riscv64 vs arm64 or x86-64 has been published. No profiling latency measurements (signal delivery, stack walk time, perf event overhead) exist for riscv64 in any public source. Performance optimization work cannot be scoped without a baseline measurement campaign on target hardware.</p>
-
-<p>The informal specjvm2008 comparison from PR #644 (“looking good” against aarch64) provides no actionable data.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p><strong>Add riscv64 to CI matrix</strong></p>
-
-<p>The CI (<code class="language-plaintext highlighter-rouge">test-and-publish-nightly.yml</code>) runs on GitHub-hosted runners. GitHub Actions does not offer a hosted riscv64 runner as of the research date. Options are:</p>
 
 <ul>
-  <li>Self-hosted riscv64 runner (e.g., RISC-V development board or server with GitHub Actions runner agent)</li>
-  <li>QEMU user-mode emulation via <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code> on an arm64 or x86-64 runner (slow; adequate for build and unit tests, not for perf event testing)</li>
-  <li>Cross-compilation CI job producing binaries, with a separate hardware-based test stage</li>
+  <li><strong>Color:</strong> orange (no-upstream-ci-no-release - a plain Step-1 orange row; not a distro-floor case, since no distribution packages async-profiler at all, so there is nothing to float up from)</li>
+  <li><strong>Release provider:</strong> none</li>
 </ul>
 
-<p>The maintainer (<code class="language-plaintext highlighter-rouge">apangin</code>) verified the v3.0 merge via QEMU manually. A QEMU-based CI job is technically feasible but has not been pursued. Adding CI requires <code class="language-plaintext highlighter-rouge">apangin</code>’s acceptance of the workflow change.</p>
+<p><strong>Justification:</strong> All 7 GitHub Actions workflow files were read and adversarially re-verified directly from <code class="language-plaintext highlighter-rouge">raw.githubusercontent.com</code>: the CI matrix in <a href="https://github.com/async-profiler/async-profiler/blob/master/.github/workflows/test-and-publish-nightly.yml">test-and-publish-nightly.yml</a> builds and tests only linux-arm64, linux-x64, and macOS - there is no riscv64 build job, test job, or QEMU step anywhere. The <a href="https://github.com/async-profiler/async-profiler/releases/tag/v4.5">v4.5 release assets</a> ship only linux-arm64/linux-x64/macos tarballs, jars, and source - no riscv64 artifact has ever been published by upstream (release provider: none). No Linux distribution packages it either: Ubuntu 26.04/resolute search returns zero results for any architecture, and Debian/official-Arch also lack the package per prior research, so no distro floor applies. This lands squarely on the Step 1 “orange” row (no upstream CI, no test execution, no upstream release). It is not red: riscv64 source-level support (<a href="https://github.com/async-profiler/async-profiler/pull/644">PR #644</a>, merged 2023-11-26, first shipped v3.0) was manually validated by contributors on real hardware (HiFive Unmatched, LicheePi-4A) and in QEMU, and the README explicitly lists riscv64 as a community-maintained “other available port” rather than claiming it is broken. Not grey either: this is a well-characterized known state, not an unknown-unknown. async-profiler is a JVM sampling profiler/observability tool, not a project whose core value proposition is architecture-specific speed (no SIMD/crypto/compression/allocator framing), so the optimization-purpose modifier does not apply and no optimization-level rating is assigned.</p>
 
-<p>Effort: 3-4 person-weeks (setup, integration, maintenance). Ongoing: runner hardware cost or QEMU CPU overhead.</p>
-
-<p><strong>Publish riscv64 binary releases</strong></p>
-
-<p>Requires either extending the upstream release process (needs <code class="language-plaintext highlighter-rouge">apangin</code> agreement) or establishing a third-party binary distribution channel. The Makefile already supports <code class="language-plaintext highlighter-rouge">make release</code> producing <code class="language-plaintext highlighter-rouge">async-profiler-&lt;version&gt;-linux-riscv64.tar.gz</code>; the gap is CI integration and upload automation.</p>
-
-<p>Effort: 1-2 person-weeks (conditional on CI being established first).</p>
-<h3 id="134-ecosystem-enablement">
+<p><strong>Pending work that could change the grade:</strong> No open PR or issue adds riscv64 CI or a riscv64 release job. PR #1185 (merged 2025-03-21) was an unrelated build fix incidentally touching a riscv64 source file. <code class="language-plaintext highlighter-rouge">zifeihan</code> (Alibaba) volunteered in November 2023 to maintain the riscv64 port, but no riscv64-specific commits have landed since, through v4.5 (2026-07-20). RISE Project involvement is confirmed absent (not in the riseproject.dev blog, GitHub org, member list, or wheel builder). Several stack-unwinding functions (<code class="language-plaintext highlighter-rouge">unwindPrologue</code>/<code class="language-plaintext highlighter-rouge">unwindEpilogue</code>/<code class="language-plaintext highlighter-rouge">adjustSP</code>) remain explicit stubs in <code class="language-plaintext highlighter-rouge">src/stackFrame_riscv64.cpp</code>, and GraalVM Native Image’s riscv64 LLVM backend gap (<a href="https://github.com/oracle/graal/issues/13516">oracle/graal#13516</a>) blocks the <code class="language-plaintext highlighter-rouge">jfr-converter</code> helper - neither is CI/release-blocking for the core agent but would matter in a more code-completeness-oriented reassessment. The RISE RISC-V Runners program (free native RISC-V CI on GitHub, announced 2026-03-24) is available infrastructure that async-profiler has not adopted and that would materially lower the cost of closing the CI gap if a contributor pursued it.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has not funded, benchmarked, or otherwise engineered any part of async-profiler’s riscv64 support (Section 12) - none of the following work is already covered by outside investment.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p><strong>Package async-profiler for Debian/Ubuntu riscv64</strong></p>
+<p><strong>Implement <code class="language-plaintext highlighter-rouge">unwindPrologue</code>, <code class="language-plaintext highlighter-rouge">unwindEpilogue</code>, <code class="language-plaintext highlighter-rouge">adjustSP</code> in <code class="language-plaintext highlighter-rouge">stackFrame_riscv64.cpp</code>.</strong> Highest-priority gap: these functions determine whether frames at JIT-compiled method boundaries are correctly recovered, and their absence is compounded by DWARF and VMStructs both being structurally unavailable on riscv64 (Section 4.5), leaving no fallback unwinding strategy. <code class="language-plaintext highlighter-rouge">stackFrame_aarch64.cpp</code> (354 lines) is the reference implementation. Requires a developer fluent in the RISC-V ABI and HotSpot JIT code generation, plus riscv64 hardware or a reliable QEMU environment. Correctness cannot be validated without full JVM workloads (SPECjvm2008, Renaissance) compared against known-good flamegraphs. Effort: 6-10 person-weeks.</p>
 
-<p>async-profiler is not in Debian or Ubuntu at all – this requires packaging from scratch, not a riscv64-specific patch. A Debian ITP (Intent to Package) would be the entry point. This is independent of the RISC-V port status.</p>
+<p><strong>Implement VMStructs <code class="language-plaintext highlighter-rouge">_interpreter_frame_bcp_offset</code> for riscv64.</strong> Unlocks the CSTACK_VM fast path currently disabled entirely on riscv64. Requires determining the correct HotSpot riscv64 interpreter frame offset from OpenJDK source. Effort: 1-2 person-weeks.</p>
 
-<p>Effort: 4-6 person-weeks (initial packaging, policy review, upload). Long tail for Debian NEW queue processing.</p>
+<p><strong>Implement TSC via the <code class="language-plaintext highlighter-rouge">cycle</code> CSR in <code class="language-plaintext highlighter-rouge">src/tsc.h</code>.</strong> Adds JFR timestamp correlation; the aarch64 implementation (<code class="language-plaintext highlighter-rouge">cntvct_el0</code> inline asm) is a direct analogue. Effort: 1-2 person-weeks.</p>
 
-<p><strong>GraalVM Native Image riscv64 (<code class="language-plaintext highlighter-rouge">jfr-converter</code>)</strong></p>
+<p><strong>Verify and correct PLT constants in <code class="language-plaintext highlighter-rouge">arch.h</code>.</strong> Must be confirmed against the RISC-V psABI and actual PLT entries in GCC- and LLVM-compiled riscv64 ELF binaries (lld and GNU ld may differ). Effort: 0.5 person-weeks.</p>
 
-<p>Blocked on GraalVM upstream issue #13516 (LLVM backend calling convention) and #13386 (pthread crash). Fix PR #13826 is open. This is outside async-profiler’s control. If <code class="language-plaintext highlighter-rouge">jfr-converter</code> is required in the target deployment, track GraalVM riscv64 progress separately.</p>
+<p><strong>Implement <code class="language-plaintext highlighter-rouge">safeAccess</code> inline asm for riscv64.</strong> Lower priority - the C fallback is functional; an asm implementation with explicit fault-handler registration would improve reliability profiling partially-unmapped regions. Effort: 1-2 person-weeks.</p>
 
-<p>Effort within async-profiler: 0 (blocked on GraalVM). Monitoring: low ongoing effort.</p>
-<h3 id="135-summary-table">
+<p><strong>DWARF unwinding support.</strong> Larger, lower-priority item: extending <code class="language-plaintext highlighter-rouge">dwarf.h</code>/<code class="language-plaintext highlighter-rouge">dwarf.cpp</code> to riscv64 would give the port a second unwinding strategy independent of frame-pointer completeness. Not scoped in detail here; likely comparable in size to the aarch64 DWARF implementation. Data not available: no existing riscv64 DWARF prototype or design was found in any source checked.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
+  
+  
+</h3>
+    
+
+<p>Data not available: no benchmark comparing async-profiler overhead on riscv64 versus arm64 or x86-64 has been published anywhere (Section 11.4). Performance optimization work cannot be scoped without a baseline measurement campaign (signal delivery latency, stack-walk time, perf-event overhead) on target hardware. The informal SpecJVM2008 comparison from PR #644 provides no actionable numbers.</p>
+<h3 id="143-cicd-infrastructure">
+  
+  
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+
+<p><strong>Add riscv64 to the CI matrix.</strong> GitHub Actions has no first-party hosted riscv64 runner. Options: (a) the RISE RISC-V Runners program (free native RISC-V CI on GitHub, live since March 2026, currently unused by this project) - the lowest-cost path given it requires no hardware procurement by async-profiler or a sponsor; (b) a self-hosted riscv64 runner (board or server); (c) QEMU user-mode emulation (<code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code>), adequate for build/unit tests but not for perf-event testing, which needs real hardware. <code class="language-plaintext highlighter-rouge">apangin</code> verified the v3.0 merge manually via QEMU, so the mechanism is known to work; the gap is wiring it into CI and getting maintainer buy-in. Effort: 2-4 person-weeks if using RISE Runners (lower integration overhead than self-hosting); 3-4 person-weeks for self-hosted, plus ongoing runner cost.</p>
+
+<p><strong>Publish riscv64 binary releases.</strong> The Makefile already supports <code class="language-plaintext highlighter-rouge">make release</code> producing a correctly-named riscv64 tarball; the gap is CI integration and upload automation, conditional on CI existing first. Effort: 1-2 person-weeks.</p>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p><strong>Package async-profiler for Debian/Ubuntu (any architecture).</strong> async-profiler is not in Debian or Ubuntu at all - this is packaging from scratch, not a riscv64-specific patch, and is a prerequisite independent of riscv64 port status. A Debian ITP (Intent to Package) is the entry point. Effort: 4-6 person-weeks initial, plus a long tail for Debian NEW queue processing.</p>
+
+<p><strong>Monitor GraalVM riscv64 progress for <code class="language-plaintext highlighter-rouge">jfr-converter</code>.</strong> Blocked on <a href="https://github.com/oracle/graal/issues/13516">oracle/graal#13516</a> and #13386; fix PR #13826 is open. Outside async-profiler’s control. Effort within async-profiler: 0 (blocked upstream); low ongoing effort to track.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1117,36 +1012,43 @@
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Implement TSC via <code class="language-plaintext highlighter-rouge">cycle</code> CSR</td>
+      <td>Implement VMStructs <code class="language-plaintext highlighter-rouge">_interpreter_frame_bcp_offset</code></td>
       <td>1-2</td>
-      <td>Any contributor with riscv64 toolchain</td>
+      <td>Contributor with OpenJDK source access</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Set vmStructs BCP offset for riscv64</td>
+      <td>Implement TSC via <code class="language-plaintext highlighter-rouge">cycle</code> CSR</td>
       <td>1-2</td>
-      <td>Any contributor with OpenJDK source access</td>
+      <td>Contributor with riscv64 toolchain</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
       <td>Verify and correct PLT constants</td>
       <td>0.5</td>
-      <td>Any contributor with riscv64 linker knowledge</td>
+      <td>Contributor with riscv64 linker knowledge</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
       <td>Implement <code class="language-plaintext highlighter-rouge">safeAccess</code> inline asm</td>
       <td>1-2</td>
-      <td>Any contributor with riscv64 asm</td>
+      <td>Contributor with riscv64 asm</td>
       <td>Low</td>
     </tr>
     <tr>
+      <td>Functional</td>
+      <td>DWARF unwinding support</td>
+      <td>Data not available (unscoped)</td>
+      <td>Needs DWARF + RISC-V expertise</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 to CI matrix (QEMU or self-hosted)</td>
-      <td>3-4</td>
+      <td>Add riscv64 to CI matrix (RISE Runners preferred, else self-hosted/QEMU)</td>
+      <td>2-4</td>
       <td>DevOps + needs <code class="language-plaintext highlighter-rouge">apangin</code> acceptance</td>
       <td>High</td>
     </tr>
@@ -1159,9 +1061,9 @@
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Debian/Ubuntu packaging</td>
+      <td>Debian/Ubuntu packaging (any arch, prerequisite)</td>
       <td>4-6</td>
-      <td>Debian maintainer (independent of port)</td>
+      <td>Debian maintainer</td>
       <td>Medium</td>
     </tr>
     <tr>
@@ -1173,23 +1075,13 @@
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Baseline benchmark campaign on riscv64</td>
-      <td>Data not available – cannot scope</td>
-      <td>–</td>
+      <td>Baseline benchmark campaign on riscv64 hardware</td>
+      <td>Data not available - cannot scope</td>
+      <td>-</td>
       <td>Prerequisite for optimization work</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1201,14 +1093,23 @@
 
 <ul>
   <li><a href="https://github.com/async-profiler/async-profiler">async-profiler repository</a></li>
-  <li><a href="https://async-profiler.github.io/">async-profiler homepage</a></li>
-  <li><a href="https://github.com/async-profiler/async-profiler/pull/644">PR #644 “Basic RISC-V support”</a> – merged 2023-11-26, merge commit <code class="language-plaintext highlighter-rouge">752b79ec4e4cc46c105dade93e1df1954fbbc638</code></li>
-  <li><a href="https://github.com/async-profiler/async-profiler/releases/tag/v3.0">v3.0 release</a> – first release containing RISC-V port, 2024-01-21</li>
-  <li><a href="https://github.com/async-profiler/async-profiler/releases/tag/v4.4">v4.4 release</a> – latest stable release as of research date, 2026-04-20</li>
-  <li><a href="https://github.com/async-profiler/async-profiler/pull/1185">PR #1185 “Fix compilation with source merging disabled”</a> – riscv64-related, closed without merge, 2025-03-21</li>
-  <li><a href="https://github.com/oracle/graal/issues/13516">GraalVM issue #13516</a> – LLVM backend calling convention not implemented on riscv64; blocks <code class="language-plaintext highlighter-rouge">jfr-converter</code></li>
-  <li><a href="https://github.com/oracle/graal/issues/13386">GraalVM issue #13386</a> – pthread crash on shutdown on riscv64</li>
-  <li><a href="https://wiki.riseproject.dev/index.php/Main_Page">RISE funded projects wiki</a> – RP001-RP016 reviewed; async-profiler absent</li>
+  <li><a href="https://async-profiler.github.io/">async-profiler homepage (returns HTTP 404, does not resolve)</a></li>
+  <li><a href="https://github.com/async-profiler/async-profiler/pull/644">PR #644 “Basic RISC-V support”</a> - merged 2023-11-26</li>
+  <li><a href="https://github.com/async-profiler/async-profiler/commit/752b79ec4e4cc46c105dade93e1df1954fbbc638">Merge commit 752b79e</a></li>
+  <li><a href="https://github.com/async-profiler/async-profiler/commit/0d0f0f0c670c2d4dbea6eb9a0284079f58e2fb91">Follow-up fix commit 0d0f0f0</a></li>
+  <li><a href="https://github.com/async-profiler/async-profiler/pull/1185">PR #1185 “Fix compilation with source merging disabled”</a> - merged 2025-03-21, not riscv64-specific</li>
+  <li><a href="https://github.com/async-profiler/async-profiler/releases/tag/v4.5">v4.5 release</a> - latest stable, 2026-07-20</li>
+  <li><a href="https://github.com/async-profiler/async-profiler/blob/master/.github/workflows/test-and-publish-nightly.yml">test-and-publish-nightly.yml CI workflow</a></li>
+  <li><a href="https://github.com/oracle/graal/issues/13516">GraalVM issue #13516</a> - LLVM backend calling convention not implemented on riscv64, blocks <code class="language-plaintext highlighter-rouge">jfr-converter</code></li>
+  <li><a href="https://github.com/oracle/graal/issues/13386">GraalVM issue #13386</a> - pthread crash on shutdown on riscv64</li>
+  <li><a href="https://github.com/async-profiler/async-profiler/issues/1661">GitHub issue #1661</a> - VM structs stack walker failure after retransform/redefine</li>
+  <li><a href="https://github.com/async-profiler/async-profiler/issues/1676">GitHub issue #1676</a> - unify dwarf and vm stack walking modes</li>
+  <li><a href="https://github.com/async-profiler/async-profiler/issues/1756">GitHub issue #1756</a> - runtime attach fails on JVMs with many native libraries</li>
+  <li><a href="https://riseproject.dev/">RISE Project members</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners announcement</a></li>
+  <li><a href="https://riseproject.dev/2025/09/24/openjdk-supercharging-vectorized-math-with-sleef/">RISE: OpenJDK - Supercharging Vectorized Math with SLEEF</a></li>
+  <li><a href="https://riseproject.dev/2025/07/23/cmovex-vectorization/">RISE: OpenJDK CMoveX &amp; Vectorization</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
 </ul>
 
           

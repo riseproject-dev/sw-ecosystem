@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:mail@ludovic.dev">mail@ludovic.dev</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> Orange (downstream-only)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for Kubernetes<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items verified against only one source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,9 +280,11 @@
 </h2>
     
 
-<p>Kubernetes is the de facto standard container orchestration platform. It is a <a href="https://cncf.io/">CNCF</a> graduated project (highest CNCF maturity tier) under The Linux Foundation, licensed Apache 2.0. The primary repository is <a href="https://github.com/kubernetes/kubernetes">kubernetes/kubernetes</a>.</p>
+<p>Kubernetes is the de facto standard container orchestration platform. It is a <a href="https://cncf.io/">CNCF</a> graduated project (the highest CNCF maturity tier), operating under “Kubernetes, a Series of LF Projects, LLC” (a Linux Foundation legal umbrella; governance follows <a href="https://lfprojects.org/policies/">LF Projects policies</a>). Source code is licensed Apache License 2.0; documentation/website content is CC BY 4.0. The primary repository is <a href="https://github.com/kubernetes/kubernetes">kubernetes/kubernetes</a>.</p>
 
-<p>Governance uses a SIG (Special Interest Group) structure overseen by a 7-member Steering Committee with staggered 2-year terms. Current committee composition as of mid-2026:</p>
+<p>Governance uses a SIG (Special Interest Group) structure. A 7-seat Steering Committee holds top decision authority (elected by contributors, ratifies major changes and new SIG charters); day-to-day technical direction is delegated to autonomous SIGs, each with chairs and OWNERS files. There is no single MAINTAINERS file and no BDFL; decisions happen via SIG consensus plus OWNERS approval, escalating to Steering only for cross-cutting or charter-level issues. Root OWNERS delegates go.mod and architecture approval to <code class="language-plaintext highlighter-rouge">dep-approvers</code> and <code class="language-plaintext highlighter-rouge">sig-architecture-approvers</code>.</p>
+
+<p>Current Steering Committee members and employers:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -317,14 +320,16 @@
     </tr>
     <tr>
       <td>Kat Cosgrove (@katcosgrove)</td>
-      <td>Minimus</td>
+      <td>Minimus, per one source; VillageSQL (independent), per a second source [NEEDS VERIFICATION, conflicting sources]</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>CNCF Governing Board Representative: Christoph Blecker (@cblecker). CNCF Staff Liaison: Jeff Sica (@jeefy).</p>
+<p>Top recent corporate contributors, sampled from the latest ~30 commits to <code class="language-plaintext highlighter-rouge">kubernetes/kubernetes</code> as of September 2026: Davanum Srinivas (dims, Red Hat), Jordan Liggitt (liggitt, Google), Tim Hockin (thockin, Google), Marek Siarkowicz (serathius, Google), Lucas Kaldstrom (luxas, Amazon), Stephen Kitt (skitt, Red Hat), jubittajohn (Red Hat). This is broadly consistent with the CNCF governing board composition, whose Kubernetes-linked seats span Red Hat, Google, Microsoft, Apple, NVIDIA, AWS and others.</p>
 
-<p>Corporate composition of the committee – Google (2 seats), Red Hat (1), CoreWeave (1), DaoCloud (1), Defense Unicorns (1), Minimus (1) – reflects historical dominant contributors: Google (original creator), Red Hat, and Microsoft. There is no single MAINTAINERS file; governance is distributed via per-SIG OWNERS files throughout the repo.</p><hr />
+<p><strong>Community stance on new architecture ports is cautious but organically interested.</strong> Issue <a href="https://github.com/kubernetes/kubernetes/issues/132570">#132570</a> (“Assessment of the difficulty in porting CPU architecture for kubernetes,” an unsolicited automated porting-complexity pitch, opened 2025-06-27) was closed and tagged <code class="language-plaintext highlighter-rouge">priority/awaiting-more-evidence</code>, a skeptical default response to low-effort porting pitches. Issue <a href="https://github.com/kubernetes/kubernetes/issues/132836">#132836</a> (“Proposal: Official Support for RISC-V Architecture and RVA23 Advancements in Kubernetes Releases,” opened 2025-07-09) is a substantive, still-open proposal labeled <code class="language-plaintext highlighter-rouge">sig/testing</code>, <code class="language-plaintext highlighter-rouge">sig/release</code>, <code class="language-plaintext highlighter-rouge">sig/architecture</code>, <code class="language-plaintext highlighter-rouge">sig/k8s-infra</code>, <code class="language-plaintext highlighter-rouge">needs-triage</code>. One research pass reported this issue carries 26 comments and 12 “rocket” reactions; a separate direct read of the issue in the same research round reported no comments visible. This is a direct contradiction in the source material and is marked [NEEDS VERIFICATION].</p>
+
+<p><strong>RISE Project membership:</strong> Kubernetes and CNCF are not listed as RISE Project members (checked against <a href="https://riseproject.dev/members/">riseproject.dev/members</a>). RISE Premier members are Alibaba, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive and Tenstorrent; General members include Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT and ZTE. Despite non-membership, ZTE (a RISE General member) has directly engaged Kubernetes riscv64 enablement through <a href="https://github.com/riseproject-dev/kubernetes-riscv/issues/2">riseproject-dev/kubernetes-riscv#2</a> (see Section 12).</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -334,7 +339,7 @@
 </h2>
     
 
-<p>The RISC-V porting effort in Kubernetes began in September 2019 with carlosedp (Carlos de Paula), who independently drove the cloud-native RISC-V ecosystem. No work predates him in this repository. Four separate attempts to add riscv64 have been made; all failed for the same structural reason: absence of CI infrastructure.</p>
+<p>The RISC-V porting effort in Kubernetes began in September 2019 with Carlos de Paula (carlosedp), who independently drove early cloud-native RISC-V work. No effort predates him in this repository. Four upstream PR attempts have been made to add riscv64 build/platform support; three were closed unmerged, one remains open on hold. Exactly one riscv64-motivated PR has ever merged.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -348,68 +353,80 @@
   <tbody>
     <tr>
       <td>2019-09-04</td>
-      <td><a href="https://github.com/kubernetes/kubernetes/pull/82349">PR #82349</a> – bump x/sys and runc deps for riscv64 buildability</td>
+      <td><a href="https://github.com/kubernetes/kubernetes/pull/82349">PR #82349</a>, bump x/sys and runc deps for riscv64 buildability</td>
       <td>carlosedp</td>
-      <td>Voluntarily closed; Go 1.13 upgrade (PR #82809) landed the needed deps first</td>
+      <td>Closed unmerged 2019-12-06; superseded by other dependency bumps</td>
     </tr>
     <tr>
       <td>2019-12-06</td>
-      <td><a href="https://github.com/kubernetes/kubernetes/pull/86011">PR #86011</a> – add riscv64 to build scripts</td>
+      <td><a href="https://github.com/kubernetes/kubernetes/pull/86011">PR #86011</a>, add riscv64 to build scripts</td>
       <td>carlosedp</td>
-      <td>Closed by @cblecker citing no KEP and no architecture policy; reopened by @dims Aug 2020; auto-closed stale Jan 2021</td>
+      <td>All core binaries (kube-apiserver, kubelet, kubectl, etc.) demonstrated compiling for riscv64 via <code class="language-plaintext highlighter-rouge">KUBE_BUILD_PLATFORMS=linux/riscv64</code>. Closed by @cblecker (no architecture-addition policy/KEP existed); reopened by @dims August 2020; auto-closed stale 2021-01-10. Never merged</td>
     </tr>
     <tr>
-      <td>2019-12-20</td>
-      <td><a href="https://github.com/kubernetes/kubernetes/pull/86013">PR #86013</a> – bump Ginkgo to support riscv64 build</td>
+      <td>2019-12-06 to 2019-12-20</td>
+      <td><a href="https://github.com/kubernetes/kubernetes/pull/86013">PR #86013</a>, bump Ginkgo to support riscv64 build</td>
       <td>carlosedp</td>
-      <td><strong>Merged</strong> into v1.18; first and only riscv64-motivated merge into Kubernetes core</td>
+      <td><strong>Merged</strong> 2019-12-20 (commit <code class="language-plaintext highlighter-rouge">4ff6928</code>), shipped in v1.18.0 (released 2020-03-25). The only riscv64-motivated merge into Kubernetes core to date</td>
     </tr>
     <tr>
       <td>2023-03-16</td>
-      <td><a href="https://github.com/kubernetes/kubernetes/pull/116686">PR #116686</a> – feat: add riscv64 support (draft)</td>
+      <td><a href="https://github.com/kubernetes/kubernetes/pull/116686">PR #116686</a>, “feat: add riscv64 support”</td>
       <td>ernado</td>
-      <td>Closed by author 2023-04-21; cited missing distroless image, etcd image, and Kubernetes base images for riscv64; author estimated readiness in 2025 tied to Debian full riscv64 support</td>
+      <td>Closed by author 2023-04-21, citing missing riscv64 distroless image, etcd image and Kubernetes base images; estimated readiness Q4 2023 to 2025. A March 2026 follow-up comment on the same PR confirms the distroless and base-image blockers materialized, roughly on the author’s original schedule</td>
     </tr>
     <tr>
       <td>2024-03-04</td>
-      <td><a href="https://github.com/kubernetes/kubernetes/pull/123661">PR #123661</a> – Add riscv64 support</td>
+      <td><a href="https://github.com/kubernetes/kubernetes/pull/123661">PR #123661</a>, “Add riscv64 support”</td>
       <td>JasenChao</td>
-      <td>Closed by @dims 2024-05-22; @liggitt stated CI coverage is mandatory and cited the two prior failed attempts</td>
+      <td>Closed by @dims 2024-05-22. Reviewer @liggitt stated builds succeeding is not sufficient: “we need a good set of tests that exercise a wide battery of jobs in this new architecture,” citing the same blocker that stalled #86011 and #116686</td>
     </tr>
     <tr>
-      <td>2024-11-07</td>
-      <td><a href="https://github.com/kubernetes/kubernetes/pull/128148">PR #128148</a> – bump opencontainers/selinux to v1.11.1</td>
-      <td>bzsuni</td>
-      <td><strong>Merged</strong> into v1.32 as routine dependency update; v1.11.1 upstream had extended its riscv64 build target</td>
+      <td>2025-06-27 to 2025-07-10</td>
+      <td><a href="https://github.com/kubernetes/kubernetes/issues/132570">Issue #132570</a>, automated RISC-V porting-difficulty assessment (“RAX” tool: 8,714 architecture-specific LOC, cyclomatic complexity 569,001, rated “low” difficulty)</td>
+      <td>carlosqwqqwq</td>
+      <td>Closed, tagged <code class="language-plaintext highlighter-rouge">priority/awaiting-more-evidence</code>, no substantive maintainer follow-up</td>
     </tr>
     <tr>
       <td>2025-07-09</td>
-      <td><a href="https://github.com/kubernetes/kubernetes/issues/132836">Issue #132836</a> – Proposal: Official Support for RISC-V Architecture and RVA23 Advancements</td>
+      <td><a href="https://github.com/kubernetes/kubernetes/issues/132836">Issue #132836</a>, master tracking proposal for official RISC-V/RVA23 support</td>
       <td>yu8833</td>
-      <td>Open; tagged sig/architecture, sig/k8s-infra, sig/release, sig/testing; no milestone, no linked PRs, awaiting triage</td>
+      <td>Open. Still the current umbrella issue as of 2026-09-30; last updated 2026-08-28</td>
     </tr>
     <tr>
-      <td>2026-02-27</td>
-      <td>distroless-debian13 riscv64 images (static, base, cc) merged by distroless maintainer @loosebazooka</td>
-      <td>loosebazooka</td>
-      <td>Distroless image blocker resolved</td>
+      <td>2026-07-20</td>
+      <td><a href="https://github.com/riseproject-dev/kubernetes-riscv/issues/2">riseproject-dev/kubernetes-riscv#2</a>, “Proposal: Joint collaboration to advance official RISC-V Tier 2 support for Kubernetes and etcd”</td>
+      <td>Weihong Qiu (ZTE Corporation)</td>
+      <td>Open. Identifies insufficient CI hardware and a shortage of maintainers as the concrete blockers; ZTE offers to donate physical RISC-V CI servers</td>
     </tr>
     <tr>
-      <td>2026-03-26</td>
-      <td><a href="https://github.com/kubernetes/sig-release/pull/2974">kubernetes/sig-release PR #2974</a> – Rewrite platform support tiers</td>
-      <td>saschagrunert</td>
-      <td><strong>Merged</strong>; formally defined Tier 3 entry path (no KEP required; documented build process + external artifact link sufficient)</td>
+      <td>2026-08-10</td>
+      <td><a href="https://github.com/kubernetes/kubernetes/pull/141291">PR #141291</a>, “Add RISC-V build for the pause image”</td>
+      <td>chazapis</td>
+      <td>Open. A minimal, build-config-only, single-file change (no source changes) adding riscv64 to <code class="language-plaintext highlighter-rouge">build/pause/Makefile</code>. Placed <code class="language-plaintext highlighter-rouge">/hold</code> by @dims, referencing the unresolved policy discussion in #132836. Depends on a companion kube-cross container change, <a href="https://github.com/kubernetes/release/pull/4489">kubernetes/release#4489</a> (status not stated in available sources)</td>
     </tr>
     <tr>
-      <td>2026-04</td>
-      <td><a href="https://github.com/kubernetes/kubernetes/compare/master...riseproject-dev:kubernetes-riscv:riscv-support">riseproject-dev/kubernetes-riscv</a> riscv-support branch in preparation</td>
-      <td>brianredbeard / RISE</td>
-      <td>Active; no upstream PR yet as of 2026-04-10</td>
+      <td>2026-09-18</td>
+      <td><a href="https://github.com/kubernetes/sig-release/issues/3107">kubernetes/sig-release#3107</a>, “Tier3 Platform Support Request for RISC-V”</td>
+      <td>RISE Project</td>
+      <td>Open. States mandatory Tier 3 requirements are already satisfied and artifacts are released; long-term goal is Tier 2 after two release cycles</td>
+    </tr>
+    <tr>
+      <td>2026-09-21</td>
+      <td><a href="https://github.com/kubernetes/sig-release/pull/3110">kubernetes/sig-release PR #3110</a>, “add riscv64 as a tier 3 platform”</td>
+      <td>upodroid</td>
+      <td>Open. Small diff (10-29 lines) implementing #3107/#132836; received positive maintainer reactions; auto-assigned to release-engineering approvers</td>
+    </tr>
+    <tr>
+      <td>2026-09-28</td>
+      <td><a href="https://riseproject.dev/2026/09/28/how-kairos-is-charting-the-stepping-stones-of-risc-v-productization/">RISE blog post on Kairos and RISC-V productization</a></td>
+      <td>RISE Project (Ashleigh Bustamante, Google)</td>
+      <td>Not a kubernetes/kubernetes event, but documents lightweight Kubernetes (k3s) successfully booting on riscv64 under the CNCF Sandbox project Kairos</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Two merged PRs touch riscv64 in the entire history of the repository (#86013 in 2019 and #128148 in 2024). Neither adds riscv64 as a supported build target. No upstream PR for riscv64 architecture support has ever been merged.</p><hr />
+<p><strong>Net position:</strong> exactly one merged PR touches riscv64 in the repository’s history (#86013, a Ginkgo test-framework dependency bump), and it does not add riscv64 as a supported build or release platform. No PR adding actual riscv64 build or release support has ever merged. A commit-message search of the default branch for “riscv” returns zero results, confirming no riscv64-labeled commit has landed via that path.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -419,17 +436,58 @@
 </h2>
     
 
-<p>Kubernetes defines platform support tiers in <a href="https://github.com/kubernetes/sig-release/blob/master/release-engineering/platforms/README.md">kubernetes/sig-release release-engineering/platforms/README.md</a>, last substantively rewritten by PR #2974 (merged 2026-03-26).</p>
+<p>Historically, Kubernetes had no formal Tier 1/2/3 platform classification (unlike, e.g., Node.js or Rust); architecture support was defined de facto by (a) inclusion in the <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_*_PLATFORMS</code> arrays in <code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code>, and (b) CI/test-infra coverage and official release-artifact publishing controlled jointly by SIG Release, SIG Architecture and SIG K8s-Infra.</p>
 
-<p><strong>Tier 1</strong> – Official binaries and images, release-blocking CI, kubernetes.io documentation, minimum 2 dedicated maintainers. Current platforms: <code class="language-plaintext highlighter-rouge">linux/amd64</code>, <code class="language-plaintext highlighter-rouge">linux/arm64</code>, <code class="language-plaintext highlighter-rouge">linux/ppc64le</code>, <code class="language-plaintext highlighter-rouge">linux/s390x</code>.</p>
+<p>That is changing: <a href="https://github.com/kubernetes/sig-release/pull/2974">kubernetes/sig-release PR #2974</a> (merged 2026-03-26) formally rewrote the platform-support-tier policy, and as of September 2026 there is an active, concrete Tier 3 request specifically for riscv64:</p>
 
-<p><strong>Tier 2</strong> – Official binaries, informing (non-blocking) CI, 2 maintainers, Go first-class port required. Current: <code class="language-plaintext highlighter-rouge">darwin/amd64</code>, <code class="language-plaintext highlighter-rouge">darwin/arm64</code>, <code class="language-plaintext highlighter-rouge">windows/amd64</code>, <code class="language-plaintext highlighter-rouge">windows/arm64</code> (client/node scope, varying).</p>
+<ul>
+  <li><a href="https://github.com/kubernetes/sig-release/issues/3107">kubernetes/sig-release#3107</a> (open, 2026-09-18, filed by the RISE Project) asserts all mandatory Tier 3 requirements are already met.</li>
+  <li><a href="https://github.com/kubernetes/sig-release/pull/3110">kubernetes/sig-release PR #3110</a> (open, 2026-09-21, upodroid) is the implementing change, referencing #3107 and #132836, currently pending review.</li>
+</ul>
 
-<p><strong>Tier 3</strong> – No official builds, no project CI, externally maintained with a documented community build process and link to external artifacts. No platforms are currently formally designated Tier 3, though this is the entry point for new architectures under the revised policy.</p>
+<p>No platform is currently formally designated Tier 3; #3107/#3110 would be the first such designation under the revised policy.</p>
 
-<p><strong>Restriction:</strong> Platforms using Go secondary or experimental ports are capped at Tier 3. Go promoted riscv64 to a first-class port in Go 1.22+; this restriction no longer applies to riscv64.</p>
-
-<p><strong>riscv64 current tier: not listed.</strong> The architecture has no tier designation, no KEP, and no formal proposal accepted by any SIG. @saschagrunert stated in March 2026 that contributing a documented build process targeting Tier 3 would be the correct next step (<a href="https://github.com/kubernetes/kubernetes/issues/132836">issue #132836 comment, 2026-03-31</a>).</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Platform</th>
+      <th>Official binaries</th>
+      <th>Release-blocking CI</th>
+      <th>Documentation</th>
+      <th>Status as of 2026-09-30</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>amd64</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Full (listed in all <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_*</code> arrays)</td>
+    </tr>
+    <tr>
+      <td>arm64</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Full (listed in all <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_*</code> arrays)</td>
+    </tr>
+    <tr>
+      <td>ppc64le / s390x</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Full (listed in server/node/client/test arrays)</td>
+    </tr>
+    <tr>
+      <td>riscv64</td>
+      <td>No</td>
+      <td>No</td>
+      <td>No</td>
+      <td>Not listed in any <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_*</code> array; Tier 3 designation proposed but not merged (sig-release#3107/#3110, open)</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -439,11 +497,11 @@
 </h2>
     
 
-<p>Kubernetes is written in Go. It has no JIT backends, no SIMD dispatch, no hand-written assembly, and no CPU-feature-gated code paths in first-party source. The entire codebase is architecture-neutral from the perspective of the language runtime.</p>
+<p>Kubernetes is written in pure Go. It has no JIT backends, no SIMD dispatch, no hand-written assembly, and no CPU-feature-gated code paths in first-party source for any architecture, including amd64 and arm64. There is nothing analogous to a JIT, hand-tuned intrinsics, or scalar-fallback dispatch to grade on a full/partial/scalar/missing scale, because that category of code does not exist in this repository for any platform.</p>
 
-<p><strong>First-party riscv64 files: zero.</strong> An exhaustive search of all non-vendor files (pkg/, cmd/, staging/, build/, hack/, test/, api/, cluster/) found no files matching <code class="language-plaintext highlighter-rouge">riscv</code>, no <code class="language-plaintext highlighter-rouge">//go:build riscv64</code> constraints, no architecture-specific build tags, and no <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> guards. <code class="language-plaintext highlighter-rouge">linux/riscv64</code> does not appear anywhere in first-party source code.</p>
+<p><strong>First-party riscv64 files: zero, confirmed independently twice.</strong> An exhaustive repository-wide code search (<code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">riscv64</code>, <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, <code class="language-plaintext highlighter-rouge">rvv</code>, <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code>, <code class="language-plaintext highlighter-rouge">path:arch/riscv</code>) across <code class="language-plaintext highlighter-rouge">pkg/</code>, <code class="language-plaintext highlighter-rouge">cmd/</code>, <code class="language-plaintext highlighter-rouge">staging/</code>, <code class="language-plaintext highlighter-rouge">build/</code>, <code class="language-plaintext highlighter-rouge">hack/</code>, <code class="language-plaintext highlighter-rouge">test/</code>, <code class="language-plaintext highlighter-rouge">api/</code>, <code class="language-plaintext highlighter-rouge">cluster/</code> found no <code class="language-plaintext highlighter-rouge">//go:build riscv64</code> constraints, no architecture-specific build tags, and no C preprocessor guards. The only non-empty hit is one source comment in <code class="language-plaintext highlighter-rouge">staging/src/k8s.io/dynamic-resource-allocation/deviceattribute/numa_linux.go</code>: “Linux defines MAX_NUMNODES … capped at 10 across all architectures (x86, arm64, riscv)” - a generic comment, not architecture-specific logic. Two additional “rvv”/”RVV” string matches in <code class="language-plaintext highlighter-rouge">handler_proxy_test.go</code> and a test certificate file are coincidental substring hits inside base64-encoded test material, unrelated to the RISC-V Vector extension.</p>
 
-<p><strong>Vendor tree: 24 riscv64 files, all upstream pass-throughs.</strong> These arrived incidentally via dependency version bumps and do not constitute Kubernetes riscv64 support:</p>
+<p><strong>Vendor tree: approximately 24 riscv64 files, all upstream pass-throughs, not Kubernetes-authored.</strong> These arrived incidentally via dependency version bumps:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -477,11 +535,44 @@
   </tbody>
 </table></div>
 
-<p>For comparison: the vendor tree contains 53 amd64-specific files and 51 arm64-specific files. The riscv64 vendor coverage (24 files) is incomplete relative to what arm64 has – it covers syscall bindings and CPU detection but lacks architecture-specific netlink, seccomp, and eBPF bindings present for arm64.</p>
+<p>For comparison, the vendor tree contains roughly 53 amd64-specific files and 51 arm64-specific files; riscv64 vendor coverage is incomplete relative to arm64, covering syscall bindings and CPU detection but lacking architecture-specific netlink, seccomp and eBPF bindings. None of these vector/crypto extension detections (Zvkn, Zvks, etc.) are used by any Kubernetes code path; they exist only because <code class="language-plaintext highlighter-rouge">x/sys</code> ships them as part of its own portability work.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">vendor/golang.org/x/sys/cpu/cpu_riscv64.go</code> file detects V, Zba, Zbb, Zbs, Zbc, and the vector cryptography extensions (Zvkn, Zvks, etc.) via Linux <code class="language-plaintext highlighter-rouge">hwcap</code>. These detections are unused by any Kubernetes code path – they exist only because x/sys ships them as part of its own portability work.</p>
+<p>A <code class="language-plaintext highlighter-rouge">third_party/multiarch/qemu-user-static/register/qemu-binfmt-conf.sh</code> file lists ELF magic-number/mask pairs for many architectures including riscv32/riscv64, for generic <code class="language-plaintext highlighter-rouge">binfmt_misc</code> multi-arch container emulation. This is a vendored copy of an upstream QEMU script, not Kubernetes-authored code, and contains no Kubernetes build instructions.</p>
 
-<p>A <code class="language-plaintext highlighter-rouge">third_party/multiarch/qemu-user-static/</code> helper script lists riscv32/riscv64 ELF magic bytes for binfmt_misc cross-arch emulation. This is a vendored copy of an upstream QEMU script, not Kubernetes-authored code.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+      <th>Rating basis</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Core language runtime</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full (Go GOARCH=riscv64, first-class since ~Go 1.22)</td>
+      <td>Inherited from Go toolchain, not Kubernetes code</td>
+    </tr>
+    <tr>
+      <td>Architecture-specific source (JIT/SIMD/asm)</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>No such code exists in this repo for any platform</td>
+    </tr>
+    <tr>
+      <td>Vendored syscall/CPU-feature bindings</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Partial (syscalls + CPU detection present; netlink/seccomp/eBPF bindings for riscv64 not confirmed)</td>
+      <td>Vendor-tree file count comparison</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -491,16 +582,16 @@
 </h2>
     
 
-<p>Kubernetes uses Go’s native cross-compilation invoked through shell scripts and a Docker-based “kube-cross” container image. There is no CMake, no Bazel (removed in v1.21), and no architecture-specific build configuration files.</p>
+<p>Kubernetes uses Go’s native cross-compilation, invoked through shell scripts and a Docker-based “kube-cross” build container. There is no CMake and no Bazel (removed in v1.21); confirmed by an exhaustive search finding zero <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> files, no <code class="language-plaintext highlighter-rouge">cmake/</code> directory, and no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>/cross-compilation documentation anywhere in the repository.</p>
 
 <p><strong>Standard build invocation:</strong></p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make WHAT=./cmd/&lt;binary&gt; KUBE_BUILD_PLATFORMS=linux/riscv64
 </code></pre></div></div>
 
-<p>Output lands in <code class="language-plaintext highlighter-rouge">_output/local/bin/linux/riscv64/</code>. This invocation will succeed with an unmodified Go toolchain because Go supports <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code> natively since Go 1.14. The build scripts do not block on architecture; they only enforce the supported list for release builds.</p>
+<p>Output lands in <code class="language-plaintext highlighter-rouge">_output/local/bin/linux/riscv64/</code>. This invocation succeeds with an unmodified Go toolchain, because Go has supported <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code> natively since Go 1.14; the build scripts do not block on architecture for local/dev builds, only for release builds via the supported-platform arrays.</p>
 
-<p><strong>Platform lists in <code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code> (authoritative):</strong></p>
+<p><strong>Platform lists in <code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code> (authoritative, confirmed current as of this report):</strong></p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>KUBE_SUPPORTED_SERVER_PLATFORMS:  linux/amd64 linux/arm64 linux/s390x linux/ppc64le
 KUBE_SUPPORTED_NODE_PLATFORMS:    linux/amd64 linux/arm64 linux/s390x linux/ppc64le windows/amd64
@@ -510,52 +601,39 @@ KUBE_SUPPORTED_TEST_PLATFORMS:    linux/amd64 linux/arm64 linux/s390x linux/ppc6
                                    darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">linux/riscv64</code> is absent from all four arrays. The fallback at line 215-216 explicitly defaults to amd64 for any platform not in the server list.</p>
+<p><code class="language-plaintext highlighter-rouge">linux/riscv64</code> is absent from all four arrays.</p>
 
-<p><strong>Cross-compiler assignments (from <code class="language-plaintext highlighter-rouge">hack/lib/golang.sh kube::golang::set_platform_envs()</code>):</strong></p>
+<p><strong>Cross-compiler assignments (<code class="language-plaintext highlighter-rouge">hack/lib/golang.sh kube::golang::set_platform_envs()</code>):</strong> explicit CC entries exist for amd64, arm64, arm, ppc64le and s390x; there is no <code class="language-plaintext highlighter-rouge">linux/riscv64</code> entry. A generic fallback derives the CC environment variable name from the platform string, so setting <code class="language-plaintext highlighter-rouge">KUBE_LINUX_RISCV64_CC=riscv64-linux-gnu-gcc</code> externally would wire CGO correctly for riscv64 without a code change to this specific mechanism.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>linux/amd64:   CC=${KUBE_LINUX_AMD64_CC:-x86_64-linux-gnu-gcc}
-linux/arm64:   CC=${KUBE_LINUX_ARM64_CC:-aarch64-linux-gnu-gcc}
-linux/arm:     CC=${KUBE_LINUX_ARM_CC:-arm-linux-gnueabihf-gcc}
-linux/ppc64le: CC=${KUBE_LINUX_PPC64LE_CC:-powerpc64le-linux-gnu-gcc}
-linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
-# linux/riscv64: no entry
-</code></pre></div></div>
-
-<p>A generic fallback derives the CC variable name from the platform string, so setting <code class="language-plaintext highlighter-rouge">KUBE_LINUX_RISCV64_CC=riscv64-linux-gnu-gcc</code> externally will wire CGO correctly for riscv64. No code change is needed for that specific integration.</p>
-
-<p><strong>kube-cross container image (the official cross-compilation build environment):</strong></p>
+<p><strong>kube-cross build container image (official cross-compilation environment):</strong></p>
 
 <ul>
   <li>Image: <code class="language-plaintext highlighter-rouge">registry.k8s.io/build-image/kube-cross</code></li>
-  <li>Current version pin in kubernetes/kubernetes: <code class="language-plaintext highlighter-rouge">v1.37.0-go1.26.4-bullseye.0</code></li>
-  <li>Base: Debian Bullseye</li>
-  <li><code class="language-plaintext highlighter-rouge">KUBE_CROSSPLATFORMS</code>: <code class="language-plaintext highlighter-rouge">linux/386 linux/arm linux/arm64 linux/ppc64le linux/s390x darwin/amd64 windows/amd64 windows/386</code></li>
-  <li><code class="language-plaintext highlighter-rouge">KUBE_DYNAMIC_CROSSPLATFORMS</code>: <code class="language-plaintext highlighter-rouge">arm64 armhf i386 ppc64el s390x</code></li>
-  <li>Installed cross-toolchains: gcc for arm, arm64, ppc64le, s390x, 386; no <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> or <code class="language-plaintext highlighter-rouge">crossbuild-essential-riscv64</code></li>
+  <li>Current pinned version: <code class="language-plaintext highlighter-rouge">v1.38.0-go1.27.1-bullseye.0</code> (confirmed via live fetch of <code class="language-plaintext highlighter-rouge">.go-version</code> and the cross-build image VERSION file), a Debian Bullseye base.</li>
+  <li><code class="language-plaintext highlighter-rouge">KUBE_CROSSPLATFORMS</code>: <code class="language-plaintext highlighter-rouge">linux/386 linux/arm linux/arm64 linux/ppc64le linux/s390x darwin/amd64 windows/amd64 windows/386</code>. No riscv64 cross-toolchain package (e.g., <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> or <code class="language-plaintext highlighter-rouge">crossbuild-essential-riscv64</code>) is installed.</li>
+  <li><a href="https://github.com/kubernetes/release/pull/4303">kubernetes/release PR #4303</a> (“add debian trixie and riscv64 support for debian-base”), opened 2026-03-02 by @Opvolger, was placed on hold by @BenTheElder citing lack of CI resources, and was closed without merging.</li>
+  <li>A newer, currently referenced companion change is <a href="https://github.com/kubernetes/release/pull/4489">kubernetes/release#4489</a>, cited by PR #141291 as the required kube-cross update to add a RISC-V cross-compiler; its current status is not stated in available sources [NEEDS VERIFICATION].</li>
 </ul>
 
-<p>The kube-cross image is maintained in the <code class="language-plaintext highlighter-rouge">kubernetes/release</code> repository. <a href="https://github.com/kubernetes/release/pull/4303">PR #4303</a> (by @Opvolger, opened 2026-03-02) proposed adding riscv64 support. It was placed on hold by @BenTheElder citing resource cost and lack of CI: “We do not have any CI resources available for this architecture.” The PR was closed without merge.</p>
+<p><strong>Pause container build (<code class="language-plaintext highlighter-rouge">build/pause/Makefile</code>):</strong> confirmed current content on the default branch reads <code class="language-plaintext highlighter-rouge">ALL_ARCH.linux = amd64 arm64 ppc64le s390x</code>; riscv64 is absent. PR #141291 is a minimal, single-file, four-line diff adding <code class="language-plaintext highlighter-rouge">riscv64</code> to this array, a <code class="language-plaintext highlighter-rouge">TRIPLE.linux-riscv64 := riscv64-linux-gnu</code> cross-compile mapping, and two buildx flags. No new source code is introduced. It remains blocked on the kube-cross toolchain update above and is under a maintainer <code class="language-plaintext highlighter-rouge">/hold</code>.</p>
 
-<p><strong>Go version:</strong> Current minimum enforced is 1.26.4 (from <code class="language-plaintext highlighter-rouge">.go-version</code>). Go has supported <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code> since Go 1.14. The Go toolchain is not a blocker.</p>
+<p><strong>QEMU emulation:</strong> PR #116686 (closed, unmerged) had proposed adding <code class="language-plaintext highlighter-rouge">["riscv64"]="riscv64"</code> to the <code class="language-plaintext highlighter-rouge">QEMUARCHS</code> map in <code class="language-plaintext highlighter-rouge">test/images/image-util.sh</code>; this has not landed. A vendored, generic <code class="language-plaintext highlighter-rouge">qemu-user-static</code> binfmt script (Section 4) already lists riscv64 ELF magic bytes for generic multi-arch emulation, independent of this specific Kubernetes integration point.</p>
 
-<p><strong>Pause container:</strong> The pause binary is a small C program in <code class="language-plaintext highlighter-rouge">build/pause/</code>. PR #116686 proposed adding <code class="language-plaintext highlighter-rouge">riscv64</code> to <code class="language-plaintext highlighter-rouge">ALL_ARCH.linux</code> in <code class="language-plaintext highlighter-rouge">build/pause/Makefile</code> and setting <code class="language-plaintext highlighter-rouge">TRIPLE.linux-riscv64 := riscv64-linux-gnu</code>. The pause binary compilation is the immediate blocker cited by @shanduur in issue #132836 (July 2025): “The biggest issue right now is lack of pause image – every other component is easy to build. The <code class="language-plaintext highlighter-rouge">kube-cross</code> image lacks <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code>.”</p>
+<p><strong>Go toolchain version:</strong> current minimum enforced is 1.27.1 (per <code class="language-plaintext highlighter-rouge">.go-version</code>). Go has supported <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code> since Go 1.14 and promoted it toward first-class status by Go 1.22+. The Go toolchain itself is not a blocker to building Kubernetes for riscv64.</p>
 
-<p><strong>QEMU emulation:</strong> PR #116686 proposed adding <code class="language-plaintext highlighter-rouge">["riscv64"]="riscv64"</code> to the <code class="language-plaintext highlighter-rouge">QEMUARCHS</code> map in <code class="language-plaintext highlighter-rouge">test/images/image-util.sh</code>. Standard <code class="language-plaintext highlighter-rouge">qemu-user-static</code> binfmt_misc registration would then enable riscv64 container image builds on x86_64 hosts. This has not been merged.</p>
-
-<p><strong>What adding riscv64 requires in the build system (from PR #116686 analysis):</strong></p>
+<p><strong>Items required to add riscv64 as a supported build platform (per PR #116686’s own enumeration, largely still applicable):</strong></p>
 
 <ol>
-  <li><code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code> – add <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to all four <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_*_PLATFORMS</code> arrays; extend fast-build arch check</li>
-  <li><code class="language-plaintext highlighter-rouge">build/pause/Makefile</code> – add <code class="language-plaintext highlighter-rouge">riscv64</code> to <code class="language-plaintext highlighter-rouge">ALL_ARCH.linux</code>; set <code class="language-plaintext highlighter-rouge">TRIPLE.linux-riscv64 := riscv64-linux-gnu</code></li>
-  <li><code class="language-plaintext highlighter-rouge">cluster/images/etcd/Makefile</code> – add <code class="language-plaintext highlighter-rouge">riscv64</code> to <code class="language-plaintext highlighter-rouge">ALL_ARCH.linux</code>; set base image (e.g., <code class="language-plaintext highlighter-rouge">docker.io/riscv64/debian:sid-slim</code>)</li>
-  <li><code class="language-plaintext highlighter-rouge">hack/lib/util.sh</code> – add <code class="language-plaintext highlighter-rouge">riscv64*) host_arch=riscv64 ;;</code> case</li>
-  <li><code class="language-plaintext highlighter-rouge">test/images/image-util.sh</code> – add <code class="language-plaintext highlighter-rouge">["riscv64"]="riscv64"</code> to <code class="language-plaintext highlighter-rouge">QEMUARCHS</code></li>
-  <li><code class="language-plaintext highlighter-rouge">test/typecheck/main.go</code> – add <code class="language-plaintext highlighter-rouge">"linux/riscv64"</code> to typecheck platform list</li>
-  <li><code class="language-plaintext highlighter-rouge">kubernetes/release</code> kube-cross Dockerfile – install <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>; add <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to <code class="language-plaintext highlighter-rouge">KUBE_CROSSPLATFORMS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code>, add <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to the four <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_*_PLATFORMS</code> arrays</li>
+  <li><code class="language-plaintext highlighter-rouge">build/pause/Makefile</code>, add riscv64 (in progress via open PR #141291)</li>
+  <li><code class="language-plaintext highlighter-rouge">cluster/images/etcd/Makefile</code>, add riscv64 and a riscv64 base image</li>
+  <li><code class="language-plaintext highlighter-rouge">hack/lib/util.sh</code>, add a <code class="language-plaintext highlighter-rouge">riscv64*) host_arch=riscv64 ;;</code> case</li>
+  <li><code class="language-plaintext highlighter-rouge">test/images/image-util.sh</code>, add <code class="language-plaintext highlighter-rouge">riscv64</code> to <code class="language-plaintext highlighter-rouge">QEMUARCHS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">test/typecheck/main.go</code>, add <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to the typecheck platform list</li>
+  <li><code class="language-plaintext highlighter-rouge">kubernetes/release</code> kube-cross Dockerfile, install a riscv64 cross-compiler and add <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to <code class="language-plaintext highlighter-rouge">KUBE_CROSSPLATFORMS</code> (tracked by release#4489)</li>
 </ol>
 
-<p>The code changes are mechanical and small. The blocking constraint is not code complexity – it is CI infrastructure.</p><hr />
+<p>The code changes required are small and mechanical. The persistent blocking constraint, across every rejected attempt since 2019, is CI infrastructure and organizational policy, not code complexity (see Sections 7 and 12).</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -564,8 +642,6 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
   
 </h2>
     
-
-<p>The following table covers the components and features that constitute a functioning Kubernetes cluster.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -579,35 +655,7 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
   </thead>
   <tbody>
     <tr>
-      <td>kube-apiserver</td>
-      <td>Official binary</td>
-      <td>Official binary</td>
-      <td>No official binary</td>
-      <td>Release gap</td>
-    </tr>
-    <tr>
-      <td>kube-scheduler</td>
-      <td>Official binary</td>
-      <td>Official binary</td>
-      <td>No official binary</td>
-      <td>Release gap</td>
-    </tr>
-    <tr>
-      <td>kube-controller-manager</td>
-      <td>Official binary</td>
-      <td>Official binary</td>
-      <td>No official binary</td>
-      <td>Release gap</td>
-    </tr>
-    <tr>
-      <td>kube-proxy</td>
-      <td>Official binary</td>
-      <td>Official binary</td>
-      <td>No official binary</td>
-      <td>Release gap</td>
-    </tr>
-    <tr>
-      <td>kubelet</td>
+      <td>kube-apiserver, kube-scheduler, kube-controller-manager, kube-proxy, kubelet</td>
       <td>Official binary</td>
       <td>Official binary</td>
       <td>No official binary</td>
@@ -617,21 +665,21 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
       <td>kubectl (client)</td>
       <td>Official binary</td>
       <td>Official binary</td>
-      <td>No official binary (Debian sid only)</td>
+      <td>No official upstream binary; patched Debian sid build only (client-only)</td>
       <td>Release gap</td>
     </tr>
     <tr>
       <td>pause container image</td>
       <td>Official (registry.k8s.io)</td>
       <td>Official</td>
-      <td>No official image</td>
+      <td>No official image; open PR #141291 pending</td>
       <td>Image gap</td>
     </tr>
     <tr>
       <td>kube-cross build image</td>
       <td>Full toolchain</td>
       <td>Full toolchain</td>
-      <td>No toolchain, image missing riscv64-gcc</td>
+      <td>No riscv64 toolchain installed</td>
       <td>Build infrastructure gap</td>
     </tr>
     <tr>
@@ -642,44 +690,47 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
       <td>Image gap</td>
     </tr>
     <tr>
-      <td>CI coverage (Prow/TestGrid)</td>
+      <td>CI coverage</td>
       <td>Full, release-blocking</td>
       <td>Full, release-blocking</td>
-      <td>None</td>
+      <td>None confirmed (no GitHub Actions workflows exist in this repo at all; Prow coverage in kubernetes/test-infra not independently checked this round)</td>
       <td>CI gap</td>
+    </tr>
+    <tr>
+      <td>Pod live migration / checkpoint-restore (CRIU)</td>
+      <td>Supported (via containerd)</td>
+      <td>Supported</td>
+      <td>Unavailable, CRIU has no riscv64 implementation</td>
+      <td>Feature gap</td>
     </tr>
     <tr>
       <td>kubeadm preflight checks</td>
       <td>Pass</td>
       <td>Pass</td>
-      <td>Fail (SystemVerification, KubeletVersion) [NEEDS VERIFICATION]</td>
+      <td>Reported failures requiring <code class="language-plaintext highlighter-rouge">--ignore-preflight-errors</code> on a v1.16-era community deployment [NEEDS VERIFICATION, single community source, version outdated]</td>
       <td>Compatibility gap</td>
     </tr>
     <tr>
       <td>iptables / nftables</td>
       <td>nftables default</td>
       <td>nftables default</td>
-      <td>Legacy iptables required [NEEDS VERIFICATION]</td>
+      <td>Legacy iptables reportedly required on a v1.16-era community deployment [NEEDS VERIFICATION, single community source, version outdated]</td>
       <td>Kernel feature gap</td>
-    </tr>
-    <tr>
-      <td>Pod live migration (CRIU)</td>
-      <td>Supported (containerd)</td>
-      <td>Supported</td>
-      <td>Unavailable (CRIU has no riscv64 support)</td>
-      <td>Feature gap</td>
-    </tr>
-    <tr>
-      <td>Vendor syscall bindings (x/sys)</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Auto-generated partial set</td>
-      <td>Minor vendor gap</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The iptables and kubeadm preflight items are sourced from <a href="https://github.com/carlosedp/riscv-bringup/blob/master/kubernetes/Readme.md">carlosedp/riscv-bringup</a> which documents a Kubernetes v1.16-era deployment. These issues may be resolved in current kernel versions; both are marked [NEEDS VERIFICATION].</p><hr />
+<p><strong>Performance gap evidence (new this cycle):</strong> the only rigorous, peer-reviewed benchmark of Kubernetes-adjacent orchestration on RISC-V found is Lumpp, Barchi, Acquaviva and Bombieri, “On the Containerization and Orchestration of RISC-V architectures for Edge-Cloud computing,” ESAAM 2023 (<a href="https://dl.acm.org/doi/fullHtml/10.1145/3624486.3624490">ACM DL</a>, <a href="https://cris.unibo.it/retrieve/976f8d03-98e3-4565-b2c4-a921e6561322/3624486.3624490.pdf">PDF</a>). This paper does not test vanilla kubernetes/kubernetes; it tests a custom-built fork called <strong>KubeEdge-V</strong> (KubeEdge ported to RISC-V) on a SiFive HiFive Unmatched board (4x U74 cores at 1GHz, part of the “Monte Cimone” cluster), compared against a power-matched NVIDIA Jetson Xavier AGX (ARM64, throttled to 4 cores at 1.2GHz). Results:</p>
+
+<ul>
+  <li>Sysbench (CPU, 1M primes, 4 threads): RISC-V native 2.47 event/s to KubeEdge 2.46 event/s (-0.4% overhead); ARM64 native 6.40 to KubeEdge 6.17 (-3.7% overhead).</li>
+  <li>STREAM memory bandwidth: average orchestration overhead was +0.4% on RISC-V vs -3.8% on ARM64 (absolute bandwidth remains far lower on RISC-V, roughly 30 GB/s theoretical max dual-channel DDR4-1866 64-bit bus vs roughly 86 GB/s on the Jetson’s LPDDR4x-1333 256-bit bus).</li>
+  <li>Phoronix test suite (Rodinia/LavaMD, x265, 7-Zip, POV-Ray, OpenSSL): average overhead -1.9% on RISC-V vs -3.1% on ARM64.</li>
+  <li>OSBench/IPC-Benchmark/stress-ng (OS-level): average overhead -5.4% on RISC-V vs -2.9% on ARM64, with a notable outlier: <strong>a 21.4% context-switch performance loss on RISC-V under KubeEdge vs only 0.26% on ARM64</strong>, traced via <code class="language-plaintext highlighter-rouge">perf</code> to container-runtime syscall interception adding up to 40% extra syscall time (syscall time: native 192.18ns, manual namespaces/cgroups 191.72ns, KubeEdge 206.48ns).</li>
+  <li>Memory footprint: KubeEdge plus EdgeMesh plus CRI-O used roughly 250MB system memory on the RISC-V board; per-container overhead ranged from 1.4MB at 4 containers to 1.9MB at 64 containers (122.52MB total overhead at 64 containers).</li>
+</ul>
+
+<p>The paper’s conclusion: containerization/orchestration overhead on RISC-V is comparable to, and in several application-level benchmarks smaller than, ARM64; OS-level process/thread/context-switch operations suffer disproportionately due to an unoptimized container-runtime syscall-interception path, and the roughly 250MB memory footprint is a real constraint on memory-limited edge boards. This is a substantive, citable data point but is scoped to a research fork (KubeEdge-V) on 2023-era, low-power RISC-V hardware, not to kubernetes/kubernetes itself or to current-generation RISC-V server silicon. No other quantitative, independently verifiable riscv64-vs-arm64/amd64 Kubernetes benchmark was found; a secondary MDPI paper reference (“Evaluating ARM and RISC-V Architectures for HPC with Docker and Kubernetes”) could not be fetched (HTTP 403) and its figures are cited only via search-engine summary, not verified against the source PDF [NEEDS VERIFICATION].</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -689,25 +740,44 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
 </h2>
     
 
-<p><strong>Official CI coverage for riscv64: zero.</strong></p>
+<p><strong>Official riscv64 CI coverage: zero, and confirmed in an adversarial verification pass this cycle.</strong></p>
 
-<p>Kubernetes CI is run by Prow, with job definitions in <a href="https://github.com/kubernetes/test-infra">kubernetes/test-infra</a>. Direct inspection of the relevant job configuration files confirms:</p>
+<p>Direct inspection of the <code class="language-plaintext highlighter-rouge">.github</code> directory on the default branch (<code class="language-plaintext highlighter-rouge">github.com/kubernetes/kubernetes/tree/master/.github</code>) shows only <code class="language-plaintext highlighter-rouge">ISSUE_TEMPLATE/</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, <code class="language-plaintext highlighter-rouge">PULL_REQUEST_TEMPLATE.md</code> and <code class="language-plaintext highlighter-rouge">SECURITY.md</code>; there is no <code class="language-plaintext highlighter-rouge">workflows/</code> subdirectory at all. Kubernetes has <strong>no GitHub Actions CI of any kind</strong> in this repository, riscv64 or otherwise; confirmed independently via the repository’s Actions tab, which lists only GitHub’s own auto-injected default workflows (Copilot, Copilot code review, Dependency Graph). GitHub code search scoped to <code class="language-plaintext highlighter-rouge">repo:kubernetes/kubernetes</code> for <code class="language-plaintext highlighter-rouge">riscv64</code> returns 0 results repo-wide, and for <code class="language-plaintext highlighter-rouge">riscv</code> returns exactly 1 result (the NUMA comment noted in Section 4); neither is CI-related.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">config/jobs/kubernetes/sig-release/kubernetes-builds.yaml</code> – cross-build jobs run on AWS EKS and GCP; no riscv64 architecture enumeration</li>
-  <li><code class="language-plaintext highlighter-rouge">config/jobs/kubernetes/sig-node/node-kubelet.yaml</code> – 20 jobs; only arm64 appears once (<code class="language-plaintext highlighter-rouge">--target-build-arch=linux/arm64</code>); riscv64 absent</li>
-  <li>TestGrid dashboards – architectures tested: amd64, arm64, ppc64le, s390x; riscv64 absent</li>
-</ul>
+<p>Kubernetes’ actual pre-submit/post-submit CI runs on <strong>Prow</strong>, configured in the separate <code class="language-plaintext highlighter-rouge">kubernetes/test-infra</code> repository, which could not be directly inspected this cycle (GitHub MCP access was scoped to <code class="language-plaintext highlighter-rouge">riseproject-dev/sw-ecosystem</code> only, and <code class="language-plaintext highlighter-rouge">kubernetes/test-infra</code> was out of scope for the checks performed). Given PR #123661 was explicitly rejected by @liggitt for lacking “a wide battery of CI jobs,” and no tracking issue or PR in the available evidence claims a Prow job for riscv64 was ever merged, there is no basis in the available evidence to believe such a job exists, but <code class="language-plaintext highlighter-rouge">kubernetes/test-infra</code> itself was not directly re-checked this round.</p>
 
-<p>There is no <code class="language-plaintext highlighter-rouge">.github/workflows/</code> directory in kubernetes/kubernetes. The repo has no GitHub Actions workflows at all; CI is entirely Prow-based.</p>
+<p><strong>RISE RISC-V Runners:</strong> the RISE Project announced a free, native RISC-V GitHub Actions runner service in March 2026 (Scaleway EM-RV1 bare-metal hardware). It is used internally by the RISE Project’s own infrastructure (a Kubernetes device plugin schedules CI jobs onto RISC-V worker nodes) and by CNCF-adjacent projects including k0s (nightly RISC-V builds pending per k0sproject/k0s#7414, referenced in the Kairos blog post as k0s issue 1919) and Kairos (via kairos-init and hadron, both building and testing continuously on RISE runners). As of the most recent check, no Kubernetes upstream (kubernetes/kubernetes) CI job uses the RISE runners.</p>
 
-<p>No QEMU-based riscv64 emulation jobs exist in any CI tier (blocking, informing, or experimental).</p>
-
-<p><strong>Hardware availability:</strong> @BenTheElder stated in <a href="https://github.com/kubernetes/kubernetes/issues/132836">issue #132836</a> (2025-07-09): “Is there a lack of RISC-V servers for CI/CD automation testing and builds? Yes.” and “NOTE: We also do not have any CI resources available for this architecture.”</p>
-
-<p>@pl4nty noted in issue #132836 (2025-11-28) that a particular riscv64 CI job took over 10 hours – a maintainer asked for under 1 hour (the amd64/arm64 standard) before considering official support. This is the practical hardware performance constraint for CI viability [NEEDS VERIFICATION for the specific time figures].</p>
-
-<p><strong>RISE RISC-V Runners:</strong> The RISE Project announced a free native RISC-V GitHub Actions runner service in March 2026 (label: <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>, backed by Scaleway EM-RV1 bare-metal hardware). The service is used by cloud-native ecosystem projects including k0s (k0sproject/k0s#7414 pending merge for nightly builds), Kairos (kairos-io/kairos-init), and kubetail-org/kubetail (499 jobs). The RISE service uses Kubernetes internally (each job runs as an ephemeral Kubernetes pod via a custom device plugin). As of June 2026, no Kubernetes upstream CI jobs use the RISE runners, but active engagement is described as underway.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GitHub Actions workflows in kubernetes/kubernetes</td>
+      <td>None (repo has no GHA workflows for any platform)</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Prow (kubernetes/test-infra)</td>
+      <td>Full, release-blocking</td>
+      <td>Full, release-blocking</td>
+      <td>Not confirmed present; not directly re-checked this cycle</td>
+    </tr>
+    <tr>
+      <td>Free native CI hardware available via RISE</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Yes (RISE RISC-V Runners), not yet integrated with Kubernetes upstream Prow</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -717,35 +787,86 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
 </h2>
     
 
-<p><strong>Upstream Kubernetes releases (dl.k8s.io / github.com/kubernetes/kubernetes):</strong></p>
+<p><strong>Canonical release binaries (dl.k8s.io):</strong> directly verified this cycle. <code class="language-plaintext highlighter-rouge">https://dl.k8s.io/v1.37.1/bin/linux/riscv64/kubectl</code> returns <strong>HTTP 404 Not Found</strong>. A control check of the same release for a supported architecture, <code class="language-plaintext highlighter-rouge">https://dl.k8s.io/v1.37.1/bin/linux/amd64/kubectl</code>, resolves to a real binary object (the fetch tool’s own size cap was the only failure mode, confirming the URL pattern is valid and serves real content for amd64). This is a direct, positive confirmation of absence, not a missing-URL artifact.</p>
 
-<p>The v1.36.2, v1.35.6, and v1.34.9 releases have <code class="language-plaintext highlighter-rouge">"assets": []</code> in the GitHub API – binaries are distributed via dl.k8s.io, not as GitHub release file attachments. The CHANGELOG-1.36.md download section lists the following supported architectures:</p>
+<p>CHANGELOG download tables for v1.36, v1.35 and v1.34 (checked against v1.36.2, v1.35.6, v1.34.9 per the readiness grade below) list supported client architectures as linux-386/amd64/arm/arm64/ppc64le/s390x, darwin-amd64/arm64, windows-386/amd64/arm64; server as linux-amd64/arm64/ppc64le/s390x; node as linux-amd64/arm64/ppc64le/s390x plus windows-amd64. riscv64 is absent from every category in every checked release.</p>
+
+<p><strong>GitHub Releases:</strong> recent releases (v1.38.0-alpha.1, v1.37.1, v1.36.5, v1.35.9, v1.34.12) each show only “Assets 2,” the standard GitHub auto-generated source <code class="language-plaintext highlighter-rouge">.zip</code>/<code class="language-plaintext highlighter-rouge">.tar.gz</code>, not platform binaries for any architecture, because dl.k8s.io is the canonical binary distribution channel. This is expected behavior and not specific evidence against riscv64, but it confirms GitHub Releases cannot be used to find riscv64 artifacts either.</p>
+
+<p><strong>Container images (registry.k8s.io):</strong> all official Kubernetes component images (kube-apiserver, kube-scheduler, kube-controller-manager, kube-proxy, pause, etc.) are published for amd64, arm64, ppc64le and s390x. No riscv64 manifests exist in the official registry.</p>
+
+<p><strong>Debian Unstable (sid):</strong> the <code class="language-plaintext highlighter-rouge">kubectl</code> binary (v1.33.4+ds-1 per prior verification) is listed as built on riscv64 at <a href="https://buildd.debian.org/status/package.php?p=kubernetes">buildd.debian.org</a>. This is a patched, Debian-source-repackaged (<code class="language-plaintext highlighter-rouge">+ds</code> suffix) cross-compilation, not an upstream Kubernetes release artifact, and it produces only <code class="language-plaintext highlighter-rouge">kubectl</code>, <code class="language-plaintext highlighter-rouge">kubernetes-client</code> and <code class="language-plaintext highlighter-rouge">golang-k8s-kubectl-dev</code>, not server-side components (kube-apiserver, kubelet, etc.). This is the specific artifact underlying the readiness grade’s “patched, not clean” distro distinction (Section 13).</p>
+
+<p><strong>Ubuntu archive:</strong> a direct check against Ubuntu 26.04 (“resolute”) via <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> found 7 matching packages containing “kubernetes” in the name, none named plainly <code class="language-plaintext highlighter-rouge">kubernetes</code> or <code class="language-plaintext highlighter-rouge">libkubernetes</code>:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Package</th>
+      <th>Version</th>
+      <th>Arches</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>golang-github-kubernetes-cri-api-dev</td>
+      <td>-</td>
+      <td>all</td>
+    </tr>
+    <tr>
+      <td>golang-github-kubernetes-gengo-dev</td>
+      <td>-</td>
+      <td>all</td>
+    </tr>
+    <tr>
+      <td>golang-github-kubernetes-kubelet-dev</td>
+      <td>-</td>
+      <td>all</td>
+    </tr>
+    <tr>
+      <td>golang-github-ovn-kubernetes-libovsdb-dev</td>
+      <td>-</td>
+      <td>all</td>
+    </tr>
+    <tr>
+      <td>kubernetes-split-yaml</td>
+      <td>0.4.0-1build2</td>
+      <td>amd64, arm64, armhf, ppc64el, <strong>riscv64</strong>, s390x</td>
+    </tr>
+    <tr>
+      <td>python3-kubernetes</td>
+      <td>30.1.0-3</td>
+      <td>all (architecture-independent)</td>
+    </tr>
+    <tr>
+      <td>rsyslog-kubernetes</td>
+      <td>8.2512.0-1</td>
+      <td>amd64, arm64, armhf, ppc64el, <strong>riscv64</strong>, s390x</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>A separate, independent check against the authoritative Ubuntu archive database (Launchpad, used because <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> returned HTTP 503 on repeated attempts) found that the literal <code class="language-plaintext highlighter-rouge">kubernetes</code> source package has <strong>no current release in resolute at all</strong> (“There is no current release of this source package in The Resolute Raccoon”); its broader history shows a stale stub frozen at version “1.0,” last touched in 2019 (Focal), 2021 (Jammy) and 2023 (Noble), unrelated in substance to real upstream Kubernetes 1.3x and never published for resolute on any architecture. This corrects and supersedes the notion of a meaningful <code class="language-plaintext highlighter-rouge">kubernetes</code> package existing in current Ubuntu releases: the only real, current riscv64-relevant Ubuntu artifacts are <code class="language-plaintext highlighter-rouge">kubernetes-split-yaml</code> and <code class="language-plaintext highlighter-rouge">rsyslog-kubernetes</code> (both minor utilities, both built for riscv64), plus <code class="language-plaintext highlighter-rouge">python3-kubernetes</code> (architecture-independent).</p>
+
+<p><strong>PyPI (Python client library, not the orchestrator):</strong> current version 36.0.3, shipped only as <code class="language-plaintext highlighter-rouge">py3-none-any</code> wheels and a source tarball, architecture-independent by design; this was cross-checked across 200+ historical release files (0.0.0a2 to 37.0.0b1) with zero riscv64-specific files found, consistent with pure-Python packaging needing none. The RISE GitLab wheel-builder project (<code class="language-plaintext highlighter-rouge">gitlab.com/.../packages/pypi/simple/kubernetes/</code>) returns an HTTP 302 redirect to real PyPI, confirming no custom riscv64 build was needed or registered.</p>
+
+<p><strong>Arch Linux RISC-V:</strong> <code class="language-plaintext highlighter-rouge">kubernetes-control-plane-common-1.35.4-1-riscv64.pkg.tar.zst</code> and <code class="language-plaintext highlighter-rouge">python-kubernetes-33.1.0-1-any.pkg.tar.zst</code> were previously reported as available; this could not be re-verified this cycle (the archriscv.felixc.at package search did not return usable results via automated fetch). [NEEDS VERIFICATION, single source, unconfirmed this cycle]</p>
+
+<p><strong>Snap Store:</strong> the <code class="language-plaintext highlighter-rouge">kubectl</code> snap’s architecture list could not be checked this cycle (API endpoint requires a header the fetch tool could not set). [NEEDS VERIFICATION]</p>
+
+<p><strong>Community/third-party builds (all non-upstream):</strong></p>
 
 <ul>
-  <li>Client: linux-386, linux-amd64, linux-arm, linux-arm64, linux-ppc64le, linux-s390x, darwin-amd64, darwin-arm64, windows-386, windows-amd64, windows-arm64</li>
-  <li>Server: linux-amd64, linux-arm64, linux-ppc64le, linux-s390x</li>
-  <li>Node: linux-amd64, linux-arm64, linux-ppc64le, linux-s390x, windows-amd64</li>
+  <li><a href="https://github.com/go-riscv/kind">go-riscv/kind</a>, community riscv64 builds of kind, kubectl, kubeadm, k9s</li>
+  <li><a href="https://github.com/CARV-ICS-FORTH/kubernetes-riscv64">CARV-ICS-FORTH/kubernetes-riscv64</a>, a k3s-based riscv64 port, 35 stars, last updated 2026-08-26, funded via the EU RISER, AERO and REBECCA/Chips JU programs</li>
+  <li><a href="https://github.com/alitariq4589/kubernetes-riscv/releases">alitariq4589/kubernetes-riscv</a>, periodic upstream-tag tracking releases</li>
+  <li><a href="https://github.com/portainer/kubesolo">portainer/kubesolo</a>, a lightweight Kubernetes distribution with riscv64 support</li>
+  <li><a href="https://github.com/carlosedp/riscv-bringup">carlosedp/riscv-bringup</a>, a guide for running Kubernetes/K3s on RISC-V</li>
+  <li>Kairos (CNCF Sandbox), publishing bootable riscv64 ISOs and a raw OCI disk image (<code class="language-plaintext highlighter-rouge">quay.io/mauromorales/kairos-riscv64:0.1.3-img</code>) that boots k3s on riscv64, per the RISE blog post of 2026-09-28</li>
+  <li>The <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub org’s <code class="language-plaintext highlighter-rouge">kubernetes-riscv</code> repository, the current home of RISE/community riscv64 enablement discussion (issue #2, Section 2 and 12)</li>
 </ul>
 
-<p>riscv64 is absent from all three categories in all checked releases.</p>
-
-<p><strong>Container images (registry.k8s.io):</strong> All official Kubernetes component images (kube-apiserver, kube-scheduler, kube-controller-manager, kube-proxy, pause, etc.) are published for amd64, arm64, ppc64le, and s390x. No riscv64 manifests exist in the official registry.</p>
-
-<p><strong>Debian Unstable (sid):</strong> The <code class="language-plaintext highlighter-rouge">kubectl</code> binary (v1.33.4+ds-1) is listed as “Installed” on riscv64 at <a href="https://buildd.debian.org/status/package.php?p=kubernetes">buildd.debian.org</a>. This is a Debian cross-compilation from patched source; it is not an upstream Kubernetes release artifact. The <code class="language-plaintext highlighter-rouge">+ds</code> suffix denotes Debian source repackaging. The Debian kubernetes source package produces only <code class="language-plaintext highlighter-rouge">kubectl</code>, <code class="language-plaintext highlighter-rouge">kubernetes-client</code>, and <code class="language-plaintext highlighter-rouge">golang-k8s-kubectl-dev</code> – it does not build server-side components (kube-apiserver, kubelet, etc.). A riscv64 kubectl in Debian sid is not a deployable Kubernetes cluster.</p>
-
-<p><strong>Arch Linux RISC-V (archriscv.felixc.at):</strong> <code class="language-plaintext highlighter-rouge">kubernetes-control-plane-common-1.35.4-1-riscv64.pkg.tar.zst</code> (built 2026-04-22) and <code class="language-plaintext highlighter-rouge">python-kubernetes-33.1.0-1-any.pkg.tar.zst</code> are available. [NEEDS VERIFICATION – secondary source only; Arch RISC-V is a community port.]</p>
-
-<p><strong>Ubuntu 24.04 Noble:</strong> The <code class="language-plaintext highlighter-rouge">kubernetes</code> package (version 1.0) in Noble is <code class="language-plaintext highlighter-rouge">arch=all</code> (a metapackage/installer), available on riscv64 because arch=all packages are architecture-independent. This is not a native binary build.</p>
-
-<p><strong>Third-party unofficial riscv64 Kubernetes builds (community-maintained):</strong></p>
-
-<ul>
-  <li><a href="https://github.com/alitariq4589/kubernetes-riscv/releases">alitariq4589/kubernetes-riscv</a> – periodic release tracking of upstream tags</li>
-  <li><a href="https://github.com/CARV-ICS-FORTH/kubernetes-riscv64">CARV-ICS-FORTH/kubernetes-riscv64</a> – K3s-based port (chazapis), maintained for 2+ years as of 2025</li>
-  <li>KubeSolo (shanduur) – unofficial, community build</li>
-  <li>Unofficial Talos Linux port (pl4nty) – includes kubernetes, etcd, and dependency tree</li>
-  <li><a href="https://github.com/kubernetes/kubernetes/compare/master...riseproject-dev:kubernetes-riscv:riscv-support">riseproject-dev/kubernetes-riscv</a> – <code class="language-plaintext highlighter-rouge">riscv-support</code> branch and <code class="language-plaintext highlighter-rouge">riscv-support-v1.36</code> branch, backed by RISE, being prepared for upstream submission by brianredbeard</li>
-</ul><hr />
+<p><strong>Bottom line for a user wanting a working riscv64 binary:</strong> no official upstream path exists. The only client-only option close to upstream fidelity is the patched Debian sid <code class="language-plaintext highlighter-rouge">kubectl</code> build. A functioning cluster requires assembling community forks (CARV-ICS-FORTH’s k3s port, Kairos’s k3s-based images, or similar), none of which are official Kubernetes releases.</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -755,110 +876,152 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
 </h2>
     
 
-<p>The following table covers direct dependencies that affect riscv64 Kubernetes cluster deployability.</p>
+<p>The following table covers the ten direct dependencies in scope for this report, plus additional indirect dependencies surfaced during research.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
+      <th>Relation</th>
+      <th>Criticality</th>
       <th>Role</th>
       <th>riscv64 Build</th>
-      <th>riscv64 CI</th>
-      <th>riscv64 Release Artifacts</th>
+      <th>riscv64 CI/Test</th>
+      <th>riscv64 Release/Artifacts</th>
       <th>Blocking Issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>Go runtime</strong></td>
-      <td>Primary language; all Kubernetes binaries compiled with Go</td>
-      <td>Yes (since Go 1.14, secondary; first-class since ~1.22)</td>
-      <td>Go’s own CI covers riscv64</td>
-      <td>Released with every Go toolchain</td>
-      <td>No blockers</td>
+      <td>Go</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Compiler and runtime for all Kubernetes binaries</td>
+      <td>Yes, GOARCH=riscv64 supported since Go 1.14, first-class port since roughly Go 1.22</td>
+      <td>Covered by Go’s own upstream CI</td>
+      <td>Shipped with every Go toolchain release</td>
+      <td>None</td>
     </tr>
     <tr>
-      <td><strong>containerd</strong></td>
-      <td>Default CRI backend</td>
+      <td>etcd</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>Control-plane key-value store</td>
+      <td>Yes, <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH</code> workaround removed via <a href="https://github.com/etcd-io/etcd/pull/21510">PR #21510</a> (merged 2026-03-29)</td>
+      <td>No riscv64 CI found</td>
+      <td>No, absent from all release assets v3.4 through v3.7-rc</td>
+      <td>Hard blocker: no official release binaries despite build support</td>
+    </tr>
+    <tr>
+      <td>containerd</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Default CRI (container runtime) backend</td>
       <td>Yes</td>
-      <td>No riscv64 integration tests (issues #13020, #13124 open as of 2026-03-25)</td>
-      <td>Yes – v2.3.2 ships <code class="language-plaintext highlighter-rouge">containerd-2.3.2-linux-riscv64.tar.gz</code></td>
-      <td>CI gap (#13124 open); CRIU checkpoint not supported on riscv64</td>
+      <td>No dedicated riscv64 integration tests confirmed (issues #13020, #13124, carried from prior research, not re-verified live this cycle)</td>
+      <td>Yes, v2.3.2 ships <code class="language-plaintext highlighter-rouge">containerd-2.3.2-linux-riscv64.tar.gz</code></td>
+      <td>CI gap; CRIU checkpoint unsupported on riscv64</td>
     </tr>
     <tr>
-      <td><strong>runc</strong></td>
-      <td>OCI runtime (low-level container execution)</td>
+      <td>runc</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>OCI low-level container execution runtime</td>
       <td>Yes</td>
-      <td>CI includes riscv64 (<a href="https://github.com/opencontainers/runc/pull/5166">PR #5166</a> merged)</td>
-      <td>Yes – v1.5.0 ships <code class="language-plaintext highlighter-rouge">runc.riscv64</code></td>
-      <td>#3950 (open): musl static build broken on riscv64</td>
+      <td>CI reportedly includes riscv64 (<a href="https://github.com/opencontainers/runc/pull/5166">opencontainers/runc PR #5166</a>, merged; not re-verified live this cycle)</td>
+      <td>Yes, v1.5.0 ships <code class="language-plaintext highlighter-rouge">runc.riscv64</code></td>
+      <td>#3950 open: musl static build broken on riscv64</td>
     </tr>
     <tr>
-      <td><strong>etcd</strong></td>
-      <td>Control plane key-value store</td>
-      <td>Yes (ETCD_UNSUPPORTED_ARCH workaround removed <a href="https://github.com/etcd-io/etcd/pull/21510">PR #21510</a>, merged 2026-03-29)</td>
-      <td>No riscv64 CI</td>
-      <td>No – absent from all release assets v3.4 through v3.7-rc</td>
-      <td>Hard blocker: no release binaries; no CI</td>
-    </tr>
-    <tr>
-      <td><strong>CNI plugins</strong></td>
+      <td>CNI plugins</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Pod networking (bridge, loopback, host-local, portmap)</td>
       <td>Yes</td>
       <td>No dedicated riscv64 CI visible</td>
-      <td>Yes – v1.9.1 ships <code class="language-plaintext highlighter-rouge">cni-plugins-linux-riscv64-v1.9.1.tgz</code></td>
-      <td>No open blocking issues found</td>
+      <td>Yes, v1.9.1 ships <code class="language-plaintext highlighter-rouge">cni-plugins-linux-riscv64-v1.9.1.tgz</code></td>
+      <td>None found</td>
     </tr>
     <tr>
-      <td><strong>CoreDNS</strong></td>
+      <td>CoreDNS</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Cluster DNS</td>
       <td>Yes</td>
       <td>No dedicated riscv64 CI visible</td>
-      <td>Yes – v1.14.4 ships <code class="language-plaintext highlighter-rouge">coredns_1.14.4_linux_riscv64.tgz</code></td>
-      <td>No open blocking issues found</td>
+      <td>Yes, v1.14.4 ships <code class="language-plaintext highlighter-rouge">coredns_1.14.4_linux_riscv64.tgz</code></td>
+      <td>None found</td>
     </tr>
     <tr>
-      <td><strong>CRIU</strong></td>
-      <td>Pod live migration / checkpoint-restore</td>
+      <td>CRIU</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>Pod live migration and checkpoint-restore</td>
       <td>No</td>
       <td>N/A</td>
       <td>No</td>
-      <td><a href="https://github.com/checkpoint-restore/criu/issues/1702">criu/criu#1702</a> open since 2021 – RISC-V not implemented; blocks all checkpoint/restore features</td>
+      <td><a href="https://github.com/checkpoint-restore/criu/issues/1702">checkpoint-restore/criu#1702</a>, open since 2021, confirmed still open (last updated 2023-06-27, effectively stale); RISC-V not implemented</td>
     </tr>
     <tr>
-      <td><strong>libseccomp</strong></td>
-      <td>Syscall filtering (seccomp profiles)</td>
+      <td>libseccomp</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Syscall filtering for seccomp profiles</td>
       <td>Yes (v2.5.x+)</td>
       <td>Tested in CI</td>
       <td>Released</td>
-      <td>#327 (open): riscv32 not supported – does not affect riscv64</td>
+      <td>#327 open: riscv32 unsupported, does not affect riscv64</td>
     </tr>
     <tr>
-      <td><strong>distroless images</strong></td>
-      <td>Base images for Kubernetes component containers</td>
-      <td>Yes – distroless-debian13 (static, base, cc) merged Feb 2026 by @loosebazooka</td>
+      <td>Ginkgo</td>
+      <td>test-dependency</td>
+      <td>critical</td>
+      <td>Go BDD test framework used for Kubernetes e2e/unit test suites</td>
+      <td>Yes, enabled specifically via <a href="https://github.com/kubernetes/kubernetes/pull/86013">PR #86013</a>, merged 2019-12-20, the only riscv64-motivated merge into kubernetes/kubernetes core, shipped in v1.18.0 (2020-03-25)</td>
+      <td>Not independently exercised on riscv64 hardware for kubernetes/kubernetes, since no riscv64 CI runners exist for the project itself</td>
+      <td>N/A, test-only dependency, not a shipped artifact</td>
+      <td>None beyond the general absence of riscv64 CI</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>C cross-compiler needed for CGO-linked components (notably the pause image) inside the kube-cross build image</td>
+      <td>GCC itself has mature, long-standing upstream riscv64 support, but the specific <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code> package is absent from Kubernetes’ kube-cross image</td>
+      <td>N/A within kube-cross</td>
+      <td>kube-cross image does not currently ship a riscv64 cross-toolchain</td>
+      <td><a href="https://github.com/kubernetes/release/pull/4489">kubernetes/release#4489</a> (status not stated in available sources) is the current open item, referenced as a dependency of PR #141291; a prior attempt <a href="https://github.com/kubernetes/release/pull/4303">kubernetes/release#4303</a> was closed on hold over CI resource cost</td>
+    </tr>
+    <tr>
+      <td>distroless base images (indirect, via etcd/pause/component base images)</td>
+      <td>indirect runtime-dependency</td>
+      <td>critical (historical blocker)</td>
+      <td>Minimal base images for Kubernetes component containers</td>
+      <td>Yes, distroless-debian13 (static, base, cc) riscv64 images merged February 2026</td>
       <td>N/A</td>
       <td>Available for riscv64</td>
-      <td>Blocker resolved Feb 2026</td>
+      <td>Historical blocker resolved; corroborated by a March 2026 follow-up comment on PR #116686</td>
     </tr>
     <tr>
-      <td><strong>kube-cross image</strong></td>
-      <td>Official cross-compilation build container</td>
-      <td>No – no riscv64 toolchain</td>
+      <td>kube-cross build image (indirect, via GCC/toolchain)</td>
+      <td>indirect build-dependency</td>
+      <td>critical</td>
+      <td>Official cross-compilation container for all Kubernetes release builds</td>
+      <td>No riscv64 toolchain installed (see GCC row)</td>
       <td>N/A</td>
-      <td>No</td>
-      <td>PR #4303 (kubernetes/release) placed on hold by @BenTheElder, then closed; this is a current active blocker</td>
+      <td>Current pin <code class="language-plaintext highlighter-rouge">v1.38.0-go1.27.1-bullseye.0</code>, no riscv64 support</td>
+      <td>Same as GCC row above</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Summary of hard blockers for a production Kubernetes cluster on riscv64:</strong></p>
+<p><strong>Hard blockers for a deployable production riscv64 Kubernetes cluster, in order of severity:</strong></p>
 
 <ol>
-  <li><strong>etcd</strong> – no official riscv64 release binaries exist in any currently supported release series (v3.4 through v3.7-rc). A standard Kubernetes installation requires etcd; this is a single-point hard blocker.</li>
-  <li><strong>Kubernetes itself</strong> – not in the official supported platform list; no release binaries or container images published to <code class="language-plaintext highlighter-rouge">registry.k8s.io</code> for riscv64.</li>
-  <li><strong>kube-cross image</strong> – lacks <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code>; blocking the CI build pipeline and the pause container build.</li>
-  <li><strong>CRIU</strong> – checkpoint/restore unavailable on riscv64 since 2021, with no active upstream work. Blocks pod live migration and stateful container checkpointing.</li>
+  <li><strong>etcd</strong>: no official riscv64 release binaries exist in any currently supported release series, a single-point hard blocker for any standard Kubernetes installation.</li>
+  <li><strong>Kubernetes itself</strong>: not on the official supported platform list; no release binaries or container images published to registry.k8s.io for riscv64.</li>
+  <li><strong>kube-cross image</strong>: lacks a riscv64 cross-compiler (GCC), blocking the pause-image build and, by extension, the broader CI/release build pipeline.</li>
+  <li><strong>CRIU</strong>: no riscv64 support since the upstream issue was opened in 2021; blocks pod checkpoint/restore and live migration.</li>
 </ol><hr />
 <h2 id="10-ecosystem-status">
   
@@ -869,23 +1032,7 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
 </h2>
     
 
-<p><strong>RISE Project:</strong> The RISE Project (Linux Foundation) runs a free native RISC-V GitHub Actions runner service using Scaleway EM-RV1 bare-metal hardware. As of the six-weeks-in status post (May 2026), Kubernetes-adjacent projects using the runners include:</p>
-
-<ul>
-  <li><strong>kubetail-org/kubetail</strong> – real-time Kubernetes log explorer; 499 jobs logged</li>
-  <li><strong>k0s</strong> (CNCF Sandbox Kubernetes distro) – <a href="https://github.com/k0sproject/k0s/pull/7414">k0sproject/k0s#7414</a> pending merge to enable nightly RISC-V builds and tests</li>
-  <li><strong>Kairos</strong> (CNCF Sandbox, immutable Linux for edge/Kubernetes) – active use via kairos-io/kairos-init</li>
-</ul>
-
-<p>The RISE blog has zero posts mentioning Kubernetes upstream. The RISE wheel builder page (~80 Python packages for riscv64 binary wheels) does not include any Kubernetes packages (the Python client is pure Python and needs no riscv64 wheel).</p>
-
-<p>RISE has begun active engagement with the Kubernetes upstream per issue #132836: @luhenry (Ludovic Henry) commented 2025-11-03 offering funding, machines, engineering, and documentation resources. @BenTheElder directed engagement to SIG Release and SIG K8s Infra.</p>
-
-<p><strong>go-riscv GitHub org:</strong> Maintained by @ernado (author of PR #116686) to host riscv64 forks of cloud-native dependencies including etcd and Kubernetes base images. Referenced as an interim build source by the community.</p>
-
-<p><strong>k3s (Rancher/SUSE):</strong> No riscv64 release binaries found in k3s releases. [NEEDS VERIFICATION – community reportedly built K3s on riscv64 per multiple issue comments.]</p>
-
-<p><strong>Upstream engagement level:</strong> Five substantive community contributors have expressed intent to drive riscv64 support since 2019 (carlosedp, ernado, JasenChao, chazapis, brianredbeard/RISE). Two Steering Committee members (@BenTheElder, @saschagrunert) have engaged in the thread with substantive technical guidance. The March 2026 platform tier policy rewrite was explicitly motivated in part by the riscv64 discussion.</p><hr />
+<p>Not applicable. Kubernetes is an orchestration runtime/standalone platform, not a language runtime or package manager with a large dependent package ecosystem (comparable to, for example, PyPI, npm or Maven packages that must each be separately validated on riscv64). The Python client library (<code class="language-plaintext highlighter-rouge">kubernetes</code> on PyPI) is the only package-ecosystem-adjacent artifact identified, and it requires no riscv64-specific work because it ships pure-Python, architecture-independent wheels (Section 8). This section is omitted per the reporting criteria.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -895,24 +1042,42 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
 </h2>
     
 
-<p><strong>Open upstream issues:</strong></p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/kubernetes/kubernetes/issues/132836">kubernetes/kubernetes#132836</a></td>
+      <td>Proposal: Official Support for RISC-V Architecture and RVA23 Advancements</td>
+      <td>Open</td>
+      <td>N/A (feature proposal, not a bug)</td>
+      <td><code class="language-plaintext highlighter-rouge">needs-triage</code>; comment count is disputed between two research passes (26 vs 0), see Section 1</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/kubernetes/kubernetes/issues/139894">kubernetes/kubernetes#139894</a> / <a href="https://github.com/kubernetes/kubernetes/pull/141937">PR #141937</a></td>
+      <td><code class="language-plaintext highlighter-rouge">resource.Quantity.AsApproximateFloat64()</code> returns NaN instead of 0 for a zero-valued quantity with large scale</td>
+      <td>Closed, fixed, merged 2026-09-08, targeted for v1.38</td>
+      <td>Low, correctness</td>
+      <td>Surfaced in a “riscv nan floating” search but <strong>confirmed platform-independent</strong>: a pure math overflow bug (<code class="language-plaintext highlighter-rouge">0 * math.Pow10(overflow) = +Inf -&gt; NaN</code>), not RISC-V-specific. Authored by wilmerdooley, approved by jpbetz and liggitt</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/riseproject-dev/kubernetes-riscv/issues/2">riseproject-dev/kubernetes-riscv#2</a></td>
+      <td>Proposal: Joint collaboration to advance official RISC-V Tier 2 support for Kubernetes and etcd</td>
+      <td>Open</td>
+      <td>N/A (process/infrastructure issue, not a code bug)</td>
+      <td>Filed by ZTE Corporation, identifies insufficient CI hardware and a maintainer shortage as the concrete blockers; ZTE offers to donate physical RISC-V CI servers</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<ul>
-  <li><a href="https://github.com/kubernetes/kubernetes/issues/132836">Issue #132836</a> (2025-07-09, open): Proposal for official RISC-V support. Not a bug; a feature proposal awaiting triage. 11 upvote reactions. Stale lifecycle removed 2026-03-31 by @saschagrunert.</li>
-</ul>
-
-<p><strong>No riscv64-specific correctness or performance bugs are open in kubernetes/kubernetes.</strong> This absence reflects that riscv64 is untested and unsupported, not that it is defect-free.</p>
-
-<p><strong>Known practical issues from community builds (<a href="https://github.com/carlosedp/riscv-bringup/blob/master/kubernetes/Readme.md">carlosedp/riscv-bringup</a>, Kubernetes v1.16.0-era, [NEEDS VERIFICATION for current versions]):</strong></p>
-
-<ol>
-  <li>kubeadm preflight failures on riscv64: <code class="language-plaintext highlighter-rouge">--ignore-preflight-errors SystemVerification,KubeletVersion</code> required to bypass platform validation</li>
-  <li>API server liveness probe timeouts: <code class="language-plaintext highlighter-rouge">initialDelaySeconds</code> and <code class="language-plaintext highlighter-rouge">timeoutSeconds</code> require manual patching; indicates slower startup on RISC-V hardware relative to x86_64 baseline</li>
-  <li>iptables incompatibility: modern nftables-based iptables do not work on riscv64 kernel builds available at the time; all four tools (iptables, ip6tables, arptables, ebtables) require legacy variant</li>
-  <li>Missing upstream pause and CoreDNS images: pause Makefile requires patching to add riscv64 to <code class="language-plaintext highlighter-rouge">ALL_ARCH</code></li>
-</ol>
-
-<p><strong>Performance data:</strong> No published quantitative benchmarks exist for Kubernetes on riscv64 (pod scheduling latency, API server throughput, container startup time, etcd operation latency). No academic papers, vendor reports, or community benchmarks with actual numeric comparisons against amd64 or arm64 were found.</p><hr />
+<p><strong>No dedicated, open, RISC-V-labeled correctness or performance bug is filed against kubernetes/kubernetes itself.</strong> Targeted searches (<code class="language-plaintext highlighter-rouge">riscv64 bug</code>, <code class="language-plaintext highlighter-rouge">riscv nan floating</code>, scoped to the repository) returned zero riscv-specific hits beyond the items above. All substantive RISC-V activity in the core repository is enablement/support proposal work, not bug reports, consistent with riscv64 not yet being an officially built or tested platform (there is no CI to surface architecture-specific bugs). The real bug/blocker backlog for Kubernetes-on-RISC-V currently lives in process and infrastructure issues (CI hardware, maintainer capacity) rather than code defects. See Section 6 for the one architecture-specific performance characteristic found, the 21.4% context-switch regression observed in the KubeEdge-V research fork, which is not a filed bug against any tracked repository.</p><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -922,121 +1087,115 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
 </h2>
     
 
-<p>The primary gate has been stated consistently across three PR review cycles (2020, 2023, 2024) by two maintainers (@cblecker, @liggitt):</p>
+<p>The primary gate has been stated consistently across three PR review cycles (2020, 2023, 2024) by multiple maintainers:</p>
 
-<p><strong>@liggitt (Jordan Liggitt), reviewing <a href="https://github.com/kubernetes/kubernetes/pull/123661">PR #123661</a> on 2024-03-04:</strong></p>
+<p><strong>@cblecker, closing PR #86011 (2020):</strong> new architecture support requires a formal KEP via SIG Release; the project had not decided to take on any additional architectures.</p>
+
+<p><strong>@liggitt, reviewing PR #123661 (2024-03-04):</strong></p>
 <blockquote>
   <p>“It is not enough for builds to work as it gets bit-rotted quickly when we vendor in new changes, update versions of things we use etc. So we need a good set of tests that exercise a wide battery of jobs in this new architecture.”</p>
 </blockquote>
 
-<p><strong>@BenTheElder (Benjamin Elder), in <a href="https://github.com/kubernetes/kubernetes/issues/132836">issue #132836</a> on 2025-07-09, enumerating blockers:</strong></p>
+<p><strong>@BenTheElder, in issue #132836 (2025-07-09), enumerating blockers:</strong> confirmed a lack of RISC-V CI/CD servers, and cited manpower and maintenance concerns from “poor experiences with adding lesser used architectures in the past.” He also directed subsequent hardware/funding offers (including from RISE) to SIG Release and SIG K8s Infra.</p>
+
+<p><strong>@dims, placing <code class="language-plaintext highlighter-rouge">/hold</code> on PR #141291 (2026-08-10):</strong> blocked the minimal pause-image build PR pending resolution of the broader architecture-support policy discussion in #132836, an explicitly organizational/policy hold, not a technical objection to the diff itself.</p>
+
+<p><strong>ZTE Corporation, via riseproject-dev/kubernetes-riscv#2 (2026-07-20):</strong> independently converges on the same two blockers from the community side, insufficient CI hardware and a shortage of maintainers, and offers physical RISC-V CI server donation as a remedy. This stems from a CNCF TAG Infra discussion of a dedicated RISC-V enablement subproject.</p>
+
+<p><strong>Current formal path forward (as of September 2026):</strong> the parallel Tier 3 platform designation request, <a href="https://github.com/kubernetes/sig-release/issues/3107">sig-release#3107</a> and its implementing <a href="https://github.com/kubernetes/sig-release/pull/3110">PR #3110</a>, is the concrete mechanism most likely to satisfy the long-standing policy gate identified back in #86011. It is open, not yet merged or formally accepted, as of 2026-09-30.</p>
+
+<p><strong>Remaining blockers even if Tier 3 is granted:</strong></p>
 <ul>
-  <li>Lack of RISC-V CI/CD servers: “Yes” (explicit)</li>
-  <li>Manpower and maintenance concerns: “Yes” (explicit), citing “poor experiences with adding lesser used architectures in the past”</li>
-  <li>KVM/QEMU RISC-V virtualization maturity: “That doesn’t sound mature, which will be a problem for our qemu based cross-builds”</li>
+  <li>kube-cross image must gain a riscv64 cross-toolchain (kubernetes/release#4489, status not stated).</li>
+  <li>PR #141291’s <code class="language-plaintext highlighter-rouge">/hold</code> must be lifted, contingent on #132836 policy resolution.</li>
+  <li>No official etcd riscv64 release binaries exist, which blocks a standard deployable cluster regardless of Kubernetes’ own platform status.</li>
 </ul>
 
-<p><strong>@saschagrunert, in <a href="https://github.com/kubernetes/kubernetes/issues/132836">issue #132836</a> on 2026-03-31, post-policy-rewrite:</strong></p>
-<blockquote>
-  <p>“For RISC-V, the next step would be to target Tier 3 support, which requires: a documented, publicly available build process; no official builds or automated testing guarantees.”</p>
-</blockquote>
-
-<p><strong>Current formal path (as of March 2026):</strong> Tier 3 designation does not require a KEP. It requires: (1) a documented, publicly available build process; (2) a link to external artifacts. A PR demonstrating this plus engagement with SIG Release is the minimum viable path.</p>
-
-<p><strong>Remaining blockers for Tier 3:</strong></p>
-<ul>
-  <li>kube-cross image must be updated to include <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code> (kubernetes/release PR #4303 was closed; must be reopened or replaced)</li>
-  <li>Documented build process for riscv64 (not yet published as official documentation)</li>
-  <li>No current PR open against master (riseproject-dev/kubernetes-riscv <code class="language-plaintext highlighter-rouge">riscv-support</code> branch is in preparation but not submitted as of 2026-04-10)</li>
-</ul>
-
-<p><strong>Blockers resolved since 2023:</strong></p>
-<ul>
-  <li>distroless riscv64 images (merged Feb 2026) – previously the most-cited dependency gap</li>
-  <li>Platform tier policy now defines Tier 3 without KEP requirement (merged March 2026)</li>
-  <li>etcd can be built for riscv64 without <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH</code> override (PR #21510 merged 2026-03-29) – though etcd still ships no riscv64 release binaries</li>
-</ul><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Blockers resolved since 2023:</strong> distroless riscv64 base images (merged February 2026); the platform tier policy rewrite defining a documented Tier 3 path (merged March 2026); etcd’s <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH</code> build-time restriction removed (merged 2026-03-29), though etcd still ships no riscv64 release binaries.</p><hr />
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>The code changes required to add riscv64 to the Kubernetes build system are small and mechanical (7 files, 30-50 lines total, per PR #116686 analysis). The riscv64-motivated implementation work is dominated by CI infrastructure and build image work, not Kubernetes source code.</p>
-
-<p>The immediate code-level work items are:</p>
-
-<ol>
-  <li>Add <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to platform arrays in <code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code> – 4 line additions</li>
-  <li>Add riscv64 to <code class="language-plaintext highlighter-rouge">build/pause/Makefile</code> – 2 line additions</li>
-  <li>Add riscv64 to <code class="language-plaintext highlighter-rouge">cluster/images/etcd/Makefile</code> – 2-3 line additions</li>
-  <li>Update <code class="language-plaintext highlighter-rouge">hack/lib/util.sh</code> host arch detection – 1 line</li>
-  <li>Update <code class="language-plaintext highlighter-rouge">test/images/image-util.sh</code> QEMU map – 1 line</li>
-  <li>Update <code class="language-plaintext highlighter-rouge">test/typecheck/main.go</code> – 1 line</li>
-  <li>Update kube-cross Dockerfile (kubernetes/release) – install <code class="language-plaintext highlighter-rouge">crossbuild-essential-riscv64</code>, add to <code class="language-plaintext highlighter-rouge">KUBE_CROSSPLATFORMS</code></li>
-</ol>
-
-<p>The riseproject-dev/kubernetes-riscv <code class="language-plaintext highlighter-rouge">riscv-support</code> branch (brianredbeard) is being prepared covering these items. Effort to prepare and submit a clean upstream-mergeable PR is estimated at 2-4 person-weeks including maintainer iteration.</p>
-<h3 id="132-performance-optimization">
-  
-  
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>No performance work is required to reach Tier 3 or Tier 2. Performance optimization (SIMD, JIT) is not applicable to Kubernetes core – the project is written in pure Go with no architecture-specific code paths. Kubernetes performance on riscv64 will be hardware-bound (instruction throughput, memory bandwidth) and container runtime-bound (containerd, runc), not Kubernetes-code-bound.</p>
-
-<p>Data not available: quantitative latency or throughput comparison between riscv64 and arm64 for Kubernetes workloads. No benchmarks exist in any public source.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>This is the hardest item and the reason prior attempts stalled. The following CI items are needed to reach Tier 2 (informing CI, non-blocking):</p>
-
-<ol>
-  <li>Provision native riscv64 build machines in the Kubernetes CI cluster (Prow on GCP/AWS). The RISE RISC-V Runner service provides free GitHub Actions runners; these are GitHub Actions, not Prow. Integrating RISE runners with Prow’s autoscaling would require engineering work on both sides.</li>
-  <li>Add riscv64 Prow job definitions in kubernetes/test-infra covering at minimum: cross-build, kubelet unit tests, and conformance tests.</li>
-  <li>Address CI job execution time – one riscv64 job run was reported at 10+ hours [NEEDS VERIFICATION]. Hardware performance and QEMU emulation both contribute. Native hardware is required for sub-1-hour CI.</li>
-</ol>
-
-<p>Tier 3 requires none of this – it requires only a documented external build process with no Prow integration.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
-  
-  
-</h3>
-    
-
-<p>Two dependency gaps require investment to fully enable a deployable cluster:</p>
 
 <ul>
-  <li><strong>etcd:</strong> No riscv64 release binaries exist. The etcd team must add riscv64 to its release pipeline. This is a separate project with separate maintainers. Without riscv64 etcd release binaries, a standard Kubernetes installation is not possible regardless of Kubernetes build status.</li>
-  <li><strong>CRIU:</strong> No riscv64 support since issue opened in 2021. Checkpoint/restore for pods is unavailable. This is a separate project (checkpoint-restore/criu) requiring platform bring-up work.</li>
+  <li><strong>Color:</strong> Orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Justification:</strong> No riscv64 CI runs against kubernetes/kubernetes upstream (no Prow/TestGrid riscv64 jobs, no GitHub Actions) and no official riscv64 release binaries or container images are published (checked v1.36.2, v1.35.6, v1.34.9); see <a href="https://github.com/kubernetes/kubernetes/issues/132836">kubernetes/kubernetes#132836</a>. The only riscv64 availability is a patched Debian sid <code class="language-plaintext highlighter-rouge">kubectl</code> client build (client-only, not the core server components), which caps the grade at orange (downstream-only) per the distribution floor, since the distro build is patched rather than clean. Three substantive upstream attempts to add riscv64 build support (#86011, #116686, #123661) were each closed without merging, and the current minimal attempt (#141291, pause-image build) is open but on hold pending resolution of policy proposal #132836.</li>
+  <li><strong>Pending work that could change the grade:</strong> open PR <a href="https://github.com/kubernetes/kubernetes/pull/141291">#141291</a> (pause image riscv64 build, on <code class="language-plaintext highlighter-rouge">/hold</code> by maintainer dims); open tracking issue <a href="https://github.com/kubernetes/kubernetes/issues/132836">#132836</a> (untriaged, no maintainer consensus); the parallel Tier 3 platform designation proposal <a href="https://github.com/kubernetes/sig-release/issues/3107">kubernetes/sig-release#3107</a> and <a href="https://github.com/kubernetes/sig-release/pull/3110">PR #3110</a> (open, not yet merged or accepted as of 2026-09-30); informal RISE Project engagement offering CI and hardware resources on #132836, joined this cycle by a formal ZTE-filed collaboration proposal (<a href="https://github.com/riseproject-dev/kubernetes-riscv/issues/2">riseproject-dev/kubernetes-riscv#2</a>) offering physical CI server donation.</li>
 </ul>
-<h3 id="135-summary-table">
+
+<p>This is not an optimization-purpose project (no JIT, SIMD or numerics core requiring per-architecture tuning), so no optimization-level rating applies.</p><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
+  
+  
+</h3>
+    
+
+<p>The code changes required to add riscv64 to the Kubernetes build system are small and mechanical (roughly 7 files, tens of lines total, per the PR #116686 and #141291 analysis in Section 5). An open PR (#141291) already implements the first concrete piece (the pause image) but is held on policy, not engineering. The riscv64-motivated implementation work is dominated by CI infrastructure and build-image work, not Kubernetes source code itself. RISE has not, per available evidence, funded a direct engineering submission to kubernetes/kubernetes; its confirmed role to date is CI hardware (RISE RISC-V Runners) and informal advocacy on #132836. ZTE’s proposal (riseproject-dev/kubernetes-riscv#2) is a hardware and collaboration offer, not yet executed engineering work.</p>
+
+<p>Effort to prepare and land the remaining build-system changes (items 1, 3-6 from Section 5’s enumeration, since item 2 is already in flight as #141291) and shepherd them through review given the established CI-coverage bar: estimated 2-4 person-weeks including maintainer iteration, contingent on the policy question in #132836 being resolved first.</p>
+<h3 id="142-performance-optimization">
+  
+  
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
+  
+  
+</h3>
+    
+
+<p>No performance-tuning work is required to reach Tier 3 or Tier 2; Kubernetes core has no architecture-specific code paths to optimize (Section 4). Performance on riscv64 will be governed by hardware (instruction throughput, memory bandwidth) and by the container runtime layer (containerd, runc), not by Kubernetes-code-level bottlenecks. The one available data point (Section 6, ESAAM 2023 KubeEdge-V benchmark) suggests orchestration-layer overhead on RISC-V is broadly comparable to, and in several application-level tests smaller than, ARM64, with a notable OS-level context-switch regression traced to the container runtime’s syscall-interception path rather than to Kubernetes. That finding is on a research fork and 2023-era low-power hardware, not on current-generation RISC-V server silicon or on kubernetes/kubernetes proper, so it should inform but not substitute for a direct measurement before committing engineering time to runtime-layer syscall-path optimization.</p>
+<h3 id="143-cicd-infrastructure">
+  
+  
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+
+<p>This remains the critical-path item and the reason every prior attempt stalled. Required to reach Tier 2 (informing, non-blocking CI):</p>
+
+<ol>
+  <li>Provision native riscv64 build/test capacity reachable by Kubernetes’ Prow infrastructure. RISE RISC-V Runners (GitHub Actions-based, free) and ZTE’s offered hardware donation (riseproject-dev/kubernetes-riscv#2) are both available inputs, but integrating either with Prow’s GCP/AWS-based autoscaling requires dedicated engineering on both sides; no evidence this integration work has started for kubernetes/kubernetes specifically.</li>
+  <li>Add riscv64 Prow job definitions in kubernetes/test-infra covering at minimum cross-build, kubelet unit tests and conformance tests, to satisfy @liggitt’s “wide battery of jobs” bar from PR #123661.</li>
+  <li>Resolve the <code class="language-plaintext highlighter-rouge">/hold</code> on PR #141291, contingent on #132836 or the Tier 3 proposal (sig-release#3107/#3110) reaching maintainer consensus.</li>
+</ol>
+
+<p>Tier 3 itself requires none of this; it requires only a documented, externally maintained build process with a link to artifacts, which is the basis of the currently open #3107/#3110 request.</p>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Two dependency gaps require investment from outside the Kubernetes project itself before a full cluster is deployable on riscv64:</p>
+
+<ul>
+  <li><strong>etcd</strong>: no riscv64 release binaries exist despite the build-time <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH</code> restriction being removed (PR #21510, merged 2026-03-29). The etcd project must add riscv64 to its own release pipeline; this is separate ownership and separate maintainers.</li>
+  <li><strong>CRIU</strong>: no riscv64 support since the tracking issue opened in 2021 (checkpoint-restore/criu#1702), with no active upstream work found. This blocks pod checkpoint/restore and live migration specifically, not baseline scheduling/networking functionality.</li>
+</ul>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1055,23 +1214,23 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Submit riscv64 platform PR to kubernetes/kubernetes (build system + pause image)</td>
+      <td>Land remaining build-system PR items (Section 5, items 1, 3-6) once #132836/policy is resolved</td>
       <td>2-4</td>
-      <td>RISE / brianredbeard</td>
+      <td>RISE / community contributors</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Update kube-cross image to include <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code> (kubernetes/release)</td>
+      <td>Unblock and merge PR #141291 (pause image) and its kube-cross dependency (release#4489)</td>
       <td>1-2</td>
-      <td>RISE / kubernetes/release maintainers</td>
+      <td>Kubernetes maintainers (dims et al.) / kubernetes/release maintainers</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Add riscv64 to etcd release pipeline</td>
+      <td>Add riscv64 to etcd’s release pipeline</td>
       <td>4-8</td>
-      <td>etcd maintainers (external)</td>
+      <td>etcd maintainers (external project)</td>
       <td>Critical</td>
     </tr>
     <tr>
@@ -1083,16 +1242,16 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
     </tr>
     <tr>
       <td>Process</td>
-      <td>Engage SIG Release for Tier 3 designation (documented build process)</td>
+      <td>Land Tier 3 designation (sig-release#3107/PR#3110)</td>
       <td>1-2</td>
-      <td>RISE</td>
+      <td>RISE Project / SIG Release</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI</td>
-      <td>Integrate RISE RISC-V Runners with upstream Prow for informing (Tier 2) CI</td>
+      <td>Integrate RISE RISC-V Runners and/or ZTE-donated hardware with upstream Prow for informing (Tier 2) CI</td>
       <td>8-16</td>
-      <td>RISE + SIG K8s Infra</td>
+      <td>RISE + ZTE + SIG K8s Infra</td>
       <td>High</td>
     </tr>
     <tr>
@@ -1104,30 +1263,20 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>CRIU riscv64 port (platform bring-up)</td>
+      <td>CRIU riscv64 platform bring-up</td>
       <td>16-32</td>
       <td>CRIU maintainers / separate investment</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Data not available: benchmarks required before scoping optimization work</td>
-      <td>N/A</td>
-      <td>N/A</td>
+      <td>Validate the KubeEdge-V ESAAM 2023 context-switch/syscall-overhead finding against current-generation RISC-V server hardware and unmodified kubernetes/kubernetes, before scoping runtime-layer optimization work</td>
+      <td>2-4</td>
+      <td>RISE / benchmarking effort</td>
       <td>Low</td>
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates – initial report dated 2026-07-20.</p><hr />
 <h2 id="15-references">
   
   
@@ -1139,28 +1288,41 @@ linux/s390x:   CC=${KUBE_LINUX_S390X_CC:-s390x-linux-gnu-gcc}
 
 <ul>
   <li><a href="https://github.com/kubernetes/kubernetes">kubernetes/kubernetes repository</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/issues/132836">Issue #132836 – Proposal: Official Support for RISC-V Architecture and RVA23 Advancements</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/issues/132570">Issue #132570 – Assessment of the difficulty in porting CPU architecture for kubernetes</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/pull/86013">PR #86013 – Bump Ginkgo to support building on riscv64 arch (MERGED, v1.18)</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/pull/128148">PR #128148 – Dependences: update opencontainers/selinux to v1.11.1 (MERGED, v1.32)</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/pull/86011">PR #86011 – Add build support for riscv64 arch (CLOSED)</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/pull/82349">PR #82349 – Bump x/sys and opencontainers/runc to support Risc-V architecture (CLOSED)</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/pull/116686">PR #116686 – feat: add riscv64 support (CLOSED)</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/pull/123661">PR #123661 – Add riscv64 support (CLOSED)</a></li>
-  <li><a href="https://github.com/kubernetes/release/pull/4303">kubernetes/release PR #4303 – add debian trixie and riscv64 support for debian-base (CLOSED)</a></li>
-  <li><a href="https://github.com/kubernetes/sig-release/pull/2974">kubernetes/sig-release PR #2974 – Rewrite platform support tiers documentation (MERGED 2026-03-26)</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/blob/master/hack/lib/golang.sh">hack/lib/golang.sh – authoritative platform list</a></li>
-  <li><a href="https://github.com/kubernetes/sig-release/blob/master/release-engineering/platforms/README.md">kubernetes/sig-release platform support guide</a></li>
-  <li><a href="https://github.com/carlosedp/riscv-bringup/blob/master/kubernetes/Readme.md">carlosedp/riscv-bringup Kubernetes notes</a></li>
-  <li><a href="https://github.com/kubernetes/kubernetes/compare/master...riseproject-dev:kubernetes-riscv:riscv-support">riseproject-dev/kubernetes-riscv riscv-support branch</a></li>
-  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE Project blog – Announcing RISC-V Runners (2026-03-24)</a></li>
-  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE Project blog – RISC-V Runners six weeks in (2026-05-12)</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=kubernetes">buildd.debian.org kubernetes riscv64 status</a></li>
-  <li><a href="https://packages.debian.org/sid/riscv64/kubectl">packages.debian.org kubectl riscv64</a></li>
-  <li><a href="https://github.com/etcd-io/etcd/pull/21510">etcd PR #21510 – remove ETCD_UNSUPPORTED_ARCH for riscv64 (MERGED 2026-03-29)</a></li>
-  <li><a href="https://github.com/checkpoint-restore/criu/issues/1702">criu issue #1702 – riscv64 support (OPEN since 2021)</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/issues/132836">Issue #132836, Proposal: Official Support for RISC-V Architecture and RVA23 Advancements</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/issues/132570">Issue #132570, Assessment of the difficulty in porting CPU architecture for kubernetes</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/pull/82349">PR #82349, Bump x/sys and opencontainers/runc to support Risc-V architecture (closed)</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/pull/86011">PR #86011, Add build support for riscv64 arch (closed)</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/pull/86013">PR #86013, Bump Ginkgo to support building on riscv64 arch (merged, v1.18.0)</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/pull/116686">PR #116686, feat: add riscv64 support (closed)</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/pull/123661">PR #123661, Add riscv64 support (closed)</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/pull/141291">PR #141291, Add RISC-V build for the pause image (open, on hold)</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/issues/139894">Issue #139894, Quantity.AsApproximateFloat64 returns NaN</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/pull/141937">PR #141937, fix for #139894 (merged)</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/blob/master/hack/lib/golang.sh">hack/lib/golang.sh, authoritative platform list</a></li>
+  <li><a href="https://github.com/kubernetes/release/pull/4303">kubernetes/release PR #4303, add debian trixie and riscv64 support for debian-base (closed)</a></li>
+  <li><a href="https://github.com/kubernetes/release/pull/4489">kubernetes/release PR #4489, kube-cross riscv64 update</a></li>
+  <li><a href="https://github.com/kubernetes/sig-release/pull/2974">kubernetes/sig-release PR #2974, rewrite platform support tiers documentation (merged 2026-03-26)</a></li>
+  <li><a href="https://github.com/kubernetes/sig-release/issues/3107">kubernetes/sig-release#3107, Tier3 Platform Support Request for RISC-V (open)</a></li>
+  <li><a href="https://github.com/kubernetes/sig-release/pull/3110">kubernetes/sig-release PR #3110, add riscv64 as a tier 3 platform (open)</a></li>
+  <li><a href="https://github.com/riseproject-dev/kubernetes-riscv/issues/2">riseproject-dev/kubernetes-riscv#2, Proposal: Joint collaboration to advance official RISC-V Tier 2 support (open)</a></li>
+  <li><a href="https://github.com/opencontainers/runc/pull/5166">opencontainers/runc PR #5166</a></li>
+  <li><a href="https://github.com/etcd-io/etcd/pull/21510">etcd PR #21510, remove ETCD_UNSUPPORTED_ARCH for riscv64 (merged 2026-03-29)</a></li>
+  <li><a href="https://github.com/checkpoint-restore/criu/issues/1702">checkpoint-restore/criu#1702, riscv64 support (open since 2021)</a></li>
   <li><a href="https://github.com/CARV-ICS-FORTH/kubernetes-riscv64">CARV-ICS-FORTH/kubernetes-riscv64</a></li>
   <li><a href="https://github.com/alitariq4589/kubernetes-riscv/releases">alitariq4589/kubernetes-riscv releases</a></li>
+  <li><a href="https://github.com/go-riscv/kind">go-riscv/kind</a></li>
+  <li><a href="https://github.com/carlosedp/riscv-bringup">carlosedp/riscv-bringup, Kubernetes on RISC-V notes</a></li>
+  <li><a href="https://buildd.debian.org/status/package.php?p=kubernetes">buildd.debian.org, kubernetes riscv64 build status</a></li>
+  <li><a href="https://pypi.org/pypi/kubernetes/json">PyPI kubernetes package</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE Project, Announcing the RISE RISC-V Runners (2026-03-24)</a></li>
+  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE Project, RISE RISC-V Runners: six weeks in (2026-05-12)</a></li>
+  <li><a href="https://riseproject.dev/2026/09/28/how-kairos-is-charting-the-stepping-stones-of-risc-v-productization/">RISE Project, How Kairos is Charting the Stepping Stones of RISC-V Productization (2026-09-28)</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://dl.acm.org/doi/fullHtml/10.1145/3624486.3624490">Lumpp, Barchi, Acquaviva, Bombieri, On the Containerization and Orchestration of RISC-V architectures for Edge-Cloud computing, ESAAM 2023 (ACM DL)</a></li>
+  <li><a href="https://cris.unibo.it/retrieve/976f8d03-98e3-4565-b2c4-a921e6561322/3624486.3624490.pdf">ESAAM 2023 paper, PDF</a></li>
+  <li><a href="https://www.mdpi.com/2079-9292/13/17/3494">MDPI, Evaluating ARM and RISC-V Architectures for HPC with Docker and Kubernetes (fetch blocked, figures unverified)</a></li>
+  <li><a href="https://github.com/kairos-io/kairos/issues">Kairos CNCF Sandbox project, issue tracker</a></li>
+  <li><a href="https://github.com/kubernetes/sig-release/blob/master/release-engineering/platforms/README.md">kubernetes/sig-release platform support guide</a></li>
 </ul>
 
           
