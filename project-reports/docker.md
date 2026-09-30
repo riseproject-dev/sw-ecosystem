@@ -1,10 +1,15 @@
 ---
 title: Docker
 parent: Project Reports
-categories:
-  - containers
+color: orange
 dependencies:
   - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: xx
+    relation: build-dependency
+    criticality: critical
+  - name: Buildx
     relation: build-dependency
     criticality: critical
   - name: runc
@@ -16,16 +21,25 @@ dependencies:
   - name: BuildKit
     relation: runtime-dependency
     criticality: critical
+  - name: libseccomp
+    relation: runtime-dependency
+    criticality: critical
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
+  - name: iptables
+    relation: runtime-dependency
+    criticality: critical
   - name: rootlesskit
     relation: runtime-dependency
     criticality: optional
   - name: tini
     relation: runtime-dependency
     criticality: optional
-  - name: Buildx
+  - name: CRIU
     relation: runtime-dependency
     criticality: optional
-  - name: CRIU
+  - name: Delve
     relation: runtime-dependency
     criticality: optional
 ---
@@ -35,124 +49,103 @@ dependencies:
 # Docker
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
-**Scope:** RISC-V (riscv64/linux) support status for Docker (moby/moby)<br/>
+**Date:** 2026-09-30<br/>
+**Readiness:** Orange (downstream-only)<br/>
+**Scope:** RISC-V (riscv64/linux) support status for Docker<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
----
-
 ## 1. Project Overview
 
-Docker Engine (upstream project: [moby/moby](https://github.com/moby/moby)) is the container daemon that underpins Docker Desktop, Docker Hub CI runners, and a large fraction of Kubernetes node runtimes worldwide. The `dockerd` binary manages the full container lifecycle: image pull, container start/stop, network namespace creation, volume management, and seccomp-based syscall filtering.
+Docker Engine (upstream project: [moby/moby](https://github.com/moby/moby)) is the container daemon that underpins Docker Desktop, Docker Hub CI runners, and a large fraction of Kubernetes node runtimes worldwide. The `dockerd` binary manages the full container lifecycle: image pull, container start/stop, network namespace creation, volume management, and seccomp-based syscall filtering. Homepage: [docker.com](https://www.docker.com/).
 
-The project is written almost entirely in Go. C code surfaces only at the boundary with libseccomp (CGO linkage) and in third-party binaries bundled in the release image (tini, runc). The build system is `docker buildx bake` driven by `docker-bake.hcl`, with a thin `make` wrapper. There is no CMake, no autoconf.
+The project is written almost entirely in Go. C code surfaces only at the boundary with libseccomp (CGO linkage) and in third-party binaries bundled into the release image (tini, runc). The build system is `docker buildx bake` driven by `docker-bake.hcl`, with a thin `make` wrapper. There is no CMake, no autoconf, no `setup.py`, no `Cargo.toml` - the standard dependency-discovery method used for C/C++/Rust projects (parsing build-system files for SIMD/JIT/crypto dependencies) does not apply here.
 
-Governance is corporate-led by Docker Inc., with committers from Docker Inc., Mirantis, NTT, Microsoft, and individual contributors. The project is Apache 2.0 licensed. Docker Inc. is not a RISE Project member. There is no external foundation (the CNCF hosts containerd and runc separately).
+Governance is corporate-led. `project/GOVERNANCE.md` states Moby is "the open-source project used to build Docker, jointly maintained by Docker and the community." There is no Linux Foundation, CNCF, or OCI foundation membership for moby/moby itself - this differs from sibling projects containerd and runc, which did move under CNCF/OCI governance. Decision-making follows an "everything is a pull request" model with two maintainer tiers (Reviewers, who can LGTM but hold no write access, and Committers, who have write access and vote on project-level decisions); new maintainers need 3+ months of sustained contribution, a 7-day public discussion period, then a vote. The license is Apache 2.0.
 
-The canonical tracking issue for riscv64 support is [moby/moby#44319](https://github.com/moby/moby/issues/44319), opened October 18, 2022. The enabling PR is [moby/moby#44735](https://github.com/moby/moby/pull/44735), open as a Draft since January 2, 2023 and not yet merged as of June 2026.
+Mapping `MAINTAINERS` entries by email domain shows Docker, Inc. dominates the roster: committers tonistiigi, vvoland, and robmry, and reviewers rumpl, stevvooe, thompson-shaun, and tiborvass all carry `@docker.com` addresses. Outside Docker Inc., committer corhere is `@mirantis.com` (Mirantis) and AkihiroSuda is `@hco.ntt.co.jp` (NTT); reviewer coolljt0725 is `@huawei.com` (Huawei) and estesp is `@linux.vnet.ibm.com` (IBM). Several other listed maintainers (thaJeztah, cpuguy83, akerouanton, austinvazquez, tianon, crazy-max, dmcgowan, kolyshkin, laurazard, neersighted, samuelkarp, unclejack) use personal email addresses in the `MAINTAINERS` file itself, so their employer cannot be confirmed from that source alone. There is no CNCF-style multi-vendor steering committee - it is Docker-led, with outside contributors earning individual maintainer status. `project/PACKAGERS.md` lists known downstream packagers (Docker CE, Mirantis Container Runtime, Microsoft CBL-Mariner, Amazon Linux) but says nothing about CPU architecture tiers; there is no formal, written platform-tier policy anywhere in the repository.
 
----
+Docker, Docker Inc., and Moby are not listed among [RISE Project members](https://riseproject.dev/members/) in either the Premier tier (Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent) or the General tier (Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE).
+
+The canonical tracking issue for riscv64 support is [moby/moby#44319, "Adding support for RISC-V"](https://github.com/moby/moby/issues/44319), opened October 18, 2022 and still open as of 2026-09-30. The enabling PR is [moby/moby#44735, "Enable riscv64 cross build"](https://github.com/moby/moby/pull/44735), open as a Draft since January 2, 2023.
 
 ## 2. Port History and Upstreaming Timeline
 
-All dates are merge dates to moby/moby master unless noted.
+| Date | Event | Source |
+|---|---|---|
+| 2019-06-26 | Commit `3780098` (merge of PR #2389, "bridge: add riscv64 build tags") adds riscv64 build constraints to libnetwork's netlink sockaddr files, authored by Euan Harris (`euan.harris@docker.com`, Docker Inc.) | [commit 3780098](https://github.com/moby/moby/commit/3780098cd6be0a82f725fa4e2412b33e3be95276) |
+| 2019-07-02 | PR #39423 "Update modules to support riscv64" merged; first shipped in v20.10.0 (2020-12-08) | [#39423](https://github.com/moby/moby/pull/39423) |
+| 2019-08-21 | PR #39726 "bump x/sys to fix riscv64 epoll" merged; first shipped in v20.10.0 | [#39726](https://github.com/moby/moby/pull/39726) |
+| 2020-04-03 | PR #40664 "Add riscv64 support to the build scripts" merged; first shipped in v20.10.0 | [#40664](https://github.com/moby/moby/pull/40664) |
+| 2022-05-13 | PR #43553 "seccomp: support riscv64" merged; landed first in the abandoned v22.06.0-beta.0 pre-release (that cycle was scrapped), first stable release v23.0.0 (2023-01-31) | [#43553](https://github.com/moby/moby/pull/43553) |
+| 2023-01-02 | PR #44735 "Enable riscv64 cross build" opened as Draft; still open, not merged | [#44735](https://github.com/moby/moby/pull/44735) |
+| 2024-09-10 | PR #48455 "seccomp: add riscv64 mapping to seccomp_linux.go" merged (re-fixes bit-rot in #43553's arch table); first shipped in v28.0.0 (2025-02-19); same-day backports #48463 (27.x, shipped v27.3.0), #48465 (25.0, shipped v25.0.7), #48466 (23.0, shipped v23.0.16); #48464 (26.1) merged but never released, since that branch's last tag v26.1.5 (2024-07-23) predates the merge and no later 26.1.x tag was ever cut | [#48455](https://github.com/moby/moby/pull/48455), [#48463](https://github.com/moby/moby/pull/48463) |
+| 2024-09-10 | PR #48462 "ci: add linux/riscv64 testing" closed, not merged | [#48462](https://github.com/moby/moby/pull/48462) |
+| 2025-05-26 | PR #50077 "profile/seccomp: update to kernel v6.13" (adds `riscv_hwprobe` to seccomp allowlist) merged; first shipped in v28.2.0 (2025-05-28) | [#50077](https://github.com/moby/moby/pull/50077) |
+| 2025-10-01 | PR #51081 "feat: add linux/riscv64 to docker-bake" closed, not merged | [#51081](https://github.com/moby/moby/pull/51081) |
+| 2026-03-12 | PR #52162 "Add linux/riscv64 to cross-build platform targets" closed unmerged, explicitly in favor of #44735, by gounthar | [#52162](https://github.com/moby/moby/pull/52162) |
+| 2026-09-15 | PR #50726 "Dockerfile update to Debian 13 trixie" merged, clearing the Debian riscv64-packages blocker that had gated #44735 since 2023 | [#50726](https://github.com/moby/moby/pull/50726) |
 
-| Date | PR | Description | Author | Milestone |
-|---|---|---|---|---|
-| 2019-07-02 | [#39423](https://github.com/moby/moby/pull/39423) | Update vendor deps (netns, libnetwork, sctp) for riscv64 | carlosedp | 20.10.0 |
-| 2019-08-21 | [#39726](https://github.com/moby/moby/pull/39726) | Bump golang.org/x/sys to fix broken epoll on riscv64 | carlosedp | 20.10.0 |
-| 2020-04-03 | [#40664](https://github.com/moby/moby/pull/40664) | Add riscv64 to build scripts (hack/make.sh, hack/make/.binary, projectquota.go) | carlosedp | 20.10.0 |
-| 2022-05-13 | [#43553](https://github.com/moby/moby/pull/43553) | Add riscv64 to seccomp profile (architecture entry) | AkihiroSuda | 23.0.0 |
-| 2023-01-02 | [#44735](https://github.com/moby/moby/pull/44735) | Enable riscv64 cross build (Draft, not merged) | crazy-max | -- |
-| 2024-09-10 | [#48455](https://github.com/moby/moby/pull/48455) | Fix seccomp architecture mapping for riscv64 (bugfix) | gdams | 28.0.0 |
-| 2026-02 | commit f889c34 | Upgrade Delve to v1.26.0 (adds linux/riscv64 support) | -- | -- |
-| 2026-05 | commit 76adc50 | Vendor golang.org/x/sys v0.45.0 (riscv64 zbc extension detection) | -- | -- |
+**Data discrepancy on release tagging [NEEDS VERIFICATION]:** Two independent live-research passes disagree on moby/moby's current release lineage. One pass, using `git ls-remote --tags` against the live repository, found the actual latest tag is **v28.5.2**, and separately identified a WebFetch-reported set of tags (v29.8.1, v29.8.0, v25.0.18) as fabricated - `github.com/moby/moby/releases/tag/v29.8.1` returns HTTP 404. A second, independently run pass, using a full local clone with `git log --all`, `git merge-base --is-ancestor`, and tag-date inspection (accounting for a claimed tag-prefix change from `vX.Y.Z` to `docker-vX.Y.Z` at v29.0.0), reports PR #50726 first shipped in a tag named `docker-v29.8.1` (2026-09-15, the same day as the merge). These two findings directly conflict and could not be reconciled with the evidence available. Separately, a dev.to article by gounthar independently references "Docker Engine v29.0.0 (Nov 6, 2025)" as a real upstream release. Treat all specific version/tag claims post-v28.5.2 as unverified pending a clean re-check of the tag list.
 
-The initial bringup was driven entirely by a single community contributor, **carlosedp** (Carlos de Paula), whose broader [riscv-bringup](https://github.com/carlosedp/riscv-bringup) project coordinated riscv64 porting across the Go ecosystem in 2019. The first Docker Inc. internal contribution was from **tonistiigi** (Tonis Tiigi), who added riscv64 build tags to the bridge network driver in libnetwork in June 2019 [NEEDS VERIFICATION -- this event is in libnetwork, which was later merged into moby; the primary source attributes it to tonistiigi but the merge SHA for libnetwork is not in the moby findings].
+**Key contributors:** carlosedp (community, author of the [riscv-bringup](https://github.com/carlosedp/riscv-bringup) tracker) drove the initial 2019 bringup (#39423, #40664) and filed the early interactive-terminal bug (#39461). Euan Harris (Docker Inc.) made the earliest Docker Inc.-authored riscv64 commit (the libnetwork bridge driver tags, June 2019). AkihiroSuda (NTT) authored the original seccomp support PR #43553 and identified the runc riscv64 prerequisite. crazy-max (Docker Inc.) is the owner of the still-open cross-build PR #44735, and has rebased it as recently as October 2025. gdams authored the 2024 seccomp-mapping bugfix #48455, reviewed and merged by thaJeztah (Docker Inc.), who is the consistent maintainer gatekeeper across nearly every riscv64-related PR, including the decision to require genuine Debian riscv64 support rather than an Ubuntu-base-image workaround. neersighted (Docker Inc.) is the maintainer who explicitly blocked that workaround in #44735. gounthar, maintainer of the community [docker-for-riscv64](https://github.com/gounthar/docker-for-riscv64) project (117+ riscv64 releases claimed [NEEDS VERIFICATION, single source - gounthar's own README]), is the most active 2026 voice pushing for official upstream inclusion, and closed his own competing PR #52162 in favor of #44735.
 
-The seccomp fix in 2024 ([#48455](https://github.com/moby/moby/pull/48455)) was a correctness bug that had been silently broken since 2022. The 2-year gap before it was fixed reflects the absence of CI on riscv64 -- without native hardware or QEMU runners in the test matrix, the defect was invisible to the project's automated gates.
-
----
+**Is it fully upstream?** No. Full, official riscv64 release support has never merged. Tracking issue #44319 remains open nine years after the first riscv64-related commit; enabling PR #44735 remains a Draft nearly four years after it was opened.
 
 ## 3. Upstream Support Tier
 
-Docker does not publish a formal tier policy document for architecture support. Support tiers are implicit, inferred from presence in the release artifact matrix (`_platforms` in `docker-bake.hcl`) and from presence in CI.
+Docker publishes no formal platform/architecture tier policy document - confirmed by directory search: no `PLATFORMS.md`, `SUPPORT.md`, or `docs/platforms/` file exists in moby/moby (only generic `*_unsupported.go` build-tag files). Support tiers must be inferred from presence in `docker-bake.hcl`'s platform lists and in CI.
 
-**Tier 1 (official release, CI-tested):** linux/amd64, linux/arm64, linux/arm/v5, linux/arm/v6, linux/arm/v7, linux/ppc64le, linux/s390x, windows/amd64. These eight platforms are in the `_platforms`, `binary-smoketest`, and `bin-image-cross` targets in `docker-bake.hcl`. They are built, tested, and released on every merge to master.
+Direct inspection of `docker-bake.hcl` (verified via git clone and confirmed independently by a GitHub code search for `riscv64 repo:moby/moby filename:docker-bake.hcl`, which returns zero matches) shows the `_platforms`, `binary-smoketest`, and `bin-image-cross` targets all enumerate the same eight platforms: `linux/amd64`, `linux/arm/v5`, `linux/arm/v6`, `linux/arm/v7`, `linux/arm64`, `linux/ppc64le`, `linux/s390x`, `windows/amd64`. `linux/riscv64` is absent from all three lists.
 
-**linux/riscv64:** Not in any of the three bake platform lists. No CI exists (see Section 7). No official binary is distributed. Source compiles correctly and a Debian downstream package exists (see Section 8). Effective support tier: build-only community port, not officially supported by Docker Inc.
+| Tier signal | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| In `_platforms` / `binary-smoketest` / `bin-image-cross` | Yes | Yes | No |
+| Official release binary (download.docker.com) | Yes | Yes | No |
+| Upstream CI coverage | Yes | Yes | No |
+| Release-blocking on failure | Yes | Yes | N/A (not built) |
 
----
+riscv64's effective status is a build-only community/downstream port: source compiles correctly with manual overrides, and Debian/Ubuntu ship their own riscv64 `docker.io` package, but it is not officially supported by Docker Inc.
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-Docker's riscv64 implementation is fully generic at the Go source code level. There is no architecture-specific assembly, SIMD dispatch, JIT backend, or ISA intrinsics anywhere in moby/moby. The following confirms this by absence:
+Docker's riscv64 implementation is fully generic at the Go source level. No architecture-specific assembly, SIMD dispatch, JIT backend, or ISA intrinsics exist anywhere in moby/moby - moby/moby is a Go orchestration daemon with no per-architecture compute kernels, so the JIT/SIMD-rating framework used for numeric libraries is a category error for this codebase. This was confirmed by repeated, independent GitHub code searches across the repository:
 
-- No `arch/riscv/` directory.
-- No `.S` assembly files in the repository.
-- No `_riscv64.go` build-tagged files in the moby/moby source tree (outside vendored dependencies).
-- No RVV intrinsics, no riscv64-specific crypto paths.
-- No SIMD dispatch in daemon/, pkg/, internal/, or hack/.
+- `riscv` / `riscv64` repo-wide: 6 total matches, every one of them either a Dockerfile build-arg check or a Go test-table entry (see below) - confirmed identically by two separate research passes.
+- `vfloat32m1_t` (RVV intrinsic type): 0 matches. No RISC-V Vector code exists.
+- `rvv`: 1 match, and it is a false positive - a random base64 substring inside a test PEM key file (`integration/testdata/https/client-key.pem`), unrelated to the RISC-V Vector extension.
+- `__riscv` (C/cgo architecture guard): 0 matches.
+- `GOARCH=riscv64` and `filename:*_riscv64.go`: 0 matches (note: GitHub's `filename:` qualifier does not support wildcards, so this specific check is weaker evidence than the full-text searches above).
 
-The vendored `golang.org/x/sys/unix` dependency contains the expected generated files for riscv64: `asm_linux_riscv64.s`, `syscall_linux_riscv64.go`, `zsysnum_linux_riscv64.go`, `ztypes_linux_riscv64.go`, `zerrors_linux_riscv64.go`. These are auto-generated from Linux kernel headers and contain correct riscv64 ABI constants, syscall numbers, struct layouts, and register definitions.
+The six repo-wide riscv/riscv64 matches are: (1) the root `Dockerfile`'s `ARG DELVE_SUPPORTED=${DELVE_SUPPORTED#linux/riscv64}` line, which strips riscv64 out of the Delve-debugger-supported platform list (see the correction under "Delve" below); and (2) five Go unit-test files - `integration/image/save_test.go`, `daemon/containerd/image_save_test.go`, `client/service_create_test.go`, `integration/image/attestation_test.go`, and `daemon/containerd/image_load_test.go` - each of which constructs a generic `platforms.Platform{Architecture: "riscv64"}` or `ocispec.Platform{...}` struct as one row in a table-driven test of platform-matching logic. `daemon/containerd/image_load_test.go` even contains a variable name typo'd as `linuxRiscv64` (though the string literal itself is correctly spelled `"riscv64"`), a minor sign that this is throwaway test scaffolding rather than a maintained riscv64-specific subsystem. None of these six matches builds, runs, or tests actual riscv64 binaries in CI.
 
-**Seccomp subsystem (the one area requiring riscv64-specific code):**
+The vendored `golang.org/x/sys/unix` package contains the expected generated files for riscv64 - `asm_linux_riscv64.s`, `syscall_linux_riscv64.go`, `zsysnum_linux_riscv64.go`, `ztypes_linux_riscv64.go`, `zerrors_linux_riscv64.go` - auto-generated from Linux kernel headers with correct riscv64 ABI constants, syscall numbers, and struct layouts.
 
-`profiles/seccomp/seccomp_linux.go` contains:
+**Seccomp subsystem - unresolved contradiction in the research [NEEDS VERIFICATION]:** A direct read of PR #48455's body and discussion states it "Adds `riscv64` to the `nativeToSeccomp` map (-> `specs.ArchRISC_V64`) and to the `goToNative` map (-> `"riscv64"`) in `seccomp_linux.go`," ties this back to the original riscv64 arch entry added by PR #43553 (2022, shipped in 23.0), and records four same-day backports into every active release branch. A separate, later adversarial verification pass searched moby/moby directly for the literal string `SCMP_ARCH_RISCV64` and found zero hits in the repository; it found that exact symbol only in **opencontainers/runc**'s `libcontainer/seccomp/config.go`, and concluded the riscv64 seccomp arch-mapping fix may actually live in runc rather than in moby/moby's own source. Both findings come from live, sourced investigation of this repository and directly conflict; this report does not attempt to resolve which is correct. What is independently confirmed by both passes and by the issue tracker is that riscv64 seccomp behavior was broken for real users (see Section 11, issue #48454) and was fixed under PR #48455's number in 2024, whichever repository the underlying code change physically lives in.
 
-- `"riscv64": specs.ArchRISCV64` in the `nativeToSeccomp` map.
-- `"riscv64": "riscv64"` in the `goToNative` map.
-- riscv64-specific syscalls in `default.json`: `riscv_flush_icache`, `riscv_hwprobe`.
+**Delve debugger - correction from prior reporting:** The current `Dockerfile` explicitly excludes riscv64 from Delve debugger support via `ARG DELVE_SUPPORTED=${DELVE_SUPPORTED#linux/riscv64}` (confirmed by direct code search against the current default branch). This supersedes an earlier claim that riscv64 is a supported Delve platform as of v1.26.0 (commit f889c34) - that specific commit and version claim could not be corroborated against live source and is contradicted by the Dockerfile's own exclusion logic. As of this report, Delve is **not** supported on riscv64 in moby/moby's own build.
 
-This mapping was added in two steps: architecture entry in PR [#43553](https://github.com/moby/moby/pull/43553) (May 2022) and the correct architecture mapping in PR [#48455](https://github.com/moby/moby/pull/48455) (September 2024). Without the 2024 fix, `includes.arches: ["riscv64"]` rules in the seccomp profile were silently skipped, causing JVM workloads to crash with `RISCV_FLUSH_ICACHE not available` errors.
-
-**Delve debugger:**
-
-riscv64 is listed as a supported Delve platform in the Dockerfile (`DELVE_SUPPORTED` stripping logic). Delve v1.26.0 support was confirmed via commit f889c34 in February 2026.
-
-**Networking:**
-
-No riscv64-specific networking code. The iptables integration is the current blocker for the release pipeline (see Section 12), but this is an incompatibility at the Debian trixie packaging level, not a riscv64-specific code defect.
-
----
+**Networking:** No riscv64-specific networking code exists. The current release-pipeline blocker involving iptables (see Sections 5, 11, 12) is a Debian-13-packaging-level incompatibility, not a riscv64-specific code defect.
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-**Build tool:** `docker buildx bake` + `docker-bake.hcl`. The Makefile is a thin wrapper. No CMake, no configure.
+**Build tool:** `docker buildx bake` + `docker-bake.hcl`. The Makefile is a thin wrapper. No CMake, no autoconf.
 
-**Cross-compilation mechanism:** [`tonistiigi/xx`](https://github.com/tonistiigi/xx) (version 1.9.0 pinned in master Dockerfile). For riscv64 on Debian trixie, `xx` adds the Debian Ports keyring, appends `deb [ arch=riscv64 ] http://ftp.ports.debian.org/debian-ports sid main` to apt sources, runs `dpkg --add-architecture riscv64`, and installs cross packages via multiarch notation. This behavior requires Debian >= 13 (trixie); earlier versions skip riscv64 package installation entirely (hardcoded version check: `$(cut -d. -f 1 /etc/debian_version) -lt 13`).
+**Cross-compilation mechanism:** [tonistiigi/xx](https://github.com/tonistiigi/xx), pinned at v1.9.0 in the master Dockerfile. For riscv64, `xx` adds the Debian Ports keyring, appends the `debian-ports` riscv64 source to apt, runs `dpkg --add-architecture riscv64`, and installs cross packages via multiarch notation - but historically this path required Debian >= 13 (trixie); on earlier Debian, `xx` silently skipped riscv64 package installation. During review of PR #44735 (December 2023), crazy-max identified and worked around an `xx` apt `sources.list` bug that was specifically breaking riscv64 package installation.
 
-**Why Debian trixie is required:** Debian 12 "bookworm" has no riscv64 packages. Debian 13 "trixie" (released June 2025) is the first stable Debian release with official riscv64. The tracking issue [#44319](https://github.com/moby/moby/issues/44319) was opened in October 2022 specifically because `golang:1.19.2-bullseye` and `debian:bullseye` had no riscv64 platform manifests.
+**Why Debian trixie is required:** Debian 12 "bookworm" ships no riscv64 cross-compilation packages, not even in `sid` at the time PR #44735 was opened. Debian 13 "trixie" is the first stable Debian release with riscv64 as a Tier-1 architecture, and PR #50726's body quotes Debian's own release notes confirming this. Tracking issue #44319 was opened in October 2022 specifically because `golang:1.19.2-bullseye` and `debian:bullseye` base images had no riscv64 manifests.
 
-**Key version ARGs in master Dockerfile (as of June 2026):**
+**Current state as of 2026-09-30:** PR #50726 (bumping the Dockerfile's base image to Debian 13 trixie) merged on 2026-09-15, so master's Dockerfile no longer requires a manual `BASE_DEBIAN_DISTRO=trixie` override to get a riscv64-capable base image. This removes a multi-year blocker from PR #44735's dependency chain. It does **not** by itself add riscv64 to the official bake platform lists - that gap remains (Section 3) and is the remaining scope of #44735.
+
+**Build commands to cross-build riscv64 today (source build, not an officially released target):**
 
 ```
-GO_VERSION=1.26.4
-BASE_DEBIAN_DISTRO="bookworm"   -- blocks riscv64 on current master
-XX_VERSION=1.9.0
-CONTAINERD_VERSION=v2.2.5
-RUNC_VERSION=v1.3.6
-TINI_VERSION=v0.19.0
-ROOTLESSKIT_VERSION=v3.0.1
-DOCKER_STATIC=1
+docker buildx bake binary --set *.platform=linux/riscv64
 ```
 
-The current master uses `BASE_DEBIAN_DISTRO="bookworm"`. PR [#44735](https://github.com/moby/moby/pull/44735) changes this to `trixie` and adds `e2fsprogs` to the `apt-get install` block. Until #44735 merges, riscv64 cross-compilation from master requires passing `--build-arg BASE_DEBIAN_DISTRO=trixie` explicitly.
+Once PR #44735 merges and riscv64 is added to the official cross-build target:
 
-**Build commands:**
-
-To build riscv64 from source today (requires manual overrides -- not the official procedure):
-
-```bash
-docker buildx bake binary \
-  --set *.args.BASE_DEBIAN_DISTRO=trixie \
-  --set *.platform=linux/riscv64
 ```
-
-Once [#44735](https://github.com/moby/moby/pull/44735) merges:
-
-```bash
 docker buildx bake binary-cross --set *.platform=linux/riscv64
 ```
 
@@ -160,254 +153,256 @@ docker buildx bake binary-cross --set *.platform=linux/riscv64
 
 | Component | Minimum | Notes |
 |---|---|---|
-| Go | 1.14 | First release with GOARCH=riscv64; master uses 1.26.4 |
-| Debian base | 13 (trixie) | First stable Debian with riscv64; bookworm (12) has no riscv64 |
-| tonistiigi/xx | 1.7.0 | Minimum with trixie riscv64 apt support; 1.9.0 pinned in master |
-| runc | v1.3.6 | riscv64 mainline since opencontainers/runc#3446 |
-| containerd | v2.2.5 | riscv64 binaries released; CI coverage incomplete (see Section 9) |
+| Go | 1.14 | First release with `GOARCH=riscv64`; master Dockerfile pins a much later version |
+| Debian base | 13 (trixie) | First stable Debian with riscv64; now the default base image in master since PR #50726 merged 2026-09-15 |
+| xx (tonistiigi/xx) | Effectively requires Debian trixie for riscv64 apt support; pinned v1.9.0 in master | Historical apt-sources bug for riscv64 identified and worked around Dec 2023 |
+| runc | riscv64 mainline since opencontainers/runc#3446 | Required to be built from runc's main branch before it was backported to a release line |
+| containerd | riscv64 binaries released | CI coverage for riscv64 remains incomplete (Section 9) |
 
-**Unofficial community build:** [gounthar/docker-for-riscv64](https://github.com/gounthar/docker-for-riscv64) has produced 117+ successful riscv64 Docker builds on native hardware (BananaPi F3 with Armbian Trixie). Build time on native hardware is approximately 35-40 minutes [NEEDS VERIFICATION -- single source, gounthar README].
-
----
+**Unofficial community build:** [gounthar/docker-for-riscv64](https://github.com/gounthar/docker-for-riscv64) rebuilds official Moby/CLI/Compose/BuildKit/Tini sources with minimal patches for riscv64 and ships automated weekly builds on native BananaPi F3 hardware (Armbian Trixie). Per gounthar's own [dev.to write-up](https://dev.to/gounthar/docker-v29-lands-on-risc-v64-in-under-a-week-the-future-is-here-4g2i), a full Docker Engine v29.0.0 compile took roughly 35-40 minutes natively, with a community riscv64 CLI build shipped within 5 days and Engine build within 6 days of the corresponding upstream x86/arm64 release. A separate [dev.to post](https://dev.to/gounthar/docker-buildx-for-risc-v64-when-infrastructure-just-works-41h3) reports Buildx v0.29.1 compiled and packaged (Deb+RPM) natively in 9 minutes 13 seconds. These figures come from a single source (gounthar's own posts) and are marked [NEEDS VERIFICATION].
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
 | Feature | amd64 | arm64 | riscv64 | Notes |
 |---|---|---|---|---|
-| docker run / exec / stop | Yes | Yes | Yes (from source build) | Core daemon: architecture-agnostic Go |
-| seccomp enforcement | Yes | Yes | Yes (since Docker 28.0.0) | Fixed in PR #48455, Sep 2024; backported to 23.0/25.0/26.1/27.x |
-| JVM workloads | Yes | Yes | Yes (since Docker 28.0.0) | Required the seccomp fix |
-| overlay2 graphdriver | Yes | Yes | Yes | Generic Linux; no arch-specific code |
-| BuildKit (docker build) | Yes | Yes | Yes | buildkit v0.31.0 ships riscv64 binary (issue #6577 closed Mar 2026) |
-| docker compose | Yes | Yes | Yes | Ships riscv64 binary |
-| docker buildx | Yes | Yes | No (official binary absent) | Issue [#3723](https://github.com/docker/buildx/issues/3723) closed as "Not planned" Mar 2026 |
-| rootless mode | Yes | Yes | Yes | rootlesskit v3.0.1 ships riscv64 binary |
-| docker init (tini) | Yes | Yes | Partial | No official riscv64 tini binary (issue #239, open); moby Dockerfile builds from source |
-| docker checkpoint (CRIU) | Yes | Yes | No | CRIU issue #1702 open since 2019; CRIU riscv64 port incomplete |
-| Delve debugger | Yes | Yes | Yes (v1.26.0+) | Confirmed via commit f889c34, Feb 2026 |
-| Official release binary | Yes | Yes | No | download.docker.com has no riscv64/ directory; HTTP 404 confirmed |
-| Docker Scout | Yes | Yes | No | Closed source; no riscv64 binaries exist |
+| docker run / exec / stop | Yes | Yes | Yes (from source build) | Core daemon logic is architecture-agnostic Go |
+| seccomp enforcement | Yes | Yes | Yes, with the sourcing caveat in Section 4 | Riscv64-scoped rules were silently dropped until a 2024 fix; see issue #48454 |
+| overlay2 graphdriver | Yes | Yes | Yes | Generic Linux code path, no arch-specific logic |
+| BuildKit (docker build) | Yes | Yes | Yes | Official `buildkit-*-linux-riscv64.tar.gz` ships (issue #6577 closed Mar 2026) |
+| docker compose | Yes | Yes | Yes (downstream) | Ubuntu 26.04 ports pocket ships `docker-compose-v2` for riscv64 (2.40.3+ds1-0ubuntu1) |
+| docker buildx | Yes | Yes | No official binary | Issue [#3723](https://github.com/docker/buildx/issues/3723) closed "Not planned" Mar 2026, no rationale documented |
+| rootless mode | Yes | Yes | Yes | `rootlesskit` v3.0.1 ships a riscv64 binary |
+| docker run --init (tini) | Yes | Yes | Partial | No official riscv64 tini binary (issue #239, open, project stalled since 2021); moby's own Dockerfile builds it from source via xx |
+| docker checkpoint (CRIU) | Yes | Yes | No | CRIU issue #1702 open since 2019; only partial (coredump generation) riscv64 work merged upstream in CRIU |
+| Delve debugger (dlv) | Yes | Yes | No | Explicitly excluded via `DELVE_SUPPORTED` stripping in the Dockerfile (see Section 4 correction) |
+| Official release binary | Yes | Yes | No | `download.docker.com` has no `riscv64/` directory; confirmed via direct listing |
 
-**Key gaps specific to riscv64:**
+**Functional gaps:** no official `dockerd`/`buildx` binary from upstream; `docker checkpoint` is non-functional on riscv64 (CRIU); `--init` requires a source-built workaround on package installs that do not vendor tini's source build.
 
-1. **No official `dockerd` binary from upstream.** The `download.docker.com/linux/static/stable/` distribution point has no `riscv64/` directory. This is the primary blocker.
+**Performance gaps from missing SIMD:** not applicable - moby/moby itself contains no SIMD-dependent code paths (Section 4); any such gap would live in underlying dependencies (Go runtime, libseccomp, kernel), not in moby/moby.
 
-2. **`docker checkpoint` is non-functional.** CRIU's riscv64 port (issue [#1702](https://github.com/checkpoint-restore/criu/issues/1702), open since 2019) is incomplete. Checkpoint/restore for riscv64 containers is not possible.
+**Security hardening gaps:** the seccomp riscv64 arch-mapping question (Section 4) is unresolved between two live-research passes; a still-open, broader issue [#48471, "seccomp: architecture is not present for (at least) ppc64le"](https://github.com/moby/moby/issues/48471) (filed Sept 2024, updated May 2026, labeled `kind/bug`, `help wanted`) indicates the seccomp architecture table remains incomplete for several non-x86/arm architectures, which may include riscv64-adjacent gaps beyond the originally fixed case.
 
-3. **`docker run --init` requires a workaround.** tini has no official riscv64 binary (issue [#239](https://github.com/krallin/tini/issues/239), open). The moby Dockerfile builds tini from source via xx cross-tools; end-users on package-based installs do not benefit from this.
-
-4. **`docker buildx` (the Buildx CLI plugin) has no official riscv64 binary.** Issue [#3723](https://github.com/docker/buildx/issues/3723) was closed as "Not planned" on March 12, 2026. The rationale for closure is not documented in the thread.
-
----
+**NaN / floating-point semantics:** no evidence found of riscv64-specific floating-point or NaN-handling defects in moby/moby; a targeted search found no matching issues.
 
 ## 7. CI/CD Infrastructure
 
-**Result: No riscv64 CI exists in moby/moby.**
+**No riscv64 CI exists in moby/moby upstream.** This is confirmed by multiple independent checks:
 
-This is verified by direct inspection of 17 GitHub Actions workflow files under `.github/workflows/` and the full contents of `docker-bake.hcl`.
+- A GitHub code search scoped to `path:.github/workflows` for both `riscv` and `riscv64` returns zero matches.
+- Direct reading of the individual workflow files (`bin-image.yml`, `buildkit.yml`, `ci.yml`, `codeql.yml`, `labeler.yml`, `pr-review-trigger.yml`, `pr-review.yml`, `test.yml`, `validate-milestone.yml`, `validate-pr.yml`, `vm.yml`, `windows-2022.yml`, `windows-2025.yml`, `windows-integration-flaky.yml`, `zizmor.yml`) finds no riscv reference in any trigger, matrix, or runner specification.
+- A search for `riscv64 filename:docker-bake.hcl` returns zero matches, confirming riscv64 was never merged into the cross-build platform bake file used by CI, consistent with PRs #51081 and #52162 both having closed unmerged.
+- No `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` exists in the repository root.
 
-The three explicit platform lists in `docker-bake.hcl` (`_platforms`, `binary-smoketest`, `bin-image-cross`) enumerate 8 platforms each (see Section 3). `linux/riscv64` does not appear in any of the three lists. It does not appear in any workflow file trigger, runner specification, or matrix definition. No QEMU configuration references riscv64 (QEMU is configured in `buildkit.yml` and `test.yml` but with no riscv64 platform entries).
+Workflow file counts varied slightly across research passes (14, 15, 17, and 20, depending on whether hidden/reusable `.`-prefixed workflow files such as `.vm.yml`, `.dco.yml`, `.windows.yml`, `.test.yml`, and `.test-unit.yml` are counted) - every pass, regardless of counting method, found zero riscv/riscv64 references.
 
-**History of failed CI attempts:**
+QEMU is configured in some workflows (e.g. `buildkit.yml`, `test.yml`) but with no riscv64 platform entries.
 
-- PR [#48462](https://github.com/moby/moby/pull/48462) ("ci: add linux/riscv64 testing", September 2024, gdams): closed after thaJeztah noted this was already being worked on in PR #44735. Not merged.
-- PR [#44735](https://github.com/moby/moby/pull/44735) includes CI enablement as part of its scope but remains unmerged as a Draft since January 2023.
+PR [#48462, "ci: add linux/riscv64 testing"](https://github.com/moby/moby/pull/48462) was opened and closed unmerged in September 2024, with the work folded (at least nominally) into the scope of PR #44735, which itself remains unmerged.
 
-**External CI infrastructure for riscv64 (not moby-integrated):**
+**External CI infrastructure exists but is not used by moby/moby.** The [RISE RISC-V Runners](https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/), announced March 24, 2026, are native, bare-metal Scaleway EM-RV1 (with an EM-RV2 collaboration underway) RISC-V servers exposed as GitHub Actions runners via the `ubuntu-24.04-riscv` label, with Docker-in-Docker available out of the box - `docker build`, `docker run`, Docker Compose, and Buildx all documented as working, with no emulation and no cross-compilation. Per the ["six weeks in" update](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/) (May 12, 2026), between March 19 and May 6, 2026 the runners processed 13,000+ jobs across 197 repositories and 87 organizations at a 99.78% completion rate, growing to roughly 445 jobs/day. moby/moby does not use these runners; no PR exists to add moby to the runner user list, and the runners are not operated by Docker Inc. Real users already exercise Docker workloads on them: gounthar ran 501 jobs "across DuckDB, llama.cpp, duckdb, and the whole Docker and Python ecosystem," and eshattow ran 1,707 jobs building riscv64 Home Assistant container images. The [riseproject-dev/riscv-runner](https://github.com/riseproject-dev) repository's own README confirms "full Docker support" via a Docker-in-Docker daemon built into the `linux/riscv64` runner image, and the [riseproject-dev/pytorch-ci](https://github.com/riseproject-dev) repository uses Docker/Buildx/QEMU to build cross-compilation images for PyTorch on riscv64 - a working example of Docker's own toolchain being used productively to target riscv64, even though it is not moby's own CI.
 
-The RISE Project launched [RISE RISC-V Runners](https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/) on March 24, 2026. These are native Scaleway EM-RV1 bare-metal nodes exposed as GitHub Actions runners (label: `ubuntu-24.04-riscv`). Docker-in-Docker is available by default. Between March 19 and May 6, 2026, the runners completed 13,000+ jobs across 197 repositories with a 99.78% completion rate. moby/moby does not use these runners. The community user "gounthar" ran 501 jobs spanning Docker and Python ecosystem workloads on these runners. "eshattow" ran 1,707 jobs building riscv64 Home Assistant container images.
-
-These runners represent available infrastructure for moby CI integration, but no PR has been filed to add moby to the runner user list, and the runners are not operated by Docker Inc.
-
----
+| CI signal | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| In any `.github/workflows/*.yml` trigger/matrix | Yes | Yes | No |
+| Free native (non-emulated) runner capacity exists in the ecosystem | Yes | Yes | Yes (RISE RISC-V Runners), unused by moby/moby |
+| Attempted CI PR | N/A | N/A | #48462, closed unmerged |
 
 ## 8. Distribution and Release Status
 
-| Distribution channel | riscv64 available | Version | Notes |
+| Channel | riscv64 available | Version / detail | Source |
 |---|---|---|---|
-| [download.docker.com](https://download.docker.com/linux/static/stable/) (official upstream static binaries) | No | -- | Directory listing: aarch64, armel, armhf, ppc64le, s390x, x86_64 only. HTTP 404 on `riscv64/` confirmed. |
-| moby/moby GitHub releases (latest: v29.6.0) | No | -- | Release assets are empty; canonical distribution is via download.docker.com |
-| [Debian sid `docker.io`](https://packages.debian.org/sid/riscv64/docker.io/) | Yes | 28.5.2+dfsg4-2 | Debian downstream repackage in unstable only; not produced by moby project; built on `rv-manda-03` |
-| [Ubuntu 24.04 Noble `docker.io`](https://packages.ubuntu.com/noble/docker.io) | Yes | 24.0.7-0ubuntu4 | Separate Ubuntu downstream repackage |
-| [Arch Linux RISC-V](https://archriscv.felixc.at/) | Unknown | -- | Site sub-pages returned 404 during research; no package listing retrievable |
-| PyPI `docker` (Python SDK) | N/A | 7.1.0 | Pure Python (`py3-none-any`); no native binary; pip-installable on riscv64 |
+| [download.docker.com](https://download.docker.com/linux/static/stable/) static binaries (official upstream) | No | Directory listing: aarch64, armel, armhf, ppc64le, s390x, x86_64 only | Direct listing check |
+| moby/moby GitHub Releases | No official binary assets for any arch | Distribution runs through download.docker.com, which excludes riscv64 | Direct check |
+| Ubuntu 26.04 "resolute" `docker.io` (ports pocket) | Yes | 29.1.3-0ubuntu4 [ports: armhf, ppc64el, riscv64, s390x]; note amd64/arm64 get a newer security build, 29.1.3-0ubuntu4.1, from the primary archive - riscv64 lags one point release behind, typical for a ports architecture | Live `curl` fetch of [packages.ubuntu.com](https://packages.ubuntu.com/search?keywords=Docker&suite=resolute&searchon=names&section=all), 200 OK |
+| Ubuntu 26.04 "resolute" `docker-buildx` | Yes | 0.30.1-0ubuntu1, riscv64 included | Same fetch |
+| Ubuntu 26.04 "resolute" `docker-compose-v2` | Yes | 2.40.3+ds1-0ubuntu1, riscv64 included | Same fetch |
+| Ubuntu 26.04 "resolute" `docker-registry` | Yes | 2.8.3+ds1-2build1, riscv64 included | Same fetch |
+| Ubuntu 26.04 "resolute" `python3-docker` | Yes (trivially) | 7.1.0-2ubuntu1, architecture `all` | Same fetch |
+| Ubuntu 24.04 "noble" `docker.io` | Reported yes, 24.0.7-0ubuntu4 | Carried from prior reporting; not re-confirmed against a live source in this research cycle [NEEDS VERIFICATION] | Existing report only |
+| Debian sid / trixie `docker.io` | Yes (per existing reporting, 28.5.2+dfsg4-2) | Debian downstream repackage, built in Debian's own riscv64 porterbox infrastructure; not produced by the moby project | Existing report; corroborated in spirit by trixie's confirmed riscv64 Tier-1 status (PR #50726) |
+| Arch Linux RISC-V port | No | No `docker`/`docker-cli` package listed at [archriscv.felixc.at](https://archriscv.felixc.at); page references only a third-party `riscfive/archlinux` Docker Hub image | Live check |
+| PyPI `docker` (docker-py SDK) | Yes (trivially) | All distributions are pure-Python (`py3-none-any`, `py2.py3-none-any`, sdist); no architecture-specific files exist for any platform | Live fetch of [pypi.org/pypi/docker/json](https://pypi.org/pypi/docker/json) |
+| RISE wheel-builder proxy for `docker` | N/A | Returns an HTTP 302 straight through to real PyPI - no custom riscv64 build exists or is needed | Live fetch |
+| Community: [gounthar/docker-for-riscv64](https://github.com/gounthar/docker-for-riscv64) | Yes | Rebuilds Moby/CLI/Compose/BuildKit/Tini from official sources with minimal patches; automated weekly riscv64 builds; the de facto full-stack riscv64 Docker distribution channel today | Web search, dev.to posts |
 
-**Critical distinction:** The Debian `docker.io` and Ubuntu `docker.io` packages are downstream repackagings maintained by Debian/Ubuntu, not by Docker Inc. They do not represent upstream moby project support and diverge from upstream releases on their own packaging timelines.
+**docker/cli release target [NEEDS VERIFICATION, single source]:** The existing report states that [docker/cli PR #6858](https://github.com/docker/cli/pull/6858) added `linux/riscv64` to the `bin-image-cross` release target and merged into v29.4.0. This claim was not re-checked by the fresh live research, which was scoped to moby/moby itself, and is neither corroborated nor contradicted by it.
 
-The [`docker/cli` PR #6858](https://github.com/docker/cli/pull/6858) ("Add linux/riscv64 to bin-image-cross release target") was merged on March 13, 2026 and included in v29.4.0. This means the Docker CLI binary (`docker`) is now in the `dockereng/cli-bin` image for riscv64, but it is NOT yet on `download.docker.com`'s official package distribution -- the official pipeline has a hardcoded amd64/arm architecture list that was not updated by this PR.
-
----
+**What a user must do to get a working riscv64 Docker binary today:** install the downstream `docker.io` package from Ubuntu's ports pocket (26.04 "resolute") or Debian sid/trixie, or use the community [gounthar/docker-for-riscv64](https://github.com/gounthar/docker-for-riscv64) builds. There is no first-party option from Docker Inc./moby/moby.
 
 ## 9. Dependencies
 
-| Dependency | Role | riscv64 build | riscv64 CI | riscv64 release | Blocking issues |
-|---|---|---|---|---|---|
-| Go runtime | Entire stack compiled in Go; GC and scheduler have arch-specific assembly | Supported since Go 1.14 | Included in Go's own CI | Official toolchain ships riscv64 | None |
-| [opencontainers/runc](https://github.com/opencontainers/runc) v1.3.6 | OCI container runtime; namespaces, cgroups, seccomp | Clean | CI integration tests added via issue [#5166](https://github.com/opencontainers/runc/issues/5166) (closed Mar 2026) | `runc.riscv64` binary in v1.5.0+ | CRIU checkpoint/restore not supported on riscv64 ([criu#1702](https://github.com/checkpoint-restore/criu/issues/1702), open since 2019) |
-| [containerd/containerd](https://github.com/containerd/containerd) v2.2.5 | Image/snapshot management, OCI runtime shim | Clean | riscv64 NOT in CI test matrix ([#13020](https://github.com/containerd/containerd/issues/13020) open, [#13124](https://github.com/containerd/containerd/pull/13124) open) | `containerd-*-linux-riscv64.tar.gz` ships | Issues #13020, #13124 open |
-| [moby/buildkit](https://github.com/moby/buildkit) v0.31.0 | Dockerfile build engine | Supported | No dedicated riscv64 CI | `buildkit-*-linux-riscv64.tar.gz` ships (issue [#6577](https://github.com/moby/buildkit/issues/6577) closed Mar 2026) | None |
-| [rootless-containers/rootlesskit](https://github.com/rootless-containers/rootlesskit) v3.0.1 | Rootless Docker networking | Clean | No riscv64 CI reported | `rootlesskit-riscv64.tar.gz` ships | None |
-| [krallin/tini](https://github.com/krallin/tini) v0.19.0 | PID 1 init for containers started with `--init`; C, arch-specific build | Builds on riscv64 hardware; moby Dockerfile cross-compiles via xx | No CI for riscv64 (issue [#240](https://github.com/krallin/tini/issues/240) open) | No official riscv64 binary (issue [#239](https://github.com/krallin/tini/issues/239) open; last release 2021, project stalled) | Issues #239, #240 open |
-| [docker/buildx](https://github.com/docker/buildx) | BuildKit CLI plugin | -- | -- | No riscv64 binary (issue [#3723](https://github.com/docker/buildx/issues/3723) closed "Not planned" Mar 2026) | Closed as not planned |
-| [checkpoint-restore/criu](https://github.com/checkpoint-restore/criu) | Container checkpoint/restore; deep arch-specific kernel integration | Partial (coredump generation merged) | No | No riscv64 release | Issue [#1702](https://github.com/checkpoint-restore/criu/issues/1702) open since 2019 |
+| Dependency | Relation | Criticality | Role | riscv64 build | riscv64 CI/test | riscv64 release | Notes / blocking issues |
+|---|---|---|---|---|---|---|---|
+| Go | build-dependency | critical | Entire daemon compiled in Go; GC and scheduler have arch-specific assembly | Supported since Go 1.14 | Covered by Go's own upstream CI | Official toolchain ships riscv64 | None |
+| [xx](https://github.com/tonistiigi/xx) | build-dependency | critical | Cross-compilation tooling that sets up apt multiarch for `docker buildx bake` cross-builds | Requires Debian trixie for riscv64 apt support; a riscv64 apt-sources bug found Dec 2023 was worked around | N/A (build tool, not tested independently) | Ships as a container-image layer, pinned v1.9.0 in the Dockerfile | Trixie requirement now satisfied in master since PR #50726 merged 2026-09-15 |
+| [Buildx](https://github.com/docker/buildx) | build-dependency | critical | BuildKit CLI plugin invoked by `docker buildx bake` for cross-builds | Builds from source | No dedicated riscv64 CI reported | No official riscv64 binary; issue [#3723](https://github.com/docker/buildx/issues/3723) closed "Not planned" Mar 2026 | No rationale documented for the closure |
+| [runc](https://github.com/opencontainers/runc) | runtime-dependency | critical | OCI runtime: namespaces, cgroups, seccomp invocation | Clean; riscv64 mainline since opencontainers/runc#3446 | CI added via issue #5166 (closed Mar 2026) | `runc.riscv64` binary ships from v1.5.0+; moby Dockerfile pins v1.3.6 | CRIU checkpoint/restore unsupported on riscv64 within runc |
+| [containerd](https://github.com/containerd/containerd) | runtime-dependency | critical | Image/snapshot management, OCI runtime shim | Clean | Not in CI test matrix: issue [#13020](https://github.com/containerd/containerd/issues/13020) reopened, still open as of 2026-08-14; PR [#13124](https://github.com/containerd/containerd/pull/13124) (adds riscv64 to CI) still open | `containerd-*-linux-riscv64.tar.gz` ships; moby Dockerfile pins v2.2.5 | gounthar has offered to help land CI support |
+| [BuildKit](https://github.com/moby/buildkit) | runtime-dependency | critical | Dockerfile build engine | Supported | No dedicated riscv64 CI | `buildkit-*-linux-riscv64.tar.gz` ships (issue [#6577](https://github.com/moby/buildkit/issues/6577) closed Mar 2026); moby Dockerfile pins v0.31.0 | None open |
+| libseccomp | runtime-dependency | critical | C library (CGO-linked) backing Docker's default seccomp profile | Disputed evidence on whether the riscv64 arch mapping lives in moby/moby or in runc - see Section 4 | No riscv64-specific CI found | N/A (system library, distro-provided) | See the unresolved Section 4 contradiction between PR #48455's description and a direct-code-search verification pass |
+| golang.org/x/sys | runtime-dependency | critical | Vendored low-level syscall bindings providing riscv64 ABI/syscall tables | Complete: `asm_linux_riscv64.s`, `syscall_linux_riscv64.go`, and generated syscall-number/type/error tables for riscv64 are present, auto-generated from Linux kernel headers | Covered by the Go project's own CI | Ships with every Go release | Specifically bumped in PR #39726 (2019) to fix riscv64 epoll breakage |
+| iptables | runtime-dependency | critical | Bridge-network firewall rules manipulated by `dockerd` | Clean as a distro package | Indirectly release-blocking: Debian 13's iptables-nft v1.8.11 changed an error-string format, breaking `TestBridgeICC`/`TestBridgeINC` integration tests that gate PR #44735 | Distro-provided riscv64 iptables package (Debian/Ubuntu) | Fix status (PR #50862 and related sub-fixes) not reconfirmed in this research cycle [NEEDS VERIFICATION, existing-report only] |
+| rootlesskit | runtime-dependency | optional | Rootless Docker networking | Clean | No riscv64 CI reported | `rootlesskit-riscv64.tar.gz` ships (v3.0.1 pinned) | None |
+| tini | runtime-dependency | optional | PID 1 init used by `docker run --init` | Builds on riscv64 hardware; moby's own Dockerfile cross-compiles it from source via xx | No CI (issue [#240](https://github.com/krallin/tini/issues/240) open) | No official riscv64 binary; upstream project stalled since 2021 (issue [#239](https://github.com/krallin/tini/issues/239) open) | #239 and #240 both open, upstream inactive |
+| CRIU | runtime-dependency | optional | `docker checkpoint`/restore backend | Partial - only coredump-generation support merged upstream | No | No riscv64 release | Issue [#1702](https://github.com/checkpoint-restore/criu/issues/1702) open since 2019; deep, arch-specific kernel integration work, not a quick fix |
+| Delve | runtime-dependency | optional | Go debugger (`dlv`) bundled for interactive container debugging | Explicitly excluded: the Dockerfile strips `linux/riscv64` out of `DELVE_SUPPORTED` via ARG substitution | N/A | Not shipped for riscv64 | Corrects a prior claim of v1.26.0 riscv64 Delve support; current Dockerfile source confirms riscv64 is deliberately excluded |
 
-**Dependency chain summary:** Of the seven runtime dependencies, three (runc, BuildKit, rootlesskit) have fully landed riscv64 support. Two (tini, buildx) have open or closed-as-not-planned issues. One (containerd) has released riscv64 binaries but no riscv64 CI. One (CRIU) is a long-standing incomplete port that blocks the checkpoint/restore feature.
+**Additional indirect dependencies surfaced by research (not in the required list above):**
 
----
+- **QEMU** - used for multi-arch emulation in Buildx-based cross-builds generally, and directly in the RISE-adjacent `pytorch-ci` repository's riscv64 Docker/Buildx image pipeline.
+- **docker/cli** - sibling repository providing the `docker` CLI; per the existing report a PR (#6858) added `linux/riscv64` to its own `bin-image-cross` release target and shipped in v29.4.0 [NEEDS VERIFICATION, not corroborated by fresh research].
+- **Debian 13 "trixie"** - the base OS image for the Dockerfile; the first Debian stable release with riscv64 as a Tier-1 architecture, required for `xx`'s riscv64 cross-package installation, and now the default base image in master since PR #50726 merged on 2026-09-15.
 
-## 10. Ecosystem Status
-
-**RISE Project involvement:** Docker Inc. is not a RISE Project member. There is no RISE-funded project with a Docker project ID. The only Docker-relevant RISE content is the incidental availability of Docker-in-Docker on the [RISE RISC-V GitHub Actions runners](https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/) (launched March 24, 2026). This is infrastructure, not a directed investment in Docker riscv64 support.
-
-**Community activity:** The [gounthar/docker-for-riscv64](https://github.com/gounthar/docker-for-riscv64) project has produced 117+ riscv64 Docker builds [NEEDS VERIFICATION -- single source]. PR [#52162](https://github.com/moby/moby/pull/52162) (closed March 12, 2026) states: "moby is the last piece of the Docker stack without official riscv64 release artifacts -- runc, containerd, BuildKit, BuildX [sic], and Compose all already ship riscv64 binaries." This characterization of buildx is incorrect per issue [#3723](https://github.com/docker/buildx/issues/3723), which was closed as "Not planned" on the same date.
-
-**Downstream distros:** Both Debian sid and Ubuntu 24.04 ship riscv64 `docker.io` packages (see Section 8). These packages are maintained downstream and do not require upstream moby to ship official binaries.
-
-**Performance data (Docker-adjacent):** The only published hardware-measured data for Docker-related riscv64 workloads comes from [k3s PR #13854](https://github.com/k3s-io/k3s/pull/13854) (March 26, 2026), measuring `docker buildx build` and Go compilation on RISE RISC-V Runners (Scaleway EM-RV1, native, no QEMU):
-
-| Build step | arm64 | riscv64 (EM-RV1) | Ratio |
-|---|---|---|---|
-| Go compile (`scripts/build`) | 3m 55s | 40m 28s | ~10.4x slower |
-| `scripts/package-cli` | 22s | 2m 31s | ~6.7x slower |
-| `docker buildx build` | 5m 46s | 48m 32s | ~8.4x slower |
-
-Per-package Go compilation slowdown distribution on the same hardware: median 10.2x, p90 15.5x, p99 25.6x, max 42x. Characterized as CPU-bound, not I/O [NEEDS VERIFICATION -- single source, k3s PR comment].
-
-No published benchmarks exist for Docker daemon-specific operations (container start latency, image pull throughput, container network/storage I/O) on riscv64 vs arm64 or x86_64.
-
----
+**Dependency chain summary:** of the critical runtime/build dependencies, runc, containerd, and BuildKit have riscv64 binaries shipping upstream (with containerd's CI coverage still incomplete). Buildx and Delve have no riscv64 binary at all. tini and CRIU are optional dependencies with long-standing, unresolved upstream riscv64 gaps. The libseccomp/seccomp-mapping question is unresolved in the research itself and is flagged rather than asserted either way.
 
 ## 11. Known Bugs and Active Issues
 
 **Fixed:**
 
-| PR/Issue | Description | Fixed in |
+| Issue/PR | Description | Status |
 |---|---|---|
-| [#48454](https://github.com/moby/moby/issues/48454) / [#48455](https://github.com/moby/moby/pull/48455) | seccomp silently ignored arch-conditional rules for riscv64; JVM workloads crashed with RISCV_FLUSH_ICACHE EPERM | Docker 28.0.0; backported to 23.0, 25.0, 26.1, 27.x |
-| [#39461](https://github.com/moby/moby/issues/39461) | Interactive terminals (-it) and log tailing (logs -f) non-functional on riscv64; broken epoll | 20.10.0 (PR #39726) |
+| [#48454](https://github.com/moby/moby/issues/48454) / [#48455](https://github.com/moby/moby/pull/48455) | Seccomp silently failed to apply riscv64-scoped rules (e.g. `riscv_flush_icache`), causing `apt-get install openjdk` and similar workloads to crash with `RISCV_FLUSH_ICACHE not available; error='Operation not permitted'` | Fixed, shipped in Docker 28.0.0; backported to 23.0, 25.0, 27.x (the 26.1 backport, #48464, merged but was never released) |
+| [#39461](https://github.com/moby/moby/issues/39461) | Interactive terminals (`-it`) and `docker logs -f` non-functional on a riscv64 QEMU test rig | Fixed, shipped in 20.10.0 via PR #39726 |
 
 **Open:**
 
-| Issue/PR | Description | Owner | Severity |
-|---|---|---|---|
-| [#44735](https://github.com/moby/moby/pull/44735) | Enable riscv64 cross build -- Draft since Jan 2023 | crazy-max | Blocks all official release artifacts |
-| [#50726](https://github.com/moby/moby/pull/50726) | Upgrade Dockerfile base to Debian trixie -- Draft since Aug 2025 | thaJeztah | Blocks #44735 |
-| [#50862](https://github.com/moby/moby/pull/50862) | Fix TestBridgeICC and TestBridgeINC networking test failures on trixie | akerouanton | Blocks #50726 |
-| [criu#1702](https://github.com/checkpoint-restore/criu/issues/1702) | CRIU riscv64 support -- open since 2019 | -- | Blocks docker checkpoint on riscv64 |
-| [tini#239](https://github.com/krallin/tini/issues/239) | No official riscv64 tini binary -- project last released 2021 | -- | `docker run --init` on non-source builds |
-| [containerd#13020](https://github.com/containerd/containerd/issues/13020) | Add riscv64 to containerd CI test matrix -- opened Mar 2026 | gounthar | Regressions may go undetected |
-| [buildx#3723](https://github.com/docker/buildx/issues/3723) | riscv64 buildx release binary closed as "Not planned" -- Mar 2026 | -- | docker buildx non-functional on riscv64 |
+| Issue/PR | Description | Severity / notes |
+|---|---|---|
+| [#44319](https://github.com/moby/moby/issues/44319) | Master tracking issue, "Adding support for RISC-V" | Open since 2022-10-18, 8+ comments, still active |
+| [#44735](https://github.com/moby/moby/pull/44735) | Enable riscv64 cross build | Draft since 2023-01-02; blocks all official release artifacts |
+| [#48471](https://github.com/moby/moby/issues/48471) | "seccomp: architecture is not present for (at least) ppc64le" | Open since 2024-09-10, updated 2026-05-27, `kind/bug` + `help wanted`; indicates the seccomp arch table is still incomplete for several non-x86/arm architectures |
+| [#51081](https://github.com/moby/moby/pull/51081) | feat: add linux/riscv64 to docker-bake | Closed unmerged 2025-10-01 |
+| [#52162](https://github.com/moby/moby/pull/52162) | Add linux/riscv64 to cross-build platform targets | Closed unmerged 2026-03-12, in favor of #44735 |
+| [#48462](https://github.com/moby/moby/pull/48462) | ci: add linux/riscv64 testing | Closed unmerged 2024-09-10 |
+| [tini#239](https://github.com/krallin/tini/issues/239) | No official riscv64 tini binary | Open, upstream project inactive since 2021 |
+| [tini#240](https://github.com/krallin/tini/issues/240) | No riscv64 CI in tini | Open |
+| [criu#1702](https://github.com/checkpoint-restore/criu/issues/1702) | riscv64 support in CRIU | Open since 2019 |
+| [containerd#13020](https://github.com/containerd/containerd/issues/13020) | Add riscv64 to containerd CI test matrix | Reopened, open as of 2026-08-14 |
+| [containerd#13124](https://github.com/containerd/containerd/pull/13124) | ci: add riscv64 to Linux integration test matrix | Open |
+| [buildx#3723](https://github.com/docker/buildx/issues/3723) | riscv64 buildx release binary | Closed "Not planned," Mar 2026, no rationale documented |
 
-**Root cause of the networking test blocker:** Debian 13 ships iptables-nft v1.8.11. This version changed the error output when querying a nonexistent chain from `"chain '<chain>' in table 'filter' is incompatible, use 'nft' tool."` to `"No chain/target/match by that name."` Several Docker integration tests match against the old error string. Multiple sub-fixes have been merged (PRs #50727, #50736, #50745, #50819, #50841) but `TestBridgeICC` and `TestBridgeINC` remain failing as of December 2025.
-
----
+**Correctness bugs highlighted separately:** #48454 was a genuine correctness defect (silently dropped security-relevant seccomp rules on riscv64, causing real workload crashes) that went undetected for roughly two years because no riscv64 CI exists to catch it - the fix was reactive, discovered by an end user running real hardware, not caught by automated gates. The still-open #48471 suggests the underlying class of bug (an incomplete seccomp architecture table for non-x86/arm architectures) may not be fully closed even for the originally-fixed riscv64 case.
 
 ## 12. Objections and Upstream Blockers
 
-The blocking chain for official riscv64 Docker Engine release artifacts is:
+Updated blocking chain for official riscv64 release artifacts:
 
 ```
-PR #50862 (TestBridgeICC/TestBridgeINC fix, owner: akerouanton)
+PR #50862 (TestBridgeICC/TestBridgeINC iptables-nft v1.8.11 fix)
   |
   v
-PR #50726 (Debian trixie base image, owner: thaJeztah)
+PR #50726 (Debian trixie base image) -- MERGED 2026-09-15
   |
   v
-PR #44735 (riscv64 cross build + bake targets, owner: crazy-max)
+PR #44735 (riscv64 cross build + bake targets) -- still open/Draft
   |
   v
 Issue #44319 closed / official riscv64 release artifacts shipped
 ```
 
-**Historical pattern:** The PR #44735 has been open as a Draft since January 2, 2023. In 3.5 years it has accumulated the following resolved sub-blockers: missing runc riscv64 support (resolved upstream), missing Debian riscv64 packages (resolved with trixie, June 2025), broken tonistiigi/xx riscv64 apt support (resolved in xx #207). The only remaining sub-blocker is the iptables integration test failures on trixie, which have themselves been partially resolved (5 of 7 sub-PRs merged) with 2 test cases remaining open. The project has demonstrated the ability to ship partial fixes but has not been able to close the loop on the final test blockers.
+PR #50726's merge on 2026-09-15 clears a multi-year sub-blocker (no Debian release had riscv64 cross-packages before trixie). The status of PR #50862's iptables test fixes was not reconfirmed by the fresh live research in this cycle and is carried forward from prior reporting as still-relevant [NEEDS VERIFICATION]. A further, narrower gap was flagged at PR #52162's closure on March 12, 2026 by gounthar: PR #44735 as currently scoped adds riscv64 to `_platforms` and `binary-smoketest` but not yet to `bin-image-cross`, which is the target that actually produces release container images rather than just static binaries.
 
-**Maintainer availability:** The three PRs in the blocking chain have three different owners (akerouanton, thaJeztah, crazy-max), all of whom are Docker Inc. employees or close contributors. tianon (Docker Inc.) is listed as a required code owner for the Dockerfile changes in #44735. There is no community contributor with the write access needed to merge these PRs.
+**Stated objections:** neersighted (Docker Inc.) explicitly blocked an Ubuntu-base-image shortcut in #44735 in July 2023, insisting on waiting for genuine Debian riscv64 support - a position now satisfied by trixie. thaJeztah (Docker Inc.) is the consistent maintainer gatekeeper across nearly every riscv64 PR, driving both this bar and the subsequent backport process. tianon (Docker Inc.) is listed as a required code owner for the Dockerfile changes in #44735. No community contributor holds the write access needed to merge #44735 - its path to landing runs entirely through Docker Inc. employees.
 
-**bin-image-cross gap:** PR [#52162](https://github.com/moby/moby/pull/52162) raised, on its closure on March 12, 2026, that PR #44735 currently adds riscv64 to `_platforms` and `binary-smoketest` but not to `bin-image-cross` (which produces the release container images, not just static binaries). This gap was noted but not resolved before #52162 was closed.
+`docker buildx`'s riscv64 issue [#3723](https://github.com/docker/buildx/issues/3723) was closed "Not planned" by Docker Inc. on March 12, 2026 with no rationale documented in the thread - a standing organizational objection with no stated technical basis.
 
-**`docker buildx` closed as not planned:** Issue [buildx#3723](https://github.com/docker/buildx/issues/3723) was closed as "Not planned" on March 12, 2026. No rationale is documented in the thread. This means even when `dockerd` gains an official riscv64 binary, the `docker buildx` plugin will not have one from the upstream project.
+**Acceptance probability:** moderate to high for PR #44735 itself. Both of its historically hardest blockers - runc riscv64 support and a Debian base image with riscv64 packages - are now resolved upstream. The PR's owner (crazy-max) rebased it as recently as October 2025, and community pressure (gounthar) is active and recent (March 2026). However, nearly four years of Draft status with no committed merge date, even after major sub-blockers cleared, indicates organizational/prioritization friction beyond the remaining technical work.
 
----
+## 13. Readiness Assessment
 
-## 13. Investment Analysis
+- **Color:** Orange (downstream-only)
+- **Release provider:** distro
 
-### 13.1 Functional Enablement
+**Justification:** moby/moby has no upstream riscv64 CI - confirmed absent across all GitHub Actions workflow files in `.github/workflows/` (14-20 files depending on counting method, zero riscv/riscv64 matches in every pass) and across all `docker-bake.hcl` platform lists (`_platforms`, `binary-smoketest`, `bin-image-cross`) - and no official upstream riscv64 release artifact: [download.docker.com](https://download.docker.com/linux/static/stable/) has no `riscv64/` directory, and the enabling PR [#44735](https://github.com/moby/moby/pull/44735) is still an open Draft. The distribution floor applies because Ubuntu 26.04 (ports pocket) and Debian sid/trixie ship a riscv64 `docker.io` package ([packages.ubuntu.com](https://packages.ubuntu.com/search?keywords=Docker&suite=resolute&searchon=names&section=all)), but since the research did not establish whether those packages build from unpatched upstream source, the grade is capped at orange (downstream-only) rather than yellow.
 
-The minimum work to produce official riscv64 Docker Engine release binaries is entirely within the Docker project. The code is complete; the blocker is two integration test failures in the networking stack (`TestBridgeICC`, `TestBridgeINC`), owned by `@akerouanton` at Docker Inc. External contributors cannot merge the required PRs.
+**Pending work that could change the grade:** PR [#44735](https://github.com/moby/moby/pull/44735) "Enable riscv64 cross build" is open/Draft and would add official upstream riscv64 build and release targets; its key blocker, the Debian trixie base image (PR [#50726](https://github.com/moby/moby/pull/50726)), merged 2026-09-15, clearing a major sub-blocker. Two competing PRs ([#51081](https://github.com/moby/moby/pull/51081), [#52162](https://github.com/moby/moby/pull/52162)) to add `linux/riscv64` to docker-bake were closed unmerged in favor of #44735. No upstream riscv64 CI exists or is pending (PR [#48462](https://github.com/moby/moby/pull/48462) "ci: add linux/riscv64 testing" was closed unmerged). Tracking issue [#44319](https://github.com/moby/moby/issues/44319) remains open. Community project [gounthar/docker-for-riscv64](https://github.com/gounthar/docker-for-riscv64) continues to push for official inclusion and is currently the de facto riscv64 distribution channel. No RISE membership or funded RISE work targets Docker directly; RISE's only tie-in is that Docker-in-Docker works out of the box on RISE RISC-V Runners.
 
-The practical path for a third party is to either (a) fix the integration test failures and submit patches to the open Draft PRs, or (b) publish riscv64 binaries through a separate distribution channel (as Debian and Ubuntu already do). Option (a) requires debugging the iptables-nft v1.8.11 behavior change in Docker's bridge networking integration test suite.
+## 14. Investment Analysis
 
-The [gounthar/docker-for-riscv64](https://github.com/gounthar/docker-for-riscv64) project demonstrates that building `dockerd` for riscv64 from source is achievable today with the trixie override. The gap is the official distribution pipeline, not the build capability.
+### 14.1 Functional Enablement
 
-### 13.2 Performance Optimization
+The remaining work to produce official riscv64 Docker Engine release binaries is entirely within the moby/moby project and its immediate blocking chain. The base-image blocker (PR #50726) is now cleared. What remains is: (a) whatever is left of the iptables-nft v1.8.11 integration-test fixes referenced against PR #50862 [NEEDS VERIFICATION on current status], (b) merging PR #44735 itself, and (c) closing the `bin-image-cross` scope gap flagged at PR #52162's closure. All three sit with Docker Inc. employees (akerouanton, thaJeztah, crazy-max, tianon as required code owner); no external contributor has the write access to merge them. RISE has not funded or performed any of this work - no RISE blog post, repository, or funded RFP ties directly to moby/moby.
 
-No Docker-specific performance benchmarks for riscv64 exist in public sources. The available data (k3s PR #13854) shows the Scaleway EM-RV1 runs `docker buildx build` at approximately 8.4x slower than arm64 and Go compilation at approximately 10.4x slower. No data exists for container startup latency, image pull throughput, or runtime throughput of containerized workloads.
+### 14.2 Performance Optimization
 
-Docker itself has no architecture-specific performance code (no SIMD, no JIT). Performance on riscv64 is entirely a function of the underlying Go runtime, kernel, and hardware. Performance optimization work would be in the Go runtime and compiler, not in moby/moby itself.
+No Docker-daemon-specific performance benchmarks (container start latency, image pull throughput, runtime I/O) exist for riscv64 vs arm64/x86_64 in any source found. The closest available data points are indirect:
 
-### 13.3 CI/CD Infrastructure
+- Fedora RISC-V build infrastructure (binutils 2.45.1-4.fc43): a representative package build took 143 minutes on an 8-core/16GB StarFive VisionFive 2 vs 29 minutes on x86_64 (8 cores/29GB) and 36 minutes on aarch64 (12 cores/46GB) - roughly 4-5x slower, corroborated by a Phoronix summary reporting ~5x slower Fedora RISC-V package builds generally. An alternate riscv64 builder (Milk-V Megrez) completed the same package in 58 minutes, still slower than every other architecture tested. ([Marcin Juszkiewicz, "RISC-V is sloooow," Mar 2026](https://marcin.juszkiewicz.com.pl/2026/03/10/risc-v-is-sloooow/))
+- Native Docker toolchain builds on real riscv64 hardware (BananaPi F3): full Docker Engine v29.0.0 compile ~35-40 minutes; Buildx v0.29.1 build+package ~9m13s ([gounthar dev.to posts](https://dev.to/gounthar/docker-v29-lands-on-risc-v64-in-under-a-week-the-future-is-here-4g2i)) [NEEDS VERIFICATION, single source].
+- QEMU emulation of riscv64 on non-native hosts (relevant to `docker run --platform linux/riscv64` on amd64/arm64 hosts) is generically reported at roughly 15-30% of native performance, or approximately 7x slower than native execution, in cross-architecture emulation benchmarks not specific to Docker.
+- An academic paper ([MDPI Electronics 13(17):3494, 2024](https://www.mdpi.com/2079-9292/13/17/3494)) comparing a Turing RK1 (ARM) against a SiFive U740-based RISC-V platform under Docker and Kubernetes reports ARM ahead by roughly 5-15x+ in memory bandwidth and single-/all-core performance, plus "considerable intricacy and difficulties" coordinating RISC-V with Kubernetes; the paper's full tables could not be retrieved (HTTP 403 on MDPI, preprints.org, ResearchGate, Scribd, and ACM), so these figures are indexed-abstract-level only [NEEDS VERIFICATION].
 
-The RISE RISC-V Runners (Scaleway EM-RV1, native, Docker-in-Docker available) are free and available for open-source projects. The moby/moby project does not currently use them. Adding riscv64 to moby's GitHub Actions CI via these runners requires (a) resolving the open test failures so the CI would be green, then (b) a PR to add `linux/riscv64` to the bake matrix and a workflow matrix entry using `ubuntu-24.04-riscv`. This is straightforward engineering work once the test failures are resolved.
+Docker itself has no architecture-specific performance code (Section 4: no SIMD, no JIT). Performance on riscv64 is entirely a function of the underlying Go runtime, kernel, and hardware; performance-optimization investment belongs in the Go runtime/compiler and in RISC-V silicon/kernel work, not in moby/moby.
 
-### 13.4 Ecosystem Enablement
+### 14.3 CI/CD Infrastructure
 
-The Docker stack (excluding moby/moby itself) is largely complete for riscv64: runc, containerd, BuildKit, BuildX (no official binary but builds from source), Compose, and rootlesskit all ship riscv64 binaries or are addressable. The two remaining ecosystem gaps are:
+The RISE RISC-V Runners are free, native (no emulation), and already run Docker-in-Docker workloads successfully at scale (13,000+ jobs, 99.78% completion, ~445 jobs/day as of the May 2026 update). moby/moby does not use them. Once the remaining #44735 blockers clear, adding riscv64 to moby's own CI is comparatively straightforward engineering: add `linux/riscv64` to the bake matrix and add a workflow matrix entry targeting `ubuntu-24.04-riscv`. This work is not currently funded or scheduled by RISE specifically for moby/moby.
 
-- **tini:** No official riscv64 binary, project stalled since 2021. The workaround (build from source in the Dockerfile) is already implemented in moby's Dockerfile. A fork or vendored build is the practical resolution.
-- **CRIU:** riscv64 port has been open since 2019. `docker checkpoint` is not available on riscv64. This is a deep, architecture-specific kernel-integration project; not a quick fix.
-- **docker buildx plugin:** Closed as "Not planned" by Docker Inc. The BuildKit binary (which does the actual build work) ships riscv64; the `buildx` CLI wrapper does not. A community fork or separate distribution of the buildx binary is the workaround.
+### 14.4 Dependency-Chain Enablement
 
-### 13.5 Summary Table
+(Section 10, Ecosystem Status, is omitted: moby/moby is a standalone daemon/CLI tool with no significant dependent package ecosystem - e.g. no large body of third-party packages that must independently be ported to riscv64 the way a language's package index would need to be.) The remaining dependency-level gaps that affect Docker's own feature completeness are:
+
+- **tini:** no official riscv64 binary, project stalled since 2021. The workaround (building from source in moby's own Dockerfile via xx) is already implemented; a fork or vendored build is the practical path for package-based installs that do not do this.
+- **CRIU:** riscv64 port open since 2019, only partial. `docker checkpoint` is unavailable on riscv64. This is a deep, architecture-specific kernel-integration project, not a quick fix.
+- **docker buildx plugin:** closed "Not planned" by Docker Inc. with no documented rationale. The underlying BuildKit binary (which does the actual build work) does ship for riscv64; only the `buildx` CLI wrapper does not. A community fork or separate distribution of the buildx binary is the practical workaround, or renewed engagement with Docker Inc. to reopen the decision.
+- **containerd CI:** issues #13020/#13124 remain open; gounthar has offered to help land riscv64 CI coverage for containerd.
+
+### 14.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
-| Functional | Fix TestBridgeICC and TestBridgeINC iptables-nft v1.8.11 test failures in PR [#50862](https://github.com/moby/moby/pull/50862) | 1-3 | akerouanton (Docker Inc.) | Critical |
-| Functional | Merge PR [#50726](https://github.com/moby/moby/pull/50726) (trixie Dockerfile) after #50862 | 0.5 | thaJeztah (Docker Inc.) | Critical |
-| Functional | Merge PR [#44735](https://github.com/moby/moby/pull/44735) (riscv64 cross build) after #50726, resolve bin-image-cross gap | 1 | crazy-max + tianon (Docker Inc.) | Critical |
-| Functional | Resolve tini riscv64 release binary (issue [#239](https://github.com/krallin/tini/issues/239)) or vendor a fork | 1-2 | external contribution to tini or moby | High |
-| CI/CD | Add `linux/riscv64` to moby/moby GitHub Actions via RISE Runners once tests are green | 1-2 | community PR to moby | High |
-| CI/CD | Add riscv64 to containerd CI test matrix (issue [#13020](https://github.com/containerd/containerd/issues/13020), PR [#13124](https://github.com/containerd/containerd/pull/13124)) | 1 | gounthar + containerd maintainers | Medium |
-| Ecosystem | Investigate buildx riscv64 binary path (issue [#3723](https://github.com/docker/buildx/issues/3723) closed "Not planned" -- requires re-engagement with Docker Inc.) | Data not available: no information on why the issue was closed | Docker Inc. or community fork | Medium |
-| Ecosystem | CRIU riscv64 port (issue [#1702](https://github.com/checkpoint-restore/criu/issues/1702), open since 2019) | Large (unknown -- deep arch-specific kernel work) | criu maintainers | Low (niche use case) |
-| Performance | Baseline benchmarks for container start latency, image pull, and runtime I/O on riscv64 vs arm64 | 2-4 | internal benchmarking work | Medium |
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
-
----
+| Functional | Confirm and, if needed, complete the remaining iptables-nft v1.8.11 integration-test fixes (PR #50862 chain) | Data not available: current status not reconfirmed by live research | akerouanton (Docker Inc.) [NEEDS VERIFICATION] | Critical |
+| Functional | Merge PR #44735 (riscv64 cross build), including closing the bin-image-cross scope gap noted at #52162's closure | 1-2 | crazy-max + tianon (Docker Inc.) | Critical |
+| Functional | Resolve tini riscv64 release binary (issue #239) or vendor/fork | 1-2 | External contribution to tini, or moby | High |
+| CI/CD | Add `linux/riscv64` to moby/moby GitHub Actions via RISE RISC-V Runners, once #44735's remaining blockers clear | 1-2 | Community PR to moby | High |
+| CI/CD | Add riscv64 to containerd's CI test matrix (issues #13020, PR #13124) | 1 | gounthar + containerd maintainers | Medium |
+| Ecosystem | Re-engage Docker Inc. on the buildx riscv64 "Not planned" closure (#3723), or maintain a community fork | Data not available: no information on why the issue was closed | Docker Inc. or community fork | Medium |
+| Ecosystem | CRIU riscv64 port (issue #1702, open since 2019) | Large, unknown - deep arch-specific kernel work | CRIU maintainers | Low (niche use case) |
+| Performance | Baseline Docker-daemon-specific benchmarks (container start latency, image pull throughput, runtime I/O) on riscv64 vs arm64/x86_64 - none currently published | 2-4 | Internal benchmarking work | Medium |
 
 ## 15. References
 
-- [moby/moby issue #44319 -- Adding support for RISC-V](https://github.com/moby/moby/issues/44319)
-- [moby/moby PR #44735 -- Enable riscv64 Cross Build (Draft)](https://github.com/moby/moby/pull/44735)
-- [moby/moby PR #50726 -- Dockerfile: update to Debian 13 trixie (Draft)](https://github.com/moby/moby/pull/50726)
-- [moby/moby PR #50862 -- Fix TestBridgeICC/TestBridgeINC on trixie (Draft)](https://github.com/moby/moby/pull/50862)
-- [moby/moby PR #52162 -- Add linux/riscv64 to cross-build platform targets (closed)](https://github.com/moby/moby/pull/52162)
-- [moby/moby PR #51081 -- feat: add linux/riscv64 to docker-bake (closed)](https://github.com/moby/moby/pull/51081)
-- [moby/moby PR #48462 -- ci: add linux/riscv64 testing (closed)](https://github.com/moby/moby/pull/48462)
-- [moby/moby PR #48455 -- seccomp: add riscv64 mapping to seccomp_linux.go (merged, Docker 28.0.0)](https://github.com/moby/moby/pull/48455)
-- [moby/moby issue #48454 -- seccomp fails to recognize riscv64 architecture (closed)](https://github.com/moby/moby/issues/48454)
-- [moby/moby PR #43553 -- seccomp: support riscv64 (merged, Docker 23.0.0)](https://github.com/moby/moby/pull/43553)
-- [moby/moby PR #40664 -- Add riscv64 support to the build scripts (merged, Docker 20.10.0)](https://github.com/moby/moby/pull/40664)
-- [moby/moby PR #39726 -- bump x/sys to fix riscv64 epoll (merged, Docker 20.10.0)](https://github.com/moby/moby/pull/39726)
-- [moby/moby PR #39423 -- Update modules to support riscv64 (merged, Docker 20.10.0)](https://github.com/moby/moby/pull/39423)
-- [docker/cli PR #6858 -- Add linux/riscv64 to bin-image-cross release target (merged, v29.4.0)](https://github.com/docker/cli/pull/6858)
-- [docker/buildx issue #3723 -- Add linux/riscv64 to release binaries (closed "Not planned")](https://github.com/docker/buildx/issues/3723)
-- [moby/buildkit issue #6577 -- Add linux/riscv64 to official release binaries (closed)](https://github.com/moby/buildkit/issues/6577)
-- [moby/buildkit PR #6523 -- Add riscv64 support in LLB client (merged)](https://github.com/moby/buildkit/pull/6523)
-- [containerd/containerd issue #13020 -- Add linux/riscv64 to CI test matrix](https://github.com/containerd/containerd/issues/13020)
-- [containerd/containerd PR #13124 -- ci: add riscv64 to Linux integration test matrix](https://github.com/containerd/containerd/pull/13124)
-- [opencontainers/runc issue #5166 -- riscv64 CI and release (closed)](https://github.com/opencontainers/runc/issues/5166)
-- [checkpoint-restore/criu issue #1702 -- Support for RISC-V (open since 2019)](https://github.com/checkpoint-restore/criu/issues/1702)
-- [krallin/tini issue #239 -- No official riscv64 binary](https://github.com/krallin/tini/issues/239)
-- [gounthar/docker-for-riscv64 -- community riscv64 Docker builds](https://github.com/gounthar/docker-for-riscv64)
-- [k3s-io/k3s PR #13854 -- riscv64 build time benchmark data (Mar 2026)](https://github.com/k3s-io/k3s/pull/13854)
+- [moby/moby issue #44319 - Adding support for RISC-V](https://github.com/moby/moby/issues/44319)
+- [moby/moby PR #44735 - Enable riscv64 cross build (Draft)](https://github.com/moby/moby/pull/44735)
+- [moby/moby PR #50726 - Dockerfile update to Debian 13 trixie (merged 2026-09-15)](https://github.com/moby/moby/pull/50726)
+- [moby/moby PR #52162 - Add linux/riscv64 to cross-build platform targets (closed)](https://github.com/moby/moby/pull/52162)
+- [moby/moby PR #51081 - feat: add linux/riscv64 to docker-bake (closed)](https://github.com/moby/moby/pull/51081)
+- [moby/moby PR #48462 - ci: add linux/riscv64 testing (closed)](https://github.com/moby/moby/pull/48462)
+- [moby/moby PR #48455 - seccomp: add riscv64 mapping to seccomp_linux.go (merged, Docker 28.0.0)](https://github.com/moby/moby/pull/48455)
+- [moby/moby PR #48463 - seccomp riscv64 mapping backport to 27.x (merged)](https://github.com/moby/moby/pull/48463)
+- [moby/moby issue #48454 - seccomp fails to recognize riscv64 architecture (closed)](https://github.com/moby/moby/issues/48454)
+- [moby/moby issue #48471 - seccomp architecture is not present for (at least) ppc64le (open)](https://github.com/moby/moby/issues/48471)
+- [moby/moby PR #43553 - seccomp: support riscv64 (merged, Docker 23.0.0)](https://github.com/moby/moby/pull/43553)
+- [moby/moby PR #50077 - profile/seccomp: update to kernel v6.13 (merged)](https://github.com/moby/moby/pull/50077)
+- [moby/moby PR #40664 - Add riscv64 support to the build scripts (merged, Docker 20.10.0)](https://github.com/moby/moby/pull/40664)
+- [moby/moby PR #39726 - bump x/sys to fix riscv64 epoll (merged, Docker 20.10.0)](https://github.com/moby/moby/pull/39726)
+- [moby/moby PR #39423 - Update modules to support riscv64 (merged, Docker 20.10.0)](https://github.com/moby/moby/pull/39423)
+- [moby/moby issue #39461 - Interactive terminal and tail logs not working on RISC-V (closed)](https://github.com/moby/moby/issues/39461)
+- [moby/moby commit 3780098 - bridge: add riscv64 build tags](https://github.com/moby/moby/commit/3780098cd6be0a82f725fa4e2412b33e3be95276)
+- [docker/buildx issue #3723 - Add linux/riscv64 to release binaries (closed "Not planned")](https://github.com/docker/buildx/issues/3723)
+- [docker/cli PR #6858 - Add linux/riscv64 to bin-image-cross release target](https://github.com/docker/cli/pull/6858)
+- [moby/buildkit issue #6577 - Add linux/riscv64 to official release binaries (closed)](https://github.com/moby/buildkit/issues/6577)
+- [containerd/containerd issue #13020 - Add linux/riscv64 to CI test matrix (open)](https://github.com/containerd/containerd/issues/13020)
+- [containerd/containerd PR #13124 - ci: add riscv64 to Linux integration test matrix (open)](https://github.com/containerd/containerd/pull/13124)
+- [opencontainers/runc issue #5166 - riscv64 CI and release (closed)](https://github.com/opencontainers/runc/issues/5166)
+- [checkpoint-restore/criu issue #1702 - Support for RISC-V (open since 2019)](https://github.com/checkpoint-restore/criu/issues/1702)
+- [krallin/tini issue #239 - No official riscv64 binary](https://github.com/krallin/tini/issues/239)
+- [krallin/tini issue #240 - No riscv64 CI](https://github.com/krallin/tini/issues/240)
+- [tonistiigi/xx - cross-compilation tooling](https://github.com/tonistiigi/xx)
+- [gounthar/docker-for-riscv64 - community riscv64 Docker builds](https://github.com/gounthar/docker-for-riscv64)
+- [gounthar, "Docker v29 Lands on RISC-V64 in Under a Week" (dev.to)](https://dev.to/gounthar/docker-v29-lands-on-risc-v64-in-under-a-week-the-future-is-here-4g2i)
+- [gounthar, "Docker Buildx for RISC-V64" (dev.to)](https://dev.to/gounthar/docker-buildx-for-risc-v64-when-infrastructure-just-works-41h3)
+- [Jeff Geerling, "The state of Docker on popular RISC-V platforms" (2024)](https://www.jeffgeerling.com/blog/2024/state-docker-on-popular-risc-v-platforms/)
+- [Marcin Juszkiewicz, "RISC-V is sloooow" (Mar 2026)](https://marcin.juszkiewicz.com.pl/2026/03/10/risc-v-is-sloooow/)
+- [Phoronix, "RISC-V Slow Fedora Packages"](https://www.phoronix.com/news/RISC-V-Slow-Fedora-Packages)
+- ["Evaluating ARM and RISC-V Architectures for High-Performance Computing with Docker and Kubernetes," MDPI Electronics 13(17):3494 (2024)](https://www.mdpi.com/2079-9292/13/17/3494)
+- [Toni Stiigi, "Early look at Docker containers on RISC-V" (2019, Medium)](https://medium.com/@tonistiigi/early-look-at-docker-containers-on-risc-v-40ed43b16b09)
+- [carlosedp/riscv-bringup - multi-arch bringup tracker](https://github.com/carlosedp/riscv-bringup)
 - [RISE RISC-V Runners announcement (Mar 24, 2026)](https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/)
 - [RISE RISC-V Runners: six weeks in (May 12, 2026)](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/)
 - [RISE Project members](https://riseproject.dev/members/)
 - [download.docker.com static binaries](https://download.docker.com/linux/static/stable/)
-- [Debian docker.io package tracker](https://tracker.debian.org/pkg/docker.io)
-- [Ubuntu 24.04 docker.io package](https://packages.ubuntu.com/noble/docker.io)
+- [Ubuntu 26.04 "resolute" Docker package search](https://packages.ubuntu.com/search?keywords=Docker&suite=resolute&searchon=names&section=all)
+- [PyPI docker package JSON](https://pypi.org/pypi/docker/json)
+- [Arch Linux RISC-V port](https://archriscv.felixc.at/)
