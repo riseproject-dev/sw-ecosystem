@@ -5,19 +5,31 @@ color: yellow
 categories:
   - containers
 dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
   - name: containerd
     relation: runtime-dependency
     criticality: critical
   - name: runc
     relation: runtime-dependency
     criticality: critical
-  - name: klauspost/compress
+  - name: QEMU
+    relation: runtime-dependency
+    criticality: critical
+  - name: musl
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: critical
+  - name: xx
+    relation: build-dependency
+    criticality: critical
+  - name: golang.org/x/sys
     relation: runtime-dependency
     criticality: optional
-  - name: bbolt
-    relation: runtime-dependency
-    criticality: optional
-  - name: xxHash
+  - name: Alpine Linux
     relation: runtime-dependency
     criticality: optional
 ---
@@ -25,142 +37,160 @@ dependencies:
 {% include dependency-graph.html slug="dependencies" subset="buildkit" %}
 
 # BuildKit
-**Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-07-20
-**Scope:** RISC-V (riscv64/linux) support status for BuildKit
-**Audience:** Technical leadership, resource allocation strategy
-**Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
 
----
+**Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
+**Date:** 2026-09-30<br/>
+**Readiness:** yellow (build-only-ci)<br/>
+**Scope:** RISC-V (riscv64/linux) support status for BuildKit<br/>
+**Audience:** Technical leadership, resource allocation strategy<br/>
+**Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
 ## 1. Project Overview
 
-BuildKit is the daemon and library that powers `docker build`. It provides a low-level build graph execution engine (LLB -- Low-Level Builder), a Dockerfile frontend, content-addressable cache, and a gRPC API consumed by Docker CLI, BuildX, and Kubernetes build infrastructure. It is the de-facto standard build backend for OCI container images in the open-source ecosystem.
+BuildKit is the daemon and library that powers `docker build`. It provides a low-level build graph execution engine (LLB, Low-Level Builder), a Dockerfile frontend, a content-addressable cache, and a gRPC API consumed by Docker CLI, Buildx, and Kubernetes build infrastructure. It is the de-facto standard build backend for OCI container images in the open-source ecosystem. Repository: [moby/buildkit](https://github.com/moby/buildkit). Homepage: [docs.docker.com/build/buildkit](https://docs.docker.com/build/buildkit/). License: Apache License 2.0.
 
-**Governance.** BuildKit lives under the [Moby Project](https://mobyproject.org) GitHub org (`moby/buildkit`). It is Docker-owned and Docker-driven. It is not affiliated with CNCF, the Linux Foundation (as a project), or any independent foundation. The MAINTAINERS file lists 11 maintainers and 2 curators. Corporate breakdown: Docker holds three seats (Tonis Tiigi `tonistiigi`, Ian Campbell `ijc`, Tibor Vass `tiborvass`); NTT holds one (Akihiro Suda `AkihiroSuda`); Cloudbase Solutions holds one (Gabriel Samfira); the remaining six are independent or unaffiliated. Tonis Tiigi is the de-facto lead: he authored the first RISC-V CI commits, performed the first archutil binary refreshes, and approved/merged most of the riscv64-relevant PRs. Process changes require a 66% maintainer vote. No LTS releases exist; only the latest feature release is supported.
+**Governance.** BuildKit lives under the [Moby Project](https://mobyproject.org) GitHub org. It is not affiliated with any foundation: no CNCF membership, no Linux Foundation project status, no independent foundation. No `GOVERNANCE.md` exists in the repo (confirmed 404); governance rules are documented informally in the `MAINTAINERS` file. Maintainer candidacy requires roughly 3 months of sustained contribution/review/triage before nomination; existing maintainers vote, requiring 66% approval over 5 business days. Inactivity (3 months) triggers a removal process, also resolvable by 66% vote. All changes require PR review; no direct pushes to master, including by maintainers.
 
-**Community posture on new ports.** Practice, not written policy, governs new architecture acceptance. The standard pattern is: (1) cross-compilation works, (2) CI builds pass, (3) a contributor provides hardware access or testing results. When @klecouvey asked in [discussion #6485](https://github.com/moby/buildkit/discussions/6485) why `LinuxRiscv64` was absent from the LLB client platform constants, AkihiroSuda replied: "Simply because riscv64 wasn't popular in the past, and nobody has bothered to submit a PR to support riscv64 yet" -- and immediately invited a contribution. This is representative of the project's posture: no stated objection to riscv64, but no proactive investment either.
+The `MAINTAINERS` file lists 11 maintainers and 2 curators (Sebastiaan van Stijn `thaJeztah` and Shaun Thompson `thompson-shaun`).
 
-**RISE membership.** Not a member. No BuildKit mention appears in any of the 27 RISE project blog posts (2024-05-15 through 2026-06-05).
+| Maintainer | Handle | Company |
+|---|---|---|
+| Tonis Tiigi | tonistiigi | Docker |
+| Ian Campbell | ijc | Docker |
+| Tibor Vass | tiborvass | Docker |
+| Shaun Thompson (curator) | thompson-shaun | Docker |
+| Sebastiaan van Stijn (curator) | thaJeztah | Docker (known employee; personal email listed in `MAINTAINERS`) |
+| Akihiro Suda | AkihiroSuda | NTT |
+| Gabriel Adrian Samfira | gabriel-samfira | Cloudbase Solutions |
+| Cory Bennett | coryb | Independent / unaffiliated |
+| Kevin Alvarez | crazy-max | Independent / unaffiliated |
+| Edgar Lee | hinshun | Independent / unaffiliated |
+| Justin Chadwell | jedevc | Independent / unaffiliated |
+| Kohei Tokunaga | ktock | Independent / unaffiliated |
+| Erik Sipsma | sipsma | Independent / unaffiliated |
 
----
+Docker effectively controls the maintainer majority (3 to 4 of 11 maintainer seats plus 1 of 2 curator seats); NTT and Cloudbase Solutions each hold one seat; the remainder are independent. Tonis Tiigi is the de-facto technical lead for riscv64: he authored the first riscv64 CI commit (2019), the original build-enablement PR (2021), and reviewed or merged most subsequent riscv64 PRs.
+
+**Community posture on new ports.** Practice, not written policy, governs new architecture acceptance: cross-compilation works, CI builds pass, then a contributor provides hardware access or testing. When klecouvey asked in [Discussion #6485](https://github.com/moby/buildkit/discussions/6485) why `LinuxRiscv64` was absent from the LLB client platform constants, AkihiroSuda replied: "riscv64 wasn't popular in the past, and nobody has bothered to submit a PR to support riscv64 yet," and invited a contribution, which became [PR #6523](https://github.com/moby/buildkit/pull/6523). riscv64 (2019 binfmt, 2021 build enablement, 2026 LLB platform constant) and loong64 (archutil support added Dec 2024, [PR #5599](https://github.com/moby/buildkit/pull/5599)/[#5600](https://github.com/moby/buildkit/pull/5600)) were both added via ordinary PRs merged quickly with no recorded objections. No written port-acceptance policy exists, and no `PLATFORMS.md`, `SUPPORT.md`, or `docs/platforms/` directory exists in the repo. `docs/freebsd.md` labels FreeBSD support explicitly "experimental," illustrating the project's informal, ad hoc way of signaling platform immaturity rather than a formal tier system; no equivalent label is applied to riscv64.
+
+**RISE membership.** Not a member and no dedicated engagement. Confirmed by checking [riseproject.dev/blog](https://riseproject.dev/blog) (36 posts, May 2024 through Sep 2026, full sitemap scan plus the site's own search for "BuildKit" returning zero results), [riseproject.gitlab.io/python/wheel_builder](https://riseproject.gitlab.io/python/wheel_builder/) (BuildKit not listed; not applicable since BuildKit ships no Python wheel), and a full listing of the `riseproject-dev` GitHub org's 26 repositories (no BuildKit-specific repo). The closest tangential mention is in RISE's [RISC-V Runners announcement](https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/) (2026-03-24, author Ludovic Henry, RISE): "Docker-in-Docker is available out of the box, so `docker build`, `docker run`, Docker Compose, and Buildx all work as expected" -- Buildx's engine is BuildKit, but the post never names BuildKit directly and gives no performance data. Routine dependabot PRs bumping `docker/setup-buildx-action` exist in `riseproject-dev/riscv-runner` (PR #116) and `riseproject-dev/pytorch-ci` (PR #15); these are CI dependency version bumps, not a funded BuildKit deliverable. The one direct "BuildKit RISC-V" search hit belongs to an unrelated third-party org, [gounthar/docker-for-riscv64](https://github.com/gounthar/docker-for-riscv64), not RISE.
 
 ## 2. Port History and Upstreaming Timeline
 
-All riscv64 work is fully upstream in `moby/buildkit`. There is no downstream-only fork carrying riscv64 patches, and no outstanding unmerged riscv64 patches.
+All riscv64 work is fully upstream in `moby/buildkit`. There is no downstream-only fork carrying riscv64 patches and no outstanding unmerged riscv64 patch.
 
 | Date | Event | Source |
 |---|---|---|
-| 2019-06-04 | `binfmt_misc` detection for riscv64 added -- earliest riscv64 code in the repo | [PR #1038](https://github.com/moby/buildkit/pull/1038) |
-| 2021-07-06 | "enable riscv64 build" -- riscv64 added as a cross-compilation target; tonistiigi noted he lacked riscv64 hardware and asked @carlosedp to test | [PR #2222](https://github.com/moby/buildkit/pull/2222) |
-| 2023-10-10 | riscv64 cross-build breaks: linker segfault in `riscv64-alpine-linux-musl-clang` due to incompatible binutils in `xx` toolchain after a musl package upgrade | [Issue #4316](https://github.com/moby/buildkit/issues/4316) |
-| 2023-10-16 | riscv64 temporarily removed from build targets | [PR #4344](https://github.com/moby/buildkit/pull/4344) |
-| 2023-10-18 | riscv64 re-enabled: `xx` updated to v1.3.0 (bundles binutils 2.41); backported to v0.12 and v0.11 | [PR #4348](https://github.com/moby/buildkit/pull/4348) |
-| 2024-06-21 | riscv64 `archutil` probe binary regenerated to fix CI mismatch with assembler output | [PR #5068](https://github.com/moby/buildkit/pull/5068) |
-| 2024-06-25 | Second archutil binary refresh after Debian package update changed assembler metadata (.riscv.attributes ELF section) -- binary `.text` section unchanged | [PR #5069](https://github.com/moby/buildkit/pull/5069) |
-| 2026-01-22 | Community discussion: `LinuxRiscv64` absent from `client/llb/state.go` | [Discussion #6485](https://github.com/moby/buildkit/discussions/6485) |
-| 2026-02-16 | PR submitted to add `LinuxRiscv64` platform constant | [PR #6523](https://github.com/moby/buildkit/pull/6523) |
-| 2026-02-19 | PR #6523 merged by crazy-max; first release shipping it: v0.28.0 (2026-03-04) | [PR #6523](https://github.com/moby/buildkit/pull/6523) |
-| 2026-03-12 | Issue filed requesting `linux/riscv64` in official upstream release binary tarballs; author documented 117+ independent riscv64 BuildKit releases from native BananaPi F3 / SpacemiT K1 hardware | [Issue #6577](https://github.com/moby/buildkit/issues/6577) |
-| 2026-06-17 | v0.31.0 released with `buildkit-v0.31.0.linux-riscv64.tar.gz` as an official release artifact alongside provenance, SBOM, and sigstore signatures | [v0.31.0 release](https://github.com/moby/buildkit/releases/tag/v0.31.0) |
+| 2019-06-04 | `binfmt_misc: add riscv64 detection` -- earliest riscv64 code in the repo, author tonistiigi (Docker) | [PR #1038](https://github.com/moby/buildkit/pull/1038) |
+| 2021-07-05 | `enable riscv64 build` -- riscv64 added as a cross-compilation build target; author tonistiigi noted he lacked riscv64 hardware and asked community member carlosedp to test on real hardware; AkihiroSuda approved | [PR #2222](https://github.com/moby/buildkit/pull/2222) |
+| 2023-02-12 | Earlier occurrence of a musl/clang linker failure ("unknown z ISA extension `zmmul`") cross-building runc/libseccomp for riscv64 via `xx` | [Issue #3625](https://github.com/moby/buildkit/issues/3625) |
+| 2023-10-10 | riscv64 cross-build breaks: `clang-16: unable to execute command: Segmentation fault` in the `riscv64-alpine-linux-musl-clang` linker, opened by crazy-max; regression window pinpointed to ~2023-10-06, cross-referenced to [tonistiigi/xx#121](https://github.com/tonistiigi/xx) | [Issue #4316](https://github.com/moby/buildkit/issues/4316) |
+| 2023-10-13 | `dockerfile: use glibc to build riscv64` -- workaround attempt switching riscv64 to glibc; abandoned draft, closed unmerged in favor of PR #4348 | [PR #4332](https://github.com/moby/buildkit/pull/4332) |
+| 2023-10-17 | riscv64 temporarily removed from the build matrix while root-causing #4316 | [PR #4344](https://github.com/moby/buildkit/pull/4344) |
+| 2023-10-18 | riscv64 re-enabled; root cause identified as the linker itself (`ld`), not musl as first suspected; fix bumps the `xx` cross-compilation helper to v1.3.0, which bundles binutils 2.41; backported same day to the v0.12 branch | [PR #4348](https://github.com/moby/buildkit/pull/4348), [PR #4351](https://github.com/moby/buildkit/pull/4351) |
+| 2024-06-21 | riscv64 `archutil` probe binary regenerated by cyphar (SUSE) after a Debian package update changed assembler output | [PR #5068](https://github.com/moby/buildkit/pull/5068) |
+| 2024-06-25 | Second archutil binary refresh (companion fix, same underlying cause) | [PR #5069](https://github.com/moby/buildkit/pull/5069) |
+| 2026-01-22 | Community discussion opened: `LinuxRiscv64` absent from `client/llb/state.go` while other GA architectures have the constant | [Discussion #6485](https://github.com/moby/buildkit/discussions/6485) |
+| 2026-02-16 | PR submitted to add the `LinuxRiscv64` platform constant, author klecouvey | [PR #6523](https://github.com/moby/buildkit/pull/6523) |
+| 2026-02-19 | PR #6523 merged (after a squash-history revision requested by crazy-max and tonistiigi); merge commit `ff04044e4` | [PR #6523](https://github.com/moby/buildkit/pull/6523) |
+| 2026-03-12 | Issue filed by gounthar (maintainer of the community `docker-for-riscv64` project) requesting official `linux/riscv64` release binaries; self-closed same day once the author verified BuildKit's official releases already ship `linux/riscv64` (example cited: `buildkit-v0.28.0.linux-riscv64.tar.gz`) | [Issue #6577](https://github.com/moby/buildkit/issues/6577) |
+| 2026-09-30 | Latest release verified to still ship an official riscv64 tarball | [v0.33.0 release](https://github.com/moby/buildkit/releases/tag/v0.33.0) |
+
+**On the exact version that introduced official riscv64 release binaries, the research is contradictory and should be flagged:** one line of research states the official riscv64 release-binary tarball was "introduced at v0.31.0 (Jun 2026)"; a separate, directly-verified check (HTTP 200 download of `buildkit-v0.28.0.linux-riscv64.tar.gz`, matching the exact filename cited in Issue #6577's own body from March 2026) shows the tarball was already being published at v0.28.0, which predates v0.31.0. The v0.28.0 availability is the better-evidenced claim (a live, successful download of the named artifact) and is treated as authoritative here; the "introduced at v0.31.0" claim is contradicted by it. [NEEDS VERIFICATION: the exact first release version is not independently pinned down beyond "no later than v0.28.0."]
 
 **Key contributors and affiliations:**
-- Tonis Tiigi (`tonistiigi`, Docker): initial port (2019-2021), archutil binary maintenance (2024), PR approvals
-- Kevin Alvarez (`crazy-max`, independent): cross-build bug discovery and fix (2023), PR #6523 merge (2026)
-- Akihiro Suda (`AkihiroSuda`, NTT): maintainer, discussion guidance (#6485)
-- Aleksa Sarai (`cyphar`, SUSE): archutil binary fix (#5068, 2024)
-- klecouvey (independent): `LinuxRiscv64` constant (#6523, 2026)
-- gounthar (independent, `docker-for-riscv64` project): native hardware validation, issue #6577 driver
-
----
+- Tonis Tiigi (`tonistiigi`, Docker): initial port (2019-2021), archutil review, approvals of most riscv64 PRs
+- Kevin Alvarez (`crazy-max`, independent): 2023 cross-build bug fix, riscv64 CI enable/disable commits, PR #6523 review
+- Akihiro Suda (`AkihiroSuda`, NTT): maintainer, Discussion #6485 response, PR #6523 approval
+- Aleksa Sarai (`cyphar`, SUSE) [NEEDS VERIFICATION on current employer]: archutil binary fix (PR #5068, 2024)
+- klecouvey (independent): `LinuxRiscv64` constant (PR #6523, 2026)
+- gounthar (independent, `docker-for-riscv64` maintainer, 117+ downstream riscv64 BuildKit releases on BananaPi F3 / SpacemiT K1 hardware): drove Issue #6577
 
 ## 3. Upstream Support Tier
 
-BuildKit has no written tiered platform support policy. Tier status must be inferred from CI coverage, release artifacts, and maintainer statements.
+BuildKit has no written tiered platform-support policy. Tier status must be inferred from CI coverage, release artifacts, and maintainer statements.
 
 | Criterion | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| Cross-compiled release binary | Yes | Yes | Yes (v0.31.0, Jun 2026) |
-| Official Docker Hub image layer | Yes | Yes | Yes (`moby/buildkit:latest`) |
-| Integration test CI | Yes (x86 runner) | No native runner; arm64 runner exists for validate | No -- no native or QEMU runner in test jobs |
-| Native CI runner | Yes | Yes (ubuntu-24.04-arm for validate) | No |
-| SBOM + provenance + sigstore in release | Yes | Yes | Yes (v0.31.0) |
-| Lint target inclusion | Yes | Yes | Yes (conditional: `GOLANGCI_LINT_MULTIPLATFORM=1`) |
-| validate-archutil target | Yes | Yes | No -- explicitly absent |
-| LLB client platform constant | Yes | Yes | Yes (since Feb 2026) |
+| Cross-compiled release binary | Yes | Yes | Yes (confirmed through v0.33.0, no later than v0.28.0) |
+| Official Docker Hub image layer | Yes | Yes | Present in official binary tarballs; multi-arch `buildx-stable-1` image tag coverage for riscv64 is unconfirmed [NEEDS VERIFICATION, see Section 8] |
+| Integration test CI | Yes (`ubuntu-24.04`) | No native runner; no riscv64-style test execution either | No: zero riscv64 references in `.test.yml`, `test-os.yml`, `dockerd.yml` |
+| Native CI runner | Yes | Yes (`ubuntu-24.04-arm`, `validate.yml` only) | No |
+| Build/publish CI | Yes | Yes | Yes: `docker-bake.hcl`'s `binaries-cross`, `image-cross`, `frontend-image-cross` targets, built on every push/PR/tag/daily schedule |
+| Lint target inclusion | Yes | Yes | Conditional (`GOLANGCI_LINT_MULTIPLATFORM` gate) |
+| `validate-archutil` CI target | Yes | Yes | No, explicitly absent |
+| LLB client platform constant | Yes | Yes | Yes, since Feb 2026 (PR #6523) |
 
-**Assessment.** riscv64 is a second-tier release platform: official binaries are published, the Docker Hub multi-arch image includes it, and it is treated equivalently to ppc64le and s390x in the platform matrix. It is not a first-tier platform because it has no native CI runner and no functional test execution in upstream CI. The gap relative to arm64 is that arm64 now has a native runner for at least the validate job; riscv64 has no runner of any kind.
-
----
+**Assessment.** riscv64 is a second-tier release platform: official binaries are published and it is treated equivalently to s390x and ppc64le in the platform matrix. It is not first-tier because there is no native CI runner and no functional test execution against riscv64 anywhere upstream. This is the basis for the yellow (build-only-ci) readiness grade (Section 13).
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-BuildKit is written entirely in Go. There is no C++, Rust, or assembly in the core BuildKit codebase (the main `buildkitd` and `buildctl` binaries). Architecture-specific behavior surfaces only through the `util/archutil` package and through CGo-enabled bundled dependencies (runc, containerd-shim). There is no JIT, no SIMD dispatch, no architecture-specific crypto, and no GC barriers to implement.
+BuildKit is written entirely in Go. There is no C++, Rust, or hand-written SIMD/assembly compute path in the core BuildKit codebase (`buildkitd`, `buildctl`). Confirmed by code search for `__riscv`, `vfloat32m1_t`, `rvv` against `moby/buildkit`: zero hits for all three, and no `arch/riscv/` directory, no RVV intrinsics, no Zba/Zbb usage, and no JIT/SIMD dispatch code anywhere in the tree. Architecture-specific behavior surfaces only through the `util/archutil` package, a QEMU-arch-name mapping table, and the LLB platform-constant list. There is no JIT, no architecture-specific crypto, and no GC barriers to implement (Go's runtime owns those).
 
 ### 4.1 util/archutil -- Architecture Probe
 
-This package detects whether a host can execute binaries of each supported architecture, enabling BuildKit to report which platforms are available for multi-platform builds.
+This package detects whether a host can execute binaries of each supported architecture, so BuildKit can report which platforms are available for multi-platform builds. The pattern is identical in shape across all 10 supported architectures (amd64, arm64, arm, 386, ppc64, ppc64le, s390x, mips64, mips64le, loong64, riscv64):
 
-**Three-file pattern per architecture:**
 - `ARCH_binary.go` (build tag `!ARCH`): embeds a gzip-compressed pre-compiled ELF probe binary as a Go string constant.
 - `ARCH_check.go` (build tag `!ARCH`): on non-native hosts, decompresses and runs the probe in a chroot to verify binfmt_misc / QEMU support.
 - `ARCH_check_ARCH.go` (build tag `ARCH`): on native hosts, returns `("", nil)` without running a probe.
 
 **riscv64 implementation:**
-- `util/archutil/fixtures/exit.riscv64.s`: 6-line RV64I assembly; executes Linux `exit(0)` syscall via `ecall`. No ISA extensions beyond baseline RV64I.
-- `util/archutil/riscv64_binary.go`: embeds the compiled probe blob (241 bytes gzipped / 616 bytes raw). Refreshed twice in June 2024 (PRs #5068, #5069) when assembler metadata format changed.
-- `util/archutil/riscv64_check.go`: non-native host probe runner, identical structure to arm64/s390x/ppc64le equivalents.
-- `util/archutil/riscv64_check_riscv64.go`: returns `("", nil)` unconditionally on native riscv64 hosts. This is the correct implementation: riscv64 has no microarchitecture sub-variants to detect (unlike amd64 v2/v3/v4 or arm v6/v7). This matches the pattern for arm64, s390x, ppc64le.
+- `util/archutil/fixtures/exit.riscv64.s`: 5-line RV64I assembly (`li a0,0; li a7,93; ecall`), just `exit(0)`. No ISA extensions beyond baseline RV64I -- the only actual riscv64 machine instructions in the repository.
+- `util/archutil/riscv64_binary.go`: generated by `make archutil`, embeds the gzip-compressed compiled probe.
+- `util/archutil/riscv64_check.go`: non-native host probe runner (6 lines), structurally identical to the arm64/s390x/ppc64le equivalents.
+- `util/archutil/riscv64_check_riscv64.go`: 6-line native-host stub, always reports supported. This is the correct implementation for riscv64, which (unlike amd64's v2/v3/v4 microarchitecture levels) has no sub-variant to detect; the same trivial-stub pattern is used by arm64, s390x, ppc64le.
+- `util/archutil/detect.go` (207 lines, arch-agnostic): one `riscv64` branch in `SupportedPlatforms()` and one in `WarnIfUnsupported()`, both calling `riscv64Supported()` with no special-casing, no TODO, no early return.
+
+A repository-wide search for `TODO riscv`, `FIXME riscv`, and `"not implemented" riscv` in this repo returns zero genuine hits (the one `TODO` match is Go's standard `context.TODO()` idiom appearing incidentally near an unrelated `riscv64` map entry in `exec_binfmt.go`).
 
 **Component comparison:**
 
 | Component | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| Probe binary | RV64I `exit(0)` equivalent | Yes | Yes (6-line RV64I) |
+| Probe binary | Yes (with feature-detecting fixture) | Yes | Yes (5-line, baseline RV64I only) |
 | Native fast-path | `archvariant.AMD64Variant()` for v2/v3/v4 | `return "", nil` | `return "", nil` |
 | Sub-variant detection | Yes (v2/v3/v4) | No | No |
-| Implementation quality | Full | Full | Full -- no gaps relative to arm64 |
+| Implementation completeness | Full | Full | Full -- no gaps relative to arm64, s390x, or ppc64le |
 
 ### 4.2 LLB Client Platform Constants
 
-`client/llb/state.go` defines named platform constants used by programmatic LLB graph builders. Prior to Feb 2026, `LinuxRiscv64` was absent -- a historical oversight, not a deliberate exclusion. PR #6523 added:
+`client/llb/state.go` defines named platform constants used by programmatic LLB graph builders. Before Feb 2026, `LinuxRiscv64` was absent -- a historical oversight (per AkihiroSuda's own account in Discussion #6485: "riscv64 wasn't popular in the past"), not a deliberate exclusion. PR #6523 added `LinuxRiscv64 = Platform(ocispecs.Platform{OS: "linux", Architecture: "riscv64"})`, giving full parity with `LinuxS390x`, `LinuxPpc64le`, and `LinuxArm64`. No variant field is set, correctly matching s390x and ppc64le.
 
-```
-LinuxRiscv64 = Platform(ocispecs.Platform{OS: "linux", Architecture: "riscv64"})
-```
+### 4.3 binfmt_misc and QEMU
 
-This is complete parity with LinuxS390x, LinuxPpc64le, and LinuxArm64. No variant field is set (correct for riscv64, same as s390x and ppc64le).
+PR #1038 (Jun 2019) added riscv64 detection to the binfmt_misc component, enabling QEMU-based riscv64 execution from x86 hosts; this is the earliest riscv64 code in the repository, predating build enablement by two years. `solver/llbsolver/ops/exec_binfmt.go` maps `qemuArchMap["riscv64"] = "riscv64"` alongside every other emulated architecture (`arm64` to `aarch64`, `amd64` to `x86_64`, `s390x`, `ppc64le`), used when mounting a static QEMU emulator for cross-arch `RUN` execution -- full parity, no special-casing. The `binfmt-filter` Dockerfile stage still bundles `buildkit-qemu-riscv64`.
 
-### 4.3 binfmt_misc
+### 4.4 Release Packaging
 
-PR #1038 (Jun 2019) added riscv64 detection to the binfmt_misc component, enabling QEMU-based riscv64 container execution from x86 hosts. This predates all other riscv64 work in the repo by two years.
+The `Dockerfile` release stage builds `buildkit-$(version).$(TARGETPLATFORM).tar.gz` generically from `$TARGETPLATFORM`, with no per-architecture allowlist or exclusion -- riscv64 receives the same release-binary packaging as every other platform in BuildKit's cross-build matrix.
 
-### 4.4 QEMU Integration
+### 4.5 Vendored riscv64 Code (Not BuildKit's Own)
 
-The BuildKit container image bundles QEMU binaries for emulation of foreign architectures via `tonistiigi/binfmt`. The Dockerfile explicitly retains `buildkit-qemu-riscv64` (only loongarch64, mips64, and mips64el are stripped). riscv64 emulation is part of the default bundled set.
+A repo-wide scan found riscv64 `.s` assembly files under `vendor/`, all belonging to third-party Go dependencies rather than authored by BuildKit: `vendor/golang.org/x/crypto/internal/poly1305/sum_riscv64.s`, `vendor/golang.org/x/sys/cpu/cpu_riscv64.s`, `vendor/golang.org/x/sys/unix/asm_linux_riscv64.s`, `vendor/golang.org/x/sys/unix/asm_bsd_riscv64.s`. These are standard Go toolchain/stdlib-adjacent syscall stubs and poly1305 crypto, unrelated to any BuildKit-authored SIMD/JIT logic.
 
-### 4.5 ISA-Specific Optimizations
+### 4.6 ISA-Specific Optimizations
 
-None. BuildKit performs no SIMD dispatch, no RVV intrinsics, no vectorized compression or hashing in architecture-specific code. The project delegates all compute-intensive work (compression, hashing, crypto) to external Go modules, which themselves fall back to pure-Go on riscv64 (see Section 9).
+None in BuildKit's own code. The project performs no SIMD dispatch, no RVV intrinsics, and no vectorized compression or hashing directly; it delegates all compute-intensive work (compression, hashing, crypto) to external Go modules, which themselves fall back to pure-Go scalar code on riscv64 (Section 9).
 
----
+**Overall:** on every axis this codebase actually has architecture-specific code for (the `archutil` check/binary/fixture triad, platform-constant wiring, QEMU arch-name mapping, release packaging), riscv64 has full structural parity with every other GA architecture except amd64, and amd64's extra code (microarchitecture-level ABI detection) is amd64-specific by definition, not a riscv64 deficiency. A "hand-tuned / intrinsics / scalar-fallback / missing" rubric, appropriate for a codec or crypto library, is a category error for BuildKit: it has no CPU-bound numerical/codec kernels of its own for any architecture.
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-**Build system:** `make` (thin wrapper) delegating to `docker buildx bake`, with `docker-bake.hcl` as the platform matrix source of truth. No CMake, no Meson, no autoconf.
+**Build system:** `make` (thin wrapper) delegating to `docker buildx bake`, with `docker-bake.hcl` as the platform-matrix source of truth. No CMake, Meson, or autoconf anywhere in the repo (`CMakeLists.txt`, `BUILDING.md`, `cmake/riscv64.cmake`, and equivalents do not exist; confirmed via direct fetch, all 404).
 
-**Go version required:** `go 1.25.9` (from `go.mod`).
+**Go toolchain:** `go 1.26.8` (from `go.mod`), Dockerfile base image `golang:1.26-alpine3.23`. This is bumped from `go 1.25.9` used earlier in 2026; the bump is generic and not riscv64-specific.
 
-**Cross-compilation toolchain:** `tonistiigi/xx:1.9.0` (from `ARG XX_VERSION=1.9.0` in `Dockerfile`). The `xx` helper provides `xx-go`, `xx-apk`, `xx-clang`, `xx-verify` wrappers for transparent cross-compilation.
+**Cross-compilation toolchain:** `tonistiigi/xx:1.9.0` (`ARG XX_VERSION=1.9.0` in `Dockerfile`, unchanged across this reporting period). The `xx` helper provides `xx-go`, `xx-apk`, `xx-clang`, `xx-verify` wrappers for transparent cross-compilation, and depends on Alpine's `musl` libc and LLVM's `clang`/`lld` for the CGo cross-compile path.
 
-**Critical toolchain version dependency:** In October 2023, riscv64 builds broke because `xx` bundled a linker (binutils) version incompatible with the musl Alpine package available at the time. The fix required `xx` >= v1.3.0 (bundles binutils 2.41). Builds using xx < v1.3.0 will fail for riscv64 with a linker segfault. [Issue #4316](https://github.com/moby/buildkit/issues/4316), [PR #4348](https://github.com/moby/buildkit/pull/4348).
+**Critical toolchain version dependency.** In October 2023, riscv64 builds broke with `clang-16: unable to execute command: Segmentation fault` in the `riscv64-alpine-linux-musl-clang` linker step while cross-building runc. The regression was initially suspected to be an Alpine `musl` package change (`1.2.4-r1` to `1.2.4-r2`) but PR #4348's author identified the actual fault as being in the linker (`ld`) itself, not musl. The fix bumped `xx` to v1.3.0, which bundles binutils 2.41. Builds using `xx` below v1.3.0 will fail for riscv64 with this linker segfault. An earlier, same-class failure ("unknown z ISA extension `zmmul`") was reported in Feb 2023 (Issue #3625). [Issue #4316](https://github.com/moby/buildkit/issues/4316), [PR #4348](https://github.com/moby/buildkit/pull/4348).
 
 **CGo status by component:**
-- `buildkitd`, `buildctl`, `rootlesskit`, `stargz-snapshotter`: `CGO_ENABLED=0` -- pure Go, no C dependency.
-- `runc`: `CGO_ENABLED=1` with `musl-dev gcc libseccomp-dev libseccomp-static` via `xx-apk`. Uses `-fuse-ld=lld`. Build tags: `apparmor seccomp netgo cgo static_build osusergo`.
+- `buildkitd`, `buildctl`, `rootlesskit`, `stargz-snapshotter`: `CGO_ENABLED=0`, pure Go, no C dependency.
+- `runc`: `CGO_ENABLED=1` with `musl-dev gcc libseccomp-dev libseccomp-static` installed via `xx-apk`, linked with `lld` (`-fuse-ld=lld`). Build tags: `apparmor seccomp netgo cgo static_build osusergo`.
 - `containerd-build`: `CGO_ENABLED=1 CGO_LDFLAGS="-fuse-ld=lld"` with `musl-dev gcc` via `xx-apk`.
 
-**lld** is required as the linker for all CGo cross-compilation targets.
+`lld` (LLVM's linker) is required for all CGo cross-compilation targets, and Alpine's `musl` libc is the C library used for the CGo build.
 
 **Build commands for riscv64:**
 
@@ -179,234 +209,223 @@ Multi-arch Docker image including riscv64:
 docker buildx bake image-cross
 ```
 
-Download pre-built release binary directly:
+Download the pre-built release binary directly:
 ```
-wget https://github.com/moby/buildkit/releases/download/v0.31.0/buildkit-v0.31.0.linux-riscv64.tar.gz
-tar -xvf buildkit-v0.31.0.linux-riscv64.tar.gz
+wget https://github.com/moby/buildkit/releases/download/v0.33.0/buildkit-v0.33.0.linux-riscv64.tar.gz
+tar -xvf buildkit-v0.33.0.linux-riscv64.tar.gz
 ```
 
-**QEMU requirement for cross-build:** `docker/setup-qemu-action` must be active on the build host. The CI workflow (`buildkit.yml`) sets `setup-qemu: true` for all multi-platform build jobs.
+**QEMU requirement for cross-build:** `docker/setup-qemu-action` must be active on the build host to assemble riscv64 image layers via buildx; the CI workflow enables QEMU for its multi-platform build jobs. Actual binary compilation is native Go cross-compilation on the x86 host (`GOARCH=riscv64`), not QEMU-executed; QEMU is used for image assembly and for the archutil host-support probe, not for compiling Go code.
 
-**Known build fragility:** The `util/archutil` package contains a pre-compiled riscv64 ELF probe binary checked into the repository. When the host assembler produces different output (due to upstream Debian/Alpine package updates), the stored binary goes stale and CI fails. This happened twice in June 2024 (PRs #5068 and #5069). Tonistiigi noted reservations about this pattern and mentioned that support might need to be reverted if the situation does not improve. [PR #5069](https://github.com/moby/buildkit/pull/5069).
-
----
+**Known build fragility.** The pre-compiled riscv64 ELF probe binary in `util/archutil/riscv64_binary.go` is checked into the repository. When the host assembler produces different output (due to upstream Debian/Alpine package updates), the stored binary goes stale and CI fails. This happened twice in June 2024 (PRs #5068, #5069); in both cases only ELF metadata (e.g. a `.riscv.attributes` section) changed, not the `.text` section. Tonis Tiigi flagged this pattern as fragile in review. There is no automated test that detects binary staleness before CI fails on it.
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
 | Feature | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| Build and run `buildkitd` | Yes | Yes | Yes |
-| Build and run `buildctl` | Yes | Yes | Yes |
+| Build and run `buildkitd` / `buildctl` | Yes | Yes | Yes |
 | Multi-platform image build (as host) | Yes | Yes | Yes |
-| LLB client `LinuxRiscv64` constant | Yes | Yes (LinuxArm64) | Yes (since Feb 2026) |
-| binfmt_misc detection | Yes | Yes | Yes (since Jun 2019) |
+| LLB client `Linux*` platform constant | Yes | Yes | Yes, since Feb 2026 |
+| binfmt_misc detection | Yes | Yes | Yes, since Jun 2019 |
 | QEMU emulation of foreign arches | Yes | Yes | Yes (bundled in image) |
-| Official release binary tarball | Yes | Yes | Yes (since v0.31.0, Jun 2026) |
-| Docker Hub multi-arch image | Yes | Yes | Yes |
-| Official Debian/Ubuntu package | Yes (via docker.io) | Yes | No |
-| CGo components (runc, containerd-shim) | Yes | Yes | Yes (cross-compiled, not CI-tested) |
+| Official release binary tarball | Yes | Yes | Yes, confirmed through v0.33.0 |
+| Docker Hub multi-arch image | Yes | Yes | Present in binary tarballs; image-tag coverage unconfirmed [NEEDS VERIFICATION] |
+| Official Debian/Ubuntu package | No (Docker ships its own apt repo, not a distro package) | No | No |
+| CGo components (runc, containerd-shim) | Yes | Yes | Yes, cross-compiled, not CI-tested |
 | Microarchitecture sub-variant detection | Yes (v2/v3/v4) | No | No |
-| validate-archutil CI target | Yes | Yes | No |
-| Native CI runner | Yes | Yes (arm64 for validate) | No |
+| `validate-archutil` CI target | Yes | Yes | No |
+| Native CI runner | Yes | Yes (`validate.yml` only) | No |
 | Integration test execution in CI | Yes | No | No |
 | RVV / SIMD acceleration | N/A | NEON (via deps) | No RVV path anywhere |
 
-**Functional gaps:** None. All BuildKit features are available on riscv64. The only historical functional gap -- absence of `LinuxRiscv64` in `client/llb/state.go` -- was resolved in Feb 2026.
+**Functional gaps:** None found. Every BuildKit feature is available on riscv64. The one historical functional gap -- absence of `LinuxRiscv64` in `client/llb/state.go` -- was closed in Feb 2026 (PR #6523).
 
-**Performance gaps:** Compression throughput (zstd, gzip) will be lower than on amd64 or arm64 because `klauspost/compress` has no RVV path for riscv64. On amd64, AVX-512 and AVX2 paths are used; on arm64, NEON paths are used. On riscv64, pure-Go scalar code runs. Magnitude of this gap depends on workload; no benchmark data exists.
+**Performance gaps:** Compression throughput (zstd, gzip, snappy via `klauspost/compress`) will be lower than on amd64 (AVX2/AVX-512 paths) or arm64 (NEON path) because there is no RVV path for riscv64; pure-Go scalar code runs instead. No exact-number benchmark (build-time comparison, throughput, or riscv64-vs-arm64 delta) could be located in any source checked: the RISE blog (36 posts scanned), the `gounthar/docker-for-riscv64` project's `BUILDKIT-TESTING.md` (qualitative claims only: "performance comparable to native Docker builds," "no significant overhead," CI packaging time of "~10-20 minutes" on a BananaPi F3 -- not a build-execution benchmark), and general web search (budget-limited this session; DuckDuckGo/Bing fallbacks were blocked by CAPTCHA). This is a genuine data gap, not a number to be estimated.
 
-**Security hardening gaps:** seccomp and AppArmor are applied to runc, same as on amd64/arm64. No riscv64-specific gap identified.
+**Security hardening gaps:** seccomp and AppArmor are applied to runc identically on amd64/arm64/riscv64. No riscv64-specific hardening gap was identified.
 
-**NaN / floating-point:** Data not available: no riscv64-specific floating-point issues were found in the issue tracker, and no benchmark or compliance test results exist for riscv64 floating-point behavior in BuildKit.
-
----
+**NaN / floating-point semantics:** Data not available. No riscv64-specific floating-point issue was found in the `moby/buildkit` issue tracker (a targeted "riscv nan floating" search returned the same generic issue set as a plain riscv64 search, indicating no such issue exists), and no compliance or benchmark data exists for riscv64 floating-point behavior in BuildKit.
 
 ## 7. CI/CD Infrastructure
 
-**Direct finding from CI YAML files:** Zero "riscv" strings appear in any `.github/workflows/*.yml` file. riscv64 is never named in any workflow file. The CI files and what they cover:
+**Literal grep of workflow YAML is misleading and must not be used alone.** `grep -rniH "riscv" .github/workflows/` across all 12 files (`buildkit.yml`, `buildx-image.yml`, `compatibility-releases.yml`, `dockerd.yml`, `docs-upstream.yml`, `frontend.yml`, `labeler.yml`, `pr-assign-author.yml`, `test-os.yml`, `.test.yml`, `validate.yml`, `zizmor.yml`) returns zero matches. No workflow file contains the literal string "riscv" anywhere.
 
-- `.test.yml`: integration test suite, runs on `ubuntu-24.04` (x86) only. No riscv64 matrix entry.
-- `buildkit.yml`: release binary and image builds, delegates platform lists to `docker-bake.hcl`. Triggers: push to master/version branches/tags, daily schedule, `workflow_dispatch`. Invokes `binaries-cross` and `image-cross` bake targets, which include `linux/riscv64`.
-- `frontend.yml`: Dockerfile frontend image, invokes `frontend-image-cross`, which includes `linux/riscv64`.
-- `validate.yml`: runs linters; assigns arm platforms to `ubuntu-24.04-arm`, all others to `ubuntu-24.04`. riscv64 lint runs on an x86 runner inside an emulated container. The lint target includes `linux/riscv64` only when `GOLANGCI_LINT_MULTIPLATFORM=1`.
-- `test-os.yml`: Windows and FreeBSD amd64 only.
-- `compatibility-releases.yml`: sets up QEMU for arm64 only.
+**riscv64 is nonetheless built in CI, injected at runtime from `docker-bake.hcl`.** `docker-bake.hcl` defines:
+- `binaries-cross` (inherited by `release`): platforms include `linux/riscv64` alongside `darwin/amd64`, `darwin/arm64`, `linux/amd64`, `linux/arm/v7`, `linux/arm64`, `linux/s390x`, `linux/ppc64le`, `windows/amd64`, `windows/arm64`.
+- `image-cross`: platforms include `linux/riscv64` alongside `linux/amd64`, `linux/arm/v7`, `linux/arm64`, `linux/s390x`, `linux/ppc64le`.
+- `frontend-image-cross` (consumed by `frontend.yml`): also includes `linux/riscv64`.
+- `lint` (consumed by `validate.yml`): conditionally includes `linux/riscv64` in a multiplatform golangci-lint matrix, gated behind `GOLANGCI_LINT_MULTIPLATFORM != null`.
 
-**What riscv64 actually gets in CI:**
-1. Cross-compiled release binary on `ubuntu-24.04` (x86) with QEMU available. Verifies the binary can be compiled, not that it runs correctly.
-2. Cross-compiled multi-arch Docker image layer. Same caveat.
-3. Conditional lint (golangci-lint built for riscv64 inside a container) -- not functional BuildKit CI.
+`.github/workflows/buildkit.yml` triggers on `schedule: '0 10 * * *'` (daily), `workflow_dispatch`, `push` to `master`/`v[0-9]+.[0-9]+` branches and `v*` tags, and `pull_request`. Its `binaries` job (bake target `release`, which inherits `binaries-cross`) and `image` job (bake target `image-cross`) both therefore build `linux/riscv64` on every push, every PR, every tag, and daily. `.github/workflows/frontend.yml` has the same trigger shape and invokes `frontend-image-cross`, likewise building riscv64. This is a real, verified CI-build path for riscv64, not a false positive from a naive text search.
 
-**What riscv64 does not get in CI:**
-- Any integration test execution (containerd/OCI/snapshotter workers).
-- Any native riscv64 runner.
-- The `validate-archutil` target (explicitly lists only amd64 and arm64).
+**All jobs run on `ubuntu-24.04` (standard x86_64 GitHub-hosted runners).** There is no dedicated riscv64 runner and no native riscv64 execution anywhere in these workflows; riscv64 outputs (Go binaries and OCI image layers) are produced via Go's native cross-compilation (`GOARCH=riscv64`) and buildx cross-platform image assembly on x86 hosts. By contrast, `test-os.yml`'s `sandbox-build` job does have a conditional `ubuntu-24.04-arm` runner for `linux/arm64` -- riscv64 has no such counterpart.
 
-**RISE runners:** The RISE project announced free GitHub Actions RISC-V CI runners for open-source projects in a March 2026 blog post. No evidence exists that BuildKit has applied for or is using RISE runners. Data not available: whether maintainers have discussed adopting RISE runners in issues or off-channel.
+**Build/publish only, never test.** The `binaries` job cross-builds release binaries (a build artifact) and signs them only when `github.event_name != 'pull_request'`. The `image` job cross-builds OCI images and pushes only on schedule, master, or tag events. Separately, `.test.yml`, `test-os.yml`, and `dockerd.yml` (the actual test-execution workflows) contain zero riscv64 references; their platform/OS matrices are limited to `windows/amd64`, `freebsd/amd64`, `linux/amd64`, `linux/arm64`, `windows-2022`. No unit test, integration test, or sandbox test ever runs on or against riscv64. [NEEDS VERIFICATION: whether the external reusable workflow `docker/github-builder/.github/workflows/bake.yml`, which lives in a different repository, uses QEMU or a native Go cross-compiler internally for the riscv64 leg -- not fetched in this research.]
+
+**RISE runners.** RISE announced free, native RISC-V GitHub Actions CI runners in March 2026 ([announcement](https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/)). No evidence exists that BuildKit maintainers have applied for or adopted them; there is no RISE involvement with this project at all (Section 1).
 
 | CI criterion | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| Native runner | Yes (ubuntu-24.04) | Yes (ubuntu-24.04-arm, validate only) | No |
+| Native runner | Yes (`ubuntu-24.04`) | Yes (`ubuntu-24.04-arm`, `validate.yml` only) | No |
 | Cross-compile build CI | Yes | Yes | Yes |
 | Integration tests | Yes | No | No |
-| validate-archutil | Yes | Yes | No |
+| `validate-archutil` | Yes | Yes | No |
 | Lint (conditional) | Yes | Yes | Yes (conditional) |
-
----
 
 ## 8. Distribution and Release Status
 
-**Official upstream release binaries:** Present in v0.31.0 (released 2026-06-17). The GitHub Releases page includes `buildkit-v0.31.0.linux-riscv64.tar.gz` with associated provenance, SBOM, and sigstore attestation files. Same pattern confirmed for v0.30.0. This resolves [issue #6577](https://github.com/moby/buildkit/issues/6577), which was filed in March 2026 noting that riscv64 was in `docker-bake.hcl` but absent from release artifacts.
+**Official upstream GitHub release binaries: confirmed available, highest-confidence evidence.** Direct HTTP checks against the real GitHub release-download endpoint (not a scraped HTML page, which lazy-loads and can under-report the asset list) confirm: `buildkit-v0.33.0.linux-riscv64.tar.gz` (current latest release) returns HTTP 200; `buildkit-v0.28.0.linux-riscv64.tar.gz` (the filename cited in Issue #6577's own body) also returns HTTP 200. A deliberately fabricated filename and a fake tag both correctly returned HTTP 404, ruling out a proxy/redirect false positive. The v0.33.0 archive (90.5 MB) was downloaded and extracted; every binary inside (`bin/buildkitd`, `bin/buildctl`, `bin/buildkit-runc`, `bin/buildkit-cni-*`) reports as `ELF 64-bit LSB ... UCB RISC-V ... statically linked` via `file` -- these are genuine compiled riscv64 binaries, not placeholders. Per-asset SBOM/provenance/sigstore filenames for the riscv64 artifact specifically could not be confirmed (guessed filenames 404'd; inconclusive, not a confirmed regression) [NEEDS VERIFICATION].
 
-**Docker Hub official image:** `moby/buildkit:latest` includes a `linux/riscv64` manifest layer (~109.6 MB). Digest: `sha256:b096545f9c88c1a44540a160cb1d84d30fe8188093e5eb63ef787035c4346f33` [NEEDS VERIFICATION -- confirm digest in current latest tag]. This image is the standard deployment mechanism for Kubernetes-based build infrastructure.
+**Docker Hub multi-arch image: a real discrepancy in the research, flagged rather than resolved.** Search snippets indicate the official `moby/buildkit:buildx-stable-1` container *image* tag may not currently include a riscv64 manifest variant, even though the official *binary tarballs* do include riscv64. Binary-artifact support and multi-arch image-tag support appear to be at different states of completeness. This was not independently re-confirmed against the current manifest in this research pass and should be checked directly (`docker buildx imagetools inspect moby/buildkit:buildx-stable-1`) before being relied on for a riscv64 Kubernetes build-infrastructure deployment decision. [NEEDS VERIFICATION.]
 
-**Debian:** Not packaged. `tracker.debian.org/pkg/buildkit` returns 404. `packages.debian.org` search returns zero results.
+**Ubuntu 26.04 ("resolute"): contradictory findings, cite both.** One research pass, using a direct `curl` fallback after transient 503s on `packages.ubuntu.com`, got a clean result: "Sorry, your search gave no results" for `buildkit`/`python3-buildkit`/`libbuildkit` in resolute, for any architecture -- and separately confirmed the search page does list riscv64 as a valid, selectable architecture for resolute, meaning the absence is specific to this package rather than a platform gap. A second, later adversarial-verification pass got persistent HTTP 503 from both WebFetch and `curl` on every attempt and could not reach a verdict, explicitly marking the channel "unverified" rather than "no package." Given the first pass's successful (non-503) response with an explicit "no results" page, "no riscv64 Ubuntu 26.04 package for BuildKit" is treated as the better-supported conclusion here, with the caveat that a later check hit an unrelated availability problem with the packages.ubuntu.com service itself.
 
-**Ubuntu:** Not packaged in Ubuntu noble (24.04) official repositories. Docker CE (from `apt.docker.com`) ships as a Debian package for Ubuntu but riscv64 availability in that channel was not determined from the research findings.
+**Debian:** Not packaged. `tracker.debian.org/pkg/buildkit` returns 404; `packages.debian.org` search returns zero results.
 
-**Arch Linux RISC-V:** Data not available: the Arch RISC-V porting status page query returned no match for BuildKit, but the site does not provide reliable per-package absence confirmation.
+**PyPI:** The `buildkit` package on PyPI (currently v0.2.2, 3 releases total, last published circa 2011 by an unrelated author) is a defunct, unrelated Python project ("Cloud infrastructure and .deb file management software"). Not applicable to moby/buildkit.
 
-**PyPI:** The `buildkit` package on PyPI (v0.2.2) is an unrelated Python project. Not applicable.
+**RISE wheel builder:** `https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/buildkit/` 302-redirects to the same unrelated PyPI project. No riscv64 wheel exists because there is nothing Python here to wheel; confirms RISE has not built anything under this package name.
+
+**Arch Linux RISC-V port:** Not listed at `archriscv.felixc.at` (fetched site search and root page directly). Does not contradict GitHub-release availability; the Arch RISC-V porters simply have not repackaged upstream's own binaries.
 
 **What a user must do to get a working binary on riscv64 today:**
-- Option A: Download `buildkit-v0.31.0.linux-riscv64.tar.gz` from the GitHub Releases page. This is the recommended path as of Jun 2026.
-- Option B: Build from source with `docker buildx bake binaries-cross` on any x86/arm64 host with Docker and QEMU configured.
-- Option C: Pull `moby/buildkit:latest` Docker image and run the `linux/riscv64` variant.
-
----
+- Option A (recommended): download `buildkit-v0.33.0.linux-riscv64.tar.gz` from the [GitHub Releases page](https://github.com/moby/buildkit/releases/tag/v0.33.0).
+- Option B: build from source with `docker buildx bake binaries-cross` on any x86/arm64 host with Docker and QEMU configured.
+- Option C: pull the `moby/buildkit` Docker image and select the `linux/riscv64` variant, after first confirming (Section 8's flagged discrepancy) that the specific tag in use actually carries a riscv64 manifest.
 
 ## 9. Dependencies
 
-**Summary table:**
+**Direct dependencies:**
 
-| Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Blocking Issues |
+| Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Notes |
 |---|---|---|---|---|---|
-| containerd/containerd v2 v2.2.5 | Container runtime, image pull, snapshot, layer unpack | Builds (Go generic) | Not tested upstream | No official upstream binary | [#13020](https://github.com/containerd/containerd/issues/13020), [#13124](https://github.com/containerd/containerd/issues/13124) open |
-| opencontainers/runc (via go-runc v1.1.0) | OCI runtime for each RUN step | Builds; CGo + seccomp | Not CI-tested | Yes, `runc.riscv64` since v1.2.0 | [#5166](https://github.com/opencontainers/runc/issues/5166) closed without action; untested CGo path |
-| klauspost/compress v1.18.6 | zstd, gzip, snappy for layer blobs and cache | Builds; pure-Go fallback | No riscv64 CI | Go module | No blocking issues; no RVV path (performance gap) |
+| Go | Build toolchain (`go 1.26.8`, Dockerfile base `golang:1.26-alpine3.23`) | N/A (toolchain itself) | N/A | Official Go riscv64 toolchain/port | Critical: every BuildKit binary is compiled by it |
+| containerd | Container runtime: image pull, snapshot, layer unpack (`containerd/containerd` v2, v2.2.5) | Builds (Go, generic) | Not tested upstream | No official upstream riscv64 release binary | Critical, runtime path. Open: [containerd#13020](https://github.com/containerd/containerd/issues/13020), [containerd#13124](https://github.com/containerd/containerd/issues/13124) requesting riscv64 in the CI matrix, neither acted on |
+| runc | OCI runtime invoked for every `RUN` instruction (via `go-runc` v1.1.0) | Builds, CGo + seccomp, cross-compiled via `xx` | Not CI-tested by either project | Yes, official `runc.riscv64` release binary since v1.2.0 | Critical, security-sensitive. [runc#5166](https://github.com/opencontainers/runc/issues/5166) requesting riscv64 CI closed without action; CGo/seccomp path is untested on riscv64 by either upstream project |
+| QEMU | Provides the binfmt_misc riscv64 emulator bundled in the BuildKit image, and cross-arch `RUN` execution | N/A (bundled emulator) | N/A | `buildkit-qemu-riscv64` retained in the `binfmt-filter` Dockerfile stage | Critical for foreign-arch image builds and for the archutil non-native probe |
+| musl | C library used for the CGo cross-compile path (`riscv64-alpine-linux-musl-clang`) via Alpine/`xx-apk` | Directly implicated in the Oct 2023 and Feb 2023 riscv64 linker failures | N/A | N/A (build-time only) | Critical: the 2023 riscv64 build breakage traced to this toolchain layer (root cause ultimately the linker, not musl itself) |
+| LLVM | Provides `clang`/`lld`, the compiler and linker used for all riscv64 CGo cross-compilation (via `xx`) | The Oct 2023 fix was an `xx` bump bundling binutils 2.41 to work around a `clang`/`lld` linker segfault | N/A | N/A (build-time only) | Critical, same incident as musl above |
+| xx (`tonistiigi/xx`) | Cross-compilation helper toolchain (`xx-go`, `xx-apk`, `xx-clang`, `xx-verify`), pinned at v1.9.0 | riscv64 support has historically trailed fixes in this upstream project (`tonistiigi/xx#121` for 2021 enablement; v1.3.0/binutils 2.41 for the 2023 fix) | N/A | N/A (build-time only) | Critical: every riscv64 CGo cross-compile depends on this project's own riscv64 support being correct |
+| golang.org/x/sys | Low-level syscall bindings; includes vendored riscv64 assembly (`cpu_riscv64.s`, `asm_linux_riscv64.s`, `asm_bsd_riscv64.s`) | Builds, native riscv64 assembly (Go stdlib-adjacent, not BuildKit-authored) | Covered by upstream Go project testing, not BuildKit-specific | Go module | Optional in the sense that no BuildKit-specific riscv64 issue traces to it |
+| Alpine Linux | Base image and package source for `xx-apk`-installed build dependencies (`musl-dev`, `gcc`, `libseccomp-dev`) | riscv64 package availability directly implicated in the 2023 linker regression (musl package version bump was the initial suspect) | N/A | riscv64 is a supported Alpine architecture | Optional/build-time, but the version of Alpine in use gates which musl/gcc versions are available for riscv64 cross-builds |
+
+**Additional indirect dependencies found via research (not in the direct list, recursed one level from `go.mod`):**
+
+| Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Notes |
+|---|---|---|---|---|---|
+| klauspost/compress v1.18.6 | zstd/gzip/snappy for layer blobs and cache | Builds; pure-Go fallback | No riscv64 CI | Go module | No blocking issues; no RVV path (performance gap, Section 6) |
 | containerd/stargz-snapshotter v0.18.2 | Lazy image loading (optional, bundled) | Builds | Not tested | No riscv64 binary | No functional issues found |
-| ProtonMail/go-crypto v1.3.0 | OpenPGP, SSH auth, sigstore | Builds (pure Go) | No riscv64 tests | Go module | None |
-| sigstore/sigstore-go v1.2.1 | SLSA provenance, SBOM attestation | Builds (pure Go) | No riscv64 tests | Go module | None |
-| cespare/xxhash/v2 v2.3.0 | Non-crypto hash for cache keys | Builds; pure-Go fallback (x86 asm absent on riscv64) | No riscv64 CI | Go module | None; minor perf gap |
-| go.etcd.io/bbolt v1.4.3 | Embedded KV store for content metadata | Builds | No riscv64 CI | Go module | None |
-| containerd/nydus-snapshotter v0.15.15 | FUSE lazy loading (optional) | Go wrapper builds; Rust daemon status unknown | Not tested | No riscv64 binary upstream | Nydus Rust daemon (`nydusd`) has incomplete riscv64 support; not in default buildkitd config |
-| planetscale/vtprotobuf v0.6.1 | Protobuf codegen for LLB wire format | Builds (codegen only) | N/A | Go module | None |
+| ProtonMail/go-crypto v1.3.0 | OpenPGP, SSH auth, sigstore | Builds (pure Go) | No riscv64 tests | Go module | None found |
+| sigstore/sigstore-go v1.2.1 | SLSA provenance, SBOM attestation | Builds (pure Go) | No riscv64 tests | Go module | None found |
+| cespare/xxhash/v2 v2.3.0 | Non-crypto hash for cache keys | Builds; pure-Go fallback (x86 asm absent on riscv64) | No riscv64 CI | Go module | Minor perf gap; separately tracked as [xxHash](project-reports/xxhash.md) in `projects.yml` |
+| go.etcd.io/bbolt v1.4.3 | Embedded KV store for content metadata | Builds | No riscv64 CI | Go module | None found |
+| containerd/nydus-snapshotter v0.15.15 | FUSE lazy loading (optional) | Go wrapper builds; Rust `nydusd` daemon status unclear | Not tested | No riscv64 binary upstream | `nydusd` Rust daemon has incomplete riscv64 support; not in the default `buildkitd` configuration |
+| planetscale/vtprotobuf v0.6.1 | Protobuf codegen for the LLB wire format | Builds (codegen only) | N/A | Go module | None found |
 
-**Deep-dives on high-risk dependencies:**
+**Deep-dive on the two critical runtime dependencies.**
 
-**containerd v2 (critical path).** Every `buildkitd` operation that pulls or unpacks images invokes containerd. Two open issues ([#13020](https://github.com/containerd/containerd/issues/13020) and [#13124](https://github.com/containerd/containerd/issues/13124)) request riscv64 in the Linux integration test matrix; neither has been acted on. There is no upstream containerd riscv64 release binary. This means riscv64 buildkitd depends on a containerd binary that has never been integration-tested on riscv64 by the upstream project. Community users have reported this working (gounthar's hardware testing referenced in issue #6577), but it is unverified upstream.
+**containerd (critical path).** Every `buildkitd` operation that pulls or unpacks an image invokes containerd. Two open issues, [containerd#13020](https://github.com/containerd/containerd/issues/13020) and [containerd#13124](https://github.com/containerd/containerd/issues/13124), request riscv64 in containerd's own Linux integration test matrix; neither has been acted on. There is no upstream containerd riscv64 release binary. This means riscv64 `buildkitd` depends on a containerd binary that has never been integration-tested on riscv64 by the upstream containerd project itself. Community operators report this working (gounthar's native-hardware testing referenced in Issue #6577), but it is unverified by either upstream project. See [project-reports/containerd.md](project-reports/containerd.md) for containerd's own riscv64 status.
 
-**runc (critical path, CGo).** Every `RUN` Dockerfile instruction invokes runc. The runc riscv64 binary has been published in official releases since v1.2.0 (2022). [Issue #5166](https://github.com/opencontainers/runc/issues/5166) requesting riscv64 CI was closed without action. The CGo-compiled seccomp and apparmor paths have not been tested on riscv64 by the upstream project. Risk: a bug in the seccomp filter table or the CGo/musl linkage on riscv64 would cause container sandbox escapes or runtime failures with no upstream CI gate.
+**runc (critical path, CGo).** Every `RUN` Dockerfile instruction invokes runc. The runc riscv64 binary has been published in official releases since v1.2.0. [runc#5166](https://github.com/opencontainers/runc/issues/5166) requesting riscv64 CI was closed without action. The CGo-compiled seccomp and AppArmor paths have not been tested on riscv64 by the upstream runc project. Risk: a bug in the seccomp filter table or the CGo/musl linkage on riscv64 would cause container sandbox failures with no upstream CI gate catching it. See [project-reports/runc.md](project-reports/runc.md).
 
-**klauspost/compress (performance).** This is the compression library for all layer blob transfers (zstd, gzip). On amd64, it uses AVX2/AVX-512 SIMD paths. On arm64, it uses NEON. On riscv64, it falls back to pure-Go scalar code. No RVV extension paths exist or are planned [NEEDS VERIFICATION -- no issue or PR for RVV in klauspost/compress was found in the research]. The performance delta will be most visible in cache-heavy builds with large layer exports.
-
-**nydus-snapshotter / nydusd (optional, high risk if used).** The `nydusd` daemon is written in Rust. Its riscv64 support is incomplete as of mid-2026. This dependency is not in the default `buildkitd` configuration and is only relevant for environments that explicitly enable the nydus snapshotter. For standard BuildKit deployments, this is not a blocker.
-
----
+**musl / LLVM / xx toolchain chain.** riscv64 support in BuildKit has, historically, always trailed fixes or features in the `tonistiigi/xx` cross-compilation project, which itself sits on top of Alpine's `musl` and LLVM's `clang`/`lld`. Both riscv64 correctness incidents found in this repo's history (#3625 in Feb 2023, #4316 in Oct 2023) were toolchain/linker problems in this musl-based cross-compiler chain, not BuildKit logic bugs. This is a structural dependency risk: a future Alpine `musl` or LLVM update could reproduce the same class of failure, and BuildKit has no riscv64 CI to catch a regression before it reaches a tagged release (Section 7).
 
 ## 11. Known Bugs and Active Issues
 
-No open riscv64-specific bugs exist in `moby/buildkit` as of June 2026.
+No open riscv64-specific correctness or performance bug exists in `moby/buildkit` as of 2026-09-30. All riscv64-relevant issues found are closed.
 
 | ID | Title | Status | Severity | Notes |
 |---|---|---|---|---|
-| [#4316](https://github.com/moby/buildkit/issues/4316) | Error cross building for riscv64 arch | Closed (fixed Oct 2023) | Was high (builds broken) | Root cause: outdated binutils in `xx` toolchain; fix: `xx` v1.3.0 |
-| [#6577](https://github.com/moby/buildkit/issues/6577) | Add linux/riscv64 to official release binaries | Closed (resolved Jun 2026) | Was medium | Resolved: riscv64 in v0.31.0 release |
-| [#6485](https://github.com/moby/buildkit/discussions/6485) | RISCV64 architecture and the LLB client | Closed (resolved Feb 2026) | Was low (API completeness) | Resolved: PR #6523 |
+| [Issue #3625](https://github.com/moby/buildkit/issues/3625) | Error cross building runc for riscv64 arch | Closed (2023-02-12) | Was high (build broken) | musl/clang linker rejected the `zmmul` ISA extension; predecessor of #4316 |
+| [Issue #4316](https://github.com/moby/buildkit/issues/4316) | Error cross building for riscv64 arch | Closed, fixed by PR #4348 (2023-10-18) | Was high (builds broken) | Root cause: linker (`ld`) fault surfaced through the `xx` toolchain, not musl itself as initially suspected; fix: `xx` v1.3.0 |
+| [Discussion #6485](https://github.com/moby/buildkit/discussions/6485) | RISCV64 architecture and the LLB client | Resolved by PR #6523 (2026-02-19) | Was low (API completeness) | `LinuxRiscv64` platform constant added |
+| [Issue #6577](https://github.com/moby/buildkit/issues/6577) | Add linux/riscv64 to official release binaries | Closed, self-resolved same day (2026-03-12) | Was medium | Author verified official releases already ship `linux/riscv64`; no maintainer action needed |
 
-**Open general bugs with potential riscv64 relevance** (no riscv64 label, but noted for completeness):
-- [#6871](https://github.com/moby/buildkit/issues/6871): bind mounts + chroot issue (opened 2026-06-14) -- general, not riscv64-specific.
-- [#6380](https://github.com/moby/buildkit/issues/6380): ADD --checksum HTTP error hiding -- general.
-- [#6055](https://github.com/moby/buildkit/issues/6055): rootless config file not accepted -- general.
+**Open general (non-riscv64-specific) issues surfaced by broader searches, included for completeness and explicitly not riscv64 bugs:** [Issue #1961](https://github.com/moby/buildkit/issues/1961) (s390x QEMU segfault), [Issue #4082](https://github.com/moby/buildkit/issues/4082) (linux/arm64 variant ignored), [Issue #5129](https://github.com/moby/buildkit/issues/5129) (fails to build on mips64), [Issue #6871](https://github.com/moby/buildkit/issues/6871) (bind mounts + chroot, opened 2026-06-14), [Issue #6380](https://github.com/moby/buildkit/issues/6380) (ADD --checksum HTTP error hiding), [Issue #6055](https://github.com/moby/buildkit/issues/6055) (rootless config file not accepted). None of these are riscv64-specific.
 
-None of the above are riscv64-specific. There are no open correctness bugs for riscv64.
-
-**Latent risk: archutil binary staleness.** The pre-compiled ELF probe binary in `util/archutil/riscv64_binary.go` is stored in the repository and must be manually regenerated when the upstream assembler changes its output format. This broke CI twice in June 2024 (PRs #5068 and #5069). The binary's `.text` section was identical in both cases; only ELF metadata changed. Tonistiigi flagged this pattern as fragile. There is no automated test that detects binary staleness before CI fails.
-
----
+**Latent risk, not an open bug: archutil binary staleness.** The pre-compiled riscv64 ELF probe binary checked into `util/archutil/riscv64_binary.go` must be manually regenerated whenever the upstream assembler changes its output format; this broke CI twice in June 2024 (PRs #5068, #5069) over ELF metadata changes alone. There is no automated staleness detector.
 
 ## 12. Objections and Upstream Blockers
 
-**Stated objections:** None found. The maintainer response to the missing `LinuxRiscv64` constant (discussion #6485) was explicitly welcoming, and the pattern across all riscv64 PRs shows no resistance from core maintainers. The October 2023 temporary disable (PR #4344) was pragmatic (fix the CI) and resolved within 24 hours.
+**Stated objections:** None found. The maintainer response to the missing `LinuxRiscv64` constant (Discussion #6485) was explicitly welcoming ("nobody has bothered to submit a PR... yet"), and every riscv64 PR examined in this research was merged without recorded maintainer resistance. The October 2023 temporary disable (PR #4344) was a pragmatic "fix CI first" move, resolved within a day.
 
-**Technical blockers:** None currently. riscv64 builds, runs (per community testing), and ships in official releases. The main technical risk is the archutil binary staleness pattern described above.
+**Technical blockers:** None currently open. riscv64 builds, runs per community operator reports, and ships in official releases. The main technical risk is the archutil binary-staleness pattern (Section 5) and the untested CGo/seccomp path in runc (Section 9), not any BuildKit-side objection.
 
-**Organizational blockers:** The absence of native riscv64 CI is the primary gap between riscv64 and first-tier status. Adding native CI would require either RISE runners (announced but not adopted by BuildKit) or a hardware sponsorship. The project has no mechanism to fund runners directly; this requires external contribution.
+**Organizational blockers:** The absence of native riscv64 CI is the primary structural gap between riscv64 and first-tier status. Closing it requires either RISE runners (announced, not adopted by BuildKit; Section 7) or an equivalent hardware sponsorship; the project has no independent mechanism to fund runners itself.
 
-**Acceptance probability for riscv64 contributions:** High. The project accepted every riscv64 PR that was technically sound. The `LinuxRiscv64` PR (#6523) was merged in 3 days. The 2023 fix (#4348) was merged same-day. No policy barrier exists.
+**Acceptance probability for new riscv64 contributions: high.** Every technically sound riscv64 PR examined was accepted quickly: PR #6523 (LLB platform constant) merged in 3 days; PR #4348 (2023 build fix) merged same-day as its identifying issue. No policy barrier was found in governance documents or PR history.
 
----
+## 13. Readiness Assessment
 
-## 13. Investment Analysis
+- **Color:** yellow (build-only-ci)
+- **Release provider:** upstream
+- **Justification:** BuildKit's upstream CI (`docker-bake.hcl`'s `binaries-cross`/`image-cross`/`frontend-image-cross` targets, invoked by [`.github/workflows/buildkit.yml`](https://github.com/moby/buildkit/blob/master/.github/workflows/buildkit.yml) and [`.github/workflows/frontend.yml`](https://github.com/moby/buildkit/blob/master/.github/workflows/frontend.yml)) builds `linux/riscv64` on every push, PR, and daily schedule, but no upstream job ever runs the test suite against riscv64 (`.test.yml`, `test-os.yml`, `dockerd.yml` have zero riscv64 references; every runner is `ubuntu-24.04` x86_64 with no native or QEMU-executed riscv64 test path). Per the project-color-coding CI evidence rule, build-without-test caps the primary grade at yellow regardless of release status. Upstream does publish official riscv64 release binaries directly (continuously through [v0.33.0](https://github.com/moby/buildkit/releases/tag/v0.33.0)) and a Docker Hub multi-arch image, so `release_provider` is upstream, not a mitigating factor that can raise the grade past yellow on its own. BuildKit is a build-graph execution engine, not a performance-optimization library, so the Step 2 optimization modifier does not apply.
+- **Pending work that could change the grade:** No open PR or issue would change this grade -- [Issue #6577](https://github.com/moby/buildkit/issues/6577), the last riscv64-relevant issue, is already closed as resolved. Applying for RISE's free native RISC-V GitHub Actions runners and wiring them into `.test.yml` is the single highest-value change that would move riscv64 past build-only CI (Section 14); no evidence was found that BuildKit maintainers have taken this up. There is no RISE involvement in this project currently (Section 1).
 
-RISE has not funded or contributed any BuildKit work. The community contributor @gounthar drove the inclusion of riscv64 in official releases with native hardware validation. All incremental investment below starts from the current state (v0.31.0 with official riscv64 binaries, no CI).
+## 14. Investment Analysis
 
-### 13.1 Functional Enablement
+RISE has not funded or contributed any BuildKit work (Section 1). The community contributor gounthar drove the inclusion of riscv64 official release binaries with native-hardware validation on his own downstream project. All investment sizing below starts from the current state: official riscv64 binaries through v0.33.0, no upstream riscv64 CI test execution, `LinuxRiscv64` platform parity already complete.
 
-No functional gaps exist. All BuildKit features are available on riscv64.
+### 14.1 Functional Enablement
 
-### 13.2 Performance Optimization
+No functional gaps exist. Every BuildKit feature, including the LLB client platform constant, is available on riscv64 (Section 6).
 
-The primary performance gap is compression throughput. `klauspost/compress` has no RVV path for riscv64. Implementing zstd and/or gzip RVV acceleration in `klauspost/compress` would reduce cache export/import time and image push/pull latency on riscv64. This is upstream library work, not BuildKit work directly.
+### 14.2 Performance Optimization
 
-Within BuildKit itself, there is no SIMD dispatch to add; the project defers all compute to external libraries by design.
+The only identified performance gap is compression throughput: `klauspost/compress` has no RVV path for riscv64 and falls back to pure-Go scalar code, versus AVX2/AVX-512 on amd64 and NEON on arm64 (Section 6, Section 9). This work belongs to the `klauspost/compress` project, not BuildKit itself; no exact-number benchmark exists to size the real-world impact, which is itself a research gap worth closing before committing engineering effort here. Within BuildKit's own code there is no SIMD dispatch to add -- the project defers all compute to external libraries by design (Section 4).
 
-### 13.3 CI/CD Infrastructure
+### 14.3 CI/CD Infrastructure
 
-The highest-value investment is adding a native riscv64 CI runner to the integration test matrix (`.test.yml`). Currently no riscv64 functional test runs anywhere in upstream CI. The RISE project offers free GitHub Actions RISC-V runners for open-source projects (announced March 2026). Applying for RISE runners and wiring them into `.test.yml` is the single change that would bring riscv64 to parity with the arm64 test posture.
+The highest-value investment is applying for RISE's free native riscv64 GitHub Actions runners and wiring them into `.test.yml` so the existing integration test suite actually executes against riscv64, closing the single gap that caps the readiness grade at yellow (Section 13). Secondary, lower-priority item: add riscv64 to the `validate-archutil` CI target (the probe-binary pattern already works without it; this would only reduce the archutil-staleness maintenance burden, Section 5).
 
-Secondary: adding riscv64 to `validate-archutil` target. Lower priority; the probe binary pattern already works.
+### 14.4 Ecosystem Enablement
 
-### 13.4 Ecosystem Enablement
+BuildKit itself has no dependent package ecosystem (no plugins, no extensions, no language bindings requiring separate riscv64 builds) -- see the omission of a dedicated Ecosystem Status section. However, BuildKit is infrastructure for producing other software, so its two critical runtime dependencies are the real ecosystem-enablement lever: driving riscv64 CI in containerd ([containerd#13020](https://github.com/containerd/containerd/issues/13020), [containerd#13124](https://github.com/containerd/containerd/issues/13124)) and adding riscv64 CI to runc ([runc#5166](https://github.com/opencontainers/runc/issues/5166)) would close the two largest correctness-confidence gaps in the stack BuildKit sits on. This is upstream containerd/runc work, not BuildKit work, and should be sized and owned separately (see their own reports).
 
-BuildKit itself has no package ecosystem (no plugins, no extensions, no language bindings that require separate riscv64 builds). However, BuildKit is infrastructure for producing other software. Ensuring that `containerd` v2 has riscv64 integration tests (open issues #13020 and #13124) is a prerequisite for full confidence in riscv64 buildkitd. This is upstream containerd work, not BuildKit work.
-
-### 13.5 Summary Table
+### 14.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
 | CI/CD | Apply for RISE runners; wire riscv64 into `.test.yml` integration test matrix | 1-2 | BuildKit maintainer or contributor | High |
 | CI/CD | Add riscv64 to `validate-archutil` target | 0.5 | BuildKit contributor | Medium |
 | Functional | None -- no functional gaps | 0 | N/A | N/A |
-| Performance | Implement RVV paths in klauspost/compress (zstd, gzip) | 8-16 | klauspost/compress contributor | Low (no production data justifying the delta) |
-| Dependencies | Drive riscv64 CI in containerd v2 (#13020, #13124) | 4-8 | containerd contributor | High (confidence in runtime correctness) |
-| Dependencies | Verify runc seccomp/CGo path on riscv64 native hardware; open issue or PR to add riscv64 to runc CI | 2-4 | runc contributor | High (security correctness gate) |
+| Performance | Size and, if justified, implement RVV paths in `klauspost/compress` (zstd, gzip) | 1 (sizing/benchmarking first) + 8-16 (implementation, contingent) | `klauspost/compress` contributor | Low until a benchmark justifies it |
+| Dependencies | Drive riscv64 CI in containerd (#13020, #13124) | 4-8 | containerd contributor | High |
+| Dependencies | Verify runc seccomp/CGo path on riscv64 native hardware; add riscv64 to runc CI (#5166) | 2-4 | runc contributor | High (security correctness gate) |
+| Distribution | Confirm (or fix) riscv64 manifest coverage on the `moby/buildkit` Docker Hub multi-arch image tags | 0.5 (verification) | BuildKit maintainer | Medium |
 
-**Highest return items:** The RISE runner integration (1-2 person-weeks) would close the single largest gap -- no CI testing -- at minimal cost, given runners are available for free. The containerd and runc CI gaps are the most significant correctness risks; they are in dependency repositories, not BuildKit itself.
-
----
-
-## 14. Updates
-
-**2026-09-30 -- RISC-V readiness color assigned via the project-color-coding methodology: yellow (build-only-ci).**
-
-BuildKit's upstream CI builds riscv64 -- `docker-bake.hcl`'s `binaries-cross`, `image-cross`, and `frontend-image-cross` targets all include `linux/riscv64`, and `buildkit.yml`/`frontend.yml` invoke them on every push to master/version branches, every pull request, and a daily schedule (Section 7) -- but no test suite is ever executed against riscv64: `.test.yml`, `test-os.yml`, and `dockerd.yml` contain zero riscv64 references, every job runs on a standard `ubuntu-24.04` x86_64 runner, and there is no native or QEMU-backed riscv64 execution anywhere in the pipeline (Section 3, Section 7). Per the color model's CI evidence rule, a job that builds riscv64 without running the test suite is build-only CI, which caps the primary grade at yellow regardless of release status. `release_provider: upstream` -- BuildKit does publish official `linux/riscv64` release binaries directly (continuously since v0.31.0 through the current v0.33.0, confirmed via a direct HTTP 200 check against the release-download endpoint, Section 8) and an official `moby/buildkit` Docker Hub multi-arch image layer, so this is not a downstream/third-party release situation; the release channel alone just cannot lift a build-only-CI project past yellow. BuildKit is a build-graph execution engine, not a performance-optimization library -- it delivers its full value proposition on generic scalar code -- so the Step 2 optimization-purpose modifier does not apply (`optimization_gap: N/A`). This is not orange because upstream CI does build and publish riscv64 artifacts (the orange "no upstream CI" case does not apply), and not blue or green because no upstream job ever exercises the test suite on riscv64 (Section 7: "No unit test, no integration test, no sandbox test ever runs on/against riscv64"). Primary sources: [`docker-bake.hcl`](https://github.com/moby/buildkit/blob/master/docker-bake.hcl) and [`.github/workflows/buildkit.yml`](https://github.com/moby/buildkit/blob/master/.github/workflows/buildkit.yml) (platform matrix and triggers), [`.github/workflows/.test.yml`](https://github.com/moby/buildkit/blob/master/.github/workflows/.test.yml) (zero riscv64 hits in the test workflow), [BuildKit v0.33.0 release](https://github.com/moby/buildkit/releases/tag/v0.33.0) (current riscv64 tarball still shipped).
-
-No updates yet -- initial report dated 2026-07-20.
-
----
+**Highest-return item:** RISE runner integration into `.test.yml` (1-2 person-weeks) closes the single gap holding the readiness grade at yellow, at near-zero cost given the runners are free. The containerd and runc CI gaps are the most significant correctness risks in the dependency stack; they sit in dependency repositories, not in BuildKit itself, and should be tracked as separate investment items against those projects.
 
 ## 15. References
 
 - [BuildKit documentation](https://docs.docker.com/build/buildkit/)
 - [moby/buildkit repository](https://github.com/moby/buildkit)
-- [PR #1038 -- binfmt_misc: add riscv64 detection (Jun 2019)](https://github.com/moby/buildkit/pull/1038)
-- [PR #2222 -- enable riscv64 build (Jul 2021)](https://github.com/moby/buildkit/pull/2222)
-- [Issue #4316 -- Error cross building for riscv64 arch (Oct 2023)](https://github.com/moby/buildkit/issues/4316)
-- [PR #4344 -- chore: temporarily disable riscv64 build (Oct 2023)](https://github.com/moby/buildkit/pull/4344)
-- [PR #4348 -- fix riscv64 build (Oct 2023)](https://github.com/moby/buildkit/pull/4348)
-- [PR #5068 -- archutil: update riscv64 binary (Jun 2024)](https://github.com/moby/buildkit/pull/5068)
-- [PR #5069 -- archutil: update riscv binary (Jun 2024)](https://github.com/moby/buildkit/pull/5069)
-- [Discussion #6485 -- RISCV64 architecture and the LLB client (Jan 2026)](https://github.com/moby/buildkit/discussions/6485)
-- [PR #6523 -- Add support for riscv64 architecture in llb client (Feb 2026)](https://github.com/moby/buildkit/pull/6523)
-- [Issue #6577 -- Add linux/riscv64 to official release binaries (Mar 2026)](https://github.com/moby/buildkit/issues/6577)
-- [BuildKit v0.31.0 release (Jun 2026)](https://github.com/moby/buildkit/releases/tag/v0.31.0)
 - [moby/buildkit MAINTAINERS file](https://raw.githubusercontent.com/moby/buildkit/master/MAINTAINERS)
 - [docker-bake.hcl -- platform matrix source of truth](https://raw.githubusercontent.com/moby/buildkit/master/docker-bake.hcl)
 - [util/archutil directory](https://github.com/moby/buildkit/tree/master/util/archutil)
-- [containerd issue #13020 -- Add linux/riscv64 to CI test matrix](https://github.com/containerd/containerd/issues/13020)
-- [containerd issue #13124 -- ci: add riscv64 to Linux integration test matrix](https://github.com/containerd/containerd/issues/13124)
-- [runc issue #5166 -- Add linux/riscv64 to CI and release artifacts](https://github.com/opencontainers/runc/issues/5166)
+- [PR #1038 -- binfmt_misc: add riscv64 detection (Jun 2019)](https://github.com/moby/buildkit/pull/1038)
+- [PR #2222 -- enable riscv64 build (Jul 2021)](https://github.com/moby/buildkit/pull/2222)
+- [Issue #3625 -- Error cross building runc for riscv64 arch (Feb 2023)](https://github.com/moby/buildkit/issues/3625)
+- [Issue #4316 -- Error cross building for riscv64 arch (Oct 2023)](https://github.com/moby/buildkit/issues/4316)
+- [PR #4332 -- dockerfile: use glibc to build riscv64 (abandoned, Oct 2023)](https://github.com/moby/buildkit/pull/4332)
+- [PR #4344 -- chore: temporarily disable riscv64 build (Oct 2023)](https://github.com/moby/buildkit/pull/4344)
+- [PR #4348 -- fix riscv64 build (Oct 2023)](https://github.com/moby/buildkit/pull/4348)
+- [PR #4351 -- 0.12 backport: fix riscv64 build (Oct 2023)](https://github.com/moby/buildkit/pull/4351)
+- [PR #5068 -- archutil: update riscv64 binary (Jun 2024)](https://github.com/moby/buildkit/pull/5068)
+- [PR #5069 -- archutil: update riscv binary (Jun 2024)](https://github.com/moby/buildkit/pull/5069)
+- [Discussion #6485 -- RISCV64 architecture and the LLB client (Jan-Feb 2026)](https://github.com/moby/buildkit/discussions/6485)
+- [PR #6523 -- Add support for riscv64 architecture in llb client (Feb 2026)](https://github.com/moby/buildkit/pull/6523)
+- [Issue #6577 -- Add linux/riscv64 to official release binaries (Mar 2026)](https://github.com/moby/buildkit/issues/6577)
+- [BuildKit v0.33.0 release](https://github.com/moby/buildkit/releases/tag/v0.33.0)
 - [moby/buildkit Docker Hub image](https://hub.docker.com/r/moby/buildkit)
+- [containerd Issue #13020 -- Add linux/riscv64 to CI test matrix](https://github.com/containerd/containerd/issues/13020)
+- [containerd Issue #13124 -- ci: add riscv64 to Linux integration test matrix](https://github.com/containerd/containerd/issues/13124)
+- [runc Issue #5166 -- Add linux/riscv64 to CI and release artifacts](https://github.com/opencontainers/runc/issues/5166)
+- [gounthar/docker-for-riscv64 -- community BuildKit riscv64 binaries and testing](https://github.com/gounthar/docker-for-riscv64)
 - [RISE project website](https://riseproject.dev)
-- [RISE project -- Announcing RISE RISC-V Runners (Mar 2026)](https://riseproject.dev/blog)
+- [RISE -- Announcing the RISE RISC-V Runners: free, native RISC-V CI on GitHub (Mar 2026)](https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/)
+- [RISE -- RISE RISC-V Runners: six weeks in (May 2026)](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/)
+- [RISE Python wheel builder coverage page](https://riseproject.gitlab.io/python/wheel_builder/)
+- [project-reports/containerd.md](project-reports/containerd.md)
+- [project-reports/runc.md](project-reports/runc.md)
+- [project-reports/xxhash.md](project-reports/xxhash.md)
