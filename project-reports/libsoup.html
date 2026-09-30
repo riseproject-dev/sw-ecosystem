@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange (downstream-only)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for libsoup<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,17 +280,17 @@
 </h2>
     
 
-<p>libsoup is a GLib/GObject-based HTTP networking library written in C (c_std=gnu99). It implements HTTP/1.1, HTTP/2 (via libnghttp2), WebSocket, TLS integration (via GnuTLS/GLib/GIO), authentication schemes (Basic, Digest, NTLM, GSSAPI, Negotiate), cookies, caching, and content decoding (brotli, zstd, gzip). It is a core GNOME infrastructure library used by GNOME Web (Epiphany), WebKitGTK, librest, and other GNOME stack components.</p>
+<p>libsoup is a GLib/GObject-based HTTP networking library written in C (<code class="language-plaintext highlighter-rouge">c_std=gnu99</code>). It implements HTTP/1.1, HTTP/2 (via libnghttp2), WebSocket, TLS integration (through GLib’s pluggable TLS backend, typically backed by GnuTLS), authentication schemes (Basic, Digest, NTLM, GSSAPI/Negotiate), cookies, HSTS enforcement, caching, and content decoding (brotli, zstd, gzip). It is core GNOME infrastructure, consumed by GNOME Web (Epiphany), WebKitGTK, librest, and other GNOME stack components. 4,190 commits, 102 branches, 339 tags, 7 official releases as of the last GitLab project-page fetch.</p>
 
-<p><strong>Governance:</strong> libsoup is an official GNOME project, hosted at <a href="https://gitlab.gnome.org/GNOME/libsoup">gitlab.gnome.org/GNOME/libsoup</a>. The GitHub repository at <a href="https://github.com/GNOME/libsoup">github.com/GNOME/libsoup</a> is a read-only mirror. License: LGPL-2.0-only.</p>
+<p><strong>Governance:</strong> libsoup is an official GNOME module hosted at <a href="https://gitlab.gnome.org/GNOME/libsoup">gitlab.gnome.org/GNOME/libsoup</a>; GitHub hosts only a read-only mirror. License: LGPL-2.0-or-later (per <code class="language-plaintext highlighter-rouge">meson.build</code>; earlier documentation cites LGPL-2.0-only). There is no separate “libsoup Foundation” and no dedicated per-architecture tier policy; the module is governed under standard GNOME Project/GNOME Foundation structures (module maintainers have final say over changes to their component, per the GNOME handbook).</p>
 
-<p><strong>Corporate sponsors via GNOME Foundation Advisory Board:</strong> Red Hat (large member), Google (large member), SUSE (large member), Canonical, Endless.</p>
+<p><strong>Homepage caveat:</strong> The domain <code class="language-plaintext highlighter-rouge">libsoup.org</code> no longer belongs to the project - it currently resolves to an unrelated, repurposed page and must not be cited as a source. The canonical project references are the GitLab repository above and <code class="language-plaintext highlighter-rouge">libsoup.gnome.org</code>.</p>
 
-<p><strong>Dominant maintainer: Igalia.</strong> The top two contributors by commit count are Patrick Griffis (461 commits, pgriffis@igalia.com) and Carlos Garcia Campos (438 commits, cgarcia@igalia.com), both Igalia employees. Red Hat has secondary involvement via Tomas Popela (91 commits), Milan Crha (37 commits), and Michael Catanzaro (26 commits, co-maintainer). The original author, Dan Winship, has 89 commits but appears to be independent/historical.</p>
+<p><strong>Corporate sponsorship / maintainers:</strong> Per <code class="language-plaintext highlighter-rouge">libsoup.doap</code> (GNOME/libsoup master branch), the current maintainers are Carlos Garcia Campos (cgarcia@igalia.com) and Patrick Griffis (pgriffis@igalia.com) - both Igalia employees, confirming Igalia as the de facto corporate sponsor of ongoing maintenance (consistent with Igalia’s broader role across WebKit/GNOME infrastructure). Michael Catanzaro (Red Hat) is an active co-maintainer/reviewer based on recent GitLab activity. Dan Winship, the original author, is a historical/former maintainer per GNOME wiki (page retired). [NEEDS VERIFICATION]: specific commit counts attributed to individual maintainers (e.g., “461 commits Griffis, 438 Garcia Campos”) and GNOME Foundation Advisory Board membership claims (Red Hat, Google, SUSE, Canonical, Endless as sponsors) come from a single prior source and were not independently reconfirmed this cycle.</p>
 
-<p><strong>Community culture on new ports:</strong> Passive and non-blocking. The project accepts architecture-related patches without objection. There is no published tier policy and no documented process for adopting new CPU architectures. riscv64 support is treated as a distribution concern, not an upstream concern. The project does not proactively add riscv64 CI but has never rejected riscv64-related patches either.</p>
+<p><strong>Community culture on new ports:</strong> Passive and non-blocking. No documented process or RFC exists for adopting new CPU architectures; architecture support is treated as a downstream distribution concern, not an upstream governance matter. The only observed friction is slower riscv64 CI/test hardware causing timeout-related flakiness in downstream distro packaging (Debian/Ubuntu), not any upstream objection to riscv64 itself.</p>
 
-<p><strong>RISE Project:</strong> libsoup and GNOME are not RISE Project members. No RISE blog posts (27 posts reviewed, May 2024 - June 2026) mention libsoup.</p><hr />
+<p><strong>RISE Project:</strong> Neither GNOME nor libsoup appears in the <a href="https://riseproject.dev/members/">RISE members list</a> (Premier: Google, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent, MediaTek, Alibaba Damo; General: Canonical, Andes, Microchip, ZTE, and others - all corporate/organizational members, not open-source library projects). No RISE blog post (35+ posts reviewed, 2024-2026) mentions libsoup, and the RISE Python wheel builder does not list it (expected, since libsoup is a C library, not a Python package). No RISE runner usage or funded work on libsoup was found.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -299,7 +300,7 @@
 </h2>
     
 
-<p>libsoup contains zero architecture-specific code. There is no “RISC-V port” in the traditional sense – the library is portable C and has run on any architecture that GLib supports since its inception. The relevant history is therefore limited to distro packaging milestones and test infrastructure incidents.</p>
+<p>libsoup contains no architecture-specific code. There is no “RISC-V port” in the traditional sense - the library is portable C and compiles identically on any architecture GLib supports. The relevant history is limited to distro packaging milestones and test-infrastructure incidents caused by riscv64 build hardware being slower than x86_64.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -312,35 +313,42 @@
   <tbody>
     <tr>
       <td>2018-09-30</td>
-      <td>First documented riscv64 reference: <a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/120">Issue #120</a> “tls_interaction test fails on several architectures” lists riscv64 among affected platforms alongside armhf, hppa, mipsel, mips64el</td>
+      <td>First documented riscv64 reference: <a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/120">GitLab Issue #120</a> “tls_interaction test fails on several architectures” lists riscv64 among affected platforms alongside armhf, hppa, mipsel, mips64el</td>
       <td>GitLab GNOME/libsoup issue #120</td>
     </tr>
     <tr>
-      <td>2019 (closed)</td>
-      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/122">Issue #122</a> “Consider extending timeout for some meson tests” – chunk-io-test hit the 30s Meson default timeout on riscv64 hardware; resolution was to extend per-test timeout limits</td>
-      <td>GitLab GNOME/libsoup issue #122</td>
+      <td>2022-09-02</td>
+      <td><a href="https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1868207.html">Debian Bug#1018709</a> filed: <code class="language-plaintext highlighter-rouge">libsoup3</code> FTBFS on riscv64, <code class="language-plaintext highlighter-rouge">http2-body-stream-test</code> timing out on Debian build daemons. Packager patch extended the test timeout and was noted as intended to be proposed upstream</td>
+      <td>Debian BTS #1018709</td>
     </tr>
     <tr>
       <td>2022-09-05</td>
-      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/309">MR !309</a> “Extend timeout of test http2-body-stream” filed by Eric Long, targeting riscv64 Debian buildd (rv-manda-01) SIGTERM at 300s</td>
+      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/309">MR !309</a> “Extend timeout of test http2-body-stream” filed by Eric Long, targeting riscv64 Debian buildd (rv-manda-01) SIGTERM at 300s - plausibly the upstream submission referenced by Debian Bug#1018709</td>
       <td>GitLab GNOME/libsoup MR !309</td>
+    </tr>
+    <tr>
+      <td>MR !309 closed without merge, due to conflicts with master</td>
+      <td>GitLab GNOME/libsoup MR !309</td>
+      <td>Closed (date per prior report: 2025-05-01) [NEEDS VERIFICATION - exact close date single-sourced]</td>
+    </tr>
+    <tr>
+      <td>2025-01-19 to 2025-01-22</td>
+      <td><a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1093564">Debian Bug#1093564</a>: <code class="language-plaintext highlighter-rouge">libsoup3</code> 3.6.4-1 FTBFS on riscv64, <code class="language-plaintext highlighter-rouge">server-test</code> reported as SIGSEGV but actually an insufficient test timeout on riscv64 build daemons. Fixed by raising <code class="language-plaintext highlighter-rouge">debian/rules --timeout-multiplier</code> from 5 to 6; closed in libsoup3 3.6.4-2</td>
+      <td>Debian BTS #1093564</td>
     </tr>
     <tr>
       <td>2025-05-01</td>
-      <td>MR !309 closed without merge by Michael Catanzaro due to conflicts with master</td>
-      <td>GitLab GNOME/libsoup MR !309</td>
-    </tr>
-    <tr>
-      <td>2026-02-15</td>
-      <td>Debian sid libsoup3 3.6.6-1 built successfully on rv-manda-01 (status: “Maybe-Successful”, ~15 minutes build time); riscv64 at 3.6.6-1 parity with all other mainstream architectures</td>
-      <td><a href="https://tracker.debian.org/pkg/libsoup3.0">Debian tracker</a></td>
+      <td>mcatanzaro comment on Issue #120 suggests the tls_interaction flakiness is “probably fixed by !180,” pending confirmation</td>
+      <td>GitLab GNOME/libsoup issue #120</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Upstreaming status:</strong> Fully upstream. No patches required; all riscv64 issues have been infrastructure (test timeouts on slow buildd hardware), not code defects.</p>
+<p><strong>Discrepancy note:</strong> An earlier pass of this research characterized MR !309 as “unrelated to riscv64” (an http2 test-timeout MR with no riscv64 connection), while the same research’s MR description and the computed readiness justification both describe it explicitly as fixing a riscv64 Debian buildd timeout. The weight of evidence (the MR’s own description referencing rv-manda-01, and its citation in the readiness justification) supports treating MR !309 as riscv64-relevant; the “unrelated” characterization is very likely a search-classification error and is flagged here rather than silently dropped.</p>
 
-<p><strong>Key contributors:</strong> The riscv64 test timeout issues were primarily surfaced by Debian packagers, not Igalia or Red Hat maintainers.</p><hr />
+<p><strong>Upstreaming status:</strong> Functionally, libsoup needs no riscv64 port - it already builds and runs correctly. The two riscv64-specific fixes that have been needed (Debian Bug#1018709 in 2022, Debian Bug#1093564 in 2025) were both packaging-level timeout-multiplier adjustments in Debian’s <code class="language-plaintext highlighter-rouge">debian/rules</code>, not upstream GNOME/libsoup code changes. No upstream commit in the GNOME/libsoup repository has been required to support riscv64.</p>
+
+<p><strong>Key contributors:</strong> All riscv64-specific issues were surfaced and fixed by Debian packagers (Aurelien Jarno, a Debian RISC-V porter, and Jeremy Bicha), not by Igalia or Red Hat upstream maintainers.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -350,21 +358,9 @@
 </h2>
     
 
-<p>GNOME has no published formal platform support tier document. There is no documented tier policy distinguishing architectures.</p>
+<p>GNOME publishes no formal platform/architecture support tier document for libsoup or for GNOME modules generally. In practice, the project’s de facto support model is whatever Fedora (for upstream CI) and Debian/Ubuntu/Arch (for downstream distribution) choose to build.</p>
 
-<p>In practice, the project follows Fedora and Debian packaging: if those distributions ship libsoup on a given architecture, the project treats that architecture as supported at the distribution level. No explicit community stance on RISC-V exists beyond the general portability inherited from GLib.</p>
-
-<p><strong>Evidence from CI:</strong></p>
-
-<p>The <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> defines four build/test jobs, all running on Fedora 43 x86_64 only:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">fedora-test</code> – main build, test, coverage, scan-build (runner tag: <code class="language-plaintext highlighter-rouge">ipv6</code>)</li>
-  <li><code class="language-plaintext highlighter-rouge">fedora-autobahn-quick</code> – WebSocket autobahn tests (runner tag: <code class="language-plaintext highlighter-rouge">ipv6</code>, allow_failure: true)</li>
-  <li><code class="language-plaintext highlighter-rouge">fedora-asan</code> – AddressSanitizer build (runner tag: <code class="language-plaintext highlighter-rouge">asan</code>)</li>
-  <li>Container image builds for Fedora 43 and Fedora 40</li>
-</ul>
-
-<p>No architecture matrix. No QEMU. No cross-compilation. No riscv64 runner tags.</p>
+<p><strong>Evidence from CI:</strong> <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> (read directly from <code class="language-plaintext highlighter-rouge">gitlab.gnome.org/GNOME/libsoup/-/raw/master/.gitlab-ci.yml</code>, and cross-checked identical against the GitHub mirror) defines exactly these jobs, all on Fedora containers (implicitly x86_64): <code class="language-plaintext highlighter-rouge">build-fedora-image</code>, <code class="language-plaintext highlighter-rouge">build-fedora-autobahn-image</code> (Fedora 43, tag <code class="language-plaintext highlighter-rouge">2026-04-29-v1</code>, and Fedora 40 python2-compat image, tag <code class="language-plaintext highlighter-rouge">2025-01-14-python2-v3</code>), <code class="language-plaintext highlighter-rouge">gobject-linter</code>, <code class="language-plaintext highlighter-rouge">fedora-test</code>, <code class="language-plaintext highlighter-rouge">fedora-autobahn-quick</code>, <code class="language-plaintext highlighter-rouge">fedora-asan</code>, <code class="language-plaintext highlighter-rouge">reference</code>, <code class="language-plaintext highlighter-rouge">pages</code>. Runner tags used are only <code class="language-plaintext highlighter-rouge">ipv6</code> and <code class="language-plaintext highlighter-rouge">asan</code>. There is no architecture matrix, no QEMU job, no cross-compilation job, and the string “riscv” appears zero times in the file.</p>
 
 <p><strong>Comparison table:</strong></p>
 
@@ -380,7 +376,7 @@
   <tbody>
     <tr>
       <td>Upstream CI coverage</td>
-      <td>Yes (Fedora 43, all jobs)</td>
+      <td>Yes (Fedora 43/40, all jobs)</td>
       <td>No</td>
       <td>No</td>
     </tr>
@@ -392,7 +388,7 @@
     </tr>
     <tr>
       <td>Official upstream binary</td>
-      <td>No (source-only)</td>
+      <td>No (source-only releases)</td>
       <td>No (source-only)</td>
       <td>No (source-only)</td>
     </tr>
@@ -400,7 +396,7 @@
       <td>Distribution binary</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (Debian sid, Ubuntu 24.04)</td>
+      <td>Yes (Debian sid, Ubuntu ports, Arch RISC-V)</td>
     </tr>
     <tr>
       <td>Formal tier designation</td>
@@ -411,7 +407,7 @@
   </tbody>
 </table></div>
 
-<p>riscv64 is at parity with arm64 from the upstream perspective: neither architecture has upstream CI coverage, neither blocks releases, and neither receives official prebuilt binaries from the project itself.</p><hr />
+<p>riscv64 is at rough parity with arm64 from the pure-upstream perspective (neither has upstream CI, neither blocks releases, neither gets an official prebuilt binary from GNOME itself); it differs in that it required two riscv64-specific packaging fixes downstream to get building reliably, which arm64 did not.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -421,16 +417,9 @@
 </h2>
     
 
-<p>libsoup contains no architecture-specific code of any kind. A complete recursive enumeration of 539 files in the GitLab repository found zero files containing “riscv”, “x86”, “arm”, “aarch64”, “simd”, “neon”, “avx”, “sse”, or any architecture identifier in their names or paths. No <code class="language-plaintext highlighter-rouge">.S</code> assembly files exist. No SIMD intrinsics exist. No JIT. No cryptographic primitives (delegated to GnuTLS/GLib/GIO). No platform dispatch tables.</p>
+<p>libsoup contains no architecture-specific code of any kind. A recursive directory enumeration of the repository (<code class="language-plaintext highlighter-rouge">.gitlab-ci/</code>, <code class="language-plaintext highlighter-rouge">docs/</code>, <code class="language-plaintext highlighter-rouge">examples/</code>, <code class="language-plaintext highlighter-rouge">fuzzing/</code>, <code class="language-plaintext highlighter-rouge">libsoup/</code> with subdirectories <code class="language-plaintext highlighter-rouge">auth</code>, <code class="language-plaintext highlighter-rouge">cache</code>, <code class="language-plaintext highlighter-rouge">content-decoder</code>, <code class="language-plaintext highlighter-rouge">content-sniffer</code>, <code class="language-plaintext highlighter-rouge">cookies</code>, <code class="language-plaintext highlighter-rouge">hsts</code>, <code class="language-plaintext highlighter-rouge">http1</code>, <code class="language-plaintext highlighter-rouge">http2</code>, <code class="language-plaintext highlighter-rouge">include</code>, <code class="language-plaintext highlighter-rouge">server/http1</code>, <code class="language-plaintext highlighter-rouge">server/http2</code>, <code class="language-plaintext highlighter-rouge">websocket</code>, <code class="language-plaintext highlighter-rouge">po/</code>, <code class="language-plaintext highlighter-rouge">subprojects/</code>, <code class="language-plaintext highlighter-rouge">tests/</code>) found no <code class="language-plaintext highlighter-rouge">arch/</code> directory, no <code class="language-plaintext highlighter-rouge">riscv*</code>, <code class="language-plaintext highlighter-rouge">.S</code>/<code class="language-plaintext highlighter-rouge">.asm</code> files, and no <code class="language-plaintext highlighter-rouge">x86</code>/<code class="language-plaintext highlighter-rouge">arm64</code>/<code class="language-plaintext highlighter-rouge">aarch64</code>-named directories or files. (Two independent tree fetches returned slightly different total file counts - 449 and 539 - likely reflecting different points in repository history or counting methodology; neither changed the conclusion that zero architecture-specific files exist.) There is no SIMD, no JIT, and no cryptographic primitives implemented in libsoup itself (TLS is delegated to GLib’s pluggable TLS backend/GnuTLS).</p>
 
-<p>The one <code class="language-plaintext highlighter-rouge">cpu_family()</code> check in the entire build system is in the top-level <code class="language-plaintext highlighter-rouge">meson.build</code>, selecting between 32-bit and 64-bit MSVC GSSAPI DLL names on Windows. It is not executed on Linux.</p>
-
-<p>All performance-sensitive operations are delegated:</p>
-<ul>
-  <li>TLS: GnuTLS (which has its own architecture-specific optimizations)</li>
-  <li>Compression: brotli, zstd, zlib (each has its own riscv64 story; see Section 9)</li>
-  <li>HTTP/2 framing: libnghttp2 (pure C, no SIMD)</li>
-</ul>
+<p>The single <code class="language-plaintext highlighter-rouge">host_machine.cpu_family()</code>-style check in the entire build system selects between 32-bit and 64-bit MSVC GSSAPI DLL names on Windows; it is not exercised on Linux/riscv64.</p>
 
 <p><strong>Component table:</strong></p>
 
@@ -450,47 +439,47 @@
       <td>C scalar</td>
       <td>C scalar</td>
       <td>C scalar</td>
-      <td>Scalar – appropriate for this workload</td>
+      <td>Scalar - appropriate for this workload</td>
     </tr>
     <tr>
       <td>HTTP/2 stack</td>
       <td>C scalar</td>
       <td>C scalar</td>
       <td>C scalar</td>
-      <td>Scalar – appropriate for this workload</td>
+      <td>Scalar - appropriate for this workload</td>
     </tr>
     <tr>
-      <td>TLS (via GnuTLS/GIO)</td>
+      <td>TLS (via GLib/GnuTLS)</td>
       <td>Delegated</td>
       <td>Delegated</td>
       <td>Delegated</td>
-      <td>Inherits GnuTLS arch support</td>
+      <td>Inherits GnuTLS’s own architecture support</td>
     </tr>
     <tr>
       <td>Auth (NTLM/Digest/GSSAPI)</td>
       <td>C scalar</td>
       <td>C scalar</td>
       <td>C scalar</td>
-      <td>Scalar – appropriate</td>
+      <td>Scalar - appropriate</td>
     </tr>
     <tr>
       <td>Content decoding (brotli/zstd/zlib)</td>
       <td>Delegated</td>
       <td>Delegated</td>
       <td>Delegated</td>
-      <td>Inherits per-library arch support</td>
+      <td>Inherits per-library architecture support</td>
     </tr>
     <tr>
       <td>Architecture preprocessor guards</td>
       <td>None</td>
       <td>None</td>
       <td>None</td>
-      <td>N/A – none needed</td>
+      <td>N/A - none needed</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>For a networking/HTTP library, scalar C is the correct implementation strategy. There are no numerical kernels, no buffer operations that would benefit from vectorization, and no cryptographic primitives that need constant-time assembly. The absence of riscv64-specific code is not a gap; it is correct design.</p><hr />
+<p>For an HTTP protocol/session-management library with no vectorizable hot path, scalar C is the correct and complete implementation strategy on every architecture, including riscv64. This is not a gap; adversarial re-verification this cycle reached the same conclusion: the “hand-tuned / intrinsics / scalar-fallback / missing” implementation-quality rubric used for compute-bound libraries (codecs, crypto, math kernels) simply does not apply to libsoup, because it has no such hot path.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -500,14 +489,14 @@
 </h2>
     
 
-<p><strong>Build system:</strong> Meson (minimum version 0.62, declared in <code class="language-plaintext highlighter-rouge">project()</code> in <code class="language-plaintext highlighter-rouge">meson.build</code>). Language: C, c_std=gnu99.</p>
+<p><strong>Build system:</strong> Meson, minimum version 0.62 (declared in <code class="language-plaintext highlighter-rouge">project()</code> in <code class="language-plaintext highlighter-rouge">meson.build</code>, version 3.7.3). Language: C, <code class="language-plaintext highlighter-rouge">c_std=gnu99</code>. There is no CMake and no autotools <code class="language-plaintext highlighter-rouge">configure</code> in this project; any cmake/configure-specific riscv64 instructions would not apply.</p>
 
-<p><strong>Required toolchain minimums:</strong></p>
+<p><strong>Required dependency minimums (from <code class="language-plaintext highlighter-rouge">meson.build</code>):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Tool</th>
+      <th>Tool/Dependency</th>
       <th>Minimum</th>
       <th>Source</th>
     </tr>
@@ -516,38 +505,45 @@
     <tr>
       <td>Meson</td>
       <td>0.62</td>
-      <td><code class="language-plaintext highlighter-rouge">project()</code> declaration in meson.build</td>
+      <td><code class="language-plaintext highlighter-rouge">project()</code> in meson.build</td>
     </tr>
     <tr>
-      <td>GLib</td>
-      <td>2.70.0</td>
-      <td><code class="language-plaintext highlighter-rouge">dependency('glib-2.0', version: '&gt;= 2.70.0')</code> in meson.build</td>
+      <td>GLib (glib-2.0/gobject-2.0/gio-2.0/gmodule-no-export-2.0, gio-unix-2.0)</td>
+      <td>&gt;= 2.70.0</td>
+      <td>meson.build</td>
     </tr>
     <tr>
       <td>libnghttp2</td>
-      <td>no declared minimum (&gt;= 1.50 for RFC 9113 option)</td>
+      <td>&gt;= 1.50 (for RFC 9113 support)</td>
       <td>meson.build</td>
     </tr>
     <tr>
       <td>libpsl</td>
-      <td>0.20</td>
+      <td>&gt;= 0.20</td>
+      <td>meson.build</td>
+    </tr>
+    <tr>
+      <td>libzstd</td>
+      <td>&gt;= 1.4.0 (optional)</td>
+      <td>meson.build</td>
+    </tr>
+    <tr>
+      <td>GnuTLS</td>
+      <td>&gt;= 3.6.0 (test-only, PKCS#11 tests)</td>
       <td>meson.build</td>
     </tr>
     <tr>
       <td>GCC/Clang</td>
-      <td>No explicit minimum; c_std=gnu99 satisfied by GCC &gt;= 4.5</td>
+      <td>No pinned minimum version; <code class="language-plaintext highlighter-rouge">c_std=gnu99</code> compatibility is the only constraint</td>
       <td>meson.build</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>For riscv64 cross-compilation, <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> from Debian/Ubuntu (GCC 12 or 14 depending on release) is sufficient.</p>
+<p>For riscv64 cross-compilation, the Debian/Ubuntu <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> package is sufficient; no riscv64-specific compiler version floor is documented by upstream.</p>
 
-<p><strong>Cross-compilation procedure:</strong></p>
+<p><strong>Cross-compilation procedure:</strong> No libsoup-specific cross-file exists in the repository; the standard Meson cross-file pattern applies. Example <code class="language-plaintext highlighter-rouge">/tmp/riscv64-linux-gnu.ini</code>:</p>
 
-<p>No libsoup-specific cross-file exists in the repository. Standard Meson cross-file pattern applies.</p>
-
-<p>Create <code class="language-plaintext highlighter-rouge">/tmp/riscv64-linux-gnu.ini</code>:</p>
 <div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">[binaries]</span><span class="w">
 </span><span class="py">c</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64-linux-gnu-gcc'</span>
 <span class="py">cpp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64-linux-gnu-g++'</span>
@@ -567,6 +563,7 @@
 </code></pre></div></div>
 
 <p>Configure and build:</p>
+
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>meson setup builddir <span class="se">\</span>
   <span class="nt">--cross-file</span> /tmp/riscv64-linux-gnu.ini <span class="se">\</span>
   <span class="nt">-Dintrospection</span><span class="o">=</span>disabled <span class="se">\</span>
@@ -615,7 +612,7 @@
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dgssapi</code></td>
       <td><code class="language-plaintext highlighter-rouge">disabled</code></td>
-      <td>libkrb5-dev may not be available in cross sysroot</td>
+      <td>libkrb5-dev may not be present in cross sysroot</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dntlm</code></td>
@@ -630,28 +627,21 @@
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dtests</code></td>
       <td><code class="language-plaintext highlighter-rouge">false</code></td>
-      <td>Tests require apache2, PHP, networking; cannot run cross</td>
+      <td>Test suite requires apache2, PHP, networking; cannot run cross</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">-Dbrotli</code></td>
-      <td><code class="language-plaintext highlighter-rouge">disabled</code></td>
-      <td>Optional; disable if libbrotlidec not in sysroot</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-Dzstd</code></td>
-      <td><code class="language-plaintext highlighter-rouge">disabled</code></td>
-      <td>Optional; disable if libzstd not in sysroot</td>
+      <td><code class="language-plaintext highlighter-rouge">-Dbrotli</code> / <code class="language-plaintext highlighter-rouge">-Dzstd</code></td>
+      <td><code class="language-plaintext highlighter-rouge">disabled</code> (optional)</td>
+      <td>Disable if the corresponding <code class="language-plaintext highlighter-rouge">-dev</code> package is absent from the sysroot</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>All feature options default to <code class="language-plaintext highlighter-rouge">auto</code> (skipped if dependency absent), but explicit <code class="language-plaintext highlighter-rouge">disabled</code> is recommended for cross builds to avoid unexpected detection failures.</p>
+<p>All feature options default to <code class="language-plaintext highlighter-rouge">auto</code> (silently skipped if the dependency is absent), but explicit <code class="language-plaintext highlighter-rouge">disabled</code> avoids unexpected auto-detection failures in a cross sysroot.</p>
 
-<p><strong>QEMU usage:</strong> Meson uses <code class="language-plaintext highlighter-rouge">exe_wrapper = 'qemu-riscv64-static'</code> from the cross-file to execute test binaries on the build host. Required packages: <code class="language-plaintext highlighter-rouge">qemu-user-static</code>, <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>. Activate binfmt_misc handler via <code class="language-plaintext highlighter-rouge">update-binfmts --enable qemu-riscv64</code>.</p>
+<p><strong>QEMU usage:</strong> The cross-file’s <code class="language-plaintext highlighter-rouge">exe_wrapper = 'qemu-riscv64-static'</code> lets Meson execute test binaries under emulation on the build host. Requires <code class="language-plaintext highlighter-rouge">qemu-user-static</code> and <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>, with the <code class="language-plaintext highlighter-rouge">qemu-riscv64</code> binfmt_misc handler enabled (<code class="language-plaintext highlighter-rouge">update-binfmts --enable qemu-riscv64</code>). No QEMU usage exists anywhere in the project’s own <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>.</p>
 
-<p><strong>Known build failures:</strong> None specific to riscv64. The Debian buildd <code class="language-plaintext highlighter-rouge">rv-manda-01</code> built libsoup3 3.6.6-1 successfully in approximately 15 minutes (status “Maybe-Successful”, 2026-02-15). The “Maybe-Successful” status reflects intermittent test failures due to network port binding conflicts in the test suite (a known issue on all architectures), not riscv64-specific failures.</p>
-
-<p>No <code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code>, no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, no <code class="language-plaintext highlighter-rouge">.ci/docker/</code> riscv64 images exist in the repository.</p><hr />
+<p><strong>Known build failures:</strong> None specific to libsoup’s own source. Both documented riscv64 build failures (Debian Bug#1018709, Debian Bug#1093564) were false-alarm SIGSEGV/timeout reports on Debian’s riscv64 build daemons, resolved by raising the test timeout multiplier in <code class="language-plaintext highlighter-rouge">debian/rules</code>, not by changing libsoup source. No <code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code>, <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, or riscv64-specific CI image exists in the repository (confirmed: no Dockerfile exists in the project at all - CI pulls prebuilt Fedora container images by tag rather than building from an in-repo Dockerfile).</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -696,7 +686,7 @@
       <td>None</td>
     </tr>
     <tr>
-      <td>TLS (GnuTLS integration)</td>
+      <td>TLS (GLib/GnuTLS integration)</td>
       <td>Full</td>
       <td>Full</td>
       <td>Full</td>
@@ -718,23 +708,23 @@
     </tr>
     <tr>
       <td>brotli decompression</td>
-      <td>Full (libbrotli)</td>
-      <td>Full (libbrotli)</td>
-      <td>Full (libbrotli, scalar)</td>
-      <td>Performance: RVV optimization PR #1410 in brotli is stalled on CLA; generic build works</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full (scalar)</td>
+      <td>None functional; see Section 9 for brotli’s own riscv64 optimization status</td>
     </tr>
     <tr>
       <td>zstd decompression</td>
-      <td>Full (libzstd)</td>
-      <td>Full (libzstd)</td>
-      <td>Full (libzstd, scalar+)</td>
-      <td>Performance: zstd riscv64 arch detection only merged Dec 2025; multiple optimization PRs open (see Section 9)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>None functional; see Section 9 for zstd’s own riscv64 optimization status</td>
     </tr>
     <tr>
       <td>gzip decompression</td>
-      <td>Full (zlib)</td>
-      <td>Full (zlib)</td>
-      <td>Full (zlib)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full</td>
       <td>None</td>
     </tr>
     <tr>
@@ -761,13 +751,13 @@
   </tbody>
 </table></div>
 
-<p><strong>Functional gaps:</strong> None. All HTTP/networking features are available on riscv64.</p>
+<p><strong>Functional gaps:</strong> None identified. Every HTTP/networking feature libsoup offers on amd64/arm64 is present and working on riscv64, as evidenced by feature-complete Ubuntu and Debian riscv64 packages.</p>
 
-<p><strong>Performance gaps:</strong> Potential throughput difference from optional compression libraries (brotli, zstd) not having finalized riscv64 SIMD paths. libsoup itself contributes no architecture-specific code to close. The compression performance gap is upstream of libsoup.</p>
+<p><strong>Performance gaps:</strong> No RISC-V-specific performance benchmark data for libsoup exists in any public source found (RISE blog, general web search, GitHub benchmark repositories were all checked and returned nothing libsoup-specific). Any performance delta versus amd64/arm64 would flow entirely from libsoup’s delegated dependencies (brotli, zstd compression) rather than from libsoup’s own code, since libsoup has no vectorizable hot path of its own.</p>
 
-<p><strong>Security hardening:</strong> No architecture-specific security hardening in libsoup. Stack protectors, RELRO, and similar mitigations are compiler-driven and apply equally to riscv64.</p>
+<p><strong>Security hardening:</strong> No architecture-specific hardening exists in libsoup; stack protectors, RELRO, and similar mitigations are compiler-driven and apply uniformly across architectures including riscv64.</p>
 
-<p><strong>Floating-point / NaN semantics:</strong> No floating-point operations in libsoup. Not applicable.</p><hr />
+<p><strong>Floating-point / NaN semantics:</strong> Not applicable - libsoup performs no floating-point computation.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -777,9 +767,9 @@
 </h2>
     
 
-<p>No riscv64 CI exists in the libsoup project.</p>
+<p>No riscv64 CI exists for libsoup, confirmed by direct reading of <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> from both <code class="language-plaintext highlighter-rouge">gitlab.gnome.org/GNOME/libsoup/-/raw/master/.gitlab-ci.yml</code> and the GitHub mirror (identical content).</p>
 
-<p><strong>Current CI configuration (<code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>):</strong></p>
+<p><strong>Current CI configuration:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -804,16 +794,22 @@
       <td>Autobahn test container</td>
     </tr>
     <tr>
+      <td><code class="language-plaintext highlighter-rouge">gobject-linter</code></td>
+      <td>external ghcr.io image</td>
+      <td>(none)</td>
+      <td>Lint stage</td>
+    </tr>
+    <tr>
       <td><code class="language-plaintext highlighter-rouge">fedora-test</code></td>
       <td>Fedora 43 x86_64</td>
       <td><code class="language-plaintext highlighter-rouge">ipv6</code></td>
-      <td>Build, test, coverage, scan-build</td>
+      <td>Build, meson test, coverage, scan-build static analysis</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">fedora-autobahn-quick</code></td>
       <td>Fedora 40 x86_64</td>
       <td><code class="language-plaintext highlighter-rouge">ipv6</code></td>
-      <td>WebSocket autobahn tests (allow_failure: true)</td>
+      <td>WebSocket autobahn tests (<code class="language-plaintext highlighter-rouge">allow_failure: true</code>)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">fedora-asan</code></td>
@@ -825,16 +821,14 @@
       <td><code class="language-plaintext highlighter-rouge">reference</code> / <code class="language-plaintext highlighter-rouge">pages</code></td>
       <td>Fedora 43 x86_64</td>
       <td>(none)</td>
-      <td>Docs build and GitLab Pages deploy</td>
+      <td>Docs build (gi-docgen) and GitLab Pages deploy</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Pipeline uses <a href="https://gitlab.freedesktop.org/Infrastructure/freedesktop-ci-templates">freedesktop-ci-templates</a> at ref <code class="language-plaintext highlighter-rouge">8f27b815</code> and GNOME citemplates. No architecture matrix. No QEMU. No cross-compilation jobs. The only runner tags used are <code class="language-plaintext highlighter-rouge">ipv6</code> and <code class="language-plaintext highlighter-rouge">asan</code>.</p>
+<p>The pipeline uses <a href="https://gitlab.freedesktop.org/Infrastructure/freedesktop-ci-templates">freedesktop-ci-templates</a> pinned at commit <code class="language-plaintext highlighter-rouge">8f27b815f07b7ebc3546863a2b386425291b7349</code> plus GNOME <code class="language-plaintext highlighter-rouge">citemplates</code> (release-service). No architecture matrix, no QEMU job, no cross-compilation job. The only runner tags in use are <code class="language-plaintext highlighter-rouge">ipv6</code> and <code class="language-plaintext highlighter-rouge">asan</code>. No <code class="language-plaintext highlighter-rouge">.github/workflows/</code> directory exists in the GNOME/libsoup GitHub mirror.</p>
 
-<p>No <code class="language-plaintext highlighter-rouge">.github/workflows/</code> directory exists in the GNOME/libsoup GitHub mirror; GitHub Actions are not used.</p>
-
-<p><strong>RISE runners:</strong> Not used. RISE is not involved with libsoup CI.</p>
+<p><strong>RISE runners:</strong> Not used. RISE has no involvement in libsoup CI.</p>
 
 <p><strong>CI comparison table:</strong></p>
 
@@ -885,7 +879,9 @@
       <td>No</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p>This absence of upstream riscv64 CI is the primary driver of the orange readiness grade (Section 13): the two riscv64-specific build failures that did occur (Debian Bug#1018709, Debian Bug#1093564) were caught only by downstream Debian buildd infrastructure, never by an upstream CI signal, because none exists.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -895,7 +891,7 @@
 </h2>
     
 
-<p><strong>Upstream releases:</strong> libsoup ships source-only. The five most recent upstream releases (3.7.1, 3.6.6, 3.6.5, 3.6.4, 3.6.3) all consist of source archives (<code class="language-plaintext highlighter-rouge">.tar.xz</code>, <code class="language-plaintext highlighter-rouge">.tar.gz</code>, <code class="language-plaintext highlighter-rouge">.zip</code>) only. No binary assets are attached to any release. The GNOME/libsoup GitHub mirror has zero releases; all releases are on <a href="https://gitlab.gnome.org/GNOME/libsoup/-/releases">GNOME GitLab</a>.</p>
+<p><strong>Upstream releases:</strong> libsoup ships source-only. The most recent releases (3.7.1, 3.6.6, 3.6.5, 3.6.4, 3.6.3) consist solely of <code class="language-plaintext highlighter-rouge">.tar.xz</code>/<code class="language-plaintext highlighter-rouge">.tar.gz</code>/<code class="language-plaintext highlighter-rouge">.zip</code> source archives with no binary assets attached. All releases live on <a href="https://gitlab.gnome.org/GNOME/libsoup/-/releases">GNOME GitLab</a>; the GitHub mirror has zero releases.</p>
 
 <p><strong>Distribution packages:</strong></p>
 
@@ -913,48 +909,50 @@
       <td><a href="https://packages.debian.org/sid/libsoup-3.0-0">Debian sid</a></td>
       <td>3.6.6-1</td>
       <td>Yes</td>
-      <td>Architecture list includes riscv64 alongside amd64, arm64, armhf, i386, loong64, ppc64el, s390x. Both libsoup 2.x (2.74.3-1) and 3.x (3.6.6-1) available; note libsoup 2.x was removed from sid on 2025-12-12</td>
+      <td>Built across amd64, arm64, armhf, i386, loong64, ppc64el, riscv64, s390x. libsoup 2.x (2.74.3-1) removed from sid 2025-12-12; libsoup3 remains</td>
     </tr>
     <tr>
-      <td><a href="https://packages.ubuntu.com/noble/libsoup-3.0-dev">Ubuntu 24.04 Noble</a></td>
+      <td>Ubuntu 26.04 “Resolute” (ports archive)</td>
+      <td>libsoup-3.0-0 3.6.6-1; libsoup-2.4-1 2.74.3-10.1ubuntu5</td>
+      <td>Yes</td>
+      <td>Confirmed live via <a href="https://packages.ubuntu.com/search?keywords=libsoup&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a>: <code class="language-plaintext highlighter-rouge">libsoup-3.0-0</code>, <code class="language-plaintext highlighter-rouge">-dev</code>, <code class="language-plaintext highlighter-rouge">-tests</code>, <code class="language-plaintext highlighter-rouge">libsoup-2.4-1</code>, <code class="language-plaintext highlighter-rouge">libsoup-gnome-2.4-1</code>, <code class="language-plaintext highlighter-rouge">libsoup-gnome2.4-dev</code>, <code class="language-plaintext highlighter-rouge">libsoup2.4-dev</code> all list riscv64 explicitly among built architectures (ports pocket)</td>
+    </tr>
+    <tr>
+      <td>Ubuntu 24.04 Noble</td>
       <td>3.4.4-5build2</td>
       <td>Yes</td>
-      <td>7 architectures: amd64, arm64, armhf, i386, ppc64el, riscv64, s390x. Package: libsoup-3.0-0 (277.9 kB download, 654.0 kB installed on riscv64)</td>
+      <td>Package <code class="language-plaintext highlighter-rouge">libsoup-3.0-0</code>, 7 architectures including riscv64 (277.9 kB download / 654.0 kB installed)</td>
     </tr>
     <tr>
-      <td><a href="https://packages.debian.org/bookworm/libsoup-3.0-0">Debian 12 bookworm stable</a></td>
+      <td>Debian 12 bookworm (stable)</td>
       <td>3.2.3-0+deb12u2</td>
       <td>No</td>
       <td>riscv64 was not a Debian release architecture for bookworm</td>
     </tr>
     <tr>
-      <td>Fedora (upstream CI target)</td>
+      <td>Arch Linux RISC-V (archriscv.felixc.at mirror)</td>
+      <td>libsoup 2.74.3-4; libsoup3 3.6.5-1</td>
+      <td>Yes</td>
+      <td>Confirmed directly against <code class="language-plaintext highlighter-rouge">mirrors.felixc.at/archriscv/repo/extra/</code>: actual riscv64 binary artifacts present (<code class="language-plaintext highlighter-rouge">libsoup-2.74.3-4-riscv64.pkg.tar.zst</code>, <code class="language-plaintext highlighter-rouge">libsoup3-3.6.5-1-riscv64.pkg.tar.zst</code>, plus signatures and <code class="language-plaintext highlighter-rouge">-docs</code> packages). No patch directory exists for libsoup3 in <a href="https://github.com/felixonmars/archriscv-packages">felixonmars/archriscv-packages</a>, implying it builds from the mainline PKGBUILD unmodified</td>
+    </tr>
+    <tr>
+      <td>Fedora</td>
       <td>Current stable</td>
-      <td>Data not available: Fedora package tracker was not queried</td>
+      <td>Data not available: Fedora package tracker was not queried this cycle</td>
       <td>[NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>Arch Linux mainline</td>
+      <td>Arch Linux mainline (x86_64-centric)</td>
       <td>3.6.6-2</td>
       <td>No</td>
       <td>riscv64 is not a tier-1 Arch architecture</td>
     </tr>
-    <tr>
-      <td>Arch Linux RISC-V (archriscv.felixc.at)</td>
-      <td>Unknown</td>
-      <td>Likely yes [NEEDS VERIFICATION]</td>
-      <td>No patch directory exists in <a href="https://github.com/felixonmars/archriscv-packages">felixonmars/archriscv-packages</a> for libsoup3, meaning it builds from mainline PKGBUILD unmodified; per-package build status not confirmed from accessible sources</td>
-    </tr>
-    <tr>
-      <td>ArchPOWER riscv64</td>
-      <td>3.6.4 (libsoup3), 2.74.3 (libsoup2)</td>
-      <td>Yes [NEEDS VERIFICATION]</td>
-      <td>flagged potentially vulnerable on ArchPOWER; not an authoritative distribution</td>
-    </tr>
   </tbody>
 </table></div>
 
-<p><strong>What a user must do to get a working riscv64 binary:</strong> Install from Debian sid (<code class="language-plaintext highlighter-rouge">apt install libsoup-3.0-0</code>) or Ubuntu 24.04 (<code class="language-plaintext highlighter-rouge">apt install libsoup-3.0-0</code>). No additional steps required. Building from source requires standard Meson cross-compilation procedure (Section 5).</p><hr />
+<p>PyPI, npm, Maven, and OCI registries are not applicable release channels for libsoup - it is a C library with no PyPI package (<code class="language-plaintext highlighter-rouge">pypi.org/pypi/libsoup/json</code> returns HTTP 404) and no equivalent packages in those ecosystems.</p>
+
+<p><strong>What a user must do to get a working riscv64 binary:</strong> Install from Debian sid, Ubuntu 24.04/26.04 (<code class="language-plaintext highlighter-rouge">apt install libsoup-3.0-0</code>), or Arch Linux RISC-V. No source patching is required. Building from source requires only the standard Meson cross-compilation procedure in Section 5.</p>
 <h2 id="9-dependencies">
   
   
@@ -964,118 +962,122 @@
 </h2>
     
 
-<p><strong>Dependency summary table:</strong></p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>Required?</th>
+      <th>Criticality</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
-      <th>riscv64 Release (Debian sid)</th>
+      <th>riscv64 Release (Ubuntu 26.04 resolute / Debian sid)</th>
       <th>Blocking Issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>GLib &gt;= 2.70 / GObject / GIO</td>
-      <td>Core object system, async I/O, TLS abstraction</td>
-      <td>Required</td>
-      <td>Builds (no known arch-specific failures)</td>
-      <td>Not in CI</td>
-      <td>libglib2.0-0t64 v2.88.1-2</td>
+      <td>GLib</td>
+      <td>runtime-dependency (glib-2.0/gobject-2.0/gio-2.0, &gt;= 2.70.0) - core object system, main loop, networking primitives</td>
+      <td>Critical</td>
+      <td>Archive presence confirms successful riscv64 build (<code class="language-plaintext highlighter-rouge">libglib2.0-dev</code>)</td>
+      <td>Not separately tracked in this research</td>
+      <td>Shipped (Ubuntu resolute security pocket; libglib2.0-0t64 v2.88.1-2 in Debian sid)</td>
       <td>None identified</td>
     </tr>
     <tr>
-      <td>libnghttp2</td>
-      <td>HTTP/2 framing</td>
-      <td>Required</td>
-      <td>Builds</td>
-      <td>Not in CI</td>
-      <td>libnghttp2-14 v1.69.0-1</td>
-      <td>None</td>
+      <td>nghttp2</td>
+      <td>runtime-dependency - HTTP/2 framing (libnghttp2, &gt;= 1.50)</td>
+      <td>Critical</td>
+      <td>Archive presence confirms riscv64 build (<code class="language-plaintext highlighter-rouge">libnghttp2-dev</code>)</td>
+      <td>Not separately tracked</td>
+      <td>Shipped (libnghttp2-14 v1.69.0-1 Debian sid)</td>
+      <td>None; pure C, no SIMD. See <code class="language-plaintext highlighter-rouge">project-reports/nghttp2.md</code></td>
     </tr>
     <tr>
-      <td>libpsl &gt;= 0.20</td>
-      <td>Public Suffix List for cookie/redirect handling</td>
-      <td>Required</td>
-      <td>Builds</td>
-      <td>Not in CI</td>
-      <td>libpsl5 v0.21.2-1</td>
+      <td>SQLite</td>
+      <td>runtime-dependency - backing store for HSTS enforcer and cookie-jar persistence</td>
+      <td>Critical</td>
+      <td>Archive presence confirms riscv64 build (<code class="language-plaintext highlighter-rouge">libsqlite3-dev</code>)</td>
+      <td>Not separately tracked</td>
+      <td>Shipped (libsqlite3-0 v3.53.2-1 Debian sid)</td>
+      <td>None. See <code class="language-plaintext highlighter-rouge">project-reports/sqlite.md</code></td>
+    </tr>
+    <tr>
+      <td>libpsl</td>
+      <td>runtime-dependency - Public Suffix List lookups for cookie-domain validation (&gt;= 0.20)</td>
+      <td>Critical</td>
+      <td>Archive presence confirms riscv64 build (<code class="language-plaintext highlighter-rouge">libpsl-dev</code>, Ubuntu universe)</td>
+      <td>Not separately tracked</td>
+      <td>Shipped (libpsl5 v0.21.2-1 Debian sid)</td>
       <td>None identified</td>
     </tr>
     <tr>
       <td>zlib</td>
-      <td>gzip content-encoding</td>
-      <td>Optional</td>
-      <td>Builds</td>
-      <td>Not in CI</td>
-      <td>zlib1g v1.3.dfsg+really1.3.2-3</td>
-      <td>None</td>
+      <td>runtime-dependency - gzip/deflate Content-Encoding compression</td>
+      <td>Critical</td>
+      <td>Archive presence confirms riscv64 build (<code class="language-plaintext highlighter-rouge">zlib1g-dev</code>, security pocket)</td>
+      <td>Not separately tracked</td>
+      <td>Shipped (zlib1g v1.3.dfsg+really1.3.2-3 Debian sid)</td>
+      <td>None. See <code class="language-plaintext highlighter-rouge">project-reports/zlib.md</code> (notes a conservative maintainer culture toward architecture-specific PRs)</td>
     </tr>
     <tr>
-      <td>libbrotlidec</td>
-      <td>brotli content-encoding</td>
+      <td>brotli</td>
+      <td>runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">-Dbrotli</code>, libbrotlidec/libbrotlienc) - Brotli Content-Encoding</td>
       <td>Optional</td>
-      <td>Builds (scalar)</td>
-      <td>Not in CI</td>
-      <td>libbrotli1 v1.2.0-3</td>
-      <td>RVV optimization PR #1410 stalled (CLA issue); does not block generic builds</td>
+      <td>Archive presence confirms riscv64 build (<code class="language-plaintext highlighter-rouge">libbrotli-dev</code>, Ubuntu universe)</td>
+      <td>Not separately tracked</td>
+      <td>Shipped (libbrotli1 v1.2.0-3 Debian sid)</td>
+      <td>See <code class="language-plaintext highlighter-rouge">project-reports/brotli.md</code>: a 2018-merged riscv64 platform-configuration PR exists; no RISE investment; generic scalar build is functional</td>
     </tr>
     <tr>
-      <td>libzstd</td>
-      <td>zstd content-encoding</td>
+      <td>zstd</td>
+      <td>runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">-Dzstd</code>, libzstd &gt;= 1.4.0) - Zstandard Content-Encoding</td>
       <td>Optional</td>
-      <td>Builds</td>
-      <td>Not in CI</td>
-      <td>libzstd1 v1.5.7+dfsg-3+b2</td>
-      <td>Multiple open optimization PRs (#4584, #4596, #4622, #4629, #4643, #4668); riscv64 arch detection only merged Dec 2025 (PR #4525); none block basic builds</td>
+      <td>Archive presence confirms riscv64 build (<code class="language-plaintext highlighter-rouge">libzstd-dev</code>, Ubuntu universe)</td>
+      <td>Not separately tracked</td>
+      <td>Shipped (libzstd1 v1.5.7+dfsg-3+b2 Debian sid)</td>
+      <td>See <code class="language-plaintext highlighter-rouge">project-reports/zstd.md</code>: riscv64 arch detection only merged into upstream zstd in December 2025; multiple optimization PRs remain open; none block correctness</td>
     </tr>
     <tr>
-      <td>sqlite3</td>
-      <td>Cookie/session persistence</td>
+      <td>GnuTLS</td>
+      <td>test-dependency, optional (&gt;= 3.6.0, only pulled in for <code class="language-plaintext highlighter-rouge">-Dpkcs11_tests</code>; TLS itself goes through GLib’s pluggable backend, not a direct libsoup runtime dependency)</td>
       <td>Optional</td>
-      <td>Builds</td>
-      <td>Not in CI</td>
-      <td>libsqlite3-0 v3.53.2-1</td>
-      <td>None</td>
+      <td>Archive presence confirms riscv64 build (<code class="language-plaintext highlighter-rouge">libgnutls28-dev</code>, security pocket)</td>
+      <td>Not separately tracked</td>
+      <td>Shipped (Debian sid)</td>
+      <td>None identified</td>
     </tr>
     <tr>
-      <td>krb5/GSSAPI</td>
-      <td>Kerberos HTTP authentication</td>
+      <td>Kerberos</td>
+      <td>runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">-Dgssapi</code>, krb5-gssapi) - NTLM/Negotiate (SPNEGO) HTTP authentication</td>
       <td>Optional</td>
-      <td>Builds</td>
-      <td>Not in CI</td>
-      <td>Available as part of krb5</td>
-      <td>None</td>
+      <td>Archive presence confirms riscv64 build (<code class="language-plaintext highlighter-rouge">libkrb5-dev</code>, security pocket)</td>
+      <td>Not separately tracked</td>
+      <td>Shipped (part of krb5, Debian sid)</td>
+      <td>None identified</td>
     </tr>
     <tr>
-      <td>GnuTLS &gt;= 3.6</td>
-      <td>TLS for PKCS#11 integration tests</td>
-      <td>Optional (test-only)</td>
-      <td>Builds</td>
-      <td>Not in CI</td>
-      <td>Available</td>
+      <td>sysprof</td>
+      <td>runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">-Dsysprof</code>, sysprof-capture-4) - profiling/tracing capture integration</td>
+      <td>Optional</td>
+      <td>Archive presence confirms riscv64 build (<code class="language-plaintext highlighter-rouge">libsysprof-capture-4-dev</code>)</td>
+      <td>Not separately tracked</td>
+      <td>Shipped (Ubuntu resolute)</td>
+      <td>Not tracked in this repo’s project registry; no dedicated report</td>
+    </tr>
+    <tr>
+      <td>Meson</td>
+      <td>build-dependency (&gt;= 0.62)</td>
+      <td>Critical</td>
+      <td>Meson itself is architecture-independent (a Python build-system generator); no riscv64-specific concerns</td>
+      <td>N/A</td>
+      <td>N/A (host-side build tool, not a shipped runtime dependency)</td>
       <td>None</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Deep-dive on dependencies with architecture significance:</strong></p>
-
-<p><strong>brotli:</strong> RVV optimization PR #1410 is open but stalled due to a CLA issue. The generic (scalar) riscv64 build is functional and available in Debian sid (libbrotli1 v1.2.0-3). No correctness issues on riscv64. See <code class="language-plaintext highlighter-rouge">project-reports/brotli.md</code> (24,987 bytes).</p>
-
-<p><strong>zstd:</strong> riscv64 architecture detection was merged in December 2025 (PR #4525). Multiple performance-oriented PRs are open: RVV intrinsics (#4584, #4622, #4629), unaligned access optimization (#4596), and prefetch tuning (#4643, #4668). The <code class="language-plaintext highlighter-rouge">MEM_FORCE_MEMORY_ACCESS</code> discussion in PR #4596 is relevant to riscv64 systems without the <code class="language-plaintext highlighter-rouge">Zicclsm</code> extension but does not block correctness. Available in Debian sid (libzstd1 v1.5.7+dfsg-3+b2). See <code class="language-plaintext highlighter-rouge">project-reports/zstd.md</code> for details.</p>
-
-<p><strong>GLib:</strong> Not itself a scoped project, but libsoup requires GLib &gt;= 2.70. GLib has extensive per-architecture handling in its GIO and GObject subsystems. No riscv64-specific failures were identified in the research. Available as libglib2.0-0t64 v2.88.1-2 in Debian sid.</p>
-
-<p><strong>libnghttp2:</strong> Pure C, no SIMD. Available in Debian sid (v1.69.0-1). No riscv64-specific issues identified. See <code class="language-plaintext highlighter-rouge">project-reports/nghttp2.md</code> for details.</p>
-
-<p><strong>SQLite:</strong> Available in Debian sid (v3.53.2-1). See <code class="language-plaintext highlighter-rouge">project-reports/sqlite.md</code> (25,043 bytes).</p>
-
-<p><strong>glibc</strong> (runtime, not a direct libsoup dependency): See <code class="language-plaintext highlighter-rouge">project-reports/glibc.md</code> (31,546 bytes).</p><hr />
+<p><strong>Notes on methodology:</strong> All ten runtime/test dependencies plus Meson have a <code class="language-plaintext highlighter-rouge">-dev</code> (or equivalent) package built for riscv64 in the live Ubuntu 26.04 “resolute” archive, so nothing at the Ubuntu-packaging level currently blocks a riscv64 build of libsoup. The <code class="language-plaintext highlighter-rouge">project-graph</code> internal tool, which would normally supply authoritative transitive-dependency and per-architecture test/CI data, failed to connect this cycle (<code class="language-plaintext highlighter-rouge">CONNECTION_CLOSED</code>); archive-presence data from <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> was used as a fallback and represents a flatter signal (build success implied by package presence) than a true CI/test-pass record. This should be re-run once that tool is available. Five of the eleven dependencies (nghttp2, SQLite, zlib, brotli, zstd) have dedicated RISC-V status reports elsewhere in this repository with deeper build/test/CI detail; GLib, libpsl, GnuTLS, and Kerberos are tracked in the project registry without a dedicated report; sysprof is not tracked at all. <code class="language-plaintext highlighter-rouge">glibc</code>, while not a direct libsoup dependency, underlies the whole stack; see <code class="language-plaintext highlighter-rouge">project-reports/glibc.md</code> for its own riscv64 status.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1097,44 +1099,60 @@
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/120">#120</a></td>
+      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/120">Issue #120</a></td>
       <td>tls_interaction test fails on several architectures</td>
-      <td>Open (Needs Information)</td>
+      <td>Open (label: “Needs Information,” last comment 2025-05-01)</td>
       <td>Low (test-only)</td>
-      <td>riscv64 explicitly listed. Error: <code class="language-plaintext highlighter-rouge">Unexpected status 7 - Connection terminated unexpectedly (expected 200 OK)</code>. Also affects armhf, hppa, mipsel, mips64el. Likely a race condition or timing-sensitive failure on slower/non-x86 architectures. Not a functional defect in libsoup networking logic.</td>
+      <td>riscv64 explicitly listed alongside armhf, hppa, mipsel, mips64el. Error: <code class="language-plaintext highlighter-rouge">Unexpected status 7 - Connection terminated unexpectedly (expected 200 OK)</code> in <code class="language-plaintext highlighter-rouge">ssl-test.c</code>. Full 8-comment thread shows the detailed reproduction/debugging (smcv 2020, mcatanzaro 2025) concerns x86_64/armhf timing, not riscv64 specifically - riscv64 appears only in the original architecture list, with zero riscv64-specific logs or discussion in the thread. mcatanzaro’s 2025-05-01 comment suggests it may be fixed by MR !180, unconfirmed as of this writing. Not a functional networking defect.</td>
     </tr>
     <tr>
-      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/521">#521</a></td>
-      <td>Probe HTTPS speed when selecting timeout-test slow mode</td>
-      <td>Open</td>
-      <td>Low (test-only)</td>
-      <td>sparcv7 affected; riscv64 not explicitly named but same root cause applies – slow-machine detection uses HTTP speed rather than HTTPS speed, causing misclassification on slow architectures</td>
+      <td><a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1093564">Debian Bug#1093564</a></td>
+      <td>libsoup3 FTBFS on riscv64: server-test fails</td>
+      <td>Closed (fixed in libsoup3 3.6.4-2, 2025-01-22)</td>
+      <td>Was serious (build-blocking)</td>
+      <td>Reported SIGSEGV was actually an insufficient meson test timeout for riscv64 build daemons; fixed via Debian <code class="language-plaintext highlighter-rouge">debian/rules</code> <code class="language-plaintext highlighter-rouge">--timeout-multiplier</code> 5 -&gt; 6. A Debian packaging-only fix; no upstream GNOME/libsoup code change</td>
     </tr>
     <tr>
-      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/530">#530</a></td>
-      <td>logger-test: /logger/long-invalid-body-length fails on 32-bit architectures</td>
-      <td>Open (filed 2026-05-27)</td>
-      <td>Low (test-only)</td>
-      <td>32-bit platforms only (i686). Not a riscv64 issue since riscv64 is 64-bit.</td>
-    </tr>
-    <tr>
-      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/122">#122</a></td>
-      <td>chunk-io-test TIMEOUT on riscv64</td>
-      <td>Closed</td>
-      <td>Low (test infrastructure)</td>
-      <td>Resolved by extending Meson per-test timeout limits. chunk-io-test: ~58x slower on riscv64 vs amd64 (28.50s vs 0.49s on libsoup 2.64.0).</td>
+      <td>Debian Bug#1018709</td>
+      <td>libsoup3 FTBFS on riscv64 (test timeout, http2-body-stream-test)</td>
+      <td>Closed (2022)</td>
+      <td>Was serious</td>
+      <td>Earlier instance of the same class of riscv64-hardware-speed timeout issue; patch extended the test timeout and was intended to be proposed upstream (plausibly the origin of MR !309)</td>
     </tr>
     <tr>
       <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/309">MR !309</a></td>
       <td>Extend timeout of test http2-body-stream</td>
-      <td>Closed without merge (2025-05-01)</td>
+      <td>Closed without merge, due to conflicts with master</td>
       <td>Low (test infrastructure)</td>
-      <td>Filed for riscv64 Debian buildd (rv-manda-01) SIGTERM at 300s. Closed due to conflicts with master; the underlying timeout issue may persist on slow hardware.</td>
+      <td>Filed for riscv64 Debian buildd (rv-manda-01) SIGTERM at 300s. Could be resubmitted; one research pass mischaracterized this MR as “unrelated to riscv64,” which conflicts with the MR’s own description and the computed readiness justification - the “riscv64-relevant” characterization is judged more reliable (see Section 2 discrepancy note)</td>
+    </tr>
+    <tr>
+      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/122">Issue #122</a></td>
+      <td>chunk-io-test TIMEOUT on riscv64</td>
+      <td>Closed</td>
+      <td>Low (test infrastructure)</td>
+      <td>Resolved by extending Meson per-test timeout limits; reported ~58x slower on riscv64 vs amd64 (28.50s vs 0.49s on libsoup 2.64.0). [NEEDS VERIFICATION - not reconfirmed by this cycle’s live research; carried from a prior report pass]</td>
+    </tr>
+    <tr>
+      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/521">Issue #521</a></td>
+      <td>Probe HTTPS speed when selecting timeout-test slow mode</td>
+      <td>Open</td>
+      <td>Low (test-only)</td>
+      <td>sparcv7 explicitly affected; riscv64 not explicitly named but same root cause (slow-machine detection using HTTP speed rather than HTTPS speed) plausibly applies. [NEEDS VERIFICATION - not reconfirmed this cycle]</td>
+    </tr>
+    <tr>
+      <td><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/530">Issue #530</a></td>
+      <td>logger-test: /logger/long-invalid-body-length fails on 32-bit architectures</td>
+      <td>Open</td>
+      <td>Low (test-only)</td>
+      <td>32-bit platforms only (i686); not applicable to riscv64 (64-bit). [NEEDS VERIFICATION - not reconfirmed this cycle]</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Correctness bugs:</strong> None. All documented riscv64 issues are test infrastructure problems (timeouts, TLS handshake races on slow hardware), not defects in libsoup’s HTTP or networking logic.</p><hr />
+<p><strong>Correctness bugs:</strong> None. Every documented riscv64-related item is a test-infrastructure problem - timeout thresholds calibrated for faster x86_64 hardware, or a generic multi-architecture TLS-handshake race condition - not a defect in libsoup’s HTTP or networking logic. General libsoup CVEs found in current searches (CRLF injection, request smuggling, duplicate-header rejection) are architecture-independent and are not riscv64 issues.</p>
+
+<p><strong>Performance/benchmark data:</strong> No published quantitative riscv64-vs-arm64 (or vs-amd64) performance benchmark exists for libsoup from RISE or any other source found.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1144,75 +1162,93 @@
 </h2>
     
 
-<p><strong>Stated objections:</strong> None found. No upstream developer has objected to riscv64 support in any issue, MR, or mailing list discussion found in the research.</p>
+<p><strong>Stated objections:</strong> None found. No upstream developer has objected to riscv64 support in any issue, merge request, or discussion located in this research.</p>
 
-<p><strong>Technical blockers:</strong> None. libsoup is portable C with no architecture-specific components. GLib (the primary dependency) already supports riscv64. The build system (Meson) supports riscv64 cross-compilation via standard cross-files.</p>
+<p><strong>Technical blockers:</strong> None. libsoup is portable C with no architecture-specific components. Its critical dependency, GLib, already supports riscv64, and Meson supports riscv64 cross-compilation via standard cross-files.</p>
 
-<p><strong>Organizational blockers:</strong> None. GNOME project maintainership (dominated by Igalia) has not raised any process or policy barrier to riscv64 support. The only outstanding item is MR !309 (closed), which was a test timeout patch that conflicted with master – a trivial rebasing exercise.</p>
+<p><strong>Organizational blockers:</strong> None from GNOME/Igalia maintainership. The only outstanding item is MR !309 (closed without merge, due to conflicts with master), which is a small, mechanical rebase-and-resubmit task, not a policy dispute.</p>
 
-<p><strong>Acceptance probability for upstream patches:</strong> High. The project has accepted riscv64-related test infrastructure patches in the past (issue #122 resolution). No CLA or DCO process exists beyond standard GNOME contributor agreements. Code review is active (Igalia and Red Hat maintainers respond to MRs).</p>
+<p><strong>Acceptance probability for upstream patches:</strong> High. The project has previously accepted riscv64-motivated test-infrastructure patches (e.g., Issue #122’s timeout extension). No unusual CLA/DCO process exists beyond standard GNOME contribution norms, and Igalia/Red Hat maintainers are active reviewers.</p>
 
-<p><strong>CI gap:</strong> Adding a riscv64 CI job would require either (a) a GNOME GitLab runner with a riscv64 tag (GNOME infrastructure does not currently have one), or (b) a QEMU-based cross-compile CI job. This is a GNOME infrastructure decision, not a libsoup-specific decision.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>CI gap:</strong> Adding riscv64 CI would require either (a) a GNOME GitLab runner tagged <code class="language-plaintext highlighter-rouge">riscv64</code> (GNOME infrastructure does not currently provide one), or (b) a QEMU-based cross-compile job added to <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>. This is a GNOME infrastructure decision, not something libsoup’s maintainers can unilaterally resolve.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no involvement with libsoup. The work below is not duplicating anything already funded.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p><strong>Justification:</strong> libsoup has no upstream riscv64 CI at all - GNOME’s <a href="https://gitlab.gnome.org/GNOME/libsoup/-/raw/master/.gitlab-ci.yml">.gitlab-ci.yml</a> runs exclusively on Fedora x86_64 containers with no architecture matrix, QEMU, or riscv tags - so the CI-based primary grade starts at orange. riscv64 binaries are shipped only downstream (Debian sid/Ubuntu 26.04 ports, Arch RISC-V), and getting there required riscv64-specific packaging patches to fix FTBFS test-timeout failures at least twice (<a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1093564">Debian Bug#1093564</a>, closed 2025-01-22, <code class="language-plaintext highlighter-rouge">debian/rules</code> timeout-multiplier 5 -&gt; 6 “for riscv64”; also Debian Bug#1018709 in 2022 for http2-body-stream-test), which per the distribution floor caps the result at orange (downstream-only) rather than yellow (clean-distro-build). libsoup is a portable GLib/GObject HTTP library with no architecture-specific code paths, so no optimization-purpose modifier applies.</p>
+
+<p><strong>Pending work that could change the grade:</strong> GNOME GitLab <a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/120">Issue #120</a> (open since 2018, tls_interaction test flakiness across armhf/hppa/mipsel/mips64el/riscv64) remains open, possibly fixed by MR !180 per a 2025-05-01 comment but unconfirmed. <a href="https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/309">MR !309</a> (rebasing the http2-body-stream timeout extension for the riscv64 Debian buildd) was closed without merging due to conflicts with master and could be resubmitted. No RISE Project involvement exists or is planned for libsoup.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has no involvement with libsoup; none of the work below duplicates any funded or planned RISE activity.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>No functional work is required. libsoup builds and runs correctly on riscv64 as distributed by Debian sid and Ubuntu 24.04. All HTTP/networking features are available.</p>
-<h3 id="132-performance-optimization">
+<p>No functional work is required. libsoup already builds and runs correctly on riscv64, as distributed by Debian sid, Ubuntu (24.04 and 26.04 ports), and Arch Linux RISC-V. All HTTP/networking features are present.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>libsoup itself has no performance-sensitive architecture-specific paths. Any performance optimization investment should target the compression libraries it delegates to (brotli, zstd), not libsoup itself. Those are tracked in separate reports.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The only actionable investment is adding a riscv64 CI job to <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>. Two options:</p>
-
-<p><strong>Option A – QEMU cross-compile CI:</strong> Add a cross-compilation job using <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> and <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code> on the existing Fedora x86_64 runners. This validates that libsoup compiles on riscv64 but cannot run tests that require networking.</p>
-
-<p><strong>Option B – Native riscv64 runner:</strong> Provision a GNOME GitLab runner with a <code class="language-plaintext highlighter-rouge">riscv64</code> tag. This enables full test execution including the networking-dependent tests. Requires coordination with GNOME infrastructure team.</p>
-
-<p>Upstream MR !309 (http2-body-stream timeout on riscv64) should be rebased on master and resubmitted to address the test reliability issue on slow hardware.</p>
-<h3 id="134-ecosystem-enablement">
+<p>libsoup itself has no performance-sensitive architecture-specific code path to optimize. Any performance investment should target the compression libraries it delegates to (brotli, zstd) rather than libsoup itself; those are tracked in their own reports. No riscv64-vs-other-architecture performance benchmark for libsoup exists to establish a baseline, so a benchmarking pass (not an optimization pass) would be the prerequisite step if this were ever prioritized.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>Not applicable. libsoup has no dependent package ecosystem requiring separate enablement (see Section 10 omission rationale: libsoup is a system library consumed by GNOME stack components, not a plugin/extension ecosystem).</p>
-<h3 id="135-summary-table">
+<p>The only concrete, actionable investment is adding riscv64 CI to <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>:</p>
+
+<ul>
+  <li><strong>Option A - QEMU cross-compile CI:</strong> Add a cross-compilation job on the existing Fedora x86_64 runners using <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> and <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code>. Validates that libsoup compiles for riscv64 but cannot exercise the networking-dependent test suite.</li>
+  <li><strong>Option B - Native riscv64 runner:</strong> Provision a GNOME GitLab runner tagged <code class="language-plaintext highlighter-rouge">riscv64</code>, enabling full test execution including networking tests. Requires coordination with the GNOME infrastructure team, outside libsoup maintainers’ unilateral control.</li>
+</ul>
+
+<p>Separately, resubmitting MR !309 (rebased http2-body-stream timeout fix) would close the one concrete, already-drafted riscv64 fix currently sitting unmerged.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable. libsoup is a system library consumed directly by GNOME stack components (Epiphany, WebKitGTK, librest); it has no dependent plugin/extension package ecosystem (npm, PyPI, Maven, etc.) requiring separate riscv64 enablement. (See omission of Section 10.)</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1231,7 +1267,7 @@
   <tbody>
     <tr>
       <td>CI/CD</td>
-      <td>Add QEMU cross-compile CI job to .gitlab-ci.yml</td>
+      <td>Add QEMU cross-compile CI job to <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code></td>
       <td>0.5</td>
       <td>Contributor / Igalia</td>
       <td>Medium</td>
@@ -1245,46 +1281,43 @@
     </tr>
     <tr>
       <td>Test reliability</td>
-      <td>Rebase MR !309 (http2-body-stream timeout) on master and submit</td>
+      <td>Rebase and resubmit MR !309 (http2-body-stream timeout)</td>
       <td>0.5</td>
       <td>Contributor</td>
       <td>Low</td>
     </tr>
     <tr>
       <td>Test reliability</td>
-      <td>Investigate and fix Issue #120 (tls_interaction race on slow arches)</td>
-      <td>2</td>
+      <td>Investigate/confirm fix status of Issue #120 (tls_interaction race, MR !180) on riscv64</td>
+      <td>1</td>
       <td>Igalia / Red Hat</td>
       <td>Low</td>
     </tr>
     <tr>
-      <td>Compression performance</td>
-      <td>Track brotli RVV PR #1410 CLA resolution</td>
-      <td>0 (monitor only)</td>
+      <td>Benchmarking</td>
+      <td>Establish a riscv64-vs-arm64/amd64 performance baseline (none currently published)</td>
+      <td>1</td>
+      <td>Contributor</td>
+      <td>Low</td>
+    </tr>
+    <tr>
+      <td>Compression performance (upstream, monitor only)</td>
+      <td>Track brotli’s riscv64 platform-configuration status</td>
+      <td>0 (monitor)</td>
       <td>brotli upstream</td>
       <td>Low</td>
     </tr>
     <tr>
-      <td>Compression performance</td>
-      <td>Track zstd riscv64 optimization PRs (#4584, #4596, #4622, etc.)</td>
-      <td>0 (monitor only)</td>
+      <td>Compression performance (upstream, monitor only)</td>
+      <td>Track zstd’s riscv64 arch-detection/optimization PRs</td>
+      <td>0 (monitor)</td>
       <td>zstd upstream</td>
       <td>Low</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Total estimated investment for CI coverage: 1 person-week. No functional or performance work is required in libsoup itself.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p>Total estimated investment for libsoup-specific CI coverage and cleanup: approximately 2 person-weeks (Option A) to 5 person-weeks (Option B including infrastructure coordination). No functional or performance work is required in libsoup’s own source.</p>
 <h2 id="15-references">
   
   
@@ -1297,18 +1330,25 @@
 <ul>
   <li><a href="https://gitlab.gnome.org/GNOME/libsoup">GNOME/libsoup GitLab repository</a></li>
   <li><a href="https://github.com/GNOME/libsoup">GNOME/libsoup GitHub mirror</a></li>
-  <li><a href="https://libsoup.org/">libsoup homepage</a></li>
-  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/120">libsoup Issue #120 – tls_interaction test fails on several architectures</a></li>
-  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/122">libsoup Issue #122 – chunk-io-test timeout on riscv64</a></li>
-  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/521">libsoup Issue #521 – Probe HTTPS speed for slow-machine detection</a></li>
-  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/530">libsoup Issue #530 – logger-test fails on 32-bit architectures</a></li>
-  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/309">libsoup MR !309 – Extend timeout of test http2-body-stream</a></li>
+  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/raw/master/.gitlab-ci.yml">libsoup .gitlab-ci.yml (master, raw)</a></li>
+  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/120">GitLab Issue #120 - tls_interaction test fails on several architectures</a></li>
+  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/122">GitLab Issue #122 - chunk-io-test timeout on riscv64</a></li>
+  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/521">GitLab Issue #521 - Probe HTTPS speed for slow-machine detection</a></li>
+  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/issues/530">GitLab Issue #530 - logger-test fails on 32-bit architectures</a></li>
+  <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/merge_requests/309">GitLab MR !309 - Extend timeout of test http2-body-stream</a></li>
+  <li><a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1093564">Debian Bug#1093564 - libsoup3 FTBFS on riscv64: server-test fails</a></li>
+  <li><a href="https://www.mail-archive.com/debian-bugs-closed@lists.debian.org/msg791980.html">Debian Bug#1093564 closure notice</a></li>
+  <li><a href="https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1868207.html">Debian Bug#1018709 report</a></li>
   <li><a href="https://packages.debian.org/sid/libsoup-3.0-0">Debian sid libsoup-3.0-0 package</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=libsoup&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 “Resolute” package search for libsoup</a></li>
   <li><a href="https://packages.ubuntu.com/noble/libsoup-3.0-dev">Ubuntu 24.04 Noble libsoup-3.0-dev package</a></li>
+  <li><a href="https://mirrors.felixc.at/archriscv/repo/extra/">Arch Linux RISC-V mirror, extra repo listing</a></li>
+  <li><a href="https://github.com/felixonmars/archriscv-packages">felixonmars/archriscv-packages (Arch Linux RISC-V patches)</a></li>
   <li><a href="https://gitlab.gnome.org/GNOME/libsoup/-/releases">GNOME GitLab libsoup releases</a></li>
   <li><a href="https://gitlab.freedesktop.org/Infrastructure/freedesktop-ci-templates">freedesktop-ci-templates (libsoup CI infrastructure)</a></li>
   <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
-  <li><a href="https://github.com/felixonmars/archriscv-packages">felixonmars/archriscv-packages (Arch Linux RISC-V patches)</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members list</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
   <li><a href="https://tracker.debian.org/pkg/libsoup3.0">Debian tracker for libsoup3.0</a></li>
 </ul>
 
