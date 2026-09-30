@@ -567,12 +567,7 @@ Write the COMPLETE report. Formatting rules:
 - Every URL as a Markdown link [text](url), never bare URLs
 - Use the simplest Markdown formatting
 - Omit Section 10 entirely if the project has no significant package ecosystem
-
----
-title: ${proj.name}
-parent: Project Reports
-color: [COLOR -- grey|green|blue|yellow|orange|red]
----
+- Do NOT write a YAML frontmatter block (no "---" fences, no title:/color:/dependencies: lines) and do NOT write any "---" horizontal-rule separator before Section 1 either. The calling process builds and prepends all of that deterministically from data already computed. Your output starts directly at the "# ${proj.name}" heading below and ends after Section 15 -- nothing before it, nothing after it.
 
 # ${proj.name}
 
@@ -677,29 +672,26 @@ const depsYaml = dependencies.length
       `  - name: ${d.name}\n    relation: ${d.relation}\n    criticality: ${d.criticality}\n`
     ).join('')
   : ''
-// The synthesize agent sometimes prepends a stray H1 (or other preamble) before the real
-// frontmatter fence -- Jekyll only recognizes frontmatter starting at byte 0 of the file, so
-// leaving such preamble in place would silently break frontmatter parsing entirely (not just
-// look untidy). Strip anything before the first '^---' line outright, rather than just
-// working around its position with a regex flag.
-const fmStart = report.search(/^---\s*$/m)
-let reportFromFm = fmStart > 0 ? report.slice(fmStart) : report
-// The agent sometimes also wraps the whole frontmatter block in a stray markdown code fence
-// (e.g. "```yaml" before it), despite the frontmatter being given to it as raw text with no
-// fence -- the fmStart search above already lands past the opening fence (it matches the
-// inner '---'), so only the matching closing fence right after frontmatter's closing '---'
-// needs to be stripped here.
-reportFromFm = reportFromFm.replace(/^(---\n[\s\S]*?\n---)\n```[ \t]*\n/, '$1\n')
-// The agent also sometimes writes its own `dependencies:` block into the frontmatter --
-// especially likely during a refresh, where it may copy the EXISTING REPORT's frontmatter
-// structure verbatim. Strip any such block(s) before splicing in the deterministic,
-// registry-resolved one below, so the frontmatter never ends up with two `dependencies:` keys.
-const stripOwnDeps = (body) => body.replace(/^dependencies:\n(?:[ \t]+.*\n?)*/gm, '')
-let finalReport = reportFromFm.replace(/^---\n([\s\S]*?)\n---/, (match, body) => '---\n' + stripOwnDeps(body).replace(/\n+$/, '\n') + depsYaml + '---')
-finalReport = finalReport.replace(
-  /\n## 1\. Project Overview/,
-  `\n{% include dependency-graph.html slug="dependencies" subset="${slug}" %}\n\n## 1. Project Overview`
-)
+// The synthesize agent's own attempt at frontmatter has proven unreliable in practice --
+// observed failures include: omitting it entirely (starting straight at "# Title"), writing
+// it with a duplicated `dependencies:` key (often from copying the EXISTING REPORT's
+// frontmatter verbatim during a refresh), wrapping it in a stray markdown code fence, and
+// prepending a stray heading or horizontal rule before or instead of it. Rather than add an
+// ever-growing list of regex repairs for each new shape this takes, don't parse or trust any
+// of it: discard everything before the report's actual content (its "# ProjectName" H1,
+// which the prompt above tells the agent its output starts with, and which every sample seen
+// so far does in fact include) and build the entire frontmatter fresh from data already
+// computed in this script.
+const h1Start = report.search(/^#\s/m)
+const reportBody = h1Start > 0 ? report.slice(h1Start) : report
+// `categories:` is a real Jekyll taxonomy field some existing reports carry, but it isn't
+// part of this workflow's own template (project-report.md's header block never mentions it)
+// -- so there's nothing in this script computing it. Best-effort recovery: if the agent's
+// (discarded) frontmatter attempt happened to include one, anywhere in the raw text, keep it.
+const categoriesMatch = report.match(/^categories:\n(?:[ \t]+-.*\n?)+/m)
+const categoriesYaml = categoriesMatch ? categoriesMatch[0] : ''
+const frontmatter = `---\ntitle: ${proj.name}\nparent: Project Reports\n${categoriesYaml}color: ${grade.color}\n${depsYaml}---\n\n{% include dependency-graph.html slug="dependencies" subset="${slug}" %}\n\n`
+let finalReport = frontmatter + reportBody
 
 return [{
   name: proj.name,
