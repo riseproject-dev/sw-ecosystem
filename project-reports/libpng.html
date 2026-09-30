@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow (clean-distro-build)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for libpng<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +280,15 @@
 </h2>
     
 
-<p>libpng is the reference implementation of the PNG image format. It is a C library with no formal foundation, no governance board, and no tiered platform policy. The project is maintained by a single individual, Cosmin Truta (ctruta), who has held the maintainer role since 2018. Corporate contributors credited in the AUTHORS file include Google LLC, Samsung Group, SpacemiT Hangzhou Technology, Arm Holdings, Apple Inc., and Loongson Technology. No company holds a controlling stake.</p>
+<p>libpng is the reference implementation of the PNG image format, written in C. It has no formal foundation, no governance board, and no documented tiered platform policy (no MAINTAINERS, CODEOWNERS, PLATFORMS.md, SUPPORT.md, or docs/platforms/ file exists in the repository). Governance is informal: the current maintainer is Cosmin Truta (ctruta), who has held the role since 2018. Predecessors were Glenn Randers-Pehrson (1998-2018), Andreas Dilger (1996-1997), and Guy Eric Schalnat/Group 42, Inc. (original author, 1995-1996). Project infrastructure is hosted on SourceForge (mailing lists <code class="language-plaintext highlighter-rouge">png-mng-implement</code>/<code class="language-plaintext highlighter-rouge">png-mng-misc</code>); the homepage <a href="http://www.libpng.org/">libpng.org</a> is maintained separately by Greg Roelofs with no stated institutional affiliation.</p>
 
-<p>The canonical active development repository is <a href="https://github.com/pnggroup/libpng">pnggroup/libpng</a>. The <a href="https://github.com/glennrp/libpng">glennrp/libpng</a> repository is a read-only mirror. All RISC-V activity is in pnggroup/libpng. License: PNG Reference Library License version 2, a custom permissive license with no copyleft.</p>
+<p>License: “PNG Reference Library License version 2,” a permissive zlib/libpng-style license, with a legacy version-1 clause retained for libpng 0.5-1.6.35. Copyright is held collectively by “The PNG Reference Library Authors” plus named past maintainers.</p>
 
-<p>libpng is not a member of the RISE project and is not listed on riseproject.dev.</p><hr />
+<p>Corporate-affiliated contributors credited in AUTHORS.md include Apple Inc. (Zixu Wang), Arm Holdings (Richard Townsend), Google LLC (Dan Field, Dragos Tiselice, Leon Scroggins III, Matt Sarett, Mike Klein, Sami Boukortt, Wan-Teh Chang), Loongson Technology Corporation Ltd. (GuXiWei, JinBo, ZhangLixia), Samsung Group (Filip Wasil), and SpacemiT (Hangzhou) Technology Co. (Liang Junzhao). No company holds a controlling stake; maintainership is personal, not seat-based. By raw commit volume across the full <code class="language-plaintext highlighter-rouge">libpng16</code> history (4,574 commits): Glenn Randers-Pehrson (~3,469 combined), John Bowler (463), Cosmin Truta (398, current maintainer), Vadim Barkov (36), Filip Wasil/Samsung (14).</p>
+
+<p>The canonical active development repository is <a href="https://github.com/pnggroup/libpng">pnggroup/libpng</a> (github.com/glennrp/libpng redirects there). In practice, new architecture ports are accepted pragmatically and directly into the source tree once a contributor submits working SIMD-optimized code (filter/palette intrinsics plus a <code class="language-plaintext highlighter-rouge">*_init.c</code> runtime feature-detection file), modeled on the existing ARM NEON pattern; there is no RFC or committee process. The RISC-V port’s origin, an initial contribution from a Google engineer later substantially reworked by Samsung and an independent developer, illustrates this low-friction, corporate-and-community-mixed contribution model.</p>
+
+<p>libpng is not a RISE project member and does not appear on riseproject.dev’s member list (8 Premier + 12 General members, none of which is libpng) or in any RISE blog post.</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -293,96 +298,103 @@
 </h2>
     
 
-<p>RISC-V Vector (RVV) support was introduced into the libpng16 branch on pnggroup/libpng in May 2025 and has required sustained remediation through December 2025.</p>
+<p>RISC-V Vector (RVV) support entered the <code class="language-plaintext highlighter-rouge">libpng16</code> branch in May 2025 and required sustained correctness and build-system remediation through December 2025.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Date</th>
       <th>Event</th>
-      <th>Reference</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Dec 2021</td>
-      <td>PR #405 opened – initial RVV support for RVV 0.7.1 (Allwinner D1). Status at time of research: open.</td>
-      <td><a href="https://github.com/pnggroup/libpng">pnggroup/libpng</a></td>
+      <td>Dec 15/20, 2021</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/405">PR #405</a> opened by mschlaegl: inline-assembly RVV implementation supporting drafts 0.7.1 through 1.0 simultaneously, tested on Allwinner D1 (RVV 0.7.1). Never merged; superseded in practice by PR #666. Status confirmed: still open.</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/405">PR #405</a></td>
     </tr>
     <tr>
-      <td>May 1, 2025</td>
-      <td>First commit adding <code class="language-plaintext highlighter-rouge">riscv/</code> directory. Commit <code class="language-plaintext highlighter-rouge">cc5ee6b</code> “Add optimized RISC-V Vector functions” authored by Dragos Tiselice (Google), committed by ctruta. Same day: “Fix and improve the RISC-V Vector (RVV) implementation” by Filip Wasil (Samsung) and Manfred Schlaegl.</td>
-      <td><a href="https://github.com/pnggroup/libpng">pnggroup/libpng</a></td>
+      <td>Feb 26, 2024</td>
+      <td>Maintainer ctruta states a preference for a C-intrinsics approach (dragostis’s prototype) over mschlaegl’s inline-assembly approach in #405, while confirming the inline-asm version worked.</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/405">PR #405</a></td>
     </tr>
     <tr>
-      <td>May 14, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/666">PR #666</a> “RISC-V RVV extension” merged. 38 comments – the most discussed RISC-V PR. Adds <code class="language-plaintext highlighter-rouge">riscv/riscv_init.c</code>, <code class="language-plaintext highlighter-rouge">riscv/filter_rvv_intrinsics.c</code>, <code class="language-plaintext highlighter-rouge">riscv/.editorconfig</code>. Authors: filipwasil (Samsung), dragostis (Google). Target release: v1.6.49.</td>
+      <td>Feb 17, 2025</td>
+      <td>filipwasil (Samsung) offers to rebase dragostis’s (Google) intrinsics prototype on working hardware; this becomes PR #666.</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/405">PR #405</a></td>
+    </tr>
+    <tr>
+      <td>May 2, 2023 (committed)</td>
+      <td>First RISC-V commit, <code class="language-plaintext highlighter-rouge">cc5ee6b</code>, “Add optimized RISC-V Vector functions,” authored by Dragos Tiselice (Google), signed off by ctruta. Message notes it is “largely based off of the ARM NEON implementation.” This is the seed commit later formalized through PR #666.</td>
+      <td>Local clone, <code class="language-plaintext highlighter-rouge">libpng16</code> history</td>
+    </tr>
+    <tr>
+      <td>Mar 7, 2025 - May 14, 2025</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/666">PR #666</a> “RISC-V RVV extension” merged (commit <code class="language-plaintext highlighter-rouge">009b90d</code>, by ctruta). Adds <code class="language-plaintext highlighter-rouge">riscv/riscv_init.c</code>, <code class="language-plaintext highlighter-rouge">riscv/filter_rvv_intrinsics.c</code>, <code class="language-plaintext highlighter-rouge">contrib/riscv-rvv/</code>; autotools and CMake integration; runtime hwprobe-based detection; RVV disabled by default. A reviewer (camel-cdr) caught an ISA-string false-positive bug (custom extensions like <code class="language-plaintext highlighter-rouge">rv64gc_xtheadvector</code> misparsed as RVV-capable) that was fixed before merge. Tested on Banana Pi F3 (256-bit VLEN), GCC 14.0.1. Released in v1.6.49.</td>
       <td><a href="https://github.com/pnggroup/libpng/pull/666">PR #666</a></td>
     </tr>
     <tr>
-      <td>May 26, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/683">PR #683</a> merged – autotools update for RISC-V.</td>
+      <td>May 19-26, 2025</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/683">PR #683</a> merged: configure.ac checks so <code class="language-plaintext highlighter-rouge">-march=rv64gcv1p0</code> enables RVV compilation and <code class="language-plaintext highlighter-rouge">--enable-riscv-rvv</code> accepts on/yes/off/no/check/api.</td>
       <td><a href="https://github.com/pnggroup/libpng/pull/683">PR #683</a></td>
     </tr>
     <tr>
+      <td>May 27, 2025</td>
+      <td><a href="https://github.com/pnggroup/libpng/issues/678">Issue #678</a> opened: configure script regression traced to the RISC-V build-file change. <a href="https://github.com/pnggroup/libpng/pull/685">PR #685</a> and <a href="https://github.com/pnggroup/libpng/pull/693">PR #693</a> opened and closed as duplicate fixes for the same break.</td>
+      <td><a href="https://github.com/pnggroup/libpng/issues/678">Issue #678</a></td>
+    </tr>
+    <tr>
+      <td>Jun 11-17, 2025</td>
+      <td><a href="https://github.com/pnggroup/libpng/issues/698">Issue #698</a> and <a href="https://github.com/pnggroup/libpng/issues/703">Issue #703</a>: autotools cross-build fails with <code class="language-plaintext highlighter-rouge">undefined reference to png_init_filter_functions_rvv</code> while the CMake build succeeds with identical flags, on both Debian 12 (GCC 12.2.0) and Mint 22.1/Ubuntu 24.04.2.</td>
+      <td><a href="https://github.com/pnggroup/libpng/issues/698">Issue #698</a>, <a href="https://github.com/pnggroup/libpng/issues/703">Issue #703</a></td>
+    </tr>
+    <tr>
       <td>Jun 12, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/699">PR #699</a> merged – fix autodetection of RVV support. Released in v1.6.49.</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/699">PR #699</a> merged: fixed build-time RVV autodetection when <code class="language-plaintext highlighter-rouge">-march</code> doesn’t explicitly declare the V extension.</td>
       <td><a href="https://github.com/pnggroup/libpng/pull/699">PR #699</a></td>
     </tr>
     <tr>
-      <td>Jun 17, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/702">PR #702</a> merged – fix fallback when RVV revision &lt; 1.0.</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/702">PR #702</a></td>
-    </tr>
-    <tr>
-      <td>Jun 18, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/704">PR #704</a> merged – separate autotools and CMake build flows. Both #702 and #704 released in v1.6.50.</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/704">PR #704</a></td>
-    </tr>
-    <tr>
-      <td>Jun 18, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/issues/705">Issue #705</a> opened – configure.ac forcibly enables V extension, crashing non-vector builds. Closed.</td>
+      <td>Jun 17-18, 2025</td>
+      <td><a href="https://github.com/pnggroup/libpng/issues/705">Issue #705</a> opened: <code class="language-plaintext highlighter-rouge">configure.ac</code> unconditionally forced <code class="language-plaintext highlighter-rouge">-march=rv64gv1p0</code> during the RVV compiler probe, crashing on non-vector hardware. <a href="https://github.com/pnggroup/libpng/pull/702">PR #702</a> (fallback for RVV rev &lt; 1.0) and <a href="https://github.com/pnggroup/libpng/pull/704">PR #704</a> (separated autotools/CMake build flows) merged.</td>
       <td><a href="https://github.com/pnggroup/libpng/issues/705">Issue #705</a></td>
     </tr>
     <tr>
       <td>Jun 24, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/issues/711">Issue #711</a> opened – crash on T-Head C920 (RVV 0.7.1) due to raw inline assembly targeting wrong RVV version. Closed.</td>
+      <td><a href="https://github.com/pnggroup/libpng/issues/711">Issue #711</a> opened: crash on T-Head C920 (RVV 0.7.1 hardware) because GCC 15’s RVV-1.0 intrinsics did not match; reporter (via a Gentoo bug report) argued for compiler intrinsics over raw instructions to survive spec-version drift.</td>
       <td><a href="https://github.com/pnggroup/libpng/issues/711">Issue #711</a></td>
     </tr>
     <tr>
-      <td>Jun 28, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/713">PR #713</a> manually integrated by ctruta – assembly-to-intrinsics conversion, configure.ac -march override fix. Released in v1.6.50. GitHub records it as closed rather than merged.</td>
+      <td>Jun 26-28, 2025</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/713">PR #713</a> “Libpng16 build fixes for riscv”: switched to C intrinsics for RVV ops and stopped the RVV probe from overwriting user <code class="language-plaintext highlighter-rouge">-march</code> flags. Manually integrated by ctruta (“Integrated in the master branch although GitHub doesn’t seem to think so”); GitHub’s own status shows “Closed,” not “Merged.” Released in v1.6.50.</td>
       <td><a href="https://github.com/pnggroup/libpng/pull/713">PR #713</a></td>
     </tr>
     <tr>
-      <td>Jul 15, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/721">PR #721</a> manually integrated by ctruta – restricts RVV support to 1.0 only via <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> compile-time detection. Released in v1.6.51. GitHub records it as closed.</td>
+      <td>Jul 7-15, 2025</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/721">PR #721</a> “RISCV support only RVV 1.0”: gates RVV 1.0 support at compile time via the <code class="language-plaintext highlighter-rouge">__riscv_v</code> macro with forward-compatible version ranges, validated on T-Head hardware, directly answering the #711 concern. Also manually integrated by ctruta, also shows “Closed” in GitHub’s data model (<code class="language-plaintext highlighter-rouge">merged_at</code> is null in both #713 and #721 despite the code being in trunk). Released in v1.6.51.</td>
       <td><a href="https://github.com/pnggroup/libpng/pull/721">PR #721</a></td>
     </tr>
     <tr>
-      <td>Dec 4, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/issues/769">Issue #769</a> opened – paeth3/paeth4 RVV produces wrong pixel values on Spacemit K1 with libpng 1.6.51, causing 52 OpenCV test failures. Closed.</td>
-      <td><a href="https://github.com/pnggroup/libpng/issues/769">Issue #769</a></td>
-    </tr>
-    <tr>
-      <td>Dec 2, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/763">PR #763</a> opened – correctness and optimization fix; abandoned (targeted wrong branch).</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/763">PR #763</a></td>
-    </tr>
-    <tr>
       <td>Dec 2-4, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/766">PR #766</a> opened – Paeth filter correctness fix; absorbed directly into tree by ctruta without GitHub merge. Released around v1.6.52.</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/766">PR #766</a> “Fix and improve RVV png_read_filter”: replaced mask-agnostic intrinsics with mask-undisturbed variants and fixed abs-diff computation; validated on QEMU-RISC-V (no physical hardware at submission). Author closed it after ctruta applied an equivalent fix directly.</td>
       <td><a href="https://github.com/pnggroup/libpng/pull/766">PR #766</a></td>
     </tr>
     <tr>
+      <td>Dec 4, 2025</td>
+      <td><a href="https://github.com/pnggroup/libpng/issues/769">Issue #769</a> opened by asmorkalov (OpenCV): <code class="language-plaintext highlighter-rouge">png_read_filter_row_paeth3_rvv</code>/<code class="language-plaintext highlighter-rouge">paeth4_rvv</code> produced wrong pixel values in 1.6.51, causing 52 OpenCV image I/O test failures on Spacemit K1; disabling the two functions resolved all 52 failures. Closed once fixed.</td>
+      <td><a href="https://github.com/pnggroup/libpng/issues/769">Issue #769</a></td>
+    </tr>
+    <tr>
       <td>Dec 5, 2025</td>
-      <td><a href="https://github.com/pnggroup/libpng/pull/771">PR #771</a> merged – removes reference to non-existent intrinsic <code class="language-plaintext highlighter-rouge">__riscv_vaaddu_wx_u8m1</code>, which caused build failure when <code class="language-plaintext highlighter-rouge">-march=rv64gv</code> was passed. Released in v1.6.53.</td>
+      <td><a href="https://github.com/pnggroup/libpng/pull/771">PR #771</a> merged: fixed a nonexistent intrinsic, <code class="language-plaintext highlighter-rouge">__riscv_vaaddu_wx_u8m1</code>. Maintainer ctruta stated in review that his own CI/manual testing “was in fact NOT compiling the vectorized (RVV’ed) code, because…I forgot to pass <code class="language-plaintext highlighter-rouge">-march=rv64gv</code>” – i.e. the maintainer’s own testing had never exercised the RVV path. Confirmed working with OpenCV on Spacemit K1 in libpng 1.6.53.</td>
       <td><a href="https://github.com/pnggroup/libpng/pull/771">PR #771</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The RISC-V port has required 8 PRs and 4 issues from initial merge through December 2025. All 4 issues are now closed. No open RISC-V-specific issues remain in the repository.</p><hr />
+<p>The RISC-V port required roughly a dozen follow-up PRs and 5 issues from initial merge (May 2025) through the correctness fix in 1.6.53 (December 2025). As of the research date no open RISC-V-specific issue or PR remains against <code class="language-plaintext highlighter-rouge">pnggroup/libpng</code>.</p>
+
+<p><strong>Important caveat on “upstream”:</strong> the code above is fully present and wired only on the <code class="language-plaintext highlighter-rouge">libpng16</code> (stable/<code class="language-plaintext highlighter-rouge">master</code>, currently tracking 1.6.60-dev) branch. GitHub’s <em>default</em> branch is <code class="language-plaintext highlighter-rouge">libpng18</code>, a 1.8 development refactor. On <code class="language-plaintext highlighter-rouge">libpng18</code>, <code class="language-plaintext highlighter-rouge">riscv/riscv_init.c</code> and <code class="language-plaintext highlighter-rouge">riscv/filter_rvv_intrinsics.c</code> are present (carried over via the v1.6.59 merge) but orphaned: the new <code class="language-plaintext highlighter-rouge">pngtarget.h</code> target-dispatch header includes <code class="language-plaintext highlighter-rouge">arm/check.h</code>, <code class="language-plaintext highlighter-rouge">intel/check.h</code>, <code class="language-plaintext highlighter-rouge">mips/check.h</code>, <code class="language-plaintext highlighter-rouge">powerpc/check.h</code> but no <code class="language-plaintext highlighter-rouge">riscv/check.h</code>; <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> and <code class="language-plaintext highlighter-rouge">configure.ac</code> on this branch contain zero RISC-V references. A user who clones the default branch today gets plain-C fallback on riscv64 regardless of flags passed, and <code class="language-plaintext highlighter-rouge">manuals/libpng-install.txt</code> on that branch documents <code class="language-plaintext highlighter-rouge">--enable-riscv-rvv</code>/<code class="language-plaintext highlighter-rouge">PNG_RISCV_RVV</code> flags that do not exist there. This is a real, verifiable regression relative to <code class="language-plaintext highlighter-rouge">libpng16</code>, not a stub – the code has simply not yet been ported to the new 1.8 dispatch convention.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -392,11 +404,46 @@
 </h2>
     
 
-<p>libpng has no formal tiered platform policy. Architecture-specific optimizations are structured as optional subdirectories (<code class="language-plaintext highlighter-rouge">arm/</code>, <code class="language-plaintext highlighter-rouge">riscv/</code>, <code class="language-plaintext highlighter-rouge">intel/</code>, etc.) compiled conditionally. The build system defaults RVV to <strong>off</strong> (unlike ARM NEON, Intel SSE, and PowerPC VSX, which default to on).</p>
+<p>libpng has no formal tiered platform policy; architecture-specific optimizations are structured as optional subdirectories (<code class="language-plaintext highlighter-rouge">arm/</code>, <code class="language-plaintext highlighter-rouge">riscv/</code>, <code class="language-plaintext highlighter-rouge">intel/</code>, <code class="language-plaintext highlighter-rouge">mips/</code>, <code class="language-plaintext highlighter-rouge">powerpc/</code>, <code class="language-plaintext highlighter-rouge">loongarch/</code>) compiled conditionally. RVV defaults to <strong>off</strong> in the build system (unlike ARM NEON, Intel SSE, and PowerPC VSX, which default on).</p>
 
-<p>The CI pipeline runs only on x86-64 (Linux, macOS) and ARM64 (Windows). No RISC-V CI is automated. All RISC-V validation has been performed manually on contributor hardware (Spacemit K1, Banana Pi F3, StarFive JH7110) and ad-hoc QEMU runs by the maintainer. The maintainer explicitly acknowledged forgetting to apply <code class="language-plaintext highlighter-rouge">-march=rv64gv</code> during review of PR #766, which allowed a non-existent intrinsic to reach the mainline, requiring a follow-up fix in PR #771.</p>
+<p>No RISC-V CI is automated (Section 7). All RISC-V validation to date has been manual, on contributor hardware (Spacemit K1, Banana Pi F3) or via QEMU (PR #766). No SLA or support commitment for RISC-V is documented. Work has been driven entirely by external contributors (Google, Samsung, an independent developer, and downstream consumer OpenCV), not by the maintainer proactively.</p>
 
-<p>There is no documented SLA or support commitment for RISC-V. The work has been driven entirely by external contributors from Google, Samsung, SpacemiT, and the OpenCV team.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CI coverage</td>
+      <td>Native (<code class="language-plaintext highlighter-rouge">ubuntu-latest</code>)</td>
+      <td>Partial (native on macOS runner; <code class="language-plaintext highlighter-rouge">windows-11-arm</code> in verify-windows.yml)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Official binary distribution</td>
+      <td>Distro packages; no upstream GitHub Release assets</td>
+      <td>Distro packages; no upstream GitHub Release assets</td>
+      <td>Distro packages only (Debian, Ubuntu); no upstream GitHub Release assets</td>
+    </tr>
+    <tr>
+      <td>SIMD default-on</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Wired on default GitHub branch (<code class="language-plaintext highlighter-rouge">libpng18</code>)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (orphaned source files)</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -405,10 +452,10 @@
   
 </h2>
     
-<h3 id="41-source-file-inventory">
+<h3 id="41-source-file-inventory-on-libpng16">
   
   
-    <a href="#41-source-file-inventory" class="anchor-heading" aria-labelledby="41-source-file-inventory"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Source File Inventory
+    <a href="#41-source-file-inventory-on-libpng16" class="anchor-heading" aria-labelledby="41-source-file-inventory-on-libpng16"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Source file inventory (on <code class="language-plaintext highlighter-rouge">libpng16</code>)
   
   
 </h3>
@@ -424,69 +471,58 @@
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv/filter_rvv_intrinsics.c</code></td>
-      <td>RVV C intrinsics implementation of all 7 PNG read filter reconstruction functions</td>
-      <td>Complete implementation</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv/filter_rvv_intrinsics.c</code> (290 lines)</td>
+      <td>RVV C-intrinsics implementation of the Up, Sub3/4, Avg3/4, Paeth3/4 read-filter reconstruction functions (7 functions plus 3 static helpers)</td>
+      <td>Complete, no TODO/FIXME/stub markers found</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv/riscv_init.c</code></td>
-      <td>Runtime dispatch – assigns RVV filter function pointers based on bpp</td>
-      <td>Complete implementation</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv/riscv_init.c</code> (45 lines)</td>
+      <td>Runtime dispatch, <code class="language-plaintext highlighter-rouge">png_init_filter_functions_rvv</code>, assigns filter function pointers by bpp</td>
+      <td>Complete</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">riscv/.editorconfig</code></td>
-      <td>Editor style config only; contains a FIXME note on style, not code</td>
+      <td>Editor style config only</td>
       <td>Non-code</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No <code class="language-plaintext highlighter-rouge">.S</code> assembly files exist. No JIT backend. No Zba/Zbb/Zbc/Zbs bit-manipulation usage. The only ISA used is RVV 1.0 via C intrinsics from <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code>.</p>
+<p>No <code class="language-plaintext highlighter-rouge">.S</code> assembly files exist for RISC-V. No JIT backend. No Zba/Zbb/Zbc/Zbs bit-manipulation usage in libpng itself. The only ISA extension used is RVV 1.0 via C intrinsics from <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code>.</p>
 <h3 id="42-filter-function-coverage">
   
   
-    <a href="#42-filter-function-coverage" class="anchor-heading" aria-labelledby="42-filter-function-coverage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Filter Function Coverage
+    <a href="#42-filter-function-coverage" class="anchor-heading" aria-labelledby="42-filter-function-coverage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Filter function coverage
   
   
 </h3>
     
 
-<p>The <code class="language-plaintext highlighter-rouge">riscv/filter_rvv_intrinsics.c</code> implements the following functions:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">png_read_filter_row_up_rvv</code> – Up filter using <code class="language-plaintext highlighter-rouge">vuint8m8</code> wide vector loads</li>
-  <li><code class="language-plaintext highlighter-rouge">png_read_filter_row_sub3_rvv</code> and <code class="language-plaintext highlighter-rouge">sub4_rvv</code> – Sub filter for 3 bpp and 4 bpp</li>
-  <li><code class="language-plaintext highlighter-rouge">png_read_filter_row_avg3_rvv</code> and <code class="language-plaintext highlighter-rouge">avg4_rvv</code> – Average filter using <code class="language-plaintext highlighter-rouge">__riscv_vaaddu_vv_u8m1</code></li>
-  <li><code class="language-plaintext highlighter-rouge">png_read_filter_row_paeth3_rvv</code> and <code class="language-plaintext highlighter-rouge">paeth4_rvv</code> – Paeth predictor using widened subtraction and min comparisons</li>
-</ul>
-
-<p>All 7 variants are implemented. Compilation guards: <code class="language-plaintext highlighter-rouge">PNG_RISCV_RVV_IMPLEMENTATION == 1</code> and <code class="language-plaintext highlighter-rouge">PNG_READ_SUPPORTED</code>. Vector types used: <code class="language-plaintext highlighter-rouge">vuint8m8_t</code>, <code class="language-plaintext highlighter-rouge">vuint8m1_t</code>, <code class="language-plaintext highlighter-rouge">vuint16m2_t</code>.</p>
-<h3 id="43-runtime-dispatch">
+<p>All 7 filter variants documented in Section 2 (Up, Sub3, Sub4, Avg3, Avg4, Paeth3, Paeth4) are implemented, gated by <code class="language-plaintext highlighter-rouge">PNG_RISCV_RVV_IMPLEMENTATION == 1</code> and <code class="language-plaintext highlighter-rouge">PNG_READ_SUPPORTED</code>. Vector types used: <code class="language-plaintext highlighter-rouge">vuint8m8_t</code>, <code class="language-plaintext highlighter-rouge">vuint8m1_t</code>, <code class="language-plaintext highlighter-rouge">vuint16m2_t</code>.</p>
+<h3 id="43-runtime-dispatch-and-feature-detection">
   
   
-    <a href="#43-runtime-dispatch" class="anchor-heading" aria-labelledby="43-runtime-dispatch"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Runtime Dispatch
+    <a href="#43-runtime-dispatch-and-feature-detection" class="anchor-heading" aria-labelledby="43-runtime-dispatch-and-feature-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Runtime dispatch and feature detection
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">riscv/riscv_init.c</code> exports <code class="language-plaintext highlighter-rouge">png_init_filter_functions_rvv(png_structp pp, unsigned int bpp)</code>. It always assigns the Up filter, and assigns sub/avg/paeth variants conditionally on bpp==3 or bpp==4. The function is declared in <code class="language-plaintext highlighter-rouge">pngpriv.h</code> and called when <code class="language-plaintext highlighter-rouge">PNG_RISCV_RVV_OPT &gt; 0 &amp;&amp; __riscv_v &gt;= 1000000</code>.</p>
-
-<p>There is no runtime CPU feature detection (no <code class="language-plaintext highlighter-rouge">check.h</code> equivalent for RISC-V). Feature presence is determined at compile time by the availability of <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code>. A binary compiled with RVV enabled cannot fall back at runtime on a non-vector RISC-V CPU.</p>
+<p><code class="language-plaintext highlighter-rouge">png_init_filter_functions_rvv(png_structp pp, unsigned int bpp)</code> always assigns the Up filter and assigns Sub/Avg/Paeth variants conditionally on bpp==3 or bpp==4, exactly matching the dispatch pattern of every other architecture in the codebase. There is, however, <strong>no runtime CPU-feature detection for RISC-V</strong> – no <code class="language-plaintext highlighter-rouge">check.h</code>/hwprobe-based equivalent of ARM’s dedicated detection layer exists in the source tree (the PR #666 description mentions hwprobe-based detection in <code class="language-plaintext highlighter-rouge">contrib/riscv-rvv/linux.c</code>, but the actual filter dispatch in <code class="language-plaintext highlighter-rouge">pngpriv.h</code> gates purely on the compile-time macro <code class="language-plaintext highlighter-rouge">__riscv_v &gt;= 1000000</code>). A binary compiled with RVV enabled will execute unconditionally on any riscv64 target and will crash on hardware that lacks a matching V-extension revision – this is precisely the mechanism behind the T-Head C920 crash in Issue #711.</p>
 <h3 id="44-scope-limitations">
   
   
-    <a href="#44-scope-limitations" class="anchor-heading" aria-labelledby="44-scope-limitations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Scope Limitations
+    <a href="#44-scope-limitations" class="anchor-heading" aria-labelledby="44-scope-limitations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Scope limitations
   
   
 </h3>
     
 
-<p>The RISC-V port covers the <strong>read path only</strong> (filter reconstruction for decompressed scanlines). There is no write-path SIMD. There is no palette expansion optimization (absent for all architectures except ARM, so this is not a RISC-V-specific gap).</p>
-<h3 id="45-architecture-comparison">
+<p>The RISC-V port covers the read path only (filter reconstruction for decompressed scanlines). There is no write-path (encoder) SIMD and no palette-expansion acceleration for RISC-V; both gaps are shared with most other architectures in the codebase (only ARM has a palette-expansion path).</p>
+<h3 id="45-architecture-comparison-line-counts-and-features-libpng16">
   
   
-    <a href="#45-architecture-comparison" class="anchor-heading" aria-labelledby="45-architecture-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Architecture Comparison
+    <a href="#45-architecture-comparison-line-counts-and-features-libpng16" class="anchor-heading" aria-labelledby="45-architecture-comparison-line-counts-and-features-libpng16"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Architecture comparison (line counts and features, <code class="language-plaintext highlighter-rouge">libpng16</code>)
   
   
 </h3>
@@ -496,66 +532,66 @@
   <thead>
     <tr>
       <th>Arch</th>
-      <th>Source files</th>
+      <th>Files (lines)</th>
       <th>Filter coverage</th>
       <th>Runtime detection</th>
       <th>Hand asm</th>
-      <th>Palette</th>
+      <th>Palette accel</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>riscv</td>
-      <td>2</td>
+      <td>riscv_init.c (45) + filter_rvv_intrinsics.c (290) = 335</td>
       <td>7 of 7</td>
       <td>No (compile-time only)</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>intel</td>
-      <td>2</td>
+      <td>intel (SSE2)</td>
+      <td>intel_init.c (51) + filter_sse2_intrinsics.c (408) = 459</td>
       <td>6 of 7 (no Up)</td>
       <td>Yes</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>loongarch</td>
-      <td>2</td>
-      <td>7 of 7</td>
-      <td>No</td>
-      <td>No</td>
-      <td>No</td>
-    </tr>
-    <tr>
-      <td>powerpc</td>
-      <td>2</td>
+      <td>powerpc (VSX)</td>
+      <td>powerpc_init.c (125) + filter_vsx_intrinsics.c (768) = 893</td>
       <td>7 of 7</td>
       <td>Yes</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>arm</td>
-      <td>4</td>
+      <td>loongarch (LSX)</td>
+      <td>loongarch_lsx_init.c (66) + filter_lsx_intrinsics.c (417) = 483</td>
       <td>7 of 7</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
+      <td>No</td>
+      <td>No</td>
+      <td>No</td>
     </tr>
     <tr>
-      <td>mips</td>
-      <td>3</td>
+      <td>mips (MSA/MMI)</td>
+      <td>mips_init.c (203) + filter_msa_intrinsics.c (812) + filter_mmi_inline_assembly.c (525) = 1540</td>
       <td>7 of 7</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
+    </tr>
+    <tr>
+      <td>arm (NEON)</td>
+      <td>arm_init.c (138) + filter_neon_intrinsics.c (401) + palette_neon_intrinsics.c (147) + filter_neon.S (60) = 686</td>
+      <td>7 of 7</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>On filter coverage, RISC-V matches or exceeds Intel (which omits the Up filter). RISC-V is materially behind ARM and MIPS in terms of runtime detection, hand-tuned assembly, and overall code volume. ARM is approximately 3x the line count for filter code alone and has the most complete and battle-tested SIMD port in the codebase.</p><hr />
+<p>RISC-V is the smallest SIMD port by line count, tracking with it being the newest addition rather than being incomplete: filter-function coverage matches PowerPC and LoongArch, and exceeds Intel SSE2 (which omits the Up filter). It sits at the same intrinsics-only maturity tier as Intel, PowerPC and LoongArch, below ARM NEON (hand asm, runtime detection, palette accel) and MIPS (hand asm, runtime detection).</p><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -564,67 +600,73 @@
   
 </h2>
     
-<h3 id="51-cmake">
+
+<p>No <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, <code class="language-plaintext highlighter-rouge">docs/building.md</code>, <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code>, or <code class="language-plaintext highlighter-rouge">docs/</code> directory exists in the repository on either branch. <code class="language-plaintext highlighter-rouge">manuals/libpng-install.txt</code> (section XII, “Enabling or disabling hardware optimizations”) is the closest equivalent, and on <code class="language-plaintext highlighter-rouge">libpng18</code> it documents flags that do not exist on that branch (see Section 2). No Dockerfile, riscv64 CMake toolchain file, or QEMU configuration exists anywhere in the repository.</p>
+<h3 id="51-cmake-libpng16">
   
   
-    <a href="#51-cmake" class="anchor-heading" aria-labelledby="51-cmake"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 CMake
+    <a href="#51-cmake-libpng16" class="anchor-heading" aria-labelledby="51-cmake-libpng16"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 CMake (<code class="language-plaintext highlighter-rouge">libpng16</code>)
   
   
 </h3>
     
 
-<p>Architecture is matched by the regex <code class="language-plaintext highlighter-rouge">^(riscv)</code> against <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code>. <code class="language-plaintext highlighter-rouge">PNG_RISCV_RVV</code> defaults to <strong>off</strong>. When enabled, CMake runs a compile-time probe of <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> with specific RVV 1.0 intrinsics (<code class="language-plaintext highlighter-rouge">__riscv_vreinterpret_v_u64m1_u8m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vle64_v_u64m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vle32_v_f32m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vfmv_f_s_f32m1_f32</code>). If the compiler cannot compile this probe, CMake aborts with <code class="language-plaintext highlighter-rouge">FATAL_ERROR</code>. CMake minimum required version: 3.14.</p>
+<p><code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> matches <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> against the regex <code class="language-plaintext highlighter-rouge">^(riscv)</code>. <code class="language-plaintext highlighter-rouge">PNG_RISCV_RVV</code> is a cache string (<code class="language-plaintext highlighter-rouge">on</code>/<code class="language-plaintext highlighter-rouge">off</code>, default <code class="language-plaintext highlighter-rouge">off</code>; note this is a naming inconsistency with <code class="language-plaintext highlighter-rouge">PNG_HARDWARE_OPTIMIZATIONS</code>, which takes boolean <code class="language-plaintext highlighter-rouge">ON</code>/<code class="language-plaintext highlighter-rouge">OFF</code>). When not <code class="language-plaintext highlighter-rouge">off</code>, CMake runs a <code class="language-plaintext highlighter-rouge">check_c_source_compiles</code> probe exercising <code class="language-plaintext highlighter-rouge">__riscv_vreinterpret_v_u64m1_u8m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vle64_v_u64m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vle32_v_f32m1</code>, and <code class="language-plaintext highlighter-rouge">__riscv_vfmv_f_s_f32m1_f32</code>; if the compiler cannot compile this probe, CMake aborts with <code class="language-plaintext highlighter-rouge">FATAL_ERROR</code>. CMake minimum required version: 3.14.</p>
 
-<p>Cross-compilation command (RVV disabled, safe for all riscv64 targets):</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake /path/to/libpng <span class="se">\</span>
-  <span class="nt">-DCMAKE_SYSTEM_NAME</span><span class="o">=</span>Linux <span class="se">\</span>
-  <span class="nt">-DCMAKE_SYSTEM_PROCESSOR</span><span class="o">=</span>riscv64 <span class="se">\</span>
-  <span class="nt">-DCMAKE_C_COMPILER</span><span class="o">=</span>riscv64-linux-gnu-gcc <span class="se">\</span>
-  <span class="nt">-DCMAKE_AR</span><span class="o">=</span>riscv64-linux-gnu-ar <span class="se">\</span>
-  <span class="nt">-DCMAKE_RANLIB</span><span class="o">=</span>riscv64-linux-gnu-ranlib <span class="se">\</span>
-  <span class="nt">-DPNG_RISCV_RVV</span><span class="o">=</span>off <span class="se">\</span>
-  <span class="nt">-DCMAKE_BUILD_TYPE</span><span class="o">=</span>Release
-</code></pre></div></div>
-<h3 id="52-autoconfconfigure">
-  
-  
-    <a href="#52-autoconfconfigure" class="anchor-heading" aria-labelledby="52-autoconfconfigure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Autoconf/configure
-  
-  
-</h3>
-    
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <span class="se">\</span>
-<span class="nv">AR</span><span class="o">=</span>riscv64-linux-gnu-ar <span class="se">\</span>
-<span class="nv">RANLIB</span><span class="o">=</span>riscv64-linux-gnu-ranlib <span class="se">\</span>
-./configure <span class="se">\</span>
-  <span class="nt">--host</span><span class="o">=</span>riscv64-linux-gnu <span class="se">\</span>
-  <span class="nt">--prefix</span><span class="o">=</span>/usr/local <span class="se">\</span>
-  <span class="nt">--enable-riscv-rvv</span><span class="o">=</span>no
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake -B build -S . \
+  -DCMAKE_SYSTEM_NAME=Linux \
+  -DCMAKE_SYSTEM_PROCESSOR=riscv64 \
+  -DCMAKE_C_COMPILER=riscv64-linux-gnu-gcc \
+  -DCMAKE_AR=riscv64-linux-gnu-ar \
+  -DCMAKE_RANLIB=riscv64-linux-gnu-ranlib \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DPNG_RISCV_RVV=on \
+  -DCMAKE_INSTALL_PREFIX=&lt;install-dir&gt;
+cmake --build build --config Release
+cmake --build build --config Release --target install
 </code></pre></div></div>
 
-<p>To enable RVV: <code class="language-plaintext highlighter-rouge">--enable-riscv-rvv=yes</code>. To disable all hardware optimizations: <code class="language-plaintext highlighter-rouge">--disable-hardware-optimizations</code>.</p>
-<h3 id="53-ci-cross-compilation-environment-file">
+<p>On <code class="language-plaintext highlighter-rouge">libpng18</code> (the default branch), <code class="language-plaintext highlighter-rouge">-DPNG_RISCV_RVV=...</code> is simply unrecognized – the option does not exist there.</p>
+<h3 id="52-autoconfconfigure-libpng16">
   
   
-    <a href="#53-ci-cross-compilation-environment-file" class="anchor-heading" aria-labelledby="53-ci-cross-compilation-environment-file"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 CI Cross-Compilation Environment File
+    <a href="#52-autoconfconfigure-libpng16" class="anchor-heading" aria-labelledby="52-autoconfconfigure-libpng16"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Autoconf/configure (<code class="language-plaintext highlighter-rouge">libpng16</code>)
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">ci/targets/linux/ci_env.riscv64-linux-gnu.sh</code> exists in the repository. It sets <code class="language-plaintext highlighter-rouge">CI_TARGET_ARCH=riscv64</code>, <code class="language-plaintext highlighter-rouge">CI_TARGET_SYSTEM=linux</code>, <code class="language-plaintext highlighter-rouge">CI_TARGET_ABI=gnu</code>, and configures <code class="language-plaintext highlighter-rouge">CC=riscv64-linux-gnu-gcc</code>, <code class="language-plaintext highlighter-rouge">AR=riscv64-linux-gnu-ar</code>, <code class="language-plaintext highlighter-rouge">RANLIB=riscv64-linux-gnu-ranlib</code>, plus matching CMake cross-compile variables. No GitHub Actions workflow or other automated CI pipeline sources this file. It is a developer convenience script, not a CI integration.</p>
+<p><code class="language-plaintext highlighter-rouge">AC_ARG_ENABLE([riscv-rvv], ...)</code> accepts <code class="language-plaintext highlighter-rouge">no</code>/<code class="language-plaintext highlighter-rouge">off</code>, <code class="language-plaintext highlighter-rouge">yes</code>/<code class="language-plaintext highlighter-rouge">on</code> (which sets <code class="language-plaintext highlighter-rouge">PNG_RISCV_RVV_OPT=2</code> and emits a warning to also pass <code class="language-plaintext highlighter-rouge">-march=rv64gv1p0</code>), with auto-detection enabling <code class="language-plaintext highlighter-rouge">riscv_rvv=yes</code> when <code class="language-plaintext highlighter-rouge">$host_cpu</code> is <code class="language-plaintext highlighter-rouge">riscv64</code>, gated by the same compile probe as CMake. <code class="language-plaintext highlighter-rouge">Makefile.am</code> builds <code class="language-plaintext highlighter-rouge">riscv/riscv_init.c</code> and <code class="language-plaintext highlighter-rouge">riscv/filter_rvv_intrinsics.c</code> into a <code class="language-plaintext highlighter-rouge">noinst_LTLIBRARIES</code> sublibrary with <code class="language-plaintext highlighter-rouge">CFLAGS = -march=rv64gv</code> (no explicit <code class="language-plaintext highlighter-rouge">1p0</code> suffix) when <code class="language-plaintext highlighter-rouge">PNG_RISCV_RVV</code> is true.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CC=riscv64-linux-gnu-gcc \
+AR=riscv64-linux-gnu-ar \
+RANLIB=riscv64-linux-gnu-ranlib \
+./configure --host=riscv64-linux-gnu --prefix=&lt;install-dir&gt; --enable-riscv-rvv=yes
+make
+make install
+</code></pre></div></div>
+
+<p>To disable all hardware optimizations: <code class="language-plaintext highlighter-rouge">--disable-hardware-optimizations</code>. <code class="language-plaintext highlighter-rouge">-march=rv64gv1p0</code> (CMake) / <code class="language-plaintext highlighter-rouge">-march=rv64gv</code> (autotools default) is the flag actually needed to compile the vectorized path – its historical absence from the maintainer’s own testing (Section 2, PR #771) is what let a nonexistent intrinsic ship in 1.6.51-era code undetected.</p>
+<h3 id="53-ci-adjacent-cross-compilation-scripts-unused-by-any-ci">
+  
+  
+    <a href="#53-ci-adjacent-cross-compilation-scripts-unused-by-any-ci" class="anchor-heading" aria-labelledby="53-ci-adjacent-cross-compilation-scripts-unused-by-any-ci"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 CI-adjacent cross-compilation scripts (unused by any CI)
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">ci/targets/linux/ci_env.riscv64-linux-gnu.sh</code> sets <code class="language-plaintext highlighter-rouge">CI_TARGET_ARCH=riscv64</code>, <code class="language-plaintext highlighter-rouge">CI_CC=riscv64-linux-gnu-gcc</code>, <code class="language-plaintext highlighter-rouge">CI_AR</code>, <code class="language-plaintext highlighter-rouge">CI_RANLIB</code>, and matching <code class="language-plaintext highlighter-rouge">-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=riscv64</code> variables; <code class="language-plaintext highlighter-rouge">ci/targets/freebsd/ci_env.riscv64-unknown-freebsd.sh</code> is the FreeBSD equivalent (sets no <code class="language-plaintext highlighter-rouge">CI_CC</code>/<code class="language-plaintext highlighter-rouge">CI_AR</code>/<code class="language-plaintext highlighter-rouge">CI_RANLIB</code> – caller must supply a cross toolchain). Per <code class="language-plaintext highlighter-rouge">ci/README.md</code> these are “Shell environments for cross-platform testing,” invoked manually via <code class="language-plaintext highlighter-rouge">source ci/targets/linux/ci_env.riscv64-linux-gnu.sh; CI_NO_TEST=1 ./ci/ci_verify_cmake.sh</code>. <code class="language-plaintext highlighter-rouge">CI_NO_TEST=1</code> is required because <code class="language-plaintext highlighter-rouge">ci_build</code> otherwise runs <code class="language-plaintext highlighter-rouge">ctest</code>/<code class="language-plaintext highlighter-rouge">make test</code> unconditionally, and a cross-compiled riscv64 binary cannot execute on a non-riscv64 runner; the repository provides no QEMU/binfmt setup to make that test step work. These scripts are referenced only in <code class="language-plaintext highlighter-rouge">ci/README.md</code> and are explicitly excluded from lint checks (<code class="language-plaintext highlighter-rouge">ci_lint.sh</code> skips <code class="language-plaintext highlighter-rouge">ci_env.*.sh</code>); no <code class="language-plaintext highlighter-rouge">.github/workflows/*.yml</code> or <code class="language-plaintext highlighter-rouge">.appveyor.yml</code> sources, calls, or mentions them.</p>
 <h3 id="54-toolchain-version-requirements">
   
   
-    <a href="#54-toolchain-version-requirements" class="anchor-heading" aria-labelledby="54-toolchain-version-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Toolchain Version Requirements
+    <a href="#54-toolchain-version-requirements" class="anchor-heading" aria-labelledby="54-toolchain-version-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Toolchain version requirements
   
   
 </h3>
     
 
-<p>No explicit minimum compiler version is declared. For RVV support, the compiler must compile <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> with RVV 1.0 intrinsics. In practice: GCC &gt;= 13 (first release with complete RVV 1.0 API; GCC 12 has partial support); Clang/LLVM &gt;= 14. For non-RVV builds: any modern <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code> from the Debian/Ubuntu cross toolchain package is sufficient.</p>
+<p>No explicit minimum compiler version is stated anywhere in the repository; the CMake/configure compile probe exercises specific RVV 1.0 intrinsics rather than checking a version number, so any compiler whose <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> supports those exact intrinsics passes. Observed evidence: GCC 12.2.0 (Debian 12) failed to link RVV builds via autotools with <code class="language-plaintext highlighter-rouge">undefined reference to png_init_filter_functions_rvv</code> while CMake succeeded with the same toolchain (Issue #703); GCC 14.0.1/14 was used successfully in PR #666 (Banana Pi F3) and PR #763 (Spacemit K1); GCC 15 exposed an intrinsics-version mismatch on T-Head C920 (Issue #711). [NEEDS VERIFICATION]: an exact minimum GCC/Clang version (commonly cited elsewhere as GCC &gt;= 13, Clang &gt;= 14 for a complete RVV 1.0 API) is not stated by the libpng project itself.</p>
 <h3 id="55-qemu">
   
   
@@ -634,42 +676,7 @@
 </h3>
     
 
-<p>The repository contains no QEMU configuration or QEMU-specific scripts. The CI scripts do not reference QEMU. No <code class="language-plaintext highlighter-rouge">QEMU_</code> or emulator variables are set in the riscv64 CI environment file. The maintainer has used QEMU manually (noted in PR #766 discussion) but this is not automated.</p>
-<h3 id="56-missing-build-infrastructure">
-  
-  
-    <a href="#56-missing-build-infrastructure" class="anchor-heading" aria-labelledby="56-missing-build-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 Missing Build Infrastructure
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Item</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code></td>
-      <td>Not present</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code></td>
-      <td>Not present</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code></td>
-      <td>Not present</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code></td>
-      <td>Not present</td>
-    </tr>
-  </tbody>
-</table></div><hr />
+<p>No QEMU configuration or QEMU-specific scripts exist in the repository (<code class="language-plaintext highlighter-rouge">git grep -ni qemu</code> returns zero hits). PR #766 was validated on QEMU-RISC-V manually by its author, but this is not automated.</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -690,13 +697,13 @@
   </thead>
   <tbody>
     <tr>
-      <td>Read filter SIMD (all 7 variants)</td>
-      <td>Yes (RVV 1.0 intrinsics)</td>
-      <td>Yes (NEON intrinsics + asm)</td>
-      <td>Partial (SSE2, 6 of 7 – no Up filter)</td>
+      <td>Read-filter SIMD (all 7 variants)</td>
+      <td>Yes (RVV 1.0 intrinsics, off by default)</td>
+      <td>Yes (NEON intrinsics + hand asm, on by default)</td>
+      <td>Partial (SSE2, 6 of 7 – no Up filter; on by default)</td>
     </tr>
     <tr>
-      <td>Write filter SIMD</td>
+      <td>Write-filter SIMD</td>
       <td>No</td>
       <td>No</td>
       <td>No</td>
@@ -709,7 +716,7 @@
     </tr>
     <tr>
       <td>Runtime CPU feature detection</td>
-      <td>No</td>
+      <td>No (compile-time <code class="language-plaintext highlighter-rouge">__riscv_v</code> macro only)</td>
       <td>Yes</td>
       <td>Yes</td>
     </tr>
@@ -726,15 +733,21 @@
       <td>Yes</td>
     </tr>
     <tr>
+      <td>Wired on default GitHub branch (<code class="language-plaintext highlighter-rouge">libpng18</code>)</td>
+      <td>No (orphaned)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
       <td>Automated CI coverage</td>
-      <td>No</td>
-      <td>Partial (Windows ARM64 only)</td>
-      <td>Yes (Linux x86-64)</td>
+      <td>None</td>
+      <td>Partial (macOS native, Windows ARM64 native)</td>
+      <td>Full (native Linux)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The primary functional gap versus arm64 is the absence of runtime CPU detection. On arm64 and amd64, the build can produce a binary that falls back to scalar code on hardware lacking the extension. On riscv64, if RVV is compiled in, it will execute on any riscv64 hardware regardless of whether that hardware has the V extension – a binary compiled for RVV 1.0 will crash on pre-1.0 hardware (demonstrated by the C920 crash in issue #711). The only mitigation is to not compile with RVV on non-uniform hardware fleets.</p><hr />
+<p>The primary functional gap versus arm64 is the absence of runtime CPU feature detection: on arm64/amd64 a distributed binary can gracefully fall back to scalar code on hardware lacking the extension, whereas an RVV-enabled riscv64 binary will execute unconditionally and can crash on hardware with a mismatched or absent V extension (Issue #711, Issue #705). No RISC-V-specific NaN or floating-point semantics issue was found in libpng’s own tracker; general RISC-V NaN-boxing discussions found during research (GCC bug 116017, LLVM #225455, cva6 #2449, unicorn-engine #2314) are toolchain/simulator/core-level issues unrelated to libpng.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -744,58 +757,60 @@
 </h2>
     
 
-<p><strong>No automated riscv64 CI exists.</strong> This is confirmed by direct inspection of all CI configuration files.</p>
+<p><strong>No automated riscv64 CI exists.</strong> Confirmed by reading all four GitHub Actions workflow files plus <code class="language-plaintext highlighter-rouge">.appveyor.yml</code> directly against a fresh clone (HEAD <code class="language-plaintext highlighter-rouge">8334628</code>, <code class="language-plaintext highlighter-rouge">libpng18</code>, 2026-09-30); <code class="language-plaintext highlighter-rouge">grep -ni riscv</code> across <code class="language-plaintext highlighter-rouge">.github/workflows/*.yml</code> and <code class="language-plaintext highlighter-rouge">.appveyor.yml</code> returns zero matches.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>CI file</th>
-      <th>Architectures covered</th>
+      <th>Trigger</th>
+      <th>Runner(s)</th>
       <th>riscv64 present</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">.github/workflows/lint.yml</code></td>
-      <td>ubuntu-latest (x86-64)</td>
+      <td>push/PR on <code class="language-plaintext highlighter-rouge">libpng16</code>, <code class="language-plaintext highlighter-rouge">libpng18</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (yamllint + editorconfig-checker)</td>
       <td>No</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">.github/workflows/verify-linux.yml</code></td>
-      <td>ubuntu-latest (x86-64)</td>
+      <td>push/PR on <code class="language-plaintext highlighter-rouge">libpng16</code>, <code class="language-plaintext highlighter-rouge">libpng18</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code>, native build via <code class="language-plaintext highlighter-rouge">ci_verify_configure.sh</code> with sanitizers</td>
       <td>No</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">.github/workflows/verify-macos.yml</code></td>
-      <td>macos-latest (x86-64 / arm64)</td>
+      <td>push/PR</td>
+      <td><code class="language-plaintext highlighter-rouge">macos-latest</code>, native CMake build</td>
       <td>No</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">.github/workflows/verify-windows.yml</code></td>
-      <td>windows-2025 (x64), windows-11-arm (ARM64)</td>
+      <td>push/PR</td>
+      <td><code class="language-plaintext highlighter-rouge">windows-2025</code> (x64), <code class="language-plaintext highlighter-rouge">windows-11-arm</code> (ARM64), CMake via vcpkg</td>
       <td>No</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">.appveyor.yml</code></td>
-      <td>x86, x64, arm64, i686, x86_64 (Windows)</td>
+      <td>(AppVeyor)</td>
+      <td>x86/x64 Windows</td>
       <td>No</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code></td>
-      <td>Not present</td>
+      <td><code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code></td>
       <td>N/A</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">.cirrus.yml</code></td>
-      <td>Not present</td>
+      <td>Not present in repository</td>
       <td>N/A</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The string “riscv” does not appear in any workflow file. The <code class="language-plaintext highlighter-rouge">verify-linux.yml</code> workflow runs a native x86-64 build with address and undefined-behavior sanitizers only.</p>
+<p>No riscv64 runner, no QEMU step, and no hidden <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>-only or label-gated job exists in any config. The unused <code class="language-plaintext highlighter-rouge">ci_env.riscv64-*.sh</code> scripts described in Section 5.3 are dead/unwired artifacts, not CI. No RISE-operated runner usage for libpng was found anywhere in the riseproject-dev GitHub organization.</p>
 
-<p>The consequence is operational: the non-existent intrinsic <code class="language-plaintext highlighter-rouge">__riscv_vaaddu_wx_u8m1</code> in PR #766 (December 2025) went undetected through review because the maintainer did not apply <code class="language-plaintext highlighter-rouge">-march=rv64gv</code> to his local test run. PR #771 was required to fix the resulting build failure. Automated riscv64 CI via QEMU cross-compilation would have caught this before merge.</p><hr />
+<p>The operational consequence is concrete: the nonexistent intrinsic <code class="language-plaintext highlighter-rouge">__riscv_vaaddu_wx_u8m1</code> shipped in December 2025 review went undetected because the maintainer’s local test run never applied <code class="language-plaintext highlighter-rouge">-march=rv64gv</code> and therefore never compiled the vectorized code path at all (PR #771, maintainer’s own words). A QEMU-based riscv64 build+test lane in <code class="language-plaintext highlighter-rouge">verify-linux.yml</code> would have caught both this build failure and the Paeth correctness regression (Issue #769) before they reached a tagged release.</p><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -805,19 +820,19 @@
 </h2>
     
 
-<p><strong>Upstream GitHub releases are source-only.</strong> glennrp/libpng has no GitHub release assets at all. pnggroup/libpng distributes source tarballs only. No prebuilt binaries are distributed by upstream.</p>
+<p><strong>Upstream GitHub releases are nonexistent, not merely source-only.</strong> Both <code class="language-plaintext highlighter-rouge">github.com/glennrp/libpng/releases</code> and <code class="language-plaintext highlighter-rouge">github.com/pnggroup/libpng/releases</code> render “There aren’t any releases here” – zero release assets of any kind exist; the project ships via tags and source tarballs referenced from libpng.org/libpng.sourceforge.io, not GitHub Releases.</p>
 
-<p><strong>Debian:</strong> libpng1.6 version 1.6.58-1 is built and installed for riscv64 in Debian sid. Built on buildd <code class="language-plaintext highlighter-rouge">rv-manda-02</code>. All architectures including riscv64 show status “Installed.” Source: <a href="https://buildd.debian.org/status/package.php?p=libpng1.6&amp;suite=sid">Debian buildd status</a>.</p>
+<p><strong>Debian:</strong> libpng1.6 builds for riscv64 in Debian sid (status page: <a href="https://buildd.debian.org/status/package.php?p=libpng1.6&amp;suite=sid">buildd.debian.org</a>). A package search across trixie/forky/sid confirms riscv64 builds of <code class="language-plaintext highlighter-rouge">libpng-dev</code>, <code class="language-plaintext highlighter-rouge">libpng-tools</code>, <code class="language-plaintext highlighter-rouge">libpng16-16t64</code>, <code class="language-plaintext highlighter-rouge">libpng16-16-udeb</code>, <code class="language-plaintext highlighter-rouge">libpnglite-dev</code>, and <code class="language-plaintext highlighter-rouge">libpnglite0</code> (the latter two are the separate, unrelated “pnglite” project).</p>
 
-<p><strong>Ubuntu:</strong> libpng16-16t64, libpng-dev, and libpng-tools are available for riscv64 in Ubuntu 24.04 Noble (version 1.6.43-5ubuntu0.6) and Ubuntu 26.04 Resolute (version 1.6.57-1). riscv64 appears in the “ports” tier (ports.ubuntu.com) rather than the main archive, but official packages exist. Source: <a href="https://packages.ubuntu.com">packages.ubuntu.com</a>.</p>
+<p><strong>Ubuntu:</strong> confirmed directly via <a href="https://packages.ubuntu.com/search?keywords=libpng&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a> for 26.04 “resolute”: <code class="language-plaintext highlighter-rouge">libpng-dev</code>, <code class="language-plaintext highlighter-rouge">libpng-tools</code>, and <code class="language-plaintext highlighter-rouge">libpng16-16t64</code>, all version 1.6.57-1, build for riscv64 alongside amd64/arm64/armhf/i386/ppc64el/s390x. The download page for the riscv64 binary has the exact filename <code class="language-plaintext highlighter-rouge">libpng16-16t64_1.6.57-1_riscv64.deb</code>, reproduced across two independent fetches. <code class="language-plaintext highlighter-rouge">libimage-png-libpng-perl</code> 0.59-1 (Perl binding) is also built for riscv64; <code class="language-plaintext highlighter-rouge">libpng++-dev</code> 0.2.10-1build1 is architecture-independent (<code class="language-plaintext highlighter-rouge">all</code>) and therefore trivially available. This finding was independently re-verified in an adversarial pass and could not be refuted.</p>
 
-<p><strong>Arch Linux RISC-V (archriscv.felixc.at):</strong> The package tracker did not return confirming data through the research tooling. The project policy states all non-blacklisted packages from Arch Linux [core] and [extra] are ported, and libpng is a fundamental [extra] package. Direct file URL probing for expected filenames returned 404. [NEEDS VERIFICATION]</p>
+<p><strong>PyPI, npm, Maven, OCI:</strong> not applicable. <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/libpng/json</code> returns HTTP 404 – no PyPI package named <code class="language-plaintext highlighter-rouge">libpng</code> exists (expected for a C library). No npm or Maven artifact search was applicable to a C library with no language-specific packaging.</p>
 
-<p><strong>PyPI:</strong> No libpng package exists on PyPI (HTTP 404). Not a relevant channel for this C library.</p>
+<p><strong>Arch Linux RISC-V port</strong> (<a href="https://archriscv.felixc.at">archriscv.felixc.at</a>): libpng does not appear in the port’s package listing at all. [NEEDS VERIFICATION] – this is a single-source finding; the port’s stated policy is to carry all non-blacklisted <code class="language-plaintext highlighter-rouge">[core]</code>/<code class="language-plaintext highlighter-rouge">[extra]</code> packages, which would normally include libpng, so its absence from the visible listing should be treated as unconfirmed rather than a firm “not available.”</p>
 
-<p><strong>RISE wheel builder (GitLab):</strong> Redirected to PyPI simple index, which returned 404. Not applicable.</p>
+<p><strong>RISE wheel builder (GitLab):</strong> <code class="language-plaintext highlighter-rouge">https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/libpng/</code> redirects to the PyPI simple index, which returns 404. Not applicable to a C library; not listed among the 89 packages on the RISE Python wheel_builder page.</p>
 
-<p><strong>Current stable version:</strong> 1.6.58 as of research date. The December 2025 correctness fixes (paeth filter, missing intrinsic) are present in 1.6.53 and later. Debian sid (1.6.58-1) and Ubuntu Resolute (1.6.57-1) postdate these fixes. Ubuntu Noble (1.6.43-5ubuntu0.6) [NEEDS VERIFICATION – the version number 1.6.43 predates the RVV port entirely, which suggests Ubuntu Noble ships libpng without RVV enabled or with a backport; the security patch suffix <code class="language-plaintext highlighter-rouge">ubuntu0.6</code> indicates a distro-maintained version].</p><hr />
+<p><strong>What a user must do today:</strong> on Debian sid or Ubuntu 26.04 (resolute), <code class="language-plaintext highlighter-rouge">apt install libpng16-16t64</code> (or <code class="language-plaintext highlighter-rouge">libpng-dev</code>) on a riscv64 system installs a working, unmodified-upstream build (RVV path off by default, so no riscv64-specific patch is required). Outside those two distributions, or for an RVV-accelerated build, a user must build from source on <code class="language-plaintext highlighter-rouge">libpng16</code> using the commands in Section 5; the default GitHub branch (<code class="language-plaintext highlighter-rouge">libpng18</code>) cannot currently produce an RVV-accelerated riscv64 build regardless of flags passed (Section 2).</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -835,66 +850,60 @@
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
       <th>riscv64 Release</th>
-      <th>Open Blockers</th>
+      <th>Notes / Blocking Issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>zlib</td>
-      <td>DEFLATE compression/decompression – required for all PNG encode/decode</td>
-      <td>Passing – no SIMD paths, portable C compiles cleanly</td>
-      <td>Unknown – no riscv64 CI upstream; no test failures reported; GitHub issues search for “riscv64” returns 0 results</td>
-      <td>Shipping – v1.3.1 (Feb 2024) is portable; all Linux distros ship riscv64 packages</td>
-      <td>None</td>
+      <td>Runtime dependency, critical – DEFLATE compression/decompression required for all PNG encode/decode</td>
+      <td>Passing – pure portable C, no SIMD in mainline, compiles cleanly on riscv64</td>
+      <td>Limited – only CI target is OpenBSD/riscv64 via vmactions (QEMU); no Linux/riscv64 entry in <code class="language-plaintext highlighter-rouge">configure.yml</code>’s cross-compile matrix (ARM/AARCH64/PPC/PPC64LE/S390X are present, riscv64 is not)</td>
+      <td>Shipping – zlib1g/zlib1g-dev present for riscv64 in Ubuntu 24.04 and Debian sid (source-only upstream releases, no prebuilt binaries for any arch)</td>
+      <td>Unmerged PR #1099 (RVV-accelerated Adler32, +7% claimed on SG2042) open since 2025-10-28 with no maintainer response; duplicate PR #1267 self-closed 2026-06-10. No RVV/Zbc CRC-32 or <code class="language-plaintext highlighter-rouge">longest_match</code> SIMD exists for riscv64. Maintainer (madler) has a multi-year precedent of not reviewing architecture-SIMD PRs. None of this blocks correctness of the base build libpng consumes.</td>
     </tr>
     <tr>
       <td>zlib-ng</td>
-      <td>Drop-in zlib replacement used by some distros as zlib provider; includes SIMD acceleration</td>
-      <td>Passing – riscv64 build fixed in v2.2.x (Feb 2026, PRs #2148 and #2152 fixed <code class="language-plaintext highlighter-rouge">crc32_riscv64_zbc</code> undeclared symbol and no-RVV fallback build failure)</td>
-      <td>Passing – riscv64 included in CI matrix as of Jan 2026; cross-compilation tested</td>
-      <td>Shipping – active riscv64 maintenance; fixes landed in v2.2.x</td>
-      <td>None</td>
+      <td>Runtime dependency, optional – drop-in SIMD-accelerated zlib replacement some distros use as the zlib provider</td>
+      <td>Passing – full <code class="language-plaintext highlighter-rouge">arch/riscv/</code> port (adler32_rvv, chunkset_rvv, compare256_rvv, slide_hash_rvv, crc32_zbc, runtime hwprobe/hwcap detection); all files complete, no stubs</td>
+      <td>Passing in CI – 6 riscv64 jobs per run (GCC/Clang x cmake/configure) via QEMU; test corpora are skipped on riscv64 because QEMU is too slow, and Clang code coverage is broken on riscv64</td>
+      <td>Shipping only via Alpine Linux edge (2.3.3-r0, built 2026-05-11); <strong>not packaged for Debian or Ubuntu at all</strong> – no Debian buildd entry in any suite, no package in Ubuntu Noble or any supported release</td>
+      <td>Open: Issue #1670 (<code class="language-plaintext highlighter-rouge">CHUNK_MEMSET_RVV_IMPL</code> raw pointer cast lacks the <code class="language-plaintext highlighter-rouge">UNALIGNED_OK</code> guard other architectures use – portability/correctness risk on strict-alignment targets). Closed/historical: a bogus <code class="language-plaintext highlighter-rouge">HWCAP_ISA_ZBC</code> bit silently disabled Zbc detection for ~7 months (issues #1997/#1705, fixed by PR #1999/#2130); a SIGSEGV in <code class="language-plaintext highlighter-rouge">chunkset_rvv</code> from a signed/unsigned comparison bug (fixed). Zbc acceleration is unavailable at runtime on kernels &lt; 6.8 (hwprobe requirement). <em>Note on discrepancy:</em> an earlier research pass characterized zlib-ng riscv64 as actively maintained and shipping broadly; the evidence above shows it is CI-passing but distribution availability is narrow (Alpine edge only) – treat “shipping” claims for this dependency as build/CI maturity, not distro ubiquity.</td>
     </tr>
     <tr>
-      <td>libm (glibc)</td>
-      <td><code class="language-plaintext highlighter-rouge">pow()</code> for PNG gamma correction on Unix; conditional dependency</td>
-      <td>Passing</td>
-      <td>Passing</td>
-      <td>Shipping</td>
-      <td>None</td>
+      <td>CMake</td>
+      <td>Build dependency, critical – generates libpng’s CMake build and runs the <code class="language-plaintext highlighter-rouge">PNG_RISCV_RVV</code> compile probe</td>
+      <td>Data not available: no riscv64-specific CMake build/test/release data was found in research; CMake’s own riscv64 support was not directly investigated. CMake &gt;= 3.14 is libpng’s stated minimum.</td>
+      <td>Data not available: not investigated</td>
+      <td>Data not available: not investigated</td>
+      <td>No libpng-specific blockers found; libpng’s own CMake RVV wiring is present only on <code class="language-plaintext highlighter-rouge">libpng16</code>, not on the default <code class="language-plaintext highlighter-rouge">libpng18</code> branch (Section 2).</td>
     </tr>
     <tr>
-      <td>RVV intrinsics (<code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code>)</td>
-      <td>SIMD filter row acceleration (optional)</td>
-      <td>Passing with GCC &gt;= 13 or Clang &gt;= 14 and appropriate -march flag</td>
-      <td>Partial – no automated riscv64 CI in libpng; validated on Spacemit K1 by asmorkalov (OpenCV) in PR #771</td>
-      <td>Released in v1.6.53 (Dec 2025) after intrinsic bug fix</td>
-      <td>No open blockers; CI gap remains</td>
+      <td>autoconf</td>
+      <td>Build dependency, critical – generates libpng’s <code class="language-plaintext highlighter-rouge">configure</code> script, including the <code class="language-plaintext highlighter-rouge">--enable-riscv-rvv</code> probe</td>
+      <td>Data not available: no riscv64-specific autoconf build/test/release data was found in research</td>
+      <td>Data not available: not investigated</td>
+      <td>Data not available: not investigated</td>
+      <td>Two of libpng’s own RISC-V build failures (Issue #698, Issue #703) were specifically autotools-path failures (<code class="language-plaintext highlighter-rouge">undefined reference to png_init_filter_functions_rvv</code>) that did not reproduce via CMake with the same toolchain, indicating a libpng-side autotools/RVV integration gap rather than an autoconf defect per se.</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Build dependency, critical – primary compiler used to build libpng and its RVV intrinsics path</td>
+      <td>Riscv64 cross-compilation observed working (GCC 14.0.1/14 used successfully in PR #666 and PR #763) and observed failing for RVV linking specifically (GCC 12.2.0 on Debian 12, Issue #703)</td>
+      <td>Data not available beyond the pass/fail build evidence above</td>
+      <td>Riscv64 cross toolchain (<code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code>) is the toolchain named throughout libpng’s CI env scripts and configure examples</td>
+      <td>GCC’s exact minimum version for the full RVV 1.0 intrinsics API is not documented by libpng itself [NEEDS VERIFICATION]; observed evidence places a working floor somewhere between GCC 12.2.0 (fails RVV autotools link) and GCC 14 (works).</td>
+    </tr>
+    <tr>
+      <td>LLVM</td>
+      <td>Build dependency, critical – alternate compiler toolchain (Clang) referenced for RVV 1.0 testing</td>
+      <td>Clang 17 and “GCC trunk” were cited as required to test RVV 1.0 hardware/emulation during the #405 development discussion (Feb 2024)</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>No LLVM/Clang-specific riscv64 build failure or fix was found in libpng’s own issue/PR history; all documented build failures (Issue #698, #703, #705, #711) involve GCC.</td>
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-
-<p><strong>RISE involvement:</strong> None. No libpng entry appears on riseproject.dev, in the RISE wheel builder package list (76 packages, libpng absent), in any of the 27 RISE blog posts (May 2024 through June 2026), or in any GitHub repository or code in the riseproject-dev organization (API search returns 0 results).</p>
-
-<p><strong>OpenCV integration:</strong> asmorkalov (Alexander Smorkalov, OpenCV.ai) filed <a href="https://github.com/pnggroup/libpng/issues/769">issue #769</a> and authored <a href="https://github.com/pnggroup/libpng/pull/771">PR #771</a> after the paeth correctness bug caused 52 OpenCV image I/O test failures on Spacemit K1. libpng 1.6.53 was validated as correct within OpenCV (confirmed in OpenCV PR opencv/opencv#28111 and issue opencv/opencv#28126). The OpenCV project is an active riscv64 consumer of libpng and has effectively served as downstream CI.</p>
-
-<p><strong>Downstream hardware:</strong></p>
-<ul>
-  <li>Spacemit K1 (SpacemiT, VLEN=256-bit): active validation platform for libpng RVV</li>
-  <li>Banana Pi F3 (also K1): used in PR #704 validation</li>
-  <li>StarFive JH7110 (no vector extension): exposed the autodetection bug in PR #702</li>
-  <li>T-Head C920 (Alibaba/DAMO Academy, RVV 0.7.1): confirmed crash behavior in issue #711; also reported as Gentoo bug #958203</li>
-</ul>
-
-<p><strong>Performance data:</strong> The only quantitative data from a 2021-2022 bachelor’s thesis by Manfred Schlaegl (JKU Linz) on an Allwinner D1/Xuantie C906 board (RVV Draft 0.7.1) shows speedups over scalar ranging from 1.13x (paeth3) to 5.43x (up3/up4). These numbers predate the RVV 1.0 rewrite and the Paeth correctness fix; they do not reflect current performance on 1.0-compliant hardware. From PR #763 (chLFF, Spacemit K1 MUSEBOOK, VLEN=256-bit, GCC 14, Dec 2025): the <code class="language-plaintext highlighter-rouge">vaaddu</code> optimization achieved approximately 14% speedup over scalar for the paeth filter after the correctness fix. No riscv64-vs-arm64 or riscv64-vs-amd64 comparative benchmark data exists in any source consulted.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -904,48 +913,70 @@
 </h2>
     
 
-<p>As of the research date, <strong>no open RISC-V-specific issues exist</strong> in pnggroup/libpng. The 12 currently open issues are general correctness or security bugs not specific to RISC-V architecture.</p>
-
-<p>The closed RISC-V bug history is summarized below:</p>
+<p>No open RISC-V-specific issue or PR exists in <code class="language-plaintext highlighter-rouge">pnggroup/libpng</code> as of the research date. All RISC-V issues found are closed.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Issue/PR</th>
-      <th>Summary</th>
-      <th>Root Cause</th>
-      <th>Resolution</th>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://github.com/pnggroup/libpng/issues/705">Issue #705</a></td>
-      <td>configure.ac prepended <code class="language-plaintext highlighter-rouge">-march=rc64gv1p0</code> to compile tests, forcibly enabling V extension, causing compiler crashes on <code class="language-plaintext highlighter-rouge">-march=rv64g</code> and build failures on <code class="language-plaintext highlighter-rouge">-march=rv64id</code></td>
-      <td>configure.ac line ~720 overwrote CFLAGS for compiler probe</td>
-      <td>Fixed in PR #713 commit <code class="language-plaintext highlighter-rouge">d9f649a</code></td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/pnggroup/libpng/issues/711">Issue #711</a></td>
-      <td>Runtime crash on T-Head C920 (RVV 0.7.1); raw <code class="language-plaintext highlighter-rouge">asm volatile</code> targeting different RVV version; no compile-time version guard</td>
-      <td>Raw inline assembly with no ISA version check</td>
-      <td>Fixed in PR #713 (asm to intrinsics) and PR #721 (compile-time <code class="language-plaintext highlighter-rouge">__riscv_v &gt;= 1000000</code> guard)</td>
-    </tr>
-    <tr>
       <td><a href="https://github.com/pnggroup/libpng/issues/769">Issue #769</a></td>
-      <td>paeth3/paeth4 RVV produced wrong pixel values on Spacemit K1 with libpng 1.6.51; 52 OpenCV image I/O test failures</td>
-      <td>Mask-agnostic (<code class="language-plaintext highlighter-rouge">_m</code>) intrinsics gave no guarantees on masked-off elements; broken absolute-value computation in vectorized Paeth predictor</td>
-      <td>Fixed in PR #766 (absorbed directly by ctruta); <code class="language-plaintext highlighter-rouge">_m</code> replaced with <code class="language-plaintext highlighter-rouge">_mu</code> (mask-undisturbed); abs computation corrected using <code class="language-plaintext highlighter-rouge">rsub zero + minu</code> pattern</td>
+      <td><code class="language-plaintext highlighter-rouge">png_read_filter_row_paeth3(4)</code> RVV implementation is not accurate</td>
+      <td>Closed (2025-12-05)</td>
+      <td><strong>Correctness – highest severity found.</strong> Silent pixel-data corruption</td>
+      <td>OpenCV (vendoring libpng 1.6.51, Spacemit K1, RVV enabled) hit 52 failing image-decode tests; root-caused to mask-agnostic intrinsics and a broken abs-diff computation in the vectorized Paeth filter. Disabling just the two Paeth RVV functions fixed all 52 failures. Fixed via PR #766 (mask-undisturbed intrinsics, corrected abs-diff) and shipped correct in 1.6.53.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/pnggroup/libpng/pull/771">PR #771</a></td>
-      <td>Build failure with <code class="language-plaintext highlighter-rouge">-march=rv64gv</code>; intrinsic <code class="language-plaintext highlighter-rouge">__riscv_vaaddu_wx_u8m1</code> does not exist</td>
-      <td>Non-existent intrinsic introduced by PR #766 manual integration; reviewer did not apply the V march flag during review</td>
-      <td>Replaced with correct intrinsic; fix validated on Spacemit K1 via OpenCV; released in libpng 1.6.53</td>
+      <td>Fixed RISC-V RVV code build</td>
+      <td>Merged (2025-12-05)</td>
+      <td>Build-breaking</td>
+      <td>Nonexistent intrinsic <code class="language-plaintext highlighter-rouge">__riscv_vaaddu_wx_u8m1</code>; exposed that the maintainer’s own CI/manual testing had never actually compiled the vectorized RVV path (missing <code class="language-plaintext highlighter-rouge">-march=rv64gv</code>).</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/pnggroup/libpng/issues/711">Issue #711</a></td>
+      <td>Crashes on a machine with the C920 core</td>
+      <td>Closed (2025-07-10)</td>
+      <td>Correctness/crash</td>
+      <td>T-Head C920 (RVV 0.7.1) crashed because GCC 15’s RVV-1.0 intrinsics did not match the core’s spec draft; resolved by moving to compile-time <code class="language-plaintext highlighter-rouge">__riscv_v</code> version gating (PR #721) rather than raw inline assembly.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/pnggroup/libpng/issues/705">Issue #705</a></td>
+      <td>RISCV configure.ac overrides build environment architecture settings</td>
+      <td>Closed (2025-07-05, per build-fix cascade)</td>
+      <td>Build-safety</td>
+      <td><code class="language-plaintext highlighter-rouge">configure.ac</code> forced <code class="language-plaintext highlighter-rouge">-march=rv64gv1p0</code> during the compiler probe regardless of target, risking crashes on non-V hardware and blocking no-vector builds; <code class="language-plaintext highlighter-rouge">-march=rv64g</code> crashed the compiler on <code class="language-plaintext highlighter-rouge">asm</code> directives, <code class="language-plaintext highlighter-rouge">-march=rv64id</code> failed to compile <code class="language-plaintext highlighter-rouge">riscv_init.c</code>.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/pnggroup/libpng/issues/703">Issue #703</a></td>
+      <td>riscv64-linux-gnu-gcc 12.2.0 (Debian 12) good for RVV-enabled builds?</td>
+      <td>Closed, not planned (2025-06-17)</td>
+      <td>Build</td>
+      <td>GCC 12.2.0 failed to link RVV builds via autotools (<code class="language-plaintext highlighter-rouge">undefined reference to png_init_filter_functions_rvv</code>) though CMake succeeded with the identical toolchain.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/pnggroup/libpng/issues/698">Issue #698</a></td>
+      <td>riscv: cmake cross-build works, but configure one doesn’t</td>
+      <td>Closed (2025-06-12)</td>
+      <td>Build</td>
+      <td>Same symptom as #703, reproduced on Mint 22.1/Ubuntu 24.04.2 with <code class="language-plaintext highlighter-rouge">--host=riscv64-linux-gnu --enable-hardware-optimizations</code>.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/pnggroup/libpng/issues/678">Issue #678</a></td>
+      <td>configure script produces a syntax error since commit ffb8e8b</td>
+      <td>Closed (2025-05-27)</td>
+      <td>Build-breaking</td>
+      <td>Regression traced to an early RISC-V build-file change; fixed by PR #683/#685/#693 follow-ons.</td>
     </tr>
   </tbody>
-</table></div>
-
-<p>The December 2025 correctness regression (issue #769, PR #771) is the most significant: a build that appeared to compile and link correctly produced silently wrong output on a real riscv64 board. The bug was caught only because the OpenCV team ran a comprehensive image test suite on physical hardware.</p><hr />
+</table></div><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -955,79 +986,86 @@
 </h2>
     
 
-<p><strong>No active blockers.</strong> All RISC-V issues are closed. The maintainer (ctruta) is supportive of RISC-V work and personally shepherded all merges.</p>
+<p><strong>No active blockers.</strong> All RISC-V issues and PRs found are closed or merged, and the maintainer (ctruta) has consistently shepherded the work to completion.</p>
 
-<p><strong>Reviewer friction (resolved):</strong> John Bowler (jbowler), a long-standing contributor, expressed skepticism during PR #666 review, citing concerns about documentation quality (links to wikis and Google Drive documents) and macro discipline (<code class="language-plaintext highlighter-rouge">-Wundef</code>). His objections were technical, not philosophical. All were resolved before merge. He subsequently reviewed and approved PR #713 and PR #721, providing detailed feedback that improved the implementation.</p>
+<p><strong>Reviewer friction (resolved):</strong> John Bowler (jbowler) was the most persistent critical voice across the multi-year #405 thread and later in Issue #711/#705, repeatedly raising portability and safety objections: inline-assembly fragility in #405 (“appears only works with linux,” questioned runtime-detection given incomplete compiler support for unratified RVV revisions), the forced <code class="language-plaintext highlighter-rouge">-march</code> override risking crashes in #705, and intrinsics-vs-raw-instructions correctness risk in #711 (arguing raw RVV assembly “will break” as the spec evolves). His objections were technical, not philosophical, and were resolved by the intrinsics-based rewrite (PR #666, #713) and compile-time version gating (PR #721). A separate reviewer, camel-cdr, resolved a spec-legitimacy disagreement between jbowler and the implementers by linking the authoritative ratified RVV spec in the official <code class="language-plaintext highlighter-rouge">riscv-isa-manual</code> repository.</p>
 
-<p><strong>Structural risks (not blockers):</strong></p>
+<p><strong>Structural risks (not active blockers):</strong></p>
 
 <ol>
-  <li>
-    <p>Single maintainer: all merge decisions pass through ctruta. The review incident in PR #771 (maintainer forgot to apply <code class="language-plaintext highlighter-rouge">-march=rv64gv</code> during review) shows that the absence of automated CI amplifies single-point-of-failure risk for RISC-V code quality.</p>
-  </li>
-  <li>
-    <p>No runtime detection: the compile-time-only RVV enablement strategy means libpng cannot produce a universal riscv64 binary that works correctly on both vector and non-vector hardware. Any fleet with mixed hardware must either disable RVV system-wide or ship separate binaries.</p>
-  </li>
-  <li>
-    <p>RVV off by default: unlike ARM, Intel, and PowerPC, RISC-V RVV is not enabled in the default build. Distribution packages may or may not enable it depending on their build configuration. The Ubuntu Noble version number (1.6.43) predates the RVV port entirely, suggesting RVV may not be active in that distribution’s libpng builds.</p>
-  </li>
+  <li><strong>Single-maintainer CI blind spot.</strong> The PR #771 incident, where the maintainer’s own local testing silently skipped the vectorized code path for an unknown period because <code class="language-plaintext highlighter-rouge">-march=rv64gv</code> was never applied, shows that the absence of automated CI directly allowed a latent build defect (and, separately, the Paeth correctness bug) to reach a tagged release undetected.</li>
+  <li><strong>No runtime detection.</strong> The compile-time-only RVV enablement strategy means libpng cannot produce a single universal riscv64 binary safe across mixed vector/non-vector hardware fleets; a distributor must either disable RVV system-wide or ship separate binaries per target.</li>
+  <li><strong>RVV off by default, and dead on the default branch.</strong> Distribution packages inherit whichever default applies to the branch/release they package from; Ubuntu 26.04 and Debian sid both ship the plain scalar build (RVV path off by default, consistent with upstream defaults), so no riscv64-specific patch is needed for the packages currently shipping. A distributor wanting the RVV-accelerated build must build from <code class="language-plaintext highlighter-rouge">libpng16</code> explicitly, since the code is unreachable on the <code class="language-plaintext highlighter-rouge">libpng18</code> default branch.</li>
 </ol><hr />
-<h2 id="13-investment-analysis">
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> yellow (clean-distro-build)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Justification:</strong> No upstream CI builds or tests riscv64: all four GitHub Actions workflows (<a href="https://github.com/pnggroup/libpng/blob/libpng16/.github/workflows/lint.yml">lint.yml</a>, <a href="https://github.com/pnggroup/libpng/blob/libpng16/.github/workflows/verify-linux.yml">verify-linux.yml</a>, <a href="https://github.com/pnggroup/libpng/blob/libpng16/.github/workflows/verify-macos.yml">verify-macos.yml</a>, <a href="https://github.com/pnggroup/libpng/blob/libpng16/.github/workflows/verify-windows.yml">verify-windows.yml</a>) plus <code class="language-plaintext highlighter-rouge">.appveyor.yml</code> were read directly and contain zero “riscv” references, and upstream publishes no GitHub Release binaries at all. The distribution floor applies instead: Debian sid (<a href="https://buildd.debian.org/status/package.php?p=libpng1.6&amp;suite=sid">buildd.debian.org</a>) and Ubuntu 24.04/26.04 (<a href="https://packages.ubuntu.com/search?keywords=libpng&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a>) build and ship libpng for riscv64 from effectively unmodified upstream source – the RVV SIMD path is optional and off by default, so no riscv64 patch is needed to build – giving the yellow “clean-distro-build” classification.</li>
+  <li><strong>Pending work that could change the grade:</strong> No automated riscv64 CI exists upstream; adding a QEMU-based riscv64 build+test lane to <code class="language-plaintext highlighter-rouge">verify-linux.yml</code> is the highest-priority gap identified in the investment table below. The optional RVV acceleration path (off by default) had a correctness regression in the vectorized Paeth filter (<a href="https://github.com/pnggroup/libpng/issues/769">Issue #769</a> / <a href="https://github.com/pnggroup/libpng/pull/771">PR #771</a>) that shipped in 1.6.51 and was fixed in 1.6.53; this does not affect the base scalar riscv64 build that distros ship. Separately, the default GitHub branch (<code class="language-plaintext highlighter-rouge">libpng18</code>) has not yet had the RISC-V port migrated to its new <code class="language-plaintext highlighter-rouge">pngtarget.h</code>/<code class="language-plaintext highlighter-rouge">check.h</code> dispatch convention, so RVV is currently unreachable there even though it is fully wired on <code class="language-plaintext highlighter-rouge">libpng16</code>. No RISE project involvement or funded work on libpng was found in any source consulted.</li>
+</ul><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has funded no work on libpng (Section 1, Section 10 absence); none of the sizing below is already covered by RISE or any other funded initiative.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The RISC-V port is functionally complete for the read path. All 7 PNG filter variants are implemented and correct as of v1.6.53. No write-path SIMD exists, but this is a gap shared with arm64 and amd64. The remaining functional gap relative to arm64 is the absence of runtime CPU feature detection, which constrains deployment on heterogeneous hardware.</p>
-<h3 id="132-performance-optimization">
+<p>The RISC-V read-path port is functionally complete on <code class="language-plaintext highlighter-rouge">libpng16</code> (7 of 7 filter variants, matching PowerPC/LoongArch coverage and exceeding Intel SSE2). The two material functional gaps are (a) the absence of runtime CPU-feature detection, which blocks safe universal-binary distribution across mixed vector/non-vector riscv64 fleets, and (b) the orphaned state of the RISC-V source on the <code class="language-plaintext highlighter-rouge">libpng18</code> default branch, where it is currently unreachable via any build flag.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>The only available performance figure is a 14% speedup over scalar for the paeth filter on Spacemit K1 (VLEN=256-bit, Dec 2025). No throughput figures in MB/s, no cross-architecture comparisons, and no formal benchmark results from pngtest or any external harness are available in any source consulted. The 2021-2022 thesis data (RVV 0.7.1, Allwinner D1) reports 1.13x-5.43x across filter types, but this is not applicable to current RVV 1.0 code on current hardware.</p>
-
-<p>Performance on VLEN=128-bit (typical for many shipping riscv64 cores) is unknown – no benchmark data was found for this configuration. The Spacemit K1 is VLEN=256-bit.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>There is no automated riscv64 CI. The ci_env.riscv64-linux-gnu.sh environment file exists and is correct, but no GitHub Actions workflow executes it. Adding QEMU-based riscv64 cross-compilation to the verify-linux.yml workflow is the highest-leverage near-term infrastructure investment. The December 2025 correctness regression would have been caught by such infrastructure.</p>
-<h3 id="134-ecosystem-enablement">
+<p>The only quantitative figures found come from an unaffiliated, non-RISE 2021-2022 academic project (<code class="language-plaintext highlighter-rouge">libpng_rvv</code>, Manfred Schlaegl, JKU Linz), benchmarked on an Allwinner D1/Xuantie C906 board (RVV draft 0.7.1, not the ratified 1.0 spec now shipped): speedups over scalar C ranged from 1.13x (Paeth3, the hardest filter to vectorize due to serial/branchy logic) to 5.43x (Up3/Up4). These figures predate both the RVV 1.0 rewrite and the Paeth correctness fix and do not reflect current 1.0-compliant hardware. No throughput figures in megapixels/second or MB/s, and no riscv64-vs-arm64 or riscv64-vs-amd64 comparative benchmark, was found in any source consulted for the current (1.6.53+) RVV 1.0 implementation. OpenEmbedded-core CI notes document that libpng’s ptest suite consistently times out under QEMU riscv64 emulation (too slow to finish within the ptest-runner window), a build/test-infrastructure problem rather than a hardware performance data point.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>libpng is a transitive dependency of a large fraction of the Linux userspace image processing stack (OpenCV, ImageMagick, Qt, browsers, etc.). The OpenCV team has already demonstrated downstream riscv64 integration testing. Investing in upstream libpng riscv64 CI produces leverage across all of these consumers.</p>
+<p>No automated riscv64 CI exists (Section 7). The <code class="language-plaintext highlighter-rouge">ci_env.riscv64-linux-gnu.sh</code> environment file is correct and ready to use but is not invoked by any GitHub Actions workflow. Wiring it into <code class="language-plaintext highlighter-rouge">verify-linux.yml</code> with a QEMU cross-execution step is the single highest-leverage near-term infrastructure investment; it would have caught both the December 2025 build break (PR #771) and, potentially, the Paeth correctness regression (Issue #769) before release.</p>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
 
-<p>Distribution packages in Debian and Ubuntu already ship riscv64 binaries. The primary gap is not availability but correctness assurance – the last correctness bug was found and fixed only because the OpenCV team ran physical hardware tests.</p>
-<h3 id="135-summary-table">
+<p>libpng is a transitive build dependency of a large share of the Linux image-processing stack (OpenCV, browsers, image libraries, etc.), but libpng itself has no dependent package ecosystem of its own that requires separate per-package riscv64 enablement (see omission of Section 10). The most concrete ecosystem signal is that the OpenCV project (asmorkalov) has already served as de facto downstream riscv64 CI for libpng, filing and fixing the Paeth correctness bug and the build-break bug on real Spacemit K1 hardware. Formalizing upstream riscv64 CI would reduce libpng’s current reliance on a single downstream consumer to catch regressions.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1046,42 +1084,42 @@
   <tbody>
     <tr>
       <td>CI/CD</td>
-      <td>Add QEMU-based riscv64 cross-compile and test lane to verify-linux.yml</td>
+      <td>Add a QEMU-based riscv64 build+test lane to <code class="language-plaintext highlighter-rouge">verify-linux.yml</code>, wiring in the existing <code class="language-plaintext highlighter-rouge">ci_env.riscv64-linux-gnu.sh</code></td>
       <td>1</td>
-      <td>Upstream (with external contributor patch)</td>
-      <td>Critical</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Wire ci_env.riscv64-linux-gnu.sh into the GitHub Actions matrix</td>
-      <td>0.5</td>
-      <td>Upstream</td>
+      <td>Upstream (external contributor patch)</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Implement runtime RVV feature detection (check.h equivalent) to allow safe universal binaries</td>
+      <td>Migrate the <code class="language-plaintext highlighter-rouge">riscv/</code> RVV port to the <code class="language-plaintext highlighter-rouge">libpng18</code> default branch’s <code class="language-plaintext highlighter-rouge">pngtarget.h</code>/<code class="language-plaintext highlighter-rouge">check.h</code> dispatch convention (currently orphaned)</td>
+      <td>2</td>
+      <td>External contributor</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Implement runtime RVV feature detection (a <code class="language-plaintext highlighter-rouge">check.h</code>/hwprobe equivalent) to allow safe universal riscv64 binaries</td>
       <td>3</td>
       <td>External contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Benchmark RVV filter implementations on VLEN=128-bit hardware (produce MB/s figures)</td>
+      <td>Produce current (RVV 1.0, 1.6.53+) throughput benchmarks on representative riscv64 hardware (e.g. Spacemit K1, VLEN=128-bit cores), since the only public figures are from a 2021-2022 RVV-0.7.1 thesis</td>
       <td>2</td>
       <td>External contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Benchmark RVV vs scalar vs auto-vectorization on multiple riscv64 cores</td>
+      <td>Benchmark RVV vs scalar vs auto-vectorization across multiple riscv64 cores and VLEN configurations</td>
       <td>2</td>
       <td>External contributor</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Enable RVV by default in CMake/configure when compiler probe passes</td>
+      <td>Enable RVV by default in CMake/configure once the compiler probe passes, matching ARM/Intel/PowerPC</td>
       <td>0.5</td>
       <td>Upstream</td>
       <td>Medium</td>
@@ -1095,16 +1133,6 @@
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
 <h2 id="15-references">
   
   
@@ -1116,25 +1144,32 @@
 
 <ul>
   <li><a href="https://github.com/pnggroup/libpng">pnggroup/libpng (canonical upstream)</a></li>
-  <li><a href="https://github.com/glennrp/libpng">glennrp/libpng (read-only mirror)</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/issues/698">Issue #698 – RVV autodetection flaw (linked from PR #699)</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/issues/705">Issue #705 – configure.ac overrides build environment</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/issues/711">Issue #711 – crashes on C920 core</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/issues/769">Issue #769 – paeth3/paeth4 RVV inaccurate results</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/pull/666">PR #666 – RISC-V RVV extension (initial port)</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/pull/699">PR #699 – fix autodetection of RVV support</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/pull/702">PR #702 – fix fallback when RVV rev. &lt; 1.0</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/pull/704">PR #704 – separated build flow for autotools and cmake</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/pull/713">PR #713 – libpng16 build fixes for riscv (assembly to intrinsics)</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/pull/721">PR #721 – RISCV support only RVV 1.0</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/pull/763">PR #763 – correct and optimize RVV implementations (abandoned)</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/pull/766">PR #766 – fix and improve RVV png_read_filter (absorbed directly)</a></li>
-  <li><a href="https://github.com/pnggroup/libpng/pull/771">PR #771 – fixed RISC-V RVV code build</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=libpng1.6&amp;suite=sid">Debian buildd status – libpng1.6 riscv64</a></li>
-  <li><a href="https://packages.ubuntu.com/search?keywords=libpng&amp;suite=noble&amp;searchon=names&amp;section=all">Ubuntu packages – libpng Noble</a></li>
-  <li><a href="https://github.com/opencv/opencv/issues/28126">OpenCV issue opencv/opencv#28126</a></li>
-  <li><a href="https://github.com/opencv/opencv/pull/28111">OpenCV PR opencv/opencv#28111</a></li>
-  <li><a href="https://github.com/mschlaegl/libpng_rvv-doc">mschlaegl/libpng_rvv-doc – JKU Linz bachelor thesis benchmark data</a></li>
+  <li><a href="https://github.com/glennrp/libpng">glennrp/libpng (redirects to pnggroup/libpng)</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/405">PR #405 - Support for RISC-V Vector Extension (open, superseded by #666)</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/666">PR #666 - RISC-V RVV extension (merged, v1.6.49)</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/683">PR #683 - riscv: autotools update</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/issues/678">Issue #678 - configure script produces a syntax error</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/699">PR #699 - riscv: fix autodetection of rvv support</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/issues/698">Issue #698 - cmake cross-build works, configure one doesn’t</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/issues/703">Issue #703 - riscv64-linux-gnu-gcc 12.2.0 good for RVV-enabled builds?</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/702">PR #702 - fix Fallback when RVV rev. &lt; 1.0</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/704">PR #704 - separated build flow for autotools and cmake</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/issues/705">Issue #705 - RISCV configure.ac overrides build environment architecture settings</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/issues/711">Issue #711 - RISCV: crashes on a machine with the C920 core</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/713">PR #713 - Libpng16 build fixes for riscv</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/721">PR #721 - RISCV support only RVV 1.0</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/766">PR #766 - Fix and improve RVV png_read_filter</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/issues/769">Issue #769 - png_read_filter_row_paeth3(4) RVV implementation is not accurate</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/771">PR #771 - Fixed RISC-V RVV code build</a></li>
+  <li><a href="https://github.com/pnggroup/libpng/pull/589">PR #589 - [libpng18] reworked SIMD code (abandoned)</a></li>
+  <li><a href="https://buildd.debian.org/status/package.php?p=libpng1.6&amp;suite=sid">Debian buildd status - libpng1.6 riscv64 (sid)</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=libpng&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu packages - libpng (resolute/26.04)</a></li>
+  <li><a href="https://github.com/mschlaegl/libpng_rvv-doc">mschlaegl/libpng_rvv-doc - RISC-V Vector Optimized libpng benchmark</a></li>
+  <li><a href="https://www.eessi.io/docs/available_software_riscv/detail/libpng/">EESSI - libpng available software (riscv64)</a></li>
+  <li><a href="https://riseproject.dev">RISE Project - riseproject.dev</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel_builder package list</a></li>
+  <li><a href="https://github.com/madler/zlib">zlib PR #1099 - RVV-accelerated Adler32 (unmerged)</a></li>
+  <li><a href="https://github.com/zlib-ng/zlib-ng">zlib-ng repository</a></li>
 </ul>
 
           
