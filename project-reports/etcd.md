@@ -2,8 +2,6 @@
 title: etcd
 parent: Project Reports
 color: orange
-categories:
-  - containers
 dependencies:
   - name: Go
     relation: build-dependency
@@ -20,16 +18,19 @@ dependencies:
   - name: Protocol Buffers
     relation: runtime-dependency
     criticality: critical
-  - name: golang.org/x/crypto
-    relation: runtime-dependency
-    criticality: optional
   - name: golang.org/x/sys
     relation: runtime-dependency
     criticality: critical
+  - name: golang.org/x/crypto
+    relation: runtime-dependency
+    criticality: optional
   - name: prometheus/client_golang
     relation: runtime-dependency
     criticality: optional
   - name: OpenTelemetry
+    relation: runtime-dependency
+    criticality: optional
+  - name: zap
     relation: runtime-dependency
     criticality: optional
 ---
@@ -37,33 +38,35 @@ dependencies:
 {% include dependency-graph.html slug="dependencies" subset="etcd" %}
 
 # etcd
+
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
+**Readiness:** orange<br/>
 **Scope:** RISC-V (riscv64/linux) support status for etcd<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
----
-
 ## 1. Project Overview
 
-etcd is a distributed, strongly-consistent key-value store used as the backing store for Kubernetes cluster state. It implements the Raft consensus algorithm and exposes a gRPC API (v3) with a watch facility for change notification. It is written entirely in Go with no C or assembly code.
+etcd is a distributed, strongly-consistent key-value store used as the backing store for Kubernetes cluster state. It implements the Raft consensus algorithm and exposes a gRPC API (v3) with a watch facility for change notification. It is written entirely in Go with no C or assembly code of its own.
 
-**Governance.** etcd is a [CNCF Graduated project](https://www.cncf.io/projects/etcd/) (graduated November 24, 2020; incubated December 2018). It is governed under [SIG-etcd](https://github.com/kubernetes/community/blob/master/sig-etcd/README.md) within the Kubernetes community, using maintainer lazy-consensus with a supermajority fallback after a three-business-week period. Roles are defined in `OWNERS` and `OWNERS_ALIASES` files in the repository.
+**Governance.** etcd is a [CNCF Graduated project](https://www.cncf.io/projects/etcd/) (graduated November 24, 2020; incubated December 2018), governed under [SIG-etcd](https://github.com/kubernetes/community/blob/master/sig-etcd/README.md) within the Kubernetes community. Decisions use maintainer lazy-consensus with a supermajority fallback after a three-business-week inactive voting period (minimum two maintainers). Roles are defined in `OWNERS` and `OWNERS_ALIASES` in the repository.
 
-**Corporate sponsors.** Current active maintainers, from `OWNERS_ALIASES` and the SIG-etcd README:
+**Corporate sponsors,** from `OWNERS_ALIASES`:
 
 | Role | Name | GitHub handle | Company |
 |---|---|---|---|
-| Chair | Siyuan Zhang | @siyuanfoundation | Google |
 | Chair | Ivan Valdes | @ivanvc | Inmar Intelligence |
+| Chair | James Blair | @jmhbnz | Not publicly listed |
+| Chair | Siyuan Zhang | @siyuanfoundation | Google |
 | Tech Lead | Benjamin Wang | @ahrtr | Broadcom (formerly VMware) |
+| Tech Lead | Wei Fu | @fuweid | Microsoft |
 | Tech Lead | Marek Siarkowicz | @serathius | Google |
-| Tech Lead | Wei Fu | @fuweid | unknown |
+| Approver | Sahdev Zala | @spzala | IBM |
 
-Historical contributors came from Amazon, IBM, Alibaba, and Red Hat. The active maintainership is dominated by Google and Broadcom.
+Emeritus maintainers include hexfusion (Red Hat) and several ex-CoreOS founders (philips, xiang90, heyitsanthony) plus ex-Google maintainers (jingyih, jpbetz, wenjiaswe). Active leadership spans Google, Broadcom/VMware, Microsoft, IBM and Inmar Intelligence, with no single-vendor control.
 
-**Culture on new ports.** Cautious to negative. [CONTRIBUTING.md](https://github.com/etcd-io/etcd/blob/main/CONTRIBUTING.md) states that "the only supported architecture is linux-amd64" and "bug reports for other environments will generally be ignored." Adding an architecture requires dedicated nodes in the Kubernetes Prow testing infrastructure. When asked about riscv64 plans in May 2026, maintainer @serathius responded: "No plans." The project does not rely on GitHub Actions; all CI runs on Prow, which the etcd project does not control.
+**Culture on new ports.** Cautious, and on riscv64 specifically the maintainer response has been negative. etcd's [supported-platform tier documentation](https://etcd.io/docs/v3.6/op-guide/supported-platform/) requires a contributor to commit to long-term maintenance and to stand up CI meeting the target tier's bar before a new architecture is added. Because etcd's CI runs on Kubernetes Prow rather than GitHub Actions, that CI requirement means dedicated physical riscv64 hardware wired into the Prow pool, not merely a green run on a third-party GitHub Actions runner. When asked directly about riscv64 plans during the March 2026 pull request discussion, maintainer @serathius stated **"No plans."** [NEEDS VERIFICATION: a prior version of this assessment dated that quote to May 2026; the primary source, the PR #21510 discussion thread itself, places it within the thread's active window of March 20-29, 2026, and that dating is used here.]
 
 ---
 
@@ -71,199 +74,168 @@ Historical contributors came from Amazon, IBM, Alibaba, and Red Hat. The active 
 
 | Date | Event | Source |
 |---|---|---|
-| August 29, 2019 | [PR #10834](https://github.com/etcd-io/etcd/pull/10834) merged: vendor update of `golang.org/x/sys` and `golang.org/x/net` to include riscv64 support. Only RISC-V related commit ever merged. Author: @carlosedp (Carlos Eduardo), part of a broad RISC-V Go ecosystem bringup effort. Merged by @gyuho. | GitHub API (merge_commit_sha: 876df8d), verified |
-| March 2022 | Issue #13504 and issue #14522 requesting riscv64 CI extension. Both closed stale. | GitHub search |
-| April 21, 2023 | [PR #15490](https://github.com/etcd-io/etcd/pull/15490) "feat: add riscv64 support" (draft) closed without merging. Author: @ernado (Aleksandr Razumov). Blocker: `gcr.io/distroless/static-debian11` had no riscv64 variant. Maintainer @ahrtr: distroless is required due to CVE exposure; maintainer @serathius: opposed to a separate base image for riscv64. Author closed the PR and created the [go-riscv/etcd](https://github.com/go-riscv/etcd) community fork. | GitHub PR #15490 comments, verified |
-| March 20, 2026 | [Issue #21509](https://github.com/etcd-io/etcd/issues/21509) opened by @gounthar requesting formal riscv64 support, with build evidence from native hardware (BananaPi F3 / SpacemiT K1) and an offer of free RISE riscv64 CI runners. | GitHub issue #21509, verified |
-| March 29, 2026 | [PR #21510](https://github.com/etcd-io/etcd/pull/21510) "server: add riscv64 to supported architectures" closed without merging. A one-line change to `checkSupportArch()`. Maintainer @ivanvc: etcd CI runs on Prow; adding an architecture requires physical riscv64 Prow nodes, which do not exist. Author closed voluntarily. Maintainer @serathius, when asked about future plans in May 2026: "No plans." | GitHub PR #21510 comments, verified |
-| June 4, 2026 | [Issue #21509](https://github.com/etcd-io/etcd/issues/21509) closed by maintainer @jberkus after confirming with k8s-infra: "We do not currently have RISCV machines in the Prow testing pool." The path identified: RISE Project provides Scaleway EM-RV1 machines to SIG-k8s-infra, which integrates them into Prow, which then unblocks etcd. That conversation was beginning on #sig-k8s-infra Slack as of June 5, 2026. | GitHub issue #21509 comment thread, verified |
+| August 29, 2019 | [PR #10834](https://github.com/etcd-io/etcd/pull/10834), "vendor: update x/sys and x/net modules to support Risc-V," merged. Vendor bump of `golang.org/x/sys` and `golang.org/x/net` to versions carrying upstream RISC-V support (tracked against golang/go#27532). Author: @carlosedp (Carlos de Paula). Merged by @gyuho. Merge commit `876df8d123978b4b762275f75dbc47c227c105de`. This is the only riscv-related change ever merged into etcd. First release containing it: **v3.4.1** (2019-09-17); v3.4.0 (2019-08-30) predates it. | GitHub PR and commit pages, verified directly; CHANGELOG-3.4.md cross-check |
+| November 25, 2021 - April 18, 2022 | [PR #13504](https://github.com/etcd-io/etcd/pull/13504), "Is it necessary to avoid setting ETCD_UNSUPPORTED_ARCH=riscv64," by @jiangxiaobin96. Earliest riscv64 attempt found. Maintainer @ptabor required a doc update plus an actual CI build test to justify even Tier-3 status; the PR went stale and closed without the requested work being added. | GitHub PR #13504, verified |
+| September 25, 2022 - March 18, 2023 | [PR #14517](https://github.com/etcd-io/etcd/pull/14517), "Adding support for RISC-V," by @advancedwebdeveloper, with a working Docker build/run demo on `linux/riscv64`. @ahrtr questioned production readiness (Go riscv64 support still "experimental" as of Go 1.14); @serathius set a two-phase bar (CI first, "officially supported" label only after); @ptabor recommended fail-by-default for Tier-3 architectures. The CI half of the plan was spun off as issue #14522. Went stale with no further action. | GitHub PR #14517, verified |
+| September 26, 2022 - April 2, 2023 | [Issue #14522](https://github.com/etcd-io/etcd/issues/14522), "Extending CI pipeline, on behalf of 64bit RISC-V environment," filed on behalf of PR #14517 to scope QEMU emulation, a dedicated riscv64 board for a GitHub Actions runner, and cross-compilation. Closed stale, unimplemented. | GitHub issue #14522, verified |
+| March 16 - April 21, 2023 | [PR #15490](https://github.com/etcd-io/etcd/pull/15490), "feat: add riscv64 support" (draft), by @ernado, proposing riscv64 be marked Tier-3 per the supported-platform doc. Never taken out of draft and never merged. [NEEDS VERIFICATION: a prior assessment attributed the closure specifically to `gcr.io/distroless/static-debian11` lacking a riscv64 variant at the time, and stated the author subsequently created the [go-riscv/etcd](https://github.com/go-riscv/etcd) fork; this detail appears in only one of the two sources reviewed here and could not be independently corroborated in the current research pass.] | GitHub PR #15490, verified as closed/unmerged |
+| March 20, 2026 | [Issue #21509](https://github.com/etcd-io/etcd/issues/21509), "Add riscv64 to supported architectures," opened by @gounthar, requesting riscv64 be promoted to officially supported, citing successful native builds on BananaPi F3 / SpacemiT K1 hardware and free RISE Project CI runners. Functioned as the tracking issue for the companion PR #21510. | GitHub issue #21509, verified |
+| March 20-29, 2026 | [PR #21510](https://github.com/etcd-io/etcd/pull/21510), "server: add riscv64 to supported architectures." One-line change to `checkSupportArch()`, backed by a green build on RISE riscv64 runners. @serathius pointed out riscv64 was absent from the supported-platform doc; @ivanvc explained the real blocker is that etcd's CI runs on Prow (not GitHub Actions), requiring dedicated riscv64 Prow hardware nodes; @serathius stated **"No plans"** when asked about future intent; @upodroid (Kubernetes-side) noted parallel Kubernetes riscv64 work is waiting on the same hardware gap. The author closed the PR, stating that standing up Prow infrastructure was beyond what they could contribute. **Closed, not merged.** | GitHub PR #21510, verified |
+| June 4, 2026 | Issue #21509 closed. [NEEDS VERIFICATION: attributed by a prior assessment to maintainer @jberkus, quoting confirmation with SIG-k8s-infra that "We do not currently have RISCV machines in the Prow testing pool"; this specific attribution and quote were not independently re-confirmed in the current research pass, though the substance, that the issue closed on this date without the feature landing because of the Prow hardware gap, is corroborated.] Around this time, RISE TSC offered Scaleway EM-RV1 riscv64 machines to SIG-k8s-infra in the #21509 thread to integrate into etcd's Prow CI pool (see Section 12). | GitHub issue #21509; corroborated by live research (~June 2026 RISE offer) |
 
-**Note on contradictory finding.** The build system research section contains a table entry claiming "PR #21509 Merged Jun 4, 2026." This is incorrect. #21509 is an issue, not a PR; it was closed (not merged) by @jberkus with the /close command on June 4, 2026 because the Prow infrastructure blocker was confirmed. All other sources are consistent: no riscv64 support was merged as of the report date. The erroneous entry is discarded.
+**Is work fully upstream?** No. The only merged upstream contribution is the 2019 vendor dependency bump (PR #10834). Direct source confirmation at HEAD (commit `7583cc6`, `server/etcdmain/etcd.go` lines ~232-240) shows the `checkSupportArch()` switch statement still lists only `"amd64", "arm64", "ppc64le", "s390x"`; riscv64 remains absent. Every substantive riscv64 enablement attempt (PR #13504, #14517, #15490, #21510) has been closed without merging.
 
-**Is work fully upstream?** No. The sole merged upstream contribution is the 2019 vendor dependency bump (PR #10834). All substantive riscv64 enablement attempts have been rejected. riscv64 is not an officially supported platform in etcd as of June 2026.
-
-**RISE Project involvement.** None. A search of all 27 RISE Project blog posts (May 2024 through June 2026) returns zero mentions of etcd. The RISE Project wheel builder does not list etcd. RISE was cited by contributor @gounthar as a source of free riscv64 CI runners, and RISE TSC Co-Chair @luhenry offered Scaleway EM-RV1 machines to SIG-k8s-infra in the issue #21509 thread (June 5, 2026), but no funded or structured RISE work exists for etcd itself.
+**RISE Project involvement.** No RISE blog post substantively covers etcd; a site search returns only two incidental biographical mentions (in working-group-lead election result posts) of a maintainer's past CoreOS work on etcd, rkt, and Kubernetes, with no technical or RISC-V content. The RISE Python wheel builder does not list an "etcd" package. No GitHub repository named `etcd` or `kubernetes-riscv` exists under the `riseproject-dev` GitHub organization; a widely-circulated claim of a `riseproject-dev/kubernetes-riscv` issue #2 proposing joint Kubernetes/etcd Tier-2 collaboration was checked directly against the GitHub org listing and repository search and found to be **fabricated by a search-summarization step** - no such repository exists. RISE's only concrete, corroborated involvement is the ~June 2026 offer (by a RISE TSC representative, in the #21509 thread) of Scaleway EM-RV1 riscv64 machines to SIG-k8s-infra, intended to unblock Prow integration; no confirmation that this hardware has actually been integrated into Prow was found.
 
 ---
 
 ## 3. Upstream Support Tier
 
-etcd defines three support tiers, documented at [etcd.io/docs/v3.6/op-guide/supported-platform/](https://etcd.io/docs/v3.6/op-guide/supported-platform/):
+etcd's [supported-platform documentation](https://etcd.io/docs/v3.6/op-guide/supported-platform/) defines:
 
-- **Tier 1** (all tests must pass, release-blocking): linux/amd64, linux/arm64
-- **Tier 3** (best-effort, not release-blocking): darwin/amd64, darwin/arm64, windows/amd64, linux/ppc64le, linux/s390x
-- **Unsupported** (requires `ETCD_UNSUPPORTED_ARCH` env var at runtime to bypass the startup exit): everything else
-
-riscv64 is not listed in any tier. It is in the unsupported category enforced at runtime by `checkSupportArch()` in `server/etcdmain/etcd.go`.
+- **Tier 1** (full support, robustness-tested, release-blocking): `linux/amd64`, `linux/arm64`
+- **Tier 3** (build-only, unstable, not release-blocking): `darwin/amd64`, `darwin/arm64`, `windows/amd64`, `linux/ppc64le`, `linux/s390x`
+- No Tier 2 platforms are currently listed. (The ARM64 Tier-2-to-Tier-1 promotion via PR #12928 is cited in the doc as precedent for how a new architecture can advance.)
+- Everything else, including riscv64, is **unsupported**, enforced at runtime by `checkSupportArch()` in `server/etcdmain/etcd.go`, which exits unless the operator sets `ETCD_UNSUPPORTED_ARCH=riscv64`.
 
 | Criterion | amd64 | arm64 | riscv64 |
 |---|---|---|---|
 | Official support tier | Tier 1 | Tier 1 | Unsupported |
-| Release binary published | Yes | Yes | No |
-| CI coverage | Full (Prow) | Full (Prow) | None |
+| Release binary published upstream | Yes | Yes | No |
+| CI coverage (Prow) | Full | Full | None |
 | Runtime startup gate | Passes | Passes | Blocked; requires `ETCD_UNSUPPORTED_ARCH=riscv64` |
-| Makefile PLATFORMS target | Yes | Yes | No |
-| Docker multi-arch image | Yes | Yes | No |
-| Distroless base image available | Yes | Yes | Yes (blocker from 2023 is now resolved) |
-
-The distroless blocker that caused PR #15490 to fail in 2023 has been resolved: `gcr.io/distroless/static-debian11` now supports riscv64. The current blocker is entirely the Prow CI infrastructure constraint.
+| Makefile `PLATFORMS` target | Yes | Yes | No |
+| Docker multi-arch image | Yes | Yes | No (official); community fork only |
 
 ---
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-etcd is a pure Go application. It has no C source files, no assembly files, no JIT compiler, no SIMD dispatch, and no architecture-gated build tags within the repository itself.
+etcd itself is a pure Go application. A full-repository grep for "riscv" at HEAD (commit `7583cc6`) returns **zero matches** outside of coincidental base64 substrings inside TLS certificate/key test fixtures (not source code). Confirmed absent: any `arch/riscv/` directory, `.s`/`.S`/`.asm` assembly files, JIT backend, riscv64 SIMD dispatch, and any `_amd64.go`/`_arm64.go`/`_riscv64.go` per-architecture build-tag files (searches for these suffix patterns across the repo each returned zero results, for every architecture, not just riscv64). This is expected: etcd has no architecture-specific code paths of its own for any platform, supported or not; its "architecture support" is entirely the one-line `checkSupportArch()` allow-list check.
 
-A full source scan of the etcd-io/etcd repository confirms:
-- Zero files matching `*.s`, `*.S`, or `*.asm`
-- Zero occurrences of "riscv" in any Go, Makefile, shell, or YAML source file
-- Zero occurrences of SIMD intrinsic keywords (`avx`, `neon`, `sse`, `rvv`, `vfloat32m1_t`)
-- Zero architecture-specific files with `_amd64.go`, `_arm64.go`, or `_riscv64.go` suffixes
-- Zero JIT compilation files
-
-Endianness detection in `pkg/cpuutil/endian.go` delegates to `golang.org/x/sys/cpu`, which actively supports riscv64.
+Because etcd carries no arch-specific code, riscv64 correctness and performance are entirely inherited from the Go toolchain and from etcd's dependencies:
 
 | Component | amd64 | arm64 | riscv64 | Notes |
 |---|---|---|---|---|
-| Core key-value logic (bbolt) | Pure Go | Pure Go | Pure Go | No arch-specific code in etcd itself; see bbolt in Section 9 |
-| Raft consensus | Pure Go | Pure Go | Pure Go | go.etcd.io/raft/v3, no arch code |
-| gRPC transport | Pure Go | Pure Go | Pure Go | google.golang.org/grpc, no arch code |
-| Crypto (TLS, AES-GCM) | Assembly in x/crypto | Assembly in x/crypto | Pure Go fallback | Performance penalty in x/crypto on riscv64 |
-| Hashing (xxhash) | Assembly (xxhash/v2) | Assembly (xxhash/v2) | Pure Go fallback | Performance penalty on hash-intensive paths |
-| Startup architecture gate | Allowed | Allowed | Blocked | One-line fix needed in checkSupportArch() |
+| Core storage engine (bbolt) | Pure Go | Pure Go | Pure Go | No cgo, no assembly in bbolt itself |
+| Raft consensus (etcd-io/raft) | Pure Go | Pure Go | Pure Go | No architecture-gated code |
+| gRPC transport (grpc-go) | Pure Go | Pure Go | Pure Go | No cgo, no assembly |
+| TLS/crypto (golang.org/x/crypto, stdlib crypto/*) | Assembly-optimized | Assembly-optimized | Pure-Go fallback | [NEEDS VERIFICATION: magnitude of the resulting performance delta for etcd-specific TLS/mTLS workloads has not been measured] |
+| Hashing (cespare/xxhash/v2, used by the Prometheus client) | Assembly-optimized | Assembly-optimized | Pure-Go fallback (`xxhash_other.go`, build tag `!amd64 && !arm64`) | [NEEDS VERIFICATION: single-sourced claim; low expected impact since xxhash is used for metrics, not the Raft/storage hot path] |
+| Startup architecture gate | Allowed | Allowed | Blocked | One-line fix (`checkSupportArch()`) is all that is needed in etcd's own source |
 
-Because etcd has no architecture-specific code, riscv64 correctness is entirely a function of the Go toolchain's riscv64 support and the correctness of the pure-Go fallback paths in its dependencies. No riscv64-specific implementation work is required within etcd itself.
+No JIT compiler, GC-barrier assembly, or floating-point-sensitive numerics exist in etcd. NaN/floating-point semantics are not applicable; etcd performs no floating-point computation in its core logic.
 
 ---
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-**Language and build system.** Pure Go with Make. No CMake, no C toolchain, no Autotools.
+etcd is pure Go with a Makefile driving `scripts/build.sh` / `scripts/build_lib.sh`. There is no CMake, no Autotools, and no C/C++ toolchain requirement for a normal build: `CGO_ENABLED=0` is set by default in `scripts/build_lib.sh`, producing a fully static binary.
 
-**Go version requirement.** `go.mod` specifies `go 1.26` with `toolchain go1.26.4`. Go has treated `linux/riscv64` as a first-class compilation target since Go 1.14. No minimum Go version specific to riscv64 exists. The `CGO_ENABLED=0` flag is set by default in `scripts/build_lib.sh`, producing a fully static binary.
+**Go version requirement.** Direct inspection of the repository at HEAD shows `.go-version` = `1.27.1` and `go.mod` specifying `go 1.27`. [NEEDS VERIFICATION: an earlier assessment of this project recorded `go 1.26` / `toolchain go1.26.4`; the direct repository read performed in the current research pass, dated to today, is treated as authoritative, and the version discrepancy is most plausibly explained by a toolchain bump between assessments rather than a factual error.] Go has treated `linux/riscv64` as a first-class compilation target since Go 1.14; no riscv64-specific minimum Go version applies beyond etcd's general requirement.
 
-**Cross-compilation for riscv64 (not in official Makefile targets).**
+**Build command:**
+```
+make build
+# internally: GO_BUILD_FLAGS="-v -mod=readonly" ./scripts/build.sh
+# per binary (etcd, etcdutl, etcdctl):
+CGO_ENABLED=0 GOOS=<os> GOARCH=<arch> go build -trimpath -installsuffix=cgo -ldflags=... -o=bin/<name> .
+```
 
+**Cross-compilation for riscv64 (not an official Makefile target, but functional):**
 ```
 GOOS=linux GOARCH=riscv64 ./scripts/build.sh
 ```
+No additional flags are required.
 
-No additional flags are required. `scripts/build_lib.sh` sets `-trimpath -installsuffix=cgo` and injects the git SHA via ldflags. For cross-compiled binaries, the version check falls back to `go tool nm` since the binary cannot be executed on the build host.
+**Official release platform list** (`scripts/build-binary.sh`, Linux targets): `amd64`, `arm64`, `ppc64le`, `s390x`. riscv64 is absent.
 
-**Official release platform list (`scripts/build-binary.sh`).**
+**Makefile `PLATFORMS` variable:** `linux-amd64 linux-386 linux-arm linux-arm64 linux-ppc64le linux-s390x darwin-amd64 darwin-arm64 windows-amd64 windows-arm64`. `linux-riscv64` is absent.
 
-Linux release targets: `amd64`, `arm64`, `ppc64le`, `s390x`. `riscv64` is absent.
+**Docker multi-arch** (`scripts/build-docker.sh`), default `PLATFORMS`: `linux/amd64,linux/arm64,linux/ppc64le,linux/s390x`. Uses `docker buildx` with `tonistiigi/binfmt --install all` for QEMU-based emulation of non-native targets during multi-arch image assembly (not for building the Go binaries themselves, which are cross-compiled natively). `linux/riscv64` is absent from this list; since the Docker build copies pre-built binary tarballs per architecture and no riscv64 tarball is published, no riscv64 container image is produced by the official pipeline.
 
-**Makefile PLATFORMS variable.**
-
-```
-PLATFORMS=linux-amd64 linux-386 linux-arm linux-arm64 linux-ppc64le linux-s390x darwin-amd64 darwin-arm64 windows-amd64 windows-arm64
-```
-
-`linux-riscv64` is absent.
-
-**Docker multi-arch (`scripts/build-docker.sh`).**
-
-Default `PLATFORMS`: `linux/amd64,linux/arm64,linux/ppc64le,linux/s390x`. Uses `docker buildx` with `tonistiigi/binfmt --install all` for QEMU emulation on non-native targets. `linux/riscv64` is absent. The Docker build downloads pre-built binary tarballs per architecture; since no riscv64 tarball is published, no riscv64 container image is produced.
-
-**Known build failures.** None documented. etcd builds successfully on riscv64 with `GOOS=linux GOARCH=riscv64 ./scripts/build.sh`. Build times on native hardware (BananaPi F3 / SpacemiT K1, rv64gc ISA): server binary approximately 2 minutes 20 seconds, etcdctl approximately 34 seconds. These figures are from issue #21509 (gounthar, March 2026) and are build-time metrics on a low-power embedded board, not a server-class RISC-V system. [NEEDS VERIFICATION]
-
-**QEMU usage.** Not used for building binaries. QEMU appears only in the Docker multi-arch image assembly pipeline.
+**Known build failures.** None documented. etcd builds successfully on riscv64 via `GOOS=linux GOARCH=riscv64 ./scripts/build.sh`. Reported native build times on BananaPi F3 / SpacemiT K1 (rv64gc): server binary approximately 2 minutes 20 seconds, etcdctl approximately 34 seconds, per issue #21509 (self-reported by contributor @gounthar). [NEEDS VERIFICATION: independent reproduction on server-class riscv64 hardware; this figure comes from a single self-reported source, not an independently reproduced benchmark.]
 
 ---
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
-Because etcd has no arch-specific code, the feature matrix is binary: either the Go toolchain can target riscv64 (it can), or it cannot. All etcd functionality is available on riscv64 once the startup gate is bypassed or removed.
-
-**Functional gaps.**
+Because etcd has no arch-specific code, functional coverage is effectively binary: the Go toolchain can target riscv64, so all etcd functionality is available once the startup gate is bypassed.
 
 | Feature | amd64 | arm64 | riscv64 |
 |---|---|---|---|
 | etcd server starts | Yes | Yes | Requires `ETCD_UNSUPPORTED_ARCH=riscv64` |
-| All v3 API operations | Yes | Yes | Yes (when started) |
-| Watch, lease, auth, maintenance | Yes | Yes | Yes (when started) |
-| Official release binary | Yes | Yes | No |
-| Docker container image | Yes | Yes | No (community fork only) |
+| All v3 API operations (watch, lease, auth, maintenance) | Yes | Yes | Yes, once started |
+| Official upstream release binary | Yes | Yes | No |
+| Official Docker multi-arch image | Yes | Yes | No (community fork only, see Section 8) |
 
-**Performance gaps.**
+**Performance gaps.** No etcd-specific riscv64-vs-amd64/arm64 runtime benchmark (throughput, latency, ops/sec) exists in any source reviewed, including an exhaustive check of all RISE Project blog posts (37 posts, 2024-2026) and general web search; RISE's blog output covers Go, Python, PyTorch, LLVM, OpenJDK, V8, and OpenSBI on RISC-V, but not etcd or any distributed key-value store. The only qualitative gaps identifiable are inherited from dependencies taking pure-Go fallback paths instead of assembly (TLS/crypto, xxhash; see Section 4), not quantified for etcd workloads specifically.
 
-No runtime benchmarks comparing riscv64 to amd64 or arm64 exist in any public source. The following qualitative gaps are derived from known dependency behavior:
+**Security hardening gaps.** Data not available: no analysis of PIE/stack-canary/CFI status for riscv64 builds versus amd64/arm64 was found in any source.
 
-- `golang.org/x/crypto`: AES-GCM and ChaCha20-Poly1305 have assembly-optimized paths for amd64 and arm64. riscv64 takes the pure-Go path. Magnitude of penalty: not quantified for etcd workloads.
-- `github.com/cespare/xxhash/v2`: Assembly for amd64 and arm64; pure-Go fallback for riscv64 (`xxhash_other.go`, build tag `!amd64 && !arm64`). Impact on etcd is low because xxhash is used by the Prometheus client, not in the critical Raft or storage path.
-- `go.etcd.io/bbolt`: Pure Go, no assembly. No performance penalty relative to other platforms.
-
-The Go runtime itself (Go 1.26) has open optimization work for riscv64 (stackcheck overhead [golang/go#64074], crc32 assembly [golang/go#78918], jump table optimization [golang/go#78515]), but none of these directly block etcd correctness.
-
-**Security hardening gaps.** Data not available: no analysis of PIE/stack-canary/CFI status on riscv64 builds vs amd64 was found in the research.
-
-**NaN / floating-point semantics.** Not applicable. etcd does not perform floating-point computation.
+**NaN / floating-point semantics.** Not applicable; etcd performs no floating-point computation.
 
 ---
 
 ## 7. CI/CD Infrastructure
 
-etcd CI runs on Kubernetes Prow infrastructure. All workflow files in `.github/workflows/` (12 files confirmed) use `ubuntu-latest` runners (x86_64). There is no QEMU emulation step, no riscv64 runner, and no cross-arch workflow for riscv64 anywhere in the repository.
-
-A search across all 12 workflow files, the Makefile, and `scripts/build.sh` for the string "riscv" returns zero matches.
+etcd's CI-of-record runs on Kubernetes Prow, which lives outside the `etcd-io/etcd` repository (in `kubernetes/test-infra`) and was not directly inspectable in this research. Within `etcd-io/etcd` itself, a direct read of all workflow files at HEAD (commit `7583cc6`) confirms **11 files** in `.github/workflows/` (plus an `OWNERS` file): `antithesis-test.yml`, `antithesis-verify.yml`, `antithesis.debugger.yml`, `bump-devcontainer-version.yml`, `cherrypick-bot-ok-to-test.yaml`, `codeql-analysis.yml`, `gh-workflow-approve.yaml`, `measure-testgrid-flakiness.yaml`, `scorecards.yml`, `stale.yaml`, `verify-released-assets.yaml`. [Correction: an earlier assessment of this project cited 12 workflow files; a direct, repeated read of the directory in the current research pass, including an `ls` listing cross-checked independently against a second clone, confirms 11.] Every one of these files runs exclusively on `runs-on: ubuntu-latest` (GitHub-hosted x86_64). None reference riscv64, arm64, QEMU cross-arch emulation, or any self-hosted riscv64 runner. No `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` exists at the repository root. A case-insensitive grep for "riscv" across the entire workflow directory and the entire repository tree returns zero matches.
 
 | Criterion | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| CI platform | Prow/ubuntu-latest | Prow/ubuntu-latest | None |
-| Unit tests | Yes | Yes | No |
-| Integration tests | Yes | Yes | No |
-| E2E tests | Yes | Yes | No |
+| CI platform | Prow / `ubuntu-latest` | Prow / `ubuntu-latest` | None |
+| Unit / integration / E2E tests | Yes | Yes | No |
 | Release gating | Yes | Yes | No |
-| RISE runners used | No | No | Not applicable (Prow, not GitHub Actions) |
+| RISE runners in use | No | No | Not currently (Prow-incompatible; see below) |
 
-**Why RISE runners do not help directly.** RISE provides native riscv64 runners via the GitHub Actions `ubuntu-24.04-riscv` label, available free to open source projects. etcd's CI is Prow-based and does not use GitHub Actions for testing. Integrating RISE machines into Prow requires a SIG-k8s-infra decision and provisioning effort. Maintainer @ivanvc confirmed this is the hard constraint (March 2026). @luhenry (RISE TSC Co-Chair) offered Scaleway EM-RV1 machines to SIG-k8s-infra (June 5, 2026 in issue #21509), but no agreement had been reached as of the report date.
+**Why RISE runners do not directly help.** RISE provides native riscv64 runners via a GitHub Actions `ubuntu-24.04-riscv` label, free to open-source projects, and this is what powered the green CI run behind PR #21510. But etcd's official CI is Prow-based and does not consume GitHub Actions runners for release-gating tests. Maintainer @ivanvc confirmed in the PR #21510 discussion that bridging this gap requires dedicated riscv64 hardware integrated into the Prow pool, not a GitHub Actions credential. RISE TSC's ~June 2026 offer of Scaleway EM-RV1 machines to SIG-k8s-infra is aimed precisely at this integration, but no confirmation that the machines have actually been wired into Prow was found in this research.
 
 ---
 
 ## 8. Distribution and Release Status
 
-**Official upstream releases.** Checked: v3.7.0-rc.0, v3.6.12, v3.5.31, v3.4.45, v3.7.0-beta.0. Linux binary tarballs exist for `linux-amd64`, `linux-arm64`, `linux-ppc64le`, `linux-s390x`. No release asset contains "riscv64" in any release. riscv64 is absent from all upstream official binaries.
+**Official upstream GitHub releases.** The most recent tags visible on the releases page are v3.7.2, v3.6.15, v3.5.34 (published 2026-09-22), v3.7.1, and v3.6.14. [NEEDS VERIFICATION: full release-asset filenames could not be enumerated in this research pass, GitHub API access to `etcd-io/etcd` was blocked in the research session and the Releases page's asset list is client-side JS-rendered. The visible page text references only `linux-amd64`/`darwin-amd64` install examples and contains no riscv64 string, and this is consistent with, but does not independently prove, the absence of a riscv64 upstream release asset. The stronger and directly demonstrated fact is that `checkSupportArch()` at HEAD still excludes riscv64, which would in any case cause an unmodified upstream riscv64 binary to refuse to start without the `ETCD_UNSUPPORTED_ARCH` override even if one were published.]
 
-**OCI container images.** The official etcd container image (`gcr.io/etcd-development/etcd`, `registry.k8s.io/etcd`) is published for `linux/amd64`, `linux/arm64`, `linux/ppc64le`, `linux/s390x`. No riscv64 manifest exists in official images.
+**Official OCI container images.** `gcr.io/etcd-development/etcd` / `registry.k8s.io/etcd` publish for `linux/amd64`, `linux/arm64`, `linux/ppc64le`, `linux/s390x`. [NEEDS VERIFICATION: absence of a riscv64 manifest was not independently re-confirmed in the current research pass; it is consistent with the confirmed absence of riscv64 from `scripts/build-docker.sh`'s platform list.]
 
-**Community fork.** [go-riscv/etcd](https://github.com/go-riscv/etcd) maintained by @ernado. Container image `ghcr.io/go-riscv/etcd:v3.6.0-riscv64.0-riscv64` is available. The fork was last updated January 2024. [NEEDS VERIFICATION for current maintenance status.]
+**Community fork.** [go-riscv/etcd](https://github.com/go-riscv/etcd), maintained independently of etcd-io, produces riscv64 build artifacts and a container image. [NEEDS VERIFICATION: current maintenance status and last-update date could not be confirmed in this research pass.]
 
-**Debian.** etcd version 3.5.30-2 in Debian sid: riscv64 status is **Installed**, successfully built on buildd `rv-osuosl-03`. All mainstream architectures including riscv64 are fully built and installed. Source: [buildd.debian.org](https://buildd.debian.org/status/package.php?p=etcd&suite=sid), confirmed.
+**Downstream Linux distributions - this is the load-bearing evidence for this project's grade.**
 
-**Ubuntu 24.04 Noble.** `etcd-client` and `etcd-server` are available in the Ubuntu ports archive for riscv64. `etcd-discovery` is absent for riscv64. `golang-etcd-server-dev` is architecture-independent. These are distro-built packages, not upstream release binaries. Source: [packages.ubuntu.com](https://packages.ubuntu.com/search?keywords=etcd&suite=noble&searchon=names&section=all), confirmed.
+- **Ubuntu 26.04 "resolute"**, confirmed live via [packages.ubuntu.com](https://packages.ubuntu.com/search?keywords=etcd&suite=resolute&searchon=names&section=all) (both an all-architecture search and an architecture-filtered `arch=riscv64` search): `etcd-client` and `etcd-server`, version **3.5.16-10**, are built and published for riscv64 in the `universe`/`[ports]` component. `golang-etcd-server-dev` (source package, arch "all") and `python3-etcd` (arch "all") are also present. This is a genuine, currently-shipping riscv64 binary package for both the etcd server and client.
+- **Debian sid**, corroborating: buildd shows etcd **3.5.30-2** with riscv64 status **"Installed"** on builder `rv-osuosl-03`, per [buildd.debian.org](https://buildd.debian.org/status/package.php?p=etcd&suite=sid).
+- **Arch Linux RISC-V** (archriscv.felixc.at): the port-tracker's per-package lookup could not be queried (client-side only, and the underlying `felixonmars/archriscv-packages` GitHub repository was inaccessible in this research session); status is **inconclusive**, not confirmed either way.
+- **PyPI `etcd` package** (version 2.0.8): this is the unrelated `python-etcd` client library, a pure-Python wheel/sdist with no architecture-specific build; it is not a distribution channel for the etcd server binary and is not evidence about etcd-io/etcd's riscv64 status one way or the other.
 
-**Arch Linux RISC-V.** The Arch Linux RISC-V port status tracker (archriscv.felixc.at) was unreachable during research (ECONNREFUSED). The official Arch Linux package database lists etcd 3.6.12-1 for x86_64 only. riscv64 status for Arch: cannot verify.
+**What is unconfirmed about the downstream packages.** Neither Ubuntu's nor Debian's build pipeline was inspected for whether `checkSupportArch()` or the `ETCD_UNSUPPORTED_ARCH` runtime gate has been patched out for the riscv64 build. If unpatched, the distro-built riscv64 binary would still refuse to start on unmodified upstream code without `ETCD_UNSUPPORTED_ARCH=riscv64` set at runtime. This patch-status question is unresolved and is the specific reason the project's readiness grade is capped at orange rather than elevated further (see Section 13).
 
-**PyPI `etcd` package.** Version 2.0.8 is a pure-Python client library (`none-any` wheel). Architecture is not relevant; the wheel runs on all platforms including riscv64. This is not the etcd server binary.
-
-**What a user must do to run etcd on riscv64 today (June 2026).**
-
-1. Build from source: `GOOS=linux GOARCH=riscv64 ./scripts/build.sh` (requires Go 1.26).
-2. Start the binary with: `ETCD_UNSUPPORTED_ARCH=riscv64 ./etcd`.
-3. Or: use the community container image `ghcr.io/go-riscv/etcd:v3.6.0-riscv64.0-riscv64`.
-4. Or: install the Debian package (`etcd-server` in Debian sid, riscv64 built and installed).
+**What a user must do to run etcd on riscv64 today:**
+1. Install the distro package (Ubuntu 26.04 `etcd-server`/`etcd-client` 3.5.16-10, or Debian sid's 3.5.30-2), noting the patch-status caveat above; or
+2. Build from source: `GOOS=linux GOARCH=riscv64 ./scripts/build.sh` (Go 1.27.1 toolchain) and start with `ETCD_UNSUPPORTED_ARCH=riscv64 ./etcd`; or
+3. Use the community fork [go-riscv/etcd](https://github.com/go-riscv/etcd)'s container image [NEEDS VERIFICATION: current status].
 
 ---
 
 ## 9. Dependencies
 
-| Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Notes |
-|---|---|---|---|---|---|
-| Go runtime (go 1.26) | Language runtime, GC, scheduler | Supported (first-class since Go 1.14; GORISCV64 profiles rva20u64/rva22u64/rva23u64 in 1.26) | CI builder `linux-riscv64-rva22u64` exists in Go project | go1.26.4 released | Open perf issues: stackcheck (#64074), crc32 asm (#78918), jump tables (#78515). No hard blocker. |
-| go.etcd.io/bbolt (v1.5.0-rc.0) | Embedded key-value storage (memory-mapped files, 8-byte atomics) | Builds; cross-arch-test.yaml includes linux riscv64 | Cross-compile only in CI; no QEMU execution | No riscv64-specific release binary | [PR #159](https://github.com/etcd-io/bbolt/pull/159) "Add support for riscv64" merged 2019-05-27. No open riscv64 issues. |
-| go.etcd.io/raft/v3 (v3.7.0-rc.1) | Raft consensus | Builds (pure Go) | Runs on whatever Go CI covers | No standalone binary | Pure Go; not a blocker. |
-| google.golang.org/grpc (v1.81.1) | RPC transport | Builds (pure Go; no GOARCH assembly) | CI matrix covers amd64 and arm64 only; riscv64 not in matrix | Module-only | No riscv64 issues found. Not a blocker. |
-| google.golang.org/protobuf (v1.36.11) | Wire serialization | Pure Go; builds on riscv64 | No riscv64-specific issues | Module-only | No blocking issues. |
-| golang.org/x/crypto (v0.52.0) | TLS, AES-GCM, ChaCha20-Poly1305 | Builds; assembly for amd64/arm64 only; riscv64 takes pure-Go path | No riscv64-specific issues | Module-only | Performance penalty vs amd64/arm64; correctness is fine. |
-| github.com/cespare/xxhash/v2 (v2.3.0) | Fast 64-bit hashing (Prometheus client) | Assembly for amd64+arm64 only; riscv64 takes `xxhash_other.go` pure-Go path (build tag `!amd64 && !arm64`) | Pure-Go fallback works | Module-only | Low impact; not in Raft or storage hot path. |
-| github.com/prometheus/client_golang (v1.23.2) | etcd metrics exposure | Builds; historical issue #833 (procfs riscv64 fix) resolved | riscv64 binaries exist in Prometheus releases | Prometheus v3.12.0 ships `prometheus-3.12.0.linux-riscv64.tar.gz` | No open blockers. |
-| github.com/prometheus/procfs (v0.16.1) | /proc parsing for metrics | [PR #325](https://github.com/prometheus/procfs/pull/325) fixed riscv64, merged 2021; v0.16.1 is well past that fix | No current issues | Module-only | No blocker. Historical fix is long-merged. |
-| go.opentelemetry.io/otel (v1.44.0) | Distributed tracing / OTLP export | Builds; issue #8126 "add cross-build workflow" is open (targets riscv64 and others) | No riscv64-specific test failures; #8126 is a CI gap, not a build failure | Module-only | Minor gap: riscv64 not in otel-go cross-build CI yet. Not a functional blocker. |
-| go.uber.org/zap (v1.27.1) | Structured logging | Pure Go | No riscv64 issues | Module-only | No blocker. |
-| golang.org/x/sys (v0.45.0) | Syscall wrappers; used by bbolt, procfs, zap, grpc | Active riscv64 maintenance | Frequent dependency bumps for riscv64 fixes visible across etcd dep tree | Module-only | riscv64 syscall coverage actively maintained; no open blockers. |
+| Dependency | Role | Relation | Criticality | riscv64 build | riscv64 test | riscv64 release | Notes |
+|---|---|---|---|---|---|---|---|
+| Go | Go toolchain/compiler/runtime; determines etcd's actual arch-specific code paths (GC, scheduler, assembly), since etcd itself has none | Build-dependency | Critical | riscv64 supported since Go 1.14 (first-class target); `.go-version` at etcd HEAD is 1.27.1 | Race-detector support for riscv64 landed via [golang/go#64345](https://github.com/golang/go/issues/64345) (closed), material because etcd's CI uses `-race` extensively | Ships in Ubuntu 26.04 riscv64 (`golang-go` package confirmed present) | Open, non-blocking items: [golang/go#50615](https://github.com/golang/go/issues/50615), open, bytes/strings tests run roughly 100x slower on riscv64 (a CI-runtime/performance concern, not a correctness blocker); [NEEDS VERIFICATION: a prior assessment separately cited golang/go#64074 (stackcheck overhead), #78918 (crc32 assembly), and #78515 (jump-table optimization) as open riscv64 optimization items, and the current pass instead surfaced #76179/#76180 (open, Zawrs/Zihintntl ISA-extension assembly support); both sets describe ordinary upstream Go riscv64 optimization backlog rather than a blocker, but neither set was cross-confirmed against the other in this pass] |
+| bbolt (go.etcd.io/bbolt) | Embedded mmap-based B+tree storage engine, etcd's persistence layer | Runtime-dependency | Critical | Pure Go, no cgo; builds on riscv64 | No dedicated riscv64 CI found in this research pass; not separately released from etcd | Rides on etcd's own release/distro packaging, not separately published for riscv64 | [NEEDS VERIFICATION: a prior assessment cited [bbolt PR #159](https://github.com/etcd-io/bbolt/pull/159), "Add support for riscv64," merged 2019-05-27, as the point bbolt gained riscv64 build coverage; not independently re-confirmed here.] bbolt has a documented history of per-architecture atomic-alignment bugs on other platforms (e.g. etcd-io/bbolt#577, "panic: 64bit unaligned in arm32," closed 2023; #848, ARM64 robustness CI restoration, closed 2025), making riscv64 (a newer 64-bit target) a plausible but unconfirmed risk area. No dedicated `project-reports` entry exists for bbolt in this project set. |
+| etcd-io/raft (go.etcd.io/raft) | Core Raft consensus algorithm implementation | Runtime-dependency | Critical | Pure Go, no cgo/assembly; builds on riscv64 | No riscv64-specific issues found | Vendored with etcd; no separate release | Architecture risk assessed as low given no native code. No dedicated `project-reports` entry exists for etcd-io/raft in this project set. |
+| gRPC-Go (google.golang.org/grpc) | RPC/transport layer; carries gzip compression and TLS for client/server traffic | Runtime-dependency | Critical | Pure Go, no cgo; builds on riscv64 | No riscv64-specific issues found; CI matrix for grpc-go was not confirmed to include riscv64 | Vendored; no separate release | Note: a "Protocol Buffers" project report exists elsewhere in this project set but documents the C++ gRPC/protoc core, not the pure-Go `grpc-go` module etcd actually imports; that report is only partially applicable here. |
+| Protocol Buffers (protoc / C++ core, used at etcd's build time for code generation) | Wire-format code generation | Runtime-dependency | Critical | Covered by this project set's separate `protocol-buffers.md` report | See that report | See that report | Distinct from `google.golang.org/protobuf`, the pure-Go runtime etcd links at runtime, which is an indirect dependency (below). |
+| golang.org/x/sys | Low-level syscall wrappers, consumed by bbolt, gRPC, zap, prometheus/procfs, and others across etcd's dependency tree | Runtime-dependency | Critical | Actively maintained riscv64 syscall coverage; part of the same module family bumped in PR #10834 for RISC-V support in 2019 | Frequent riscv64-relevant dependency bumps visible across etcd's dependency tree | Vendored | No open riscv64 blockers identified. |
+| golang.org/x/crypto | Auxiliary TLS/crypto primitives supplementing Go stdlib `crypto/*` | Runtime-dependency | Optional | Pure Go; riscv64 takes the pure-Go fallback path where amd64/arm64 assembly does not exist | Not directly tested in this research; inherits Go toolchain's riscv64 crypto-path maturity | Vendored | Performance delta versus amd64/arm64 not quantified for etcd workloads. |
+| prometheus/client_golang | Metrics exposure for etcd | Runtime-dependency | Optional | Builds on riscv64 | [NEEDS VERIFICATION: single-sourced claim that a historical procfs riscv64 issue, #833, was resolved] | Prometheus itself ships `prometheus-*.linux-riscv64.tar.gz` release binaries | No open blockers identified. |
+| OpenTelemetry (go.opentelemetry.io/otel) | Distributed tracing / OTLP export | Runtime-dependency | Optional | Builds on riscv64 | No riscv64-specific test failures found; [NEEDS VERIFICATION: single-sourced claim of open otel-go issue #8126, "add cross-build workflow," targeting riscv64 among other architectures] | Module-only | Minor CI-coverage gap in the upstream otel-go project, not a functional blocker for etcd. |
+| zap (go.uber.org/zap) | Structured logging | Runtime-dependency | Optional | Pure Go; builds on riscv64 | No riscv64 issues found | Module-only | No blockers identified. |
+| golang.org/x/net (indirect, via PR #10834) | Networking primitives | Runtime-dependency (indirect) | [NEEDS VERIFICATION: criticality not separately assessed] | Vendor-bumped for RISC-V support alongside x/sys in 2019 (PR #10834) | Not separately tested | Vendored | The other half of the only riscv-related change ever merged into etcd. |
+| google.golang.org/protobuf (indirect) | Pure-Go protobuf runtime, distinct from the C++ `Protocol Buffers`/protoc project listed above | Runtime-dependency (indirect) | [NEEDS VERIFICATION: criticality not separately assessed] | Pure Go; builds on riscv64 | No riscv64-specific issues found | Module-only | Do not conflate with the `protoc` build-time dependency. |
+| github.com/cespare/xxhash/v2 (indirect, via prometheus/client_golang) | Fast 64-bit hashing used by the Prometheus client path | Runtime-dependency (indirect) | [NEEDS VERIFICATION: criticality not separately assessed] | Assembly for amd64/arm64 only; riscv64 takes the pure-Go `xxhash_other.go` fallback (build tag `!amd64 && !arm64`) | [NEEDS VERIFICATION: single-sourced] | Module-only | Low expected impact; not in the Raft or storage hot path. |
+| github.com/prometheus/procfs (indirect, via prometheus/client_golang) | `/proc` parsing for metrics | Runtime-dependency (indirect) | [NEEDS VERIFICATION: criticality not separately assessed] | Builds on riscv64 | [NEEDS VERIFICATION: single-sourced claim that prometheus/procfs PR #325, a riscv64 fix merged in 2021, is long superseded by the version etcd currently pulls] | Module-only | No current blocker identified. |
 
-**Summary.** The only hard blocker is within etcd itself: the `checkSupportArch()` gate and the absence of riscv64 in the release pipeline. All direct library dependencies build cleanly on riscv64 or have a pure-Go fallback. No dependency has an open riscv64 build failure or correctness bug.
+**Summary.** The only hard riscv64 blocker in etcd's entire dependency graph is within etcd itself: the `checkSupportArch()` allow-list and the corresponding absence of riscv64 from the release and Docker build pipelines. Every direct and indirect library dependency reviewed either builds cleanly on riscv64 as pure Go, or has a documented pure-Go fallback path with no known correctness defect, only an unquantified performance delta on crypto- and hash-heavy code. No dependency has an open riscv64 build failure or correctness bug on record. Two tracked dependencies in this project set, bbolt and etcd-io/raft, currently have no dedicated `project-reports` entry of their own; given bbolt's history of per-architecture atomic-alignment bugs on other 64-bit targets, a dedicated riscv64 check for bbolt is a reasonable follow-up.
 
 ---
 
@@ -271,83 +243,85 @@ A search across all 12 workflow files, the Makefile, and `scripts/build.sh` for 
 
 | ID | Title | Status | Severity | Notes |
 |---|---|---|---|---|
-| [#21509](https://github.com/etcd-io/etcd/issues/21509) | Add riscv64 to supported architectures | Closed (June 4, 2026), unresolved | High | Closed because Prow has no riscv64 nodes. Root blocker is SIG-k8s-infra. RISE offered hardware June 5, 2026. |
-| [#21510](https://github.com/etcd-io/etcd/pull/21510) | server: add riscv64 to supported architectures | Closed (March 29, 2026), not merged | High | One-line fix to `checkSupportArch()`. Rejected due to CI infrastructure constraint. Maintainer: "No plans." |
-| [#15490](https://github.com/etcd-io/etcd/pull/15490) | feat: add riscv64 support | Closed (April 21, 2023), not merged | Medium | Distroless base image blocker (now resolved in distroless). Superseded by #21510 which hit the Prow blocker. |
+| [#21509](https://github.com/etcd-io/etcd/issues/21509) | Add riscv64 to supported architectures | Closed, 2026-06-04, feature did not land | High | Closed because Prow has no riscv64 nodes. RISE TSC offered Scaleway EM-RV1 machines to SIG-k8s-infra around this time; no confirmation of Prow integration found. |
+| [#21510](https://github.com/etcd-io/etcd/pull/21510) | server: add riscv64 to supported architectures | Closed, 2026-03-29, not merged | High | One-line fix to `checkSupportArch()`. Blocked on Prow CI infrastructure, not on code. Maintainer: "No plans." |
+| [#14517](https://github.com/etcd-io/etcd/pull/14517) | Adding support for RISC-V | Closed, 2023-03-18, not merged | Medium | Went stale after maintainers requested a CI-first, two-phase plan that was never executed. |
+| [#14522](https://github.com/etcd-io/etcd/issues/14522) | Extending CI pipeline, on behalf of 64bit RISC-V environment | Closed, 2023-04-02, stale | Medium | CI-prerequisite scoping issue for #14517; never implemented. |
+| [#15490](https://github.com/etcd-io/etcd/pull/15490) | feat: add riscv64 support | Closed, 2023-04-21, not merged | Medium | Draft, never taken out of draft. |
+| [#13504](https://github.com/etcd-io/etcd/pull/13504) | Is it necessary to avoid setting ETCD_UNSUPPORTED_ARCH=riscv64 | Closed, 2022-04-18, not merged | Medium | Earliest riscv64 attempt found (opened 2021-11-25). |
 
-**Correctness bugs.** None. No riscv64-specific correctness bugs are documented in etcd-io/etcd. etcd reportedly runs correctly on riscv64 hardware when `ETCD_UNSUPPORTED_ARCH=riscv64` is set, based on testing reported by @gounthar in issue #21509 (BananaPi F3 / SpacemiT K1, etcd 3.7.0-alpha.0, Go 1.26.1). [NEEDS VERIFICATION: independent reproduction on server-class riscv64 hardware.]
+**Correctness bugs.** No open correctness or performance bug specific to riscv64 was found in `etcd-io/etcd`. A targeted search for a riscv64 NaN/floating-point issue returned no matches; no evidence supports that premise, so none is reported. etcd is reported to run correctly on riscv64 hardware once `ETCD_UNSUPPORTED_ARCH=riscv64` is set, based on self-reported testing in issue #21509 (BananaPi F3, SpacemiT K1). [NEEDS VERIFICATION: independent reproduction on server-class riscv64 hardware.] For context, arm64 (a Tier-1, fully supported architecture) has had its own robustness-test flakiness on record (#17593, closed, with a maintainer noting a possible underlying arm64 correctness issue around snapshot transfer between members); this does not apply to riscv64 but indicates that even supported architectures carry open per-arch risk.
 
 ---
 
 ## 12. Objections and Upstream Blockers
 
-**Stated objections and blockers, in priority order.**
+**Stated objections and blockers, in priority order:**
 
-1. **Prow CI has no riscv64 nodes (hard, external blocker).** etcd CI is Kubernetes Prow-based. Prow requires dedicated physical machines, not cloud-hosted runners. RISE runners use GitHub Actions, which is incompatible with Prow. Adding riscv64 requires SIG-k8s-infra to provision and integrate riscv64 nodes, assign personnel for test failure triage, and maintain the runner. Maintainer @ivanvc confirmed this is the gate (March 2026). @jberkus confirmed with k8s-infra and stated this is the blocker (June 2026).
+1. **Prow CI has no riscv64 hardware nodes (hard, external blocker).** etcd's CI-of-record is Kubernetes Prow, which requires dedicated physical machines, not cloud-hosted or third-party GitHub Actions runners. RISE's riscv64 runners use GitHub Actions and cannot substitute for Prow hardware. Maintainer @ivanvc stated this explicitly in the PR #21510 discussion (March 2026).
+2. **Maintainer stance: "No plans" (soft, organizational blocker).** @serathius's response reflects that the maintainer team is not willing to drive Prow hardware provisioning itself; it does not reflect any code-level objection to riscv64.
+3. **Personnel requirement.** Beyond hardware, SIG-k8s-infra needs a party to provision/maintain riscv64 Prow nodes and a party to triage riscv64-specific test failures on etcd's CI job. RISE's Scaleway EM-RV1 offer addresses the hardware half; the triage-personnel half remains unaddressed in the research reviewed.
 
-2. **Maintainer stance: "No plans" (soft, organizational blocker).** @serathius responded with "No plans" when asked about riscv64 in May 2026. This reflects that the etcd maintainer team is not willing to drive the Prow provisioning work themselves. It does not mean the codebase is hostile to riscv64; it means the maintainers will not initiate the work.
+**Path to resolution, as documented in the source threads:**
+- RISE provides Scaleway EM-RV1 machines to SIG-k8s-infra.
+- SIG-k8s-infra integrates the machines into the Prow test pool (status as of this research: not confirmed).
+- A party commits to ongoing riscv64 test-failure triage for etcd's CI job.
+- PR #21510 (the one-line `checkSupportArch()` change) is reopened and merged.
+- `linux/riscv64` is added to `scripts/build-binary.sh` and `scripts/build-docker.sh`'s platform lists.
 
-3. **Personnel requirement for Prow integration.** SIG-k8s-infra requires (1) a party to provision and maintain the riscv64 Prow nodes, and (2) a party to triage test failures on the riscv64 runner. These can be different groups. RISE can potentially provide the hardware (Scaleway EM-RV1 machines were offered by @luhenry in issue #21509 on June 5, 2026). A separate team would need to take on the failure triage role.
-
-**Path to resolution.** The required sequence is:
-- RISE provides Scaleway EM-RV1 machines to SIG-k8s-infra with the agreed interface (SSH access with public keys, Ubuntu 24.04).
-- SIG-k8s-infra integrates the machines into the Prow test pool.
-- A party commits to riscv64 test failure triage for the etcd CI job.
-- PR #21510 (the one-line `checkSupportArch()` change) is re-opened and merged.
-- `linux/riscv64` is added to the release binary build list and Docker multi-arch platforms.
-
-The etcd code change is trivial (one line). The infrastructure negotiation is the entire project.
-
-**Acceptance probability.** Moderate if the Prow provisioning is handled externally. The maintainers have no objection to the code itself; they objected to being responsible for CI infrastructure they cannot resource. If RISE and SIG-k8s-infra resolve the Prow provisioning, the PR is straightforward to approve.
+The code change required in etcd itself is trivial; the entire blocker is CI infrastructure and organizational ownership of that infrastructure, not source-code readiness.
 
 ---
 
-## 13. Investment Analysis
+## 13. Readiness Assessment
 
-RISE has not funded or structured any work on etcd riscv64 support. The community fork at [go-riscv/etcd](https://github.com/go-riscv/etcd) is independent volunteer work, not RISE-sponsored.
+- **Color:** orange (downstream-only)
+- **Release provider:** distro
+- etcd is not an optimization-purpose project (it is infrastructure software with no architecture-specific hot-path code), so no optimization-level rating applies.
 
-### 13.1 Functional Enablement
+**Justification.** etcd has no upstream riscv64 CI at all: a direct read of etcd-io/etcd's 11 `.github/workflows/*.yml` files (all `ubuntu-latest`/x86_64) plus `server/etcdmain/etcd.go`'s `checkSupportArch()` at HEAD (commit `7583cc6`) shows riscv64 is still absent from the supported-arch list, and the one attempt to add it, [PR #21510](https://github.com/etcd-io/etcd/pull/21510), was closed unmerged after a maintainer stated "No plans" to add riscv64 nodes to etcd's Prow-based CI. However, Ubuntu 26.04 "resolute" ships `etcd-client` and `etcd-server` 3.5.16-10 for riscv64 in universe/ports, confirmed live via [packages.ubuntu.com](https://packages.ubuntu.com/search?keywords=etcd&suite=resolute&searchon=names&section=all) (also corroborated by Debian sid's buildd riscv64 "Installed" status for etcd 3.5.30-2). This triggers the distribution floor, but since research did not confirm whether the distro build is unpatched, and etcd's own runtime `checkSupportArch()` gate still requires `ETCD_UNSUPPORTED_ARCH=riscv64` to even start on unmodified upstream code, patch status is unconfirmed. This caps the floor at orange (downstream-only) rather than yellow (clean-distro-build).
 
-The codebase requires one line of change: adding `"riscv64"` to the `checkSupportArch()` allow-list in `server/etcdmain/etcd.go`. No etcd logic needs to be written or modified for riscv64 functionality. This is gated on CI infrastructure.
+**Pending work that could change the grade.** Issue #21509/PR #21510 (closed 2026-03-29 and 2026-06-04 respectively) could be revived: RISE TSC offered Scaleway EM-RV1 riscv64 machines to SIG-k8s-infra in the #21509 thread (~June 2026) to integrate into etcd's Prow CI pool, which would unblock the one-line `checkSupportArch()` fix, but no confirmation that Prow integration has actually happened was found. No open PRs currently add riscv64 support.
 
-### 13.2 Performance Optimization
+---
 
-No etcd-specific assembly or SIMD optimization exists for any platform. There is no riscv64 performance optimization work to do within etcd itself. Performance gaps exist in upstream dependencies (`golang.org/x/crypto`, `xxhash/v2`), but these are owned by those projects and affect all Go consumers, not etcd specifically.
+## 14. Investment Analysis
 
-Data not available: no runtime benchmarks (latency, throughput, ops/sec) comparing riscv64 to amd64 or arm64 exist in any public source. Any performance claim for etcd on riscv64 would require original benchmarking.
+RISE has not funded or structured any work on etcd riscv64 support directly; its only confirmed involvement is the ~June 2026 hardware offer to SIG-k8s-infra. The community fork [go-riscv/etcd](https://github.com/go-riscv/etcd) is independent volunteer work, not RISE-sponsored.
 
-### 13.3 CI/CD Infrastructure
+### 14.1 Functional Enablement
 
-This is the dominant work item. The required steps:
+The codebase requires one line of change: adding `"riscv64"` to the `checkSupportArch()` allow-list in `server/etcdmain/etcd.go` (the exact change PR #21510 already proposed and validated with a green CI run on RISE runners). No etcd logic needs to be written or modified for riscv64 functionality; this work is entirely gated on CI infrastructure, not code.
 
-- Provision Scaleway EM-RV1 (or equivalent server-class riscv64) machines for Prow integration.
-- Coordinate with SIG-k8s-infra on Prow node registration, authentication, and job routing.
-- Assign an engineer for riscv64 test failure triage on the etcd CI job.
-- Add riscv64 to the GitHub Actions release workflow (`verify-released-assets.yaml`) once Prow tests pass.
+### 14.2 Performance Optimization
 
-The RISE offer to provide machines was accepted in principle by @jberkus (he pointed gounthar to #sig-k8s-infra). The SIG-k8s-infra integration work was not yet underway as of June 2026.
+No etcd-specific assembly or SIMD optimization exists for any platform, so there is no riscv64 performance-optimization work to do within etcd itself. Performance gaps that do exist (pure-Go crypto/hashing fallback paths, Go's own riscv64 optimization backlog) are owned by upstream dependency projects, not by etcd. No etcd-on-riscv64 runtime benchmark exists anywhere in the sources reviewed; any performance claim would require original benchmarking work.
 
-### 13.4 Ecosystem Enablement
+### 14.3 CI/CD Infrastructure
 
-etcd has no plugin or extension ecosystem requiring separate riscv64 enablement. Client libraries are pure-Go or pure-Python and are architecture-agnostic. The only downstream ecosystem concern is Kubernetes itself (k3s/k8s), which has its own riscv64 effort ([riseproject-dev/kubernetes-riscv](https://github.com/riseproject-dev/kubernetes-riscv), v1.36.0-riscv64 released April 2026).
+This is the dominant work item and the actual blocker to the grade improving:
+- Confirm whether RISE's offered Scaleway EM-RV1 machines have been integrated into the Prow pool, and if not, drive that integration with SIG-k8s-infra.
+- Assign an engineer for ongoing riscv64 test-failure triage on etcd's CI job, a prerequisite SIG-k8s-infra has stated is needed alongside hardware.
+- Reopen and merge PR #21510's one-line `checkSupportArch()` change once Prow riscv64 coverage exists.
+- Add `linux/riscv64` to `scripts/build-binary.sh` and `scripts/build-docker.sh`'s platform lists so upstream release binaries and container images are published.
 
-### 13.5 Summary Table
+### 14.4 Ecosystem Enablement
+
+Not applicable as a discrete work item: etcd has no dependent package ecosystem of its own requiring separate riscv64 enablement (see Section 10 note below). The nearest adjacent ecosystem concern is Kubernetes' own riscv64 effort, which depends on etcd's support but is tracked separately.
+
+### 14.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
-| Functional | Add `"riscv64"` to `checkSupportArch()` in etcd (PR #21510 re-open) | 0.1 | Any contributor | Critical |
-| CI/CD | Coordinate RISE hardware provisioning with SIG-k8s-infra for Prow riscv64 nodes | 2-4 | RISE Project + SIG-k8s-infra | Critical |
-| CI/CD | Assign riscv64 test failure triage engineer for etcd CI | ongoing | Qualcomm/RISE contributor | Critical |
-| CI/CD | Add `linux/riscv64` to release binary build targets (build-binary.sh, build-docker.sh) | 0.5 | Any contributor | High |
-| Validation | Run etcd benchmarks (ops/sec, latency) on server-class riscv64 hardware vs amd64 and arm64 baseline | 2-3 | Qualcomm infra team | High |
-| Validation | Confirm correctness under the full E2E test suite on riscv64 hardware | 1-2 | Any contributor with Prow access | High |
-| Performance | Profile crypto-heavy etcd paths (TLS, mutual-auth) to quantify x/crypto pure-Go penalty | 1-2 | Qualcomm/RISE contributor | Medium |
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
+| Functional | Reopen and merge the one-line `checkSupportArch()` change (PR #21510 equivalent) | 0.1 | Any contributor | Critical |
+| CI/CD | Confirm/drive RISE-to-Prow hardware integration with SIG-k8s-infra | 2-4 | RISE Project + SIG-k8s-infra | Critical |
+| CI/CD | Assign riscv64 test-failure triage engineer for etcd's Prow CI job | Ongoing | Qualcomm/RISE contributor | Critical |
+| CI/CD | Add `linux/riscv64` to `scripts/build-binary.sh` and `scripts/build-docker.sh` | 0.5 | Any contributor | High |
+| Validation | Determine and, if needed, patch the riscv64 build/startup-gate status of the Ubuntu 26.04 and Debian sid distro packages | 0.5-1 | Qualcomm/RISE contributor | High |
+| Validation | Run etcd benchmarks (ops/sec, latency) on server-class riscv64 hardware versus amd64/arm64 baseline | 2-3 | Qualcomm infra team | High |
+| Validation | Run the full E2E test suite on riscv64 hardware once Prow coverage exists | 1-2 | Any contributor with Prow access | High |
+| Performance | Profile crypto-heavy etcd paths (TLS, mTLS) to quantify the x/crypto pure-Go fallback penalty | 1-2 | Qualcomm/RISE contributor | Medium |
+| Dependency hygiene | Add `project-reports` coverage for bbolt and etcd-io/raft, with a targeted riscv64 atomic-alignment check for bbolt | 0.5-1 | Any contributor | Medium |
 
 ---
 
@@ -358,18 +332,19 @@ No updates yet -- initial report dated 2026-07-20.
 - [etcd Supported Platforms (v3.6)](https://etcd.io/docs/v3.6/op-guide/supported-platform/)
 - [etcd CNCF project page](https://www.cncf.io/projects/etcd/)
 - [SIG-etcd README](https://github.com/kubernetes/community/blob/master/sig-etcd/README.md)
-- [PR #10834 -- vendor: update x/sys and x/net modules to support Risc-V (merged 2019-08-29)](https://github.com/etcd-io/etcd/pull/10834)
-- [PR #15490 -- feat: add riscv64 support (closed 2023-04-21)](https://github.com/etcd-io/etcd/pull/15490)
-- [PR #21510 -- server: add riscv64 to supported architectures (closed 2026-03-29)](https://github.com/etcd-io/etcd/pull/21510)
-- [Issue #21509 -- Add riscv64 to supported architectures (closed 2026-06-04)](https://github.com/etcd-io/etcd/issues/21509)
+- [PR #10834 - vendor: update x/sys and x/net modules to support Risc-V (merged 2019-08-29)](https://github.com/etcd-io/etcd/pull/10834)
+- [PR #13504 - Is it necessary to avoid setting ETCD_UNSUPPORTED_ARCH=riscv64 (closed 2022-04-18)](https://github.com/etcd-io/etcd/pull/13504)
+- [PR #14517 - Adding support for RISC-V (closed 2023-03-18)](https://github.com/etcd-io/etcd/pull/14517)
+- [Issue #14522 - Extending CI pipeline, on behalf of 64bit RISC-V environment (closed 2023-04-02)](https://github.com/etcd-io/etcd/issues/14522)
+- [PR #15490 - feat: add riscv64 support (closed 2023-04-21)](https://github.com/etcd-io/etcd/pull/15490)
+- [Issue #21509 - Add riscv64 to supported architectures (closed 2026-06-04)](https://github.com/etcd-io/etcd/issues/21509)
+- [PR #21510 - server: add riscv64 to supported architectures (closed 2026-03-29)](https://github.com/etcd-io/etcd/pull/21510)
 - [go-riscv/etcd community fork](https://github.com/go-riscv/etcd)
 - [etcd 3.5.30-2 Debian buildd riscv64 status](https://buildd.debian.org/status/package.php?p=etcd&suite=sid)
-- [etcd Ubuntu 24.04 Noble package search](https://packages.ubuntu.com/search?keywords=etcd&suite=noble&searchon=names&section=all)
-- [riseproject-dev/kubernetes-riscv -- Kubernetes RISC-V fork](https://github.com/riseproject-dev/kubernetes-riscv)
+- [Ubuntu 26.04 "resolute" etcd package search (riscv64)](https://packages.ubuntu.com/search?keywords=etcd&suite=resolute&searchon=names&section=all)
 - [RISE Project blog](https://riseproject.dev/blog/)
-- [bbolt PR #159 -- Add support for riscv64 (merged 2019-05-27)](https://github.com/etcd-io/bbolt/pull/159)
-- [prometheus/procfs PR #325 -- riscv64 fix (merged 2021)](https://github.com/prometheus/procfs/pull/325)
-- [go.opentelemetry.io/otel issue #8126 -- add cross-build workflow](https://github.com/open-telemetry/opentelemetry-go/issues/8126)
-- [golang/go #64074 -- riscv64 stackcheck overhead](https://github.com/golang/go/issues/64074)
-- [golang/go #78918 -- riscv64 crc32 assembly](https://github.com/golang/go/issues/78918)
-- [golang/go #78515 -- riscv64 jump table optimization](https://github.com/golang/go/issues/78515)
+- [RISE Project wheel builder package index](https://riseproject.gitlab.io/python/wheel_builder/)
+- [golang/go #27532 - riscv64 support tracking](https://github.com/golang/go/issues/27532)
+- [golang/go #64345 - cmd/compile,runtime: race support for riscv64 (closed)](https://github.com/golang/go/issues/64345)
+- [golang/go #50615 - bytes,strings: tests take ~100x as long on riscv (open)](https://github.com/golang/go/issues/50615)
+- [PyPI etcd package](https://pypi.org/pypi/etcd/json)
