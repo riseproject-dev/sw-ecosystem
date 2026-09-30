@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for k3s<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +280,13 @@
 </h2>
     
 
-<p>k3s is a lightweight, CNCF Sandbox-level Kubernetes distribution created by Rancher Labs (now SUSE). It packages an embedded Kubernetes control plane, containerd, etcd, flannel, CoreDNS, Traefik, and a local storage provisioner into a single static binary under 100 MB. Its primary use cases are edge computing, IoT, and resource-constrained environments – making RISC-V hardware an architecturally relevant target.</p>
+<p>k3s is a lightweight, CNCF Sandbox-level Kubernetes distribution originally created by Rancher Labs and now maintained by SUSE (which acquired Rancher). It packages an embedded Kubernetes control plane, a container runtime (containerd by default), etcd or an etcd-shim (kine), flannel, CoreDNS, Traefik, and a local storage provisioner into a single statically linked binary under 100 MB. Its primary use cases are edge computing, IoT, and resource-constrained environments, which makes RISC-V hardware an architecturally relevant target.</p>
 
-<p>The project is licensed Apache-2.0. The Linux Foundation holds the trademark. Governance is documented in MAINTAINERS and GOVERNANCE.md and administered by a Maintainer Council under CNCF Technical Oversight Committee oversight. As of the current research, all listed maintainers are SUSE employees except for one SAP-affiliated community manager. Top contributors by commit count are brandond (1067), erikwilson (697), dereknola (420), and ibuildthecloud (338).</p>
+<p>The project is licensed Apache-2.0. Governance is documented in <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> and <code class="language-plaintext highlighter-rouge">GOVERNANCE.md</code> and is administered by a Maintainer Council under CNCF Technical Oversight Committee (TOC) oversight, operating by “lazy consensus” with escalation to simple-majority or (for maintainer changes/charter changes) supermajority votes. GOVERNANCE.md states explicitly: “Community over Product or Company: Sustaining and growing our community takes priority over shipping code or sponsors’ organizational goals.” Major changes require an ADR-style proposal in <code class="language-plaintext highlighter-rouge">docs/adrs/</code>.</p>
 
-<p>k3s officially releases binaries and container images for three architectures: amd64, arm64, and armhf (arm32/ARMv7). The README also references s390x as supported in downloads. RISC-V (riscv64) is not in any official release.</p><hr />
+<p>Every listed maintainer in the <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> file uses a <code class="language-plaintext highlighter-rouge">@suse.com</code> email address (brandond, briandowns, brooksn, caroline-suse-rancher, cwayne18, dereknola, galal-hussein, manuelbuil, matttrach, mdrahman-suse, Oats87, rancher-max, rbrtbnfgl, ShylajaDevadiga, thomasferrandiz, VestigeJ) except community management, which is split between OrlinVasilev (SAP) and robertsirc (SUSE). <code class="language-plaintext highlighter-rouge">CODEOWNERS</code> is a single blanket entry, <code class="language-plaintext highlighter-rouge">* @k3s-io/k3s-dev</code>. Top contributors by commit volume over the last ~1,040 commits (git shortlog, roughly Apr 2025-Sep 2026) are Brad Davidson (420, SUSE), Derek Nola (184, SUSE), dependabot[bot] (70), Rafael/rafaelbreno (48, affiliation not confirmed), github-actions[bot] (44), Manuel Buil (29, SUSE), Michael Fritch (29, SUSE), Vitor Savian (27, SUSE). The active human contributor base is essentially entirely SUSE-employed. This concentration matters for RISC-V: architecture-enablement decisions that touch Rancher/SUSE-owned container image infrastructure (pause image, systemd-node image) are gated on internal SUSE engineering priority, not purely on external contribution volume.</p>
+
+<p>k3s officially releases binaries and container images for three architectures: amd64, arm64, and arm/armhf (ARMv7). The install script and README additionally reference s390x support in some contexts, but riscv64 is not present in any official release asset, and the README’s “Requirements” documentation still lists only x86_64, armhf, arm64, and s390x as supported architectures. No <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> file exists in the repository, so there is no written architecture-tiering policy distinguishing riscv64 from the supported set.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -298,65 +301,121 @@
     <tr>
       <th>Date</th>
       <th>Event</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>2022-08-22</td>
-      <td><a href="https://github.com/k3s-io/k3s/issues/6022">Issue #6022</a>: community user reports running a custom-compiled riscv64 k3s v1.21.11 under QEMU, hitting an HTTP 403 on metrics-server scraping. First documented riscv64 usage.</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/6022">Issue #6022</a>: community user reports running a custom-compiled riscv64 k3s v1.21.11 under QEMU, hits an HTTP 403 on metrics-server scraping. First documented riscv64 usage. Closed, no public root cause; attributed to RBAC misconfiguration in the custom setup, not an upstream bug.</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/6022">#6022</a></td>
     </tr>
     <tr>
       <td>2023-03-27</td>
-      <td><a href="https://github.com/k3s-io/k3s/issues/7151">Issue #7151</a> opened requesting official riscv64 support. Maintainer brandond repurposes it as the official tracking issue and states: “This has not been prioritized, and we don’t have any build infra for riscv64, so at the moment this will be purely experimental.”</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/7151">Issue #7151</a> opened requesting official riscv64 support. Maintainer brandond repurposes it as the tracking issue: “This has not been prioritized, and we don’t have any build infra for riscv64, so at the moment this will be purely experimental.”</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/7151">#7151</a></td>
     </tr>
     <tr>
       <td>2023-05-12</td>
-      <td>brandond states: “we don’t have any hardware for CI or QA so we probably won’t have official support any time soon.”</td>
+      <td>brandond: “we don’t have any hardware for CI or QA so we probably won’t have official support any time soon.”</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/7151">#7151</a></td>
     </tr>
     <tr>
       <td>2023-06-14</td>
-      <td><a href="https://github.com/k3s-io/k3s/pull/7778">PR #7778</a> opened by chazapis (CARV-ICS-FORTH): build and packaging script changes for riscv64 cross-compilation. No Kubernetes or k3s runtime code changes. PR remains open as of 2026.</td>
-    </tr>
-    <tr>
-      <td>2023-07-21</td>
-      <td>chazapis confirms k3s-root v0.13.0 and runc v1.1.8 both support riscv64; tests a full single-node cluster on QEMU using custom-built images from carvicsforth/ Docker Hub.</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/7778">PR #7778</a> opened by Antony Chazapis (CARV-ICS-FORTH): riscv64 cross-compilation support for the (then-current) Dapper build environment. No k3s runtime code changes.</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/7778">#7778</a></td>
     </tr>
     <tr>
       <td>2023-09-11</td>
-      <td>brandond tests PR #7778 on a three-node cluster of SiFive Unmatched boards running openSUSE Tumbleweed (kernel 6.4.12, k3s v1.28.1+k3s1). Nodes reach Ready state with label <code class="language-plaintext highlighter-rouge">kubernetes.io/arch=riscv64</code>. No workload pods run due to missing official riscv64 container images.</td>
+      <td>brandond tests PR #7778’s build on a three-node SiFive HiFive Unmatched cluster (openSUSE Tumbleweed, kernel 6.4.12, k3s v1.28.1+k3s1). Nodes reach Ready with label <code class="language-plaintext highlighter-rouge">kubernetes.io/arch=riscv64</code>. No workload pods run: “I just can’t run anything on it because none of our images currently support riscv64.”</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/7778">#7778</a></td>
     </tr>
     <tr>
-      <td>2024-03</td>
-      <td><a href="https://github.com/k3s-io/k3s/pull/9719">PR #9719</a> by dereknola (SUSE): bumps go-libp2p to fix TCP build failure on riscv64. Receives two maintainer approvals. Closed 2024-04-03 when <a href="https://github.com/k3s-io/k3s/pull/9863">PR #9863</a> (Bump spegel to v0.0.20-k3s1) is merged instead, incorporating the same change.</td>
+      <td>2024-04-03</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/9719">PR #9719</a> “Bump libp2p for riscv support” merged (approved by brandond and cwayne18). First release containing it, confirmed by diffing <code class="language-plaintext highlighter-rouge">go.mod</code> across tags, is <strong>v1.29.4+k3s1</strong> (released 2024-04-25).</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/9719">#9719</a></td>
     </tr>
     <tr>
-      <td>2024-10-02</td>
-      <td>chazapis reports that CoreDNS, Local Path Provisioner, Helm, and Traefik now ship official riscv64 images. Remaining exceptions: klipper-helm and klipper-lb.</td>
+      <td>2025-04-25</td>
+      <td>Commit <code class="language-plaintext highlighter-rouge">3ce4a635</code> “Build k3s overhaul (#12200)” by Derek Nola (SUSE) merges, adding “emulation builds to k3s-build.yaml (for arm32 and future riscv64)” - explicitly framed as prep for a not-yet-supported architecture, not enablement itself.</td>
+      <td>commit <code class="language-plaintext highlighter-rouge">3ce4a635</code></td>
+    </tr>
+    <tr>
+      <td>2025-06-27</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/12556">Issue #12556</a>: external “RAX” porting-complexity tool rates k3s “low difficulty” to port (cyclomatic complexity 8,261). Closed same day as a research-validation request, not a real bug report; got no maintainer technical response.</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/12556">#12556</a></td>
     </tr>
     <tr>
       <td>2026-01-18</td>
-      <td>mmoll asks for status on PR #7778. pgonin notes: “The CNCF does not provide RISC-V build runners as part of its ‘standard’ service to projects.”</td>
+      <td>pgonin notes in #7151: “The CNCF does not provide RISC-V build runners as part of its ‘standard’ service to projects.”</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/7151">#7151</a></td>
     </tr>
     <tr>
       <td>2026-03-24</td>
-      <td>Draft <a href="https://github.com/k3s-io/k3s/pull/13854">PR #13854</a> by luhenry: adds GitHub Actions CI configuration for linux-riscv64 using RISE RISC-V Runners. No source code changes. CI run documents 10-11x build slowdown vs arm64.</td>
+      <td>Draft <a href="https://github.com/k3s-io/k3s/pull/13854">PR #13854</a> “[Experiment] Add CI on linux-riscv64” opened by luhenry: GitHub Actions CI using RISE RISC-V Runners (native hardware, not QEMU). No source changes. Remains open/draft as of this report.</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/13854">#13854</a></td>
+    </tr>
+    <tr>
+      <td>2026-03-26</td>
+      <td>luhenry classifies 15 riscv64-only CI failures in PR #13854’s own run into 5 buckets (missing Docker images: 7 jobs; missing k3s release images: 2; missing multi-arch manifest entries: 4; Nix installer action lacking a RISCV64-Linux platform mapping: 1; test-setup bug: 1). Quantifies riscv64 as ~10-11x slower than arm64 across the board (median per-package 10.2x); one specific CI run (<code class="language-plaintext highlighter-rouge">luhenry/k3s</code> Actions run 23554260675, 2026-03-25) shows build-riscv64 52m41s vs build-arm64 6m23s (8.2x) and build-amd64 8m18s (6.4x).</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/13854">#13854</a></td>
     </tr>
     <tr>
       <td>2026-04-11</td>
-      <td><a href="https://github.com/k3s-io/k3s/issues/13910">Issue #13910</a> by pgonin: proposes installing the RISE RISC-V Runners GitHub App on the k3s-io organization.</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/13910">Issue #13910</a> opened by pgonin: proposes installing the RISE RISC-V Runners GitHub App on the k3s-io org, a prerequisite for #13854.</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/13910">#13910</a></td>
+    </tr>
+    <tr>
+      <td>2026-04-17</td>
+      <td>luhenry traces the Nix CI failure to a bug in <code class="language-plaintext highlighter-rouge">nix-installer-action</code> (missing RISCV64-Linux platform entry), not Nix/nixpkgs itself, after pushback from twz123.</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/13854">#13854</a></td>
     </tr>
     <tr>
       <td>2026-04-28</td>
-      <td>luhenry notes CNCF gave informal go-ahead to engage k3s maintainers on RISE runner usage.</td>
+      <td>luhenry: “after meeting with @caniszczyk last week, we have the go ahead from the CNCF to engage with maintainers… builds are working but are taking too long.” CNCF sign-off to proceed obtained; build-speed remains the blocker.</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/13854">#13854</a></td>
     </tr>
     <tr>
       <td>2026-06-05</td>
-      <td>luhenry comments that faster Scaleway hardware (EM-RV1 class) is being provisioned through agreements with Spacemit, Scaleway, Canonical, and RISE; expects online by end of July 2026. k3s listed in the “high priority bucket.” [NEEDS VERIFICATION]</td>
+      <td>luhenry: faster RISC-V hardware (Scaleway EM-RV1 class) being provisioned via agreements with Spacemit, Scaleway, Canonical, and RISE; expected online “end-of-July.” [NEEDS VERIFICATION - completion not independently confirmed]</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/13910">#13910</a></td>
+    </tr>
+    <tr>
+      <td>2026-07-21</td>
+      <td>Hardware-readiness deadline slips to “end-of-August” per luhenry.</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/13910">#13910</a></td>
+    </tr>
+    <tr>
+      <td>2026-08-10</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/7778">PR #7778</a> closed by chazapis as obsolete (“K3s is not using Dapper anymore”). Notes: “it looks like somewhere during the transition to buildx, riscv64 has been added to the Makefile and I have successfully built the latest K3s version (v1.36.3+k3s1) in a RISC-V VM.” Directs further discussion to #7151.</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/7778">#7778</a></td>
+    </tr>
+    <tr>
+      <td>2026-08-17 - 2026-09-01</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/14529">PR #14529</a> “Enable seccomp in riscv64 builds” (author Antony Chazapis/FORTH, merged by Brad Davidson 2026-09-01). External contributor closes a functional gap, over a year after CI/build groundwork was laid by a SUSE maintainer.</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/14529">#14529</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-18</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/14641">#14641</a>-<a href="https://github.com/k3s-io/k3s/issues/14644">#14644</a>, four release-branch-specific clones of tracking issue #7151 (for releases 1.34-1.37), are opened and closed the same day without any linked merge.</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/14641">#14641</a>-<a href="https://github.com/k3s-io/k3s/issues/14644">#14644</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-20</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/13910">Issue #13910</a> closed “not planned.”</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/13910">#13910</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-23 - 2026-09-24</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/14688">PR #14688</a> “Add riscv64 release artifacts” opened by wangyf0611 (built and smoke-tested natively on an openRuyi RISC-V host, 74,449,058-byte binary), closed the next day by maintainer dereknola: “K3s remain ‘not ready’ for riscv64 releases. CI infra remains 10x slower for riscv64 builds, and associated support images (such as upstream k8s pause image) do not have a riscv64 version… We are not going to add another architecture as an official release until we have that support in place.”</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/14688">#14688</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The CARV-ICS-FORTH work (PR #7778) is funded by EU Horizon Europe programs RISER, AERO, and REBECCA. [NEEDS VERIFICATION]</p><hr />
+<p><strong>Discrepancy flag:</strong> one research pass into this report’s source material characterized 2026-09-18 as the date “riscv64 support for k3s was merged and backported… to release branches 1.34, 1.35, 1.36, and 1.37,” inferring this from the closure of issues #14641-#14644. A second, more granular pass (direct issue-by-issue review) shows those four issues are backport-tracking clones of #7151 that were opened and closed the same day with no associated PR merge - they track intent, not completion. This is corroborated by the fact that the actual release-artifacts PR, #14688, was opened five days later and explicitly rejected by a maintainer on 2026-09-24 with the statement that k3s remains “not ready” for riscv64 releases. The correct reading is that riscv64 CI/build groundwork has progressed (Makefile, <code class="language-plaintext highlighter-rouge">scripts/version.sh</code>, seccomp support) but no riscv64 release or CI has landed as of this report’s date.</p>
+
+<p>Funding for the original CARV-ICS-FORTH build-script work (PR #7778) is attributed to EU Horizon Europe programs (RISER, AERO, REBECCA); this predates and is independent of RISE Project involvement. [NEEDS VERIFICATION]</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -366,9 +425,7 @@
 </h2>
     
 
-<p>k3s has no published formal tier or maturity policy for architecture support. The implicit policy, stated explicitly by brandond in multiple comments, is that an architecture must have CI runners (CNCF-provided or otherwise) before being included in the release pipeline.</p>
-
-<p>Current classification by architecture:</p>
+<p>k3s has no published formal architecture-tier or maturity policy. The implicit policy, stated repeatedly by maintainers, is that an architecture requires dedicated CI/QA hardware before inclusion in the release pipeline; as of 2026-09-24 that bar is explicitly unmet for riscv64 (dereknola, PR #14688).</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -387,21 +444,21 @@
       <td>Official, fully released</td>
     </tr>
     <tr>
-      <td>armhf (arm32)</td>
+      <td>arm/armhf (ARMv7)</td>
       <td>Official, fully released</td>
     </tr>
     <tr>
       <td>s390x</td>
-      <td>Official in install.sh, unclear release artifact status</td>
+      <td>Referenced in some installer/doc contexts; release-artifact status unclear [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
       <td>riscv64</td>
-      <td>Experimental, no official release, no CI</td>
+      <td>Build-tooling-supported (Makefile, Dockerfile, <code class="language-plaintext highlighter-rouge">scripts/version.sh</code>), no CI, no official release, explicitly rejected as a release target by a maintainer on 2026-09-24</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>riscv64 has been explicitly labeled “purely experimental” by maintainers since the tracking issue was opened in 2023. The tracking issue (<a href="https://github.com/k3s-io/k3s/issues/7151">#7151</a>) carries milestone “Backlog” and label “arch/other” and is listed as “Working” on the K3s Development project board as of 2026 – meaning someone is working on it, not that it is done.</p><hr />
+<p>The tracking issue <a href="https://github.com/k3s-io/k3s/issues/7151">#7151</a> remains open with milestone “Backlog” as of its last recorded update (2026-08-17). “Purely experimental” (brandond’s original 2023 framing) is still the accurate characterization as of this report.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -411,18 +468,54 @@
 </h2>
     
 
-<p>k3s is a pure Go application. It has zero assembly source files (<code class="language-plaintext highlighter-rouge">.S</code>), zero <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directories, zero JIT backends, zero SIMD dispatch, and zero RVV intrinsics (<code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, <code class="language-plaintext highlighter-rouge">rvv</code>, etc.). No Go source files carry <code class="language-plaintext highlighter-rouge">//go:build riscv64</code> build constraints. Architecture-specific behavior in the Go runtime (instruction scheduling, register allocation, memory model) is handled entirely by the Go toolchain at compile time.</p>
+<p>k3s is a pure Go application with no architecture-specific source code of its own. Exhaustive code search (queries for <code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, <code class="language-plaintext highlighter-rouge">rvv</code>, <code class="language-plaintext highlighter-rouge">riscv64</code>, <code class="language-plaintext highlighter-rouge">extension:S ... riscv</code>, <code class="language-plaintext highlighter-rouge">path:arch/riscv</code>, <code class="language-plaintext highlighter-rouge">RISCV64</code>, <code class="language-plaintext highlighter-rouge">Zbb</code>, <code class="language-plaintext highlighter-rouge">GOARCH riscv</code>) returns zero hits for RVV intrinsics, <code class="language-plaintext highlighter-rouge">.S</code> assembly files, any <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory, JIT backends, or ISA-extension-gated code paths. All riscv64/riscv matches converge on exactly three files, none of which contain architecture-specific <em>logic</em>, only build/CI plumbing that treats riscv64 as an opaque <code class="language-plaintext highlighter-rouge">GOOS/GOARCH</code> string:</p>
 
-<p>There are no RISC-V ISA extension optimizations planned or present: no RVV, no Zba, no Zbb, no Zkn, no Zvk tuning anywhere in the k3s codebase or its build configuration.</p>
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">Makefile</code> - <code class="language-plaintext highlighter-rouge">linux/riscv64</code> is one entry in the <code class="language-plaintext highlighter-rouge">docker buildx build --platform</code> list for the local <code class="language-plaintext highlighter-rouge">multiarch-binary</code>/<code class="language-plaintext highlighter-rouge">release</code> targets.</li>
+  <li><code class="language-plaintext highlighter-rouge">scripts/version.sh</code> - a <code class="language-plaintext highlighter-rouge">case ${ARCH}</code> block supplies a <code class="language-plaintext highlighter-rouge">K3S_ROOT_SHA256</code> checksum for the riscv64 k3s-root sysroot tarball.</li>
+  <li><code class="language-plaintext highlighter-rouge">.github/workflows/build-k3s.yaml</code> - <code class="language-plaintext highlighter-rouge">riscv64</code> appears only inside a <code class="language-plaintext highlighter-rouge">runs-on:</code> conditional that excludes riscv64 from the ARM-runner branch of a ternary expression.</li>
+</ol>
 
-<p>The only riscv64-specific content that exists in the k3s-io/k3s master branch today is:</p>
+<p>No <code class="language-plaintext highlighter-rouge">//go:build riscv64</code> constraints exist anywhere in the repository. There are no RVV, Zba, Zbb, Zkn, or Zvk optimizations planned or present, because k3s has no compute-intensive numerical or cryptographic kernels of its own - its crypto and compression work is delegated entirely to Go standard library packages and third-party Go modules (see Section 9).</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">scripts/version.sh</code>: a <code class="language-plaintext highlighter-rouge">case ${ARCH}</code> block includes <code class="language-plaintext highlighter-rouge">riscv64</code> with SHA256 <code class="language-plaintext highlighter-rouge">3b76a4a5bfc5c8623702a3b99e3015cd36b0336dd73c7ba4a765d018dc5a9685</code> for the k3s-root v0.15.2 tarball download. This is the only riscv64 string in the main branch.</li>
-  <li><code class="language-plaintext highlighter-rouge">scripts/download</code>: uses <code class="language-plaintext highlighter-rouge">${K3S_ROOT_SHA256}</code> set by <code class="language-plaintext highlighter-rouge">version.sh</code> to fetch and verify <code class="language-plaintext highlighter-rouge">k3s-root-riscv64.tar</code>; this path is functional for riscv64 if <code class="language-plaintext highlighter-rouge">ARCH=riscv64</code> is set.</li>
-</ul>
+<p>Because k3s itself carries no architecture-specific code, the correctness risk surface for riscv64 lies one layer down, in the Go toolchain. <a href="https://github.com/golang/go/issues/64917">golang/go#64917</a> documents that <code class="language-plaintext highlighter-rouge">uint32(math.NaN())</code> returns <code class="language-plaintext highlighter-rouge">4294967295</code> on riscv64 versus <code class="language-plaintext highlighter-rouge">0</code> on every other Go-supported architecture (reported against Go 1.21.5/linux-riscv64; related: <code class="language-plaintext highlighter-rouge">int64(NaN)</code> returns <code class="language-plaintext highlighter-rouge">MAXINT</code> on riscv64 versus <code class="language-plaintext highlighter-rouge">0</code> on arm64/loong64/wasm and <code class="language-plaintext highlighter-rouge">MININT</code> on amd64/s390x/ppc64). The issue is open, labeled <code class="language-plaintext highlighter-rouge">FrozenDueToAge</code>/<code class="language-plaintext highlighter-rouge">NeedsInvestigation</code>, not actively worked, and has caused a real-world test failure in the esbuild project. No riscv64-NaN-conversion failure has been reported against k3s specifically, but any Go code path in k3s (or its dependencies) that converts a NaN float to an integer is a latent, unverified correctness risk on this architecture.</p>
 
-<p>Everything else in PR #7778 (build script changes, install.sh detection, Drone CI pipeline, cross-compilation environment) is not merged.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Application logic</td>
+      <td>Pure Go, no arch-specific code</td>
+      <td>Pure Go, no arch-specific code</td>
+      <td>Pure Go, no arch-specific code</td>
+    </tr>
+    <tr>
+      <td>JIT/codegen</td>
+      <td>Go toolchain, mature</td>
+      <td>Go toolchain, mature</td>
+      <td>Go toolchain, present since Go 1.14 (experimental), first-class since Go 1.22</td>
+    </tr>
+    <tr>
+      <td>SIMD/vector use in k3s itself</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None (not applicable - no numeric kernels in k3s)</td>
+    </tr>
+    <tr>
+      <td>NaN-to-int conversion semantics</td>
+      <td>Standard (0)</td>
+      <td>Standard (0)</td>
+      <td>Diverges (returns max value); upstream Go bug <a href="https://github.com/golang/go/issues/64917">#64917</a>, open</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -432,128 +525,62 @@
 </h2>
     
 
-<p>k3s uses no cmake. It is a pure Go plus Buildroot project.</p>
+<p>k3s has <strong>no CMake build system</strong> - this was verified exhaustively: <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, and any <code class="language-plaintext highlighter-rouge">cmake/</code> directory do not exist anywhere in the repository. The build is pure Go plus Docker Buildx (BuildKit), orchestrated by a single <code class="language-plaintext highlighter-rouge">Makefile</code> and one generic multi-stage <code class="language-plaintext highlighter-rouge">Dockerfile</code> (no per-architecture Dockerfile exists).</p>
 
-<p><strong>Main build chain:</strong></p>
+<p><strong>Exact riscv64 build command</strong> (from the <code class="language-plaintext highlighter-rouge">Makefile</code>’s <code class="language-plaintext highlighter-rouge">multiarch-binary</code>/<code class="language-plaintext highlighter-rouge">release</code> target):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker buildx build \
+    --platform linux/amd64,linux/arm64,linux/arm/v7,linux/riscv64,windows/amd64 \
+    --build-arg "GIT_TAG=$GIT_TAG" \
+    --build-arg "TREE_STATE=$TREE_STATE" \
+    --build-arg "COMMIT=$COMMIT" \
+    --build-arg "DIRTY=$DIRTY" \
+    -f Dockerfile --target=multiarch-result --output type=local,dest=.,platform-split=false .
+</code></pre></div></div>
+
+<p>To build riscv64 alone, the same command is run with <code class="language-plaintext highlighter-rouge">--platform linux/riscv64</code>. This Makefile target is invoked manually/locally; it is <strong>not</strong> called from any GitHub Actions workflow - <code class="language-plaintext highlighter-rouge">release.yml</code> (the actual CI release pipeline) builds only <code class="language-plaintext highlighter-rouge">linux/amd64</code> and <code class="language-plaintext highlighter-rouge">linux/arm64,linux/arm/v7</code> via the separate <code class="language-plaintext highlighter-rouge">build-k3s.yaml</code> reusable workflow.</p>
+
+<p><strong>Toolchain (from the live <code class="language-plaintext highlighter-rouge">Dockerfile</code>):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Layer</th>
-      <th>Tool</th>
-      <th>Version</th>
+      <th>Tool/version</th>
+      <th>Why</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Go</td>
-      <td>Go toolchain</td>
-      <td>1.26.2 minimum (go.mod: <code class="language-plaintext highlighter-rouge">go 1.26.2</code>)</td>
+      <td><code class="language-plaintext highlighter-rouge">golang:1.26.8-alpine3.24</code> (pinned <code class="language-plaintext highlighter-rouge">GOLANG</code> build-arg); go.mod requires Go 1.26.2 minimum</td>
+      <td>Base compiler/runtime</td>
     </tr>
     <tr>
-      <td>Container build</td>
-      <td>Docker Buildx</td>
-      <td><code class="language-plaintext highlighter-rouge">DOCKER_BUILDKIT=1</code> required</td>
+      <td>Cross-compile helper</td>
+      <td><code class="language-plaintext highlighter-rouge">tonistiigi/xx:1.6.1</code></td>
+      <td>Provides <code class="language-plaintext highlighter-rouge">xx-go</code>/<code class="language-plaintext highlighter-rouge">xx-apk</code>/<code class="language-plaintext highlighter-rouge">xx-cc</code> wrappers turning Alpine’s <code class="language-plaintext highlighter-rouge">clang</code>+<code class="language-plaintext highlighter-rouge">lld</code> into a per-<code class="language-plaintext highlighter-rouge">$TARGETARCH</code> C cross toolchain</td>
     </tr>
     <tr>
-      <td>Build container</td>
-      <td><code class="language-plaintext highlighter-rouge">golang:1.26.4-alpine3.22</code></td>
-      <td>Produces statically linked binary</td>
+      <td>C compiler</td>
+      <td>Alpine’s <code class="language-plaintext highlighter-rouge">clang lld</code>, plus (Linux targets) <code class="language-plaintext highlighter-rouge">xx-apk add gcc musl-dev linux-headers zlib-dev zlib-static libseccomp libseccomp-dev libseccomp-static sqlite-dev sqlite-static libselinux libselinux-dev btrfs-progs-dev btrfs-progs-static</code></td>
+      <td><code class="language-plaintext highlighter-rouge">CGO_ENABLED=1</code> is required because k3s links sqlite3, libseccomp, and selinux via cgo; pure Go cross-compilation alone is insufficient. No repo comment states a pinned minimum GCC version for this path.</td>
     </tr>
     <tr>
       <td>Static linking</td>
-      <td>musl-libc via Buildroot</td>
-      <td><code class="language-plaintext highlighter-rouge">ENV STATIC_BUILD=true</code> in Dockerfile.local</td>
-    </tr>
-    <tr>
-      <td>Build orchestration</td>
-      <td>Makefile</td>
-      <td>invokes Docker-based scripts</td>
+      <td>musl via Alpine + k3s-root’s Buildroot toolchain (<code class="language-plaintext highlighter-rouge">BR2_TOOLCHAIN_BUILDROOT_MUSL=y</code>, GCC 14.3.0 for <code class="language-plaintext highlighter-rouge">riscv64-buildroot-linux-musl</code>)</td>
+      <td><code class="language-plaintext highlighter-rouge">STATIC_BUILD=true</code> produces a statically linked binary</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Go build tags used: <code class="language-plaintext highlighter-rouge">ctrd netcgo osusergo providerless urfave_cli_no_docs sqlite_omit_load_extension apparmor seccomp</code> (plus <code class="language-plaintext highlighter-rouge">static</code> when <code class="language-plaintext highlighter-rouge">STATIC_BUILD=true</code>).</p>
+<p>Go build tags (<code class="language-plaintext highlighter-rouge">scripts/build</code>, identical across Linux architectures): <code class="language-plaintext highlighter-rouge">ctrd netcgo osusergo providerless urfave_cli_no_docs sqlite_omit_load_extension</code>, plus <code class="language-plaintext highlighter-rouge">apparmor seccomp</code> on Linux, plus <code class="language-plaintext highlighter-rouge">static_build libsqlite3</code> and <code class="language-plaintext highlighter-rouge">extldflags '-static -lm -ldl -lz -lpthread'</code> when <code class="language-plaintext highlighter-rouge">STATIC_BUILD=true</code>, plus <code class="language-plaintext highlighter-rouge">selinux</code> by default. <code class="language-plaintext highlighter-rouge">CGO_CFLAGS="-DSQLITE_ENABLE_DBSTAT_VTAB=1 -DSQLITE_USE_ALLOCA=1"</code> is identical across architectures - no riscv64-specific flag exists.</p>
 
-<p><strong>k3s-root (separate dependency repo: k3s-io/k3s-root):</strong></p>
+<p><strong>k3s-root (companion repo, <code class="language-plaintext highlighter-rouge">k3s-io/k3s-root</code>):</strong> riscv64 support has existed since v0.13.0 (“Added RISC-V support”); the Buildroot config (<code class="language-plaintext highlighter-rouge">buildroot/riscv64config</code>) sets <code class="language-plaintext highlighter-rouge">BR2_riscv=y</code>, <code class="language-plaintext highlighter-rouge">BR2_RISCV_64=y</code>, <code class="language-plaintext highlighter-rouge">BR2_OPTIMIZE_S=y</code> (size optimization, <code class="language-plaintext highlighter-rouge">-Os</code>), <code class="language-plaintext highlighter-rouge">BR2_STATIC_LIBS=y</code>, no ISA-extension flags (no RVV, Zba, Zbb). <code class="language-plaintext highlighter-rouge">scripts/version.sh</code> in k3s master currently pins k3s-root <strong>v0.15.2</strong> with SHA256 <code class="language-plaintext highlighter-rouge">3b76a4a5bfc5c8623702a3b99e3015cd36b0336dd73c7ba4a765d018dc5a9685</code> for <code class="language-plaintext highlighter-rouge">k3s-root-riscv64.tar</code>, fetched from <code class="language-plaintext highlighter-rouge">https://github.com/k3s-io/k3s-root/releases/download/v0.15.2/k3s-root-riscv64.tar</code> and verified before unpacking. This is the one part of the build chain where riscv64 is treated identically to other architectures in an official release pipeline.</p>
 
-<p>k3s-root builds the userspace root filesystem bundled into k3s. riscv64 was added in v0.13.0 (“Added RISC-V support”). The Makefile sets <code class="language-plaintext highlighter-rouge">ALL_ARCH = amd64 arm64 arm riscv64</code>. The Buildroot configuration for riscv64 (<code class="language-plaintext highlighter-rouge">buildroot/riscv64config</code>) sets:</p>
+<p><strong>QEMU usage:</strong> none found anywhere in the k3s CI configuration. k3s builds riscv64 via cross-compilation (<code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code> plus <code class="language-plaintext highlighter-rouge">xx</code>’s clang/lld cross toolchain), not QEMU emulation - consistent with <code class="language-plaintext highlighter-rouge">build-k3s.yaml</code>’s runner-selection logic, which routes any (hypothetical) riscv64 build to the x86 runner rather than QEMU-emulating on an ARM runner. The RISE-runner CI in draft PR #13854 by contrast uses <strong>native riscv64 hardware</strong> (Scaleway EM-RV1), not emulation either.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>BR2_riscv=y
-BR2_RISCV_64=y
-BR2_GCC_TARGET_ARCH="riscv64"
-BR2_ENDIAN="LITTLE"
-BR2_OPTIMIZE_S=y    (-Os, size optimization)
-BR2_STATIC_LIBS=y
-BR2_TOOLCHAIN_BUILDROOT_MUSL=y
-BR2_GCC_VERSION="14.3.0"
-</code></pre></div></div>
-
-<p>No ISA extension flags are set (no <code class="language-plaintext highlighter-rouge">BR2_RISCV_ISA_RVV</code>, no Zba, Zbb, Zbc, etc.). The shared config (<code class="language-plaintext highlighter-rouge">buildroot/config</code>) uses GCC 14.3.0, binutils 2.44, and kernel headers 6.6.101. The Buildroot toolchain builds a <code class="language-plaintext highlighter-rouge">riscv64-buildroot-linux-musl</code> cross-compiler from source inside a <code class="language-plaintext highlighter-rouge">registry.suse.com/bci/bci-base:16.0</code> container using host gcc-15.</p>
-
-<p>k3s-root v0.15.2 ships <code class="language-plaintext highlighter-rouge">k3s-root-riscv64.tar</code> (10.2 MB) and <code class="language-plaintext highlighter-rouge">k3s-root-xtables-riscv64.tar</code> (1.81 MB) as release assets. [NEEDS VERIFICATION for exact sizes]</p>
-
-<p><strong>Building k3s for riscv64 today (manually, not via CI):</strong></p>
-
-<p>The developer-facing build command documented in PR #7778 is:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ARCH=riscv64 SKIP_VALIDATE=true SKIP_IMAGE=true SKIP_AIRGAP=true make
-</code></pre></div></div>
-
-<p>This works because:</p>
-<ol>
-  <li><code class="language-plaintext highlighter-rouge">scripts/version.sh</code> has the riscv64 SHA256 hash.</li>
-  <li><code class="language-plaintext highlighter-rouge">scripts/build</code> falls through to the default Go build path (no riscv64-specific block), which works for a pure-Go build when <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code> is set.</li>
-  <li><code class="language-plaintext highlighter-rouge">scripts/package-cli</code> falls through to the default <code class="language-plaintext highlighter-rouge">"-${ARCH}"</code> suffix.</li>
-</ol>
-
-<p>QEMU support: the k3s CI uses QEMU only for arm (armv7). For riscv64, no QEMU step is wired anywhere. A developer can use <code class="language-plaintext highlighter-rouge">docker run --privileged tonistiigi/binfmt --install riscv64</code> to enable QEMU-based cross-builds on non-riscv64 hosts, but this is not documented upstream.</p>
-
-<p><strong>What is in PR #7778 but not merged:</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>File</th>
-      <th>Change</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">install.sh</code></td>
-      <td>Adds <code class="language-plaintext highlighter-rouge">riscv64)</code> case to <code class="language-plaintext highlighter-rouge">setup_verify_arch()</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">scripts/build</code></td>
-      <td>Adds <code class="language-plaintext highlighter-rouge">riscv64</code> block: <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code>, sets cross-compiler <code class="language-plaintext highlighter-rouge">CC</code> and <code class="language-plaintext highlighter-rouge">PKG_CONFIG_PATH</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">scripts/ci</code></td>
-      <td>Calls <code class="language-plaintext highlighter-rouge">./prepare-cross</code> when <code class="language-plaintext highlighter-rouge">ARCH=riscv64</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">scripts/package-cli</code></td>
-      <td>Adds riscv64 suffix handling and <code class="language-plaintext highlighter-rouge">GOARCH</code> export</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">scripts/prepare-cross</code></td>
-      <td>New file: sets up Alpine-based cross-compilation environment for riscv64</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">scripts/binary_size_check.sh</code></td>
-      <td>Adds riscv64 binary size threshold</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">.drone.yml</code></td>
-      <td>Adds riscv64 build and release pipeline steps</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">Dockerfile.dapper</code></td>
-      <td>Adds <code class="language-plaintext highlighter-rouge">ARCH</code> to <code class="language-plaintext highlighter-rouge">DAPPER_ENV</code></td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>Cross-compiling riscv64 on arm64 is slightly faster than on amd64, per a reviewer comment on PR #13854 (shanduur). [NEEDS VERIFICATION]</p><hr />
+<p><strong>Known build failures (from PR #13854’s CI run):</strong> <code class="language-plaintext highlighter-rouge">"no match for platform in manifest: not found"</code> for <code class="language-plaintext highlighter-rouge">rancher/mirrored-pause:3.6</code>; <code class="language-plaintext highlighter-rouge">"Unable to find image 'rancher/systemd-node:v0.0.8'"</code>; <code class="language-plaintext highlighter-rouge">"ArchOs (RISCV64-Linux) doesn't map to a supported Nix platform"</code> (traced to a <code class="language-plaintext highlighter-rouge">nix-installer-action</code> bug, not Nix/nixpkgs itself). Manual builds (not CI) succeed: chazapis built v1.36.3+k3s1 in a RISC-V VM (Aug 2026); a contributor built and smoke-tested a 74MB riscv64 binary natively on an openRuyi RISC-V host as part of PR #14688 (Sep 2026).</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -563,8 +590,6 @@ BR2_GCC_VERSION="14.3.0"
 </h2>
     
 
-<p>The table below covers functional features that differ in availability for riscv64 vs the two tier-1 architectures.</p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
@@ -572,7 +597,7 @@ BR2_GCC_VERSION="14.3.0"
       <th>amd64</th>
       <th>arm64</th>
       <th>riscv64</th>
-      <th>Gap Description</th>
+      <th>Gap</th>
     </tr>
   </thead>
   <tbody>
@@ -581,96 +606,103 @@ BR2_GCC_VERSION="14.3.0"
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td>Never shipped; install.sh calls <code class="language-plaintext highlighter-rouge">fatal</code> on riscv64</td>
+      <td>Never shipped; PR #14688 (add riscv64 release artifacts) explicitly rejected 2026-09-24</td>
     </tr>
     <tr>
-      <td>install.sh support</td>
+      <td>Installer (<code class="language-plaintext highlighter-rouge">get.k3s.io</code> / <code class="language-plaintext highlighter-rouge">install.sh</code>) support</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td><code class="language-plaintext highlighter-rouge">setup_verify_arch()</code> does not include riscv64; PR #7778 not merged</td>
+      <td><code class="language-plaintext highlighter-rouge">setup_verify_arch()</code> has no <code class="language-plaintext highlighter-rouge">riscv64</code> case; the change exists only in unmerged PR #7778</td>
     </tr>
     <tr>
-      <td>Default storage class (local-path-provisioner)</td>
+      <td>CI build coverage</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No (partial history)</td>
-      <td>PR #346 (rancher/local-path-provisioner) closed abandoned Sep 2024; Oct 2024 comment in PR #7778 says Rancher began shipping the image – the current state is contradictory [NEEDS VERIFICATION]</td>
+      <td>No</td>
+      <td>No workflow on master passes <code class="language-plaintext highlighter-rouge">linux/riscv64</code> as a build platform; only a dead conditional fragment references the string</td>
+    </tr>
+    <tr>
+      <td>CI test coverage</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+      <td>Same as above; PR #13854 (RISE-runner CI) is unmerged draft</td>
+    </tr>
+    <tr>
+      <td>Default CRI (containerd)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (upstream)</td>
+      <td>containerd ships riscv64 tarballs; no CI test-matrix entry (<a href="https://github.com/containerd/containerd/issues/13020">containerd#13020</a>, open)</td>
+    </tr>
+    <tr>
+      <td>Default CNI (flannel)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Best-effort</td>
+      <td>Upstream maintainers marked two riscv64 build-failure issues <code class="language-plaintext highlighter-rouge">wontfix</code> (<a href="https://github.com/flannel-io/flannel/issues/1988">#1988</a>, <a href="https://github.com/flannel-io/flannel/issues/1853">#1853</a>)</td>
     </tr>
     <tr>
       <td>Default ingress (Traefik)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Partial</td>
-      <td>Merged into GoReleaser config in Traefik v2.10 (2023); a “no space left on device” CI failure blocked binary distribution at the v2.10.4 release; v3.x artifact availability is unconfirmed</td>
+      <td>Unconfirmed</td>
+      <td>Added to GoReleaser config in v2.10 (2023); a CI “no space left on device” failure removed riscv64 from the v2.10.4 release; v3.x status not independently reconfirmed in this research pass [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>Default DNS (CoreDNS)</td>
+      <td>Default storage class (local-path-provisioner)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes</td>
-      <td><a href="https://github.com/coredns/coredns/pull/6195">PR #6195</a> merged Jul 2023; <code class="language-plaintext highlighter-rouge">coredns_*.linux_riscv64.tgz</code> ships in releases</td>
+      <td>Unconfirmed / contradictory</td>
+      <td><code class="language-plaintext highlighter-rouge">rancher/local-path-provisioner</code> PR #346 closed abandoned (Sep 2024); a separate Oct 2024 comment claims Rancher began shipping the image independently - not reconciled by any source found [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>Helm (HelmChart CRD)</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td><a href="https://github.com/helm/helm/pull/12204">PR #12204</a> merged, released in Helm 3.14.0 (Jan 2024); test suite not fully passing on riscv64</td>
-    </tr>
-    <tr>
-      <td>klipper-helm</td>
+      <td>Pod sandbox (pause image)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td><a href="https://github.com/k3s-io/klipper-helm/pull/64">k3s-io/klipper-helm#64</a> open</td>
+      <td><code class="language-plaintext highlighter-rouge">rancher/mirrored-pause:3.6</code> has no riscv64 manifest; confirmed blocking in PR #13854’s CI run and cited explicitly by dereknola in the PR #14688 rejection</td>
     </tr>
     <tr>
-      <td>klipper-lb</td>
+      <td>systemd-node image</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td><a href="https://github.com/k3s-io/klipper-lb/pull/56">k3s-io/klipper-lb#56</a> open</td>
+      <td><code class="language-plaintext highlighter-rouge">rancher/systemd-node:v0.0.8</code> has no riscv64 image; blocks 7 categories of integration tests in PR #13854</td>
     </tr>
     <tr>
-      <td>pause image (rancher/mirrored-pause)</td>
+      <td>klipper-helm / klipper-lb</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td>CI run in PR #13854 shows <code class="language-plaintext highlighter-rouge">"no match for platform in manifest: not found"</code> for <code class="language-plaintext highlighter-rouge">rancher/mirrored-pause:3.6</code></td>
-    </tr>
-    <tr>
-      <td>rancher/systemd-node</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>PR #13854 CI: <code class="language-plaintext highlighter-rouge">"Unable to find image 'rancher/systemd-node:v0.0.8'"</code> – 7 CI jobs blocked</td>
-    </tr>
-    <tr>
-      <td>Pod checkpoint/restore (CRIU)</td>
-      <td>Yes</td>
-      <td>Partial</td>
-      <td>No</td>
-      <td><a href="https://github.com/checkpoint-restore/criu/issues/1702">criu/criu#1702</a> open since 2021; not a blocker for basic cluster operation</td>
+      <td>Open PRs (<a href="https://github.com/k3s-io/klipper-helm/pull/64">klipper-helm#64</a>, <a href="https://github.com/k3s-io/klipper-lb/pull/56">klipper-lb#56</a>), status not reconfirmed in this pass [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
       <td>Airgap bundle</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td><code class="language-plaintext highlighter-rouge">scripts/manifest</code> hard-codes <code class="language-plaintext highlighter-rouge">PLUGIN_PLATFORMS="linux/amd64,linux/arm64,linux/arm"</code>; riscv64 absent</td>
+      <td>Platform list in manifest/airgap scripts does not include riscv64</td>
     </tr>
     <tr>
-      <td>CI (automated build + test)</td>
+      <td>Pod checkpoint/restore (CRIU)</td>
       <td>Yes</td>
-      <td>Yes</td>
+      <td>Partial</td>
       <td>No</td>
-      <td>All 18 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> target only amd64, arm64, arm; zero riscv64 references in master</td>
+      <td><a href="https://github.com/checkpoint-restore/criu/issues/1702">criu#1702</a>, open since 2021; not a blocker for basic cluster operation</td>
+    </tr>
+    <tr>
+      <td>NaN-to-int float conversion</td>
+      <td>Standard</td>
+      <td>Standard</td>
+      <td>Diverges</td>
+      <td><a href="https://github.com/golang/go/issues/64917">golang/go#64917</a>, open upstream Go bug; no k3s-specific failure reported</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The <code class="language-plaintext highlighter-rouge">rancher/mirrored-pause:3.6</code> gap is the most operationally severe: every pod sandbox depends on the pause image. Without it, no workload pods can be scheduled, making any riscv64 k3s cluster inoperable for user workloads even if the cluster control plane initializes successfully.</p><hr />
+<p>The pause-image gap is the most operationally severe and the most decisively confirmed: dereknola’s 2026-09-24 rejection of PR #14688 names it explicitly as a reason k3s “remain[s] ‘not ready’” for riscv64. Without a riscv64 <code class="language-plaintext highlighter-rouge">rancher/mirrored-pause</code> manifest, no pod sandbox can be created, making a riscv64 k3s control plane that otherwise initializes correctly unable to schedule any user workload.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -680,93 +712,53 @@ BR2_GCC_VERSION="14.3.0"
 </h2>
     
 
-<p>All 18 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were verified against the master branch. The string “riscv” does not appear in any file. Architecture coverage in the relevant workflows:</p>
+<p><strong>No active riscv64 CI job exists on k3s-io/k3s master.</strong> This was independently verified twice by direct inspection of every workflow file in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> (one pass enumerated 19 files per the closed-PR record used for the readiness grade; a separate full listing of the directory enumerated 20: <code class="language-plaintext highlighter-rouge">actionlint.yaml, airgap.yaml, build-k3s.yaml, codeql.yml, e2e.yaml, epic.yaml, govulncheck.yml, install.yaml, integration.yaml, issue-filter.yaml, nightly-install.yaml, release.yml, scorecard.yml, stale.yml, trivy-scan.yml, trivy-trigger.yml, unitcoverage.yaml, updatecli.yaml, updatecli_k8s.yaml, validate.yaml</code> - the count discrepancy does not change the conclusion). No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository.</p>
+
+<p>The string “riscv” appears in exactly one file, one conditional:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">runs-on</span><span class="pi">:</span> <span class="s">$</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">build-k3s.yaml</code> is a reusable workflow (<code class="language-plaintext highlighter-rouge">on: workflow_call</code> only, no push/PR/schedule trigger of its own), called from <code class="language-plaintext highlighter-rouge">release.yml</code>, <code class="language-plaintext highlighter-rouge">e2e.yaml</code>, <code class="language-plaintext highlighter-rouge">install.yaml</code>, <code class="language-plaintext highlighter-rouge">integration.yaml</code>, and <code class="language-plaintext highlighter-rouge">nightly-install.yaml</code>. None of these callers ever passes <code class="language-plaintext highlighter-rouge">linux/riscv64</code> in the <code class="language-plaintext highlighter-rouge">platforms:</code> input anywhere on master; observed values are <code class="language-plaintext highlighter-rouge">linux/amd64</code>, <code class="language-plaintext highlighter-rouge">linux/arm64,linux/arm/v7</code>, <code class="language-plaintext highlighter-rouge">windows/amd64</code>, or the default <code class="language-plaintext highlighter-rouge">linux/amd64</code>. The riscv64 exclusion therefore guards a branch of the runner-selection ternary that is never reached - dead/latent logic, not an active CI path.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Workflow</th>
-      <th>Architectures</th>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">build-k3s.yaml</code></td>
-      <td>amd64, arm64, arm only (stated in input description)</td>
+      <td>Build CI</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">cncf-ubuntu-16-64-x86</code>)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">cncf-ubuntu-16-64-arm</code>)</td>
+      <td>No (only a dead runner-selection conditional)</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">airgap.yaml</code></td>
-      <td>amd64, arm64, arm only</td>
+      <td>Test CI (e2e/integration)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">e2e.yaml</code></td>
-      <td>amd64, arm64 only</td>
+      <td>Native hardware runner</td>
+      <td>Standard CNCF-hosted x86</td>
+      <td>Standard CNCF-hosted ARM</td>
+      <td>None on master; RISE Scaleway EM-RV1 hardware used only in the unmerged draft PR #13854</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">release.yml</code></td>
-      <td><code class="language-plaintext highlighter-rouge">linux/amd64, linux/arm64, linux/arm/v7</code> only</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">install.yaml</code></td>
-      <td>amd64 only</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">integration.yaml</code></td>
-      <td>amd64 only</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">nightly-install.yaml</code></td>
-      <td>amd64 only</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">validate.yaml</code></td>
-      <td>amd64 only</td>
+      <td>CI cost multiplier vs arm64</td>
+      <td>1x</td>
+      <td>1x</td>
+      <td>~8-11x (measured in PR #13854’s own runs)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>There are no QEMU riscv64 emulation steps, no <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> runner references, and no <code class="language-plaintext highlighter-rouge">linux/riscv64</code> Docker platform strings anywhere in the CI configuration.</p>
-
-<p>Draft <a href="https://github.com/k3s-io/k3s/pull/13854">PR #13854</a> proposes adding riscv64 to <code class="language-plaintext highlighter-rouge">build-k3s.yaml</code> and <code class="language-plaintext highlighter-rouge">e2e.yaml</code> using RISE RISC-V Runners (<code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>, Scaleway EM-RV1 hardware). It has zero reviews, zero approvals, and has not been merged. Its own CI run (https://github.com/luhenry/k3s/actions/runs/23554260675) shows 15 failures, all riscv64-specific. All amd64 and arm64 jobs passed in the same run.</p>
-
-<p>CI failure breakdown from PR #13854:</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Root Cause</th>
-      <th>Affected Jobs</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Missing <code class="language-plaintext highlighter-rouge">rancher/systemd-node:v0.0.8</code> riscv64 image</td>
-      <td>7</td>
-    </tr>
-    <tr>
-      <td>Missing <code class="language-plaintext highlighter-rouge">rancher/mirrored-pause:3.6</code> riscv64 manifest</td>
-      <td>4</td>
-    </tr>
-    <tr>
-      <td>Missing prior k3s release images for riscv64 (<code class="language-plaintext highlighter-rouge">v1.34.5-k3s1</code>, <code class="language-plaintext highlighter-rouge">v1.35.2-k3s1</code>)</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">DeterminateSystems/nix-installer-action</code> missing <code class="language-plaintext highlighter-rouge">RISCV64-Linux</code> platform mapping</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <td>Test setup bug – config file not created before bind mount</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>The Nix installer issue was diagnosed by luhenry as a bug in <code class="language-plaintext highlighter-rouge">DeterminateSystems/detsys-ts</code> and an upstream fix PR (DeterminateSystems/detsys-ts#172) was opened. The test setup bug was fixed in the RISE runner app. [NEEDS VERIFICATION for fix status of both]</p>
-
-<p><a href="https://github.com/k3s-io/k3s/issues/13910">Issue #13910</a> (Apr 2026) requests that a k3s-io organization-level administrator install the RISE RISC-V Runners GitHub App. No maintainer response is recorded. This is a prerequisite for merging PR #13854.</p>
-
-<p>The CNCF does not provide riscv64 build runners as part of its standard service to projects (confirmed by pgonin in issue #7151 comments, Jan 2026). The current CI runners for arm64 and amd64 are CNCF-hosted (<code class="language-plaintext highlighter-rouge">cncf-ubuntu-16-64-arm</code>, <code class="language-plaintext highlighter-rouge">cncf-ubuntu-16-64-x86</code>). riscv64 would require the third-party RISE runner service or equivalent.</p><hr />
+<p>The only riscv64 CI that exists anywhere runs on a contributor’s personal fork (<code class="language-plaintext highlighter-rouge">luhenry/k3s</code>) via the unmerged, unreviewed draft PR #13854, using RISE RISC-V Runners. Its own measurements: median per-package build slowdown 10.2x vs arm64; one specific run shows build-riscv64 52m41s vs build-arm64 6m23s (8.2x) and build-amd64 8m18s (6.4x); 15 riscv64-specific job failures against zero amd64/arm64 failures in the same run. The organizational prerequisite for turning this into real CI - installing the RISE RISC-V Runners GitHub App on the k3s-io org (<a href="https://github.com/k3s-io/k3s/issues/13910">#13910</a>) - was closed “not planned” on 2026-09-20. The CNCF does not provide riscv64 build runners as part of its standard service to hosted projects (pgonin, Jan 2026).</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -776,51 +768,15 @@ BR2_GCC_VERSION="14.3.0"
 </h2>
     
 
-<p><strong>GitHub Releases (k3s-io/k3s):</strong></p>
+<p><strong>GitHub Releases (k3s-io/k3s):</strong> every release checked (<code class="language-plaintext highlighter-rouge">v1.37.1+k3s1</code>, <code class="language-plaintext highlighter-rouge">v1.36.5+k3s1</code>, and the five most recent releases in the prior research pass) ships assets for amd64, arm64, and arm/armhf only: <code class="language-plaintext highlighter-rouge">k3s</code>, <code class="language-plaintext highlighter-rouge">k3s-arm64</code>, <code class="language-plaintext highlighter-rouge">k3s-armhf</code>, airgap image tarballs, <code class="language-plaintext highlighter-rouge">k3s-images.txt</code>, and <code class="language-plaintext highlighter-rouge">sha256sum-{amd64,arm,arm64}.txt</code>. No asset containing “riscv” or “riscv64” exists in any release. This is architecturally consistent with the <code class="language-plaintext highlighter-rouge">release.yml</code> workflow (Section 7), which never builds riscv64.</p>
 
-<p>The five most recent releases checked (v1.36.2-rc1+k3s1 through v1.36.1+k3s1) each have exactly 16 assets covering three architectures: amd64, arm64, armhf. No asset containing “riscv64” or “riscv” exists in any release. The SHA256 sum files (<code class="language-plaintext highlighter-rouge">sha256sum-amd64.txt</code>, <code class="language-plaintext highlighter-rouge">sha256sum-arm.txt</code>, <code class="language-plaintext highlighter-rouge">sha256sum-arm64.txt</code>) confirm the closed architecture list.</p>
+<p><strong>Official installer (<code class="language-plaintext highlighter-rouge">get.k3s.io</code> / <code class="language-plaintext highlighter-rouge">install.sh</code>):</strong> <code class="language-plaintext highlighter-rouge">setup_verify_arch()</code> recognizes <code class="language-plaintext highlighter-rouge">amd64/x86_64</code>, <code class="language-plaintext highlighter-rouge">arm64/aarch64</code>, <code class="language-plaintext highlighter-rouge">arm*</code>, and <code class="language-plaintext highlighter-rouge">s390x</code>. Any other architecture, including riscv64, triggers <code class="language-plaintext highlighter-rouge">fatal "Unsupported architecture $ARCH"</code> and the script aborts. The riscv64 case added in PR #7778 was never merged.</p>
 
-<p><strong>Official install script (https://get.k3s.io):</strong></p>
+<p><strong>Linux distribution packaging:</strong> k3s is packaged by <strong>no major Linux distribution for any architecture.</strong> Ubuntu’s “resolute” (26.04) suite returns “Sorry, your search gave no results” for a <code class="language-plaintext highlighter-rouge">k3s</code> package name search across all sections and architectures - confirmed directly against <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code>. Debian does not package it. Arch Linux’s RISC-V port (<code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code>) has no <code class="language-plaintext highlighter-rouge">k3s</code> entry. Because no distribution packages k3s at all, riscv64 packaging is moot rather than merely absent - there is no distribution floor of any kind to apply.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">setup_verify_arch()</code> function covers <code class="language-plaintext highlighter-rouge">amd64/x86_64</code>, <code class="language-plaintext highlighter-rouge">arm64/aarch64</code>, <code class="language-plaintext highlighter-rouge">arm*</code>, and <code class="language-plaintext highlighter-rouge">s390x</code>. Any other architecture, including riscv64, triggers <code class="language-plaintext highlighter-rouge">fatal "Unsupported architecture $ARCH"</code>. The script aborts.</p>
+<p><strong>Package registries:</strong> k3s is distributed exclusively as a Go binary via GitHub Releases and the install script, not as a language-ecosystem package. <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/k3s/json</code> returns HTTP 404 (no PyPI project named <code class="language-plaintext highlighter-rouge">k3s</code> exists, for any architecture). The RISE GitLab wheel builder (<code class="language-plaintext highlighter-rouge">gitlab.com/riseproject/python/wheel_builder</code>) redirects to PyPI, which also 404s. There is no npm or Maven distribution path, consistent with k3s being a standalone Go binary, not a library.</p>
 
-<p><strong>Linux distribution packaging:</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Distribution</th>
-      <th>k3s packaged?</th>
-      <th>riscv64 path</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Ubuntu 24.04 (Noble)</td>
-      <td>No</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>Debian (all suites)</td>
-      <td>No</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>Arch Linux RISC-V (archriscv.felixc.at)</td>
-      <td>No</td>
-      <td>Not in core/extra; not in AUR for this arch</td>
-    </tr>
-    <tr>
-      <td>PyPI</td>
-      <td>No (k3s is a Go binary)</td>
-      <td>N/A</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>k3s is not packaged by any major Linux distribution. There is no distro-provided riscv64 path.</p>
-
-<p>The only riscv64-capable k3s binaries that exist are developer builds produced from PR #7778 by individual contributors, not from any official source.</p><hr />
+<p><strong>What a user must do today to get a working riscv64 k3s binary:</strong> build from source using the (undocumented, unmerged-for-install.sh) manual build path <code class="language-plaintext highlighter-rouge">ARCH=riscv64 SKIP_VALIDATE=true SKIP_IMAGE=true SKIP_AIRGAP=true make</code>, or use a third-party/community fork. Confirmed working community/unofficial sources: <code class="language-plaintext highlighter-rouge">CARV-ICS-FORTH/kubernetes-riscv64</code> (patched fork with rebuilt images, cited in a Sept 2026 RISE/Kairos blog post as the basis for booting k3s on riscv64); forks <code class="language-plaintext highlighter-rouge">12345qwert123456/k3s.RISC-V</code>, <code class="language-plaintext highlighter-rouge">ioito/k3s</code>, <code class="language-plaintext highlighter-rouge">yunionio/k3s</code>; and <code class="language-plaintext highlighter-rouge">gounthar/docker-for-riscv64</code>, which runs weekly native riscv64 k3s builds. None of these are official k3s-io releases, and none were independently verified for correctness or currency in this research pass.</p>
 <h2 id="9-dependencies">
   
   
@@ -830,187 +786,209 @@ BR2_GCC_VERSION="14.3.0"
 </h2>
     
 
-<p>The table below covers k3s’s critical dependencies and their riscv64 status, based on the research findings.</p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>riscv64 Build</th>
-      <th>riscv64 Release Artifacts</th>
-      <th>Blocking Issues</th>
+      <th>Criticality</th>
+      <th>riscv64 build</th>
+      <th>riscv64 release/test</th>
+      <th>Blocking issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Go runtime</td>
-      <td>Primary language runtime</td>
-      <td>Yes, first-class since Go 1.22 (experimental since 1.14)</td>
-      <td>Yes, every Go release</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>k3s-io/kubernetes fork (v1.36.2-k3s1)</td>
-      <td>Embedded control plane and kubelet</td>
+      <td>Kubernetes</td>
+      <td>Embedded control plane / kubelet (k3s-io/kubernetes fork)</td>
+      <td>Critical</td>
       <td>Buildable manually</td>
-      <td>No</td>
-      <td>kube-cross image lacks <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code>; no official pause image; no riscv64 in <code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code> platform arrays</td>
+      <td>No official riscv64 release</td>
+      <td>kube-cross image lacks a riscv64 cross-compiler; no riscv64 in <code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code> platform arrays; no official pause image (see below)</td>
     </tr>
     <tr>
-      <td>k3s-io/containerd fork (v2.3.1-k3s2)</td>
-      <td>Default CRI, container lifecycle</td>
+      <td>containerd</td>
+      <td>Default CRI, container lifecycle (k3s-io fork)</td>
+      <td>Optional (per given dependency list; operationally load-bearing since it is the default runtime)</td>
+      <td>Yes, builds clean, no patches needed</td>
+      <td>Yes - upstream containerd v2.3.2+ ships <code class="language-plaintext highlighter-rouge">containerd-*-linux-riscv64.tar.gz</code></td>
+      <td><a href="https://github.com/containerd/containerd/issues/13020">containerd#13020</a> open: no riscv64 entry in the CI test matrix; CRIU checkpoint unavailable</td>
+    </tr>
+    <tr>
+      <td>runc</td>
+      <td>OCI low-level container runtime (opencontainers/runc)</td>
+      <td>Optional</td>
+      <td>Yes - riscv64 support merged in v1.1.8 via <a href="https://github.com/opencontainers/runc/pull/3905">PR #3905</a> (2023)</td>
+      <td>Yes - riscv64 release binaries shipped since v1.1.8</td>
+      <td><a href="https://github.com/opencontainers/runc/issues/3950">#3950</a>, open: musl static build broken on riscv64. (<a href="https://github.com/opencontainers/runc/pull/5166">#5166</a>, “Add linux/riscv64 to CI and release artifacts,” is closed/superseded - support already existed by the time it was filed.)</td>
+    </tr>
+    <tr>
+      <td>etcd</td>
+      <td>Embedded key-value store, control-plane datastore (k3s-io fork)</td>
+      <td>Critical</td>
+      <td>Yes, builds and runs on riscv64</td>
+      <td>No upstream riscv64 release binary</td>
+      <td><a href="https://github.com/etcd-io/etcd/issues/21509">#21509</a> closed; <a href="https://github.com/etcd-io/etcd/pull/21510">PR #21510</a> removed the <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code> startup gate (merged Mar 2026), but upstream etcd still ships no official riscv64 release binary. k3s mitigates by building etcd from its own fork source.</td>
+    </tr>
+    <tr>
+      <td>kine</td>
+      <td>etcd-shim datastore abstraction (SQLite/Postgres/MySQL backend)</td>
+      <td>Optional</td>
       <td>Yes</td>
-      <td>Yes – upstream containerd v2.3.2 ships <code class="language-plaintext highlighter-rouge">containerd-*-linux-riscv64.tar.gz</code></td>
-      <td>CI gap: <a href="https://github.com/containerd/containerd/issues/13020">#13020</a> and <a href="https://github.com/containerd/containerd/pull/13124">#13124</a> open (Mar 2026); CRIU checkpoint unavailable</td>
+      <td>Yes - multiplatform CI extended to riscv64</td>
+      <td><a href="https://github.com/k3s-io/kine/issues/296">k3s-io/kine#296</a> closed, resolved by <a href="https://github.com/k3s-io/kine/pull/297">PR #297</a> (~Feb 2025); CI coverage added in <a href="https://github.com/k3s-io/kine/pull/462">PR #462</a> (~Apr 2025). No open blockers found.</td>
     </tr>
     <tr>
-      <td>opencontainers/runc (v1.4.2)</td>
-      <td>OCI low-level container runtime</td>
+      <td>flannel</td>
+      <td>Default CNI overlay (VXLAN/WireGuard)</td>
+      <td>Optional</td>
+      <td>Best-effort - riscv64 build added in <a href="https://github.com/flannel-io/flannel/pull/1824">PR #1824</a> (2023)</td>
+      <td>Multi-arch images including riscv64 ship, but reliability is best-effort</td>
+      <td><a href="https://github.com/flannel-io/flannel/issues/1988">#1988</a> and <a href="https://github.com/flannel-io/flannel/issues/1853">#1853</a>, both closed <strong>wontfix</strong>. This is the single most concrete upstream “will not fix” data point in the whole dependency chain.</td>
+    </tr>
+    <tr>
+      <td>CNI plugins</td>
+      <td>Bridge/loopback/portmap binaries (containernetworking/plugins)</td>
+      <td>Optional</td>
       <td>Yes</td>
-      <td>Yes – <code class="language-plaintext highlighter-rouge">runc.riscv64</code> confirmed per <a href="https://github.com/opencontainers/runc/pull/5166">PR #5166</a> scope</td>
-      <td><a href="https://github.com/opencontainers/runc/issues/3950">#3950</a> (open): musl static build broken on riscv64</td>
+      <td>Yes - <code class="language-plaintext highlighter-rouge">cni-plugins-linux-riscv64-*.tgz</code> shipped, merged via <a href="https://github.com/containernetworking/plugins/pull/739">PR #739</a> (2022)</td>
+      <td>None found</td>
     </tr>
     <tr>
-      <td>k3s-io/etcd fork (v3.6.12-k3s1)</td>
-      <td>Embedded key-value store</td>
-      <td>Yes – <a href="https://github.com/etcd-io/etcd/pull/21510">PR #21510</a> removed <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH</code> workaround, merged Mar 2026</td>
-      <td>No – upstream etcd v3.6.12 ships no riscv64 binaries</td>
-      <td>No upstream riscv64 release binary; k3s builds etcd from its own fork source, partially mitigating this</td>
-    </tr>
-    <tr>
-      <td>k3s-io/kine (v0.16.1)</td>
-      <td>etcd shim (SQLite/Postgres/MySQL alternative)</td>
-      <td>Yes – <a href="https://github.com/k3s-io/kine/pull/297">PR #297</a> merged Feb 2025</td>
-      <td>Yes – multiplatform CI including riscv64 merged in <a href="https://github.com/k3s-io/kine/pull/462">PR #462</a> Apr 2025</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>flannel-io/flannel (v0.28.4)</td>
-      <td>Default CNI networking (VXLAN/WireGuard)</td>
-      <td>Yes – <a href="https://github.com/flannel-io/flannel/pull/1824">PR #1824</a> merged 2023</td>
-      <td>Yes – multi-arch images including riscv64</td>
-      <td>Subsequent build failures <a href="https://github.com/flannel-io/flannel/issues/1988">#1988</a>, <a href="https://github.com/flannel-io/flannel/issues/1853">#1853</a> closed as wontfix; riscv64 support is best-effort</td>
-    </tr>
-    <tr>
-      <td>containernetworking/plugins (v1.9.1)</td>
-      <td>CNI plugins (bridge, loopback, portmap)</td>
-      <td>Yes – <a href="https://github.com/containernetworking/plugins/pull/739">PR #739</a> merged May 2022</td>
-      <td>Yes – <code class="language-plaintext highlighter-rouge">cni-plugins-linux-riscv64-v1.9.1.tgz</code> confirmed working per PR #7778</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>coredns/coredns</td>
+      <td>CoreDNS</td>
       <td>Cluster DNS</td>
-      <td>Yes – <a href="https://github.com/coredns/coredns/pull/6195">PR #6195</a> merged Jul 2023</td>
-      <td>Yes – <code class="language-plaintext highlighter-rouge">coredns_*.linux_riscv64.tgz</code> ships in releases</td>
-      <td>None</td>
+      <td>Optional</td>
+      <td>Yes - <a href="https://github.com/coredns/coredns/pull/6195">PR #6195</a> merged Jul 2023</td>
+      <td>Yes - <code class="language-plaintext highlighter-rouge">coredns_*.linux_riscv64.tgz</code> ships in releases</td>
+      <td>None found</td>
     </tr>
     <tr>
-      <td>traefik/traefik (default ingress)</td>
-      <td>Ingress and reverse proxy</td>
-      <td>Yes – <a href="https://github.com/traefik/traefik/pull/10026">PR #10026</a> merged Jul 2023 (v2.10)</td>
-      <td>Partial – added to GoReleaser in v2.10 but a “no space left on device” CI failure removed riscv64 from the v2.10.4 release; v3.x status unconfirmed</td>
-      <td>CI infrastructure failure prevented distribution at initial merge; v3.x riscv64 artifact availability requires verification</td>
+      <td>Traefik</td>
+      <td>Default ingress/reverse proxy</td>
+      <td>Critical</td>
+      <td>Yes - <a href="https://github.com/traefik/traefik/pull/10026">PR #10026</a> merged Jul 2023 (v2.10)</td>
+      <td>Partial - added to GoReleaser at v2.10 but a CI “no space left on device” failure pulled riscv64 from the v2.10.4 release; v3.x status not reconfirmed</td>
+      <td>[NEEDS VERIFICATION] for current v3.x riscv64 artifact availability</td>
     </tr>
     <tr>
-      <td>rancher/local-path-provisioner</td>
-      <td>Default storage class</td>
-      <td>No – <a href="https://github.com/rancher/local-path-provisioner/pull/346">PR #346</a> closed abandoned Sep 2024</td>
+      <td>local-path-provisioner</td>
+      <td>Default storage class (rancher/local-path-provisioner)</td>
+      <td>Critical</td>
+      <td>No confirmed current build</td>
       <td>No</td>
-      <td>Hard gap for any riscv64 k3s user; default storage class is inoperable (contradictory Oct 2024 note in PR #7778 thread; see Section 6)</td>
+      <td><a href="https://github.com/rancher/local-path-provisioner/pull/346">PR #346</a> closed abandoned (Sep 2024); a separate, unreconciled Oct 2024 comment claims Rancher began shipping the image independently. Contradictory and unresolved - given this dependency’s “critical” criticality, this is a standing hard gap for any riscv64 k3s deployment until clarified.</td>
     </tr>
     <tr>
-      <td>helm (via helm-controller)</td>
-      <td>HelmChart CRD management</td>
-      <td>Yes – <a href="https://github.com/helm/helm/pull/12204">PR #12204</a> merged, Helm 3.14.0 Jan 2024</td>
-      <td>Yes – Helm 3.14.0+ ships riscv64 binaries</td>
-      <td>Test suite not fully passing on riscv64</td>
+      <td>Helm</td>
+      <td>HelmChart CRD management (via helm-controller)</td>
+      <td>Optional</td>
+      <td>Yes - <a href="https://github.com/helm/helm/pull/12204">PR #12204</a> merged, released Helm 3.14.0 (Jan 2024)</td>
+      <td>Yes, ships riscv64 binaries</td>
+      <td>Test suite not confirmed fully passing on riscv64</td>
     </tr>
     <tr>
-      <td>k3s-io/klipper-helm</td>
-      <td>Helm chart job runner</td>
+      <td>klipper-helm</td>
+      <td>Helm chart job runner (k3s-io)</td>
+      <td>Optional</td>
+      <td>No confirmed</td>
       <td>No</td>
+      <td><a href="https://github.com/k3s-io/klipper-helm/pull/64">k3s-io/klipper-helm#64</a> open; status not reconfirmed in this pass</td>
+    </tr>
+    <tr>
+      <td>klipper-lb</td>
+      <td>Service load-balancer shim (k3s-io)</td>
+      <td>Optional</td>
+      <td>No confirmed</td>
       <td>No</td>
-      <td><a href="https://github.com/k3s-io/klipper-helm/pull/64">k3s-io/klipper-helm#64</a> open</td>
+      <td><a href="https://github.com/k3s-io/klipper-lb/pull/56">k3s-io/klipper-lb#56</a> open; status not reconfirmed in this pass</td>
     </tr>
     <tr>
-      <td>k3s-io/klipper-lb</td>
-      <td>Service load balancer</td>
-      <td>No</td>
-      <td>No</td>
-      <td><a href="https://github.com/k3s-io/klipper-lb/pull/56">k3s-io/klipper-lb#56</a> open</td>
+      <td>libseccomp</td>
+      <td>Seccomp filtering, linked via cgo in the <code class="language-plaintext highlighter-rouge">seccomp</code> build tag</td>
+      <td>Critical</td>
+      <td>Yes - Alpine <code class="language-plaintext highlighter-rouge">libseccomp</code>/<code class="language-plaintext highlighter-rouge">libseccomp-dev</code>/<code class="language-plaintext highlighter-rouge">libseccomp-static</code> installed via <code class="language-plaintext highlighter-rouge">xx-apk</code> for the target arch in the Dockerfile; k3s-side integration landed via <a href="https://github.com/k3s-io/k3s/pull/14529">PR #14529</a> “Enable seccomp in riscv64 builds” (merged 2026-09-01)</td>
+      <td>riscv64 builds now include seccomp; no separate release channel</td>
+      <td>This was an open functional gap (riscv64 builds existed without seccomp) closed only in Sep 2026, over a year after CI/build groundwork was first added</td>
     </tr>
     <tr>
-      <td>golang.org/x/crypto (v0.47.0)</td>
-      <td>TLS, SSH, certificate management</td>
-      <td>Yes, pure Go</td>
-      <td>Yes</td>
-      <td>None</td>
+      <td>AppArmor</td>
+      <td>LSM-based confinement, <code class="language-plaintext highlighter-rouge">apparmor</code> build tag</td>
+      <td>Optional</td>
+      <td>Presumed yes (kernel LSM, not arch-specific by design); no riscv64-specific k3s test found</td>
+      <td>Not verified</td>
+      <td>Data not available: no riscv64-specific AppArmor-on-k3s issue or test result was found in any source searched</td>
     </tr>
     <tr>
-      <td>modernc.org/sqlite (v1.51.0)</td>
-      <td>Pure-Go SQLite for kine</td>
-      <td>Yes, pure Go (no CGO)</td>
-      <td>Yes</td>
-      <td>None</td>
+      <td>SQLite</td>
+      <td>Embedded datastore for kine’s default backend</td>
+      <td>Optional</td>
+      <td>Yes via two paths: <code class="language-plaintext highlighter-rouge">mattn/go-sqlite3</code> (cgo, bundled C amalgamation - presumed buildable via the same gcc/musl riscv64 toolchain, not explicitly confirmed by a riscv64-specific issue) and <code class="language-plaintext highlighter-rouge">modernc.org/sqlite</code> (pure Go, no cgo - confirmed riscv64-portable)</td>
+      <td>Yes for the pure-Go path</td>
+      <td>None found for either path</td>
     </tr>
     <tr>
-      <td>go.etcd.io/bbolt (v1.4.3)</td>
-      <td>Embedded B-tree key-value store</td>
-      <td>Yes – <a href="https://github.com/etcd-io/bbolt/pull/666">PR #666</a> added riscv64 <code class="language-plaintext highlighter-rouge">MaxMapSize</code> constant</td>
-      <td>Yes, pure Go</td>
-      <td>None</td>
+      <td>musl</td>
+      <td>C library target for static Linux builds</td>
+      <td>Optional</td>
+      <td>Yes - Alpine <code class="language-plaintext highlighter-rouge">musl-dev</code> (via <code class="language-plaintext highlighter-rouge">xx-apk</code>) for the build container, and k3s-root’s own Buildroot <code class="language-plaintext highlighter-rouge">riscv64-buildroot-linux-musl</code> cross toolchain (GCC 14.3.0) for the bundled sysroot</td>
+      <td>Yes, shipped in k3s-root riscv64 tarballs</td>
+      <td>None found specific to k3s; runc’s musl-static-build issue (<a href="https://github.com/opencontainers/runc/issues/3950">#3950</a>) is the nearest related gap, in a different dependency</td>
     </tr>
     <tr>
-      <td>OpenSSL (via CGO in containerd/runc TLS)</td>
-      <td>TLS and crypto primitives</td>
-      <td>Yes – comprehensive RISC-V assembly (Zkn, Zksh, Zvk, RVV, ChaCha20) since 2022, active through 2026</td>
-      <td>Yes</td>
-      <td>None</td>
+      <td>k3s-root</td>
+      <td>Companion repo providing the static userspace root filesystem (sqlite, libseccomp, etc.) bundled into k3s</td>
+      <td>Critical</td>
+      <td>Yes - riscv64 supported since v0.13.0; current pin is v0.15.2, <code class="language-plaintext highlighter-rouge">k3s-root-riscv64.tar</code> fetched and SHA256-verified by <code class="language-plaintext highlighter-rouge">scripts/version.sh</code>/<code class="language-plaintext highlighter-rouge">scripts/download</code></td>
+      <td>Yes - official riscv64 tarballs published as k3s-root release assets</td>
+      <td><a href="https://github.com/k3s-io/k3s-root/issues/61">k3s-io/k3s-root#61</a> “Build riscv64 on dedicated runner” (brandond) - infra work toward dedicated riscv64 CI for this repo specifically. This is the one dependency where riscv64 is fully, officially supported today.</td>
+    </tr>
+    <tr>
+      <td>Go</td>
+      <td>Primary language runtime/compiler</td>
+      <td>Critical (build)</td>
+      <td>Yes - riscv64 experimental since Go 1.14, first-class since Go 1.22; k3s Dockerfile pins <code class="language-plaintext highlighter-rouge">golang:1.26.8-alpine3.24</code>, go.mod requires Go &gt;=1.26.2</td>
+      <td>Every Go release ships riscv64</td>
+      <td>The one known Go-level correctness gap is <a href="https://github.com/golang/go/issues/64917">golang/go#64917</a> (NaN-to-int conversion divergence on riscv64), open, not actively worked</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>C cross-compiler for cgo dependencies (sqlite3, libseccomp, selinux)</td>
+      <td>Critical (build)</td>
+      <td>Yes, via two paths: Alpine’s <code class="language-plaintext highlighter-rouge">gcc</code>/<code class="language-plaintext highlighter-rouge">musl-dev</code> packages installed through <code class="language-plaintext highlighter-rouge">tonistiigi/xx</code>’s cross-apk mechanism (k3s build image), and a from-source <code class="language-plaintext highlighter-rouge">riscv64-buildroot-linux-musl</code> GCC 14.3.0 toolchain (k3s-root build)</td>
+      <td>N/A (build-time only)</td>
+      <td>No riscv64-specific gcc/xx issue found</td>
+    </tr>
+    <tr>
+      <td>Docker</td>
+      <td>Build orchestration; <code class="language-plaintext highlighter-rouge">docker buildx build</code> invoked by the Makefile and CI</td>
+      <td>Critical (build)</td>
+      <td>Yes - Docker/BuildKit itself is architecture-agnostic for driving cross-builds</td>
+      <td>N/A (build-time only)</td>
+      <td>None found specific to riscv64</td>
+    </tr>
+    <tr>
+      <td>Buildx</td>
+      <td>Docker’s multi-platform build frontend; explicit <code class="language-plaintext highlighter-rouge">linux/riscv64</code> platform string support in the Makefile’s <code class="language-plaintext highlighter-rouge">--platform</code> list</td>
+      <td>Critical (build)</td>
+      <td>Yes - Buildx accepts <code class="language-plaintext highlighter-rouge">linux/riscv64</code> as a standard platform string</td>
+      <td>N/A (build-time only)</td>
+      <td>None found specific to riscv64</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Hard blockers for a deployable riscv64 k3s cluster:</strong></p>
+<p><strong>Additional indirect dependencies found via research:</strong></p>
 
-<ol>
-  <li>k3s ships no riscv64 release binary and the installer explicitly aborts on riscv64.</li>
-  <li><code class="language-plaintext highlighter-rouge">rancher/mirrored-pause:3.6</code> has no riscv64 manifest entry. Every pod sandbox creation fails.</li>
-  <li><code class="language-plaintext highlighter-rouge">rancher/systemd-node:v0.0.8</code> has no riscv64 image. Seven categories of CI integration tests fail.</li>
-  <li><code class="language-plaintext highlighter-rouge">klipper-helm</code> and <code class="language-plaintext highlighter-rouge">klipper-lb</code> have no riscv64 images (PRs open).</li>
-  <li><code class="language-plaintext highlighter-rouge">local-path-provisioner</code> has no official riscv64 support (PR abandoned; current state contradictory – see Section 6).</li>
-  <li>Prior k3s release images for riscv64 do not exist, blocking upgrade and skew tests.</li>
-  <li>Traefik v3.x riscv64 binary availability is unconfirmed.</li>
-</ol><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">go.etcd.io/bbolt</code> (embedded B-tree KV used by etcd/kine): pure Go, riscv64-portable; <a href="https://github.com/etcd-io/bbolt/pull/666">PR #666</a> added a riscv64 <code class="language-plaintext highlighter-rouge">MaxMapSize</code> constant. No open blockers found.</li>
+  <li><code class="language-plaintext highlighter-rouge">golang.zx2c4.com/wireguard</code> (wireguard-go, used by flannel’s WireGuard backend): pure Go, builds on riscv64 since Go crypto primitives are portable. Zero riscv64 issues found. Note: this project’s own status report (<code class="language-plaintext highlighter-rouge">project-reports/wireguard.md</code>) covers the C kernel-module WireGuard implementation, not <code class="language-plaintext highlighter-rouge">wireguard-go</code> - a scope mismatch worth flagging if cross-referenced.</li>
+  <li><code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code>: pure Go, riscv64-portable, no open issues.</li>
+  <li><code class="language-plaintext highlighter-rouge">github.com/klauspost/compress</code> (zstd/deflate): pure Go with amd64/arm64 assembly fast paths that fall back to generic Go elsewhere (including riscv64); only ARM64-test-timeout issues found, none riscv64-specific.</li>
+  <li><code class="language-plaintext highlighter-rouge">github.com/pierrec/lz4</code>: not independently checked for riscv64 status; minor indirect dependency.</li>
+  <li>OpenSSL (linked transitively via containerd/runc TLS paths in some configurations): ships comprehensive RISC-V assembly optimization (Zkn, Zksh, Zvk, RVV, ChaCha20) since 2022, actively maintained through 2026. No blockers found.</li>
+</ul>
 
-<p><strong>RISE Project involvement:</strong></p>
-
-<p>The RISE Project (Linux Foundation) operates a free managed GitHub Actions runner service providing real RISC-V hardware (Scaleway EM-RV1 nodes running Ubuntu 24.04) to open source projects. RISE Premier members include Google, NVIDIA, Qualcomm, Red Hat, SiFive, and Tenstorrent.</p>
-
-<p>A RISE blog post from May 2026 (“RISE RISC-V Runners: Six Weeks In”) lists k3s as an “engagement target” alongside Kubernetes and containerd. The phrase “engagement target” means the RISE team intends to help bring these projects to riscv64; it does not mean funded work has started or that deliverables exist. No RISE-sponsored k3s PR, dedicated repository, or committed milestone was found. The <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub organization contains no k3s repository.</p>
-
-<p>The connection between RISE and k3s is through luhenry (the author of draft PR #13854), who is associated with the RISE Runners initiative. SUSE (the k3s maintainer organization) is not listed as a RISE member.</p>
-
-<p>RISE does maintain <code class="language-plaintext highlighter-rouge">riseproject-dev/kubernetes-riscv</code>, a fork of upstream Kubernetes with a <code class="language-plaintext highlighter-rouge">v1.36.0-riscv64</code> release. k0s (a competing lightweight Kubernetes distribution) has an open PR (#7414) for nightly RISC-V builds via RISE Runners. k3s does not.</p>
-
-<p><strong>k3s-root (the userspace dependency):</strong></p>
-
-<p>riscv64 support is fully integrated in k3s-root since v0.13.0. The v0.15.2 release (the version referenced by k3s master) ships official riscv64 tarballs. This is the one area where riscv64 is treated identically to other architectures in the official release pipeline.</p>
-
-<p><strong>Hardware validation:</strong></p>
-
-<p>A three-node k3s cluster on SiFive Unmatched boards (brandond, Sep 2023) confirmed the cluster control plane forms and nodes reach Ready state. No user workload pods were able to run due to missing container images. A single-node cluster on QEMU (chazapis, Jul 2023) ran pods successfully using community-maintained images from carvicsforth/ Docker Hub.</p>
-
-<p>No external benchmark papers, slides, or dedicated performance repositories were found. All quantitative performance data comes from the CI PR comment thread.</p><hr />
+<p><strong>Hard blockers for a functioning riscv64 k3s cluster today</strong>, synthesized from the table above: (1) k3s itself ships no riscv64 release binary and the installer aborts on riscv64; (2) <code class="language-plaintext highlighter-rouge">rancher/mirrored-pause:3.6</code> has no riscv64 manifest, so no pod sandbox can be created; (3) <code class="language-plaintext highlighter-rouge">rancher/systemd-node:v0.0.8</code> has no riscv64 image; (4) <code class="language-plaintext highlighter-rouge">klipper-helm</code>/<code class="language-plaintext highlighter-rouge">klipper-lb</code> have no confirmed riscv64 images; (5) <code class="language-plaintext highlighter-rouge">local-path-provisioner</code>’s riscv64 status is unresolved/contradictory; (6) flannel’s riscv64 build reliability is explicitly disclaimed (<code class="language-plaintext highlighter-rouge">wontfix</code>) by its maintainers; (7) Traefik v3.x riscv64 artifact availability is unconfirmed. None of these seven items is a Go-language or k3s-core-logic problem - every one is either a Rancher/SUSE-owned container image gap or a third-party dependency’s own release-artifact gap.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1020,69 +998,98 @@ BR2_GCC_VERSION="14.3.0"
 </h2>
     
 
-<p><strong>Open issues and PRs:</strong></p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>ID</th>
       <th>Title</th>
       <th>Status</th>
-      <th>Priority Impact</th>
+      <th>Severity</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><a href="https://github.com/k3s-io/k3s/issues/7151">#7151</a></td>
-      <td>Add support for riscv64 architecture (tracking)</td>
-      <td>Open, Backlog</td>
-      <td>Master tracking; no schedule</td>
+      <td>Add support for riscv64 architecture (master tracking issue)</td>
+      <td>Open, milestone “Backlog”</td>
+      <td>Tracking</td>
+      <td>Open since 2023-03-27, 64 comments, last updated 2026-08-17. Umbrella issue; no committed schedule.</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/k3s-io/k3s/pull/7778">#7778</a></td>
-      <td>Add support for RISC-V (build scripts)</td>
-      <td>Open, not merged since Jun 2023</td>
-      <td>Core enablement; blocked by image gaps and install.sh.sha256sum update</td>
+      <td><a href="https://github.com/k3s-io/k3s/pull/14688">#14688</a></td>
+      <td>Add riscv64 release artifacts</td>
+      <td>Closed, not merged (2026-09-24)</td>
+      <td>High (release-blocking)</td>
+      <td>Maintainer dereknola’s rejection is the most current and decisive statement of project stance; cites CI speed and missing support images.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/k3s-io/k3s/pull/13854">#13854</a></td>
       <td>[Experiment] Add CI on linux-riscv64</td>
-      <td>Draft, no reviews</td>
-      <td>CI prerequisite for merging #7778</td>
+      <td>Open, draft</td>
+      <td>High (CI-blocking)</td>
+      <td>Has informal CNCF go-ahead (2026-04-28) but no reviews/approvals; gated on build-speed optimization.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/k3s-io/k3s/issues/13910">#13910</a></td>
-      <td>Add native riscv64 CI using RISE Runners</td>
-      <td>Open, Working</td>
-      <td>Organizational prerequisite for #13854</td>
+      <td>Add native riscv64 CI using RISE RISC-V GitHub Actions Runners</td>
+      <td>Closed “not planned” (2026-09-20)</td>
+      <td>Medium</td>
+      <td>Organizational prerequisite (GitHub App install on k3s-io org) for #13854; closed despite active progress reported through July 2026.</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/k3s-io/klipper-helm/pull/64">k3s-io/klipper-helm#64</a></td>
-      <td>Add riscv64 support</td>
-      <td>Open</td>
-      <td>Blocks Helm CRD functionality</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/14641">#14641</a>-<a href="https://github.com/k3s-io/k3s/issues/14644">#14644</a></td>
+      <td>[Release-1.3x] Add support for riscv64 architecture</td>
+      <td>Closed same-day (2026-09-18)</td>
+      <td>Low</td>
+      <td>Backport-tracking clones of #7151; closed without action, not evidence of a merge (see Section 2 discrepancy note).</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/k3s-io/klipper-lb/pull/56">k3s-io/klipper-lb#56</a></td>
-      <td>Add riscv64 support</td>
+      <td><a href="https://github.com/k3s-io/k3s/issues/12556">#12556</a></td>
+      <td>Assessment of the difficulty in porting CPU architecture for k3s</td>
+      <td>Closed (2025-06-27)</td>
+      <td>Informational</td>
+      <td>External tool rated “low difficulty”; no maintainer technical follow-up.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/k3s-io/k3s/issues/6022">#6022</a></td>
+      <td>metrics-server HTTP 403 on a custom riscv64 build</td>
+      <td>Closed</td>
+      <td>Low</td>
+      <td>Attributed to custom-setup RBAC misconfiguration, not an upstream bug.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/containerd/containerd/issues/13020">containerd#13020</a></td>
+      <td>Add linux/riscv64 to CI test matrix</td>
       <td>Open</td>
-      <td>Blocks LoadBalancer service type</td>
+      <td>Medium (dependency)</td>
+      <td>No CI test coverage for riscv64 in k3s’s default CRI, despite riscv64 release tarballs existing.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/opencontainers/runc/issues/3950">runc#3950</a></td>
+      <td>musl static build broken on riscv64</td>
+      <td>Open</td>
+      <td>Medium (dependency)</td>
+      <td>Narrow, well-scoped gap in an otherwise-supported dependency.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/flannel-io/flannel/issues/1988">flannel#1988</a>, <a href="https://github.com/flannel-io/flannel/issues/1853">flannel#1853</a></td>
+      <td>riscv64 build/image failures</td>
+      <td>Closed <strong>wontfix</strong></td>
+      <td>High (dependency)</td>
+      <td>The default CNI’s maintainers have explicitly declined to guarantee riscv64 build reliability.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/golang/go/issues/64917">golang/go#64917</a></td>
+      <td><code class="language-plaintext highlighter-rouge">uint32(math.NaN())</code> returns -1 equivalent on riscv64 vs 0 elsewhere</td>
+      <td>Open (<code class="language-plaintext highlighter-rouge">FrozenDueToAge</code>)</td>
+      <td>Low-to-medium (latent correctness)</td>
+      <td>Toolchain-level, not k3s-specific; no k3s failure attributed to it yet.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Active correctness failures (from PR #13854 CI run):</strong></p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">"no match for platform in manifest: not found"</code> on <code class="language-plaintext highlighter-rouge">rancher/mirrored-pause:3.6</code> – blocks all pod sandboxes, causes timeouts in etcd, basics, bootstraptoken, and cacerts jobs.</li>
-  <li><code class="language-plaintext highlighter-rouge">"Unable to find image 'rancher/systemd-node:v0.0.8'"</code> – blocks hardened, autoimport, snapshotrestore, dualstack, svcpoliciesandfirewall, secretsencryption, and token jobs.</li>
-  <li><code class="language-plaintext highlighter-rouge">"bind source path does not exist: /tmp/k3s-test-.../server-0.yaml"</code> in lazypull test – test environment setup bug; reportedly fixed in RISE runner app. [NEEDS VERIFICATION]</li>
-  <li><code class="language-plaintext highlighter-rouge">"ArchOs (RISCV64-Linux) doesn't map to a supported Nix platform"</code> in nixsnapshotter – upstream fix PR opened by luhenry. [NEEDS VERIFICATION for merge status]</li>
-</ul>
-
-<p><strong>Closed issues:</strong></p>
-
-<p><a href="https://github.com/k3s-io/k3s/issues/6022">Issue #6022</a>: HTTP 403 on metrics-server scraping in a custom riscv64 QEMU build (k3s v1.21.11). Closed with no public comments; attributed to RBAC misconfiguration in the custom setup, not an upstream k3s bug.</p><hr />
+<p><strong>Correctness bugs, isolated:</strong> only <a href="https://github.com/golang/go/issues/64917">golang/go#64917</a> qualifies as a genuine correctness (not availability/CI) issue tied to riscv64, and it sits in the Go compiler, not in k3s’s own code. No k3s-specific correctness bug tied to riscv64 was found in this research.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1092,173 +1099,112 @@ BR2_GCC_VERSION="14.3.0"
 </h2>
     
 
-<p><strong>Maintainer position (brandond, multiple statements 2023-2026):</strong></p>
+<p><strong>Standing maintainer position</strong>, consistent from 2023 through the most recent (2026-09-24) rejection:</p>
 
 <ol>
   <li>
-    <p>No RISC-V CI runners provided by CNCF. The CNCF standard runner fleet does not include riscv64 hardware. Any riscv64 CI must come from a third-party provider (RISE Runners) or dedicated hardware. This requires a GitHub organization-level action (installing the RISE Runners GitHub App on k3s-io) that only an org administrator can perform.</p>
+    <p><strong>No dedicated CI/QA hardware historically, now partially addressed but still too slow.</strong> brandond (2023, #7778 and #7151): “we don’t have any hardware for CI or QA.” RISE Project native riscv64 runners (Scaleway EM-RV1) now exist and are used in draft PR #13854, but measured build times remain ~8-11x slower than arm64 as of the most recent measurement (2026-03-26), and this remains dereknola’s explicit, current reason for rejecting riscv64 release artifacts: “CI infra remains 10x slower for riscv64 builds” (PR #14688 closure, 2026-09-24).</p>
   </li>
   <li>
-    <p>Rancher image-mirror infrastructure does not support riscv64. The mirror scripts that populate official Rancher images (including pause, systemd-node, klipper-helm, klipper-lb) explicitly filter out riscv64. Until this changes, even a merged k3s riscv64 build cannot run user workloads.</p>
+    <p><strong>Rancher/SUSE-owned support images lack riscv64 builds.</strong> brandond (2023, #7778): “I just can’t run anything on it because none of our images currently support riscv64.” dereknola (2026, #14688): “associated support images (such as upstream k8s pause image) do not have a riscv64 version.” This is a three-year-consistent, unresolved blocker, and unlike the CI-speed issue it is controlled entirely by SUSE-internal image-build infrastructure, not by any external contributor.</p>
   </li>
   <li>
-    <p>The build toolchain (Dapper) has no riscv64 release. Dapper is used for hermetic builds; without a riscv64 Dapper binary, the build pipeline is not fully reproducible. [NEEDS VERIFICATION – identified as a blocker in Jan 2026 comments; current status unclear]</p>
+    <p><strong>The CNCF does not provide riscv64 hardware as a standard service.</strong> (pgonin, Jan 2026.) Any riscv64 CI must come from a third-party provider (RISE) or dedicated hardware, and installing the RISE GitHub App on the k3s-io org - an organizational, zero-engineering-effort action - was itself closed “not planned” (<a href="https://github.com/k3s-io/k3s/issues/13910">#13910</a>, 2026-09-20).</p>
   </li>
   <li>
-    <p>flannel riscv64 build failures are marked wontfix by the flannel maintainers. The default CNI backend has best-effort riscv64 support with no guarantee of forward compatibility.</p>
-  </li>
-  <li>
-    <p>riscv64 hardware build times are 10-11x slower than arm64 for CPU-bound compilation (median 10.2x, p90 15.5x, max 42x from PR #13854 measurements). This significantly increases CI resource cost per job.</p>
+    <p><strong>flannel’s upstream “wontfix” on riscv64 build failures</strong> is an external blocker outside k3s maintainers’ control: the default CNI has no guaranteed riscv64 forward compatibility.</p>
   </li>
 </ol>
 
-<p><strong>What needs to happen before official support is feasible:</strong></p>
+<p><strong>Organizational signal:</strong> CNCF gave informal sign-off for engagement on riscv64 (luhenry, 2026-04-28, referencing a conversation with @caniszczyk), but this cleared a governance step, not the underlying technical/infrastructure blockers, which remain open five months later.</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Prerequisite</th>
-      <th>Owner</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>RISE Runners GitHub App installed on k3s-io org</td>
-      <td>k3s-io org admin</td>
-      <td>Open (Issue #13910)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">rancher/mirrored-pause:3.6</code> riscv64 manifest</td>
-      <td>Rancher</td>
-      <td>Missing</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">rancher/systemd-node</code> riscv64 image</td>
-      <td>Rancher</td>
-      <td>Missing</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">klipper-helm</code> riscv64 image</td>
-      <td>SUSE/Rancher</td>
-      <td>PR #64 open</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">klipper-lb</code> riscv64 image</td>
-      <td>SUSE/Rancher</td>
-      <td>PR #56 open</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">rancher/image-mirror</code> riscv64 support</td>
-      <td>Rancher</td>
-      <td>Not addressed</td>
-    </tr>
-    <tr>
-      <td>Prior k3s release images for riscv64</td>
-      <td>Rancher</td>
-      <td>Missing (blocks upgrade tests)</td>
-    </tr>
-    <tr>
-      <td>PR #7778 reviewed and merged</td>
-      <td>k3s maintainers</td>
-      <td>Open since Jun 2023, no active review</td>
-    </tr>
-    <tr>
-      <td>PR #13854 drafted into reviewable state</td>
-      <td>luhenry</td>
-      <td>Draft</td>
-    </tr>
-    <tr>
-      <td>Traefik v3.x riscv64 artifact confirmation</td>
-      <td>Traefik</td>
-      <td>Unverified</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>None of these prerequisites is controlled solely by an external contributor. The Rancher/SUSE image infrastructure items require internal SUSE engineering action.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability, stated plainly:</strong> low in the near term. The most recent, most specific, and most senior-maintainer-authored signal available (dereknola’s PR #14688 rejection, 6 days before this report’s date) is an explicit refusal, tied to concrete, named, unresolved prerequisites (CI speed, pause-image availability) rather than a vague “not prioritized.” Until those two items close, no further riscv64 release-artifact PR is likely to be accepted regardless of code quality.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>The following analysis is based on the gap analysis in Sections 6-12. Effort estimates are rough engineering approximations and should be validated with the engineering team before resource commitment.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> orange (no-upstream-ci-no-release)</li>
+  <li><strong>Release provider:</strong> none</li>
+  <li><strong>Justification:</strong> k3s ships a compiled Go binary per architecture (not architecture-independent), so the architecture-independence exemption does not apply. Reading all workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> shows riscv64 appears only in <code class="language-plaintext highlighter-rouge">build-k3s.yaml</code>’s dead runner-selection conditional - no upstream workflow (<code class="language-plaintext highlighter-rouge">release.yml</code>, <code class="language-plaintext highlighter-rouge">e2e.yaml</code>, <code class="language-plaintext highlighter-rouge">install.yaml</code>, <code class="language-plaintext highlighter-rouge">integration.yaml</code>, <code class="language-plaintext highlighter-rouge">nightly-install.yaml</code>) ever passes <code class="language-plaintext highlighter-rouge">linux/riscv64</code> as a build platform, so upstream CI neither builds nor tests riscv64 (confirmed at <a href="https://github.com/k3s-io/k3s/blob/master/.github/workflows/build-k3s.yaml"><code class="language-plaintext highlighter-rouge">.github/workflows/build-k3s.yaml</code></a>). The only riscv64 CI that exists runs on a contributor’s personal fork via draft <a href="https://github.com/k3s-io/k3s/pull/13854">PR #13854</a> (unreviewed, ~8-11x slower than arm64). Most decisively, maintainer dereknola closed <a href="https://github.com/k3s-io/k3s/pull/14688">PR #14688</a> “Add riscv64 release artifacts” on 2026-09-24 (6 days before this report), stating explicitly: “K3s remain ‘not ready’ for riscv64 releases. CI infra remains 10x slower for riscv64 builds, and associated support images… do not have a riscv64 version… We are not going to add another architecture as an official release until we have that support in place.” No riscv64 release asset exists in any GitHub release, and k3s is not packaged by any Linux distribution (Ubuntu resolute has zero k3s packages for any architecture), so no distribution floor applies either. None of the predefined orange sub-types (downstream-only, optimization-absent) apply, since no distribution packages k3s at all and k3s is not an optimization-purpose project - this places it on the “no upstream CI, no release” branch of the orange classification.</li>
+  <li><strong>Pending work that could change the grade:</strong> Open master tracking issue <a href="https://github.com/k3s-io/k3s/issues/7151">#7151</a> (since 2023-03-27, still “Backlog”). Draft PR <a href="https://github.com/k3s-io/k3s/pull/13854">#13854</a> adds experimental riscv64 CI via RISE runners but is unmerged and ~8-11x slower than arm64, blocked partly on missing riscv64 versions of <code class="language-plaintext highlighter-rouge">rancher/mirrored-pause</code> and <code class="language-plaintext highlighter-rouge">rancher/systemd-node</code>. Issue <a href="https://github.com/k3s-io/k3s/issues/13910">#13910</a> (installing the RISE RISC-V Runners GitHub App on the k3s-io org) was closed “not planned” on 2026-09-20. PR <a href="https://github.com/k3s-io/k3s/pull/14688">#14688</a> (add riscv64 release artifacts) was closed/rejected by a maintainer on 2026-09-24. Incremental groundwork has landed - PR <a href="https://github.com/k3s-io/k3s/pull/14529">#14529</a> “Enable seccomp in riscv64 builds” (merged ~2026-09-01), <code class="language-plaintext highlighter-rouge">linux/riscv64</code> present in the Makefile and <code class="language-plaintext highlighter-rouge">scripts/version.sh</code>, and manual builds succeed (chazapis built v1.36.3+k3s1 in a RISC-V VM, Aug 2026; a native openRuyi-hardware build succeeded as part of PR #14688, Sep 2026) - but none of this has yet produced upstream CI or an official release. These are the concrete items to watch for a future color change: (a) resolution of the pause-image/systemd-node riscv64-image gap inside Rancher/SUSE’s image infrastructure, (b) promotion of PR #13854 out of draft with passing CI, (c) any reversal on the RISE GitHub App install decision.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing any of the following, note what RISE has already funded or built: RISE operates the native riscv64 CI runner service used in draft PR #13854 (no cost to k3s to consume, once the org-level GitHub App is installed); RISE’s <code class="language-plaintext highlighter-rouge">riseproject-dev/riscv-runner</code> PR #119 (merged 2026-09-29) builds multi-arch kube-proxy/pause images for amd64/arm64/riscv64 “used when provisioning clusters and configuring containerd” - this is adjacent infrastructure that could reduce the effort of closing the pause-image gap, but it is not yet wired into k3s or the <code class="language-plaintext highlighter-rouge">rancher/mirrored-pause</code> image itself, and no committed RISE deliverable targets k3s specifically. A May 2026 RISE blog post names k3s only as an “engagement target” alongside Kubernetes and containerd, not a funded work item, and a September 2026 RISE/Kairos blog post again describes k3s only via a third-party fork (CARV-ICS-FORTH), not an official RISE- or SUSE-driven deliverable. SUSE, Rancher, and k3s are not RISE members (Premier: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent; General: Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE). The <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub org (52 repos as of the most recent listing) contains no dedicated k3s repository. One research pass found a <code class="language-plaintext highlighter-rouge">riseproject-dev/kubernetes-riscv</code> repo with a <code class="language-plaintext highlighter-rouge">v1.36.0-riscv64</code> release cited in the existing body of research; a separate, later full org-repo listing did not surface this repo. This is an unresolved discrepancy [NEEDS VERIFICATION] and should not be relied on for planning without direct confirmation.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
-
-<p>Getting k3s to the point where a developer can install it on riscv64 hardware via the standard installer and schedule user pods requires the following work:</p>
 
 <ol>
-  <li><strong>Install script riscv64 support</strong> (PR #7778, partially done): Add <code class="language-plaintext highlighter-rouge">riscv64</code> to <code class="language-plaintext highlighter-rouge">setup_verify_arch()</code> in <code class="language-plaintext highlighter-rouge">install.sh</code>. The code exists in PR #7778 but is unreviewed.</li>
-  <li><strong>Build pipeline riscv64 support</strong> (PR #7778): The build scripts already work implicitly; the PR formalizes cross-compilation tooling. Primary outstanding task is the <code class="language-plaintext highlighter-rouge">install.sh.sha256sum</code> update (known fix: <code class="language-plaintext highlighter-rouge">sha256sum install.sh &amp;&gt; install.sh.sha256sum</code>).</li>
-  <li><strong>klipper-helm and klipper-lb riscv64 images</strong>: PRs are open (k3s-io/klipper-helm#64, k3s-io/klipper-lb#56). These require Rancher image build infrastructure changes.</li>
-  <li><strong>rancher/mirrored-pause riscv64 manifest</strong>: The pause image gap is the single most critical blocker. This requires adding riscv64 to the Rancher image-mirror infrastructure.</li>
-  <li><strong>rancher/systemd-node riscv64 image</strong>: Required by seven categories of integration tests.</li>
-  <li><strong>local-path-provisioner riscv64 image</strong>: Requires a new PR to replace the abandoned PR #346, plus a Rancher image publish.</li>
+  <li><strong>Install-script riscv64 support:</strong> code exists in unmerged PR #7778; needs review and a rebase against the current (post-Dapper) build system. Low effort, blocked on maintainer review bandwidth, not technical difficulty.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">rancher/mirrored-pause</code> riscv64 manifest:</strong> the single most critical blocker per the maintainer’s own 2026-09-24 statement. Requires Rancher/SUSE-internal image-build/mirror infrastructure work.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">rancher/systemd-node</code> riscv64 image:</strong> same category as above, blocks 7 integration-test categories.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">klipper-helm</code>/<code class="language-plaintext highlighter-rouge">klipper-lb</code> riscv64 images:</strong> open PRs exist; status of merge readiness not reconfirmed in current research - re-verify before sizing.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">local-path-provisioner</code> riscv64 support:</strong> status is actively contradictory between sources (abandoned PR #346 vs. an unreconciled claim that Rancher began shipping the image). This must be resolved with a direct check before any effort estimate is trusted.</li>
+  <li><strong>Prior riscv64 release images for upgrade/skew testing:</strong> do not exist; blocks upgrade-path CI once base CI exists.</li>
 </ol>
-
-<p>Items 3-6 are inside the Rancher/SUSE organization. They require an internal decision to add riscv64 to the image build and mirror pipeline.</p>
-<h3 id="132-performance-optimization">
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>No performance optimization work is warranted at this stage. The 10-11x build slowdown vs arm64 is a hardware characteristic of the current RISE runner generation (Scaleway EM-RV1). It affects CI throughput, not application runtime performance.</p>
-
-<p>No application-level RISC-V performance benchmarks exist (pod startup latency, API server throughput, network I/O). There is no data on which k3s workloads are CPU-bound vs I/O-bound on riscv64 hardware. ISA extension optimization (RVV, Zba, etc.) is not applicable: k3s is a Go application and the Go runtime does not expose riscv64 SIMD intrinsics at the application layer. The crypto dependency (OpenSSL) already ships comprehensive RISC-V assembly optimization.</p>
-
-<p>Performance optimization work should wait until application-level profiling data exists on target hardware.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The primary CI investment is organizational, not engineering:</p>
+<p>Not warranted at this stage. k3s has zero architecture-specific numeric/crypto/SIMD code of its own (Section 4); the ~8-11x CI build-time slowdown is a property of current-generation RISC-V CI hardware (RISE’s Scaleway EM-RV1 class), not an application-level performance deficiency, and affects CI cost/throughput, not runtime behavior. No application-level riscv64 performance data (pod scheduling latency, API server throughput, etcd/kine I/O, network throughput) exists in any source located. The one riscv64 correctness risk identified, the Go NaN-to-int conversion divergence (<a href="https://github.com/golang/go/issues/64917">golang/go#64917</a>), is a toolchain issue, not something k3s engineering can fix directly; it merits a scoped audit of k3s’s own float-to-int conversion paths, not a broad optimization program. Optimization work should wait until (a) k3s has any riscv64 CI at all, and (b) real application-level profiling data exists on target hardware.</p>
+<h3 id="143-cicd-infrastructure">
+  
+  
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
 
 <ol>
-  <li><strong>Install RISE Runners GitHub App on k3s-io org</strong> (Issue #13910): Requires a k3s-io org administrator action. Zero engineering effort; one organizational decision.</li>
-  <li><strong>Promote PR #13854 from Draft to Ready for Review</strong>: The author (luhenry) is iterating on CI failure fixes. The remaining blockers are primarily the image gaps in 13.1 and caching improvements for build time. Once images are available and caching is tuned, this PR can be promoted.</li>
-  <li><strong>Faster hardware provisioning</strong>: luhenry noted faster Scaleway hardware is expected to come online by end of July 2026, which should reduce the 10-11x build time multiplier. [NEEDS VERIFICATION]</li>
+  <li><strong>Install the RISE RISC-V Runners GitHub App on the k3s-io org:</strong> zero engineering effort, a single organizational decision; was requested and closed “not planned” (<a href="https://github.com/k3s-io/k3s/issues/13910">#13910</a>). Re-raising this decision is a prerequisite for everything downstream.</li>
+  <li><strong>Promote PR #13854 from draft to reviewable:</strong> primarily blocked on the image gaps in 14.1 and on build-cache tuning (one contributor demonstrated a 56m19s-to-4m15s improvement via Docker layer caching in a related thread; this has not yet landed in CI). Engineering scope is CI-config-only, no k3s source changes required.</li>
+  <li><strong>Faster hardware provisioning:</strong> RISE stated it was pursuing faster hardware via Spacemit/Scaleway/Canonical partnerships, with slipping “end of July” then “end of August 2026” target dates. Current completion status is unconfirmed [NEEDS VERIFICATION] and outside k3s’s direct control.</li>
 </ol>
-<h3 id="134-ecosystem-enablement">
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
-
-<p>The following dependency gaps require external engagement, not k3s-internal work:</p>
 
 <ul>
-  <li><strong>flannel wontfix stance</strong>: The flannel project’s wontfix on riscv64 build failures means the default k3s CNI is unreliable on riscv64. An alternative CNI (Calico, Cilium, or a fork of flannel with maintained riscv64 support) should be evaluated for riscv64 deployments.</li>
-  <li><strong>Traefik v3.x riscv64 artifacts</strong>: Requires verification against the current release; may need a PR if the GoReleaser migration (May 2026) did not include riscv64.</li>
-  <li><strong>Helm test suite on riscv64</strong>: Test failures are documented but the scope is not fully characterized. Not a blocker for production use but a gap in test coverage.</li>
-  <li><strong>etcd no official release binary</strong>: k3s builds etcd from its own fork source, mitigating this for k3s specifically. No action required within k3s scope.</li>
+  <li><strong>flannel’s <code class="language-plaintext highlighter-rouge">wontfix</code> stance:</strong> an alternative CNI (Calico, Cilium, or a maintained flannel fork) should be evaluated for riscv64 deployments rather than waiting on upstream flannel.</li>
+  <li><strong>Traefik v3.x riscv64 artifact confirmation:</strong> a short verification task, not an engineering task, given the ambiguity between v2.10’s GoReleaser addition and the later CI-space failure.</li>
+  <li><strong>Helm test-suite riscv64 gaps:</strong> documented but not fully characterized; not a deployment blocker, a test-coverage gap.</li>
+  <li><strong>etcd’s missing official riscv64 release binary:</strong> mitigated for k3s specifically by building etcd from k3s’s own fork source; no action required within k3s scope.</li>
+  <li><strong>containerd CI test-matrix gap (<a href="https://github.com/containerd/containerd/issues/13020">containerd#13020</a>):</strong> outside k3s’s control; watch for upstream resolution rather than fork/patch.</li>
 </ul>
-<h3 id="135-summary-table">
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1276,15 +1222,15 @@ BR2_GCC_VERSION="14.3.0"
   </thead>
   <tbody>
     <tr>
-      <td>Functional</td>
-      <td>Install RISE Runners GitHub App on k3s-io org</td>
-      <td>0 (org admin action)</td>
+      <td>CI/CD</td>
+      <td>Re-request installation of the RISE RISC-V Runners GitHub App on k3s-io org</td>
+      <td>0 (org decision)</td>
       <td>k3s-io org admin</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Add riscv64 pause image to rancher/image-mirror</td>
+      <td>Add riscv64 pause-image manifest to Rancher image-mirror infrastructure</td>
       <td>1-2</td>
       <td>SUSE/Rancher</td>
       <td>Critical</td>
@@ -1298,63 +1244,70 @@ BR2_GCC_VERSION="14.3.0"
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Merge klipper-helm#64 (riscv64 image)</td>
-      <td>1</td>
-      <td>SUSE/Rancher</td>
+      <td>Resolve local-path-provisioner riscv64 status (verify, then act)</td>
+      <td>0.5 (verify) + 2-3 (if action needed)</td>
+      <td>Community/SUSE</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Merge klipper-lb#56 (riscv64 image)</td>
+      <td>Review, rebase, and merge install-script riscv64 support (from PR #7778)</td>
       <td>1</td>
-      <td>SUSE/Rancher</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>Review and merge PR #7778 (build scripts + install.sh)</td>
-      <td>1-2</td>
       <td>k3s maintainers</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>local-path-provisioner riscv64 support (new PR)</td>
-      <td>2-3</td>
-      <td>Community/SUSE</td>
+      <td>Merge klipper-helm#64 and klipper-lb#56 riscv64 images</td>
+      <td>1 each</td>
+      <td>SUSE/Rancher</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Promote PR #13854 to ready-for-review</td>
+      <td>Promote PR #13854 to ready-for-review (post image/cache fixes)</td>
       <td>1-2</td>
-      <td>luhenry</td>
+      <td>luhenry / RISE</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Wire riscv64 into release.yml after CI is stable</td>
+      <td>Apply Docker layer caching to cut riscv64 build time toward arm64 parity</td>
+      <td>1</td>
+      <td>luhenry / RISE</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Wire riscv64 into <code class="language-plaintext highlighter-rouge">release.yml</code> once base CI is stable</td>
       <td>1</td>
       <td>k3s maintainers</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Evaluate and document alternative CNI for riscv64 (flannel wontfix)</td>
+      <td>Evaluate alternative CNI for riscv64 given flannel’s wontfix stance</td>
       <td>1-2</td>
       <td>Community</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Verify Traefik v3.x riscv64 artifact availability</td>
+      <td>Verify current Traefik v3.x riscv64 artifact availability</td>
       <td>0.5</td>
       <td>Community</td>
       <td>Medium</td>
     </tr>
     <tr>
+      <td>Correctness</td>
+      <td>Audit k3s’s own NaN-to-int float conversion paths against golang/go#64917</td>
+      <td>0.5-1</td>
+      <td>k3s maintainers</td>
+      <td>Low</td>
+    </tr>
+    <tr>
       <td>Performance</td>
-      <td>Application-level profiling on riscv64 target hardware</td>
+      <td>Application-level profiling on riscv64 target hardware (pod scheduling, API server, etcd/kine I/O)</td>
       <td>2-4</td>
       <td>Engineering</td>
       <td>Low</td>
@@ -1362,17 +1315,7 @@ BR2_GCC_VERSION="14.3.0"
   </tbody>
 </table></div>
 
-<p>Functional enablement (a working riscv64 k3s install with user pods scheduling) requires primarily Rancher/SUSE internal actions on the image build pipeline. The external engineering work in PRs #7778 and #13854 is nearly complete – the bottleneck is the image-mirror infrastructure decision inside SUSE, not additional code changes.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p>The engineering-scope work (install script, CI config, klipper-helm/lb) is small and nearly ready to merge; the critical-path bottleneck is entirely inside Rancher/SUSE’s image-build and mirror infrastructure and the org-level CI-hardware decision, neither of which additional external code contribution can resolve.</p>
 <h2 id="15-references">
   
   
@@ -1383,30 +1326,49 @@ BR2_GCC_VERSION="14.3.0"
     
 
 <ul>
-  <li><a href="https://github.com/k3s-io/k3s/issues/7151">k3s-io/k3s Issue #7151 – riscv64 tracking</a></li>
-  <li><a href="https://github.com/k3s-io/k3s/pull/7778">k3s-io/k3s PR #7778 – Add support for RISC-V</a></li>
-  <li><a href="https://github.com/k3s-io/k3s/pull/9719">k3s-io/k3s PR #9719 – Bump libp2p for riscv support (closed)</a></li>
-  <li><a href="https://github.com/k3s-io/k3s/issues/13910">k3s-io/k3s Issue #13910 – Add native riscv64 CI using RISE RISC-V Runners</a></li>
-  <li><a href="https://github.com/k3s-io/k3s/pull/13854">k3s-io/k3s PR #13854 – [Experiment] Add CI on linux-riscv64</a></li>
-  <li><a href="https://github.com/k3s-io/k3s/issues/6022">k3s-io/k3s Issue #6022 – metrics-server on riscv64 (closed)</a></li>
-  <li><a href="https://github.com/k3s-io/k3s-root">k3s-io/k3s-root – riscv64config and ALL_ARCH</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/issues/7151">k3s-io/k3s Issue #7151 - riscv64 tracking issue</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/pull/7778">k3s-io/k3s PR #7778 - Add support for RISC-V</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/pull/7285">k3s-io/k3s PR #7285 - WIP: Add riscv64 support (closed)</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/pull/9719">k3s-io/k3s PR #9719 - Bump libp2p for riscv support</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/issues/12556">k3s-io/k3s Issue #12556 - Assessment of porting difficulty</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/issues/9489">k3s-io/k3s Issue #9489 - RISC-V Support (closed)</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/issues/7152">k3s-io/k3s Issue #7152 - How to build for riscv64 (closed)</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/issues/6022">k3s-io/k3s Issue #6022 - metrics-server on riscv64 (closed)</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/pull/13854">k3s-io/k3s PR #13854 - [Experiment] Add CI on linux-riscv64</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/issues/13910">k3s-io/k3s Issue #13910 - Add native riscv64 CI using RISE RISC-V Runners</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/pull/14688">k3s-io/k3s PR #14688 - Add riscv64 release artifacts (closed)</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/pull/14529">k3s-io/k3s PR #14529 - Enable seccomp in riscv64 builds</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/issues/14641">k3s-io/k3s Issues #14641-#14644 - release-branch backport clones of #7151</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/blob/master/.github/workflows/build-k3s.yaml">k3s-io/k3s workflow - build-k3s.yaml</a></li>
+  <li><a href="https://github.com/k3s-io/k3s-root">k3s-io/k3s-root - riscv64 support and releases</a></li>
+  <li><a href="https://github.com/k3s-io/k3s-root/issues/61">k3s-io/k3s-root Issue #61 - Build riscv64 on dedicated runner</a></li>
+  <li><a href="https://github.com/k3s-io/kine/issues/296">k3s-io/kine Issue #296 - Add support for RISC-V 64</a></li>
+  <li><a href="https://github.com/k3s-io/kine/pull/297">k3s-io/kine PR #297 - riscv64 support</a></li>
+  <li><a href="https://github.com/k3s-io/kine/pull/462">k3s-io/kine PR #462 - multiplatform CI</a></li>
   <li><a href="https://github.com/k3s-io/klipper-helm/pull/64">k3s-io/klipper-helm PR #64</a></li>
   <li><a href="https://github.com/k3s-io/klipper-lb/pull/56">k3s-io/klipper-lb PR #56</a></li>
-  <li><a href="https://github.com/k3s-io/kine/pull/297">k3s-io/kine PR #297 – riscv64 support</a></li>
-  <li><a href="https://github.com/k3s-io/kine/pull/462">k3s-io/kine PR #462 – multiplatform CI</a></li>
-  <li><a href="https://github.com/coredns/coredns/pull/6195">coredns/coredns PR #6195 – RISC-V support</a></li>
-  <li><a href="https://github.com/helm/helm/pull/12204">helm/helm PR #12204 – RISC-V support</a></li>
-  <li><a href="https://github.com/traefik/traefik/pull/10026">traefik/traefik PR #10026 – RISC-V support</a></li>
-  <li><a href="https://github.com/flannel-io/flannel/pull/1824">flannel-io/flannel PR #1824 – riscv64 support</a></li>
-  <li><a href="https://github.com/containernetworking/plugins/pull/739">containernetworking/plugins PR #739 – riscv64 support</a></li>
-  <li><a href="https://github.com/etcd-io/etcd/pull/21510">etcd-io/etcd PR #21510 – remove ETCD_UNSUPPORTED_ARCH for riscv64</a></li>
-  <li><a href="https://github.com/rancher/local-path-provisioner/pull/346">rancher/local-path-provisioner PR #346 – riscv64 (closed abandoned)</a></li>
-  <li><a href="https://github.com/opencontainers/runc/pull/5166">opencontainers/runc PR #5166 – riscv64 CI</a></li>
-  <li><a href="https://github.com/etcd-io/bbolt/pull/666">etcd-io/bbolt PR #666 – riscv64 MaxMapSize</a></li>
-  <li><a href="https://github.com/checkpoint-restore/criu/issues/1702">criu/criu Issue #1702 – RISC-V support (open since 2021)</a></li>
-  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE Project – Announcing RISE RISC-V Runners</a></li>
-  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE Project – RISC-V Runners: Six Weeks In</a></li>
-  <li><a href="https://github.com/riseproject-dev/kubernetes-riscv">riseproject-dev/kubernetes-riscv</a></li>
+  <li><a href="https://github.com/coredns/coredns/pull/6195">coredns/coredns PR #6195 - RISC-V support</a></li>
+  <li><a href="https://github.com/helm/helm/pull/12204">helm/helm PR #12204 - RISC-V support</a></li>
+  <li><a href="https://github.com/traefik/traefik/pull/10026">traefik/traefik PR #10026 - RISC-V support</a></li>
+  <li><a href="https://github.com/flannel-io/flannel/pull/1824">flannel-io/flannel PR #1824 - riscv64 support</a></li>
+  <li><a href="https://github.com/flannel-io/flannel/issues/1988">flannel-io/flannel Issue #1988 - riscv64 build failure (wontfix)</a></li>
+  <li><a href="https://github.com/flannel-io/flannel/issues/1853">flannel-io/flannel Issue #1853 - riscv64 failed to build images (wontfix)</a></li>
+  <li><a href="https://github.com/containernetworking/plugins/pull/739">containernetworking/plugins PR #739 - riscv64 support</a></li>
+  <li><a href="https://github.com/containerd/containerd/issues/13020">containerd/containerd Issue #13020 - Add linux/riscv64 to CI test matrix</a></li>
+  <li><a href="https://github.com/opencontainers/runc/pull/3905">opencontainers/runc PR #3905 - riscv64 support merged (v1.1.8)</a></li>
+  <li><a href="https://github.com/opencontainers/runc/issues/3950">opencontainers/runc Issue #3950 - musl static build broken on riscv64</a></li>
+  <li><a href="https://github.com/etcd-io/etcd/pull/21510">etcd-io/etcd PR #21510 - remove ETCD_UNSUPPORTED_ARCH for riscv64</a></li>
+  <li><a href="https://github.com/etcd-io/bbolt/pull/666">etcd-io/bbolt PR #666 - riscv64 MaxMapSize</a></li>
+  <li><a href="https://github.com/rancher/local-path-provisioner/pull/346">rancher/local-path-provisioner PR #346 - riscv64 (closed abandoned)</a></li>
+  <li><a href="https://github.com/checkpoint-restore/criu/issues/1702">checkpoint-restore/criu Issue #1702 - RISC-V support (open since 2021)</a></li>
+  <li><a href="https://github.com/golang/go/issues/64917">golang/go Issue #64917 - NaN-to-int conversion diverges on riscv64</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE Project - Announcing RISE RISC-V Runners</a></li>
+  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE Project - RISC-V Runners: Six Weeks In</a></li>
+  <li><a href="https://riseproject.dev/2026/09/28/how-kairos-is-charting-the-stepping-stones-of-risc-v-productization/">RISE Project - How Kairos is Charting the Stepping Stones of RISC-V Productization</a></li>
+  <li><a href="https://kairos.io/blog/2026/08/28/kairos-riscv64-open-invitation/">Kairos blog - RISC-V64 Open Invitation</a></li>
+  <li><a href="https://github.com/riseproject-dev/riscv-runner">riseproject-dev/riscv-runner PR #119 - multi-arch kube-proxy/pause images</a></li>
+  <li><a href="https://github.com/CARV-ICS-FORTH/kubernetes-riscv64">CARV-ICS-FORTH/kubernetes-riscv64</a></li>
+  <li><a href="https://github.com/luhenry/k3s/actions/runs/23554260675">luhenry/k3s Actions run 23554260675 - riscv64/arm64/amd64 build timing</a></li>
 </ul>
 
           
