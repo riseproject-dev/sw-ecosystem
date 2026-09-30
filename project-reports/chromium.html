@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <code class="language-plaintext highlighter-rouge">&lt;ludovic.henry@qti.qualcomm.com&gt;</code>
-<strong>Date:</strong> 2026-07-20<br />
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for Chromium and its critical dependencies<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> Yellow (build-only-ci)<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for Chromium<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION]. Where sources directly contradict each other, both are cited and the discrepancy is noted.<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +280,17 @@
 </h2>
     
 
-<p>Chromium is an open-source web browser project hosted at <a href="https://chromium.googlesource.com/chromium/src">chromium.googlesource.com/chromium/src</a>. It is the upstream for Google Chrome, Microsoft Edge, and many other browsers. The current tip-of-tree version is 151.0.7904.1.</p>
+<p>Chromium is an open-source web browser project hosted at <a href="https://chromium.googlesource.com/chromium/src">chromium.googlesource.com/chromium/src</a>, using Gerrit for code review at <a href="https://chromium-review.googlesource.com">chromium-review.googlesource.com</a>, not GitHub. It is the upstream for Google Chrome, Microsoft Edge, and other Chromium-based browsers.</p>
 
-<p>Chromium is architecturally composed of several distinct subsystems relevant to RISC-V evaluation: the V8 JavaScript and WebAssembly engine, the sandbox security layer, the Skia 2D graphics library, the Chromium networking library (Cronet), FFmpeg audio/video decoding, BoringSSL for TLS, and a set of GPU abstraction layers (ANGLE, SwiftShader, Dawn). Each subsystem has a different RISC-V readiness level.</p>
+<p><strong>Governance.</strong> Chromium has no independent foundation of its own. Google retains direct control of the project. Governance is implemented file-by-file through the OWNERS file system: each directory carries an OWNERS file granting code-review/approval authority to specific individuals, a distributed-authority model rather than a formal board. In January 2025 the Linux Foundation launched a separate initiative, “Supporters of Chromium-Based Browsers,” with a Technical Advisory Committee, whose founding/endorsing members are Google, Meta, Microsoft, and Opera. This initiative funds and organizes work around the Chromium ecosystem; it explicitly does not take over Chromium’s own (Google-controlled) governance.</p>
 
-<p>The project is not governed by an independent foundation. Google is the de-facto owner and primary maintainer. The governance model is committer-based: OWNERS files grant per-directory review authority, changes land via Gerrit code review plus an automated Commit Queue, and Tree Sheriffs monitor build health. New platform additions require emailing chrome-atls@google.com and must demonstrate benefit outweighing maintenance cost. There is no formal tier system analogous to Rust or Linux kernel tier definitions.</p><hr />
+<p><strong>License.</strong> Google/Apple-authored code is 3-clause BSD. Because of Chromium’s WebKit lineage it also bundles LGPL, MIT, MS-PL, and MPL-licensed third-party components.</p>
+
+<p><strong>New-architecture policy.</strong> Per <code class="language-plaintext highlighter-rouge">docs/new_port_policy.md</code> (content reconstructed from a search-index summary after a direct fetch 404’d this session - [NEEDS VERIFICATION] against the live file path): a new port or platform must be approved by project leadership before Chromium accepts patches for it; ports must represent a significant, ongoing investment in an established platform, not hobby/experimental code; new ports will not get bots on Google-run waterfalls, not even FYI bots; Chromium engineers are not expected to maintain new ports, the maintenance burden falls on the port’s proponents; and contributors should reuse existing branches/ifdefs rather than introduce new abstractions. This policy is corroborated verbatim by the actual Gerrit review thread on the sandbox CL (Section 12.1): reviewer Robert Sesek cites “a formal policy around the acceptance of new CPU architectures” requiring explicit engineering-leadership approval, and reviewer Matthew Denton states Chromium “long ago decided that adding MIPS support to the sandbox introduced extra unnecessary maintenance burden, and since then we have declined to merge patches for loongarch64 and powerpc” - i.e., riscv64 is being evaluated against a standing precedent of rejecting new sandbox architectures, not as a one-off decision.</p>
+
+<p><strong>Community stance.</strong> The posture toward riscv64 is pragmatic/conservative rather than hostile: substantial riscv64 code has landed and is accepted upstream (the V8 JIT backend, Crashpad/mini_chromium plumbing, some browser-level base/ code), but it is driven almost entirely by external contributors (PLCT Lab/ISCAS, Meta, FutureWei, independent contributor Levi Zim/kxxt) rather than core Google engineering, and the single highest-leverage item - sandbox support - remains blocked specifically because no official riscv64 CI/builder infrastructure exists to back it, consistent with the new-port policy’s “you build it, you maintain it” stance.</p>
+
+<p><strong>RISE membership.</strong> Google LLC is a Premier Member of RISE (RISC-V Software Ecosystem, a Linux Foundation Europe project). Chromium is not listed as a separate member entity; RISE membership is organizational, not per-project.</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -293,88 +300,121 @@
 </h2>
     
 
-<p>The RISC-V port originates in two separate efforts that converged over time.</p>
+<p>The RISC-V port originates in two efforts that converged over time.</p>
 
-<p><strong>V8 RISC-V (2020-2022):</strong> In 2020, the V8 RISC-V port was developed as an out-of-tree community effort under the v8-riscv GitHub organization, later migrated to the riscv-collab organization. The institutional drivers were PLCT Lab (Institute of Computing Technology, Chinese Academy of Sciences / ISCAS) with Yahan Lu as the leading maintainer. The riscv-collab/v8 repository shows a stable community snapshot dated August 19, 2021. The V8 RISC-V JIT backend was subsequently upstreamed into the main V8 repository in the 2021-2022 timeframe based on community repository activity.</p>
+<p><strong>V8 RISC-V (2020-2022):</strong> The V8 RISC-V port began around 2020 as an out-of-tree community effort, later formalized under the riscv-collab GitHub organization. Institutional drivers were PLCT Lab (Institute of Software / Institute of Computing Technology, Chinese Academy of Sciences), with Yahan Lu as lead maintainer and Ji Qiu as lead reviewer/CI operator. The riscv-collab/v8 repository shows a stable community snapshot dated August 19, 2021. The backend was subsequently upstreamed into mainline V8 through 2021-2022.</p>
 
-<p><strong>Chromium build system (2022-2023):</strong> StarFive Technology’s Rebecca Chang submitted the earliest traceable corporate Chromium upstream contribution for riscv64: the CL “Add support for clang toolchain on riscv64” (Gerrit I7d71882a) in March 2022. The Chromium build system received its first RISC-V-specific GN configuration file (<code class="language-plaintext highlighter-rouge">build/config/riscv.gni</code>) on March 2, 2023, authored by Yahan Lu (ISCAS-PLCT).</p>
+<p><strong>Chromium build system (2021-2023):</strong> RV64GC porting work for Chromium/ChromiumOS began around July 1, 2021, with plans to open-source it by the end of that month [NEEDS VERIFICATION: exact first-commit hash not retrievable via the tools used]. StarFive Technology’s Rebecca Chang submitted an early corporate contribution, the “Add support for clang toolchain on riscv64” CL (Gerrit I7d71882a), around March 2022. <code class="language-plaintext highlighter-rouge">build/config/riscv.gni</code> was added March 2, 2023, by Yahan Lu (ISCAS/PLCT Lab).</p>
 
-<p><strong>Current active contributor:</strong> As of 2024-2026, the primary driver of upstream Chromium riscv64 work is kxxt (Levi Zim, rsworktech@outlook.com), who describes his focus as “RISC-V and downstream packaging improvements.” Chromium upstream has 204+ commits mentioning riscv64 as of June 2026.</p>
+<p><strong>Current drivers:</strong> As of 2024-2026, the primary driver of upstream Chromium riscv64 work is Levi Zim (kxxt), who also maintains the <a href="https://github.com/riscv-forks/chromium-riscv">riscv-forks/chromium-riscv</a> community CI and has informally offered to act as riscv64 fixer-upper on the open sandbox CL, modeling the arrangement on how V8’s RISC-V port is maintained (breakage fixed after the fact rather than gated upfront). Corporate maintainers named in connection with the riscv64 backend in V8 specifically include Peng Wu (Meta/Facebook), Brice Dobry (FutureWei), Ji Qiu (PLCT Lab/ISCAS), and Yahan Lu (PLCT Lab/ISCAS).</p>
 
-<p><strong>Key milestones by date:</strong></p>
+<p><strong>Master tracking issue.</strong> Chromium tracking issue <a href="https://issues.chromium.org/issues/42050595">42050595, “RISC-V toolchain support”</a> exists (its comment thread requires Google sign-in and could not be read directly; retrieved via the tracker’s unauthenticated JSON API). It is tagged <code class="language-plaintext highlighter-rouge">Tools&gt;LLVM</code> and links 19 separate CLs across <code class="language-plaintext highlighter-rouge">chromium/src</code>, <code class="language-plaintext highlighter-rouge">chromium/tools/depot_tools</code>, and <code class="language-plaintext highlighter-rouge">chromium/third_party/ffmpeg</code> (6574317, 6574441, 6585073, 6595047, 6602743, 6603814, 6604313, 6603953, 6607216, 6629552, 6629553, 6635209, 6692951, 6633809, 6701609, 6703562, 6998812, 7509196, 8226185, 8235931), plus two access-restricted related issues (42050599, 42079370). This is the venue where Architecture Team Lead sign-off is discussed, referenced directly from CL 4935120’s review thread.</p>
+
+<p><strong>Key milestones:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Date</th>
       <th>Event</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>2020</td>
+      <td>2020-2021</td>
       <td>V8 RISC-V port initiated by PLCT Lab as out-of-tree fork</td>
+      <td>riscv-collab/v8</td>
     </tr>
     <tr>
       <td>Aug 2021</td>
       <td>riscv-collab/v8 stable community snapshot</td>
+      <td>riscv-collab/v8</td>
     </tr>
     <tr>
       <td>Mar 2022</td>
       <td>StarFive submits first Chromium riscv64 toolchain CL upstream</td>
+      <td>Gerrit I7d71882a</td>
     </tr>
     <tr>
       <td>Mar 2023</td>
-      <td>build/config/riscv.gni added by Yahan Lu (ISCAS)</td>
+      <td><code class="language-plaintext highlighter-rouge">build/config/riscv.gni</code> added by Yahan Lu</td>
+      <td>Chromium source</td>
     </tr>
     <tr>
-      <td>Oct 2023</td>
-      <td>CL 4935120 “Add support for riscv64-linux” (sandbox) filed – still open</td>
+      <td>May-Aug 2023</td>
+      <td>mini_chromium/Crashpad CLs <a href="https://chromium-review.googlesource.com/c/chromium/mini_chromium/+/4558827">4558827</a> and <a href="https://chromium-review.googlesource.com/c/chromium/mini_chromium/+/4735556">4735556</a> merged</td>
+      <td>Gerrit REST API</td>
     </tr>
     <tr>
       <td>Sep 2023</td>
-      <td>Debian bug #1051998 opened requesting riscv64 Chromium</td>
+      <td>Debian bug <a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1051998">#1051998</a> opened requesting riscv64 Chromium</td>
+      <td>Debian BTS</td>
+    </tr>
+    <tr>
+      <td>Oct 2023</td>
+      <td>Sandbox CL <a href="https://chromium-review.googlesource.com/c/chromium/src/+/4935120">4935120</a> filed, rejected same month by Robert Sesek citing policy - still open</td>
+      <td>Gerrit REST API</td>
+    </tr>
+    <tr>
+      <td>Nov 2023 (per one source) / May 2025 patch set 7 (per another source, contradictory)</td>
+      <td>FFmpeg integration CL <a href="https://chromium-review.googlesource.com/c/chromium/third_party/ffmpeg/+/5054185">5054185</a> abandoned</td>
+      <td>Gerrit REST API (dates conflict between two fetches this session - flagged [NEEDS VERIFICATION])</td>
+    </tr>
+    <tr>
+      <td>Sep 2024</td>
+      <td>CL <a href="https://chromium-review.googlesource.com/c/chromium/src/+/5839530">5839530</a> merged (“Use kPartitionCachelineSize instead of hardcoding 64” - a general PartitionAlloc cleanup, not a riscv64-specific fix as earlier characterized)</td>
+      <td>Gerrit REST API</td>
     </tr>
     <tr>
       <td>Jun 2025</td>
       <td>Highway RVV disabled (CL 6583376)</td>
+      <td>Existing report / Gerrit</td>
     </tr>
     <tr>
       <td>May 2025</td>
       <td>cpuinfo re-enabled for riscv64 Linux</td>
+      <td>Existing report</td>
     </tr>
     <tr>
       <td>Jul 2025</td>
       <td>Clang runtime libraries built for riscv64 Linux</td>
+      <td>Existing report</td>
     </tr>
     <tr>
       <td>Sep 2025</td>
-      <td>dav1d RVV on Linux riscv64 enabled (tested on SpacemiT K1-X)</td>
+      <td>dav1d RVV on Linux riscv64 enabled, tested on SpacemiT K1-X</td>
+      <td>Existing report</td>
     </tr>
     <tr>
       <td>Jan 2026</td>
-      <td>Debian package installer support added (Bug 42050595)</td>
+      <td>V8 CL <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7498990">7498990</a> merged, “[riscv] Skip pop simd128 in DeoptimizationEntry” (fixes a SIGILL on hardware without RVV; title differs from an earlier, incorrect characterization as an “RVV macro guard” CL)</td>
+      <td>Gerrit REST API</td>
     </tr>
     <tr>
       <td>Apr 2026</td>
-      <td>Zihintpause CPU yield merged (CL 7790544)</td>
-    </tr>
-    <tr>
-      <td>Apr 2026</td>
-      <td>V8 Zfa extension merged (CL 7768270)</td>
+      <td>Zihintpause CPU yield merged (CL 7790544); V8 Zfa extension merged (CL 7768270)</td>
+      <td>Existing report</td>
     </tr>
     <tr>
       <td>May 2026</td>
-      <td>Highway RVV re-enabled (CL 7807959)</td>
+      <td>SwiftShader CL <a href="https://swiftshader-review.googlesource.com/c/SwiftShader/+/75929">75929</a> (“Default to use llvm16”) merged 2026-05-27; Highway RVV re-enabled (CL 7807959)</td>
+      <td>Gerrit REST API</td>
     </tr>
     <tr>
       <td>Jun 2026</td>
-      <td>V8 ZFH simulator support merged (CL 7897892)</td>
+      <td>SwiftShader CL 75929 reverted 12 days later as CL <a href="https://swiftshader-review.googlesource.com/c/SwiftShader/+/77428">77428</a> (2026-06-08), for breaking the SwiftShader-to-Dawn roll; V8 ZFH simulator support merged (CL 7897892)</td>
+      <td>Gerrit REST API</td>
+    </tr>
+    <tr>
+      <td>Sep 2026</td>
+      <td>Sandbox CL 4935120 still open, rebased 2026-09-23, Code-Review -1 unresolved</td>
+      <td>Gerrit REST API (verified live this session)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The sandbox CL (4935120) has been open since October 2023. It is the gating item for a production-quality riscv64 Linux port and carries a Code-Review -1 as of May 2026.</p><hr />
+<p>The sandbox CL has been open since October 2023, nearly three years, and remains the gating item for a production-quality riscv64 Linux port.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -384,19 +424,53 @@
 </h2>
     
 
-<p>Chromium does not define formal support tiers. The de-facto status of riscv64 is: <strong>present in source, not officially supported, no upstream Google-managed CI</strong>.</p>
+<p>Chromium does not define formal support tiers analogous to Rust or the Linux kernel. The de-facto status of riscv64 is: present in source for several subsystems (primarily V8), not officially supported, no general-purpose upstream Google-managed CI.</p>
 
-<p>Specific indicators:</p>
+<p>Specific indicators, confirmed by direct reads of the live LUCI Starlark configuration this session:</p>
 
 <ul>
   <li><code class="language-plaintext highlighter-rouge">build/config/BUILDCONFIG.gn</code> does not list riscv64 in its CPU architecture lists (arm64, x86, x64, mips, mips64 are present; riscv64 is absent).</li>
-  <li>There is no dedicated Linux riscv64 CI builder in the Chromium LUCI infrastructure.</li>
-  <li>The sandbox security layer (seccomp-BPF) has no riscv64 support, meaning any binary produced would run without the seccomp-BPF boundary, which is not a shippable configuration.</li>
-  <li>The riscv-collab fork explicitly maintains a “stable branch that will always work for RISC-V” as a safety net against upstream breakage, which is a characteristic community response to an architecture that lacks official CI coverage.</li>
-  <li>The riscv64 sysroot targets Debian Trixie, while every other architecture uses Debian Bullseye. This is not a deliberate architectural choice but a consequence of riscv64 not being supported in Bullseye.</li>
+  <li><code class="language-plaintext highlighter-rouge">infra/config/subprojects/chromium/ci/chromium.linux.star</code>, <code class="language-plaintext highlighter-rouge">chromium.chromiumos.star</code>, <code class="language-plaintext highlighter-rouge">chromium.fyi.star</code>, and <code class="language-plaintext highlighter-rouge">chromium.android.fyi.star</code> contain zero riscv64 references - confirmed by direct file read, not inference.</li>
+  <li>The only riscv64 CI that exists is four Cronet (Android networking library) builders, compile-and-size-check only (Section 7).</li>
+  <li>The sandbox security layer (seccomp-BPF) has no riscv64 support, meaning any binary produced would run without the sandbox boundary - not a shippable Linux configuration.</li>
+  <li>The riscv-collab V8 fork maintains “a stable branch that will always work for RISC-V” as a safety net against upstream breakage, a characteristic community response to an architecture lacking official CI coverage.</li>
+  <li>The riscv64 sysroot targets Debian Trixie while every other architecture uses Debian Bullseye, because riscv64 was not supported in Bullseye.</li>
 </ul>
 
-<p>The RISE blog post from December 2025 describes the V8 RISC-V port as “mostly at feature parity with x86_64 and ARM64” and notes the community is “among the fastest to address breakages introduced by core V8 developers.” However, the Chromium browser (as distinct from V8) has no equivalent characterization in any upstream document.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Architecture</th>
+      <th>Official CI</th>
+      <th>Official binary</th>
+      <th>Sandbox support</th>
+      <th>Build-target status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>amd64</td>
+      <td>Full (build + test + release)</td>
+      <td>Yes</td>
+      <td>Full</td>
+      <td>Primary tier-1</td>
+    </tr>
+    <tr>
+      <td>arm64</td>
+      <td>Full (build + test + release, Android/Linux/ChromeOS)</td>
+      <td>Yes</td>
+      <td>Full</td>
+      <td>Primary tier-1</td>
+    </tr>
+    <tr>
+      <td>riscv64</td>
+      <td>Partial (Cronet Android only, compile+size, no tests)</td>
+      <td>No</td>
+      <td>Missing</td>
+      <td>Unofficial, source-present</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -405,70 +479,39 @@
   
 </h2>
     
-<h3 id="41-v8-javascript-engine">
+<h3 id="41-v8-javascriptwebassembly-engine">
   
   
-    <a href="#41-v8-javascript-engine" class="anchor-heading" aria-labelledby="41-v8-javascript-engine"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 V8 JavaScript Engine
+    <a href="#41-v8-javascriptwebassembly-engine" class="anchor-heading" aria-labelledby="41-v8-javascriptwebassembly-engine"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 V8 JavaScript/WebAssembly Engine
   
   
 </h3>
     
 
-<p>V8 is the dominant body of riscv64-specific code. The implementation spans approximately 85+ files across 10 directories in <code class="language-plaintext highlighter-rouge">src/</code>.</p>
+<p>V8 is the dominant body of riscv64-specific code in Chromium, spanning 85+ files across 10 directories in <code class="language-plaintext highlighter-rouge">src/</code>.</p>
 
-<p><strong>Assembler and codegen (<code class="language-plaintext highlighter-rouge">src/codegen/riscv/</code>, 58 files):</strong></p>
+<p><strong>Assembler and codegen (<code class="language-plaintext highlighter-rouge">src/codegen/riscv/</code>, 58 files):</strong> A full assembler stack - base assembler, macro-assembler, constant pool, register definitions, reglist, CPU feature detection. Dedicated extension files cover A (atomics), B (bitmanip), C (compressed), D (double FP), F (float FP), M (multiply), V (vector/RVV), Zfa, Zfh, Zicond, Zicsr, Zifencei, Zimop. Both RV32 and RV64 are supported via <code class="language-plaintext highlighter-rouge">V8_TARGET_ARCH_RISCV32</code>/<code class="language-plaintext highlighter-rouge">V8_TARGET_ARCH_RISCV64</code> guards. The VectorUnit class handles RVV with configurable vlen (128/256/512/1024). No <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED()</code> stubs were found in the core assembler.</p>
 
-<p>The full assembler stack is present: base assembler, macro-assembler, constant pool, register definitions, reglist, and CPU feature detection. Dedicated extension implementation files cover: A (atomics), B (bitmanip), C (compressed), D (double FP), F (float FP), M (multiply), V (vector/RVV), Zfa, Zfh, Zicond, Zicsr, Zifencei, Zimop. Both RV32 and RV64 are supported via <code class="language-plaintext highlighter-rouge">V8_TARGET_ARCH_RISCV32</code>/<code class="language-plaintext highlighter-rouge">V8_TARGET_ARCH_RISCV64</code> guards. The VectorUnit class handles RVV with configurable vlen (128/256/512/1024). No UNIMPLEMENTED() stubs were found in the core assembler.</p>
+<p>In April 2026, Zfa support was added (CL 7768270, +2055 lines); review caught a correctness bug where a constants file used <code class="language-plaintext highlighter-rouge">static_cast&lt;double&gt;(FLT_MIN)</code> instead of <code class="language-plaintext highlighter-rouge">DBL_MIN</code> for an <code class="language-plaintext highlighter-rouge">imm5=1</code> case, values differing by approximately 270 orders of magnitude, fixed before merge (reviewer Ji Qiu).</p>
 
-<p>In April 2026, Zfa support was added (CL 7768270, +2055 lines). A correctness issue was caught during review: a constants file incorrectly used <code class="language-plaintext highlighter-rouge">static_cast&lt;double&gt;(FLT_MIN)</code> instead of <code class="language-plaintext highlighter-rouge">DBL_MIN</code> for an <code class="language-plaintext highlighter-rouge">imm5=1</code> case – these values differ by approximately 270 orders of magnitude. The error was caught by reviewer Ji Qiu and corrected before merge.</p>
+<p><strong>Compiler backend - TurboFan/Turboshaft (<code class="language-plaintext highlighter-rouge">src/compiler/backend/riscv/</code>, 7 files):</strong> Separate instruction selectors for riscv32 and riscv64; full code generator with arithmetic, atomics, FP, write barriers, SIMD/RVV opcodes, Zbb/Zba instruction classes - structurally parallel to the arm64 and x64 backends.</p>
 
-<p><strong>Compiler backend – TurboFan/Turboshaft (<code class="language-plaintext highlighter-rouge">src/compiler/backend/riscv/</code>, 7 files):</strong></p>
+<p><strong>Builtins, Liftoff, Maglev, Sparkplug, simulator, regexp/deoptimizer/diagnostics:</strong> All present (details unchanged from prior verification): Liftoff has one explicit <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED()</code> (<code class="language-plaintext highlighter-rouge">kF32LoadF16</code>, half-precision float load); the simulator gained ZFH support in June 2026 (CL 7897892, +721 lines).</p>
 
-<p>Separate instruction selector files for riscv32 and riscv64. Full code generator with arithmetic, atomics, FP, write barriers, SIMD/RVV opcodes (F32x4, I32x4 variants), and Zbb/Zba instruction classes. Structure mirrors the arm64 and x64 backends. Active Turboshaft wide-multiply CLs were merged April-May 2026.</p>
+<p><strong>Unaligned access (CL 7763908, merged 2026-04-17):</strong> Removed approximately 770 lines of MIPS-inherited PartialUnaligned/NoUnaligned handling, standardizing on FullUnalignedAccessSupport - rationale from the reviewer: mainstream RISC-V cores handle misaligned access in hardware, and the SBI specification mandates firmware trap handling where it is not.</p>
 
-<p><strong>Builtins (<code class="language-plaintext highlighter-rouge">src/builtins/riscv/</code>, 1 file):</strong></p>
+<p><strong>Architectural improvements per the RISE blog post <a href="https://riseproject.dev/2025/12/09/a-glimpse-into-v8-development-for-risc-v/">“A Glimpse into V8 Development for RISC-V”</a> (2025-12-09), the only RISE content specifically covering this subsystem:</strong></p>
 
-<p>Full macro-assembler implementations for JSConstructStub, InterpreterEntryTrampoline, ResumeGeneratorTrampoline, JSEntry, and dispatch table lookup. Includes shadow stack support (<code class="language-plaintext highlighter-rouge">#ifdef V8_ENABLE_RISCV_SHADOW_STACK</code>) and sandbox validation paths.</p>
+<ul>
+  <li>The RISC-V port of V8 is described as “mostly at feature parity with the officially supported architectures like x86_64 and ARM64.”</li>
+  <li>Constant pool architecture redesigned using larger (32-bit) offsets, with groundwork for moving constant pools to non-executable memory; emission moved from inline (during codegen) to end-of-generation, simplifying MIPS-inherited complexity.</li>
+  <li>A WebAssembly jump-table race condition was fixed: a two-instruction patch sequence that could execute the first instruction before the second was written was replaced with an atomic memory-load approach (<code class="language-plaintext highlighter-rouge">auipc t6, 0</code> / <code class="language-plaintext highlighter-rouge">ld t6, 16(t6)</code> / <code class="language-plaintext highlighter-rouge">jalr x0, t6</code>, plus a stored target; short-distance targets use <code class="language-plaintext highlighter-rouge">jal x0 &lt;imm21&gt;</code>), so “the CPU cannot see half-updated instructions anymore.”</li>
+  <li><code class="language-plaintext highlighter-rouge">sh3add</code> cuts load-related instruction sequences roughly in half; <code class="language-plaintext highlighter-rouge">zext.w</code> reduces pointer-decompression overhead “from 5 instructions to 2.”</li>
+  <li>Vector support extended beyond 128-bit to 256/512-bit; real-hardware testing (not the simulator) surfaced a bug in save/restore of vector registers around C++ calls, whose fix enabled running the full JetStream benchmark suite (~33 MB Wasm bytecode, ~2M lines JS). No numeric JetStream score is published in this post.</li>
+  <li>RISC-V 32-bit support is slated for possible removal after May 2026.</li>
+</ul>
 
-<p><strong>Liftoff WebAssembly baseline JIT (<code class="language-plaintext highlighter-rouge">src/wasm/baseline/riscv/</code>, 3 files):</strong></p>
-
-<p>Shared, riscv32, and riscv64 inline headers. Integer arithmetic, atomics (AMO + LR/SC), SIMD via RVV, type conversions are covered. One explicit <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED()</code>: <code class="language-plaintext highlighter-rouge">kF32LoadF16</code> (half-precision float load). Big-endian RISC-V is blocked by a <code class="language-plaintext highlighter-rouge">#error</code> directive.</p>
-
-<p><strong>Maglev optimizing JIT (<code class="language-plaintext highlighter-rouge">src/maglev/riscv/</code>, 3 files):</strong></p>
-
-<p>Assembler inline header, assembler source, and IR source are all present.</p>
-
-<p><strong>Sparkplug baseline JIT (<code class="language-plaintext highlighter-rouge">src/baseline/riscv/</code>, 2 files):</strong></p>
-
-<p>Baseline assembler inline header and baseline compiler inline header are present.</p>
-
-<p><strong>Simulator (<code class="language-plaintext highlighter-rouge">src/execution/riscv/</code>, 6 files):</strong></p>
-
-<p>Full software simulator for cross-compilation builds. In June 2026, ZFH (half-precision float) simulator support was added (CL 7897892, +721 lines). A <code class="language-plaintext highlighter-rouge">clang_x64_v8_riscv64</code> toolchain exists for simulator builds.</p>
-
-<p><strong>Regexp JIT, deoptimizer, disassembler, diagnostics:</strong></p>
-
-<p><code class="language-plaintext highlighter-rouge">src/regexp/riscv/</code> (2 files), <code class="language-plaintext highlighter-rouge">src/deoptimizer/riscv/</code> (1 file), <code class="language-plaintext highlighter-rouge">src/diagnostics/riscv/</code> (2 files including disassembler and unwinder) are all present.</p>
-
-<p><strong>Unaligned access (CL 7763908, merged 2026-04-17):</strong></p>
-
-<p>The RISC-V backend previously had PartialUnaligned and NoUnaligned code paths inherited from the MIPS port. CL 7763908 removed approximately 770 lines of that code and forces <code class="language-plaintext highlighter-rouge">FullUnalignedAccessSupport</code> as the only supported mode. The reviewer comment explains the rationale: mainstream high-performance RISC-V cores handle misaligned access in hardware, and for hardware lacking support, the SBI specification mandates firmware handle it via trap handlers.</p>
-
-<p><strong>Constant pool (per RISE blog, December 2025):</strong></p>
-
-<p>Constant pool emission was moved from inline (during code generation) to end-of-generation, leveraging RISC-V’s up-to-32-bit load offsets. This reduces complexity inherited from the MIPS baseline.</p>
-
-<p><strong>Atomic jump table patching (per RISE blog, December 2025):</strong></p>
-
-<p>A race condition was identified and fixed where a CPU could execute the first of two jump-patching instructions before the second was written. The fix replaces the two-instruction sequence with a memory-load-based approach: <code class="language-plaintext highlighter-rouge">auipc t6, 0</code> / <code class="language-plaintext highlighter-rouge">ld t6, 16(t6)</code> / <code class="language-plaintext highlighter-rouge">jalr x0, t6</code> plus a stored target. For short-distance targets, <code class="language-plaintext highlighter-rouge">jal x0 &lt;imm21&gt;</code> is used.</p>
-
-<p><strong>RVV register save/restore (per RISE blog, December 2025):</strong></p>
-
-<p>A bug causing incorrect save/restore of vector registers around C++ calls was discovered only on real hardware (not caught by the simulator). The fix enabled running the complete JetStream benchmark suite.</p>
-
-<p><strong>Instruction scheduler:</strong></p>
-
-<p>[NEEDS VERIFICATION] Scheduling latencies in the RISC-V backend were copied from the MIPS port and are incorrect for all real RISC-V cores. This is documented as a known performance gap; no correction CL has been identified in the research findings.</p>
+<p><strong>Instruction scheduler:</strong> [NEEDS VERIFICATION] Scheduling latencies in the RISC-V backend are reported (no correction CL identified) to have been copied from the MIPS port and to be incorrect for all real RISC-V cores - a documented, unresolved performance gap.</p>
 <h3 id="42-chromium-base">
   
   
@@ -478,9 +521,7 @@
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">base/synchronization/lock_subtle.h</code> received Zihintpause <code class="language-plaintext highlighter-rouge">pause</code> instruction support for CPU yield (CL 7790544, merged 2026-04-27, +7/-2 lines). The <code class="language-plaintext highlighter-rouge">pause</code> instruction is encoded as a hint NOP for backward compatibility on hardware lacking Zihintpause.</p>
-
-<p><code class="language-plaintext highlighter-rouge">base/cpu.cc</code> and <code class="language-plaintext highlighter-rouge">base/cpu.h</code> have no riscv64 sections. CPU feature detection covers only x86 (via CPUID) and ARM (via auxval). The broader CPU feature detection infrastructure remains x86/ARM-only.</p>
+<p><code class="language-plaintext highlighter-rouge">base/synchronization/lock_subtle.h</code> gained Zihintpause <code class="language-plaintext highlighter-rouge">pause</code>-instruction support for CPU yield (CL 7790544, merged 2026-04-27, +7/-2 lines), encoded as a hint NOP for backward compatibility on hardware lacking Zihintpause. <code class="language-plaintext highlighter-rouge">base/cpu.cc</code>/<code class="language-plaintext highlighter-rouge">base/cpu.h</code> have no riscv64 sections; CPU feature detection covers only x86 (CPUID) and ARM (auxval).</p>
 <h3 id="43-sandbox">
   
   
@@ -490,13 +531,7 @@
 </h3>
     
 
-<p>The sandbox layer is the critical gap in the Chromium riscv64 port.</p>
-
-<p>The following files have no riscv64 support: <code class="language-plaintext highlighter-rouge">sandbox/linux/system_headers/linux_syscalls.h</code> (includes x86_64, i386, ARM, MIPS, aarch64 syscall headers – no riscv64), <code class="language-plaintext highlighter-rouge">sandbox/linux/system_headers/linux_seccomp.h</code> (no <code class="language-plaintext highlighter-rouge">EM_RISCV</code> or <code class="language-plaintext highlighter-rouge">AUDIT_ARCH_RISCV64</code>), <code class="language-plaintext highlighter-rouge">sandbox/linux/seccomp-bpf-helpers/baseline_policy.cc</code> (no riscv64 branch), <code class="language-plaintext highlighter-rouge">sandbox/linux/seccomp-bpf-helpers/syscall_parameters_restrictions.cc</code> (no <code class="language-plaintext highlighter-rouge">__riscv</code> ifdefs).</p>
-
-<p>CL 4935120 (“Add support for riscv64-linux”) addresses all of these. It was filed October 13, 2023, is at patch set 14, last rebased May 15, 2026, and carries a Code-Review -1 from reviewer Robert Sesek (rsesek@chromium.org). The last public comment was from Elly on May 18, 2026. No forward progress on clearing the -1 is evident from the available metadata. The CL has 1509 insertions and 59 deletions across approximately 28 files.</p>
-
-<p>Without this CL, Chromium on riscv64 Linux cannot run with the sandbox enabled.</p>
+<p>The critical gap. <code class="language-plaintext highlighter-rouge">sandbox/linux/system_headers/linux_syscalls.h</code>, <code class="language-plaintext highlighter-rouge">sandbox/linux/system_headers/linux_seccomp.h</code>, <code class="language-plaintext highlighter-rouge">sandbox/linux/seccomp-bpf-helpers/baseline_policy.cc</code>, and <code class="language-plaintext highlighter-rouge">sandbox/linux/seccomp-bpf-helpers/syscall_parameters_restrictions.cc</code> were confirmed this session, via live fetch, to have zero riscv64/<code class="language-plaintext highlighter-rouge">__riscv</code> handling; <code class="language-plaintext highlighter-rouge">seccomp_macros.h</code> ends with <code class="language-plaintext highlighter-rouge">#error Unsupported target platform</code> for anything outside i386/x86_64/arm/mips/aarch64. CL <a href="https://chromium-review.googlesource.com/c/chromium/src/+/4935120">4935120</a> addresses this: filed 2023-10-13, 15 patch sets, last rebased 2026-09-23, sustained Code-Review -1 from Robert Sesek. See Section 12.1 for the full substance of the review thread. Without this CL, Chromium cannot run sandboxed on riscv64 Linux.</p>
 <h3 id="44-skia-2d-graphics">
   
   
@@ -506,7 +541,7 @@
 </h3>
     
 
-<p>Skia builds on riscv64 via generic scalar paths. There is no <code class="language-plaintext highlighter-rouge">SkCpu.cpp</code> riscv64 CPU feature detection (the function returns 0 on riscv64). There is no <code class="language-plaintext highlighter-rouge">SkOpts_riscv64.cpp</code> SIMD file in <code class="language-plaintext highlighter-rouge">src/opts/</code>. LoongArch has dedicated SkOpts files; riscv64 does not. All rasterization, blending, and text rendering runs on scalar code paths.</p>
+<p>Skia builds on riscv64 via generic scalar paths only. There is no <code class="language-plaintext highlighter-rouge">SkCpu.cpp</code> riscv64 CPU feature detection (returns 0 on riscv64) and no <code class="language-plaintext highlighter-rouge">SkOpts_riscv64.cpp</code> SIMD file (LoongArch has a dedicated file; riscv64 does not). All rasterization, blending, and text rendering runs scalar. One downstream data point: <code class="language-plaintext highlighter-rouge">SkiaSharp</code> is reported to have added riscv64/RV64 targets, suggesting build-level (not necessarily SIMD-level) riscv64 support exists upstream in some form - [NEEDS VERIFICATION], not independently confirmed against Skia’s own source this run.</p>
 <h3 id="45-swiftshader-software-vulkan">
   
   
@@ -516,19 +551,17 @@
 </h3>
     
 
-<p>SwiftShader is broken for riscv64. The <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> architecture detection covers arm/aarch64, mips/mips64, ppc64le, loongarch64, x86/x86_64 – there is no riscv64 case. A riscv64 build host falls through to the x86_64 default, producing x86_64-targeted code on a riscv64 host. No dedicated riscv64 LLVM backend is wired into the SwiftShader LLVM submodule configuration.</p>
-
-<p>The consequence is that WebGL and WebGPU have no software fallback on riscv64 systems without a hardware Vulkan GPU driver.</p>
-<h3 id="46-dawn-webgpu-and-angle-webgl">
+<p>SwiftShader’s riscv64 JIT path requires LLVM 16 (LLVM 10, the default at the time, has no usable RISC-V codegen). CL <a href="https://swiftshader-review.googlesource.com/c/SwiftShader/+/75929">75929</a> (“Default to use llvm16”) merged 2026-05-27, then was reverted 12 days later as CL <a href="https://swiftshader-review.googlesource.com/c/SwiftShader/+/77428">77428</a> (2026-06-08) because it broke the SwiftShader-to-Dawn roll (<code class="language-plaintext highlighter-rouge">undefined symbol: llvm::MCSymbolizer::~MCSymbolizer</code>). Net effect: SwiftShader is currently back on LLVM 10 and still cannot JIT-compile for riscv64. Separately, the existing project report’s claim that SwiftShader’s <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> architecture-detection block has no riscv64 case (covering arm/aarch64/mips/mips64/ppc64le/loongarch64/x86/x86_64 only, falling through to the x86_64 default on a riscv64 host) could not be re-verified this session (the file fetch returned 404) and is carried forward unconfirmed rather than re-asserted as newly checked. The consequence either way: WebGL and WebGPU have no working software fallback on riscv64 systems without a hardware Vulkan GPU driver.</p>
+<h3 id="46-angle-webgl-and-dawn-webgpu">
   
   
-    <a href="#46-dawn-webgpu-and-angle-webgl" class="anchor-heading" aria-labelledby="46-dawn-webgpu-and-angle-webgl"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.6 Dawn (WebGPU) and ANGLE (WebGL)
+    <a href="#46-angle-webgl-and-dawn-webgpu" class="anchor-heading" aria-labelledby="46-angle-webgl-and-dawn-webgpu"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.6 ANGLE (WebGL) and Dawn (WebGPU)
   
   
 </h3>
     
 
-<p>Both build via generic UNIX paths. No riscv64-specific build conditions exist. Functionality is entirely dependent on available GPU drivers on riscv64 hardware. No riscv64-specific CI is documented for either component.</p>
+<p>Both build via generic UNIX paths; no riscv64-specific build conditions or CI were identified for either component in this or prior research. Functionality depends entirely on available GPU drivers on riscv64 hardware. Neither is separately packaged for riscv64 in Ubuntu (both vendored-only).</p>
 <h3 id="47-boringssl">
   
   
@@ -538,7 +571,7 @@
 </h3>
     
 
-<p>No riscv64-specific assembly or CPU detection is present in <code class="language-plaintext highlighter-rouge">crypto/</code>. There is no <code class="language-plaintext highlighter-rouge">cpu_riscv*.cc</code> file. All TLS crypto operations fall back to portable C. This is a performance gap relative to OpenSSL-based stacks, which have full riscv64 hardware crypto (AES-Zkn, Zvk vector crypto, ChaCha20 RVV, SHA512 RVV, Montgomery multiply). Note: Chromium uses BoringSSL, not OpenSSL.</p><hr />
+<p>No riscv64-specific assembly or CPU detection is present in <code class="language-plaintext highlighter-rouge">crypto/</code>; there is no <code class="language-plaintext highlighter-rouge">cpu_riscv*.cc</code> file. All TLS crypto operations fall back to portable C, a performance gap relative to OpenSSL-based stacks with full riscv64 hardware crypto (AES-Zkn, Zvk vector crypto, ChaCha20 RVV, SHA512 RVV, Montgomery multiply). A chromium-dev mailing-list thread (“Porting for riscv64”) and a chromium-bugs issue (“Can’t compile shared library of BoringSSL”) indicate riscv64-related build friction has been reported historically - [NEEDS VERIFICATION], exact date/resolution not confirmed this run. Only an Android-fork variant (<code class="language-plaintext highlighter-rouge">android-platform-external-boringssl</code>) is packaged for riscv64 in Ubuntu; upstream BoringSSL itself has no standalone distro release (it is statically vendored by Chromium).</p><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -547,6 +580,8 @@
   
 </h2>
     
+
+<p>Chromium uses GN + Ninja, not CMake and not <code class="language-plaintext highlighter-rouge">./configure</code>. No Dockerfile for riscv64 exists anywhere in the upstream tree, confirmed by a live re-check this session; the community reference build guide (kxxt.dev) also uses no Docker, relying on <code class="language-plaintext highlighter-rouge">debootstrap</code> + <code class="language-plaintext highlighter-rouge">systemd-nspawn</code> instead. The <code class="language-plaintext highlighter-rouge">riscv-forks/chromium-riscv</code> CI repo’s visible file listing (<code class="language-plaintext highlighter-rouge">.github/</code>, <code class="language-plaintext highlighter-rouge">tests/</code>, <code class="language-plaintext highlighter-rouge">README.md</code>) also shows no Dockerfile.</p>
 <h3 id="51-gn-architecture-configuration">
   
   
@@ -556,7 +591,7 @@
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">build/config/riscv.gni</code> defines the following RISC-V-specific build flags:</p>
+<p><code class="language-plaintext highlighter-rouge">build/config/riscv.gni</code>:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -583,19 +618,9 @@
       <td>“rv64gc” or “rvau22”</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zba</code></td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_use_zba</code> / <code class="language-plaintext highlighter-rouge">zbb</code> / <code class="language-plaintext highlighter-rouge">zbs</code></td>
       <td>false</td>
-      <td>Zba bitmanip</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zbb</code></td>
-      <td>false</td>
-      <td>Zbb bitmanip</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zbs</code></td>
-      <td>false</td>
-      <td>Zbs bitmanip</td>
+      <td>Bitmanip extensions</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">riscv_use_zicfiss</code></td>
@@ -615,7 +640,7 @@
     <tr>
       <td><code class="language-plaintext highlighter-rouge">riscv_code_alignment</code></td>
       <td>32</td>
-      <td>Code alignment in bytes</td>
+      <td>Code alignment (bytes)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">riscv_constant_pool_alignment</code></td>
@@ -625,99 +650,75 @@
   </tbody>
 </table></div>
 
-<p><code class="language-plaintext highlighter-rouge">build/config/BUILDCONFIG.gn</code> does not list riscv64 in its CPU architecture enumeration (arm64, x86, x64, mips, mips64 are present).</p>
-<h3 id="52-toolchain-definitions">
+<p><code class="language-plaintext highlighter-rouge">build/config/BUILDCONFIG.gn</code> does not list riscv64 in its CPU architecture enumeration.</p>
+<h3 id="52-minimal-and-practical-build-commands">
   
   
-    <a href="#52-toolchain-definitions" class="anchor-heading" aria-labelledby="52-toolchain-definitions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Toolchain Definitions
-  
-  
-</h3>
-    
-
-<p>Three riscv64 toolchain entries exist in <code class="language-plaintext highlighter-rouge">build/toolchain/linux/BUILD.gn</code>:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">clang_riscv64</code>: Clang native toolchain with linker map output enabled (for binary size analysis).</li>
-  <li><code class="language-plaintext highlighter-rouge">gcc_toolchain("riscv64")</code>: GCC native toolchain with prefix <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code>.</li>
-  <li><code class="language-plaintext highlighter-rouge">clang_x64_v8_riscv64</code>: Cross-compilation toolchain with x64 host and riscv64 V8 target, for simulator builds.</li>
-</ul>
-<h3 id="53-compiler-flags">
-  
-  
-    <a href="#53-compiler-flags" class="anchor-heading" aria-labelledby="53-compiler-flags"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Compiler Flags
+    <a href="#52-minimal-and-practical-build-commands" class="anchor-heading" aria-labelledby="52-minimal-and-practical-build-commands"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Minimal and Practical Build Commands
   
   
 </h3>
     
 
-<p>When <code class="language-plaintext highlighter-rouge">current_cpu == "riscv64"</code> on POSIX/non-Android with Clang:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">--target=riscv64-linux-gnu</code> is added to both <code class="language-plaintext highlighter-rouge">cflags</code> and <code class="language-plaintext highlighter-rouge">ldflags</code>.</li>
-  <li><code class="language-plaintext highlighter-rouge">-mabi=lp64d</code> is unconditionally set (64-bit integer registers, 64-bit double FP).</li>
-</ul>
-<h3 id="54-sysroot">
-  
-  
-    <a href="#54-sysroot" class="anchor-heading" aria-labelledby="54-sysroot"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Sysroot
-  
-  
-</h3>
-    
+<p>Official minimal sequence (will not produce a working sandboxed build):</p>
 
-<p>The riscv64 sysroot targets Debian Trixie (<code class="language-plaintext highlighter-rouge">build/linux/debian_trixie_riscv64-sysroot/</code>). Every other architecture uses Debian Bullseye. The sysroot tarball SHA256 is <code class="language-plaintext highlighter-rouge">2df6a2698a25258871b45a50d8b5079947b1ad1c63920c944690dfc2a71aab51</code>. The Debian Trixie baseline was required because riscv64 was not supported in Bullseye.</p>
-
-<p><code class="language-plaintext highlighter-rouge">sys/hwprobe.h</code> is patched out of the riscv64 sysroot. The reason documented in <code class="language-plaintext highlighter-rouge">sysroot_creator.py</code>: it requires glibc &gt;= 2.40, but Chromium’s sysroot targets glibc 2.26 minimum.</p>
-<h3 id="55-hardening-exclusions">
-  
-  
-    <a href="#55-hardening-exclusions" class="anchor-heading" aria-labelledby="55-hardening-exclusions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Hardening Exclusions
-  
-  
-</h3>
-    
-
-<p>From <code class="language-plaintext highlighter-rouge">build/config/compiler/BUILD.gn</code>: <code class="language-plaintext highlighter-rouge">_FORTIFY_SOURCE</code> is explicitly disabled for riscv64 (same exclusion applies to s390x, ppc64, mips, mips64, loong64).</p>
-
-<p>Additional exclusions:</p>
-<ul>
-  <li>CET Shadow Stack: x64-only, disabled on riscv64.</li>
-  <li>HWASan: Android arm64-only, disabled on riscv64.</li>
-  <li>CFI (<code class="language-plaintext highlighter-rouge">is_cfi</code>): x64-only on Linux, disabled on riscv64.</li>
-  <li>MSan: x64-only, disabled on riscv64.</li>
-</ul>
-<h3 id="56-toolchain-version">
-  
-  
-    <a href="#56-toolchain-version" class="anchor-heading" aria-labelledby="56-toolchain-version"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 Toolchain Version
-  
-  
-</h3>
-    
-
-<p>Chromium uses a bundled Clang at a pinned version. The <code class="language-plaintext highlighter-rouge">tools/clang/scripts/update.py</code> downloads Linux x64 host binaries only; no prebuilt riscv64 Clang host binary is provided by Chromium’s toolchain scripts. The cross-compiler for the sysroot uses GCC 12 (available in Debian Trixie), with the <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> cross-compiler package on the build host.</p>
-
-<p>The Chromium infra defines a single named riscv64 GN args config: <code class="language-plaintext highlighter-rouge">name="riscv64", args={"target_cpu":"riscv64"}</code> with no additional args (unlike arm64, which has <code class="language-plaintext highlighter-rouge">test_host_cpu</code> and other fields).</p>
-<h3 id="57-minimal-build-command-sequence">
-  
-  
-    <a href="#57-minimal-build-command-sequence" class="anchor-heading" aria-labelledby="57-minimal-build-command-sequence"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.7 Minimal Build Command Sequence
-  
-  
-</h3>
-    
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Install riscv64 sysroot
-python3 build/linux/sysroot_scripts/install-sysroot.py --arch=riscv64
-
-# Generate build directory
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 build/linux/sysroot_scripts/install-sysroot.py --arch=riscv64
 gn gen out/riscv64 --args='target_cpu="riscv64" use_sysroot=true'
-
-# Build
 autoninja -C out/riscv64 chrome
 </code></pre></div></div>
 
-<p>No Dockerfile or container build script for riscv64 exists in the upstream source tree. No QEMU configuration is documented in any upstream build file.</p><hr />
+<p>Practical working configuration, from kxxt’s 2026 “Cross compile mainline Chromium for RISC-V from scratch” guide, the closest thing to real riscv64 build documentation that exists:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gn gen "out/Release-riscv64" --args='
+  is_official_build=true
+  is_debug=false
+  target_cpu="riscv64"
+  treat_warnings_as_errors=false
+  chrome_pgo_phase=0
+  use_debug_fission=false
+  symbol_level=1'
+
+autoninja -C out/Release-riscv64 chrome
+autoninja -C out/Release-riscv64 chrome.stripped
+</code></pre></div></div>
+
+<p>Non-default flags and why: <code class="language-plaintext highlighter-rouge">treat_warnings_as_errors=false</code> because the riscv64 port currently emits warnings that would otherwise fail the build; <code class="language-plaintext highlighter-rouge">use_debug_fission=false</code> because <code class="language-plaintext highlighter-rouge">-gsplit-dwarf</code> is incompatible with RISC-V linker relaxation (<code class="language-plaintext highlighter-rouge">-mrelax</code>); <code class="language-plaintext highlighter-rouge">chrome_pgo_phase=0</code> because PGO profiles only exist for x86-64. Already excluded by upstream <code class="language-plaintext highlighter-rouge">build/config/compiler/BUILD.gn</code> for riscv64 (confirmed live, shared with s390x/ppc64/mips/mips64/loong64): <code class="language-plaintext highlighter-rouge">_FORTIFY_SOURCE</code>. CET Shadow Stack, HWASan, CFI, and MSan are gated to other architectures and end up off on riscv64 as a side effect of architecture-exclusion conditionals, not explicit toggles.</p>
+
+<p>Three patches must still be cherry-picked manually (none are merged/default):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Sandbox (CL 4935120, still open/blocked)
+git fetch https://chromium.googlesource.com/chromium/src refs/changes/20/4935120/11 &amp;&amp; git cherry-pick FETCH_HEAD
+
+# SwiftShader - bumps bundled LLVM from 10 to 16 (later reverted upstream, see Section 4.5)
+git -C third_party/swiftshader fetch https://swiftshader.googlesource.com/SwiftShader refs/changes/29/75929/2 &amp;&amp; git -C third_party/swiftshader cherry-pick FETCH_HEAD
+
+# V8 RVV/deopt crash fix
+git -C v8 fetch https://chromium.googlesource.com/v8/v8 refs/changes/90/7498990/9 &amp;&amp; git -C v8 cherry-pick FETCH_HEAD
+</code></pre></div></div>
+<h3 id="53-toolchain">
+  
+  
+    <a href="#53-toolchain" class="anchor-heading" aria-labelledby="53-toolchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Toolchain
+  
+  
+</h3>
+    
+
+<p>Clang is the only officially supported compiler (<code class="language-plaintext highlighter-rouge">docs/toolchain_support.md</code>, confirmed live; riscv64 is not mentioned there at all - only arm/arm64/x86/x64 carry the toolchain team’s CI guarantee). GCC is community-patched-in only; as of Chrome M138, even GCC builds require libc++. <code class="language-plaintext highlighter-rouge">tools/clang/scripts/update.py</code> does not ship a prebuilt riscv64 host Clang binary. Three GN toolchain entries exist in <code class="language-plaintext highlighter-rouge">build/toolchain/linux/BUILD.gn</code>: <code class="language-plaintext highlighter-rouge">clang_riscv64</code> (native Clang, <code class="language-plaintext highlighter-rouge">--target=riscv64-linux-gnu</code>, <code class="language-plaintext highlighter-rouge">-mabi=lp64d</code>), <code class="language-plaintext highlighter-rouge">gcc_toolchain("riscv64")</code> (native GCC, prefix <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code>, used only for the sysroot/cross package), and <code class="language-plaintext highlighter-rouge">clang_x64_v8_riscv64</code> (x64 host targeting riscv64, for V8 simulator builds only).</p>
+
+<p>The riscv64 sysroot targets Debian Trixie (SHA256 <code class="language-plaintext highlighter-rouge">2df6a2698a25258871b45a50d8b5079947b1ad1c63920c944690dfc2a71aab51</code>); every other architecture uses Debian Bullseye, because riscv64 was unsupported in Bullseye. <code class="language-plaintext highlighter-rouge">sys/hwprobe.h</code> is patched out of the riscv64 sysroot because it requires glibc &gt;= 2.40, while Chromium’s sysroot targets glibc 2.26 minimum.</p>
+
+<p>Rust &gt;= 1.78.0 is required for split-debuginfo fixes on riscv64 (Rust PR #120518), and Rust &gt;= 1.79.0 for cross-language LTO with the lp64d ABI (Rust PR #123612).</p>
+<h3 id="54-qemu">
+  
+  
+    <a href="#54-qemu" class="anchor-heading" aria-labelledby="54-qemu"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 QEMU
+  
+  
+</h3>
+    
+
+<p>No QEMU configuration exists in any upstream Chromium build file (confirmed live this session). QEMU appears only in community practice, for cross-compilation chroot setup (<code class="language-plaintext highlighter-rouge">qemu-user</code> + <code class="language-plaintext highlighter-rouge">binfmt_misc</code>/<code class="language-plaintext highlighter-rouge">systemd-nspawn</code>/<code class="language-plaintext highlighter-rouge">debootstrap</code> to install riscv64 packages into an x86-host sysroot) - not to run Chromium. Sources state explicitly that “qemu user-mode emulation cannot run Chromium”; the compiled binary must be tested on real hardware. A full build under <code class="language-plaintext highlighter-rouge">qemu-user</code> emulation on an AMD 5950X takes approximately 2.6 days; a native build on a 64-core SG2042 RISC-V server is faster but has reported “quirks or even system instability” (<a href="https://github.com/revyos/revyos/issues/27">revyos/revyos#27</a>). There is no QEMU-based CI runner for the browser; the four official LUCI riscv64 builders run on x86-64 hosts with zero device/emulator testing.</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -745,30 +746,12 @@ autoninja -C out/riscv64 chrome
     </tr>
     <tr>
       <td>V8 Liftoff WASM JIT</td>
-      <td>Full (one UNIMPLEMENTED: kF32LoadF16)</td>
+      <td>Full (one <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED</code>: kF32LoadF16)</td>
       <td>Full</td>
       <td>Near</td>
     </tr>
     <tr>
-      <td>V8 Maglev optimizing JIT</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Yes</td>
-    </tr>
-    <tr>
-      <td>V8 TurboFan/Turboshaft</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Yes</td>
-    </tr>
-    <tr>
-      <td>V8 builtins</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Yes</td>
-    </tr>
-    <tr>
-      <td>V8 simulator</td>
+      <td>V8 Maglev / TurboFan / Turboshaft / builtins / simulator</td>
       <td>Full</td>
       <td>Full</td>
       <td>Yes</td>
@@ -799,7 +782,7 @@ autoninja -C out/riscv64 chrome
     </tr>
     <tr>
       <td>SwiftShader (software Vulkan)</td>
-      <td>Broken</td>
+      <td>Broken (LLVM16 patch merged then reverted)</td>
       <td>Full</td>
       <td>No</td>
     </tr>
@@ -810,7 +793,7 @@ autoninja -C out/riscv64 chrome
       <td>No</td>
     </tr>
     <tr>
-      <td>_FORTIFY_SOURCE</td>
+      <td><code class="language-plaintext highlighter-rouge">_FORTIFY_SOURCE</code></td>
       <td>Disabled</td>
       <td>Enabled</td>
       <td>No</td>
@@ -829,18 +812,18 @@ autoninja -C out/riscv64 chrome
     </tr>
     <tr>
       <td>Highway RVV</td>
-      <td>Enabled (May 2026 revert)</td>
+      <td>Enabled (re-enabled May 2026 after a temporary disable)</td>
       <td>Full NEON</td>
       <td>Near</td>
     </tr>
     <tr>
       <td>Cronet Android CI</td>
-      <td>2 builders (compile only)</td>
+      <td>4 builders (compile+size only)</td>
       <td>Full CI</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>Linux browser CI</td>
+      <td>Linux/ChromeOS browser CI</td>
       <td>None</td>
       <td>Full</td>
       <td>No</td>
@@ -848,7 +831,7 @@ autoninja -C out/riscv64 chrome
   </tbody>
 </table></div>
 
-<p>The V8 engine subsystem is at near-parity with arm64 and x86-64. All other Chromium subsystems have significant gaps. The sandbox gap is the most critical because it blocks production deployment on Linux.</p><hr />
+<p>The V8 subsystem is at near-parity with arm64/x86-64. Every other subsystem examined has a significant gap, and the sandbox gap is the most consequential because it blocks any production Linux deployment.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -866,47 +849,46 @@ autoninja -C out/riscv64 chrome
 </h3>
     
 
-<p>The Chromium LUCI infrastructure contains exactly four riscv64 builders. All four are scoped to Cronet (the Android networking library) only.</p>
+<p>Verified this session by directly reading the live Starlark builder-definition files at <code class="language-plaintext highlighter-rouge">chromium.googlesource.com/chromium/src</code> (not inferred from blog posts or Gerrit CLs):</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Builder</th>
-      <th>Bucket</th>
-      <th>Group</th>
+      <th>File</th>
+      <th>riscv64 present?</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">android-cronet-riscv64-rel</code></td>
-      <td>ci</td>
-      <td>chromium.android</td>
+      <td><code class="language-plaintext highlighter-rouge">infra/config/subprojects/chromium/ci/chromium.android.star</code></td>
+      <td>Yes - <code class="language-plaintext highlighter-rouge">android-cronet-riscv64-dbg</code>, <code class="language-plaintext highlighter-rouge">android-cronet-riscv64-rel</code></td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">android-cronet-riscv64-dbg</code></td>
-      <td>ci</td>
-      <td>chromium.android</td>
+      <td><code class="language-plaintext highlighter-rouge">infra/config/subprojects/chromium/try/tryserver.chromium.android.star</code></td>
+      <td>Yes - mirrored try builders</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">android-cronet-riscv64-rel</code></td>
-      <td>try</td>
-      <td>tryserver.chromium.android</td>
+      <td><code class="language-plaintext highlighter-rouge">infra/config/subprojects/chromium/ci/chromium.linux.star</code></td>
+      <td>No</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">android-cronet-riscv64-dbg</code></td>
-      <td>try</td>
-      <td>tryserver.chromium.android</td>
+      <td><code class="language-plaintext highlighter-rouge">infra/config/subprojects/chromium/ci/chromium.chromiumos.star</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">infra/config/subprojects/chromium/ci/chromium.fyi.star</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">infra/config/subprojects/chromium/ci/chromium.android.fyi.star</code></td>
+      <td>No</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>GN args for the release builder: <code class="language-plaintext highlighter-rouge">target_cpu="riscv64"</code>, <code class="language-plaintext highlighter-rouge">target_os="android"</code>, <code class="language-plaintext highlighter-rouge">is_cronet_build=true</code>, <code class="language-plaintext highlighter-rouge">is_official_build=true</code>, <code class="language-plaintext highlighter-rouge">is_component_build=false</code>.</p>
+<p>All four riscv64 builders (2 CI + 2 mirrored try) are scoped to Cronet only (the Android networking library), described as “Verifies building Cronet against RISC-V64,” contact <code class="language-plaintext highlighter-rouge">cronet-sheriff@google.com</code> (CI) / <code class="language-plaintext highlighter-rouge">cronet-team@google.com</code> (try). GN args for the release builder: <code class="language-plaintext highlighter-rouge">target_cpu="riscv64"</code>, <code class="language-plaintext highlighter-rouge">target_os="android"</code>, <code class="language-plaintext highlighter-rouge">is_cronet_build=true</code>, <code class="language-plaintext highlighter-rouge">is_official_build=true</code>, <code class="language-plaintext highlighter-rouge">is_component_build=false</code>. Build targets: <code class="language-plaintext highlighter-rouge">cronet_package</code>, <code class="language-plaintext highlighter-rouge">cronet_sample_test_apk</code>, and five additional Cronet test APK/binary targets. Test scripts run on x86-64 Ubuntu-22.04 hosts; the builders perform compile-and-size measurement only, no physical or emulated riscv64 Android device testing. No riscv64 entry appears in <code class="language-plaintext highlighter-rouge">infra/config/generated/cq-builders.md</code> (the human-facing required/optional/experimental CQ list); these are default-CI-only, not CQ-required. <code class="language-plaintext highlighter-rouge">infra/config/generated/cq-builders.md</code> and <code class="language-plaintext highlighter-rouge">cr-buildbucket.cfg</code> were also checked but not relied on as the primary evidence given the direct <code class="language-plaintext highlighter-rouge">.star</code> reads above.</p>
 
-<p>Build targets: <code class="language-plaintext highlighter-rouge">cronet_package</code>, <code class="language-plaintext highlighter-rouge">cronet_sample_test_apk</code>, and five additional Cronet test APK/binary targets.</p>
-
-<p>On-device testing: None. Test scripts run on x86-64 Ubuntu-22.04 hosts. The builders perform compile-and-size measurement only; no physical or emulated riscv64 Android device testing is configured.</p>
-
-<p>There is no Linux riscv64 CI builder, no ChromiumOS riscv64 CI builder, and no full-browser riscv64 CI builder of any kind in the upstream Chromium infrastructure.</p>
+<p>There is no Linux riscv64 CI builder, no ChromiumOS riscv64 CI builder, and no full-browser riscv64 CI builder anywhere in upstream Chromium.</p>
 <h3 id="72-v8-official-ci">
   
   
@@ -916,7 +898,7 @@ autoninja -C out/riscv64 chrome
 </h3>
     
 
-<p>The V8 upstream project has three LUCI builders for RISC-V simulation: <code class="language-plaintext highlighter-rouge">v8_linux64_rel_ng</code> (sim), <code class="language-plaintext highlighter-rouge">v8_linux64_dbg</code> (sim-debug), and a pointer-compression variant. These run on x86-64 hosts using the <code class="language-plaintext highlighter-rouge">clang_x64_v8_riscv64</code> simulator build.</p>
+<p>Three LUCI simulator builders (<code class="language-plaintext highlighter-rouge">v8_linux64_rel_ng</code>/<code class="language-plaintext highlighter-rouge">dbg</code> and a pointer-compression variant) run on x86-64 hosts using the <code class="language-plaintext highlighter-rouge">clang_x64_v8_riscv64</code> simulator build - not native riscv64 hardware.</p>
 <h3 id="73-plct-lab-independent-ci-cirvperforg">
   
   
@@ -926,61 +908,52 @@ autoninja -C out/riscv64 chrome
 </h3>
     
 
-<p>PLCT Lab (ISCAS) operates an independent Jenkins instance at ci.rvperf.org for V8 RISC-V. Jobs and current status as of June 2026:</p>
+<p>Jobs and status as of the most recent research pass:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Job</th>
-      <th>Last Successful Build</th>
       <th>Status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>v8-upstream-master-fastcheck-riscv64</td>
-      <td>Recent</td>
       <td>Passing</td>
     </tr>
     <tr>
       <td>v8-upstream-master-pointer-compression-riscv64</td>
-      <td>Recent</td>
       <td>Passing</td>
     </tr>
     <tr>
       <td>v8-upstream-master-vlen128-riscv64</td>
-      <td>Recent</td>
       <td>Passing</td>
     </tr>
     <tr>
       <td>v8-upstream-master-vlen256-riscv64</td>
-      <td>Recent</td>
       <td>Passing</td>
     </tr>
     <tr>
       <td>v8-upstream-master-sandbox-riscv64</td>
-      <td>~1 month ago (build #219)</td>
-      <td>Intermittent</td>
+      <td>Intermittent (build #219, ~1 month stale)</td>
     </tr>
     <tr>
       <td>v8-upstream-master-riscv64-jetstream</td>
-      <td>~6 months ago (build #116)</td>
-      <td>Continuously failing</td>
+      <td>Continuously failing (~6 months, last build #116)</td>
     </tr>
     <tr>
       <td>v8-upstream-master-riscv32 (full)</td>
-      <td>~6 months ago (build #2594)</td>
-      <td>Continuously failing</td>
+      <td>Continuously failing (~6 months, build #2594)</td>
     </tr>
     <tr>
       <td>v8-upstream-master-fastcheck-riscv32</td>
-      <td>~6 months ago (build #36614)</td>
-      <td>Continuously failing</td>
+      <td>Continuously failing (~6 months, build #36614)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The JetStream job produces benchmark scores as artifacts. However, with the job failing for approximately 6 months (last run: build #271, failed), no current scores are being generated.</p>
+<p>With JetStream failing for roughly 6 months (last run build #271, failed), no current V8 riscv64 benchmark scores are being generated from this pipeline.</p>
 <h3 id="74-community-ci-riscv-forkschromium-riscv">
   
   
@@ -990,14 +963,58 @@ autoninja -C out/riscv64 chrome
 </h3>
     
 
-<p>The <a href="https://github.com/riscv-forks/chromium-riscv">riscv-forks/chromium-riscv</a> repository, maintained by kxxt (Levi Zim), publishes weekly Chromium builds for riscv64. The latest release as of the research date is 149.0.7827.155 (June 17, 2026), with 15 total releases. CI runs on hardware labeled <code class="language-plaintext highlighter-rouge">rvv-incapable</code> (native RISC-V runners). Tests executed: <code class="language-plaintext highlighter-rouge">base_unittests</code>, <code class="language-plaintext highlighter-rouge">cc_unittests</code>, <code class="language-plaintext highlighter-rouge">net_unittests</code>, V8 cctest (Debug and Release).</p>
+<p>Maintained by Levi Zim (kxxt), runs weekly full-browser Chromium builds on native riscv64 runners (hardware labeled <code class="language-plaintext highlighter-rouge">rvv-incapable</code>). Latest release confirmed: 149.0.7827.155 (June 17, 2026), 15 total releases. Tests executed: <code class="language-plaintext highlighter-rouge">base_unittests</code>, <code class="language-plaintext highlighter-rouge">cc_unittests</code>, <code class="language-plaintext highlighter-rouge">net_unittests</code>, V8 cctest (Debug and Release). Wasm SIMD tests are excluded (“not supported on this hardware”); OOM-allocation-test handlers are not triggered; <code class="language-plaintext highlighter-rouge">JumpTablePatchingStress</code> is excluded for a known flaky failure on SG2042 hardware [NEEDS VERIFICATION on root cause]. No sandbox testing is performed, consistent with the sandbox CL being unmerged.</p>
 
-<p>Known exclusions in this CI:</p>
+<p>Three open issues in this repo as of the most recent check, with primary-source detail:</p>
+
 <ul>
-  <li>Wasm SIMD tests excluded (“not supported on this hardware”).</li>
-  <li>OOM allocation test handlers not triggered (<code class="language-plaintext highlighter-rouge">AlignedAllocOOM</code>, <code class="language-plaintext highlighter-rouge">MallocedOperatorNewOOM</code>, <code class="language-plaintext highlighter-rouge">AccountingAllocatorOOM</code>).</li>
-  <li><code class="language-plaintext highlighter-rouge">JumpTablePatchingStress</code> is excluded due to a known flaky failure (“the SG2042 heisenbug”) on SG2042 hardware [NEEDS VERIFICATION on root cause].</li>
-</ul><hr />
+  <li><a href="https://github.com/riscv-forks/chromium-riscv/issues/32">Issue #32</a> - “[Regression] SocketPoolAdditionalCapacityTest.TestDefaultDistributionForFieldTrialConfig timeout,” opened 2026-05-03. Test times out in multi-threaded CI (passes standalone, ~225s single-threaded); traced to commit <code class="language-plaintext highlighter-rouge">e61c77ee6b927f9a736fc7b50680ba1da9631606</code> on main; temporarily skipped, no comments, still open.</li>
+  <li><a href="https://github.com/riscv-forks/chromium-riscv/issues/31">Issue #31</a> - “[Regression] LapTimer.ThreadTicksUsageExample failure,” opened 2026-05-03, caught in PR #30’s CI. Three assertion failures in <code class="language-plaintext highlighter-rouge">base/timer/lap_timer_unittest.cc</code> (laps/sec 178.75 vs expected &gt;1000; time/lap 5.594ms vs expected &lt;1.0ms; 10 laps recorded vs expected &gt;20), consistent with a ThreadTicks/clock-resolution issue specific to riscv64 hardware. Confirmed reproducible, not flaky. Open.</li>
+  <li><a href="https://github.com/riscv-forks/chromium-riscv/issues/25">Issue #25</a> - “Video Decoding Support with Chromium for RISC-V64 Systems,” opened 2026-04-09. Reports video decode falling back to software on riscv64; asks about hardware-acceleration plans (mentions V4L2). Open, unassigned.</li>
+</ul>
+<h3 id="75-comparison">
+  
+  
+    <a href="#75-comparison" class="anchor-heading" aria-labelledby="75-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.5 Comparison
+  
+  
+</h3>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Architecture</th>
+      <th>Official Google CI</th>
+      <th>Independent CI</th>
+      <th>On-device/native testing</th>
+      <th>Sandbox tested</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>amd64</td>
+      <td>Full</td>
+      <td>-</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>arm64</td>
+      <td>Full (Android, Linux, ChromeOS)</td>
+      <td>-</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>riscv64</td>
+      <td>Cronet-only, compile+size (4 builders)</td>
+      <td>PLCT Jenkins (V8 only), kxxt community GH-Actions-style builds (full browser, weekly, native hardware)</td>
+      <td>No (official); partial unit tests only (community)</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -1007,48 +1024,61 @@ autoninja -C out/riscv64 chrome
 </h2>
     
 
-<p>There is no official Chromium binary release for riscv64 in any distribution channel.</p>
+<p>No official riscv64 binary for Chromium exists in any channel checked.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Channel</th>
       <th>riscv64 binary available?</th>
-      <th>Notes</th>
+      <th>Evidence</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Chromium upstream</td>
       <td>No</td>
-      <td>Sandbox CL 4935120 open 2.5+ years, Code-Review -1</td>
+      <td>Sandbox CL 4935120 open 2.5+ years, Code-Review -1; upstream does not ship non-sandboxed builds</td>
+    </tr>
+    <tr>
+      <td>Ubuntu 26.04 (resolute)</td>
+      <td>No</td>
+      <td>Exact-name search for <code class="language-plaintext highlighter-rouge">chromium</code> in resolute returns 0 results. Substring search returns 7 hits, none the browser: <code class="language-plaintext highlighter-rouge">chromium-browser</code>/<code class="language-plaintext highlighter-rouge">chromium-browser-l10n</code>/<code class="language-plaintext highlighter-rouge">chromium-chromedriver</code>/<code class="language-plaintext highlighter-rouge">chromium-codecs-ffmpeg(-extra)</code> are transitional packages redirecting to the Chromium snap (metadata-only, no architecture list); <code class="language-plaintext highlighter-rouge">chromium-bsu</code>/<code class="language-plaintext highlighter-rouge">chromium-bsu-data</code> is an unrelated game (which does list riscv64); <code class="language-plaintext highlighter-rouge">webext-vimium-chromium</code>, <code class="language-plaintext highlighter-rouge">webext-indie-wiki-buddy-chromium</code>, <code class="language-plaintext highlighter-rouge">node-electron-to-chromium</code> are unrelated extensions/data files. The actual browser is distributed only as a snap, and Canonical’s riscv64 snap channel status could not be determined from archive.ubuntu.com (snaps are outside that index)</td>
     </tr>
     <tr>
       <td>Debian sid</td>
       <td>No</td>
-      <td>Maintainer arch list excludes riscv64; bug #1051998 open since Sep 2023</td>
-    </tr>
-    <tr>
-      <td>Ubuntu 24.04 (noble)</td>
-      <td>No</td>
-      <td><code class="language-plaintext highlighter-rouge">chromium-browser</code> is a transitional snap redirect; only amd64/arm64/armhf</td>
+      <td>Bug <a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1051998">#1051998</a> open since September 2023, wishlist priority, tags <code class="language-plaintext highlighter-rouge">ftbfs</code>/<code class="language-plaintext highlighter-rouge">patch</code>; patch set touches FFmpeg, Sandbox, V8, dav1d, ANGLE, base - the same blockers found upstream. By Feb 2024, ANGLE and base support had landed; sandbox and FFmpeg remained blocked pending ATL approval, unchanged as of this report</td>
     </tr>
     <tr>
       <td>Arch Linux RISC-V</td>
-      <td>No</td>
-      <td>Marked OUTDATED + FTBFS; DEP BROKEN; patch set exists but does not produce installable binary</td>
+      <td>Contradictory evidence</td>
+      <td>The existing report’s claim (version delta 148-&gt;149, tagged “Outdated FTBFS Logs”/”patched”, <code class="language-plaintext highlighter-rouge">DEP BROKEN</code> on java-runtime-headless/python, <code class="language-plaintext highlighter-rouge">DEP OUTDATED</code> on mesa/fontconfig/pipewire/npm) could not be reproduced this session: a live fetch of <code class="language-plaintext highlighter-rouge">archriscv.felixc.at/?q=chromium</code> found zero occurrences of the word “chromium” anywhere in the page content. This may reflect a JS-rendered search UI that a static fetch cannot execute, or the package listing may have changed; flagged [NEEDS VERIFICATION], the discrepancy is unresolved</td>
     </tr>
     <tr>
       <td>PyPI <code class="language-plaintext highlighter-rouge">chromium</code></td>
       <td>No</td>
-      <td>Only a hobby placeholder at version 0.0.0, architecture-independent stub</td>
+      <td>The PyPI package literally named <code class="language-plaintext highlighter-rouge">chromium</code> is an unrelated hobby/placeholder project (version 0.0.0, default cookiecutter description, pure-Python wheel/sdist only, no architecture-specific files). Chromium the browser is not a PyPI-distributed project</td>
+    </tr>
+    <tr>
+      <td>RISE wheel builder (GitLab PyPI mirror)</td>
+      <td>N/A</td>
+      <td>Redirects to plain PyPI for the <code class="language-plaintext highlighter-rouge">chromium</code> name; not applicable, since Chromium is not Python-packaged</td>
+    </tr>
+    <tr>
+      <td>Alpine (aports)</td>
+      <td>No</td>
+      <td>MR <a href="https://gitlab.alpinelinux.org/alpine/aports/-/merge_requests/40613">!40613</a>, draft, last touched 2022-11-29, unmerged</td>
+    </tr>
+    <tr>
+      <td>Community builds</td>
+      <td>Functional, unofficial</td>
+      <td><a href="https://github.com/riscv-forks/chromium-riscv">riscv-forks/chromium-riscv</a>, weekly, 15 releases, latest 149.0.7827.155 (June 2026); StarFive’s <a href="https://github.com/starfive-tech/chromium.src">chromium.src</a> out-of-tree port; historically also openSUSE, FydeOS <code class="language-plaintext highlighter-rouge">chromium_os-riscv64</code>, and openEuler builds (Chromium 100/103 on Unmatched hardware, XFCE, built on openSUSE/StarFive optimizations to ANGLE/breakpad/dav1d/FFmpeg)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The Arch Linux RISC-V port status from <a href="https://archriscv.felixc.at">archriscv.felixc.at</a>: the chromium entry shows version delta 148 -&gt; 149 (one version behind), tagged “Outdated FTBFS Logs” and “patched”, with <code class="language-plaintext highlighter-rouge">DEP BROKEN</code> on java-runtime-headless, python (make deps) and <code class="language-plaintext highlighter-rouge">DEP OUTDATED</code> on mesa, fontconfig, pipewire, npm. This reflects a community porting effort that is currently not producing successful builds.</p>
-
-<p>The community CI repository riscv-forks/chromium-riscv produces functional builds (149.0.7827.155 as of June 2026) for testing purposes. These are not official distributions and are not built with the seccomp-BPF sandbox enabled due to CL 4935120 being unmerged.</p><hr />
+<p>A user wanting a working riscv64 Chromium today must either build from source with the three manual cherry-picks in Section 5.2 (running unsandboxed, <code class="language-plaintext highlighter-rouge">--no-sandbox --use-gl=egl</code>, as documented in the Debian bug) or use a third-party community build such as riscv-forks/chromium-riscv, which is explicitly built without the sandbox.</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -1057,122 +1087,265 @@ autoninja -C out/riscv64 chrome
   
 </h2>
     
-<h3 id="91-v8">
+<h3 id="91-summary-table">
   
   
-    <a href="#91-v8" class="anchor-heading" aria-labelledby="91-v8"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 V8
-  
-  
-</h3>
-    
-
-<p>V8 is discussed above in Section 4.1. The key open issue is the Sub32 signed overflow correctness bug (CL 7500131), stalled since January 2026 with an unresolved correctness objection. The riscv32 port is deprecated with removal planned after May 2026.</p>
-<h3 id="92-ffmpeg">
-  
-  
-    <a href="#92-ffmpeg" class="anchor-heading" aria-labelledby="92-ffmpeg"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 FFmpeg
+    <a href="#91-summary-table" class="anchor-heading" aria-labelledby="91-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 Summary table
   
   
 </h3>
     
 
-<p>FFmpeg has an active riscv64 port since September 2022. Dedicated <code class="language-plaintext highlighter-rouge">libavcodec/riscv/</code>, <code class="language-plaintext highlighter-rouge">libavutil/riscv/</code>, <code class="language-plaintext highlighter-rouge">libswscale/riscv/</code>, <code class="language-plaintext highlighter-rouge">libavfilter/riscv/</code> source trees exist. RVV acceleration is present for H.264, VP8/VP9, HEVC, AAC, AC3, Opus, swscale, and swresample. Three FATE CI instances at remlab.net are all passing (5532/5532 for GC and GCVb configurations). There is a named maintainer (Remi Denis-Courmont). No out-of-tree patch queue.</p>
+<p>Includes every dependency named for this project plus additional dependencies identified via Chromium’s <code class="language-plaintext highlighter-rouge">DEPS</code>/<code class="language-plaintext highlighter-rouge">BUILD.gn</code> during this research pass (graph database queries were unavailable this session due to an MCP connection failure; Ubuntu package presence below is sourced via WebSearch/curl fallback against packages.ubuntu.com after repeated direct-fetch 503s, and is flagged accordingly).</p>
 
-<p>Open items: H.264 qpel series (PR #12953) received LGTM but is stalled un-merged. Some RVV DSP paths are marked TODO.</p>
-<h3 id="93-libjpeg-turbo">
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dependency</th>
+      <th>Role</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>V8</td>
+      <td>runtime, critical</td>
+      <td>Full, hand-tuned JIT backend</td>
+      <td>Community CI passing (core), JetStream CI failing ~6mo</td>
+      <td>No standalone binary</td>
+      <td>Near feature-parity per RISE; see 9.2</td>
+    </tr>
+    <tr>
+      <td>FFmpeg</td>
+      <td>runtime, critical</td>
+      <td>Upstream FFmpeg project has active riscv64 port; Chromium’s own integration CL abandoned but reported superseded</td>
+      <td>Not confirmed</td>
+      <td>Ubuntu universe binary (<code class="language-plaintext highlighter-rouge">ffmpeg</code> 7:8.0.1-3ubuntu2) [NEEDS VERIFICATION, WebSearch-sourced]</td>
+      <td>See 9.3</td>
+    </tr>
+    <tr>
+      <td>libjpeg-turbo</td>
+      <td>runtime, critical</td>
+      <td>RVV SIMD merged Feb 2026 (3.2 beta1)</td>
+      <td>Not confirmed (no dedicated riscv64 CI)</td>
+      <td>Ubuntu (<code class="language-plaintext highlighter-rouge">libjpeg-turbo8</code> 2.1.5-4ubuntu4) [NEEDS VERIFICATION]</td>
+      <td>Maintainer declined official riscv64 binaries (issue #885)</td>
+    </tr>
+    <tr>
+      <td>libpng</td>
+      <td>runtime, critical</td>
+      <td>RVV SIMD merged May 2025, corrected through 1.6.52</td>
+      <td>Not confirmed</td>
+      <td>Ubuntu (<code class="language-plaintext highlighter-rouge">libpng16-16t64</code> 1.6.54-1) [NEEDS VERIFICATION]</td>
+      <td>Multiple post-merge correctness bugs found via hardware bug reports</td>
+    </tr>
+    <tr>
+      <td>BoringSSL</td>
+      <td>runtime, critical</td>
+      <td>No riscv64 code, scalar-only</td>
+      <td>Not confirmed</td>
+      <td>No standalone release (vendored)</td>
+      <td>Android-fork variant only in Ubuntu; build-friction reports [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>Skia</td>
+      <td>runtime, critical</td>
+      <td>No riscv64 SIMD (scalar); downstream SkiaSharp adds riscv64 targets [NEEDS VERIFICATION]</td>
+      <td>Not confirmed</td>
+      <td>No standalone release (vendored)</td>
+      <td>See 9.5</td>
+    </tr>
+    <tr>
+      <td>ICU</td>
+      <td>runtime, critical</td>
+      <td>Architecture-agnostic C++, builds on riscv64</td>
+      <td>Not confirmed</td>
+      <td>Ubuntu (<code class="language-plaintext highlighter-rouge">libicu-dev</code> 78.2-2ubuntu1) [NEEDS VERIFICATION]</td>
+      <td>No riscv64-specific issues</td>
+    </tr>
+    <tr>
+      <td>HarfBuzz</td>
+      <td>runtime, critical</td>
+      <td>Architecture-agnostic, builds on riscv64</td>
+      <td>Not confirmed</td>
+      <td>Ubuntu (<code class="language-plaintext highlighter-rouge">libharfbuzz0b</code> 12.3.2-2) [NEEDS VERIFICATION]</td>
+      <td>No riscv64-specific issues</td>
+    </tr>
+    <tr>
+      <td>zlib</td>
+      <td>runtime, critical</td>
+      <td>Chromium’s fork has <code class="language-plaintext highlighter-rouge">cpu_features.c</code> but no riscv64 SIMD files, scalar only; <code class="language-plaintext highlighter-rouge">vclmul</code> detection marked TODO</td>
+      <td>Not confirmed</td>
+      <td>Ubuntu (<code class="language-plaintext highlighter-rouge">zlib1g</code> 1:1.3.dfsg+really1.3.1-1ubuntu2) for standalone zlib, not Chromium’s fork [NEEDS VERIFICATION]</td>
+      <td>Only x86/ARM have SIMD paths</td>
+    </tr>
+    <tr>
+      <td>angle</td>
+      <td>runtime, critical</td>
+      <td>No riscv64-specific build conditions; depends on GPU drivers</td>
+      <td>Not confirmed</td>
+      <td>No distro package (vendored-only)</td>
+      <td>See 4.6</td>
+    </tr>
+    <tr>
+      <td>dav1d</td>
+      <td>runtime, critical</td>
+      <td>RVV enabled on Linux riscv64, Sep 2025, tested on SpacemiT K1-X</td>
+      <td>Not confirmed</td>
+      <td>No standalone Ubuntu package confirmed this run</td>
+      <td>Named explicitly in Debian bug #1051998’s patch set</td>
+    </tr>
+    <tr>
+      <td>dawn</td>
+      <td>runtime, optional</td>
+      <td>No riscv64-specific build conditions; depends on GPU drivers</td>
+      <td>Not confirmed</td>
+      <td>No distro package (vendored-only)</td>
+      <td>See 4.6</td>
+    </tr>
+    <tr>
+      <td>XNNPACK</td>
+      <td>runtime, optional</td>
+      <td>riscv64 port since June 2022, 300+ kernel files, RVV for GEMM/depthwise conv/vbinary/QS8/QU8/maxpool/reduce</td>
+      <td>GitHub Actions CI on QEMU per PR; operator tests excluded</td>
+      <td>No standalone release</td>
+      <td>Open: <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_EXT_ZVFH</code> macro missing under Clang 19.1 (PR #9903, partial fix Mar 2026); F32-RSUM RVV disabled for multi-thread correctness bug (PR #6450, open); Zvfh enabled unconditionally Jan 2026, a regression on hardware lacking Zvfh</td>
+    </tr>
+    <tr>
+      <td>SwiftShader</td>
+      <td>runtime, optional</td>
+      <td>Broken - LLVM16 bump merged then reverted (Section 4.5); possible separate CMakeLists arch-detection gap, unconfirmed this session</td>
+      <td>Not confirmed</td>
+      <td>No distro package</td>
+      <td>Blocks WebGL/WebGPU software fallback on riscv64</td>
+    </tr>
+    <tr>
+      <td>Highway</td>
+      <td>runtime, optional</td>
+      <td>RVV disabled Jun 2025 (“uncommon with most riscv chips”), re-enabled May 2026</td>
+      <td>Not confirmed</td>
+      <td>No standalone release (vendored)</td>
+      <td>Re-enable required manual review (Rubber Stamper bot declined auto-approve, &gt;14-day window)</td>
+    </tr>
+    <tr>
+      <td>libpfm4</td>
+      <td>runtime, optional</td>
+      <td>No RISC-V PMU event tables (only AMD/Intel/ARM/IBM Cell)</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Blocks V8 and Chromium hardware performance-counter profiling on riscv64; no in-progress upstream work identified</td>
+    </tr>
+    <tr>
+      <td>cpuinfo</td>
+      <td>runtime, optional</td>
+      <td>Re-enabled for riscv64 Linux, May 2025</td>
+      <td>Data not available: not independently researched beyond this milestone</td>
+      <td>Data not available</td>
+      <td>No further detail found this run</td>
+    </tr>
+    <tr>
+      <td>pixman</td>
+      <td>runtime, optional</td>
+      <td>RGB565-&gt;RGB888 conversion RVV path reported ~10x speedup vs scalar (Samsung SRPOL)</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Part of Samsung’s stated RVV-optimization target list alongside FFmpeg/V8/libpng/libjpeg-turbo</td>
+    </tr>
+    <tr>
+      <td>Crashpad</td>
+      <td>runtime, optional</td>
+      <td>mini_chromium CLs <a href="https://chromium-review.googlesource.com/c/chromium/mini_chromium/+/4558827">4558827</a> (“Add RISCV64 support”) and <a href="https://chromium-review.googlesource.com/c/chromium/mini_chromium/+/4735556">4735556</a> (“[riscv][android] Add Android RISC-V support”) both merged (2023, exact date given as either 2023-08-24 or 2023-07-31 in two separate fetches this session - discrepancy unresolved, [NEEDS VERIFICATION])</td>
+      <td>Not confirmed</td>
+      <td>N/A</td>
+      <td>Build-config plumbing only, not crypto/JIT</td>
+    </tr>
+    <tr>
+      <td>LLVM</td>
+      <td>build, critical</td>
+      <td>Sole officially-supported compiler per <code class="language-plaintext highlighter-rouge">docs/toolchain_support.md</code> (riscv64 not mentioned there); no prebuilt riscv64 host Clang shipped</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>LLD segfault (<a href="https://github.com/llvm/llvm-project/issues/79944">llvm-project#79944</a>, affects Chromium toolchain builds &lt;126.0.6478.185, fixed in newer LLD); linker-relaxation CFI/target-attribute bug (<a href="https://github.com/llvm/llvm-project/issues/69780">llvm-project#69780</a>, open, “harmless but annoying”)</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>build, optional</td>
+      <td>Only used for the <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> cross-toolchain/sysroot (Debian Trixie), not Chromium’s primary compiler; GCC builds require libc++ as of M138</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td><a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=116662">GCC Bugzilla #116662</a>: <code class="language-plaintext highlighter-rouge">std::hardware_destructive_interference_size</code> defaults to 32B instead of 64B on riscv64, causing a PartitionAlloc performance regression; open upstream, Chromium workaround is explicit 64-byte alignment in <code class="language-plaintext highlighter-rouge">partition_root.h</code></td>
+    </tr>
+    <tr>
+      <td>Ninja</td>
+      <td>build, critical</td>
+      <td>Data not available: no riscv64-specific issues found; Ninja is architecture-agnostic build orchestration</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>No dedicated research performed this run beyond confirming Chromium’s build is GN+Ninja, not CMake</td>
+    </tr>
+    <tr>
+      <td>GN</td>
+      <td>build, critical</td>
+      <td>Data not available beyond Chromium’s own <code class="language-plaintext highlighter-rouge">riscv.gni</code> extension (Section 5.1), which is Chromium-authored configuration, not evidence about GN itself</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>No GN-tool-level riscv64 issues found</td>
+    </tr>
+    <tr>
+      <td>googletest</td>
+      <td>test, critical</td>
+      <td>Implied functional: community CI (riscv-forks/chromium-riscv) runs <code class="language-plaintext highlighter-rouge">base_unittests</code>/<code class="language-plaintext highlighter-rouge">cc_unittests</code>/<code class="language-plaintext highlighter-rouge">net_unittests</code> and V8 cctest, all googletest-based, on native riscv64 hardware</td>
+      <td>Passing (core suites), some regressions (Section 7.4, issues #31/#32)</td>
+      <td>N/A</td>
+      <td>No googletest-specific riscv64 issues identified independent of the test suites it runs</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Additional indirect dependencies surfaced via Chromium’s <code class="language-plaintext highlighter-rouge">DEPS</code>/<code class="language-plaintext highlighter-rouge">BUILD.gn</code> during this research pass, not in the originally supplied direct-dependency list: libvpx (VP8/VP9, Ubuntu <code class="language-plaintext highlighter-rouge">libvpx12</code>/<code class="language-plaintext highlighter-rouge">libvpx-dev</code> 1.16.0-3 present [NEEDS VERIFICATION]), libaom (AV1, Ubuntu <code class="language-plaintext highlighter-rouge">libaom3</code>/<code class="language-plaintext highlighter-rouge">libaom-dev</code> 3.13.1-2 present [NEEDS VERIFICATION]), libwebp (Ubuntu <code class="language-plaintext highlighter-rouge">libwebp-dev</code> 1.5.0-0.1build1 present [NEEDS VERIFICATION]), Opus (Ubuntu <code class="language-plaintext highlighter-rouge">libopus0</code> 1.5.2-2 present, listed for riscv64 [NEEDS VERIFICATION]), FreeType (Ubuntu <code class="language-plaintext highlighter-rouge">libfreetype6</code> 2.14.2+dfsg-1 present [NEEDS VERIFICATION]), Protocol Buffers (Ubuntu <code class="language-plaintext highlighter-rouge">libprotobuf-dev</code>/protobuf src 3.21.12-15ubuntu1 present [NEEDS VERIFICATION]), RE2 (Ubuntu <code class="language-plaintext highlighter-rouge">libre2-dev</code> 20250805-1build3 present, riscv64 listed [NEEDS VERIFICATION]), Brotli (Ubuntu <code class="language-plaintext highlighter-rouge">libbrotli1</code> 1.2.0-3build1 present, FULLYBUILT [NEEDS VERIFICATION]), zstd (Ubuntu <code class="language-plaintext highlighter-rouge">libzstd1</code> 1.5.7+dfsg-3 present [NEEDS VERIFICATION]), SQLite (Chromium vendors its own fork rather than the system library; distro packaging is only indirectly informative [NEEDS VERIFICATION]), and PDFium (no standalone Ubuntu package; upstream <code class="language-plaintext highlighter-rouge">pdfium-binaries</code>’ Linux binary matrix does not list riscv64; <code class="language-plaintext highlighter-rouge">pypdfium2</code>’s Python wrapper reportedly targets riscv64 manylinux wheels, [NEEDS VERIFICATION]). None of these carry a project report in this registry as of this run; Opus and PDFium are candidates for new registry entries.</p>
+<h3 id="92-v8-deep-dive">
   
   
-    <a href="#93-libjpeg-turbo" class="anchor-heading" aria-labelledby="93-libjpeg-turbo"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 libjpeg-turbo
+    <a href="#92-v8-deep-dive" class="anchor-heading" aria-labelledby="92-v8-deep-dive"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 V8 (deep dive)
   
   
 </h3>
     
 
-<p>RVV SIMD was merged in February 2026 to the dev branch (3,141 lines, 23 files) and released in 3.1.90 (3.2 beta1, March 2026). Measured performance on OrangePi RV2: 72% average compression speedup, 53% average decompression speedup vs scalar. GA release 3.2 is pending. No dedicated riscv64 CI. Maintainer explicitly declined to provide official riscv64 binary packages (issue #885, closed “won’t implement”).</p>
-<h3 id="94-libpng">
+<p>See Section 4.1 for the full architecture. Open item: the Sub32 signed-overflow correctness bug (CL 7500131) has been stalled since January 2026 with an unresolved correctness objection. The riscv32 port is deprecated, removal planned after May 2026.</p>
+<h3 id="93-ffmpeg-deep-dive">
   
   
-    <a href="#94-libpng" class="anchor-heading" aria-labelledby="94-libpng"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.4 libpng
-  
-  
-</h3>
-    
-
-<p>RVV SIMD merged May 2025 (PR #666). Multiple correctness bugs were found post-merge: wrong RVV version targeting T-Head C920 (issue #711), paeth3/paeth4 producing wrong pixel values on SpacemiT K1, causing 52 OpenCV test failures (issue #769, fixed approximately in v1.6.52). All corrections were discovered via hardware user bug reports, not automated CI. Current stable: 1.6.52+.</p>
-<h3 id="95-boringssl">
-  
-  
-    <a href="#95-boringssl" class="anchor-heading" aria-labelledby="95-boringssl"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.5 BoringSSL
+    <a href="#93-ffmpeg-deep-dive" class="anchor-heading" aria-labelledby="93-ffmpeg-deep-dive"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 FFmpeg (deep dive)
   
   
 </h3>
     
 
-<p>No riscv64-specific code. All TLS crypto is scalar. See Section 4.7 for detail.</p>
-<h3 id="96-skia">
+<p>Two distinct things are being tracked and should not be conflated. First, the upstream FFmpeg project has had an active riscv64 port since September 2022, with dedicated <code class="language-plaintext highlighter-rouge">libavcodec/riscv/</code>, <code class="language-plaintext highlighter-rouge">libavutil/riscv/</code>, <code class="language-plaintext highlighter-rouge">libswscale/riscv/</code>, <code class="language-plaintext highlighter-rouge">libavfilter/riscv/</code> trees and RVV acceleration for H.264, VP8/VP9, HEVC, AAC, AC3, Opus, swscale, and swresample; FATE CI at remlab.net reports passing (5532/5532 for GC and GCVb configurations), with a named maintainer (Remi Denis-Courmont). Second, Chromium’s own integration CL for its bundled/vendored FFmpeg copy, <a href="https://chromium-review.googlesource.com/c/chromium/third_party/ffmpeg/+/5054185">5054185</a> “[ffmpeg] Add riscv support” (author Yahan Lu, based on Andreas Schwab’s openSUSE patches), is <strong>abandoned</strong> - confirmed via the Gerrit REST API, though the two fetches performed this session disagree on the abandonment date (one reports last-abandoned 2025-05-29 at patch set 7; another reports 2023-11-23; this discrepancy is unresolved, [NEEDS VERIFICATION]). Dale Curtis (Chrome media owner) stated in review, 2023-12-11, “we don’t yet have the requisite Chromium infrastructure to support accepting this change… won’t be able to accept this until Buildbots and toolchain support is added,” and reiterated in 2025-05-29 that the sysroot script still lacked riscv64 support and CQ bots would be needed. Contributor Bo YU confirmed (2025-09-08) that Chromium riscv64 is “mainly blocked [by] this patch and another [4935120],” and that it also blocks Debian’s qt6-webengine. However, Levi Zim reported the same day that “riscv support for ffmpeg has already been merged in another CL. In M140, there are partial support… The config files part should land in M141” - i.e., riscv64 FFmpeg support for Chromium reportedly landed through a different path, making CL 5054185 largely moot despite remaining formally abandoned.</p>
+<h3 id="94-skia-boringssl-zlib-deep-dives">
   
   
-    <a href="#96-skia" class="anchor-heading" aria-labelledby="96-skia"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.6 Skia
-  
-  
-</h3>
-    
-
-<p>No riscv64 SIMD. All rendering is scalar. See Section 4.4 for detail.</p>
-<h3 id="97-xnnpack-ml-inference-used-for-webnn">
-  
-  
-    <a href="#97-xnnpack-ml-inference-used-for-webnn" class="anchor-heading" aria-labelledby="97-xnnpack-ml-inference-used-for-webnn"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.7 XNNPACK (ML inference, used for WebNN)
+    <a href="#94-skia-boringssl-zlib-deep-dives" class="anchor-heading" aria-labelledby="94-skia-boringssl-zlib-deep-dives"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.4 Skia, BoringSSL, zlib (deep dives)
   
   
 </h3>
     
 
-<p>A Google-initiated riscv64 port exists since June 2022, with 300+ riscv64-specific kernel files. RVV acceleration covers GEMM, depthwise conv, vbinary, QS8/QU8, maxpool/avgpool, reduce. GitHub Actions CI runs on QEMU for every PR.</p>
-
-<p>Open issues: <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_EXT_ZVFH</code> macro missing under Clang 19.1 (partial fix March 2026, PR #9903). F32-RSUM RVV disabled due to a multi-thread correctness issue (PR #6450, open). <code class="language-plaintext highlighter-rouge">XNN_ENABLE_RISCV_FP16_VECTOR</code> (Zvfh) was enabled unconditionally as of January 2026, introducing a regression when Zvfh is not present on hardware.</p>
-
-<p>No native hardware CI. Operator tests are excluded from CI.</p>
-<h3 id="98-swiftshader">
+<p>Unchanged from Sections 4.4, 4.7, and the summary table above: no riscv64 SIMD/hardware-crypto in any of the three; all run scalar C paths on riscv64.</p>
+<h3 id="95-xnnpack-deep-dive">
   
   
-    <a href="#98-swiftshader" class="anchor-heading" aria-labelledby="98-swiftshader"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.8 SwiftShader
+    <a href="#95-xnnpack-deep-dive" class="anchor-heading" aria-labelledby="95-xnnpack-deep-dive"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.5 XNNPACK (deep dive)
   
   
 </h3>
     
 
-<p>Broken for riscv64. See Section 4.5 for detail.</p>
-<h3 id="99-icu-harfbuzz">
-  
-  
-    <a href="#99-icu-harfbuzz" class="anchor-heading" aria-labelledby="99-icu-harfbuzz"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.9 ICU, HarfBuzz
-  
-  
-</h3>
-    
-
-<p>Architecture-agnostic C++. No riscv64-specific issues. Both are available in Debian/Ubuntu for riscv64.</p>
-<h3 id="910-zlib-chromium-fork">
-  
-  
-    <a href="#910-zlib-chromium-fork" class="anchor-heading" aria-labelledby="910-zlib-chromium-fork"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.10 zlib (Chromium fork)
-  
-  
-</h3>
-    
-
-<p><code class="language-plaintext highlighter-rouge">cpu_features.c</code> is present but there are no riscv64 SIMD source files. The <code class="language-plaintext highlighter-rouge">riscv_cpu_enable_rvv</code> and <code class="language-plaintext highlighter-rouge">riscv_cpu_enable_vclmul</code> detection flags are referenced in V8’s zlib config but <code class="language-plaintext highlighter-rouge">vclmul</code> detection is marked as TODO. All zlib operations run scalar on riscv64. Only x86 and ARM have SIMD-accelerated paths.</p>
-<h3 id="911-libpfm4-performance-counter-profiling">
-  
-  
-    <a href="#911-libpfm4-performance-counter-profiling" class="anchor-heading" aria-labelledby="911-libpfm4-performance-counter-profiling"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.11 libpfm4 (performance counter profiling)
-  
-  
-</h3>
-    
-
-<p>libpfm4 has no RISC-V PMU event table files. Only AMD, Intel, ARM, and IBM Cell event tables exist. This blocks all V8 and Chromium hardware performance counter profiling workflows on riscv64. Upstream contribution is required; no in-progress work was identified in the research findings.</p><hr />
+<p>See summary table. This is the ML-inference dependency backing WebNN; it has the most mature riscv64 SIMD coverage outside V8, but carries three open correctness/completeness issues (Zvfh hwprobe macro, F32-RSUM multi-thread bug, unconditional Zvfh regression).</p><hr />
 <h2 id="10-ecosystem-status">
   
   
@@ -1181,87 +1354,8 @@ autoninja -C out/riscv64 chrome
   
 </h2>
     
-<h3 id="101-corporate-contributors">
-  
-  
-    <a href="#101-corporate-contributors" class="anchor-heading" aria-labelledby="101-corporate-contributors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 Corporate Contributors
-  
-  
-</h3>
-    
 
-<p>Identified contributors to the Chromium riscv64 effort, by evidence in commits, CLs, or mailing lists:</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Contributor</th>
-      <th>Affiliation</th>
-      <th>Contribution</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Yahan Lu (yahan@iscas.ac.cn)</td>
-      <td>ISCAS / PLCT Lab</td>
-      <td>Primary V8 RISC-V backend maintainer; build/config/riscv.gni author (Mar 2023); ongoing codegen work</td>
-    </tr>
-    <tr>
-      <td>Ji Qiu (qiuji@iscas.ac.cn)</td>
-      <td>ISCAS / PLCT Lab</td>
-      <td>Primary V8 RISC-V reviewer; operates ci.rvperf.org</td>
-    </tr>
-    <tr>
-      <td>Rebecca Chang (rebecca.chang@starfivetech.com)</td>
-      <td>StarFive Technology</td>
-      <td>Earliest corporate upstream contributor; clang toolchain + sysroot scripting (Feb-Jun 2022)</td>
-    </tr>
-    <tr>
-      <td>Levi Zim (rsworktech@outlook.com)</td>
-      <td>Independent</td>
-      <td>Primary current Chromium riscv64 upstream driver; Highway RVV, Zihintpause, installer Debian support</td>
-    </tr>
-    <tr>
-      <td>mark.zhuang@spacemit.com</td>
-      <td>SpacemiT</td>
-      <td>compiler-rt riscv fixes</td>
-    </tr>
-    <tr>
-      <td>aelliott@qti.qualcomm.com</td>
-      <td>Qualcomm</td>
-      <td>Zicfiss shadow-stack extension</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="102-rise-project-involvement">
-  
-  
-    <a href="#102-rise-project-involvement" class="anchor-heading" aria-labelledby="102-rise-project-involvement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 RISE Project Involvement
-  
-  
-</h3>
-    
-
-<p>The RISE project has no dedicated Chromium-funded work. A search of all 27 RISE blog posts (May 2024 through June 2026) found zero posts mentioning Chromium. The RISE December 2024 webinar PDF lists browser/JS work under the Language Runtimes working group but identifies only “Added support to V8 and SpiderMonkey” as a 2024 achievement – with no Chromium-specific RFP cited.</p>
-
-<p>The only RISE content directly relevant to this assessment is the December 9, 2025 blog post <a href="https://riseproject.dev/2025/12/09/a-glimpse-into-v8-development-for-risc-v/">“A Glimpse Into V8 Development for RISC-V”</a>. It covers the V8 engine, not the Chromium browser.</p>
-
-<p>Institutional connections exist: Google is a RISE Premier Member. SpacemiT and ISCAS are RISE General Members. These connections do not constitute funded Chromium project work.</p>
-<h3 id="103-community-infrastructure">
-  
-  
-    <a href="#103-community-infrastructure" class="anchor-heading" aria-labelledby="103-community-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 Community Infrastructure
-  
-  
-</h3>
-    
-
-<ul>
-  <li><a href="https://github.com/riscv-forks/chromium-riscv">riscv-forks/chromium-riscv</a>: weekly riscv64 builds, 15 releases, maintained by kxxt.</li>
-  <li><a href="https://github.com/riscv-forks/electron">riscv-forks/electron</a>: Electron fork for riscv64 Linux, cross-compiled from x86-64 Debian Bookworm or natively on Arch Linux riscv64.</li>
-  <li>ci.rvperf.org: PLCT Lab Jenkins for V8 RISC-V (not Chromium browser).</li>
-  <li>Debian bug <a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1051998">#1051998</a>: open since September 2023, requesting riscv64 Chromium package. As of early 2024, sandbox and FFmpeg were identified as the two largest blockers.</li>
-</ul><hr />
+<p>Not applicable. Chromium is a standalone browser/runtime; it is not itself distributed through, nor does it have, a dependent package ecosystem (npm/PyPI/Maven/Kubernetes-operator-style consumers) whose riscv64 enablement would need separate tracking. Its own dependencies are covered in Section 9.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1270,10 +1364,10 @@ autoninja -C out/riscv64 chrome
   
 </h2>
     
-<h3 id="111-correctness-bugs-v8-open">
+<h3 id="111-correctness-bugs">
   
   
-    <a href="#111-correctness-bugs-v8-open" class="anchor-heading" aria-labelledby="111-correctness-bugs-v8-open"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.1 Correctness Bugs (V8, open)
+    <a href="#111-correctness-bugs" class="anchor-heading" aria-labelledby="111-correctness-bugs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.1 Correctness bugs
   
   
 </h3>
@@ -1282,9 +1376,10 @@ autoninja -C out/riscv64 chrome
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Issue</th>
+      <th>ID</th>
       <th>Title</th>
       <th>Component</th>
+      <th>Status</th>
     </tr>
   </thead>
   <tbody>
@@ -1292,45 +1387,50 @@ autoninja -C out/riscv64 chrome
       <td>riscv-collab/v8 #701</td>
       <td>Octane failed on Unmatched: NavierStokes checksum error, PdfJS wrong output</td>
       <td>Precision/arithmetic</td>
+      <td>Open [NEEDS VERIFICATION: 2022-era, –noopt, relevance to current JIT-enabled performance unclear]</td>
     </tr>
     <tr>
       <td>riscv-collab/v8 #702</td>
       <td>rv32 debug stress mode failed</td>
       <td>riscv32 correctness</td>
+      <td>Open</td>
     </tr>
     <tr>
       <td>riscv-collab/v8 #695</td>
       <td>cctest RunWasmLiftoff_I32Binop_DivS fails (riscv32)</td>
       <td>Wasm correctness</td>
+      <td>Open</td>
     </tr>
     <tr>
-      <td>riscv-collab/v8 #670</td>
-      <td>regress-crbug-1041232.js failing in native test mode (riscv32)</td>
+      <td>riscv-collab/v8 #670, #669</td>
+      <td>regress-crbug-* failing in native test mode (riscv32)</td>
       <td>Correctness</td>
-    </tr>
-    <tr>
-      <td>riscv-collab/v8 #669</td>
-      <td>regress-crbug-1209152.js failing in native test mode (riscv32)</td>
-      <td>Correctness</td>
+      <td>Open</td>
     </tr>
     <tr>
       <td>riscv-collab/v8 #630</td>
       <td>cctest test-macro-assembler-riscv32/CompareI</td>
       <td>riscv32 correctness</td>
+      <td>Open</td>
     </tr>
     <tr>
       <td>V8 upstream CL 7500131</td>
       <td>Sub32 signed integer overflow in assembler</td>
-      <td>riscv64 correctness – stalled Jan 2026</td>
+      <td>riscv64 correctness</td>
+      <td>Stalled since Jan 2026, unresolved correctness objection</td>
+    </tr>
+    <tr>
+      <td>GCC Bugzilla <a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=116662">#116662</a></td>
+      <td><code class="language-plaintext highlighter-rouge">std::hardware_destructive_interference_size</code> defaults to 32B, should be 64B on riscv64</td>
+      <td>PartitionAlloc performance regression</td>
+      <td>Open upstream; Chromium workaround = explicit 64-byte alignment</td>
     </tr>
   </tbody>
 </table></div>
-
-<p>The Octane PdFJS failure (expected output 939524096, actual 536870912) strongly suggests a floating-point precision or arithmetic error in the riscv64 backend on the SiFive Unmatched board. These results are from 2022 with –noopt (no JIT), so their relevance to current JIT-enabled performance is limited. However, no confirmed root cause or fix is documented in the research findings.</p>
 <h3 id="112-performance-gaps">
   
   
-    <a href="#112-performance-gaps" class="anchor-heading" aria-labelledby="112-performance-gaps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Performance Gaps
+    <a href="#112-performance-gaps" class="anchor-heading" aria-labelledby="112-performance-gaps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Performance gaps
   
   
 </h3>
@@ -1339,7 +1439,7 @@ autoninja -C out/riscv64 chrome
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Issue</th>
+      <th>ID</th>
       <th>Title</th>
       <th>Status</th>
     </tr>
@@ -1367,10 +1467,10 @@ autoninja -C out/riscv64 chrome
     </tr>
   </tbody>
 </table></div>
-<h3 id="113-hardware-level-bugs-distribution-revyos">
+<h3 id="113-toolchain-bugs">
   
   
-    <a href="#113-hardware-level-bugs-distribution-revyos" class="anchor-heading" aria-labelledby="113-hardware-level-bugs-distribution-revyos"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 Hardware-Level Bugs (distribution, revyos)
+    <a href="#113-toolchain-bugs" class="anchor-heading" aria-labelledby="113-toolchain-bugs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 Toolchain bugs
   
   
 </h3>
@@ -1379,7 +1479,67 @@ autoninja -C out/riscv64 chrome
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Issue</th>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/llvm/llvm-project/issues/79944">llvm-project#79944</a></td>
+      <td>LLD segfault, <code class="language-plaintext highlighter-rouge">SymbolTableSection&lt;ELFT&gt;::writeTo</code></td>
+      <td>Affects Chromium toolchain builds &lt; 126.0.6478.185, fixed by newer LLD</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/llvm/llvm-project/issues/69780">llvm-project#69780</a></td>
+      <td>CFI/target-attribute bug affecting RISC-V linker relaxation</td>
+      <td>Open upstream, “harmless but annoying”</td>
+    </tr>
+    <tr>
+      <td>Rust PR #120518</td>
+      <td>split-debuginfo unpacking failure on riscv64</td>
+      <td>Fixed in Rust 1.78.0</td>
+    </tr>
+    <tr>
+      <td>Rust PR #123612</td>
+      <td>cross-language LTO breakage for lp64d ABI</td>
+      <td>Fixed in Rust 1.79.0</td>
+    </tr>
+    <tr>
+      <td>Chromium build config</td>
+      <td><code class="language-plaintext highlighter-rouge">-gsplit-dwarf</code> incompatible with RISC-V linker relaxation (<code class="language-plaintext highlighter-rouge">-mrelax</code>)</td>
+      <td>Workaround: <code class="language-plaintext highlighter-rouge">use_debug_fission=false</code></td>
+    </tr>
+    <tr>
+      <td>Chromium build config</td>
+      <td>RISC-V port “not warning-free”</td>
+      <td>Workaround: <code class="language-plaintext highlighter-rouge">treat_warnings_as_errors=false</code></td>
+    </tr>
+  </tbody>
+</table></div>
+<h3 id="114-community-ci-regressions-riscv-forkschromium-riscv">
+  
+  
+    <a href="#114-community-ci-regressions-riscv-forkschromium-riscv" class="anchor-heading" aria-labelledby="114-community-ci-regressions-riscv-forkschromium-riscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.4 Community CI regressions (riscv-forks/chromium-riscv)
+  
+  
+</h3>
+    
+
+<p>See Section 7.4 for full detail on issues #32, #31, and #25.</p>
+<h3 id="115-hardware-level-bugs-downstreamrevyos">
+  
+  
+    <a href="#115-hardware-level-bugs-downstreamrevyos" class="anchor-heading" aria-labelledby="115-hardware-level-bugs-downstreamrevyos"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.5 Hardware-level bugs (downstream/revyos)
+  
+  
+</h3>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
       <th>Status</th>
       <th>Description</th>
     </tr>
@@ -1388,35 +1548,35 @@ autoninja -C out/riscv64 chrome
     <tr>
       <td>revyos #145</td>
       <td>Open</td>
-      <td>Chromium, glxinfo, glxgears crash on LicheePi Console 4A (20250930 build); GPU process exits with SIGILL; graphics stack regression</td>
+      <td>Chromium/glxinfo/glxgears crash on LicheePi Console 4A; GPU process exits with SIGILL</td>
     </tr>
     <tr>
       <td>revyos #113</td>
       <td>Closed</td>
-      <td>SIGILL from invalid compressed RISC-V instruction <code class="language-plaintext highlighter-rouge">0x6022</code> in <code class="language-plaintext highlighter-rouge">views::BubbleDialogDelegateView::GetWidget()</code>; toolchain codegen bug or ABI mismatch</td>
+      <td>SIGILL from invalid compressed RISC-V instruction <code class="language-plaintext highlighter-rouge">0x6022</code> in <code class="language-plaintext highlighter-rouge">BubbleDialogDelegateView::GetWidget()</code>; toolchain codegen or ABI mismatch</td>
     </tr>
     <tr>
       <td>revyos #81</td>
       <td>Closed (Jan 2026)</td>
-      <td>Black screen after Bilibili video on Meles board; no root cause documented</td>
+      <td>Black screen after Bilibili video on Meles board; no documented root cause</td>
+    </tr>
+    <tr>
+      <td>revyos #27</td>
+      <td>Open</td>
+      <td>Native Chromium build on 64-core SG2042 reports “quirks or even system instability”</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="114-extensionfeature-gaps-active">
+<h3 id="116-featureextension-gaps-active">
   
   
-    <a href="#114-extensionfeature-gaps-active" class="anchor-heading" aria-labelledby="114-extensionfeature-gaps-active"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.4 Extension/Feature Gaps (active)
+    <a href="#116-featureextension-gaps-active" class="anchor-heading" aria-labelledby="116-featureextension-gaps-active"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.6 Feature/extension gaps (active)
   
   
 </h3>
     
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">kF32LoadF16</code> in Liftoff: explicit <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED()</code>.</li>
-  <li>fp16/Zvfh vector arithmetic (vfadd/vfsub/vfmul/vfdiv): CL 7953190 open as of June 18, 2026, pending Review-Enforcement requirement clearance.</li>
-  <li>XNNPACK <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_EXT_ZVFH</code> macro missing under Clang 19.1: partial fix in progress (PR #9903).</li>
-  <li>XNNPACK F32-RSUM RVV: disabled due to multi-thread correctness issue (PR #6450, open).</li>
-</ul><hr />
+<p><code class="language-plaintext highlighter-rouge">kF32LoadF16</code> in Liftoff (explicit <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED()</code>); fp16/Zvfh vector arithmetic CL 7953190 open as of 2026-06-18; XNNPACK <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_EXT_ZVFH</code> macro missing under Clang 19.1 (PR #9903, partial fix); XNNPACK F32-RSUM RVV disabled for a multi-thread correctness issue (PR #6450, open).</p><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1425,118 +1585,164 @@ autoninja -C out/riscv64 chrome
   
 </h2>
     
-<h3 id="121-sandbox-cl-primary-blocker">
+<h3 id="121-sandbox-cl-4935120---the-primary-blocker">
   
   
-    <a href="#121-sandbox-cl-primary-blocker" class="anchor-heading" aria-labelledby="121-sandbox-cl-primary-blocker"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.1 Sandbox CL (primary blocker)
-  
-  
-</h3>
-    
-
-<p>CL 4935120 is blocked by a Code-Review -1 from Robert Sesek (rsesek@chromium.org) and has been in this state since the CL was filed in October 2023. The CL is at revision 14, last rebased May 15, 2026. The research findings do not contain the specific technical objection raised by the -1 reviewer. This represents a 2.5+ year unresolved review situation.</p>
-
-<p>Without this CL, a production-deployed riscv64 Chromium is not possible on Linux. The sandbox is not optional: it is the primary security boundary between the renderer process and the OS.</p>
-<h3 id="122-v8-sub32-overflow-bug-cl-7500131">
-  
-  
-    <a href="#122-v8-sub32-overflow-bug-cl-7500131" class="anchor-heading" aria-labelledby="122-v8-sub32-overflow-bug-cl-7500131"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.2 V8 Sub32 Overflow Bug (CL 7500131)
+    <a href="#121-sandbox-cl-4935120---the-primary-blocker" class="anchor-heading" aria-labelledby="121-sandbox-cl-4935120---the-primary-blocker"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.1 Sandbox CL 4935120 - the primary blocker
   
   
 </h3>
     
 
-<p>A correctness bug in the riscv64 assembler has been stalled since January 2026 with an unresolved correctness objection from a reviewer. The research findings do not contain the specific objection text. The bug has been open for approximately 5 months from the research date.</p>
-<h3 id="123-highway-rvv">
+<p>This is a policy/governance blocker, not primarily a technical one. The full review-thread substance, read directly from the Gerrit REST API this session:</p>
+
+<ul>
+  <li><strong>Robert Sesek</strong> (2023-10-19, original rejection): “the Chromium project has a formal policy around the acceptance of new CPU architectures… any new CPU architecture must be explicitly approved for inclusion by the project’s engineering leadership… Historically, the addition of new CPU architectures has not been approved because the maintenance burden does not outweigh the benefit… I am rejecting this patch.” Code-Review -1 has persisted through all 15 patch sets since.</li>
+  <li><strong>Levi Zim/kxxt</strong> (2025-08-04) points to a tracker comment suggesting it is up to local owners whether a given riscv patch is “low cost.”</li>
+  <li><strong>Matthew Denton</strong> (2025-08-04): “The ifdefs in the sandbox are very load bearing and each arch adds significant extra complexity in a security critical component… we long ago decided that adding MIPS support to the sandbox introduced extra unnecessary maintenance burden, and since then we have declined to merge patches for loongarch64 and powerpc and I don’t think it should be different with risc-v” - i.e., there is a standing precedent against new sandbox architectures independent of riscv64’s specific code quality.</li>
+  <li><strong>Elly</strong> (2025-08-06, and again 2026-05-18, the most recent substantive reply): “The maintenance costs… is mostly that it makes it harder for us to change the sandbox with confidence… Since they don’t have builders, the tests don’t run for them… The only realistic path forward would be a Chromium-level decision to support riscv64. We can’t justify taking a large patch to delicate code to support an architecture we don’t ship or have automated tests for… we just can’t carry a bunch of functionally dead code in our repository for this.”</li>
+  <li>Levi Zim has offered to act as informal maintainer, modeling the arrangement on V8’s RISC-V port (fixed after the fact, not blocked upfront), and cites his own weekly CI (riscv-forks/chromium-riscv) as evidence he can respond to breakage within a week.</li>
+</ul>
+
+<p>The blocker is explicitly circular: the sandbox reviewers require CI/builder coverage before accepting the patch, but no official builder exists because there is no sandboxed riscv64 target to build for yet. Resolving it requires a Chromium-level (engineering leadership) policy decision to accept riscv64 as a supported architecture, paired with official builder infrastructure, not further patch iteration on CL 4935120 itself.</p>
+<h3 id="122-ffmpeg-integration-cl-5054185">
   
   
-    <a href="#123-highway-rvv" class="anchor-heading" aria-labelledby="123-highway-rvv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.3 Highway RVV
+    <a href="#122-ffmpeg-integration-cl-5054185" class="anchor-heading" aria-labelledby="122-ffmpeg-integration-cl-5054185"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.2 FFmpeg integration CL 5054185
   
   
 </h3>
     
 
-<p>Was disabled in June 2025 (CL 6583376) due to “uncommon with most riscv chips.” Reverted in May 2026 (CL 7807959). The research findings note the Rubber Stamper bot refused automatic approval because the original was beyond the 14-day auto-approve window, confirming that human reviewer attention was needed for the re-enablement.</p>
-<h3 id="124-xnnpack-zvfh-regression">
+<p>Abandoned; see Section 9.3 for the full Dale Curtis review quotes establishing the same “no buildbots, no CQ bots” blocker pattern as the sandbox CL, and Levi Zim’s 2025-09-08 report that riscv64 FFmpeg support landed a different way (partial in M140, config-file completion expected M141), making this specific CL largely moot.</p>
+<h3 id="123-v8-sub32-overflow-bug-cl-7500131">
   
   
-    <a href="#124-xnnpack-zvfh-regression" class="anchor-heading" aria-labelledby="124-xnnpack-zvfh-regression"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.4 XNNPACK Zvfh Regression
-  
-  
-</h3>
-    
-
-<p><code class="language-plaintext highlighter-rouge">XNN_ENABLE_RISCV_FP16_VECTOR</code> was enabled unconditionally in January 2026. This is a regression on hardware lacking the Zvfh extension, compounded by the missing <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_EXT_ZVFH</code> macro under Clang 19.1.</p>
-<h3 id="125-governance">
-  
-  
-    <a href="#125-governance" class="anchor-heading" aria-labelledby="125-governance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.5 Governance
+    <a href="#123-v8-sub32-overflow-bug-cl-7500131" class="anchor-heading" aria-labelledby="123-v8-sub32-overflow-bug-cl-7500131"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.3 V8 Sub32 overflow bug (CL 7500131)
   
   
 </h3>
     
 
-<p>New architecture support in Chromium requires demonstrating benefit to the project. Configurations without Google-managed CI bots are unsupported. The current state – no Linux riscv64 CI, no official binary, unmerged sandbox CL – means that upstream breakage of the riscv64 port is an accepted risk.</p><hr />
-<h2 id="13-investment-analysis">
+<p>A correctness bug in the riscv64 assembler, stalled since January 2026 with an unresolved correctness objection; the specific objection text was not retrievable in this research pass.</p>
+<h3 id="124-highway-rvv">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#124-highway-rvv" class="anchor-heading" aria-labelledby="124-highway-rvv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.4 Highway RVV
+  
+  
+</h3>
+    
+
+<p>Disabled June 2025 (CL 6583376, “uncommon with most riscv chips”), re-enabled May 2026 (CL 7807959). The Rubber Stamper bot refused automatic approval on re-enablement because the original disable fell outside the 14-day auto-approve window, confirming that human reviewer attention was required.</p>
+<h3 id="125-swiftshader-llvm16-revert">
+  
+  
+    <a href="#125-swiftshader-llvm16-revert" class="anchor-heading" aria-labelledby="125-swiftshader-llvm16-revert"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.5 SwiftShader LLVM16 revert
+  
+  
+</h3>
+    
+
+<p>CL 75929 merged 2026-05-27 then was reverted 2026-06-08 (CL 77428) for breaking the SwiftShader-to-Dawn roll (<code class="language-plaintext highlighter-rouge">undefined symbol: llvm::MCSymbolizer::~MCSymbolizer</code>). This is an active, currently-unresolved regression against riscv64 software rendering, not a stale/settled item.</p>
+<h3 id="126-xnnpack-zvfh-regression">
+  
+  
+    <a href="#126-xnnpack-zvfh-regression" class="anchor-heading" aria-labelledby="126-xnnpack-zvfh-regression"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.6 XNNPACK Zvfh regression
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">XNN_ENABLE_RISCV_FP16_VECTOR</code> was enabled unconditionally in January 2026, a regression on hardware lacking the Zvfh extension, compounded by the missing <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_EXT_ZVFH</code> macro under Clang 19.1.</p>
+<h3 id="127-organizational-summary">
+  
+  
+    <a href="#127-organizational-summary" class="anchor-heading" aria-labelledby="127-organizational-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.7 Organizational summary
+  
+  
+</h3>
+    
+
+<p>New architecture support in Chromium requires a leadership-level decision to accept the maintenance burden, not merely technical patch quality. Configurations without Google-managed CI bots are treated as unsupported by design. The current state - no Linux riscv64 CI, no official binary, unmerged sandbox CL - means upstream breakage of the riscv64 port is an accepted risk borne by community maintainers, and the acceptance probability of CL 4935120 specifically is low absent either (a) a policy reversal at the engineering-leadership level, or (b) a chip company or other sponsor standing up official Google-recognized riscv64 CI infrastructure first.</p><hr />
+<h2 id="13-readiness-assessment">
+  
+  
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>The following sections identify specific work items, assess effort, and assign priorities. Effort estimates are rough-order-of-magnitude in person-weeks. Items are assessed from the perspective of a chip company evaluating whether to invest engineering resources.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> Yellow (build-only-ci)</li>
+  <li><strong>Release provider:</strong> none</li>
+  <li><strong>Optimization level:</strong> not applicable - Chromium is not classified as an optimization-purpose project; its optimization-purpose dependencies (V8, FFmpeg, XNNPACK, Highway, etc.) are graded separately in their own project reports.</li>
+</ul>
+
+<p><strong>Justification:</strong> Chromium’s official LUCI CI has exactly 4 riscv64 builders, all scoped to Cronet (Android networking library) only, and they compile and size-check without running the test suite - this build-only CI evidence sets the color to yellow. No official riscv64 binary exists anywhere: Ubuntu ships only a snap-redirect transitional package (not a riscv64 binary), <a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1051998">Debian bug #1051998</a> has been open since 2023, and Arch Linux RISC-V’s chromium entry is reported outdated/FTBFS in the source report though this could not be independently reproduced this session ([NEEDS VERIFICATION], Section 8) - so release_provider is none. See <a href="https://chromium-review.googlesource.com/c/chromium/src/+/4935120">CL 4935120</a> (the open sandbox CL, the gating blocker) and the prior version of this report.</p>
+
+<p><strong>Pending work that could change the grade:</strong> Sandbox CL <a href="https://chromium-review.googlesource.com/c/chromium/src/+/4935120">4935120</a> (seccomp-BPF riscv64-linux support) remains open since October 2023 with a sustained Code-Review -1 from Chrome’s sandbox/security owner, citing lack of official riscv64 CI as the policy blocker - this is the single highest-leverage item that could change the grade if resolved together with a Linux riscv64 CI builder. The master tracking issue <a href="https://issues.chromium.org/issues/42050595">issues.chromium.org/issues/42050595</a> links approximately 19 related CLs. No RISE-funded Chromium-specific work was identified; the closest RISE touchpoint is the December 2025 V8 blog post (Section 4.1), since V8 is a Chromium dependency, not Chromium itself. Samsung SRPOL’s Chromium/pixman/ffmpeg/libpng/libjpeg-turbo RVV optimization work is described on Samsung’s own blog as done “under the RISE project,” which is not corroborated by any RISE-published blog post, repository, or funded-project listing found this session - flagged as a discrepancy [NEEDS VERIFICATION].</p><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has not funded or published dedicated Chromium-browser work; its only substantive touchpoint is the V8 engine (Section 4.1, a dependency graded separately), plus two Chromium-component Python wheel PRs in <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> (<code class="language-plaintext highlighter-rouge">mini-racer</code>, wrapping V8; <code class="language-plaintext highlighter-rouge">comfy-angle</code>, wrapping ANGLE) and a <code class="language-plaintext highlighter-rouge">skia-python</code> riscv64 support issue (#1895). None of this covers the browser-level work items below; nothing here is double-counted against existing RISE deliverables.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The sandbox CL is the single highest-leverage item. It has been open for 2.5+ years and is blocked by one reviewer. A chip company with an interest in shipping Chromium on riscv64 Linux should apply engineering attention here. The CL itself is at revision 14 and was last rebased in May 2026, so it is not stale – it simply lacks the political momentum to clear the -1.</p>
+<p>The sandbox CL is the single highest-leverage item, and per Section 12.1 it is blocked on an organizational decision (Chromium-level policy acceptance of riscv64 as a supported architecture plus official CI), not on further technical iteration of the patch itself, which is already at revision 15 and was rebased as recently as 2026-09-23. A chip company pursuing this should engage at the policy/CI-sponsorship level, not only submit code.</p>
 
-<p>SwiftShader is the second highest-leverage functional gap. Without it, WebGL and WebGPU cannot run on riscv64 systems without a hardware GPU driver. Adding a riscv64 architecture case to SwiftShader’s CMakeLists.txt and wiring up the LLVM riscv64 backend would restore the software fallback path. This is a tractable engineering project.</p>
-<h3 id="132-performance-optimization">
+<p>SwiftShader is the second-highest-leverage functional gap: its LLVM10-to-16 bump was merged and then reverted for breaking the Dawn roll (Section 4.5/12.5). Fixing the underlying Dawn-roll incompatibility (the <code class="language-plaintext highlighter-rouge">MCSymbolizer</code> undefined-symbol issue) and re-landing is a bounded, well-scoped project, smaller than originally estimated since the core patch already exists and has prior review approval.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The Skia SIMD gap is the largest performance deficiency in the non-V8 stack. Adding RVV-accelerated paths to Skia’s <code class="language-plaintext highlighter-rouge">src/opts/</code> (analogous to the LoongArch implementation) would accelerate all 2D rendering, text, and canvas operations. BoringSSL is the second priority: scalar TLS crypto is measurably slower than the hardware-accelerated paths available via OpenSSL on riscv64.</p>
+<p>Skia’s SIMD gap is the largest performance deficiency outside V8: adding RVV-accelerated paths to <code class="language-plaintext highlighter-rouge">src/opts/</code> (as LoongArch already has) would accelerate all 2D rendering, text, and canvas operations. BoringSSL is next: scalar-only TLS crypto is a measurable gap versus OpenSSL-based stacks with full riscv64 hardware crypto. Samsung SRPOL’s pixman work (~10x speedup on RGB565-&gt;RGB888 via RVV) demonstrates the scale of gain available from this class of optimization and could serve as a template.</p>
 
-<p>V8 instruction scheduler latencies copied from MIPS represent a correctness-adjacent performance issue: the scheduler may make incorrect decisions about instruction ordering, limiting IPC gains. Profiling on real hardware and updating the latency tables would benefit any high-performance riscv64 chip deployment.</p>
-<h3 id="133-cicd-infrastructure">
+<p>The V8 instruction-scheduler latency tables, reported copied from MIPS, represent a correctness-adjacent performance issue since the scheduler may order instructions incorrectly for real RISC-V pipelines; profiling on real hardware and updating the tables would benefit any high-performance riscv64 chip deployment.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>The absence of a Linux riscv64 CI builder in Chromium LUCI is the root cause of the port’s fragility. Contributing a riscv64 build bot to the Chromium LUCI infrastructure would change the risk profile from “community vigilance” to “Google tree sheriff coverage.” This requires hardware infrastructure commitment, not just software engineering.</p>
+<p>The absence of a Linux riscv64 CI builder in Chromium LUCI is the root cause of the port’s fragility and, per the sandbox-CL review thread, the explicit reason the security team will not accept sandbox patches. Contributing a riscv64 build bot to Chromium LUCI - ideally paired with the policy engagement in 14.1 - would shift the risk profile from “community vigilance” (riscv-forks/chromium-riscv) to Google tree-sheriff coverage. This requires committed hardware infrastructure, not only software engineering.</p>
 
-<p>The ci.rvperf.org JetStream CI job has been failing for approximately 6 months. Restoring this job would produce public benchmark data that currently does not exist, enabling objective comparison of riscv64 V8 performance against arm64 and x86-64 baselines.</p>
-<h3 id="134-ecosystem-enablement">
+<p>The ci.rvperf.org JetStream job has been failing for approximately 6 months; restoring it would produce public V8 riscv64 benchmark data that currently does not exist anywhere (Section 7.3), which is directly useful for any chip-vendor performance claims.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
 
-<p>libpfm4 has no RISC-V PMU event tables. This completely blocks hardware performance counter profiling on riscv64, which affects both V8 benchmark development and general Chromium profiling workflows. Contributing PMU event tables for specific RISC-V cores is a well-scoped, bounded project.</p>
-<h3 id="135-summary-table">
+<p>libpfm4 has no RISC-V PMU event tables, which completely blocks hardware performance-counter profiling on riscv64 for both V8 benchmark development and general Chromium profiling. Contributing PMU event tables for specific RISC-V cores is a well-scoped, bounded project and a natural fit for a chip vendor with access to its own hardware’s PMU specification.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1555,15 +1761,22 @@ autoninja -C out/riscv64 chrome
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Resolve sandbox CL 4935120 (Code-Review -1 clearance + rebase)</td>
-      <td>2-4</td>
-      <td>Chip company security/sandbox eng</td>
+      <td>Sandbox CL 4935120: secure Chromium-level policy acceptance + Code-Review -1 clearance</td>
+      <td>2-4 (eng) + organizational engagement</td>
+      <td>Chip company security/sandbox eng + exec sponsorship</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>SwiftShader riscv64 architecture support</td>
-      <td>4-8</td>
+      <td>Official Linux riscv64 CI builder (prerequisite/companion to sandbox acceptance)</td>
+      <td>4-8 (infra + SW)</td>
+      <td>Chip company infra</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>SwiftShader: fix Dawn-roll incompatibility from LLVM16 bump, re-land CL 75929</td>
+      <td>2-4</td>
       <td>Chip company graphics eng</td>
       <td>High</td>
     </tr>
@@ -1590,7 +1803,7 @@ autoninja -C out/riscv64 chrome
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Skia RVV SIMD opts (src/opts/)</td>
+      <td>Skia RVV SIMD opts (<code class="language-plaintext highlighter-rouge">src/opts/</code>)</td>
       <td>6-12</td>
       <td>Chip company graphics eng</td>
       <td>High</td>
@@ -1618,13 +1831,6 @@ autoninja -C out/riscv64 chrome
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Linux riscv64 LUCI build bot (Chromium upstream)</td>
-      <td>4-8 (infra + SW)</td>
-      <td>Chip company infra</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
       <td>Restore ci.rvperf.org JetStream job</td>
       <td>1-2</td>
       <td>ISCAS or chip company</td>
@@ -1632,9 +1838,9 @@ autoninja -C out/riscv64 chrome
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Chromium Linux riscv64 CI with on-device tests</td>
-      <td>8-16</td>
-      <td>Chip company infra</td>
+      <td>Community CI regression fixes (issues #31, #32)</td>
+      <td>1-2</td>
+      <td>Chip company platform eng, or upstream via kxxt</td>
       <td>Medium</td>
     </tr>
     <tr>
@@ -1646,23 +1852,13 @@ autoninja -C out/riscv64 chrome
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Debian package for riscv64 Chromium (bug #1051998)</td>
-      <td>4-8 (depends on sandbox)</td>
+      <td>Debian package for riscv64 Chromium (bug #1051998), contingent on sandbox + FFmpeg</td>
+      <td>4-8</td>
       <td>Distribution eng</td>
       <td>Medium</td>
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates. Initial report dated 2026-07-20.</p><hr />
 <h2 id="15-references">
   
   
@@ -1674,28 +1870,61 @@ autoninja -C out/riscv64 chrome
 
 <ul>
   <li><a href="https://chromium.googlesource.com/chromium/src">Chromium source repository</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/+/main/DEPS">Chromium DEPS</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/+/main/BUILD.gn">Chromium top-level BUILD.gn</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/chromium/src/+/4935120">CL 4935120 - Add support for riscv64-linux (OPEN)</a></li>
+  <li><a href="https://chromium-review.googlesource.com/c/chromium/src/+/5839530">CL 5839530 - Use kPartitionCachelineSize instead of hardcoding 64 (MERGED)</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/chromium/src/+/7790544">CL 7790544 - Use Zihintpause for CPU yield on RISC-V (MERGED)</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/chromium/src/+/7807959">CL 7807959 - Revert highway riscv RVV BROKEN_TARGETS (MERGED)</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/chromium/src/+/6583376">CL 6583376 - highway: add riscv RVV to BROKEN_TARGETS (MERGED)</a></li>
+  <li><a href="https://chromium-review.googlesource.com/c/chromium/third_party/ffmpeg/+/5054185">CL third_party/ffmpeg 5054185 - Add riscv support (ABANDONED)</a></li>
+  <li><a href="https://chromium-review.googlesource.com/c/chromium/mini_chromium/+/4558827">CL mini_chromium 4558827 - Add RISCV64 support (MERGED)</a></li>
+  <li><a href="https://chromium-review.googlesource.com/c/chromium/mini_chromium/+/4735556">CL mini_chromium 4735556 - [riscv][android] Add Android RISC-V support (MERGED)</a></li>
+  <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7498990">CL v8/v8 7498990 - [riscv] Skip pop simd128 in DeoptimizationEntry (MERGED)</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7768270">CL v8/7768270 - Add Zfa extension (MERGED)</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7787832">CL v8/7787832 - Optimize float min/max codegen with ZFA (MERGED)</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7763908">CL v8/7763908 - Disable unaligned access support (MERGED)</a></li>
-  <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7800114">CL v8/7800114 - Fix signed integer overflow in GrowBuffer (MERGED)</a></li>
-  <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7819100">CL v8/7819100 - Decouple SIMD from WebAssembly (MERGED)</a></li>
-  <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7889597">CL v8/7889597 - Disable float16 (RVV lacks Zvfh) (MERGED)</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7897892">CL v8/7897892 - Implement ZFH in Simulator (MERGED)</a></li>
-  <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7947903">CL v8/7947903 - Add acquire-release for atomic.fence (MERGED)</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953190">CL v8/7953190 - Implement vfadd/vfsub/vfmul/vfdiv for fp16 (OPEN)</a></li>
-  <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953184">CL v8/7953184 - Implement CompareSmiAndAssert (MERGED)</a></li>
-  <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953185">CL v8/7953185 - Move DebugInfo to trusted space (MERGED)</a></li>
-  <li><a href="https://github.com/riscv-forks/chromium-riscv">riscv-forks/chromium-riscv (community builds)</a></li>
+  <li><a href="https://swiftshader-review.googlesource.com/c/SwiftShader/+/75929">SwiftShader CL 75929 - Default to use llvm16 (MERGED then REVERTED)</a></li>
+  <li><a href="https://swiftshader-review.googlesource.com/c/SwiftShader/+/77428">SwiftShader CL 77428 - Revert “Default to use llvm16”</a></li>
+  <li><a href="https://issues.chromium.org/issues/42050595">Chromium tracking issue 42050595 - RISC-V toolchain support</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/+/refs/heads/main/infra/config/generated/builders/">Chromium CI LUCI builder configuration</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/+/refs/heads/main/infra/config/subprojects/chromium/ci/chromium.android.star">chromium.android.star CI builder config, riscv64 Cronet builders</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/+/main/build/config/riscv.gni">build/config/riscv.gni</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/+/main/build/toolchain/linux/BUILD.gn">build/toolchain/linux/BUILD.gn</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/+/main/build/config/compiler/BUILD.gn">build/config/compiler/BUILD.gn</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md">docs/linux/build_instructions.md</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/+/main/docs/toolchain_support.md">docs/toolchain_support.md</a></li>
+  <li><a href="https://github.com/riscv-forks/chromium-riscv">riscv-forks/chromium-riscv (community CI/builds)</a></li>
+  <li><a href="https://github.com/riscv-forks/chromium-riscv/issues/32">riscv-forks/chromium-riscv issue #32</a></li>
+  <li><a href="https://github.com/riscv-forks/chromium-riscv/issues/31">riscv-forks/chromium-riscv issue #31</a></li>
+  <li><a href="https://github.com/riscv-forks/chromium-riscv/issues/25">riscv-forks/chromium-riscv issue #25</a></li>
+  <li><a href="https://github.com/starfive-tech/chromium.src">starfive-tech/chromium.src</a></li>
+  <li><a href="https://github.com/riscv-forks/electron">riscv-forks/electron</a></li>
   <li><a href="https://riseproject.dev/2025/12/09/a-glimpse-into-v8-development-for-risc-v/">RISE blog: A Glimpse Into V8 Development for RISC-V (Dec 2025)</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/pull/1875">riseproject-dev/python-wheels PR #1875 - mini-racer</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/pull/2123">riseproject-dev/python-wheels PR #2123 - comfy-angle</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/issues/1895">riseproject-dev/python-wheels issue #1895 - skia-python riscv64</a></li>
+  <li><a href="https://research.samsung.com/blog/RISC-V-and-Vectorization">Samsung Research blog - RISC-V and Vectorization</a></li>
+  <li><a href="https://riscv.org/blog/chromium-performance-optimization-on-xuantie-risc-v-processors/">RISC-V International blog - Chromium Performance Optimization on XuanTie RISC-V Processors</a></li>
+  <li><a href="https://www.openeuler.org/en/blog/RISC-V/">openEuler RISC-V SIG blog</a></li>
+  <li><a href="https://www.kxxt.dev/blog/cross-compile-chromium-for-riscv-2026/">kxxt.dev - Cross compile mainline Chromium for RISC-V from scratch (2026)</a></li>
+  <li><a href="https://www.kxxt.dev/blog/cross-compile-chromium-for-riscv/">kxxt.dev - Cross compile mainline Chromium for RISC-V from scratch</a></li>
   <li><a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1051998">Debian bug #1051998 - chromium: please add support for riscv64</a></li>
+  <li><a href="https://gitlab.alpinelinux.org/alpine/aports/-/merge_requests/40613">Alpine aports MR !40613 - community/chromium: enable riscv64 (draft/stale)</a></li>
   <li><a href="https://archriscv.felixc.at/">Arch Linux RISC-V package status</a></li>
-  <li><a href="https://chromium.googlesource.com/chromium/src/+/refs/heads/main/infra/config/generated/builders/">Chromium CI LUCI builder configuration - infra/config/generated/builders/</a></li>
+  <li><a href="https://pypi.org/pypi/chromium/json">PyPI chromium package (unrelated placeholder)</a></li>
+  <li><a href="https://github.com/llvm/llvm-project/issues/79944">llvm-project issue #79944 - LLD segfault</a></li>
+  <li><a href="https://github.com/llvm/llvm-project/issues/69780">llvm-project issue #69780 - CFI/target-attribute linker relaxation bug</a></li>
+  <li><a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=116662">GCC Bugzilla #116662 - hardware_destructive_interference_size wrong default on riscv64</a></li>
   <li><a href="https://github.com/riscv-collab/v8/issues">V8 RISC-V issue tracker (riscv-collab)</a></li>
-  <li><a href="https://github.com/revyos/revyos/issues">revyos hardware issues tracker</a></li>
+  <li><a href="https://github.com/riscv-collab/v8/wiki/Understand-V8-backend-architecture">riscv-collab/v8 wiki - Understand V8 backend architecture</a></li>
+  <li><a href="https://github.com/revyos/revyos/issues">revyos/revyos issues tracker</a></li>
+  <li><a href="https://groups.google.com/a/chromium.org/g/chromium-dev/c/CTSgJXER8mw">chromium-dev mailing list - Porting for riscv64</a></li>
+  <li><a href="https://groups.google.com/a/chromium.org/g/chromium-bugs/c/2uIuVBosuCU">chromium-bugs mailing list - Can’t compile shared library of BoringSSL</a></li>
+  <li><a href="https://answers.launchpad.net/ubuntu/lunar/riscv64/android-boringssl/13.0.0+r24-2">Launchpad - android-boringssl riscv64 (Lunar)</a></li>
 </ul>
 
           
