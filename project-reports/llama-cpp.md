@@ -2,11 +2,23 @@
 title: llama.cpp
 parent: Project Reports
 color: blue
-categories:
-  - llm-inference
-  - ai-ml
 dependencies:
+  - name: CMake
+    relation: build-dependency
+    criticality: critical
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: critical
+  - name: musl
+    relation: runtime-dependency
+    criticality: optional
   - name: OpenSSL
+    relation: runtime-dependency
+    criticality: optional
+  - name: cpp-httplib
     relation: runtime-dependency
     criticality: optional
   - name: OpenBLAS
@@ -15,8 +27,14 @@ dependencies:
   - name: OpenMP
     relation: runtime-dependency
     criticality: optional
-  - name: cpp-httplib
+  - name: Vulkan
     relation: runtime-dependency
+    criticality: optional
+  - name: shaderc
+    relation: build-dependency
+    criticality: optional
+  - name: QEMU
+    relation: test-dependency
     criticality: optional
 ---
 
@@ -25,646 +43,413 @@ dependencies:
 # llama.cpp
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
+**Readiness:** blue<br/>
 **Scope:** RISC-V (riscv64/linux) support status for llama.cpp<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
----
-
 ## 1. Project Overview
 
-[llama.cpp](https://github.com/ggerganov/llama.cpp) is a C/C++ LLM inference engine built around the GGML tensor library. It is the dominant open-source CPU inference stack for large language models, supporting quantized weight formats (q4_0 through q8_0, K-quants, and newer formats including nvfp4), multiple hardware backends (CPU, CUDA, Vulkan, Metal, ROCm, OpenCL, Ascend NPU, IBM zDNN), and a wide model format ecosystem via GGUF.
+llama.cpp is a C/C++ LLM inference engine built around the GGML tensor library. It is the dominant open-source CPU inference stack for quantized large language models (q4_0 through q8_0, K-quants, IQ-quants, MXFP4), and it targets multiple hardware backends (CPU, CUDA, Vulkan, Metal, ROCm, OpenCL, SYCL, Ascend CANN, IBM zDNN) via the GGUF model format.
 
-The project is hosted under the [ggml-org](https://github.com/ggml-org) GitHub organization, founded by Georgi Gerganov (Hugging Face). It is MIT-licensed. Governance is informal: no foundation membership, no technical steering committee. Maintainers are ggml-org org members who can merge after codeowner approval. The `CODEOWNERS` file is the only governance instrument.
+**Repository note:** the canonical repository has moved from `ggerganov/llama.cpp` to [`ggml-org/llama.cpp`](https://github.com/ggml-org/llama.cpp); the old owner no longer resolves via the GitHub API. All facts in this report are against `ggml-org/llama.cpp`, HEAD around commit `f872b59` as of 2026-09-30.
 
-Key corporate presences: Hugging Face (Gerganov, Nguyen, Bevenius), SpacemiT (alex-spacemit, owns `ggml/src/ggml-cpu/spacemit/`), NVIDIA (jeffbolznv, Vulkan backend), IBM (AndreasKrebbel, zDNN backend). No corporate entity has governance rights; all influence is through individual contribution and CODEOWNERS entries.
+The project is MIT-licensed, copyrighted "The ggml authors," and lives under the `ggml-org` GitHub organization, a project-run org with no legal-foundation structure (unlike, e.g., the Linux Foundation-style PyTorch Foundation). Founder Georgi Gerganov (`ggerganov@gmail.com`, 1,992 commits, by far the top contributor) also runs the commercial entity **ggml.ai**, but commits under a personal email with no visible corporate affiliation in the metadata.
 
-The project is not a RISE Project member organization. The RISE project page lists no affiliation with llama.cpp or ggml-org. RISE's connection is indirect: RISE TSC Co-Chair Ludovic Henry (Meta) bootstrapped RISC-V outreach to the project under RISE funded project RP-014, and RISE provides CI runner infrastructure.
+**Governance** (per `CONTRIBUTING.md`): a three-tier structure of Contributors (no privileges), Collaborators/Triage (own specific code areas, listed in `CODEOWNERS`), and Maintainers (review/merge after codeowner approval, squash-merge, and "reserve the right to decline review or close PRs for any reason, without question"). There is no RFC or steering-committee process; governance is informal and centered on Gerganov plus roughly 20 module-level `CODEOWNERS` entries.
+
+**Corporate presence among maintainers** (from commit email domains and `CODEOWNERS`): **Hugging Face** (Xuan-Son Nguyen, `son@huggingface.co`, #2 all-time contributor with 480 commits; Sigbjorn Skjaeret, #4 with 370 commits); **NVIDIA** (Jeff Bolz, Vulkan backend co-owner); **Qualcomm** (lhez, max-krasnyansky, ggml-hexagon backend); **IBM** (Andreas-Krebbel, AlekseiNikiforovIBM, ggml-zdnn/IBM Z backend); **Huawei** (implied, hipudding, ggml-cann/Ascend backend); **SpacemiT** (alex-spacemit, `jinghui.huang@spacemit.com`, owns `ggml/src/ggml-cpu/spacemit/`); **10xEngineers**, a Pakistan-based RISC-V/hardware consultancy (Ahmad "Tameem" Tameem and rehan-10xengineer, who authored the original 2023 RVV intrinsics and much of the subsequent RVV kernel work).
+
+**Community stance on new ports** (`CONTRIBUTING.md`): new hardware/backend support is welcomed but gated: it must start as a GitHub issue (not a PR) to let interest accumulate; new backend/model support should ship CPU-only first, with GPU/accelerator backends as follow-ups; new quant types face a high bar (perplexity/KL-divergence/performance data required); maintainers explicitly weigh long-term maintenance burden and may decline niche or unmaintainable contributions.
+
+**RISE Project relationship:** llama.cpp/ggml-org is **not listed** as a RISE member or RISE-affiliated project on riseproject.dev's members page (which lists Premier members Google, NVIDIA, Qualcomm, SiFive, Red Hat and General members including SpacemiT, Canonical, ByteDance). The connection is indirect but substantial: llama.cpp is reported as **the single heaviest consumer of RISE's free native RISC-V CI runner service, with 2,589 CI jobs in a six-week window** (2026-03-19 to 2026-05-06), running on Cloud-V-hosted RVV 1.0 hardware ([RISE blog, "RISE RISC-V Runners: six weeks in," 2026-05-12](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/)). Ludovic Henry (Meta), founder/lead of the RISE AI & ML Workgroup, is named in RISE's Q1 2026 Outsized Impact Award for "optimizing PyTorch ATen operators and llama.cpp" ([RISE Q1 2026 award post](https://riseproject.dev/2026/04/21/rise-outsized-impact-award-q1-2026/)); he also reviews llama.cpp RISC-V PRs under the handle `luhenry`. SpacemiT, the vendor behind llama.cpp's dedicated RISC-V backend, is itself a RISE General Member, giving RISE a corporate-contributor link to the project even without formal project membership. RISE also maintains a fork, `riseproject-dev/llama.cpp`, used as a CI validation target, and a related `riseproject-dev/llama.cpp-validation` repo referenced in RISE's runner architecture docs [NEEDS VERIFICATION on exact scope of that repo's contents].
 
 ---
 
 ## 2. Port History and Upstreaming Timeline
 
-The following table covers all confirmed merged RISC-V PRs in chronological order, based on direct examination of the GitHub PR history.
+RISC-V support has no single master tracking issue; it evolved through 45+ individual issues and PRs from May 2023 to the present. The table below lists confirmed merged milestones, cross-checked against a direct GitHub PR-history search that returned exact `merged_at` timestamps and first-release build tags.
 
-| Date | PR | Merge Commit | Contributor | Affiliation | First Release | Change |
-|---|---|---|---|---|---|---|
-| 2023-05-27 | [#1616](https://github.com/ggerganov/llama.cpp/pull/1616) | a6704643 | apcameron | individual | n/a | Wrap `#include <immintrin.h>` in platform guard; enables compilation on RISC-V. No optimization. |
-| 2023-09-01 | [#2929](https://github.com/ggerganov/llama.cpp/pull/2929) | 5aec2cfa | Tameem-10xE | 10xEngineers | n/a | RVV dot-product intrinsics for q4_0, q4_1, q5_0, q5_1, q8_0; Makefile cross-compile flags. Tested via qemu-riscv64. |
-| 2023-10-03 | [#3453](https://github.com/ggerganov/llama.cpp/pull/3453) | 79f34ab | (see PR) | (see PR) | b1311 | RVV intrinsics for all K-quant dot products and quantize_row. 6-7x over scalar on 8-core VLEN=256 board. Known correctness bug: garbled output with VLEN > 256. |
-| 2024-07-29 | [#8748](https://github.com/ggerganov/llama.cpp/pull/8748) | 75af08c | CarterLi999 | individual | b3486 | Fix inactive-element masking: switched from agnostic to undisturbed policy in RVV intrinsics. |
-| 2024-09-12 | [#9442](https://github.com/ggerganov/llama.cpp/pull/9442) | 2b00fa7 | Tameem-10xE | 10xEngineers | b3735 | Makefile RISCV_VECT flag and vector logging. |
-| 2025-03-27 | [#12530](https://github.com/ggerganov/llama.cpp/pull/12530) | 24feaec | xctan | individual | b4967 | 128-bit VLEN RVV support; runtime VLEN dispatch; Zfhmin FP16 conversion. pp512 3.18 -> 27.19 t/s (8.5x) on 64-core rv64gcv. Required inline assembly for K-quant kernels due to GCC 14.2 register spill with intrinsics. |
-| 2025-05-27 | [#13720](https://github.com/ggerganov/llama.cpp/pull/13720) | 05f6ac6 | xctan | individual | b5502 | xtheadvector (T-Head RVV v0.7.1) support; K-quant acceleration for SG2042. pp512 3.35 -> 15.73 t/s (4.7x) on SG2042 32-thread. |
-| 2025-08-13 | [#14439](https://github.com/ggerganov/llama.cpp/pull/14439) | 648ebcd | alitariq4589 | 10xEngineers / Cloud-V | b6150 | Native RISC-V CI via Banana Pi BPI-F3 self-hosted runner at cloud-v.co (later migrated to RISE runners). |
-| 2025-08-27 | [#15057](https://github.com/ggerganov/llama.cpp/pull/15057) | 1cf123a | (see PR) | (see PR) | b6295 | Basic RVV support for float32 vector operations. |
-| 2025-09-03 | [#15720](https://github.com/ggerganov/llama.cpp/pull/15720) | 05c0380 | xctan | individual | b6362 | RVV kernel performance improvements. |
-| 2025-09-29 | [#15288](https://github.com/ggerganov/llama.cpp/pull/15288) | b77e6c1 | alex-spacemit | SpacemiT | b6621 | SpacemiT-specific backend using proprietary IME instructions (vmadot, vfwmadot, vmadot1). Q4_0 on SpacemiT X60 4-thread: 64.12 t/s pp512 / 10.03 t/s tg128 for Qwen2.5 0.5B. Requires non-upstream Bianbu binutils. |
-| 2025-10-17 | [#16629](https://github.com/ggerganov/llama.cpp/pull/16629) | 342c728 | (see PR) | (see PR) | b6790 | Bug fix: out-of-bounds array access in SpacemiT IME task scheduler. |
-| 2025-11-06 | [#16887](https://github.com/ggerganov/llama.cpp/pull/16887) | 7f09a68 | (see PR) | (see PR) | b6963 | Performance: Q2_K and Q3_K RVV dot-product kernel optimizations. |
-| 2025-11-11 | [#17161](https://github.com/ggerganov/llama.cpp/pull/17161) | (see PR) | (see PR) | (see PR) | n/a | Zvfh-accelerated FP16-to-FP32 conversion kernels. |
-| 2025-11-14 | [#17259](https://github.com/ggerganov/llama.cpp/pull/17259) | (see PR) | (see PR) | (see PR) | n/a | README: document supported RISC-V ISA extensions (RVV, ZVFH, ZFH, ZICBOP). |
-| 2025-11-20 | [#17314](https://github.com/ggerganov/llama.cpp/pull/17314) | (see PR) | (see PR) | (see PR) | n/a | Zvfh-accelerated FP16 vector scaling. |
-| 2025-11-24 | [#17461](https://github.com/ggerganov/llama.cpp/pull/17461) | (see PR) | ixgbe | individual | n/a | Runtime CPU feature detection; GGML_CPU_ALL_VARIANTS builds libggml-cpu-riscv64_0.so and libggml-cpu-riscv64_v.so. Initial implementation used AT_HWCAP -- broken (see PR #17567). |
-| 2025-11-29 | [#17567](https://github.com/ggerganov/llama.cpp/pull/17567) | 8f77a08 | ixgbe | individual | n/a | Replace AT_HWCAP with riscv_hwprobe syscall for RVV detection; fixes false-positive on boards reporting RVV v0.7 as v1.0. Requires Linux >= 6.5. |
-| 2025-12-02 | [#16682](https://github.com/ggerganov/llama.cpp/pull/16682) | 6a38407 | (see PR) | (see PR) | b7222 | Test coverage validated on RVV 1.0 hardware. |
-| 2025-12-18 | [#17318](https://github.com/ggerganov/llama.cpp/pull/17318) | (see PR) | (see PR) | (see PR) | n/a | Extended RVV coverage to additional floating-point operations. |
-| 2025-12-22 | [#18199](https://github.com/ggerganov/llama.cpp/pull/18199) | (see PR) | (see PR) | (see PR) | n/a | RVV-accelerated SGEMM kernels in the llamafile layer. |
-| 2026-01-19 | [#18784](https://github.com/ggerganov/llama.cpp/pull/18784) | (see PR) | (see PR) | (see PR) | n/a | RVV vec dot kernels for additional quantization types. |
-| 2026-03-10 | [#19121](https://github.com/ggerganov/llama.cpp/pull/19121) | (see PR) | (see PR) | (see PR) | n/a | Repack-based RVV GEMM and GEMV kernels for quantized formats. |
-| 2026-03-13 | [#18859](https://github.com/ggerganov/llama.cpp/pull/18859) | (see PR) | (see PR) | (see PR) | n/a | Further RVV vec dot kernels for quantization types. |
-| 2026-03-17 | [#20682](https://github.com/ggerganov/llama.cpp/pull/20682) | (see PR) | (see PR) | (see PR) | n/a | Fix incorrect RVV feature-check logic in quantization and repacking dispatch. |
-| 2026-03-26 | [#20888](https://github.com/ggerganov/llama.cpp/pull/20888) | (see PR) | (see PR) | (see PR) | n/a | CMake fix: canonical ISA string ordering for RVV extensions. |
-| 2026-04-01 | [#21157](https://github.com/ggerganov/llama.cpp/pull/21157) | (see PR) | (see PR) | (see PR) | n/a | Fix fallback path when Zvfh extension is absent. |
-| 2026-04-05 | [#21263](https://github.com/ggerganov/llama.cpp/pull/21263) | (see PR) | (see PR) | (see PR) | n/a | Migrate CI from cloud-v.co self-hosted runners to RISE Project public riscv64 GitHub Actions runners. |
-| 2026-04-16 | [#20627](https://github.com/ggerganov/llama.cpp/pull/20627) | 5637536 | rehan-10xengineer | 10xEngineers | n/a | SIMD-GEMM implementation using RVV intrinsics. Flash attention benchmark: 2.69 -> 22.75 GFLOPS (8.5x) at 128 tokens on BPI-F3. |
-| 2026-04-16 | [#20633](https://github.com/ggerganov/llama.cpp/pull/20633) | (see PR) | (see PR) | (see PR) | n/a | 128-bit RVV quantization vector dot product implementations for low-VLEN cores. |
-| 2026-04-16 | [#21632](https://github.com/ggerganov/llama.cpp/pull/21632) | (see PR) | (see PR) | (see PR) | n/a | Enable ccache on riscv64 CI builds. |
-| 2026-04-29 | [#22317](https://github.com/ggerganov/llama.cpp/pull/22317) | (see PR) | (see PR) | (see PR) | n/a | CMake: append xsmtvdotii march flag for SpacemiT IME. |
-| 2026-05-07 | [#22768](https://github.com/ggerganov/llama.cpp/pull/22768) | (see PR) | (see PR) | (see PR) | n/a | Optimized RVV Q1_0 vec dot. Bonsai-1.7B on OrangePi RV2 8-thread: scalar 1.19 t/s pp64 -> RVV VL256 13.36 t/s (11.2x). |
-| 2026-05-14 | [#22863](https://github.com/ggerganov/llama.cpp/pull/22863) | (see PR) | alex-spacemit | SpacemiT | n/a | SpacemiT IME2 instruction support. SpacemiT A100 (VLEN=1024): Qwen3 0.6B Q4_0 565.83 t/s pp128. |
-| 2026-05-25 | [#23642](https://github.com/ggerganov/llama.cpp/pull/23642) | (see PR) | (see PR) | (see PR) | n/a | Update SpacemiT toolchain CI download URL (upstream URL changed). |
-| 2026-05-26 | [#23705](https://github.com/ggerganov/llama.cpp/pull/23705) | (see PR) | (see PR) | (see PR) | n/a | Disable SYCL and CANN CI builds; tangential riscv64 CI matrix effect. |
-| 2026-06-04 | [#22754](https://github.com/ggerganov/llama.cpp/pull/22754) | (see PR) | (see PR) | (see PR) | n/a | Extend RVV quantization vec dot to VLEN > 128-bit. |
+| Date (merged) | PR | Contributor / Affiliation | First Release Tag | Change |
+|---|---|---|---|---|
+| 2023-05-27 | [#1616](https://github.com/ggml-org/llama.cpp/pull/1616) | apcameron, individual | pre-`bNNNN` era | Foundational port: guards x86 SIMD includes so the code compiles on RISC-V at all. |
+| 2023-09-01 | [#2929](https://github.com/ggml-org/llama.cpp/pull/2929) | Tameem-10xE, 10xEngineers | b1140 | First real RVV intrinsics: dot products for q4_0/q4_1/q5_0/q5_1/q8_0. |
+| 2023-09-15 | [#3160](https://github.com/ggml-org/llama.cpp/pull/3160) | 10xEngineers/Cloud-V | b1245 | Original Cloud-V Jenkins-based CI pipeline for native RISC-V builds. |
+| 2023-10-03 | [#3453](https://github.com/ggml-org/llama.cpp/pull/3453) | 10xEngineers | b1317 | RVV support for K-quants; refined existing intrinsics. |
+| 2024-07-22 | [#8623](https://github.com/ggml-org/llama.cpp/pull/8623) | (unattributed) | b3434 | Fix RISC-V compile error. |
+| 2024-07-29 | [#8748](https://github.com/ggml-org/llama.cpp/pull/8748) | CarterLi999, individual | b3488 | Fix RVV inactive-lane masking (agnostic -> undisturbed policy). |
+| 2024-09-12 | [#9442](https://github.com/ggml-org/llama.cpp/pull/9442) | Tameem-10xE, 10xEngineers | b3738 | Makefile RISCV_VECT flag and vector-capability logging. |
+| 2024-10-30 | [#10029](https://github.com/ggml-org/llama.cpp/pull/10029) | (unattributed) | b3991 | RVV version of Q4_0_8_8 quant functions. |
+| 2024-11-19 | [#10411](https://github.com/ggml-org/llama.cpp/pull/10411) | (unattributed) | b4138 | CMake-based RISC-V compiler detection (previously Makefile-only). |
+| 2025-03-27 | [#12530](https://github.com/ggml-org/llama.cpp/pull/12530) | xctan, individual | b4969 | 128-bit RVV VLEN support (previously only 256+ bit); ~8.5x pp512 uplift reported. |
+| 2025-05-27 | [#13720](https://github.com/ggml-org/llama.cpp/pull/13720) | xctan, individual | b5509 | xtheadvector (T-Head vendor RVV variant) support for SG2042/C906/C910. |
+| 2025-08-13 | [#14439](https://github.com/ggml-org/llama.cpp/pull/14439) | alitariq4589, 10xEngineers/Cloud-V | b6148 | Replaced manual Jenkins Cloud-V CI with a GitHub Actions job on real RVV 1.0 hardware. |
+| 2025-09-03 | [#15720](https://github.com/ggml-org/llama.cpp/pull/15720) | xctan, individual | b6364 | RVV kernel performance optimizations. |
+| 2025-09-21 | [#16150](https://github.com/ggml-org/llama.cpp/pull/16150) | (unattributed) | b6532 | Added CI label for the RISC-V runner. |
+| 2025-09-29 | [#15288](https://github.com/ggml-org/llama.cpp/pull/15288) | alex-spacemit / co-seven / CISC | b6635 | Dedicated SpacemiT (K1/K3) backend using proprietary IME instructions; new cross-compile CI job. |
+| 2025-10-17 | [#16629](https://github.com/ggml-org/llama.cpp/pull/16629) | (unattributed) | b6788 | Fix SpacemiT IME out-of-bounds array access. |
+| 2025-11-02 | [#16952](https://github.com/ggml-org/llama.cpp/pull/16952) | (unattributed) | b6929 | Disabled a broken riscv cross-compile CI job to unblock other PRs. |
+| 2025-11-24 | [#17461](https://github.com/ggml-org/llama.cpp/pull/17461) | ixgbe / ISCAS | b7141 | Structured RISC-V CPU feature detection; enables `GGML_CPU_ALL_VARIANTS` dynamic dispatch. |
+| 2025-11-29 | [#17567](https://github.com/ggml-org/llama.cpp/pull/17567) | ixgbe / ISCAS | b7196 | Replaced legacy `hwcap` detection with `riscv_hwprobe` syscall for reliable RVV detection. |
+| 2025-12-10 | [#17916](https://github.com/ggml-org/llama.cpp/pull/17916) | (unattributed) | b7356 | Fixed a broken native riscv64 CI build. |
+| 2025-12-12 | [#17951](https://github.com/ggml-org/llama.cpp/pull/17951) | (unattributed) | b7369 | Fixed Q4_0 repack kernel-selection logic and RVV feature reporting. |
+| 2026-01-05 | [#18590](https://github.com/ggml-org/llama.cpp/pull/18590) | (unattributed) | b7628 | Initialized git-lfs in every RISC-V CI test job. |
+| 2026-01-26 | [#19121](https://github.com/ggml-org/llama.cpp/pull/19121) | (unattributed) | b8268 | RVV-accelerated repacked GEMM/GEMV paths for quantized types. |
+| 2026-03-13 | [#18859](https://github.com/ggml-org/llama.cpp/pull/18859) | rehan-10xengineer, taimur-10x, RehanQasim-dev / 10xEngineers | b8329 | RVV vec-dot kernels for IQ2/IQ3/IQ4/MXFP4 (128-bit and 256-bit VLEN). Later shown to contain the tail-handling bug tracked as issue #29131. |
+| 2026-03-17 | [#20682](https://github.com/ggml-org/llama.cpp/pull/20682) | (unattributed) | b8398 | Fixed incorrect RVV capability checks in quant/repack code paths. |
+| 2026-03-26 | [#20888](https://github.com/ggml-org/llama.cpp/pull/20888) | (unattributed) | b8545 | Canonical ISA-string ordering fix for RVV `-march` flags. |
+| 2026-04-01 | [#21157](https://github.com/ggml-org/llama.cpp/pull/21157) | (unattributed) | b8610 | Fixed scalar fallback when `zvfh` is absent. |
+| 2026-04-01 | [#21263](https://github.com/ggml-org/llama.cpp/pull/21263) | (unattributed) | n/a | Switched CI from custom self-hosted runners to standard RISE-provided RISC-V runners. |
+| 2026-04-16 | [#20627](https://github.com/ggml-org/llama.cpp/pull/20627) | 10xEngineers | b8813 | `simd_gemm` kernel using the RISC-V vector extension. |
+| 2026-04-16 | [#21632](https://github.com/ggml-org/llama.cpp/pull/21632) | (unattributed) | b8811 | Enabled ccache on riscv64 CI builds. |
+| 2026-04-29 | [#22317](https://github.com/ggml-org/llama.cpp/pull/22317) | (unattributed) | b8972 | CMake march-flag fix enabling SpacemiT's IME matrix-extension instructions. |
+| 2026-05-07 | [#22768](https://github.com/ggml-org/llama.cpp/pull/22768) | (unattributed) | b9057 | Optimized q1_0 dot-product kernel for RISC-V. |
+| 2026-05-09 | [#22863](https://github.com/ggml-org/llama.cpp/pull/22863) | alex-spacemit / SpacemiT | n/a | IME2 (2nd-gen matrix-multiply) instruction support for the SpacemiT backend. |
+| 2026-06-04 | [#22754](https://github.com/ggml-org/llama.cpp/pull/22754) | (unattributed) | b9498 | Extended RVV quantization vec-dot to higher VLENs. |
+| 2026-09-02 | [#27961](https://github.com/ggml-org/llama.cpp/pull/27961) | (unattributed) | b10756 | Gated SpacemiT IME kernel source compilation behind a build condition. |
 
-**Observation:** The rate of merged RISC-V PRs has accelerated sharply. Roughly 4 PRs were merged in all of 2023-2024 combined; 12 or more were merged in Q4 2025 alone; the pace continued at 10+ per quarter through Q1-Q2 2026. This reflects infrastructure maturity (native CI) and growing contributor diversity.
+**Closed without merging (confirmed no merge commit exists):** #3193 (Cloud-V CI test PR), #9953 (superseded by #10029), #15287 (Jenkins-to-GH-Actions replacement, superseded by #14439), plus others; also #25553 (VLEN1024 Q4_K/Q5_K repack path, closed 2026-07-11, unmerged) and #26986 ("ci: Enable release on ubuntu riscv64," closed 2026-08-12, unmerged, competing with the still-open #20991).
+
+**Currently open, unmerged:** [#20991](https://github.com/ggml-org/llama.cpp/pull/20991) (release binaries, see Sections 8 and 12), [#23009](https://github.com/ggml-org/llama.cpp/pull/23009) (xtheadvector build fix), [#28479](https://github.com/ggml-org/llama.cpp/pull/28479) (SpacemiT X60 IME1 Q8_0 kernel), [#28642](https://github.com/ggml-org/llama.cpp/pull/28642) (Q4_0 8x8 gemv/gemm for vlenb=16).
+
+**Observation:** the pace of merged RISC-V PRs accelerated sharply from a handful per year in 2023-2024 to roughly 10+ per quarter through 2025-2026, tracking the standup of native CI hardware in August 2025 ([#14439](https://github.com/ggml-org/llama.cpp/pull/14439)) and the RISE runner migration in April 2026 ([#21263](https://github.com/ggml-org/llama.cpp/pull/21263)).
 
 ---
 
 ## 3. Upstream Support Tier
 
-llama.cpp does not publish a formal tier policy. The de facto requirements for acceptance of a new architecture or backend, as stated by ggerganov in PR reviews, are:
+llama.cpp publishes no formal architecture-tier policy (no `PLATFORMS.md`/`SUPPORT.md`). The README's "Supported backends" table lists BLAS, CUDA, HIP, Hexagon, IBM zDNN, Metal, OpenCL, RPC, SYCL, Vulkan, WebGPU, ZenDNN with only one informal qualifier ("[In Progress]" for OpenVINO); RISC-V/RVV is not listed as a "backend" at all, it is a CPU-ISA optimization path inside the generic CPU backend plus the standalone SpacemiT backend.
 
-1. Follow project coding and naming conventions.
-2. Provide CI coverage, preferably with self-hosted runners for exotic hardware.
-3. Designate a CODEOWNERS entry for long-term maintenance.
-4. No third-party dependencies; portability must be considered.
+The de facto criteria applied in PR review are: follow coding/naming conventions, provide CI coverage (ideally on real hardware), designate a `CODEOWNERS` maintainer, and avoid unvetted third-party dependencies. RISC-V satisfies the CI and CODEOWNERS criteria (xctan for `ggml-cpu/arch/riscv/`, alex-spacemit for `ggml-cpu/spacemit/`) but the SpacemiT IME path depends on a non-upstream toolchain (see Section 12).
 
-RISC-V satisfies all four as of mid-2026:
+| Axis | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| Build | Yes (official) | Yes (official) | Yes -- native CI job builds successfully ([`build-riscv.yml`](https://github.com/ggml-org/llama.cpp/blob/master/.github/workflows/build-riscv.yml)) |
+| Test | Yes (official) | Yes (official) | Yes -- same CI job runs `ctest -L main --verbose --timeout 900` plus a llama2c conversion + inference smoke test on real riscv64 hardware |
+| Release (upstream GitHub Releases) | Yes | Yes | **No** -- releases b11298 through b11303 (checked through 2026-09-30) ship zero riscv64 assets; [issue #20988](https://github.com/ggml-org/llama.cpp/issues/20988) requesting this was closed not-planned |
+| CI blocking | Yes, blocks merges | Yes, blocks merges | No -- the PR trigger for `build-riscv.yml` only fires on `ggml/src/ggml-cpu/arch/riscv/**` changes; most PRs never run it |
 
-- The `ggml/src/ggml-cpu/arch/riscv/` directory is listed in CODEOWNERS (xctan is the primary codeowner).
-- Native CI exists via the RISE project runner infrastructure (`ubuntu-24.04-riscv`).
-- The SpacemiT backend (alex-spacemit) has its own CODEOWNERS entry for `ggml/src/ggml-cpu/spacemit/`.
-- All RISC-V code is C/C++ with intrinsics -- no assembly-only files, no JIT.
-
-**Effective tier: maintained, non-blocking.** RISC-V failures in CI do not block merges to `master` for non-RISC-V code. The PR trigger in `build-riscv.yml` only fires for changes inside `ggml/src/ggml-cpu/arch/riscv/**`, meaning most PRs never trigger RISC-V CI at all. This is the same situation as other non-x86 targets (s390x, etc.) and is not RISC-V-specific.
+**Effective tier: build+test verified upstream, release provided only by a third-party distro (Ubuntu's ports archive), not by upstream itself.** This is the basis of the blue color grade (Section 13).
 
 ---
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-### 4.1 Source File Inventory
+RISC-V is a full, CI-tested CPU backend integrated the same way as x86/ARM/PowerPC/s390x (arch-dispatch via `ggml-cpu/arch/<arch>/`, `GGML_BACKEND_DL_SCORE_IMPL` runtime feature scoring, and `GGML_CPU_ALL_VARIANTS` multi-ISA dynamic dispatch), plus a unique vendor-specific matrix-extension backend for SpacemiT SoCs. No RISC-V assembly (`.S`) files exist anywhere in the tree; all acceleration uses C/C++ compiler intrinsics (`riscv_vector.h`). There is no RISC-V JIT and no RISC-V GPU backend (GPU backends such as CUDA/Vulkan/SYCL are host-architecture-independent).
 
-All RISC-V-specific code lives under `ggml/src/ggml-cpu/`:
+### 4.1 Core RISC-V directory: `ggml/src/ggml-cpu/arch/riscv/`
 
-| File | Lines (approx.) | Role |
+| File | Lines | Role |
 |---|---|---|
-| `arch/riscv/quants.c` | ~6,596 | Quantization row functions and vec dot kernels for all major quant formats (q1_0 through q8_K); RVV 1.0, xtheadvector, and VLEN-dispatch variants |
-| `arch/riscv/repack.cpp` | (see PR history) | Repack GEMM and GEMV kernels; Zvfh-gated 16x1 tiling tier; Q4_0, Q4_K, IQ4_NL, Q8_0, Q2_K formats |
-| `arch/riscv/cpu-feats.cpp` | < 60 | Runtime CPU feature detection; `ggml_backend_cpu_riscv64_score()` via riscv_hwprobe; entry point for dynamic dispatch when `GGML_CPU_ALL_VARIANTS=ON` |
-| `spacemit/rvv_kernels.cpp` | large | SpacemiT-specific: softmax, tanh, RMS norm, flash attention (VLEN=1024 optimized), quantize rows |
-| `spacemit/ime.cpp` | (see PR) | SpacemiT IME1/IME2 GEMM kernels; TCM buffer management; thread affinity for SpacemiT AI cores |
-| `spacemit/ime1_kernels.cpp` | (see PR) | IME generation 1 GEMM |
-| `spacemit/ime2_kernels.cpp` | (see PR) | IME generation 2 GEMM |
-| `spacemit/repack.cpp` | (see PR) | Weight repacking for SpacemiT IME format |
-| `spacemit/spine_mem_pool.cpp` | (see PR) | Custom memory pool for SpacemiT TCM allocations |
-| `spacemit/spine_tcm.h` | (see PR) | TCM interface |
-| `spacemit/spine_barrier.h` | (see PR) | Barrier synchronization |
+| `quants.c` | 6,596 | Quantize/dequantize + `ggml_vec_dot_*` kernels for every ggml quant type (Q4_0 through Q6_K, IQ*, TQ*) using RVV intrinsics. |
+| `repack.cpp` | 1,703 | RVV-accelerated weight-repacking for blocked GEMM/GEMV (`ggml_quantize_mat_q8_0_4x8`, `ggml_gemv_*`, `ggml_gemm_*`), plus `Zvfh` fp16-vector paths. |
+| `cpu-feats.cpp` | 38 | Runtime CPU-feature detection via the Linux `riscv_hwprobe` syscall (`RISCV_HWPROBE_KEY_IMA_EXT_0`), used to score the `riscv64_v` (RVV) dynamic backend at load time. |
 
-No `.S` assembly files exist. No JIT backend exists. All RISC-V acceleration is C/C++ with intrinsics and `asm volatile`.
+ISA extensions referenced: V (RVV base vector), Zfh/Zfhmin (scalar half-float), Zvfh (vector half-float), xtheadvector (T-Head vendor variant), plus vsetvl/LMUL-aware intrinsics (`vfloat32m1_t` through `m8_t`, widening/narrowing macc, segmented loads, gather).
 
-### 4.2 ISA Extensions Supported
+### 4.2 Vendor-specific backend: `ggml/src/ggml-cpu/spacemit/` (gated by `GGML_CPU_RISCV64_SPACEMIT`)
 
-| Extension | Guard Macro | Files | Notes |
+| File | Lines | Role |
+|---|---|---|
+| `ime2_kernels.cpp` | 5,768 | IME2 GEMM/GEMV kernels (largest file in the RISC-V tree). |
+| `rvv_kernels.cpp` | 3,178 | Plain-RVV fallback kernels used alongside/underneath IME. |
+| `repack.cpp` | 1,795 | SpacemiT-specific weight repacking. |
+| `ime.cpp` | 1,742 | Core dispatcher/op registration for the IME backend (requires `__riscv_v`/`__riscv_v_intrinsic`). |
+| `ime1_kernels.cpp` | 1,027 | IME1 GEMM/GEMV kernels. |
+| `spine_mem_pool.cpp` | 760 | Custom "SPINE" memory-pool allocator for matrix-engine buffers. |
+| `ime_env.cpp` | 320 | IME1 vs IME2 feature probing. |
+| headers (`ime.h`, `ime_env.h`, `repack.h`, `rvv_kernels.h`, `spine_mem_pool.h`, `spine_barrier.h`, `spine_tcm.h`) | 21-409 each | Support headers. |
+
+Total `spacemit/`: ~15,400 lines. This is documented with real benchmark tables (Qwen3/Qwen3.5/Gemma throughput on X60 and A100 silicon) in `docs/build-riscv64-spacemit.md`, and is not a stub. Overall RISC-V-specific code is ~24,000+ lines.
+
+### 4.3 Build/dispatch integration
+
+`ggml/CMakeLists.txt` exposes `GGML_RVV`, `GGML_RV_ZFH`, `GGML_RV_ZVFH`, `GGML_RV_ZICBOP`, `GGML_RV_ZIHINTPAUSE`, `GGML_RV_ZVFBFWMA` as options; `GGML_RV_ZBA` and `GGML_CPU_RISCV64_SPACEMIT` are used but **not declared as `option()`**, so they must be passed explicitly with `-D` and will not appear in `cmake -L` output. Under `GGML_CPU_ALL_VARIANTS`, two dynamically-loadable CPU backend variants are registered: `riscv64_0` (baseline, no vector) and `riscv64_v` (RVV) -- the same mechanism used for x86 (haswell/skylakex) and ARM (armv8.x/armv9.x) variants.
+
+### 4.4 Comparison vs amd64 / arm64
+
+| Component | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| RVV 1.0 (V) | `__riscv_v` / `__riscv_v_intrinsic` | quants.c, repack.cpp, spacemit/rvv_kernels.cpp | Primary vector path |
-| Zvfh (FP16 vector) | `__riscv_zvfh` | repack.cpp, spacemit/ | Gates entire 16x1 GEMV/GEMM tier in repack.cpp |
-| Zfh (scalar FP16) | `__riscv_zfh` | spacemit/ime.cpp | SpacemiT only |
-| Zba (bit-manip addr) | cmake flag | CMakeLists, spacemit toolchain | Address generation |
-| Zicbop (prefetch) | cmake flag | CMakeLists | Cache prefetch hints |
-| Zihintpause | cmake flag | CMakeLists | Pause hint |
-| Zvfbfwma (BF16 widen) | cmake flag | CMakeLists | Optional, off by default |
-| Zfhmin | runtime probe | quants.c | Accelerated FP16 conversions |
-| XTheadVector | `__riscv_xtheadvector` | quants.c | T-Head C906/C910/SG2042 vendor extension |
-| SpacemiT IME1 | `RISCV64_SPACEMIT_IME1` | spacemit/ime*.cpp | Proprietary; requires non-upstream Bianbu binutils |
-| SpacemiT IME2 | `RISCV64_SPACEMIT_IME2` | spacemit/ime*.cpp | Proprietary; GCC 15+ for xsmtvdotii in cmake |
-
-### 4.3 Quant Format Coverage
-
-Based on merged PRs and source file content:
-
-| Format | RVV vec dot | RVV GEMV (repack) | RVV GEMM (repack) | XTheadVector | SpacemiT IME |
-|---|---|---|---|---|---|
-| Q1_0 | Yes (PR #22768) | No | No | Open PR #23009 | No |
-| Q2_K | Yes | Yes (Zvfh) | Yes (Zvfh) | Yes | Yes |
-| Q3_K | Yes | No [NEEDS VERIFICATION] | No [NEEDS VERIFICATION] | Yes | Yes |
-| Q4_0 | Yes | Yes (Zvfh) | Yes (Zvfh) | Yes | Yes |
-| Q4_1 | Yes | No [NEEDS VERIFICATION] | No [NEEDS VERIFICATION] | Yes | Yes |
-| Q4_K | Yes | Yes (Zvfh) | Yes (Zvfh) | Yes | Yes |
-| Q5_0 | Yes | No [NEEDS VERIFICATION] | No [NEEDS VERIFICATION] | Yes | No |
-| Q5_1 | Yes | No [NEEDS VERIFICATION] | No [NEEDS VERIFICATION] | Yes | No |
-| Q5_K | Yes | No [NEEDS VERIFICATION] | No [NEEDS VERIFICATION] | No [NEEDS VERIFICATION] | No |
-| Q6_K | Yes | No (Draft PR #23745) | No (Draft PR #23745) | No [NEEDS VERIFICATION] | No |
-| Q8_0 | Yes | Yes (Zvfh) | Yes (Zvfh) | No [NEEDS VERIFICATION] | No |
-| Q8_K | Yes | No [NEEDS VERIFICATION] | No [NEEDS VERIFICATION] | No [NEEDS VERIFICATION] | No |
-| IQ4_NL | Yes [NEEDS VERIFICATION] | Yes (Zvfh) | Yes (Zvfh) | No [NEEDS VERIFICATION] | No |
-| F32 | Yes (PR #15057) | Yes (PR #17791 open) | Yes (PR #17791 open) | No [NEEDS VERIFICATION] | Via rvv_kernels.cpp |
-| F16 | Yes (PR #17318) | Partial (Zvfh) | Partial (Zvfh) | No [NEEDS VERIFICATION] | Yes |
-| NVFP4 | Open PR #23402 | No | No | No | No |
-
-Note: Q3_K repack is the subject of Draft PR #23745. PR #17791 (F32 repack GEMM/GEMV) is open but stale.
-
-### 4.4 Dynamic Dispatch (GGML_CPU_ALL_VARIANTS)
-
-When built with `-DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON -DGGML_CPU_ALL_VARIANTS=ON`, the build produces two shared libraries: `libggml-cpu-riscv64_0.so` (rv64gc baseline, no vector) and `libggml-cpu-riscv64_v.so` (rv64gcv, RVV 1.0). At runtime, `cpu-feats.cpp` calls the `riscv_hwprobe` syscall (Linux >= 6.5 required) to detect RVV and load the appropriate variant. This mirrors the arm64 FEAT_DotProd dispatch pattern. PR #17461 introduced this; PR #17567 corrected the detection bug. Issue [ggml-org/ggml#1475](https://github.com/ggml-org/ggml/issues/1475) documents that sub-extension gating (Zvfh, Zvbb, etc.) is not yet done via hwprobe -- only base V is probed.
+| SIMD dot-product kernels (all quant types) | Yes (AVX2/AVX-512/AMX) | Yes (NEON/SVE, plus KleidiAI) | Yes (RVV 1.0 intrinsics; xtheadvector for T-Head cores) |
+| GEMM/GEMV repack tier | Full coverage across quant types | Full coverage across quant types | Partial: Q2_K/Q4_0/Q4_K/Q8_0/IQ4_NL covered via Zvfh; Q3_K, Q5_K, Q6_K, F32 repack not yet covered [NEEDS VERIFICATION on current PR status of the specific gap-closing PRs] |
+| Vendor matrix extension | AMX (Intel) | none in-tree | SpacemiT IME1/IME2 (`ggml-cpu/spacemit/`) |
+| Dynamic multi-ISA dispatch | Yes (`GGML_CPU_ALL_VARIANTS`) | Yes | Yes (`riscv64_0` / `riscv64_v`) |
+| Assembly (`.S`) files | Yes | Some | None -- intrinsics only |
+| GPU backend availability | CUDA, Vulkan, SYCL, HIP | Vulkan, Metal | Vulkan scaffolded but disabled in CI (Section 7) |
 
 ---
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-### 5.1 CMake Architecture Detection
+### 5.1 Architecture detection and march-string construction
 
-`ggml/cmake/common.cmake` detects riscv64 via `CMAKE_SYSTEM_PROCESSOR MATCHES "riscv64"`. Linux is the only supported target OS; any other OS triggers a fatal CMake error.
+CMake detects riscv64 via `CMAKE_SYSTEM_PROCESSOR MATCHES "riscv64"`. The `-march` string is assembled incrementally: `rv64gc` + `v` (RVV) + `_zfh` + `_xtheadvector` (mutually exclusive with zvfh/zvfbfwma) + `_zvfh` + `_zvfbfwma` + `_zicbop` + `_zihintpause` + `_zba` + `_xsmtvdotii` (SpacemiT, requires GCC >= 15), always with `-mabi=lp64d`. PR [#20888](https://github.com/ggml-org/llama.cpp/pull/20888) fixed canonical ISA-string ordering, which the assembler requires.
 
-### 5.2 CMake Option Flags (defaults)
-
-| Flag | Default | Extension |
-|---|---|---|
-| `GGML_RVV` | ON | V (RVV 1.0) |
-| `GGML_RV_ZFH` | ON | Zfh |
-| `GGML_RV_ZVFH` | ON | Zvfh |
-| `GGML_RV_ZICBOP` | ON | Zicbop |
-| `GGML_RV_ZIHINTPAUSE` | ON | Zihintpause |
-| `GGML_RV_ZVFBFWMA` | OFF | Zvfbfwma (BF16) |
-| `GGML_XTHEADVECTOR` | OFF | XTheadVector |
-| `GGML_RV_ZBA` | not declared as option() | Zba |
-| `GGML_CPU_RISCV64_SPACEMIT` | not declared as option() | SpacemiT IME |
-
-`GGML_RV_ZBA` and `GGML_CPU_RISCV64_SPACEMIT` are used in `ggml/src/ggml-cpu/CMakeLists.txt` but are not declared as `option()` in `ggml/CMakeLists.txt`. They must be passed explicitly as `-D` flags; they will not appear in `cmake -L` output.
-
-### 5.3 march String Construction
-
-The build system assembles the `-march` string incrementally:
+### 5.2 Native CI build command (from `build-riscv.yml`, verbatim)
 
 ```
-rv64gc
-  + v              (GGML_RVV)
-  + _zfh           (GGML_RV_ZFH)
-  + _xtheadvector  (GGML_XTHEADVECTOR; mutually exclusive with zvfh/zvfbfwma)
-  + _zvfh          (GGML_RVV and GGML_RV_ZVFH)
-  + _zvfbfwma      (GGML_RVV and GGML_RV_ZVFBFWMA)
-  + _zicbop        (GGML_RV_ZICBOP)
-  + _zihintpause   (GGML_RV_ZIHINTPAUSE)
-  + _zba           (GGML_RV_ZBA)
-  + _xsmtvdotii    (GGML_CPU_RISCV64_SPACEMIT and GCC >= 15)
-ABI: -mabi=lp64d always
+cmake -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DGGML_OPENMP=OFF \
+  -DLLAMA_BUILD_EXAMPLES=ON \
+  -DLLAMA_BUILD_TOOLS=ON \
+  -DLLAMA_BUILD_TESTS=ON \
+  -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+  -DGGML_RPC=ON \
+  -DCMAKE_C_COMPILER=riscv64-linux-gnu-gcc-14 \
+  -DCMAKE_CXX_COMPILER=riscv64-linux-gnu-g++-14
 ```
 
-PR [#20888](https://github.com/ggerganov/llama.cpp/pull/20888) fixed canonical ISA string ordering (assembler requires canonical order; build was failing before this fix).
+Note: this runs on the **native** `ubuntu-24.04-riscv` runner, yet still invokes the cross-compiler-triplet binary names (`riscv64-linux-gnu-gcc-14`) -- the toolchain naming is cross-style even though execution is native. No QEMU is referenced in this file.
 
-### 5.4 Build Commands
+### 5.3 SpacemiT cross-compile build command (from `build-cross.yml`, the only active job in that file; runs on x86_64, no QEMU)
 
-**Standard RVV + Zvfh (BPI-F3, Lichee Pi 4A, SiFive P670):**
-```bash
-cmake -B build -DGGML_RVV=ON -DGGML_RV_ZFH=ON -DGGML_RV_ZVFH=ON \
-  -DGGML_RV_ZICBOP=ON -DGGML_RV_ZIHINTPAUSE=ON
-cmake --build build --config Release -j$(nproc)
 ```
-Produces: `-march=rv64gcv_zfh_zvfh_zicbop_zihintpause -mabi=lp64d`
-
-**T-Head C906/C910/SG2042 (xtheadvector):**
-```bash
-cmake -B build -DGGML_RVV=OFF -DGGML_XTHEADVECTOR=ON -DGGML_RV_ZFH=ON
-cmake --build build --config Release -j$(nproc)
+cmake -B build -DLLAMA_OPENSSL=OFF \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DLLAMA_BUILD_EXAMPLES=ON \
+  -DGGML_CPU_REPACK=OFF \
+  -DLLAMA_BUILD_TOOLS=ON \
+  -DLLAMA_BUILD_TESTS=OFF \
+  -DGGML_CPU_RISCV64_SPACEMIT=ON \
+  -DGGML_RVV=ON -DGGML_RV_ZVFH=ON -DGGML_RV_ZFH=ON \
+  -DGGML_RV_ZICBOP=ON -DGGML_RV_ZIHINTPAUSE=ON -DGGML_RV_ZBA=ON \
+  -DCMAKE_TOOLCHAIN_FILE=${PWD}/cmake/riscv64-spacemit-linux-gnu-gcc.cmake
 ```
-Produces: `-march=rv64gc_zfh_xtheadvector -mabi=lp64d`
 
-**SpacemiT K1/X60 (Bananapi BPI-F3, Milk-V Jupiter):**
-```bash
-cmake -B build -DGGML_RVV=ON -DGGML_RV_ZFH=ON -DGGML_RV_ZVFH=ON \
-  -DGGML_RV_ZICBOP=ON -DGGML_RV_ZBA=ON -DGGML_CPU_RISCV64_SPACEMIT=ON
-cmake --build build --config Release -j$(nproc)
-```
-Requires SpacemiT IME toolchain (currently from Bianbu repo; not in upstream GCC). Uses `cmake/riscv64-spacemit-linux-gnu-gcc.cmake`.
+Two additional riscv64 cross-compile jobs (`ubuntu-24-riscv64-cpu-cross`, plain GCC; `ubuntu-24-riscv64-vulkan-cross`, using `apt-get install ... glslc gcc-14-riscv64-linux-gnu libvulkan-dev:riscv64`) exist in `build-cross.yml` but are **fully commented out**, with the code's own TODO: "for regular runs, provision dedicated self-hosted runners."
 
-**Dynamic dispatch (ALL_VARIANTS):**
-```bash
-cmake -B build -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON \
-  -DGGML_CPU_ALL_VARIANTS=ON
-cmake --build build --config Release -j$(nproc)
-```
-Produces `libggml-cpu-riscv64_0.so` (no vector) and `libggml-cpu-riscv64_v.so` (RVV 1.0). Requires Linux >= 6.5 for riscv_hwprobe.
+### 5.4 Toolchain requirements
 
-**Cross-compile from x86-64:**
-```bash
-cmake -B build -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=riscv64 \
-  -DCMAKE_C_COMPILER=riscv64-linux-gnu-gcc \
-  -DCMAKE_CXX_COMPILER=riscv64-linux-gnu-g++ \
-  -DGGML_RVV=ON -DGGML_RV_ZFH=ON -DGGML_RV_ZVFH=ON
-cmake --build build --config Release -j$(nproc)
-```
-No official cmake toolchain file exists for generic riscv64 cross-compilation. The SpacemiT toolchain file (`cmake/riscv64-spacemit-linux-gnu-gcc.cmake`) is SpacemiT-specific.
+- GCC >= 14 required for `_zvfh`/`_zvfbfwma` march components; the CI toolchain is `riscv64-linux-gnu-gcc-14`/`g++-14` (Ubuntu 24.04 package).
+- GCC >= 15 required for `_xsmtvdotii` (SpacemiT); explicitly gated in CMake code.
+- GNU binutils >= 2.40 required for the Zvfh/Zicbop/Zihintpause ISA strings to assemble correctly (motivating the ordering fix in #20888).
+- C++17 is the only enforced language standard.
+- No official generic riscv64 cross-compile CMake toolchain file exists upstream; only the SpacemiT-specific one (`cmake/riscv64-spacemit-linux-gnu-gcc.cmake`) ships in-tree.
 
-### 5.5 Toolchain Version Requirements
+### 5.5 Known build failures (representative, all issue-tracked)
 
-No minimum GCC/Clang version is enforced by CMake for general riscv64 builds. In practice:
-
-- GCC >= 14 required for `_zvfh` and `_zvfbfwma` in `-march` strings.
-- GCC >= 15 required for `_xsmtvdotii` (SpacemiT vendor extension); cmake code gates this explicitly.
-- Binutils >= 2.40 required for Zvfh, Zicbop, Zihintpause ISA strings.
-- C++17 is the only explicit standard.
-
-The CI compilers are `riscv64-linux-gnu-gcc-14` and `riscv64-linux-gnu-g++-14` (Ubuntu 24.04 package).
+Compile failures have recurred across the port's history: missing-RVV builds (#20669, closed), `GGML_CPU_ALL_VARIANTS=ON` failing on RISC-V (#21064, closed), cross-compile-target errors (#19049, closed), warnings-as-errors breaking cross builds (#12693, closed), and, currently open, [#28986](https://github.com/ggml-org/llama.cpp/issues/28986) ("`vfloat32m8_t` requires the `zve32f` extension," opened 2026-09-16, surfaced while cross-compiling Thunderbird's bundled llama.cpp for riscv64 via snapcraft; the failing code is in `ggml/src/ggml-cpu/vec.h` lines ~403-406 and ~606-609).
 
 ---
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
-### 6.1 What is fully implemented
+### 6.1 Fully implemented on riscv64
 
-- All major K-quant vec dot kernels (Q2_K through Q6_K): RVV, xtheadvector, and scalar fallback.
-- Q4_0, Q4_K, Q8_0, Q2_K GEMV and GEMM via Zvfh-gated repack kernels.
-- SIMD-GEMM for flash attention (PR #20627).
-- Dynamic backend dispatch (GGML_CPU_ALL_VARIANTS).
-- SpacemiT IME1/IME2 vendor-specific GEMM backend.
-- FP16/FP32 conversion via Zvfh.
-- Runtime CPU feature detection via riscv_hwprobe.
+All major K-quant vec-dot kernels (Q2_K through Q6_K: RVV, xtheadvector, scalar fallback); Q4_0/Q4_K/Q8_0/Q2_K/IQ4_NL GEMV/GEMM via Zvfh-gated repack kernels; a SIMD-GEMM flash-attention kernel ([#20627](https://github.com/ggml-org/llama.cpp/pull/20627)); dynamic backend dispatch (`GGML_CPU_ALL_VARIANTS`); the SpacemiT IME1/IME2 vendor GEMM backend; FP16/FP32 conversion via Zvfh; runtime CPU-feature detection via `riscv_hwprobe`.
 
 ### 6.2 Gaps vs arm64
 
-arm64 in llama.cpp has:
+arm64 additionally has: KleidiAI integration (ARM-only INT8/FP16 matmul, not portable to riscv64); GitHub-hosted (not third-party) CI runners; official pre-built release binaries; and, per PyPI's manifest for `llama-cpp-python`, no wheel of any kind is currently published for either architecture (Section 8.2), so this specific gap is not riscv64-unique.
 
-- Full GEMM/GEMV repack coverage across all quant formats (Q3_K, Q5_K, Q6_K, F32 are covered on arm64 but not yet on riscv64).
-- KleidiAI integration (ARM-specific INT8/FP16 matmul; not applicable to riscv64).
-- Mature, always-on CI (GitHub-hosted runners with ARM hardware; not a third-party dependency).
-- Pre-built release binaries (llama-b####-bin-ubuntu-arm64.tar.gz).
-- Python wheel on PyPI (via cibuildwheel cross-compilation).
+### 6.3 Known open correctness bugs specific to RVV kernels
 
-### 6.3 Gaps vs amd64
+| Issue | Title | Status | Detail |
+|---|---|---|---|
+| [#29131](https://github.com/ggml-org/llama.cpp/issues/29131) | RVV IQ4_NL/MXFP4 dot product errors with odd block counts | Open (2026-09-19) | In `ggml-cpu/arch/riscv/quants.c`, four kernels (`ggml_vec_dot_iq4_nl_q8_0_vl128/vl256`, `ggml_vec_dot_mxfp4_q8_0_vl128/vl256`) use loop guard `ib + 1 < nb`, skipping the final block when `nb` is odd; for `nb=1` the function returns 0 instead of the correct value. Reporter found 10 of 21 MUL_MAT test cases failing. Root cause introduced by PR [#18859](https://github.com/ggml-org/llama.cpp/pull/18859); precedent fix pattern exists in PR #8549. |
+| [#28986](https://github.com/ggml-org/llama.cpp/issues/28986) | `vfloat32m8_t` requires `zve32f` extension | Open (2026-09-16) | Compile-time failure, not yet triaged or assigned a fix. |
 
-amd64 additionally has:
+Both are unresolved as of 2026-09-30 and both fail specifically on the RVV path (not scalar fallback), i.e. a user disabling RVV would sidestep them at a large performance cost.
 
-- CUDA, Vulkan, OpenCL, SYCL, HIP backends (GPU compute; not relevant for CPU-only comparison).
-- AVX-512, AMX, VNNI intrinsic paths.
-- Release binaries including GPU variants.
-- llama-cpp-python wheels on PyPI.
+### 6.4 Historical correctness issues (now closed)
 
-### 6.4 Status of specific gaps
+Garbled output on RVV builds (#12124), incorrect output at VLEN > 256 bits (#11041), RVV 16x1 repack hard crash (#22655), SIGILL on SiFive P550 (#24250), wrong RVV-detection macro `__riscv_v_intrinsic` vs `__riscv_v` (#22159, closed not-planned, i.e. flagged but not formally fixed as a distinct patch), and `GGML_RVV=OFF` being silently ignored (#16593).
 
-| Gap | Status |
-|---|---|
-| Q3_K / Q6_K repack GEMM/GEMV | Draft PR [#23745](https://github.com/ggerganov/llama.cpp/pull/23745) |
-| F32 repack GEMM/GEMV | Open PR [#17791](https://github.com/ggerganov/llama.cpp/pull/17791), stale |
-| Repack GEMM/GEMV at VLEN != 128 | Open PR [#20723](https://github.com/ggerganov/llama.cpp/pull/20723) |
-| NVFP4 RVV optimization | Open PR [#23402](https://github.com/ggerganov/llama.cpp/pull/23402) |
-| Mamba-2 SSM RVV acceleration | Open PR [#18926](https://github.com/ggerganov/llama.cpp/pull/18926) |
-| Zvfhmin scale optimization (Q4_0) | Open PR [#19196](https://github.com/ggerganov/llama.cpp/pull/19196) |
-| q4_0 GEMM prefill locality | Open PR [#24456](https://github.com/ggerganov/llama.cpp/pull/24456) |
-| Release binaries | Open PR [#20991](https://github.com/ggerganov/llama.cpp/pull/20991), blocked on OpenSSL |
-| xtheadvector build fix + Q1_0 kernel | Open PR [#23009](https://github.com/ggerganov/llama.cpp/pull/23009), awaiting review |
-| VLEN-dispatch vec dot kernel selection | Draft PR [#18348](https://github.com/ggerganov/llama.cpp/pull/18348) |
-| RVV xxh3 tensor hashing | Open PR [#18576](https://github.com/ggerganov/llama.cpp/pull/18576) |
+### 6.5 NaN / floating-point semantics
+
+No dedicated NaN-handling defect was found in the research for this report beyond the general RVV lane-masking bug fixed in PR #8748 (2024, inactive-lane masking switched from agnostic to undisturbed policy, which could otherwise leak garbage/NaN-adjacent values into masked-out vector lanes). `tests/test-double-float.cpp` contains a `riscv` guard for float/double precision edge cases, indicating active awareness of this class of issue.
 
 ---
 
 ## 7. CI/CD Infrastructure
 
-### 7.1 Active Workflows
+Upstream runs a **dedicated, native riscv64 CI job**: [`.github/workflows/build-riscv.yml`](https://github.com/ggml-org/llama.cpp/blob/master/.github/workflows/build-riscv.yml), job `ubuntu-cpu-riscv64-native`, on the `ubuntu-24.04-riscv` runner label. It builds, then runs `ctest -L main --verbose --timeout 900`, then converts and runs inference on a llama2c-format tinystories model as a functional smoke test. Triggers: manual (`workflow_dispatch`), push to `master` (path-filtered to CMake/source/header files), and PR (opened/synchronize/reopened, path-filtered to this workflow file and `ggml/src/ggml-cpu/arch/riscv/**`).
 
-**`build-riscv.yml`** (primary RISC-V CI):
+A second file, `.github/workflows/build-cross.yml`, contains one **active** riscv64 job (`ubuntu-24-riscv64-cpu-spacemit-ime-cross`, x86_64 runner, cross-compiling with the SpacemiT toolchain, build-only, no test execution, weekly cron plus push-on-`master`) and two **disabled** (commented-out) riscv64 jobs: a generic cross-compile and a Vulkan cross-compile, both blocked on the stated need for dedicated self-hosted runners. No `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` exist anywhere in the repository (confirmed via full tree listing), and no other of the repo's 65 workflow files reference riscv64, including `docker.yml` (no `linux/riscv64` container target) and `release.yml` (Section 8).
 
-| Job | Runner | Trigger | Tests |
+**Runner provenance:** the `ubuntu-24.04-riscv` label was originally a Cloud-V (cloud-v.co) self-hosted runner on a physical Banana Pi BPI-F3, introduced by PR [#14439](https://github.com/ggml-org/llama.cpp/pull/14439) (Aug 2025); PR [#21263](https://github.com/ggml-org/llama.cpp/pull/21263) (Apr 2026) migrated CI to RISE Project-provided riscv64 runners. This infrastructure is third-party and not covered by GitHub's SLA -- a prior breakage required a dedicated fix (PR [#17916](https://github.com/ggml-org/llama.cpp/pull/17916)). llama.cpp is reported as the heaviest consumer of this RISE runner pool (2,589 jobs in six weeks, Section 1).
+
+| Axis | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| `ubuntu-cpu-riscv64-native` | `ubuntu-24.04-riscv` (native) | push to master (any .h/.cpp change) + PR (only ggml/src/ggml-cpu/arch/riscv/** changes) | `ctest -L main --verbose --timeout 900` + llama2c conversion |
-| `ubuntu-riscv64-native-sanitizer` (3x: ADDRESS, THREAD, UNDEFINED) | `ubuntu-24.04-riscv` (native) | push to master | `ctest -L main --verbose --timeout 900`, `continue-on-error: true` |
-
-**`build-cross.yml`** (SpacemiT CI):
-
-| Job | Runner | Trigger | Tests |
-|---|---|---|---|
-| `ubuntu-24-riscv64-cpu-spacemit-ime-cross` | `ubuntu-24.04` (x86, cross) | push to master (spacemit source changes) + weekly cron | Build only, no execution |
-
-Two additional riscv64 jobs in `build-cross.yml` (`ubuntu-24-riscv64-cpu-cross`, `ubuntu-24-riscv64-vulkan-cross`) are **commented out** with the note "TODO: for regular runs, provision dedicated self-hosted runners."
-
-No riscv64 CI exists in `release.yml`, `docker.yml`, `build-cpu.yml`, `server.yml`, or `build-cache.yml`.
-
-### 7.2 Runner Infrastructure
-
-The `ubuntu-24.04-riscv` label is not a GitHub-hosted runner. History:
-
-- PR [#14439](https://github.com/ggerganov/llama.cpp/pull/14439) (Aug 2025): introduced as a Cloud-V (cloud-v.co) self-hosted runner on a physical Banana Pi BPI-F3 (SpacemiT K1, rv64imafdcv). Required repo-scoped token (not org-scoped) for registration.
-- PR [#21263](https://github.com/ggerganov/llama.cpp/pull/21263) (Apr 2026): migrated to RISE Project public riscv64 runners (Scaleway EM-RV1 bare-metal nodes). Runner label: `ubuntu-24.04-riscv`. Documentation at riseproject-dev.github.io/riscv-runner/.
-
-The RISE runner infrastructure is third-party. It is not covered by GitHub's SLA. If RISE runners are unavailable, CI jobs queue indefinitely. PR [#17916](https://github.com/ggerganov/llama.cpp/pull/17916) ("ci: fix riscv64-native build") documents a prior CI breakage requiring a dedicated fix.
-
-According to the RISE blog post (2026-05-12), ggml-org/llama.cpp is the single heaviest user of RISE riscv64 runners, with 2,589 CI jobs in the first six weeks after the migration. ggml-org has a dedicated runner pool, not shared with the general RISE pool.
-
-### 7.3 CI Coverage Limitations
-
-- PR trigger for `build-riscv.yml` is narrow: only fires on changes to `ggml/src/ggml-cpu/arch/riscv/**`. Changes to model loading, server, Python bindings, non-RISC-V backends, etc. do not trigger RISC-V CI.
-- Sanitizer jobs use `continue-on-error: true`; failures there are non-blocking and may go unnoticed.
-- The SpacemiT cross-compile job is build-only (no execution); correctness of SpacemiT IME code is only validated by manual testing.
-- No QEMU-based CI exists for testing RVV behavior on VLEN variants other than the runner's native VLEN.
-- ccache was enabled for riscv64 CI in PR [#21632](https://github.com/ggerganov/llama.cpp/pull/21632), but ccache steps in `build-riscv.yml` are commented out with the note "sparing resources on dedicated runners."
+| CI exists | Yes, GitHub-hosted | Yes, GitHub-hosted | Yes, but on third-party (RISE/Cloud-V) hosted native hardware |
+| Build tested | Yes | Yes | Yes |
+| Test suite executed | Yes | Yes | Yes (`ctest -L main`, native, plus an inference smoke test) |
+| Blocks merge to master | Yes | Yes | No -- path-filtered, most PRs never trigger it |
+| SLA | GitHub SLA | GitHub SLA | No SLA; runner availability depends on RISE/Cloud-V |
 
 ---
 
 ## 8. Distribution and Release Status
 
-### 8.1 GitHub Release Binaries
+### 8.1 GitHub Releases (upstream)
 
-As of releases b9735 through b9740 (June 2026), the release asset matrix covers: macOS (arm64, x64), Ubuntu (x64, arm64, s390x, plus GPU variants), Windows (x64, arm64, CUDA, Vulkan, HIP, OpenVINO, SYCL), Android (arm64).
+Checked releases b11298 through b11303 (most recent as of 2026-09-30) and the releases page generally: asset categories cover macOS (arm64/x64), iOS XCFramework, Ubuntu (x64, arm64, s390x, various GPU backends), Android, Windows (x64/arm64), and a UI package. **No asset filename contains "riscv" or "riscv64" in any checked release.** [Issue #20988](https://github.com/ggml-org/llama.cpp/issues/20988) requesting riscv64 release assets (mirroring the existing s390x pattern) was **closed not-planned**, but it directly spawned [PR #20991](https://github.com/ggml-org/llama.cpp/pull/20991), which remains **open and unmerged** as of 2026-09-30 (see Section 12 for review history).
 
-**No riscv64 asset exists in any release.** Issue [#20988](https://github.com/ggerganov/llama.cpp/issues/20988) ("Feature Request: Add riscv64 to release binaries", opened Mar 25 2026) was closed as not-planned with no maintainer comment. PR [#20991](https://github.com/ggerganov/llama.cpp/pull/20991) (open) proposes adding riscv64 via cross-compilation on ubuntu-24.04 x86 runners (estimated 5 min vs 49 min native); it is blocked on adding OpenSSL support.
+### 8.2 Python package (PyPI)
 
-### 8.2 Python Package (PyPI)
+There is no PyPI package literally named `llama-cpp` (HTTP 404). The real binding, `llama-cpp-python`, has its latest release (0.3.35) publish **exactly one file**: a source sdist (`llama_cpp_python-0.3.35.tar.gz`), with **no prebuilt wheels for any architecture**, so there is no riscv64-specific wheel gap distinct from the project's general no-wheel policy. Separately, the RISE GitLab wheel-mirror endpoint for a package named `llama-cpp` redirects to PyPI's simple index and 404s (no such package name there either). Outside of the official PyPI project, a maintainer active on llama.cpp's own riscv64 release PRs (`gounthar`) maintains a **separate, unofficial** riscv64-wheel release for the Python bindings in their own fork (`gounthar/llama-cpp-python`) [single-source, NEEDS VERIFICATION on scope/currency of that fork's wheel]. An earlier claim that upstream `abetlen/llama-cpp-python` had merged a riscv64 CI wheel-build workflow could not be corroborated against current PyPI file listings, which show no wheels published at all; this discrepancy (a claimed merged workflow vs. an sdist-only PyPI project) is unresolved and the claim is marked [NEEDS VERIFICATION].
 
-`llama-cpp-python` is the authoritative Python binding. Version 0.3.31 is the latest as of June 2026. PyPI only contains source tarballs (`llama_cpp_python-X.Y.Z.tar.gz`). No binary wheels exist for any architecture. A riscv64 wheel build workflow was added via PR [#2139](https://github.com/abetlen/llama-cpp-python/pull/2139) (merged 2026-03-23) with fixup PR [#2273](https://github.com/abetlen/llama-cpp-python/pull/2273) (merged 2026-06-05), validated on a BananaPi F3 with Python 3.13; however, no `linux_riscv64` wheel appears in any published release on PyPI as of the research date. Source build requires approximately 15 minutes on a 1.6 GHz SoC [NEEDS VERIFICATION].
+### 8.3 Linux distributions
 
-A PyPI package named `llama-cpp` (without `-python`) does not exist (HTTP 404).
+**Ubuntu 26.04 ("resolute")**: confirmed riscv64 packages. `llama.cpp-examples`, `llama.cpp-tests`, `llama.cpp-tools`, `llama.cpp-tools-extra` (version `8681+dfsg-1`) are explicitly listed `[ports]: riscv64` in Ubuntu's ports archive; the `llama.cpp` metapackage (architecture: all) pulls these in. `vim-llama.cpp` is also present. This is the basis for the "distro" release-provider classification in Section 13.
 
-### 8.3 Linux Distributions
+An earlier data point held that Debian sid carried a fully-built riscv64 package (`v9601+dfsg-1`, built on host `rv-manda-01`); this was not re-confirmed in the current research pass, which checked Ubuntu resolute rather than Debian sid. Both distributions independently packaging riscv64 builds of llama.cpp from ports archives is plausible and not inherently contradictory, but the Debian-sid figure should be treated as [NEEDS VERIFICATION] until re-checked against `buildd.debian.org`.
 
-| Distribution | Package | riscv64 Status |
-|---|---|---|
-| Debian sid | llama.cpp v9601+dfsg-1 | Fully built (libllama0, libllama-dev, llama.cpp-tools, llama.cpp-examples, llama.cpp-tests, llama.cpp-tools-extra); build host rv-manda-01, status: Installed |
-| Ubuntu 24.04 Noble | not packaged | N/A |
-| Arch Linux RISC-V port | unknown | Site unreachable at research time |
+### 8.4 Bottom line for a user wanting a working riscv64 binary today
 
-Debian sid is the only confirmed source of pre-built riscv64 llama.cpp binaries. Debian sid is the unstable branch; production deployments should build from source or wait for the package to migrate to testing/stable.
+There is no upstream-shipped riscv64 binary. A user must either (a) install from Ubuntu's ports archive (`apt install llama.cpp-tools`, resolute or later), or (b) build from source using the native CI's own CMake invocation (Section 5.2) or the SpacemiT toolchain path (Section 5.3) if targeting SpacemiT hardware.
 
 ---
 
 ## 9. Dependencies
 
-### 9.1 ggml (in-tree)
+| Dependency | Relation | Criticality | riscv64 build | riscv64 test | riscv64 release | Notes / blocking issues |
+|---|---|---|---|---|---|---|
+| CMake | build-dependency | critical | Yes -- used to configure every riscv64 CI job in this report | N/A (build tool) | N/A | No riscv64-specific CMake issues found; general-purpose, portable build tool. |
+| GCC | build-dependency | critical | Yes -- native CI uses `gcc-14`/`g++-14`; SpacemiT path needs GCC >= 15 for `_xsmtvdotii` | Exercised via every CI compile | N/A | Version gating is load-bearing: GCC < 14 cannot emit `_zvfh`/`_zvfbfwma` march components; GCC < 15 cannot emit SpacemiT's `_xsmtvdotii`. |
+| GNU binutils | build-dependency | critical | Yes -- binutils >= 2.40 required for the assembler to accept Zvfh/Zicbop/Zihintpause in the `-march` string | Exercised via CI link/assemble steps | N/A | PR [#20888](https://github.com/ggml-org/llama.cpp/pull/20888) fixed canonical ISA-string ordering the assembler requires; without it, builds fail. |
+| musl | runtime-dependency | optional | Historically broken: [issue #8792](https://github.com/ggml-org/llama.cpp/issues/8792) ("compilation with musl toolchain on RISC-V failure," closed) | No dedicated riscv64+musl CI job found | Not part of any release path | Fixed and closed, but no current CI job continuously validates the musl+riscv64 combination, so regressions could reoccur silently. |
+| OpenSSL | runtime-dependency | optional | Yes -- native CI installs `libssl-dev` successfully on `ubuntu-24.04-riscv` (Ubuntu 24.04 ships riscv64 OpenSSL packages) | Exercised indirectly via `ctest -L main`, which links OpenSSL | Cited as a specific review objection blocking PR #20991 (Section 12) | Upstream OpenSSL has its own riscv64 CI; open OpenSSL-side issues include extension-detection problems on musl and flaky test parallelism, none reported as release-blocking for llama.cpp specifically. |
+| cpp-httplib | runtime-dependency | optional | Yes -- vendored header-only library (`vendor/cpp-httplib`), pure C++17, no architecture-specific code | Exercised via the same CI as OpenSSL (HTTP server/client for model download and the `llama-server` tool) | N/A (vendored, ships with source) | Portability depends entirely on the OpenSSL dependency for HTTPS. |
+| OpenBLAS | runtime-dependency | optional | Not exercised in llama.cpp's own riscv64 CI (BLAS is off by default); Debian trixie ships `libopenblas0:riscv64 0.3.29` per upstream OpenBLAS issue #5811 | Real-hardware regression testing occurred upstream in OpenBLAS via a SpaceMiT K1 (RVV 1.0, VLEN=256) bisection | Distro-packaged, not part of llama.cpp's own release | OpenBLAS issue #5811: DGEMM produced non-PSD matrices on riscv64_zvl256b between v0.3.31 and v0.3.33 (closed/fixed 2026-05-19, a real correctness regression that has since been resolved). Net: active, maturing riscv64 support with a recently-fixed correctness bug. |
+| OpenMP | runtime-dependency | optional | **Disabled on riscv64 by llama.cpp's own CI** (`-DGGML_OPENMP=OFF` in `build-riscv.yml`) | Not exercised on riscv64 (disabled) | N/A | The likely reason for the disable: LLVM's own tracked issue "`[riscv][openmp] libomp build fails on risc-v`" has been open since 2024-03-28 [single-source reference from prior research pass, NEEDS VERIFICATION of current status]. |
+| Vulkan | runtime-dependency | optional | Not built on riscv64 in any active CI job | No riscv64 Vulkan testing found | Not part of any release | A `ubuntu-24-riscv64-vulkan-cross` job exists in `build-cross.yml` but is commented out/disabled. A historical regression, [issue #8488](https://github.com/ggml-org/llama.cpp/issues/8488) ("Can't build vulkan backend on RISC-V platform anymore," closed), shows this path has broken before. |
+| shaderc | build-dependency | optional | Only referenced inside the disabled `ubuntu-24-riscv64-vulkan-cross` job (`apt-get install glslc`) | Not exercised (job disabled) | N/A | Purely a build-time dependency of the disabled Vulkan-on-riscv64 path; no independent riscv64 validation exists for it in this project's context. |
+| QEMU | test-dependency | optional | Used historically for early riscv64 bring-up (e.g. [issue #2500](https://github.com/ggml-org/llama.cpp/issues/2500), "qemu-riscv64 unexpectedly reached EOF error," closed) and is documented for SpacemiT emulation in `docs/build-riscv64-spacemit.md` | Not used in the current native CI path (native hardware makes QEMU unnecessary there) | N/A | No current CI job uses QEMU for riscv64; it remains a documented developer workflow for those without physical hardware. |
 
-GGML is vendored in-tree under `ggml/`. It has a dedicated riscv64 CI path and all RISC-V kernel code described in Section 4 lives inside it.
+**Additional indirect dependencies found via research (not in the direct list above):**
 
-**Active riscv64 issues in ggml-org/ggml:**
-
-- [ggml-org/ggml#1475](https://github.com/ggml-org/ggml/issues/1475) (open): SIGILL when RVV base extension is present but sub-extensions (Zvbb, Zvbc, Zvkb, Zvfh) are absent. The RVV backend is compiled for Zv* extensions but hwprobe only checks base V; any RVA23-baseline CPU without all sub-extensions can crash. **Severity: medium.**
-- [ggml-org/ggml#1535](https://github.com/ggml-org/ggml/issues/1535) (open): OpenBSD/riscv64 build fails due to missing `zve32f` extension guard in `vec.h`. Linux builds are unaffected. **Severity: low.**
-- [ggml-org/ggml#1388](https://github.com/ggml-org/ggml/issues/1388) (open): cross-compilation picks up host architecture flags instead of target riscv64 flags. **Severity: low.**
-
-### 9.2 OpenSSL
-
-OpenSSL is an optional dependency (`LLAMA_OPENSSL=ON` default) used for HTTPS model downloads via cpp-httplib.
-
-riscv64 status: linux64-riscv64 target exists since May 2022. Active RVV assembly for AES/GCM/ChaCha20/SHA via Zkn/Zvk/Zvkb extensions. All supported branches (3.0, 3.4, 3.5, 3.6, 4.0) include the riscv64 target.
-
-Active issues relevant to llama.cpp deployment:
-- [openssl/openssl#20980](https://github.com/openssl/openssl/issues/20980) (open): AES without Zkn is not constant-time. **Security relevance for model download.**
-- [openssl/openssl#22166](https://github.com/openssl/openssl/issues/22166) (open): SSL tests fail with high HARNESS_JOBS on riscv64 (flaky parallelism). Test-only; not a production blocker.
-
-OpenSSL support is the stated blocker for PR [#20991](https://github.com/ggerganov/llama.cpp/pull/20991) (release binaries for riscv64).
-
-### 9.3 OpenBLAS
-
-Optional dependency (`GGML_BLAS=ON`). CMake generic riscv64 support added in v0.3.28. CI is entirely QEMU-based; no native riscv64 hardware in OpenBLAS CI. v0.3.33 (2026-04-23) ships riscv64 support.
-
-Active correctness bug: an in-flight DGEMM correctness issue on ZVL256B as of 2026-06-07 (PR [#5815](https://github.com/xianyi/OpenBLAS/pull/5815) in-flight). This affects the optional BLAS backend at wide VLEN. The default build does not enable BLAS; impact on llama.cpp is low unless BLAS backend is explicitly activated.
-
-### 9.4 KleidiAI
-
-ARM-only by design. Not applicable to riscv64. The `GGML_CPU_KLEIDIAI` code path is guarded inside the ARM branch of ggml-cpu CMakeLists and is OFF by default.
-
-### 9.5 llamafile / cosmopolitan
-
-`GGML_LLAMAFILE` is ON by default. The llamafile SGEMM kernel uses x86/ARM SIMD dispatch and falls back to scalar C on riscv64. PR [#18199](https://github.com/ggerganov/llama.cpp/pull/18199) added RVV-accelerated SGEMM in the llamafile layer within llama.cpp. No upstream llamafile riscv64 CI exists.
-
-### 9.6 OpenMP / libomp
-
-GCC libgomp and LLVM libomp both support riscv64. `build-riscv.yml` CI explicitly tests `GGML_OPENMP=OFF` (main job) and `GGML_OPENMP=ON` (sanitizer jobs). No blocking issues identified.
-
-### 9.7 cpp-httplib
-
-Vendored header. Pure C++17, no arch-specific code. Portability depends entirely on OpenSSL for HTTPS.
-
----
-
-## 10. Ecosystem Status
-
-### 10.1 RISE Project
-
-The RISE Project (RISC-V Software Ecosystem) is a Linux Foundation Europe project with 18 members including RISE Premier Members Google, NVIDIA, Qualcomm, SiFive, and Red Hat, and General Members including SpacemiT, ByteDance, and Canonical.
-
-RISE funded project RP-014 is "Optimizing Llama.cpp and GGML for RVV." The project scope covers vecdot, quantize_row, FP16/BF16 utilities, GEMM/GEMV repacking, SGEMM (MUL_MAT), and FLASH_ATTN_EXT kernels. Validation infrastructure exists at [riseproject-dev/llama.cpp-validation](https://github.com/riseproject-dev/llama.cpp-validation), which is a benchmarking suite supporting cross-compilation via QEMU at VLEN 128/256/512/1024 and native hardware.
-
-Ludovic Henry (Meta, RISE TSC Co-Chair) is named in the RISE Q1 2026 Outsized Impact Award as having "bootstrapped outreach to llama.cpp and PyTorch as RISC-V RVV optimization targets." He appears as a reviewer in llama.cpp RISC-V PRs (e.g., PR [#17318](https://github.com/ggerganov/llama.cpp/pull/17318), PR [#17567](https://github.com/ggerganov/llama.cpp/pull/17567)) under the handle `luhenry`.
-
-RISE provides the riscv64 CI runner infrastructure (migrated from Cloud-V in April 2026) and the [RISC-V Optimization Guide](https://riscv-optimization-guide.riseproject.dev), which is referenced directly in llama.cpp RISC-V PR discussions (PR [#17567](https://github.com/ggerganov/llama.cpp/pull/17567)).
-
-llama.cpp is the single heaviest user of RISE riscv64 runners: 2,589 CI jobs in the first six weeks post-migration, with a dedicated runner pool.
-
-No dedicated RISE blog post on llama.cpp performance exists. No llama.cpp package on the RISE wheel builder (riseproject.gitlab.io/python/wheel_builder/).
-
-### 10.2 Contributing Organizations
-
-| Organization | Contributions | RISE Member |
-|---|---|---|
-| 10xEngineers (Pakistan) | First RVV intrinsics (2023), Makefile flags, native CI (Cloud-V, alitariq4589), SIMD-GEMM (2026, rehan-10xengineer) | No |
-| SpacemiT (China) | IME1/IME2 backend, CODEOWNERS maintainer (alex-spacemit) | Yes (General) |
-| ISCAS (ixgbe / Wang Yang) | riscv_hwprobe detection, nvfp4 RVV | Yes (General) |
-| Individual (xctan) | 128-bit VLEN, xtheadvector, kernel optimizations; ggml-org collaborator | No |
-| Meta / RISE (luhenry) | PR reviewer, RISE RP-014 oversight | n/a |
-
-### 10.3 Hardware Targets with Active Validation
-
-| Board | SoC | VLEN | ISA extensions | Used in CI |
-|---|---|---|---|---|
-| Banana Pi BPI-F3 | SpacemiT K1 (X60) | 256 | rv64imafdcv + Zvfh + IME1 | Yes (RISE runner) |
-| OrangePi RV2 | SpacemiT K1 | 256 | rv64imafdcv + Zvfh + IME1 | No (PR testing only) |
-| SpacemiT A100 | SpacemiT (unnamed) | 1024 | rv64 + RVA23 + IME2 | No (PR testing only) |
-| SG2042 | Sophgo SG2042 | 128 | rv64 + xtheadvector | No (PR testing only) |
-| SiFive Premier P550 | SiFive | Data not available | No Zfh | No (crash reported, issue #24250) |
-| 64-core rv64gcv machine | Data not available | 128 | rv64gcv | No (PR testing only) |
+- **llguidance** (Rust, optional grammar/structured-output compiler, off by default): zero riscv64-tagged issues found upstream. Rust's `riscv64gc-unknown-linux-gnu` is a Tier-2 target, so it should build, but this is inference from target-tier policy, not a verified build result -- [NEEDS VERIFICATION].
+- **Vulkan-Loader / Vulkan-Headers** (Khronos, sub-components pulled in by the Vulkan backend): essentially no riscv64 issue history found; ambiguous whether this means "just works" (mostly portable C) or simply untested on this architecture.
+- **Intel SYCL / oneAPI** (`intel/llvm`, optional GPU/accelerator backend): riscv64 is not an officially supported oneAPI/SYCL host or device target; the only related discussion found was informational, not evidence of real support.
+- **nlohmann/json, miniaudio, stb, subprocess.h (`vendor/sheredom`)**: vendored, header-only or single-file, no architecture-specific code and no riscv64 issues found.
 
 ---
 
 ## 11. Known Bugs and Active Issues
 
-### 11.1 Open Correctness Bugs
+| # | Title | Status | Severity | Notes |
+|---|---|---|---|---|
+| [#29131](https://github.com/ggml-org/llama.cpp/issues/29131) | RVV IQ4_NL/MXFP4 dot product errors with odd block counts | **Open** (2026-09-19) | High (correctness) | Silent wrong-answer bug (returns 0 instead of correct dot product for `nb=1`); root cause identified by reporter, fix pattern precedented in PR #8549, but no patch submitted yet. |
+| [#28986](https://github.com/ggml-org/llama.cpp/issues/28986) | `vfloat32m8_t` requires `zve32f` extension | **Open** (2026-09-16) | Medium (build) | Compile-time failure surfaced via a downstream package (Thunderbird's bundled llama.cpp); no fix proposed. |
+| [#23009](https://github.com/ggml-org/llama.cpp/pull/23009) (PR) | Fix riscv xtheadvector builds + add q1_0 vec dot kernel | **Open** | Medium (build) | Until merged, T-Head-based platforms (SG2042, C906/C910) may build incorrectly. |
+| [#22655](https://github.com/ggml-org/llama.cpp/issues/22655) | RVV 16x1 repack hard crash | Closed | High (correctness, historical) | Q8_0 + CPU_REPACK on SpacemiT K1 with prompts >= 4 tokens caused a hard crash requiring reboot; fixed. |
+| [#24250](https://github.com/ggml-org/llama.cpp/issues/24250) | SIGILL on SiFive P550 | Closed | High (correctness, historical) | GCC emitted `_Float16` instructions on a CPU lacking Zfh despite `-DGGML_ZFH=0`; illustrates that extension-gating flags do not automatically prevent illegal instructions on non-conforming silicon. |
+| [#22159](https://github.com/ggml-org/llama.cpp/issues/22159) | Wrong `__riscv_v_intrinsic` feature-detection macro | Closed, not-planned | Medium | `__riscv_v_intrinsic` is an intrinsic-API version macro, always defined regardless of actual vector hardware presence; using it as a capability guard risks executing vector instructions on non-vector cores. Closed without a confirmed code fix. |
+| [#16593](https://github.com/ggml-org/llama.cpp/issues/16593) | `GGML_RVV=OFF` still compiles vector code | Closed | Medium (historical) | Build system ignored the flag; fixed. |
+| [#12124](https://github.com/ggml-org/llama.cpp/issues/12124) | Garbled output on RVV builds | Closed (stale) | High (correctness, historical, root cause undocumented) | Disabling RVV intrinsics fixed the symptom; underlying cause in the RVV path was never clearly documented as resolved. |
+| [#11041](https://github.com/ggml-org/llama.cpp/issues/11041) | Incorrect output at RVV VLEN > 256 bits | Closed | High (correctness, historical) | |
+| [#8488](https://github.com/ggml-org/llama.cpp/issues/8488) | Can't build Vulkan backend on RISC-V | Closed | Medium (historical) | |
+| [#8792](https://github.com/ggml-org/llama.cpp/issues/8792) | musl toolchain compile failure on RISC-V | Closed | Medium (historical) | |
 
-**Issue [#24250](https://github.com/ggerganov/llama.cpp/issues/24250) -- SIGILL on SiFive P550 (open, unresolved)**
-
-Opened: Jun 7 2026. `riscv_compute_fp32_to_fp16` crashes at `simd-mappings.h:104` with SIGILL. GCC 14.2.0 emits `_Float16` instructions for a CPU lacking Zfh (SiFive Premier P550: `rv64imafdch_zicsr...` with no Zfh). CMake flags `-DGGML_ZFH=0 -DGGML_ZFHMIN=0` failed to prevent the illegal instruction. No fix or workaround confirmed.
-
-Impact: Any RVV-capable CPU lacking Zfh but with the `_Float16` GCC extension active can crash. SiFive P550 is a production-grade core used in server platforms. **Severity: high for SiFive P550 deployments.**
-
-**Issue [#22655](https://github.com/ggerganov/llama.cpp/issues/22655) -- RVV 16x1 repack hard crash (open, unresolved)**
-
-Opened: May 4 2026. Hard crash (system reboot required) during prompt processing with Q8_0 models when CPU_REPACK is active on SpacemiT K1 / OrangePi RV2 (Zvfh supported). Trigger: prompt length >= 4 tokens. Token generation alone works (approximately 5.5-5.7 t/s). First bad commit: `af237f3`. No assignee, no fix.
-
-Impact: Zvfh-capable SpacemiT hardware with Q8_0 models cannot use the repack code path without risk of system crash. **Severity: high for SpacemiT K1 deployments.**
-
-**Issue [#22159](https://github.com/ggerganov/llama.cpp/issues/22159) -- Wrong RVV feature detection macro (closed as not-planned, no fix)**
-
-Closed: Jun 5 2026. `__riscv_v_intrinsic` is used as a feature-detection guard in `ggml/src/ggml-cpu/arch/riscv/quants.c` instead of `__riscv_v`. `__riscv_v_intrinsic` is defined as a version number for the intrinsic API, not a hardware capability flag -- it is defined even on CPUs with no vector hardware. Could cause vector instructions to execute on non-vector hardware.
-
-Closed as not-planned / stale. No fix merged. This issue remains in the codebase.
-
-**Issue [#12124](https://github.com/ggerganov/llama.cpp/issues/12124) -- Garbled output with RVV on ISA simulator (closed stale)**
-
-With RVV enabled on the OpenXiangShan NEMU simulator (Linux Tizen), output was corrupted across all tested models. Disabling RVV via `-U__riscv_v_intrinsic` restored correct output. Closed as stale. Root cause not identified.
-
-**Issue [#14926](https://github.com/ggerganov/llama.cpp/issues/14926) -- SIGILL on StarFive VisionFive2 (closed stale)**
-
-`llama-cli` and `llama-server` crash immediately with SIGILL on VisionFive2 (commit `ca0ef2d`). Closed as stale, no fix.
-
-### 11.2 Historical Correctness Issues (resolved)
-
-- PR [#8748](https://github.com/ggerganov/llama.cpp/pull/8748) (Jul 2024): inactive-element masking bug in RVV intrinsics. Agnostic policy allowed all-1s to appear in inactive lanes; switched to undisturbed policy.
-- PR [#17567](https://github.com/ggerganov/llama.cpp/pull/17567) (Nov 2025): false-positive RVV detection via AT_HWCAP; boards reporting RVV v0.7 as v1.0 could trigger vector instructions incorrectly. Fixed by replacing AT_HWCAP with riscv_hwprobe.
-- PR [#20682](https://github.com/ggerganov/llama.cpp/pull/20682) (Mar 2026): incorrect RVV feature-check logic in quantization and repacking dispatch caused wrong kernel selection.
-- PR [#21157](https://github.com/ggerganov/llama.cpp/pull/21157) (Apr 2026): incorrect fallback path when Zvfh is absent.
-
-### 11.3 Open Infrastructure Issues
-
-- Issue [#21064](https://github.com/ggerganov/llama.cpp/issues/21064) (closed as not-planned): build failure with `GGML_CPU_ALL_VARIANTS=ON` on RISC-V; CMake fixes in merged PRs likely addressed this but the issue was not closed-as-fixed.
-- PR [#23009](https://github.com/ggerganov/llama.cpp/pull/23009) (open): xtheadvector build is broken on current master; awaiting one more review approval. This means T-Head SG2042 and C906/C910 builds may currently fail.
+**Correctness bugs are the standout category**: two are currently open (#29131, #28986), and the historical record (#12124, #11041, #22655, #24250, #22159) shows a repeated pattern of RVV-path silent-wrong-output or illegal-instruction bugs, several closed without a clearly documented fix. This is the main technical caution for a chip vendor evaluating riscv64 llama.cpp for production numerical accuracy.
 
 ---
 
 ## 12. Objections and Upstream Blockers
 
-**Objection: SpacemiT IME backend requires non-upstream toolchain.**
+**No master tracking issue.** Unlike some projects that maintain a single umbrella "riscv64 port status" issue, llama.cpp has none. [Issue #20988](https://github.com/ggml-org/llama.cpp/issues/20988) was the closest candidate and was closed not-planned. All work is tracked through dozens of independent issues/PRs with no consolidated view of remaining gaps.
 
-The SpacemiT backend depends on proprietary IME instructions (`vmadot`, `vfwmadot`, `xsmtvdotii`) not yet in upstream GCC binutils. This was flagged by ggerganov at merge time (PR [#15288](https://github.com/ggerganov/llama.cpp/pull/15288)) as a long-term maintenance risk. Workaround: cross-compile using the Bianbu-provided toolchain. xsmtvdotii support in GCC 15 partially addresses this for the `_xsmtvdotii` extension specifically.
+**Release-binary PR is open but has a review history worth tracking closely.** [PR #20991](https://github.com/ggml-org/llama.cpp/pull/20991) ("ci: add riscv64 to release binaries") cross-compiles from a standard Ubuntu 24.04 x64 runner using `gcc-14-riscv64-linux-gnu`, with `GGML_CPU_ALL_VARIANTS=ON` for runtime ISA dispatch. Reviewer CISC initially objected to `LLAMA_OPENSSL=OFF` in the release build ("we don't want a release without [OpenSSL]") and asked for proof of a working build from the author's fork. The author (gounthar) supplied a fork release artifact and separately verified a native build on real BananaPi F3 hardware. Reviewer taronaeo approved on 2026-05-07. Per the most current status available (2026-09-30), the author has since addressed the OpenSSL/TLS and fork-build-evidence requests, and the PR remains **open and unmerged**, still pending a second code-owner approval. A competing/related PR, [#26986](https://github.com/ggml-org/llama.cpp/pull/26986) ("ci: Enable release on ubuntu riscv64"), was closed unmerged on 2026-08-12, suggesting maintainers have not settled on a single approach.
 
-**Objection: CI relies on third-party runner infrastructure.**
+**Two correctness bugs remain open on the RVV path** (#28986, #29131; Section 11), meaning any organization building production inference on riscv64 today should validate IQ4_NL/MXFP4 and `zve32f`-dependent code paths independently rather than assuming upstream CI green means numerically correct.
 
-The RISE runner pool is not covered by GitHub SLA. Historical failures exist (PR [#17916](https://github.com/ggerganov/llama.cpp/pull/17916)). The commented-out cross-compile CI jobs in `build-cross.yml` demonstrate that the project acknowledges this fragility but has not resolved it.
+**xtheadvector is currently affected by an open, unmerged fix** ([#23009](https://github.com/ggml-org/llama.cpp/pull/23009)), meaning T-Head-based platforms (SG2042, C906/C910) may not build cleanly on current master until it lands.
 
-**Objection: No release binaries, no PyPI wheel.**
+**SpacemiT IME backend depends on a non-upstream toolchain.** The SpacemiT backend uses proprietary instructions (`vmadot`, `vfwmadot`, `xsmtvdotii`) not yet fully in upstream GCC/binutils; the `_xsmtvdotii` component requires GCC >= 15 and, per the CI job, a SpacemiT-provided toolchain package. This was a known maintenance-burden concern at merge time for PR #15288.
 
-PR [#20991](https://github.com/ggerganov/llama.cpp/pull/20991) for release binaries is open but blocked on OpenSSL. The original tracking issue was closed as not-planned. PyPI wheels require cibuildwheel support or a dedicated release workflow with RISC-V runners; neither exists in upstream as of June 2026.
+**CI infrastructure has no SLA.** The native riscv64 CI depends entirely on RISE-provided runner capacity (migrated from Cloud-V), which is not covered by GitHub's SLA; a prior CI outage required a dedicated fix (#17916), and the two riscv64 cross-compile jobs in `build-cross.yml` remain commented out pending dedicated runner provisioning.
 
-**Objection: Crash on SiFive P550.**
-
-Issue [#24250](https://github.com/ggerganov/llama.cpp/issues/24250) shows that a mainstream SiFive server core causes a SIGILL in the current codebase. This is unresolved. The root cause (GCC emitting `_Float16` instructions regardless of CMake flags) suggests a systematic issue with the extension-gating logic that may affect other non-Zfh cores.
-
-**Objection: No master tracking issue; port is fragmented.**
-
-Unlike some projects (GDB, LLDB) that maintain a single umbrella issue tracking the riscv64 port status, llama.cpp has no such issue. Issue [#20988](https://github.com/ggerganov/llama.cpp/issues/20988) was the closest candidate and was closed as not-planned. All active work is tracked through individual PRs with no consolidated view of remaining gaps.
-
-**Objection: xtheadvector is currently broken.**
-
-PR [#23009](https://github.com/ggerganov/llama.cpp/pull/23009) (open) states it fixes build breakage in the xtheadvector codepath. Until it merges, T-Head-based platforms (SG2042, C906/C910) may build incorrectly.
+**Distribution gap.** No official PyPI wheel exists for `llama-cpp-python` on any architecture (Section 8.2), so riscv64 is not uniquely disadvantaged there, but it does mean Python-based deployment on riscv64 has no clear low-friction path beyond community forks.
 
 ---
 
-## 13. Investment Analysis
+## 13. Readiness Assessment
 
-### 13.1 Functional Enablement
+- **Color:** blue
+- **Release provider:** distro
+- **Justification:** Upstream `ggml-org/llama.cpp` runs a dedicated native riscv64 CI job (`ubuntu-24.04-riscv` runner) in [`.github/workflows/build-riscv.yml`](https://github.com/ggml-org/llama.cpp/blob/master/.github/workflows/build-riscv.yml) that both builds and executes the test suite (`ctest -L main --verbose --timeout 900`) plus a llama2c conversion smoke test on real RISC-V hardware, so both the build and test axes are "yes." However, upstream GitHub Releases (checked b11298 through b11303, [releases page](https://github.com/ggml-org/llama.cpp/releases)) ship no riscv64 assets at all -- the request to add them ([issue #20988](https://github.com/ggml-org/llama.cpp/issues/20988)) was closed not-planned, and the follow-on [PR #20991](https://github.com/ggml-org/llama.cpp/pull/20991) is still open/unmerged -- so "release: no" from upstream. Build=yes, test=yes, release=no maps to blue. The only working riscv64 binaries come from Ubuntu's ports archive (`llama.cpp-examples`/`llama.cpp-tests`/`llama.cpp-tools`, version `8681+dfsg-1`, resolute), i.e. a distro, not upstream, hence release_provider is recorded as distro with the note that upstream itself ships no riscv64 release artifact.
+- **Pending work that could change the grade:** Open [PR #20991](https://github.com/ggml-org/llama.cpp/pull/20991) ("ci: add riscv64 to release binaries") would close the release gap once merged; it is approved by one reviewer and the author has addressed the earlier OpenSSL/TLS and fork-build-evidence requests, but it remains unmerged as of 2026-09-30. Two open correctness bugs remain on the RVV path ([#28986](https://github.com/ggml-org/llama.cpp/issues/28986), zve32f extension mismatch; [#29131](https://github.com/ggml-org/llama.cpp/issues/29131), RVV IQ4_NL/MXFP4 dot-product error on odd block counts), plus an open PR fixing xtheadvector build breakage ([#23009](https://github.com/ggml-org/llama.cpp/pull/23009)). RISE runner infrastructure (migrated from Cloud-V) backs the native riscv64 CI, and llama.cpp is reportedly RISE's heaviest CI consumer; this is relevant supporting context but does not itself change the color, since the gap is specifically upstream's release-artifact policy, not build/test capability.
 
-The current codebase is functional on RVV 1.0 hardware with the correct extensions. The primary functional gaps are:
+---
 
-- Q3_K and Q6_K GEMM/GEMV repack (draft PR, contributor-led, does not need external investment).
-- F32 repack GEMM/GEMV (open PR, stale).
-- Fix SIGILL on non-Zfh RISC-V CPUs including SiFive P550.
-- Fix xtheadvector build breakage.
-- Resolve the Zvfh 16x1 repack crash on SpacemiT K1.
+## 14. Investment Analysis
 
-For a chip company targeting RVA23 profiles or specific ISA variants, validating that the extension-gating CMake flags actually produce crash-free builds on the target silicon requires direct testing; the SiFive P550 issue shows this does not happen automatically.
+RISE has already funded and driven a substantial share of the groundwork here: it operates the CI runner pool llama.cpp's riscv64 CI depends on, a named RISE workgroup lead (Ludovic Henry) is credited with optimization work on llama.cpp specifically, and RISE's involvement corresponds with the acceleration in merged RISC-V PRs from 2025 onward (Section 2). A chip vendor's investment should therefore target the gaps RISE and the existing contributor base (10xEngineers, SpacemiT, ISCAS) have not yet closed, rather than duplicating CI infrastructure or basic RVV enablement that already exists.
 
-### 13.2 Performance Optimization
+### 14.1 Functional Enablement
 
-Measured performance on available hardware (from PR benchmarks, not independent verification):
+The core functional gap is not "does it build/run" (it does, per Section 3) but **correctness on specific quant-format/VLEN combinations**: the two open bugs (#28986, #29131) and the still-open xtheadvector build fix (#23009) are the concrete, scoped items. None of these require new architecture; they are bounded kernel-level fixes that a chip vendor with RISC-V hardware access could resolve quickly and would materially improve confidence in production correctness.
 
-| Hardware | Config | Model | Prefill (t/s) | Generate (t/s) |
-|---|---|---|---|---|
-| SpacemiT X60 (K1), 4 threads, VLEN=256, IME1 | Q4_0 | Qwen2.5 0.5B | 64.12 | 10.03 |
-| SpacemiT X60 (K1), 4 threads, VLEN=256, IME1 | Q4_0 | Qwen2.5 1.5B | 24.16 | 3.83 |
-| SpacemiT X60 (K1), 4 threads, VLEN=256, IME1 | Q4_0 | Qwen2.5 3B | 12.08 | 2.23 |
-| SpacemiT A100, 8 threads, VLEN=1024, IME2 | Q4_0 | Qwen3 0.6B | 565.83 | 55.77 |
-| SpacemiT A100, 8 threads, VLEN=1024, IME2 | Q4_1 | Qwen3.5 2B | 115.23 | 16.49 |
-| SpacemiT A100, 8 threads, VLEN=1024, IME2 | Q4_0 | Qwen3 4B | 79.74 | 11.29 |
-| SpacemiT A100, 8 threads, VLEN=1024, IME2 | Q4_0 | Qwen3MoE 30B.A3B | 57.88 | 12.79 |
-| OrangePi RV2 (K1), 8 threads, VLEN=256, RVV | Q1_0 | Bonsai-1.7B | 13.36 (pp64) | 9.71 (tg16) |
-| 64-core rv64gcv, VLEN=128, 64 threads | Q2_K_L | DeepSeek-R1-8B | 27.19 (pp512) | 11.10 (tg128) |
-| SG2042, 32 threads, xtheadvector | Q4_K_M | Gemma-3-4B-IT | 15.73 (pp512) | 5.15 (tg128) |
-| BPI-F3, 8 threads, VLEN=256, RVV | F16 | TinyLlama 1.1B | 22.78 (pp128, repack) | 3.4 (tg, memory-bound) |
+### 14.2 Performance Optimization
 
-No head-to-head comparison against arm64 or amd64 on equivalent silicon is available in the research data. All benchmarks compare RVV-optimized vs scalar-RISC-V baselines on the same hardware.
+llama.cpp is not evaluated here as an optimization-purpose project (per the readiness grade's optimization-purpose flag), so no formal optimization-level grade applies. That said, published community benchmarks show wide variance by hardware and toolchain: on SpacemiT K3, stock open-source RVV code ran roughly 30-34x slower on the 1024-bit-VLEN A100 cores than on the 256-bit X100 cores, while SpacemiT's closed-source IME2 toolchain reversed this to roughly 1.4x faster ([DEV Community benchmarking series, Part 4](https://dev.to/gounthar/benchmarking-llamacpp-on-spacemit-k3-risc-v-ai-cores-vs-standard-rvv-part-4-10mc)) -- a clear illustration that the open-source RVV path is currently far from saturating wide-VLEN hardware without vendor-proprietary extensions. Separately, PLCT Lab's RVV 1.0 (128-bit) merge in March 2025 was reported as up to a 9x improvement over the prior baseline, and an academic pipeline (arXiv 2503.17422) reported up to 5.5x over baseline llama.cpp on a 64-core platform. Closing the wide-VLEN gap on open kernels (i.e., without depending on SpacemiT's proprietary IME2) is an open, unclaimed investment opportunity distinct from anything RISE is reported to have funded.
 
-The SpacemiT A100 VLEN=1024 figures are notable (565 t/s prefill on Qwen3 0.6B), but the PR notes that "thread switching incurs extremely high overhead for register context preservation" at 1024-bit VLEN. The practical significance of this figure depends on the A100's position in the market, which is not addressed in the research data.
+### 14.3 CI/CD Infrastructure
 
-Remaining performance optimization opportunities (open PRs): q4_0 GEMM prefill locality (#24456), repack GEMM/GEMV at higher VLENs (#20723), Zvfhmin scale dequantization (#19196), VLEN-dispatch kernel selection (#18348).
+RISE already funds and hosts the native riscv64 runner pool and is the heaviest-used consumer relationship llama.cpp has with any RISC-V CI provider (2,589 jobs in six weeks). A chip vendor should not duplicate this. The concrete gaps RISE has not filled: (a) the two disabled cross-compile jobs in `build-cross.yml` (plain riscv64 and Vulkan) remain commented out for lack of dedicated runners; (b) no CI validates the musl+riscv64 combination continuously despite a historical break (#8792); (c) no QEMU-based CI exists for VLEN variants other than the native runner's own VLEN, leaving cross-VLEN correctness (directly relevant to bugs like #11041 and #29131) untested in CI.
 
-### 13.3 CI/CD Infrastructure
+### 14.4 Ecosystem Enablement
 
-The current RISE runner dependency is the infrastructure's main fragility. Investment options:
+The main enablement gap is release distribution: unblocking and merging [PR #20991](https://github.com/ggml-org/llama.cpp/pull/20991) would give upstream-shipped riscv64 binaries for the first time, removing the current dependency on Ubuntu's ports archive as the only distribution channel. Given the PR's review history (an approval already secured, author-supplied evidence already provided), the remaining work is primarily maintainer-attention and a second code-owner sign-off rather than new engineering, though a vendor could contribute directly to that review thread or supply additional hardware validation to help it close.
 
-- Contribute dedicated riscv64 runners to the RISE pool to reduce SLA dependency.
-- Re-enable the commented-out cross-compile CI jobs in `build-cross.yml` with dedicated runner provisioning, providing a fallback for build-level validation when native runners are unavailable.
-- Add QEMU-based CI for VLEN variant testing (128/256/512/1024) to complement native hardware CI.
-- Unblock PR [#20991](https://github.com/ggerganov/llama.cpp/pull/20991) by resolving the OpenSSL cross-compile issue.
-
-### 13.4 Ecosystem Enablement
-
-- Pre-built release binaries: unblock PR [#20991](https://github.com/ggerganov/llama.cpp/pull/20991).
-- PyPI wheel: contribute cibuildwheel riscv64 support or a release workflow using RISE runners.
-- Python binding build time is approximately 15 minutes on a 1.6 GHz RISC-V SoC [NEEDS VERIFICATION]; reducing this is a usability concern for edge deployment scenarios.
-- No llama-cpp-python wheel on any distribution channel is a friction point for Python-based inference pipelines on RISC-V.
-
-### 13.5 Summary Table
+### 14.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
-| Correctness | Fix SIGILL on non-Zfh RISC-V CPUs (issue #24250) | 1-2 | RISC-V chip vendor | Critical |
-| Correctness | Fix Zvfh 16x1 repack crash on SpacemiT K1 (issue #22655) | 1-2 | SpacemiT / any contributor | Critical |
-| Correctness | Fix wrong __riscv_v_intrinsic guard macro (issue #22159, closed-not-planned) | 0.5 | Any contributor | High |
-| Correctness | Fix xtheadvector build breakage (PR #23009) | 0.5 (already in open PR, needs review) | xctan / maintainer review | High |
-| Correctness | Resolve ggml-org/ggml#1475 (sub-extension gating in hwprobe) | 2-4 | RISC-V ecosystem contributor | High |
-| Performance | Q3_K / Q6_K repack GEMM/GEMV (draft PR #23745) | 2-3 | Contributor / 10xEngineers | Medium |
-| Performance | F32 repack GEMM/GEMV (stale PR #17791) | 2-3 | Contributor | Medium |
-| Performance | Repack GEMM/GEMV at VLEN > 128 (PR #20723) | 2-4 | Contributor | Medium |
-| Performance | NVFP4 RVV optimization (PR #23402) | 1-2 | ixgbe / any contributor | Medium |
-| Performance | q4_0 GEMM prefill locality (PR #24456) | 1 | Contributor | Low |
-| Performance | Zvfhmin Q4_0 scale optimization (PR #19196) | 1 | Contributor | Low |
-| CI | Add QEMU VLEN-variant CI (128/256/512/1024) | 2-4 | Any contributor | Medium |
-| CI | Provision dedicated riscv64 runners for build-cross.yml | 1 (setup) + ongoing | RISC-V chip vendor | Medium |
-| CI | Re-enable commented-out cross-compile CI jobs | 0.5 | Any contributor | Low |
-| Distribution | Unblock release binaries (PR #20991 -- OpenSSL cross-compile) | 1-2 | Any contributor | High |
-| Distribution | Add riscv64 PyPI wheel to llama-cpp-python | 2-4 | abetlen / RISC-V contributor | High |
-| Documentation | Consolidated port tracking issue | 0.5 | Any contributor | Low |
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
+| Functional | Fix RVV IQ4_NL/MXFP4 odd-block-count dot-product bug (#29131) | 0.5-1 | Any RISC-V contributor (root cause already identified) | Critical |
+| Functional | Fix `vfloat32m8_t`/`zve32f` extension compile bug (#28986) | 0.5-1 | Any contributor | High |
+| Functional | Land xtheadvector build fix (open PR #23009) | 0.5 (review push) | Reviewer/maintainer | High |
+| Distribution | Help land riscv64 release binaries (open PR #20991) | 0.5-1 (review/validation support) | Any contributor, plus a code-owner approval | High |
+| Performance | Close open-source RVV throughput gap on wide-VLEN (>=1024-bit) SpacemiT-class hardware without relying on proprietary IME2 | 3-6 | RISC-V chip vendor / contributor with wide-VLEN hardware | Medium |
+| CI | Re-enable disabled riscv64 cross-compile CI jobs (plain + Vulkan) in `build-cross.yml` with dedicated runners | 1-2 | RISC-V chip vendor (runner provisioning) | Medium |
+| CI | Add QEMU-based CI across multiple VLENs (128/256/512/1024) to catch VLEN-dependent correctness bugs before hardware CI does | 2-4 | Any contributor | Medium |
+| Ecosystem | Validate/restore a musl+riscv64 CI job (regression risk after #8792) | 1 | Any contributor | Low |
+| Documentation | Establish a single riscv64 port-status tracking issue | 0.5 | Any contributor | Low |
 
 ---
 
 ## 15. References
 
-- [llama.cpp repository](https://github.com/ggerganov/llama.cpp)
+- [llama.cpp repository (ggml-org)](https://github.com/ggml-org/llama.cpp)
 - [ggml-org organization](https://github.com/ggml-org)
+- [build-riscv.yml CI workflow](https://github.com/ggml-org/llama.cpp/blob/master/.github/workflows/build-riscv.yml)
 - [RISE Project](https://riseproject.dev)
-- [RISE RP-014 validation repo](https://github.com/riseproject-dev/llama.cpp-validation)
-- [RISE riscv64 runners documentation](https://riseproject-dev.github.io/riscv-runner/)
+- [RISE RISC-V Runners: six weeks in (2026-05-12)](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/)
 - [RISE Q1 2026 Outsized Impact Award](https://riseproject.dev/2026/04/21/rise-outsized-impact-award-q1-2026/)
-- [RISE runners six-weeks-in blog post](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/)
-- [RISC-V Optimization Guide](https://riscv-optimization-guide.riseproject.dev)
-- [PR #3453 -- K-Quants RVV](https://github.com/ggerganov/llama.cpp/pull/3453)
-- [PR #12530 -- 128-bit VLEN RVV](https://github.com/ggerganov/llama.cpp/pull/12530)
-- [PR #13720 -- xtheadvector](https://github.com/ggerganov/llama.cpp/pull/13720)
-- [PR #14439 -- native RISC-V CI](https://github.com/ggerganov/llama.cpp/pull/14439)
-- [PR #15288 -- SpacemiT IME backend](https://github.com/ggerganov/llama.cpp/pull/15288)
-- [PR #17461 -- RISC-V cpu-feats](https://github.com/ggerganov/llama.cpp/pull/17461)
-- [PR #17567 -- riscv_hwprobe detection](https://github.com/ggerganov/llama.cpp/pull/17567)
-- [PR #20627 -- SIMD-GEMM RVV](https://github.com/ggerganov/llama.cpp/pull/20627)
-- [PR #20888 -- CMake ISA string ordering](https://github.com/ggerganov/llama.cpp/pull/20888)
-- [PR #20991 -- riscv64 release binaries](https://github.com/ggerganov/llama.cpp/pull/20991)
-- [PR #21263 -- RISE runners migration](https://github.com/ggerganov/llama.cpp/pull/21263)
-- [PR #22768 -- Q1_0 optimized RVV dot](https://github.com/ggerganov/llama.cpp/pull/22768)
-- [PR #22863 -- SpacemiT IME2](https://github.com/ggerganov/llama.cpp/pull/22863)
-- [Issue #20988 -- riscv64 release binaries (closed)](https://github.com/ggerganov/llama.cpp/issues/20988)
-- [Issue #22655 -- Zvfh repack crash](https://github.com/ggerganov/llama.cpp/issues/22655)
-- [Issue #24250 -- SIGILL on SiFive P550](https://github.com/ggerganov/llama.cpp/issues/24250)
-- [ggml-org/ggml#1475 -- sub-extension gating](https://github.com/ggml-org/ggml/issues/1475)
-- [llama-cpp-python PR #2139 -- riscv64 wheel build](https://github.com/abetlen/llama-cpp-python/pull/2139)
-- [Debian buildd llama-cpp](https://buildd.debian.org/status/package.php?p=llama.cpp&suite=sid)
+- [Announcing the RISE RISC-V Runners (2026-03-24)](https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/)
+- [RISC-V Optimization Guide (RISE)](https://riscv-optimization-guide.riseproject.dev/)
+- [Issue #165 -- origin RISC-V support request](https://github.com/ggml-org/llama.cpp/issues/165)
+- [Issue #3191 -- automating CI for RISC-V](https://github.com/ggml-org/llama.cpp/issues/3191)
+- [Issue #20988 -- feature request: riscv64 release binaries (closed not-planned)](https://github.com/ggml-org/llama.cpp/issues/20988)
+- [PR #20991 -- add riscv64 to release binaries (open)](https://github.com/ggml-org/llama.cpp/pull/20991)
+- [PR #26986 -- competing release-enable PR (closed unmerged)](https://github.com/ggml-org/llama.cpp/pull/26986)
+- [Issue #28986 -- vfloat32m8_t / zve32f compile bug (open)](https://github.com/ggml-org/llama.cpp/issues/28986)
+- [Issue #29131 -- RVV IQ4_NL/MXFP4 odd-block dot-product bug (open)](https://github.com/ggml-org/llama.cpp/issues/29131)
+- [PR #18859 -- RVV vec dot kernels that introduced the #29131 bug](https://github.com/ggml-org/llama.cpp/pull/18859)
+- [PR #23009 -- xtheadvector build fix (open)](https://github.com/ggml-org/llama.cpp/pull/23009)
+- [PR #1616 -- foundational RISC-V support](https://github.com/ggml-org/llama.cpp/pull/1616)
+- [PR #2929 -- first RVV intrinsics](https://github.com/ggml-org/llama.cpp/pull/2929)
+- [PR #12530 -- 128-bit RVV support](https://github.com/ggml-org/llama.cpp/pull/12530)
+- [PR #13720 -- xtheadvector support](https://github.com/ggml-org/llama.cpp/pull/13720)
+- [PR #14439 -- native RISC-V CI hardware](https://github.com/ggml-org/llama.cpp/pull/14439)
+- [PR #15288 -- SpacemiT backend](https://github.com/ggml-org/llama.cpp/pull/15288)
+- [PR #17461 -- RISC-V cpu-feats](https://github.com/ggml-org/llama.cpp/pull/17461)
+- [PR #17567 -- riscv_hwprobe detection fix](https://github.com/ggml-org/llama.cpp/pull/17567)
+- [PR #20627 -- SIMD-GEMM for RVV](https://github.com/ggml-org/llama.cpp/pull/20627)
+- [PR #20888 -- CMake ISA string ordering fix](https://github.com/ggml-org/llama.cpp/pull/20888)
+- [PR #21263 -- migrate CI to RISE runners](https://github.com/ggml-org/llama.cpp/pull/21263)
+- [PR #22863 -- SpacemiT IME2 support](https://github.com/ggml-org/llama.cpp/pull/22863)
+- [Issue #22655 -- RVV 16x1 repack crash (closed)](https://github.com/ggml-org/llama.cpp/issues/22655)
+- [Issue #24250 -- SIGILL on SiFive P550 (closed)](https://github.com/ggml-org/llama.cpp/issues/24250)
+- [Issue #8488 -- Vulkan backend broken on RISC-V (closed)](https://github.com/ggml-org/llama.cpp/issues/8488)
+- [Issue #8792 -- musl toolchain compile failure (closed)](https://github.com/ggml-org/llama.cpp/issues/8792)
+- [OpenBLAS issue #5811 -- riscv64_zvl256b DGEMM correctness regression (fixed)](https://github.com/OpenMathLib/OpenBLAS/issues/5811)
+- [Benchmarking llama.cpp on SpacemiT K3, Part 4 (DEV Community)](https://dev.to/gounthar/benchmarking-llamacpp-on-spacemit-k3-risc-v-ai-cores-vs-standard-rvv-part-4-10mc)
+- [Running a Local LLM on RISC-V: Banana Pi F3, Part 1 (DEV Community)](https://dev.to/gounthar/running-a-local-llm-on-risc-v-building-llamacpp-on-a-banana-pi-f3-part-1-4d5g)
+- [PLCT Lab: RVV 1.0 support merged upstream](https://plctlab.org/en/news/085/)
+- [arXiv 2503.17422 -- RISC-V LLM inference optimization pipeline](https://arxiv.org/pdf/2503.17422v1.pdf)
+- [OpenBenchmarking.org -- Llama-cpp-k3 result set](https://openbenchmarking.org/result/2605258-NE-LLAMACPPK74&sor&rro)
