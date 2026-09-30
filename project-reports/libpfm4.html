@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> red<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for libpfm4<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,15 +280,15 @@
 </h2>
     
 
-<p>libpfm4 is a C library that provides a hardware-independent API for encoding and discovering hardware performance monitoring unit (PMU) events on Linux via the <code class="language-plaintext highlighter-rouge">perf_event_open(2)</code> syscall. It is the core library behind PAPI, oprofile, and any tool that needs to look up hardware counter names by string (e.g., “INST_RETIRED:ANY”) and translate them to the kernel’s numeric event encoding. The library does not perform measurement itself – it encodes events for the caller to pass to the kernel.</p>
+<p>libpfm4 is a C library providing a hardware-independent API for encoding and discovering hardware performance monitoring unit (PMU) events on Linux via the <code class="language-plaintext highlighter-rouge">perf_event_open(2)</code> syscall. It is the event-naming backend used by PAPI, oprofile, and other tools that translate human-readable counter names (e.g. “INST_RETIRED:ANY”) into the kernel’s numeric event encoding. libpfm4 does not perform measurement itself; it only encodes events for the caller to pass to the kernel.</p>
 
-<p>The project was created at Hewlett-Packard (2002-2006) and is licensed under the MIT License (copyright Hewlett-Packard Development Company, L.P.). It is hosted at <a href="https://perfmon2.sourceforge.net/">perfmon2.sourceforge.net</a> with a GitHub mirror at <a href="https://github.com/wcohen/libpfm4">wcohen/libpfm4</a>. The canonical upstream is the SourceForge mailing-list-driven repository; the GitHub mirror is used for issue tracking and visibility.</p>
+<p>The project originated at Hewlett-Packard (2002-2006) and is licensed under a permissive MIT-style license (COPYING), copyright Hewlett-Packard Development Company, L.P., with later contributions copyrighted by Google, Inc. (2009, via Stephane Eranian). It is canonically hosted on SourceForge (<a href="https://perfmon2.sourceforge.net/">perfmon2.sourceforge.net</a>), with <a href="https://github.com/wcohen/libpfm4">wcohen/libpfm4</a> on GitHub explicitly describing itself as a mirror of the SourceForge repository, maintained by William Cohen with local patch-staging branches (<code class="language-plaintext highlighter-rouge">wcohen/a64fx</code>, <code class="language-plaintext highlighter-rouge">wcohen/fedora</code>, <code class="language-plaintext highlighter-rouge">wcohen/gcc14</code>, <code class="language-plaintext highlighter-rouge">wcohen/python_cflags</code>, <code class="language-plaintext highlighter-rouge">wcohen/spec</code>, <code class="language-plaintext highlighter-rouge">wcohen/trunc</code>). The GitHub mirror carries essentially no issue/PR traffic (8 issues, 1 PR total across its history), so substantive upstream discussion, if any exists, would be on SourceForge or the perfmon2-devel mailing list, both outside the reach of GitHub-based tooling.</p>
 
-<p><strong>Governance:</strong> No formal foundation, no governance charter, no sponsorship tiers. The project is effectively single-maintainer. Stephane Eranian (Google) holds 1,046 of 1,256 total commits (~83%). William Cohen (Red Hat, historical affiliation) hosts the GitHub mirror and has 19 commits. Occasional contributors include Ian Rogers (Google, ARM detection fixes 2021/2024), Swarup Sahoo (AMD Zen5 L3 PMU), Sachin Monga (IBM Power10), and historically Robert Richter (AMD), Thomas Richter (IBM s390), Shay Gal-On/shay-cavium/swalk-cavium (Cavium/Marvell ThunderX2), Masahiko Yamada (Fujitsu A64FX), and Lau Mercadal Melia (HiSilicon Kunpeng).</p>
+<p><strong>Governance:</strong> No formal foundation, no governance charter, no sponsorship tiers, and no MAINTAINERS/OWNERS/CODEOWNERS/PLATFORMS.md/SUPPORT.md file anywhere in the repository. The project is effectively single-maintainer. Commit-count analysis of the full history (1,256 commits) shows Stephane Eranian (Google, originally HP Labs) with 1,046+14 commits (~83%) as the de facto sole upstream maintainer, followed by William Cohen (Red Hat, mirror/packaging maintainer, 18 commits), Vince Weaver (University of Maine, academic, 15+7), Corey Ashford (IBM, 14), Thomas Richter (IBM, 11), Hendrik Brueckner (IBM, 8), Steve Kaufmann (Cray, 7), Arun Sharma (Google/Facebook, 7+6), Andreas Beckmann (Forschungszentrum Julich, 7), Will Schmidt (IBM, 6), Masahiko Yamada (Fujitsu, 5), and Robert Richter (AMD, 4). Google and IBM dominate corporate involvement; Red Hat’s role (via Cohen) is curating the GitHub mirror and downstream packaging rather than core development. [NEEDS VERIFICATION]: earlier project documentation also names Ian Rogers (ARM detection fixes), Swarup Sahoo (AMD Zen5 L3 PMU), Sachin Monga (IBM Power10), and Lau Mercadal Melia (HiSilicon Kunpeng) as recent contributors; these names are consistent with the corporate affiliations above (Google, IBM) but were not independently re-derived from the commit-count table in this round of research.</p>
 
-<p><strong>Architecture policy for new ports:</strong> Informal and vendor-driven. Every non-x86 architecture was contributed by the hardware vendor or their ecosystem partners (IBM for s390/Power, Cavium for ThunderX2, Fujitsu for A64FX, Huawei for Kunpeng). There is no written acceptance policy. New ports require submitting a patch series to the perfmon2-devel mailing list adding a <code class="language-plaintext highlighter-rouge">pfmlib_&lt;arch&gt;.c</code> PMU backend and corresponding event header files, reviewed and merged by Eranian.</p>
+<p><strong>Architecture policy for new ports:</strong> Informal and entirely vendor-driven. Every non-x86 architecture (ARM/AArch64, SPARC, IBM Power/z, MIPS) was contributed by the hardware vendor or an ecosystem partner. There is no written acceptance policy; a new port requires a patch series to the perfmon2-devel mailing list adding a <code class="language-plaintext highlighter-rouge">pfmlib_&lt;arch&gt;.c</code> PMU backend plus event header files, reviewed and merged by Eranian. Historically, any vendor or contributor submitting well-formed PMU event tables has been merged, so the bar for a first submission appears low, but no RISC-V submission of any kind has ever been made.</p>
 
-<p><strong>RISE Project involvement:</strong> None. libpfm4 is not a RISE Project member and does not appear in any RISE blog post, working group deliverable, or funded RFP. The RISE Debug &amp; Profiling working group (2024 achievements) covered DynamoRIO, Valgrind, GDB, Linux perf, and eBPF – not libpfm4.</p><hr />
+<p><strong>RISE Project involvement:</strong> None found. RISE’s full published member list is 20 organizations across two tiers: Premier Members (Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm Technologies, Red Hat, SiFive, Tenstorrent) and General Members (Akeana, Andes Technology, Beijing ESWIN Computing Technology, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, Institute of Software Chinese Academy of Sciences, Microchip Technology, NextSilicon, Quintauris, SpacemiT, ZTE). RISE’s working groups cover Compilers &amp; Toolchains, System Libraries, Kernel &amp; Virtualization, Language Runtimes, Developer Infrastructure, Linux Distro Integration, Simulator/Emulators, System Firmware, Security Software, and AI/ML. All 35 posts on the RISE blog (2024-05-15 through 2026-09-28) were enumerated by date and title; none mention libpfm4, perfmon2, or William Cohen. libpfm4 does not appear in the RISE wheel builder package list, the riseproject-dev GitHub org’s visible repositories, or any RISE-funded RFP.</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -313,28 +314,30 @@
     </tr>
     <tr>
       <td>(historical)</td>
-      <td>ARM, AArch64, SPARC, MIPS, IBM Power/z added by respective hardware vendors</td>
+      <td>ARM, AArch64, SPARC, MIPS, IBM Power/z added by respective hardware vendors and partners</td>
       <td><a href="https://github.com/wcohen/libpfm4/tree/master/lib">wcohen/libpfm4 lib/</a></td>
     </tr>
     <tr>
       <td>(ongoing)</td>
-      <td>AMD Zen-series, Intel GraniteRapids/SapphireRapids, ARM Neoverse, IBM Power10 updates</td>
-      <td><a href="https://github.com/wcohen/libpfm4/commits/master">recent 50 commits</a></td>
+      <td>AMD Zen-series, Intel GraniteRapids/SapphireRapids, ARM Neoverse updates</td>
+      <td><a href="https://github.com/wcohen/libpfm4/commits/master">wcohen/libpfm4 commit history</a></td>
     </tr>
     <tr>
-      <td>2026-06-13</td>
-      <td>Most recent commit: “Update Intel GraniteRapids core events to 1.19”</td>
-      <td><a href="https://github.com/wcohen/libpfm4/commits/master">wcohen/libpfm4 commits</a></td>
+      <td>2024-10-04</td>
+      <td>Most recent commit on <code class="language-plaintext highlighter-rouge">master</code> per fresh clone verification: <code class="language-plaintext highlighter-rouge">91970fe6eb4e80b63f77fb54a9592e28a207050c</code>, “Add ARM Neoverse N3 core PMU support” (Stephane Eranian)</td>
+      <td>Independently reconfirmed multiple times this round via <code class="language-plaintext highlighter-rouge">git rev-parse HEAD</code> / <code class="language-plaintext highlighter-rouge">git ls-remote</code> against <a href="https://github.com/wcohen/libpfm4">wcohen/libpfm4</a></td>
     </tr>
     <tr>
-      <td>June 2026</td>
-      <td>RISC-V: no commits, no issues, no PRs, no source files</td>
-      <td><a href="https://github.com/wcohen/libpfm4">wcohen/libpfm4</a></td>
+      <td>all time</td>
+      <td>RISC-V: zero commits, zero issues, zero PRs, zero source files at any point in project history</td>
+      <td><code class="language-plaintext highlighter-rouge">git log --all --grep=riscv</code>, <code class="language-plaintext highlighter-rouge">git grep -il riscv HEAD</code>, GitHub commit/issue/PR search, all returning 0 hits</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No RISC-V work has ever been submitted or merged. The GitHub commit search for “riscv” in wcohen/libpfm4 returns 0 results. The perfmon2-devel mailing list search for “riscv” returns 0 results. There is no tracking issue, no roadmap entry, and no contributor known to be working on a RISC-V port.</p><hr />
+<p><strong>Discrepancy note:</strong> An earlier version of this report’s activity tracking cited the most recent commit as 2026-06-13 (“Update Intel GraniteRapids core events to 1.19”). Repeated independent verification this round, via fresh clones and <code class="language-plaintext highlighter-rouge">git rev-parse HEAD</code> cross-checked against <code class="language-plaintext highlighter-rouge">git ls-remote</code>, consistently returns HEAD <code class="language-plaintext highlighter-rouge">91970fe6eb4e80b63f77fb54a9592e28a207050c</code> dated 2024-10-04. This report treats the directly reproduced git-object evidence (fresh clone, commit hash matched across five separate research passes) as authoritative; the 2026-06-13 figure could not be reproduced and should be treated as stale or erroneous pending re-verification. [NEEDS VERIFICATION resolved in favor of the 2024-10-04 / <code class="language-plaintext highlighter-rouge">91970fe</code> figure.]</p>
+
+<p>No RISC-V work has ever been submitted or merged into libpfm4, on GitHub or (as far as is visible from GitHub-based tooling) on the SourceForge mainline. There is no tracking issue, no roadmap entry, and no known contributor working on a RISC-V port. The library is not fully upstream for RISC-V in any sense; it is simply absent.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -344,7 +347,7 @@
 </h2>
     
 
-<p>There is no formal tier policy. The de facto tier of an architecture in libpfm4 is determined by the presence of PMU source files and event tables in the repository. By this measure:</p>
+<p>There is no formal tier policy (no PLATFORMS.md/SUPPORT.md/docs/platforms/ file exists). The de facto tier of an architecture is determined by the presence of PMU source files, event tables, and build-system arch-detection branches.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -360,54 +363,54 @@
       <td>Architecture in <code class="language-plaintext highlighter-rouge">config.mk</code></td>
       <td>Yes (<code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_X86_64</code>)</td>
       <td>Yes (<code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_ARM64</code>)</td>
-      <td>No</td>
+      <td>No branch exists; <code class="language-plaintext highlighter-rouge">uname -m</code> of <code class="language-plaintext highlighter-rouge">riscv64</code> falls through unmatched</td>
     </tr>
     <tr>
       <td>PMU C source files in <code class="language-plaintext highlighter-rouge">lib/</code></td>
-      <td>~110 files (Intel + AMD)</td>
-      <td>18 files</td>
-      <td>0</td>
+      <td>~114 files (97 Intel-family + 17 AMD-family)</td>
+      <td>13 files (per direct file-count verification; an earlier estimate said 18)</td>
+      <td>0 files</td>
     </tr>
     <tr>
       <td>Event tables in <code class="language-plaintext highlighter-rouge">lib/events/</code></td>
-      <td>~106 headers (Intel + AMD)</td>
-      <td>18+ headers</td>
-      <td>0</td>
+      <td>~106 headers</td>
+      <td>present, count not independently re-verified this round</td>
+      <td>0 headers</td>
     </tr>
     <tr>
-      <td>Architecture guard in <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code></td>
+      <td>Architecture guard in <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code> / <code class="language-plaintext highlighter-rouge">lib/Makefile</code> dispatch</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No</td>
+      <td>No <code class="language-plaintext highlighter-rouge">RISCV</code>/<code class="language-plaintext highlighter-rouge">RISCV64</code> branch exists</td>
     </tr>
     <tr>
       <td>CI</td>
-      <td>None (project has no CI)</td>
+      <td>None (project has no CI for any architecture)</td>
       <td>None</td>
       <td>None</td>
     </tr>
     <tr>
       <td>Release-blocking</td>
-      <td>n/a</td>
+      <td>n/a (no upstream releases exist for any arch)</td>
       <td>n/a</td>
       <td>n/a</td>
     </tr>
     <tr>
       <td>Official upstream binary</td>
-      <td>No releases exist</td>
-      <td>No releases exist</td>
-      <td>No releases exist</td>
+      <td>No GitHub releases exist</td>
+      <td>No GitHub releases exist</td>
+      <td>No GitHub releases exist</td>
     </tr>
     <tr>
       <td>Distro binary package</td>
       <td>Yes (Debian, Ubuntu)</td>
       <td>Yes (Debian, Ubuntu)</td>
-      <td>Yes (Debian, Ubuntu) – non-functional for PMU</td>
+      <td>Yes (Ubuntu 26.04 “resolute”: <code class="language-plaintext highlighter-rouge">libpfm4</code>/<code class="language-plaintext highlighter-rouge">libpfm4-dev</code> 4.13.0+git106-g3e4031b-1, architectures incl. riscv64) – confirmed non-functional for PMU event lookup</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The project has no GitHub releases for any architecture. No official pre-built binaries are distributed by upstream. Distro packages exist for riscv64 in Debian sid (version 4.13.0+git106-g3e4031b-1+b2, status Installed on buildd rv-manda-02) and Ubuntu 24.04 LTS Noble (version 4.13.0+git32-g0d4ed0e-1, in the universe component). These packages build and install on riscv64 but contain zero RISC-V PMU event tables – they are non-functional for hardware performance counter access on RISC-V hardware.</p><hr />
+<p>The project has zero GitHub releases for any architecture; distribution is entirely via downstream distro packaging and raw git tags/tarballs. The riscv64 Ubuntu package compiles and installs but, per the code-level analysis in Section 4, exposes no RISC-V PMU events at runtime.</p><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -417,13 +420,13 @@
 </h2>
     
 
-<p>libpfm4’s architecture-specific work consists entirely of PMU event table definitions and <code class="language-plaintext highlighter-rouge">perf_event_open</code> encoding logic. There is no JIT backend, no SIMD dispatch, no cryptographic assembly, and no GC barrier code. The architecture-specific components are:</p>
+<p>libpfm4’s architecture-specific work consists entirely of PMU event-table definitions and <code class="language-plaintext highlighter-rouge">perf_event_open</code> encoding logic. There is no JIT backend, no SIMD dispatch, no cryptographic assembly, and no GC barrier code anywhere in the project. The architecture-specific components are:</p>
 
 <ol>
-  <li><strong>Architecture detection</strong> (<code class="language-plaintext highlighter-rouge">config.mk</code>): Maps <code class="language-plaintext highlighter-rouge">uname -m</code> output to a normalized ARCH value and sets a <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_*</code> build flag.</li>
-  <li><strong>PMU C source file</strong> (<code class="language-plaintext highlighter-rouge">lib/pfmlib_&lt;arch&gt;*.c</code>): Implements event encoding, attribute parsing, and CPU family detection for each PMU family on the architecture.</li>
-  <li><strong>Event table headers</strong> (<code class="language-plaintext highlighter-rouge">lib/events/&lt;arch&gt;_*_events.h</code>): Defines the named event descriptors for each supported CPU microarchitecture.</li>
-  <li><strong>Architecture guard</strong> (<code class="language-plaintext highlighter-rouge">pfmlib_common.c</code>): Conditionally includes PMU backends based on <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_*</code> flags.</li>
+  <li><strong>Architecture detection</strong> (<code class="language-plaintext highlighter-rouge">config.mk</code>): maps <code class="language-plaintext highlighter-rouge">uname -m</code> to a normalized <code class="language-plaintext highlighter-rouge">ARCH</code> value and sets a <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_*</code> build flag. The detection block matches i386/i686/i86pc, x86_64/amd64, ppc, sparc, arm/armv*/aarch64, mips/mipsel, and a cell case; there is no <code class="language-plaintext highlighter-rouge">riscv64</code> case, so <code class="language-plaintext highlighter-rouge">ARCH</code> is left as whatever <code class="language-plaintext highlighter-rouge">uname -m</code> reports and no <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_*</code> flag is ever set on riscv64.</li>
+  <li><strong>PMU C source files</strong> (<code class="language-plaintext highlighter-rouge">lib/pfmlib_&lt;arch&gt;*.c</code>): event encoding, attribute parsing, CPU family detection per PMU family.</li>
+  <li><strong>Event table headers</strong> (<code class="language-plaintext highlighter-rouge">lib/events/&lt;arch&gt;_*_events.h</code>): named event descriptors per CPU microarchitecture.</li>
+  <li><strong>Architecture guard / dispatch</strong> (<code class="language-plaintext highlighter-rouge">pfmlib_common.c</code>, <code class="language-plaintext highlighter-rouge">lib/Makefile</code>): the <code class="language-plaintext highlighter-rouge">ifeq ($(CONFIG_PFMLIB_ARCH_...),y)</code> branches in <code class="language-plaintext highlighter-rouge">lib/Makefile</code> cover IA64, X86, I386, X86_64, POWERPC, S390X, SPARC, ARM, ARM64, MIPS, and CELL – no RISCV branch exists, so there is no source-file list to even select from.</li>
 </ol>
 
 <div class="table-wrapper"><table>
@@ -440,25 +443,31 @@
       <td>Architecture detection in <code class="language-plaintext highlighter-rouge">config.mk</code></td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing</td>
+      <td>Missing (no case for <code class="language-plaintext highlighter-rouge">riscv64</code>)</td>
     </tr>
     <tr>
       <td>PMU source files in <code class="language-plaintext highlighter-rouge">lib/</code></td>
-      <td>~110 files (K7 through Zen5)</td>
-      <td>18 files (ARMv6 through Neoverse V3, A64FX, Kunpeng)</td>
+      <td>~114 files (K7 through Zen5, P6 through GraniteRapids)</td>
+      <td>13 files (ARMv6 through ARMv9/Neoverse, A64FX, Kunpeng)</td>
       <td>0 files</td>
     </tr>
     <tr>
       <td>Event table headers in <code class="language-plaintext highlighter-rouge">lib/events/</code></td>
-      <td>~106 headers (Intel P6 through GraniteRapids + AMD)</td>
-      <td>18+ headers</td>
+      <td>~106 headers</td>
+      <td>present (count not re-verified this round)</td>
       <td>0 headers</td>
     </tr>
     <tr>
-      <td>Architecture guard in <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code></td>
+      <td>Architecture guard in <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code> / <code class="language-plaintext highlighter-rouge">lib/Makefile</code></td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> or any RISC-V guard anywhere in tree</td>
+      <td>n/a</td>
+      <td>n/a</td>
+      <td>Zero occurrences repo-wide</td>
     </tr>
     <tr>
       <td>Linux <code class="language-plaintext highlighter-rouge">perf_event_open</code> encoding</td>
@@ -469,9 +478,17 @@
   </tbody>
 </table></div>
 
-<p>There is no RVV (RISC-V Vector), Zba, Zbb, Zbs, or any other ISA extension reference anywhere in the libpfm4 codebase. RISC-V is categorically absent at every layer. This is not a stub or partial implementation; no RISC-V-specific file has ever existed in the repository.</p>
+<p>This is total absence, not a stub: full-tree <code class="language-plaintext highlighter-rouge">git grep -il riscv</code> against HEAD <code class="language-plaintext highlighter-rouge">91970fe6eb4e80b63f77fb54a9592e28a207050c</code> returns zero matches, including comments, TODOs, and stub references. There is no RVV (RISC-V Vector), Zba, Zbb, Zbs, Zicsr, or Sscofpmf reference anywhere in the codebase.</p>
 
-<p>Note: The kernel-side counterpart (<code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu_sbi.c</code>, <code class="language-plaintext highlighter-rouge">riscv_pmu_legacy.c</code>) is in place in the Linux kernel for SBI PMU extension v0.3+. The gap is exclusively in libpfm4’s event table and encoding layer, not in the kernel.</p><hr />
+<p>The gap is entirely in libpfm4’s userspace event-table layer, not in the kernel: <code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu_sbi.c</code> and <code class="language-plaintext highlighter-rouge">riscv_pmu_legacy.c</code> are already merged in the Linux kernel for the SBI PMU extension (v0.3+), so the kernel-side counterpart libpfm4 would communicate with via <code class="language-plaintext highlighter-rouge">perf_event_open</code> is in place and waiting.</p>
+
+<p><strong>Out-of-tree academic patches (unmerged):</strong> two peer-reviewed papers document hand-patching RISC-V native PMU event tables into libpfm4 to run their own benchmarks, confirming that no such support exists upstream:</p>
+<ul>
+  <li>Banchelli, Bros Esqueu, Rocha, Roma, Tomas, Neves, Mantovani, “RISC-V in HPC: a look into tools for performance monitoring” (ISC High Performance 2025 workshop, Springer, DOI 10.1007/978-3-032-07612-0_43; <a href="http://web.tecnico.ulisboa.pt/~ist14359/wordpress/nfvr_pubs/iscw25b.pdf">full PDF</a>) manually added native events to libpfm4 for the SOPHON SG2042 and SpacemiT K1 chips by hand-transcribing vendor documentation, special-casing <code class="language-plaintext highlighter-rouge">mvendorid=0x5b7</code> for the SOPHON platform since there is no standardized <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> auto-detection format for RISC-V vendors. Preset events such as <code class="language-plaintext highlighter-rouge">PAPI_L1_DCA</code> and <code class="language-plaintext highlighter-rouge">PAPI_FP_INS</code> were added; more complex preset events were left as future work. This patch work is described as unmerged (“available upon request”), not submitted to perfmon2-devel.</li>
+  <li>Domingos, Rocha, Neves, Roma, Tomas, Sousa, “Supporting RISC-V Performance Counters Through Linux Performance Analysis Tools” (ASAP’23, <a href="https://hpcas.inesc-id.pt/~unify/papers/conf_asap23.pdf">PDF</a>), extending Domingos, Tomas, Sousa, “Supporting RISC-V Performance Counters through Performance analysis tools for Linux (Perf)” (CARRV 2021, <a href="https://arxiv.org/abs/2112.11767">arXiv:2112.11767</a>), built and released companion code at <a href="https://github.com/hpc-ulisboa/RISC-V-Perf-Events-Unmatched">hpc-ulisboa/RISC-V-Perf-Events-Unmatched</a> and <a href="https://github.com/hpc-ulisboa/RISC-V-PAPI">hpc-ulisboa/RISC-V-PAPI</a>, again without submitting upstream to libpfm4.</li>
+</ul>
+
+<p>Neither patch set has been submitted to the perfmon2-devel mailing list or merged into <code class="language-plaintext highlighter-rouge">wcohen/libpfm4</code> as far as this research could determine.</p><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -481,11 +498,9 @@
 </h2>
     
 
-<p>libpfm4 uses a pure GNU Make build system. There is no CMake, no Autoconf, no Meson, no Dockerfile, and no CI configuration of any kind.</p>
+<p>libpfm4 uses a pure GNU Make build system: <code class="language-plaintext highlighter-rouge">config.mk</code> (architecture detection and global flags), <code class="language-plaintext highlighter-rouge">Makefile</code> (top-level targets), <code class="language-plaintext highlighter-rouge">rules.mk</code> (suffix rules). There is no CMake, no Autoconf, no Meson, no Dockerfile, and no CI configuration of any kind for any architecture. Confirmed directly by cloning HEAD <code class="language-plaintext highlighter-rouge">91970fe6eb4e80b63f77fb54a9592e28a207050c</code>: no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> at any level, no <code class="language-plaintext highlighter-rouge">cmake/</code> directory, no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, no standalone <code class="language-plaintext highlighter-rouge">INSTALL</code> file (install instructions live inside the plain-text <code class="language-plaintext highlighter-rouge">README</code> under “INSTALLATION”), no <code class="language-plaintext highlighter-rouge">docs/building.md</code>, no <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code>, and no <code class="language-plaintext highlighter-rouge">.ci/</code>, <code class="language-plaintext highlighter-rouge">docker/</code>, <code class="language-plaintext highlighter-rouge">Dockerfile*</code>, <code class="language-plaintext highlighter-rouge">toolchain*</code>, or <code class="language-plaintext highlighter-rouge">*cross*</code> path anywhere in the tree (not a RISC-V-specific gap – the project has none of these for any architecture).</p>
 
-<p>Build system files: <code class="language-plaintext highlighter-rouge">config.mk</code> (architecture detection and global flags), <code class="language-plaintext highlighter-rouge">Makefile</code> (top-level targets), <code class="language-plaintext highlighter-rouge">rules.mk</code> (suffix rules for <code class="language-plaintext highlighter-rouge">.c</code>/<code class="language-plaintext highlighter-rouge">.cpp</code> -&gt; <code class="language-plaintext highlighter-rouge">.o</code>/<code class="language-plaintext highlighter-rouge">.lo</code>).</p>
-
-<p><strong>Native build on riscv64 host:</strong></p>
+<p><strong>Native build:</strong></p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make
 make PREFIX=/usr install
@@ -493,23 +508,17 @@ make CONFIG_PFMLIB_SHARED=n           # static library only
 make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
 </code></pre></div></div>
 
-<p><strong>What happens when building on riscv64:</strong> <code class="language-plaintext highlighter-rouge">uname -m</code> returns <code class="language-plaintext highlighter-rouge">riscv64</code>. The <code class="language-plaintext highlighter-rouge">config.mk</code> architecture normalization does not match any known pattern, so <code class="language-plaintext highlighter-rouge">ARCH</code> stays as <code class="language-plaintext highlighter-rouge">riscv64</code> with no <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_*</code> flag set. The generic C library compiles without error (the core code is portable C89/C99 with no architecture-specific intrinsics in the generic path). The resulting library installs successfully but <code class="language-plaintext highlighter-rouge">pfm_initialize()</code> returns no PMU entries – <code class="language-plaintext highlighter-rouge">pfm_get_pmu_info()</code> and <code class="language-plaintext highlighter-rouge">pfm_find_event()</code> return empty results for any RISC-V PMU name.</p>
+<p><strong>What happens when building on riscv64:</strong> <code class="language-plaintext highlighter-rouge">uname -m</code> returns <code class="language-plaintext highlighter-rouge">riscv64</code>. The <code class="language-plaintext highlighter-rouge">config.mk</code> architecture normalization matches no known pattern, so <code class="language-plaintext highlighter-rouge">ARCH</code> stays <code class="language-plaintext highlighter-rouge">riscv64</code> with no <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_*</code> flag set. The generic C code compiles without error (portable C89/C99, no architecture-specific intrinsics in the generic path). The resulting library installs successfully, but <code class="language-plaintext highlighter-rouge">pfm_initialize()</code> and <code class="language-plaintext highlighter-rouge">pfm_find_event()</code> return no PMU entries at all, since no PMU backend was compiled in for the architecture.</p>
 
-<p><strong>Cross-compilation:</strong> No <code class="language-plaintext highlighter-rouge">CROSS_COMPILE</code> variable and no documented cross-compilation procedure. To cross-compile, the user must manually override: <code class="language-plaintext highlighter-rouge">make CC=riscv64-linux-gnu-gcc ARCH=riscv64</code>. This produces the same non-functional result: a compilable library with no RISC-V PMU event tables.</p>
+<p><strong>Cross-compilation:</strong> No <code class="language-plaintext highlighter-rouge">CROSS_COMPILE</code> variable and no documented cross-compilation procedure anywhere in the repository. A user must manually override, e.g. <code class="language-plaintext highlighter-rouge">make CC=riscv64-linux-gnu-gcc ARCH=riscv64</code>, which produces the same non-functional result: a compilable library with zero RISC-V PMU event tables.</p>
 
-<p><strong>Required toolchain:</strong> No documented minimum. Any GCC or Clang supporting the Linux 2.6.31+ <code class="language-plaintext highlighter-rouge">perf_event</code> ABI is sufficient for compilation. No architecture-specific compiler features are required.</p>
+<p><strong>Required toolchain:</strong> No documented minimum. Any GCC or Clang supporting the Linux 2.6.31+ <code class="language-plaintext highlighter-rouge">perf_event</code> ABI is sufficient for compilation; no architecture-specific compiler feature is required because no RISC-V-specific code path exists to require one.</p>
 
-<p><strong>Known build flags:</strong></p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_SHARED=y/n</code> – build shared + static (y, default) or static only (n)</li>
-  <li><code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_DEBUG=y/n</code> – enable/disable debug assertions</li>
-  <li><code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_NOPYTHON=y/n</code> – skip Python SWIG bindings</li>
-  <li><code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_NOTRACEPOINT=y/n</code> – skip tracepoint support</li>
-</ul>
+<p><strong>Known build flags:</strong> <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_SHARED=y/n</code> (shared+static vs static-only), <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_DEBUG=y/n</code>, <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_NOPYTHON=y/n</code> (default <code class="language-plaintext highlighter-rouge">y</code>, i.e. Python bindings disabled by default), <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_NOTRACEPOINT=y/n</code>. None are architecture-specific.</p>
 
 <p><strong>QEMU usage:</strong> Not documented anywhere in the repository.</p>
 
-<p><strong>Debian buildd riscv64 build status:</strong> “Maybe-Successful” (not clean “Successful”) for all riscv64 builds since at least 2018. This pattern is consistent with the test suite requiring hardware PMU counters unavailable in the build environment, not with a compilation failure. The build artifact is produced and installed correctly.</p><hr />
+<p><strong>Debian buildd riscv64 build status:</strong> previously documented as “Maybe-Successful” (not clean “Successful”) for riscv64 builds since at least 2018, consistent with a test suite that requires hardware PMU counters unavailable in the build environment rather than a compilation failure. [NEEDS VERIFICATION – not re-checked against buildd.debian.org this round.]</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -532,7 +541,7 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
     <tr>
       <td>PMU event enumeration (<code class="language-plaintext highlighter-rouge">pfm_find_event</code>)</td>
       <td>Full (Intel P6-GraniteRapids, AMD K7-Zen5)</td>
-      <td>Full (ARMv6-ARMv9, Neoverse N1-N3/V1-V3, A64FX, Kunpeng, ThunderX2)</td>
+      <td>Full (ARMv6-ARMv9, Neoverse, A64FX, Kunpeng, ThunderX2)</td>
       <td>Not supported</td>
     </tr>
     <tr>
@@ -555,19 +564,19 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
     </tr>
     <tr>
       <td>Linux tracepoint events</td>
-      <td>Architecture-independent – available</td>
-      <td>Architecture-independent – available</td>
-      <td>Architecture-independent – available</td>
+      <td>Architecture-independent, available</td>
+      <td>Architecture-independent, available</td>
+      <td>Architecture-independent, available</td>
     </tr>
     <tr>
       <td>Software events</td>
-      <td>Architecture-independent – available</td>
-      <td>Architecture-independent – available</td>
-      <td>Architecture-independent – available</td>
+      <td>Architecture-independent, available</td>
+      <td>Architecture-independent, available</td>
+      <td>Architecture-independent, available</td>
     </tr>
     <tr>
       <td>Python bindings</td>
-      <td>Yes (built on Linux if SWIG present)</td>
+      <td>Yes (if SWIG present; disabled by default)</td>
       <td>Yes</td>
       <td>Builds, but no HW event support</td>
     </tr>
@@ -575,33 +584,18 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
       <td>PAPI integration</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Builds, no HW counter support</td>
+      <td>Builds, no HW counter support upstream; two academic groups hand-patched partial support (Section 4), unmerged</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Functional gaps (riscv64 vs arm64/amd64):</strong></p>
+<p><strong>Functional gaps:</strong> the entire PMU-specific feature set is absent on riscv64. A user on riscv64 can call <code class="language-plaintext highlighter-rouge">pfm_initialize()</code> without error and use software/tracepoint event types (these bypass libpfm4’s encoding layer). A user on riscv64 cannot look up any RISC-V hardware PMU event by name, enumerate supported PMU families for the running CPU, or encode RISC-V hardware counter attributes for <code class="language-plaintext highlighter-rouge">perf_event_open</code>. Any tool depending on libpfm4 for hardware counter access (PAPI’s hardware component, oprofile, VTune wrappers) falls back to generic <code class="language-plaintext highlighter-rouge">perf_event_open</code> encoding without the named-event abstraction.</p>
 
-<p>The entire PMU-specific feature set is absent on riscv64. A user on riscv64 can:</p>
-<ul>
-  <li>Call <code class="language-plaintext highlighter-rouge">pfm_initialize()</code> without error.</li>
-  <li>Use software and tracepoint event types via generic <code class="language-plaintext highlighter-rouge">perf_event_open</code> parameters (these do not require libpfm4’s encoding layer).</li>
-</ul>
+<p><strong>Performance/overhead data (from the Banchelli et al. ISC HPC 2025 paper, measuring the perf/CSR/PAPI-via-libpfm4 stack on real RISC-V silicon):</strong> on a fixed assembly-loop instrumentation benchmark, <code class="language-plaintext highlighter-rouge">perf</code>-based instruction-count overhead on RISC-V platforms (SiFive Unmatched, SOPHON Pioneer, SpacemiT Banana Pi, EPI EPAC) is “more than two orders of magnitude” higher than on x86 (Intel Sapphire Rapids) at equivalent expected-instruction counts (e.g. at 1.8x10^9 expected instructions: Delta-i of 1.22-2.72 million on RISC-V platforms vs 546 on x86). The root cause is stated by the paper’s authors as “not completely understood so far and is under study.” PAPI (the libpfm4-backed measurement path) showed the highest overhead of the three measurement methods tested (perf, raw CSR reads, PAPI) on every RISC-V platform tested, including an unexplained degradation on the SpacemiT Banana Pi despite that platform supporting mode-based event filtering (Sscofpmf). A companion paper (Domingos et al., ASAP’23) measured PAPI/libpfm4-backed call overhead at 83,360 microseconds total (dominated by 81,200 microseconds of initialization cost) versus 100.24 microseconds total for raw <code class="language-plaintext highlighter-rouge">perf_event</code> calls on a SiFive HiFive Unmatched board – roughly 800x higher, with syscall counts of 7,716 (PAPI) vs 43 (raw perf events), attributed to libpfm4’s event-name-to-code translation and extra memory-structure allocation. These figures characterize libpfm4’s contribution to the PAPI stack’s overhead on RISC-V but were measured using the vendors’ own hand-patched, unmerged event tables (Section 4), since stock upstream libpfm4 exposes no RISC-V events to measure against at all.</p>
 
-<p>A user on riscv64 cannot:</p>
-<ul>
-  <li>Look up any RISC-V hardware PMU event by name.</li>
-  <li>Enumerate supported PMU families for the running CPU.</li>
-  <li>Encode RISC-V hardware counter attributes for <code class="language-plaintext highlighter-rouge">perf_event_open</code>.</li>
-</ul>
+<p><strong>Security hardening gaps:</strong> not applicable; libpfm4 contains no cryptographic operations.</p>
 
-<p>Any tool that depends on libpfm4 for hardware counter access (PAPI with hardware component, oprofile, VTune wrappers) falls back to generic <code class="language-plaintext highlighter-rouge">perf_event_open</code> encoding without the named-event abstraction. PAPI’s hardware component would be non-functional.</p>
-
-<p><strong>Performance gaps:</strong> Not applicable – no SIMD or numerics in libpfm4.</p>
-
-<p><strong>Security hardening gaps:</strong> Not applicable – no cryptographic operations in libpfm4.</p>
-
-<p><strong>Floating-point/NaN semantics:</strong> Not applicable.</p><hr />
+<p><strong>Floating-point/NaN semantics:</strong> not applicable.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -611,13 +605,7 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
 </h2>
     
 
-<p>The repository has no CI configuration of any kind.</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">.github/workflows/</code> directory: HTTP 404 – does not exist.</li>
-  <li><code class="language-plaintext highlighter-rouge">.travis.yml</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>: none present in the repository root (confirmed by directory listing showing only <code class="language-plaintext highlighter-rouge">.gitignore</code>, <code class="language-plaintext highlighter-rouge">COPYING</code>, <code class="language-plaintext highlighter-rouge">Makefile</code>, <code class="language-plaintext highlighter-rouge">README</code>, <code class="language-plaintext highlighter-rouge">config.mk</code>, <code class="language-plaintext highlighter-rouge">libpfm.spec</code>, <code class="language-plaintext highlighter-rouge">rules.mk</code>, and subdirectories <code class="language-plaintext highlighter-rouge">debian/</code>, <code class="language-plaintext highlighter-rouge">docs/</code>, <code class="language-plaintext highlighter-rouge">examples/</code>, <code class="language-plaintext highlighter-rouge">include/</code>, <code class="language-plaintext highlighter-rouge">lib/</code>, <code class="language-plaintext highlighter-rouge">perf_examples/</code>, <code class="language-plaintext highlighter-rouge">python/</code>, <code class="language-plaintext highlighter-rouge">tests/</code>).</li>
-  <li>GitHub Actions tab: shows only the onboarding/promotional page – zero workflow runs, zero workflow files configured.</li>
-</ul>
+<p>The repository has no CI configuration of any kind, for any architecture. Confirmed by multiple independent fresh clones of HEAD <code class="language-plaintext highlighter-rouge">91970fe6eb4e80b63f77fb54a9592e28a207050c</code>: <code class="language-plaintext highlighter-rouge">git ls-tree -r HEAD --name-only</code> contains no <code class="language-plaintext highlighter-rouge">.github</code> path at all (so <code class="language-plaintext highlighter-rouge">.github/workflows</code> cannot exist), and a full-tree search finds no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, or <code class="language-plaintext highlighter-rouge">azure-pipelines</code> file anywhere. The repository root listing is exactly <code class="language-plaintext highlighter-rouge">.gitignore COPYING Makefile README config.mk debian docs examples include lib libpfm.spec perf_examples python rules.mk tests</code> – no CI-related entries. The GitHub Actions tab shows only the onboarding/promotional page, with zero workflow runs and zero workflow files configured.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -656,7 +644,7 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
   </tbody>
 </table></div>
 
-<p>The absence of CI is uniform across all architectures. There are no RISE CI runners for libpfm4. The Debian buildd system provides the only automated cross-architecture build check, and it is controlled by Debian, not the upstream project.</p><hr />
+<p>The absence of CI is uniform across all architectures; this is not a riscv64-specific deficiency. There are no RISE CI runners for libpfm4. The Debian buildd system is the only automated cross-architecture build check, and it is controlled by Debian, not by the upstream project.</p><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -666,21 +654,25 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
 </h2>
     
 
-<p><strong>Upstream releases:</strong> None. The wcohen/libpfm4 GitHub repository has zero releases. No release assets exist for any architecture.</p>
+<p><strong>Upstream GitHub releases:</strong> none. Direct fetch of <a href="https://github.com/wcohen/libpfm4/releases">wcohen/libpfm4/releases</a> returns “There aren’t any releases here.” Zero releases means zero release assets, so no riscv64-named artifact can exist there. libpfm4 upstream ships via git tags/tarballs, not GitHub Releases.</p>
 
-<p><strong>PyPI:</strong> HTTP 404. libpfm4 does not exist as a PyPI package on any architecture.</p>
+<p><strong>PyPI:</strong> no package exists. <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/libpfm4/json</code> returns HTTP 404 (<code class="language-plaintext highlighter-rouge">{"message": "Not Found"}</code>). This is expected: libpfm4 is a C library, not a Python package, so the RISE PyPI wheel-builder mechanism does not apply to it at all.</p>
 
-<p><strong>RISE wheel builder:</strong> Not present. libpfm4 does not appear in the RISE wheel builder package list.</p>
+<p><strong>RISE wheel builder:</strong> confirmed not present. The GitLab-hosted wheel index for libpfm4 redirects to <code class="language-plaintext highlighter-rouge">pypi.org/simple/libpfm4/</code>, which itself 404s. The RISE wheel_builder status page (<a href="https://riseproject.gitlab.io/python/wheel_builder/">riseproject.gitlab.io/python/wheel_builder</a>) lists roughly 70 packages built for riscv64 (numpy, scipy, pandas, cmake, maturin, etc.); libpfm4 is not among them.</p>
 
-<p><strong>Arch Linux RISC-V (archriscv.felixc.at):</strong> Not found. libpfm4 is not in main Arch Linux repositories (it is AUR-only), so absence in the Arch RISC-V port index is expected.</p>
+<p><strong>Ubuntu 26.04 “resolute”:</strong> confirmed available, independently re-fetched via direct HTTP request in this round (<code class="language-plaintext highlighter-rouge">packages.ubuntu.com/search?keywords=libpfm4&amp;suite=resolute</code>): <code class="language-plaintext highlighter-rouge">libpfm4</code> (universe/libs) and <code class="language-plaintext highlighter-rouge">libpfm4-dev</code> (universe/libdevel), both version <code class="language-plaintext highlighter-rouge">4.13.0+git106-g3e4031b-1</code>, architectures <code class="language-plaintext highlighter-rouge">amd64 arm64 armhf i386 ppc64el riscv64 s390x</code>. riscv64 is explicitly listed. This is the strongest, most recently re-verified distro data point available.</p>
 
-<p><strong>Debian sid:</strong> Available. Package <code class="language-plaintext highlighter-rouge">libpfm4</code>, version 4.13.0+git106-g3e4031b-1+b2, status Installed on buildd host rv-manda-02 (~55 days ago). Also <code class="language-plaintext highlighter-rouge">libpfm4-dev</code> available. riscv64 is a first-class Debian architecture for this package (no “(unofficial port)” designation). Source: <a href="https://buildd.debian.org/status/package.php?p=libpfm4&amp;suite=sid">Debian buildd status for libpfm4 sid</a>.</p>
+<p><strong>Debian sid:</strong> previously documented as available – package <code class="language-plaintext highlighter-rouge">libpfm4</code> version 4.13.0+git106-g3e4031b-1+b2, status Installed on buildd host rv-manda-02, plus <code class="language-plaintext highlighter-rouge">libpfm4-dev</code>, with riscv64 treated as a first-class Debian architecture (no “unofficial port” designation). [NEEDS VERIFICATION – not re-checked against buildd.debian.org this round; the package version string coincides closely with the Ubuntu resolute figure above, suggesting shared packaging lineage.]</p>
 
-<p><strong>Ubuntu 24.04 LTS (Noble):</strong> Available. Packages <code class="language-plaintext highlighter-rouge">libpfm4</code> and <code class="language-plaintext highlighter-rouge">libpfm4-dev</code>, version 4.13.0+git32-g0d4ed0e-1, in the universe component. riscv64 is explicitly listed among 7 supported architectures (amd64, arm64, armhf, i386, ppc64el, riscv64, s390x), package size 27.9 kB. Source: <a href="https://packages.ubuntu.com/noble/libpfm4">Ubuntu Noble libpfm4</a>.</p>
+<p><strong>Ubuntu 24.04 LTS (Noble):</strong> previously documented as available – packages <code class="language-plaintext highlighter-rouge">libpfm4</code> and <code class="language-plaintext highlighter-rouge">libpfm4-dev</code>, version 4.13.0+git32-g0d4ed0e-1, in universe, with riscv64 among 7 listed architectures. [NEEDS VERIFICATION – not re-checked this round.]</p>
 
-<p><strong>Caveat on distro packages:</strong> The riscv64 Debian/Ubuntu packages compile and install correctly but provide zero RISC-V PMU event support at runtime. A user installing <code class="language-plaintext highlighter-rouge">libpfm4</code> on a riscv64 system gets a working binary that silently has no hardware PMU entries. Any software linking against it for hardware counter access will see an empty PMU list.</p>
+<p><strong>openSUSE Tumbleweed:</strong> a general web search surfaced a riscv64 RPM, <code class="language-plaintext highlighter-rouge">libpfm4-4.13.0-2.1.riscv64.rpm</code>, as packaged for this distro. [NEEDS VERIFICATION – single web-search source, not independently confirmed via a direct package-repository fetch.]</p>
 
-<p><strong>To get a working binary for riscv64:</strong> Install <code class="language-plaintext highlighter-rouge">libpfm4</code> from Debian sid or Ubuntu 24.04 universe. The library will be present but non-functional for hardware PMU access until upstream adds RISC-V event tables.</p><hr />
+<p><strong>Arch Linux RISC-V port (archriscv.felixc.at):</strong> the earlier claim that libpfm4 is “not found” on this index should be treated as void rather than as negative evidence. Direct inspection this round shows the page is a static informational/status page (mirror list, hardware support, porting-goal text) with no functional package search; a <code class="language-plaintext highlighter-rouge">?q=libpfm4</code> query string is inert. No conclusion about Arch RISC-V packaging status can be drawn from this source.</p>
+
+<p><strong>Caveat on all distro packages:</strong> the riscv64 Debian/Ubuntu/openSUSE packages compile and install correctly but, per the code-level analysis in Section 4 (zero RISC-V branches in the build-system arch dispatch), provide zero RISC-V PMU event support at runtime. A user installing <code class="language-plaintext highlighter-rouge">libpfm4</code> on a riscv64 system gets a working binary that silently exposes no hardware PMU entries.</p>
+
+<p><strong>To get a working binary for riscv64:</strong> install <code class="language-plaintext highlighter-rouge">libpfm4</code> from Ubuntu 26.04 universe (or Debian sid / Ubuntu 24.04 universe per the unverified prior data). The library will be present but non-functional for hardware PMU access until upstream adds RISC-V event tables.</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -703,59 +695,65 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
   </thead>
   <tbody>
     <tr>
-      <td>Linux <code class="language-plaintext highlighter-rouge">perf_event</code> subsystem (kernel)</td>
-      <td>Core runtime – all PMU access goes through <code class="language-plaintext highlighter-rouge">perf_event_open(2)</code></td>
-      <td>Yes – <code class="language-plaintext highlighter-rouge">riscv_pmu_sbi.c</code>, <code class="language-plaintext highlighter-rouge">riscv_pmu_legacy.c</code> merged</td>
-      <td>Functional on SBI v0.3+ boards</td>
-      <td>Present in all major riscv64 distros</td>
-      <td>Kernel side is ready; gap is in libpfm4’s event table layer only</td>
-    </tr>
-    <tr>
-      <td>glibc / libc6</td>
-      <td>Standard C runtime</td>
-      <td>Yes – Debian/Ubuntu riscv64 v2.39+</td>
-      <td>Tested</td>
+      <td>glibc</td>
+      <td>runtime-dependency, critical</td>
+      <td>Yes – riscv64 is a first-class Debian/Ubuntu architecture; glibc riscv64 ports are mature</td>
+      <td>Functional</td>
       <td>Released</td>
-      <td>No blockers. See <code class="language-plaintext highlighter-rouge">./project-reports/glibc.md</code></td>
+      <td><code class="language-plaintext highlighter-rouge">LIBS=</code> in <code class="language-plaintext highlighter-rouge">config.mk</code> is otherwise empty; the core library (<code class="language-plaintext highlighter-rouge">libpfm.a</code>/<code class="language-plaintext highlighter-rouge">libpfm.so</code>) links against no third-party libraries at all, only glibc (and, via individual example programs rather than the library itself, libm/librt/libpthread)</td>
     </tr>
     <tr>
       <td>SWIG</td>
-      <td>Build-time – generates Python binding glue from <code class="language-plaintext highlighter-rouge">python/src/perfmon_int.i</code></td>
-      <td>Yes – Debian sid riscv64 v4.4.1-2</td>
+      <td>build-dependency, optional</td>
+      <td>Yes – <code class="language-plaintext highlighter-rouge">swig</code> is a universal-arch package present on Debian/Ubuntu riscv64 ports; 0 riscv64 issues found in <a href="https://github.com/swig/swig">swig/swig</a> issue search</td>
       <td>Not separately tested for riscv64 [NEEDS VERIFICATION]</td>
       <td>Released</td>
-      <td>No blockers</td>
+      <td>Used only to generate codegen glue for the optional Python bindings in <code class="language-plaintext highlighter-rouge">python/</code>; note <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_NOPYTHON?=y</code> in <code class="language-plaintext highlighter-rouge">config.mk</code>, so Python bindings (and therefore SWIG) are disabled by default and not exercised in a default build</td>
     </tr>
     <tr>
-      <td>Python 3 / python3-dev</td>
-      <td>Optional – Python bindings in <code class="language-plaintext highlighter-rouge">python/</code> subdirectory</td>
-      <td>Yes – Debian sid riscv64 v3.13.9-3+b1</td>
+      <td>Python</td>
+      <td>runtime-dependency, optional</td>
+      <td>Yes – riscv64 is a full Debian/Ubuntu Python 3 release architecture</td>
       <td>Functional</td>
       <td>Released</td>
-      <td>Bindings build; no HW event support on riscv64. See <code class="language-plaintext highlighter-rouge">./project-reports/python.md</code></td>
+      <td>Provides the optional <code class="language-plaintext highlighter-rouge">python/</code> bindings; bindings build on riscv64 but inherit the underlying library’s zero RISC-V PMU event coverage, so they expose no hardware events either</td>
     </tr>
     <tr>
-      <td>ncurses / libncurses-dev</td>
-      <td>Optional – <code class="language-plaintext highlighter-rouge">perf_examples/rtop</code> tool only</td>
-      <td>Yes – Debian sid riscv64 v6.6+20251231-1+b1</td>
+      <td>ncurses</td>
+      <td>runtime-dependency, optional</td>
+      <td>Yes – base/core package on every Debian/Ubuntu port</td>
       <td>Functional</td>
       <td>Released</td>
-      <td>No blockers</td>
+      <td>Linked only by the <code class="language-plaintext highlighter-rouge">rtop</code> demo program in <code class="language-plaintext highlighter-rouge">perf_examples/</code> (<code class="language-plaintext highlighter-rouge">-lncurses -ltinfo</code>), not by the library or its public headers</td>
+    </tr>
+    <tr>
+      <td>Linux <code class="language-plaintext highlighter-rouge">perf_event</code> kernel subsystem</td>
+      <td>runtime-dependency, critical</td>
+      <td>Yes – <code class="language-plaintext highlighter-rouge">riscv_pmu_sbi.c</code> and <code class="language-plaintext highlighter-rouge">riscv_pmu_legacy.c</code> are merged in the Linux kernel for SBI PMU extension v0.3+</td>
+      <td>Functional on SBI v0.3+ boards</td>
+      <td>Present in all major riscv64 distro kernels</td>
+      <td>Not a libpfm4-distributed dependency but the runtime interface libpfm4 encodes events for; the kernel-side counterpart is ready and waiting, the gap is entirely in libpfm4’s own event-table layer</td>
     </tr>
     <tr>
       <td>pthreads (NPTL)</td>
-      <td>Optional – <code class="language-plaintext highlighter-rouge">perf_examples/rtop</code> tool only</td>
+      <td>runtime-dependency, optional</td>
       <td>Yes – part of glibc on riscv64</td>
       <td>Functional</td>
       <td>Released</td>
-      <td>No blockers</td>
+      <td>Used only by the <code class="language-plaintext highlighter-rouge">rtop</code> demo program in <code class="language-plaintext highlighter-rouge">perf_examples/</code>, same as ncurses</td>
+    </tr>
+    <tr>
+      <td>libgnurx (MinGW regex shim)</td>
+      <td>build-dependency, optional</td>
+      <td>n/a – Windows/MinGW cross-build only (<code class="language-plaintext highlighter-rouge">examples/Makefile</code>, <code class="language-plaintext highlighter-rouge">LIBS += -lgnurx</code> under <code class="language-plaintext highlighter-rouge">WINDOWS</code>)</td>
+      <td>n/a</td>
+      <td>n/a</td>
+      <td>Irrelevant to Linux riscv64 builds</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Critical dependency finding:</strong> All build-time and optional runtime dependencies are available in official Debian sid and Ubuntu 24.04 riscv64 packages. There are no dependency blockers for building libpfm4 on riscv64. The single gap is architectural and internal to libpfm4: zero RISC-V PMU event tables. The Linux kernel PMU driver (<code class="language-plaintext highlighter-rouge">riscv_pmu_sbi.c</code>) is in place, meaning the kernel-side counterpart that libpfm4 would communicate with via <code class="language-plaintext highlighter-rouge">perf_event_open</code> is ready and waiting.</p>
-
-<p>No dependency in libpfm4 involves JIT compilation, SIMD dispatch, cryptographic operations, or numerics that require separate RISC-V analysis.</p><hr />
+<p><strong>Critical dependency finding:</strong> all build-time and optional runtime dependencies (glibc, SWIG, Python, ncurses, pthreads) are available in official Debian/Ubuntu riscv64 packages; there are no dependency-availability blockers for building libpfm4 on riscv64. The single blocker is architectural and internal to libpfm4 itself: zero RISC-V PMU event tables and zero build-system arch-detection branches for riscv64 (Section 4). No dependency in libpfm4 involves JIT compilation, SIMD dispatch, cryptographic operations, or numerics requiring separate RISC-V analysis; the core library links against no third-party code at all.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -765,7 +763,7 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
 </h2>
     
 
-<p>The repository has 4 open issues as of June 2026. None are related to RISC-V.</p>
+<p>The repository has 4 open issues and 4 closed issues as of this research round, reconfirmed independently via direct GitHub search this round (<code class="language-plaintext highlighter-rouge">search_issues</code>, <code class="language-plaintext highlighter-rouge">search_pull_requests</code>, <code class="language-plaintext highlighter-rouge">search_commits</code>, each scoped to <code class="language-plaintext highlighter-rouge">wcohen/libpfm4</code>, all returning 0 hits for riscv/riscv64/RISC-V terms). None of the 8 issues or the repository’s single PR relate to RISC-V.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -783,35 +781,63 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
       <td>Intel GraniteRapids Uncore event</td>
       <td>Open</td>
       <td>Medium</td>
-      <td>Intel correctness; filed July 23, 2025</td>
+      <td>Intel correctness; filed July 2025</td>
     </tr>
     <tr>
       <td><a href="https://github.com/wcohen/libpfm4/issues/8">#8</a></td>
-      <td>[bug] UNC_CHA_TOR_INSERTS events all zero</td>
+      <td>UNC_CHA_TOR_INSERTS events all zero</td>
       <td>Open</td>
       <td>Medium</td>
-      <td>Intel correctness; filed March 30, 2025</td>
+      <td>Intel correctness; filed March 2025</td>
     </tr>
     <tr>
       <td><a href="https://github.com/wcohen/libpfm4/issues/7">#7</a></td>
-      <td>libpfm4 bug: ‘sys/ioctl.h: No such file or directory’</td>
+      <td>‘sys/ioctl.h: No such file or directory’</td>
       <td>Open</td>
       <td>Low</td>
-      <td>Build/environment issue; filed July 17, 2024</td>
+      <td>Build/environment issue; filed July 2024</td>
     </tr>
     <tr>
       <td><a href="https://github.com/wcohen/libpfm4/issues/6">#6</a></td>
       <td>Invalid event attribute for cpu_clk_unhalted.thread</td>
       <td>Open</td>
       <td>Medium</td>
-      <td>Intel correctness; filed May 9, 2023</td>
+      <td>Intel correctness; filed May 2023</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/wcohen/libpfm4/issues/5">#5</a></td>
+      <td>fork clarification</td>
+      <td>Closed</td>
+      <td>–</td>
+      <td>–</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/wcohen/libpfm4/issues/4">#4</a></td>
+      <td>Python bindings question</td>
+      <td>Closed</td>
+      <td>–</td>
+      <td>–</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/wcohen/libpfm4/issues/2">#2</a></td>
+      <td>uncore events visibility</td>
+      <td>Closed</td>
+      <td>–</td>
+      <td>–</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/wcohen/libpfm4/issues/1">#1</a></td>
+      <td>macOS install</td>
+      <td>Closed</td>
+      <td>–</td>
+      <td>–</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The repository has 1 closed PR total: <a href="https://github.com/wcohen/libpfm4/pull/3">#3</a> “Update libpfm.3” (September 2020).</p>
+<p>The repository has exactly 1 PR total: <a href="https://github.com/wcohen/libpfm4/pull/3">#3</a> “Update libpfm.3” (an unrelated man-page typo fix, closed September 2020).</p>
 
-<p><strong>RISC-V issues:</strong> Zero. GitHub issue search for “riscv” in wcohen/libpfm4 returns total_count: 0. No correctness bug, no build failure, no feature request, and no tracking issue for a RISC-V port exists in the issue tracker.</p><hr />
+<p><strong>RISC-V issues:</strong> zero. GitHub issue, PR, and commit search for “riscv”/”riscv64”/”RISC-V” against <code class="language-plaintext highlighter-rouge">wcohen/libpfm4</code> returns <code class="language-plaintext highlighter-rouge">total_count: 0</code> in every query attempted across multiple independent research passes. No correctness bug, no build failure, no feature request, and no tracking issue for a RISC-V port exists in the issue tracker.</p><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -824,83 +850,90 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
 <p><strong>Organizational blockers:</strong></p>
 
 <ul>
-  <li>
-    <p>Single-maintainer project. Stephane Eranian (Google) controls ~83% of commits and all architectural decisions. A RISC-V port requires his review and merge on the perfmon2-devel mailing list. There is no known objection to RISC-V from Eranian, but there is also no stated interest or engagement. The project operates on a vendor-contribution model: until a RISC-V hardware vendor (SiFive, Alibaba DAMO, Ventana, SpacemiT) or their ecosystem partners submit a patch series, no RISC-V work will be merged.</p>
-  </li>
-  <li>
-    <p>No tracking issue exists. There is no upstream acknowledgment that RISC-V support is needed. Any contributor would be starting from zero with no prior community discussion to reference.</p>
-  </li>
+  <li>Single-maintainer project. Stephane Eranian (Google) controls ~83% of commits and all architectural decisions. A RISC-V port requires his review and merge, presumably via the perfmon2-devel mailing list (SourceForge), since the GitHub mirror’s PR workflow shows essentially no activity. There is no known objection to RISC-V from Eranian, but also no stated interest or engagement. The project operates on a vendor-contribution model: historically, every non-x86 architecture was contributed by the relevant hardware vendor or ecosystem partner (IBM, Cavium/Marvell, Fujitsu, Huawei). Until a RISC-V hardware vendor (SiFive, Alibaba DAMO, Ventana, SpacemiT) or their ecosystem partners submit a patch series, no RISC-V work is likely to be merged.</li>
+  <li>No tracking issue exists anywhere (GitHub or otherwise visible). There is no upstream acknowledgment that RISC-V support is needed, and no prior community discussion for a new contributor to build on.</li>
+  <li>No RISE Project involvement with libpfm4 was found in any channel checked (blog, member list, wheel builder, riseproject-dev GitHub org). There is no pre-existing RISE-funded work to build on or avoid duplicating.</li>
 </ul>
 
 <p><strong>Technical blockers:</strong></p>
 
 <ul>
-  <li>
-    <p>A complete RISC-V port requires: (1) architecture detection in <code class="language-plaintext highlighter-rouge">config.mk</code> (<code class="language-plaintext highlighter-rouge">riscv64</code> branch, <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_RISCV</code> flag), (2) a <code class="language-plaintext highlighter-rouge">pfmlib_riscv.c</code> PMU backend implementing CPU family detection and <code class="language-plaintext highlighter-rouge">perf_event_open</code> attribute encoding for RISC-V SBI PMU events, (3) event table headers in <code class="language-plaintext highlighter-rouge">lib/events/</code> for each supported RISC-V CPU microarchitecture (SiFive P870, Alibaba C910/C920, SpacemiT X60, Ventana Veyron, etc.), and (4) integration into <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code> and <code class="language-plaintext highlighter-rouge">lib/Makefile</code>.</p>
-  </li>
-  <li>
-    <p>The RISC-V PMU event numbering is vendor-specific and partially standardized via the RISC-V SBI PMU extension (v0.3+). Each CPU vendor defines custom events in addition to the standard architectural counters. Event tables would need to be sourced from each vendor’s hardware manual. Data availability for non-public pre-production hardware is a constraint.</p>
-  </li>
-  <li>
-    <p>No stated objection to RISC-V from any maintainer. The project has historically accepted well-formed vendor patches. Acceptance probability is high if a complete, tested patch series is submitted.</p>
-  </li>
-</ul>
-
-<p><strong>RISE coverage:</strong> RISE does not fund or contribute to libpfm4. No pre-existing work to avoid duplicating.</p><hr />
-<h2 id="13-investment-analysis">
+  <li>A complete RISC-V port requires: (1) a <code class="language-plaintext highlighter-rouge">riscv64</code> branch and <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_RISCV</code> flag in <code class="language-plaintext highlighter-rouge">config.mk</code>; (2) a <code class="language-plaintext highlighter-rouge">pfmlib_riscv.c</code> PMU backend implementing CPU family detection and <code class="language-plaintext highlighter-rouge">perf_event_open</code> attribute encoding for RISC-V SBI PMU events; (3) event table headers in <code class="language-plaintext highlighter-rouge">lib/events/</code> per supported RISC-V CPU microarchitecture (SiFive, SOPHON/T-Head, Alibaba, SpacemiT, Ventana, etc.); and (4) integration into <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code> and <code class="language-plaintext highlighter-rouge">lib/Makefile</code>’s arch dispatch.</li>
+  <li>RISC-V PMU event numbering is vendor-specific, only partially standardized via the RISC-V SBI PMU extension (v0.3+, Sscofpmf extension). Each vendor defines custom events beyond the standard architectural counters, and there is no standardized <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> format for RISC-V vendor auto-detection (the Banchelli et al. paper had to hand-code a vendor-ID special case for the SOPHON SG2042). Event tables must be sourced from each vendor’s hardware manual; data availability for non-public pre-production hardware is a constraint. As of Linux kernel 6.8, the kernel’s own <code class="language-plaintext highlighter-rouge">perf</code> subsystem recognized only 4 PMUs (SiFive FU740-C000, StarFive Dubhe-80, Andes AX45, T-Head C900), per the Banchelli et al. paper, indicating the standardization surface itself is still narrow.</li>
+  <li>Partial, unmerged prior art exists: two academic groups (Banchelli et al., ISC HPC 2025; Domingos et al., CARRV 2021 / ASAP’23) independently hand-patched native RISC-V PMU event support into libpfm4 for SOPHON SG2042, SpacemiT K1, and CVA6/SiFive Unmatched platforms to run their own benchmarks (Section 4), and released companion code at <a href="https://github.com/hpc-ulisboa/RISC-V-Perf-Events-Unmatched">hpc-ulisboa/RISC-V-Perf-Events-Unmatched</a> and <a href="https://github.com/hpc-ulisboa/RISC-V-PAPI">hpc-ulisboa/RISC-V-PAPI</a>. Neither patch set was submitted upstream; this represents unmerged starting-point work rather than a blocker, but it also means no single authoritative, vendor-endorsed patch series currently exists to adopt wholesale.</li>
+  <li>No stated objection to RISC-V from any maintainer. The project has historically accepted well-formed vendor patches for every other architecture; acceptance probability for a complete, tested RISC-V patch series appears high based on that track record, though untested since no submission has ever been attempted.</li>
+</ul><hr />
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> red (confirmed-nonfunctional)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Justification:</strong> Step 0 of the color-coding methodology (architecture-independent shortcut) does not apply, since libpfm4 ships compiled, architecture-dispatched C code. Step 1 (CI-based primary grade) starts from “no upstream CI” (confirmed: no <code class="language-plaintext highlighter-rouge">.github/workflows</code>, <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> anywhere in the tree, for any architecture), which would normally float to orange/yellow via the distribution floor since Ubuntu/Debian do build and ship riscv64 binary packages (<a href="https://packages.ubuntu.com/search?keywords=libpfm4&amp;suite=resolute">packages.ubuntu.com</a>). However, the red criterion overrides this default: RISC-V non-functionality here is directly confirmed by code inspection, not merely untested. A full-tree <code class="language-plaintext highlighter-rouge">git grep -il riscv</code> against HEAD <code class="language-plaintext highlighter-rouge">91970fe6eb4e80b63f77fb54a9592e28a207050c</code> (<a href="https://github.com/wcohen/libpfm4">wcohen/libpfm4</a>) returns zero matches, <code class="language-plaintext highlighter-rouge">config.mk</code>’s architecture detection has no riscv64 branch (so no <code class="language-plaintext highlighter-rouge">CONFIG_PFMLIB_ARCH_*</code> flag is ever set on riscv64), and <code class="language-plaintext highlighter-rouge">lib/Makefile</code>’s PMU backend dispatch has zero RISC-V branches versus roughly 114 files for the x86 family and 13 for arm64. The consequence is that the Ubuntu/Debian riscv64 package installs successfully but <code class="language-plaintext highlighter-rouge">pfm_initialize()</code>/<code class="language-plaintext highlighter-rouge">pfm_find_event()</code> return no PMU entries at all: the library’s entire purpose (naming and encoding hardware PMU events) is a confirmed no-op on riscv64. libpfm4 is not treated as an optimization-purpose (Step 2) project; it is a hardware-event completeness/naming library, closer to the observability-tooling category that the color-coding methodology’s Step 2 modifier explicitly excludes, rather than a speed-optimization library such as an allocator, SIMD kernel, or crypto library. The red color therefore comes directly from Step 1’s confirmed-nonfunctional criterion, not from an optimization gap.</li>
+  <li><strong>Pending work that could change the grade:</strong> none identified with a clear path to landing. No open GitHub issue, PR, or commit in <code class="language-plaintext highlighter-rouge">wcohen/libpfm4</code> references RISC-V; the repository’s only PR (#3) is an unrelated man-page fix, and none of its 8 issues mention RISC-V. No RISE Project involvement with libpfm4 (blog, member list, wheel builder, riseproject-dev GitHub org) was found. Two academic papers (Banchelli et al., ISC HPC 2025; Domingos et al., ASAP’23) hand-patched vendor-specific RISC-V PMU event tables into libpfm4 to run their own benchmarks, confirming no such support exists upstream, but this patched work has not been submitted or merged. If a RISC-V hardware vendor (SiFive, Alibaba DAMO, SpacemiT, Ventana) or the researchers behind those papers submitted a patch series to the perfmon2-devel mailing list, that could move the grade; no such submission is currently known to exist.</li>
+</ul><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The core work is a new RISC-V architecture port. The technical scope is well-defined: one new <code class="language-plaintext highlighter-rouge">pfmlib_riscv.c</code> source file, one or more <code class="language-plaintext highlighter-rouge">lib/events/riscv_*_events.h</code> event table headers per supported CPU, <code class="language-plaintext highlighter-rouge">config.mk</code> additions, and <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code> guard additions. The Linux kernel PMU driver is already in place (riscv_pmu_sbi.c), which provides the kernel-side specification for what events are exposed.</p>
+<p>The core work is a new RISC-V architecture port. The technical scope is well-defined: a new <code class="language-plaintext highlighter-rouge">pfmlib_riscv.c</code> source file, one or more <code class="language-plaintext highlighter-rouge">lib/events/riscv_*_events.h</code> event table headers per supported CPU, <code class="language-plaintext highlighter-rouge">config.mk</code> architecture-detection additions, and <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code>/<code class="language-plaintext highlighter-rouge">lib/Makefile</code> guard additions. The Linux kernel PMU driver (<code class="language-plaintext highlighter-rouge">riscv_pmu_sbi.c</code>) is already merged, providing the kernel-side specification of what events are exposed via the SBI PMU extension.</p>
 
-<p>The effort scales with the number of CPU microarchitectures to cover. A minimal port covering only the standard SBI architectural counters (cycle, instret, and the standardized hardware performance counters from the Sscofpmf extension) is a bounded effort. Expanding to vendor-specific PMU event tables for production silicon (SiFive P870, Alibaba C920, SpacemiT X60, Ventana Veyron) requires access to each vendor’s hardware documentation and a target system for validation.</p>
-<h3 id="132-performance-optimization">
+<p>Unmerged prior art exists and would reduce the effort for a first submission: the Banchelli et al. (ISC HPC 2025) and Domingos et al. (CARRV 2021 / ASAP’23) hand-patched event tables for SOPHON SG2042, SpacemiT K1, and CVA6/SiFive Unmatched, with released companion code (<a href="https://github.com/hpc-ulisboa/RISC-V-Perf-Events-Unmatched">hpc-ulisboa/RISC-V-Perf-Events-Unmatched</a>, <a href="https://github.com/hpc-ulisboa/RISC-V-PAPI">hpc-ulisboa/RISC-V-PAPI</a>), could serve as a starting point rather than a from-scratch implementation, subject to license and code-quality review before upstream submission.</p>
+
+<p>The effort scales with the number of CPU microarchitectures to cover. A minimal port covering only the standardized SBI architectural counters (cycle, instret, and the Sscofpmf-exposed hardware counters) is a bounded effort. Expanding to vendor-specific PMU event tables for production silicon (SiFive, SOPHON/T-Head, Alibaba, SpacemiT, Ventana) requires access to each vendor’s hardware documentation and a target system for validation.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Not applicable. libpfm4 contains no SIMD, JIT, or numerics. There is no performance optimization work to do on RISC-V beyond the functional port.</p>
-<h3 id="133-cicd-infrastructure">
+<p>Not applicable. libpfm4 contains no SIMD, JIT, or numerics code. There is no performance-optimization work beyond the functional port itself. Note, however, that the Banchelli et al. measurements show the libpfm4/PAPI event-lookup path itself imposes substantial measurement overhead on RISC-V (two or more orders of magnitude versus x86 in their perf-based test, and roughly 800x versus raw <code class="language-plaintext highlighter-rouge">perf_event</code> calls in the Domingos et al. ASAP’23 call-overhead breakdown), a root cause the paper’s authors describe as unexplained and under study; this is a property of the measurement stack’s interaction with RISC-V kernel/hardware behavior, not something a libpfm4 port would fix as a side effect.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>The upstream project has no CI of any kind for any architecture. Adding riscv64 CI is not meaningful in isolation without also establishing baseline CI for the project. A pragmatic approach is to rely on the Debian buildd system (already building riscv64 packages) for compilation verification, and to add a GitHub Actions workflow with QEMU-based test execution for the test suite. However, the test suite requires hardware PMU counters, so QEMU-based testing would only validate software and tracepoint event types unless QEMU’s RISC-V PMU emulation covers the SBI PMU extension (data not available: QEMU RISC-V PMU emulation coverage was not searched).</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>libpfm4 has no package ecosystem of plugins or extensions. Section 10 is omitted per the formatting rules. The downstream impact is PAPI’s hardware component on RISC-V, which depends on libpfm4 for hardware counter access. Enabling libpfm4 on RISC-V unblocks PAPI hardware profiling.</p>
-<h3 id="135-summary-table">
+<p>The upstream project has no CI of any kind for any architecture. Adding riscv64 CI is not meaningful in isolation without also establishing baseline CI for the project as a whole. A pragmatic approach is to rely on the Debian buildd system (already building riscv64 packages) for compilation verification, and to add a GitHub Actions workflow with QEMU-based test execution. However, the test suite requires hardware PMU counters, so QEMU-based testing would validate only software and tracepoint event types unless QEMU’s RISC-V PMU emulation covers the SBI PMU extension. Data not available: QEMU RISC-V PMU emulation coverage was not searched in this research round.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>libpfm4 has no dependent package ecosystem of plugins or extensions (Section 10 is omitted per the project’s nature as a standalone system library). The downstream impact of a RISC-V port is PAPI’s hardware component, which depends on libpfm4 for hardware counter access; enabling libpfm4 on RISC-V would unblock PAPI hardware profiling on the architecture, which in turn is a prerequisite for the measurement methodology used in both academic papers cited in Sections 4 and 6.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -919,15 +952,15 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>RISC-V architecture detection in <code class="language-plaintext highlighter-rouge">config.mk</code> + <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code> guard</td>
+      <td>RISC-V architecture detection in <code class="language-plaintext highlighter-rouge">config.mk</code> + <code class="language-plaintext highlighter-rouge">pfmlib_common.c</code>/<code class="language-plaintext highlighter-rouge">lib/Makefile</code> guard</td>
       <td>0.5</td>
       <td>libpfm4 contributor</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td><code class="language-plaintext highlighter-rouge">pfmlib_riscv.c</code>: CPU family detection + SBI PMU standard event encoding</td>
-      <td>3</td>
+      <td><code class="language-plaintext highlighter-rouge">pfmlib_riscv.c</code>: CPU family detection + SBI PMU standard event encoding (can draw on unmerged academic prior art)</td>
+      <td>2-3</td>
       <td>libpfm4 contributor</td>
       <td>Critical</td>
     </tr>
@@ -940,14 +973,14 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
     </tr>
     <tr>
       <td>Functional</td>
-      <td><code class="language-plaintext highlighter-rouge">lib/events/riscv_&lt;vendor&gt;_events.h</code> per production CPU (SiFive P870, Alibaba C920, SpacemiT X60, Ventana Veyron)</td>
-      <td>2-3 per CPU</td>
+      <td><code class="language-plaintext highlighter-rouge">lib/events/riscv_&lt;vendor&gt;_events.h</code> per production CPU (SiFive, SOPHON/T-Head, Alibaba, SpacemiT, Ventana)</td>
+      <td>1.5-3 per CPU (reduced from 2-3 if adopting hand-patched academic tables as a base)</td>
       <td>Respective hardware vendor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Upstream submission to perfmon2-devel, iteration with Eranian</td>
+      <td>Upstream submission to perfmon2-devel mailing list, iteration with Eranian</td>
       <td>2</td>
       <td>libpfm4 contributor</td>
       <td>Critical</td>
@@ -961,7 +994,7 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Hardware-in-the-loop test job on physical RISC-V board (VisionFive 2 or equivalent)</td>
+      <td>Hardware-in-the-loop test job on physical RISC-V board (e.g. SiFive HiFive Unmatched, used in both cited academic studies)</td>
       <td>2</td>
       <td>RISE or contributor infra</td>
       <td>Medium</td>
@@ -969,18 +1002,7 @@ make CONFIG_PFMLIB_NOPYTHON=y         # skip Python SWIG bindings
   </tbody>
 </table></div>
 
-<p>Total for minimal functional port (standard SBI counters, upstream submission): ~6.5-7 person-weeks.
-Total for full production coverage (4 CPU vendors + CI): ~16-20 person-weeks.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p>Total for a minimal functional port (standard SBI counters, upstream submission): approximately 6.5-7 person-weeks. Total for full production coverage across 4-5 CPU vendors plus CI: approximately 15-20 person-weeks.</p><hr />
 <h2 id="15-references">
   
   
@@ -992,18 +1014,30 @@ Total for full production coverage (4 CPU vendors + CI): ~16-20 person-weeks.</p
 
 <ul>
   <li><a href="https://github.com/wcohen/libpfm4">wcohen/libpfm4 GitHub mirror</a></li>
-  <li><a href="https://perfmon2.sourceforge.net/">libpfm4 / perfmon2 homepage</a></li>
+  <li><a href="https://perfmon2.sourceforge.net/">libpfm4 / perfmon2 homepage (SourceForge, canonical upstream)</a></li>
+  <li><a href="https://sourceforge.net/p/perfmon2/libpfm4/">perfmon2 SourceForge project page</a></li>
   <li><a href="https://github.com/wcohen/libpfm4/commits/master">wcohen/libpfm4 commit history</a></li>
   <li><a href="https://github.com/wcohen/libpfm4/tree/master/lib">wcohen/libpfm4 lib/ directory</a></li>
   <li><a href="https://github.com/wcohen/libpfm4/tree/master/lib/events">wcohen/libpfm4 lib/events/ directory</a></li>
   <li><a href="https://github.com/wcohen/libpfm4/issues">wcohen/libpfm4 issues tracker</a></li>
+  <li><a href="https://github.com/wcohen/libpfm4/pull/3">wcohen/libpfm4 PR #3</a></li>
   <li><a href="https://github.com/wcohen/libpfm4/actions">wcohen/libpfm4 GitHub Actions tab</a></li>
   <li><a href="https://github.com/wcohen/libpfm4/releases">wcohen/libpfm4 releases</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=libpfm4&amp;suite=sid">Debian buildd status: libpfm4 sid</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=libpfm4&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 “resolute”: libpfm4 package search</a></li>
   <li><a href="https://packages.ubuntu.com/noble/libpfm4">Ubuntu Noble: libpfm4</a></li>
+  <li><a href="https://buildd.debian.org/status/package.php?p=libpfm4&amp;suite=sid">Debian buildd status: libpfm4 sid</a></li>
+  <li><a href="https://pypi.org/pypi/libpfm4/json">PyPI JSON API: libpfm4 (404, no package)</a></li>
   <li><a href="https://riseproject.dev/">RISE Project homepage</a></li>
   <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
-  <li><a href="https://github.com/orgs/riseproject-dev/repositories">RISE Project GitHub org</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Project Python wheel builder status</a></li>
+  <li><a href="https://github.com/riseproject-dev">riseproject-dev GitHub org</a></li>
+  <li><a href="https://github.com/swig/swig">swig/swig GitHub repository</a></li>
+  <li><a href="http://web.tecnico.ulisboa.pt/~ist14359/wordpress/nfvr_pubs/iscw25b.pdf">Banchelli, Bros Esqueu, Rocha, Roma, Tomas, Neves, Mantovani, “RISC-V in HPC: a look into tools for performance monitoring” (ISC HPC 2025)</a></li>
+  <li><a href="https://arxiv.org/abs/2112.11767">Domingos, Tomas, Sousa, “Supporting RISC-V Performance Counters through Performance analysis tools for Linux (Perf)” (CARRV 2021, arXiv:2112.11767)</a></li>
+  <li><a href="https://hpcas.inesc-id.pt/~unify/papers/conf_asap23.pdf">Domingos, Rocha, Neves, Roma, Tomas, Sousa, “Supporting RISC-V Performance Counters Through Linux Performance Analysis Tools” (ASAP’23)</a></li>
+  <li><a href="https://github.com/hpc-ulisboa/RISC-V-Perf-Events-Unmatched">hpc-ulisboa/RISC-V-Perf-Events-Unmatched (companion code)</a></li>
+  <li><a href="https://github.com/hpc-ulisboa/RISC-V-PAPI">hpc-ulisboa/RISC-V-PAPI (companion code)</a></li>
+  <li><a href="https://github.com/torvalds/linux/blob/master/drivers/perf/riscv_pmu_sbi.c">Linux kernel driver: drivers/perf/riscv_pmu_sbi.c (kernel-side RISC-V PMU support, referenced context)</a></li>
 </ul>
 
           
