@@ -500,6 +500,41 @@ const newRegistryEntries = directDeps.filter(d => !d.foundInRegistry).map(d => (
 const dependencies = directDeps.map(d => ({ name: d.name, relation: d.relation, criticality: d.criticality }))
 const dependencyList = dependencies.map(d => `${d.name} (${d.relation}, ${d.criticality})`).join('; ') || 'none identified'
 
+// Structured readiness-color record -- computed by its OWN agent (which is free to invoke the
+// /project-color-coding skill and other tools) rather than inline within the final synthesize
+// agent below. The synthesize agent's contract is "your final text output IS the report, call
+// no tools" (rule 5) -- asking it to also invoke a skill mid-turn is exactly the kind of
+// contradiction that previously caused it to return the skill's raw output as its entire
+// "report" instead of continuing to write the full document. Splitting this out, the same way
+// deps-structured and read-existing already are, removes the ambiguity entirely.
+const COLOR_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    color: { type: 'string', enum: ['green', 'blue', 'yellow', 'orange', 'red', 'grey'] },
+    color_case: { type: 'string', description: 'the named case from the color model that applies, e.g. clean-distro-build' },
+    release_provider: { type: 'string', enum: ['upstream', 'RISE', 'distro', 'third-party', 'none'] },
+    is_optimization_purpose: { type: 'boolean', description: 'true if this project\'s stated value proposition is RISC-V-specific performance (a SIMD/compression/crypto/numerics library etc.)' },
+    optimization_gap: { type: 'string', description: 'full, partial, minimal, or absent -- ONLY when is_optimization_purpose is true; otherwise "N/A"' },
+    justification: { type: 'string', description: '1-3 sentences with links to the primary source' },
+    pending_work: { type: 'string', description: 'open PRs, RISE involvement, or other pending work that could change the grade; empty string if none' },
+  },
+  required: ['color', 'color_case', 'release_provider', 'is_optimization_purpose', 'optimization_gap', 'justification', 'pending_work'],
+}
+
+log(`Grading RISC-V readiness color for ${proj.name} ...`)
+const colorGrade = await agent(`Invoke the /project-color-coding skill on "${proj.name}" (repository: ${proj.repo}, homepage: ${proj.home}) to determine its RISC-V readiness color. That skill is the authoritative source for the color model and decision rules -- use it, do not re-derive the grade yourself. Base it on the research findings below; do not perform new research beyond what's already here.
+
+Findings:
+${fullContext.substring(0, 60000)}${existingReportBlock}`, { schema: COLOR_SCHEMA, label: `${proj.name}:color-grade`, phase: 'Synthesize' })
+
+const grade = colorGrade || { color: 'grey', color_case: 'insufficient data', release_provider: 'none', is_optimization_purpose: false, optimization_gap: 'N/A', justification: 'Data not available: color-grading agent returned no result.', pending_work: '' }
+const readinessSummary = `Color: ${grade.color} (${grade.color_case})
+Release provider: ${grade.release_provider}
+Optimization-purpose project: ${grade.is_optimization_purpose ? 'yes' : 'no'}${grade.is_optimization_purpose ? `\nOptimization level: ${grade.optimization_gap}` : ''}
+Justification: ${grade.justification}
+Pending work that could change the grade: ${grade.pending_work || 'none identified'}`
+
 log(`Synthesizing report for ${proj.name} (${fullContext.length} chars of findings) ...`)
 
 const report = await agent(`You are a highly technical, principal software engineer writing a fact-based assessment for engineering leadership at a chip company evaluating RISC-V investment. Write with precision. No hedging, no marketing language, no filler.
@@ -509,26 +544,14 @@ CRITICAL RULES:
 2. Do NOT use training knowledge to fill gaps. Do NOT invent PR numbers, dates, or benchmark figures.
 3. Where findings are contradictory, cite both and note the discrepancy.
 4. Mark any claim from only one source as [NEEDS VERIFICATION].
-5. Your final text output IS the report. Do not call any tools. Just write the report text.
+5. Your final text output IS the report. Do NOT call any tools, including the Skill tool -- everything you need, including the readiness grade, is already given to you below. Just write the complete report text, all 15 sections, and stop.
 6. Section 10 (Ecosystem Status) -- include only if the project has a significant ecosystem of packages, plugins, or extensions that must also be enabled on riscv64 (e.g., Python packages, npm packages, Kubernetes operators, Maven JARs). Skip it for system libraries, runtimes, and standalone tools that have no dependent package ecosystem.
-7. Section 13 (Readiness Assessment) -- invoke the /project-color-coding skill on this project to determine the color. That skill is the authoritative source for the color model and decision rules. Pass this project (name + repo + the research findings already gathered) to the skill. Take the skill's output fields directly: color, color_case, release_provider, optimization_gap. Write those values into the YAML frontmatter color: field, the **Readiness:** header field, and (for optimization-purpose projects only) the **Optimization level:** header field. Then write Section 13 using the skill's justification and pending-work notes.
+7. Section 13 (Readiness Assessment) -- the READINESS GRADE below was already computed by the /project-color-coding skill; do not invoke it or any other skill yourself. Write its color/release_provider/optimization_level values into the YAML frontmatter color: field, the **Readiness:** header field, and (for optimization-purpose projects only) the **Optimization level:** header field. Then write Section 13 using its justification and pending-work notes.
 8. Section 9 (Dependencies) -- its table MUST include every dependency listed below under "Direct dependencies", using that EXACT name (do not rename or omit one), plus any additional indirect/recursed dependencies found via research. The direct/indirect distinction and the frontmatter dependencies: block are handled outside this prompt; just make sure Section 9's prose table is consistent with the direct list.
 ${existingReport ? `9. This is a full rewrite of an existing report, reproduced below in the EXISTING REPORT block. Merge it with the LIVE RESEARCH FINDINGS into ONE standalone, cohesive report: keep whatever information from the existing report the live findings do not contradict, correct or replace anything the live findings show has changed, and add whatever new information the live findings reveal that the existing report lacked. Write it exactly as you would a brand-new report written today -- do NOT mention "the previous version", "previously reported", "this report has been updated", "no longer the case", a change log, or any other language that references the fact that an earlier version exists. There is no Updates/changelog section in this report format -- never add one.` : ''}
 
-READINESS COLOR MODEL (condensed reference -- the /project-color-coding skill is authoritative):
-
-Step 0: architecture-independent (pure-Python, noarch, platform-neutral JAR) -> green, stop.
-Step 1: primary grade from upstream CI:
-  green  = CI builds + tests pass + upstream publishes riscv64 artifact
-  blue   = CI builds + tests pass, no upstream riscv64 artifact
-  yellow = CI builds riscv64 but does NOT run tests (build-only)
-  orange = no upstream riscv64 CI
-  red    = confirmed broken/non-functional on riscv64
-  grey   = proprietary/vendor-locked or insufficient data
-  Distribution floor: no upstream CI but distro ships riscv64 unpatched -> yellow; patched/unknown -> orange.
-Step 2 (optimization-purpose projects only): assess RISC-V-specific code coverage:
-  full -> no cap | partial -> cap at blue | minimal -> cap at yellow | absent -> cap at orange
-  Cap only goes downward. Omit Optimization level from header for non-optimization-purpose projects.
+READINESS GRADE (already computed by the /project-color-coding skill -- see rule 7; transcribe these values, do not re-derive or second-guess them):
+${readinessSummary}
 
 Project: ${proj.name}
 Repository: ${proj.repo}
@@ -619,12 +642,12 @@ Stated objections, technical blockers, organizational blockers, acceptance proba
 
 ## 13. Readiness Assessment
 
-Invoke the /project-color-coding skill on this project using the research findings already gathered (do not do new research). Take the skill's output fields directly: color, color_case, release_provider, optimization_gap. The color here must match the header **Readiness:** field and the frontmatter \`color:\` field.
+Use the READINESS GRADE given above -- already computed by the /project-color-coding skill; do not invoke it or any other tool yourself. The color here must match the header **Readiness:** field and the frontmatter \`color:\` field.
 
-- **Color:** [color] ([color_case]) -- from skill output
-- **Release provider:** [upstream | RISE | distro | third-party | none] -- from skill output
+- **Color:** [color] ([color_case]) -- from the READINESS GRADE given above
+- **Release provider:** [upstream | RISE | distro | third-party | none] -- from the READINESS GRADE given above
 - For optimization-purpose projects only: specific operations lacking RISC-V implementations, ISA extensions that would close the gap, optimization level (full/partial/minimal/absent).
-- Justification from the skill output (1-3 sentences with links to primary source).
+- Justification from the READINESS GRADE given above (1-3 sentences with links to primary source).
 - Any pending work (open PRs, RISE involvement) that could change the grade.
 
 ## 14. Investment Analysis
