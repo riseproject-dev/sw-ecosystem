@@ -52,24 +52,21 @@ The script derives the output path as `project-reports/<slug>.md`. To override i
 
 `new_registry_entries` lists any direct dependency (found for Section 9 / the report's own `dependencies:` frontmatter) that the deps-extraction agent did not find in the registry file -- i.e. it has no `projects.yml` entry yet. **Before committing the report**, add one new alphabetically-positioned entry (`name`/`repo`/`home`, best effort) to `projects.yml` for each item in this array -- see `AGENTS.md`'s "After the workflow completes" section. This keeps the hard constraint enforced by `_plugins/dependency_graph_generator.rb` (every `dependencies: name:` in every report must match a `projects.yml` entry, or the site fails to build) from ever actually tripping in normal use.
 
-### Refreshing an existing report (full rewrite)
+### Refreshing an existing report
 
-To fully rewrite an existing report from scratch -- fresh live research merged with whatever
-still-valid content the current report already has -- rather than write a brand-new one, add
-`"existingReportPath"` (absolute path to the current `project-reports/<slug>.md`) to `args`.
-When present, a Synthesize-phase agent reads that file and the final report is written as one
-standalone, cohesive document combining it with the live findings: content the live findings
-don't contradict is kept, anything they show has changed is corrected, and whatever new
-information they reveal is added. The result never references "the previous version" or reads
-as a change log against it (that framing is reserved for `## 15. Updates`, which for a full
-rewrite reads as a normal fresh initial report, not an update entry). Omit
+There is only one way to refresh a report: a full rewrite. Add `"existingReportPath"`
+(absolute path to the current `project-reports/<slug>.md`) to `args`. When present, a
+Synthesize-phase agent reads that file and the final report is written as one standalone,
+cohesive document combining it with fresh live research: content the live findings don't
+contradict is kept, anything they show has changed is corrected, and whatever new information
+they reveal is added. The result never references "the previous version" or reads as a change
+log against it -- it reads exactly like a report written today from scratch. Omit
 `existingReportPath` for a project that has no report yet -- the script then behaves exactly as
 in the base case above, writing a report grounded in live findings only.
 
-This is a different mode from the **Update cadence** described below (a lightweight
-`## 15. Updates` subsection appended roughly every 6 months): use `existingReportPath` only
-when a full ground-up rewrite is actually wanted, since it costs the same 17-agent research
-pass as a brand-new report.
+Never hand-append a changelog-style entry to a report instead of running this. A report is
+either freshly generated (no `existingReportPath`) or fully rewritten (`existingReportPath`
+set) -- there is no partial-update mode.
 
 For a non-GitHub project (sourceware.org, kernel.org, googlesource.com), the `repo` URL is not a github.com URL and the script automatically switches to WebSearch + WebFetch instead of GitHub MCP tools. For a project with no `repo` at all, the script falls back to the `home` URL for web searches.
 
@@ -129,7 +126,7 @@ Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trac
 - Only generate Latin-1 characters. Do not use em-dashes; use a hyphen or comma instead. Write like a human.
 - Output is a Markdown file. Use the simplest, default formatting. Every URL in the report must be a Markdown link: `[descriptive text](https://url)`. Never write bare URLs.
 
-**Update cadence:** This report is updated approximately every 6 months. When updating an existing report, do not rewrite it. Add a new "Update - YYYY-MM-DD" subsection inside the Updates section (see Section 15), describing only what changed since the previous version. All original content stays in place.
+**Update cadence:** This report is refreshed approximately every 6 months, and every refresh is a full rewrite -- see "Refreshing an existing report" above (`existingReportPath`). Never append a changelog-style "Update - YYYY-MM-DD" entry instead of rewriting; there is no partial-update mode.
 
 ---
 

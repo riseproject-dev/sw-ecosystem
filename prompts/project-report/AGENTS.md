@@ -26,7 +26,7 @@ Workflow({
 
 To fully rewrite an existing report instead of writing a brand-new one, add
 `"existingReportPath": "/abs/path/to/project-reports/<slug>.md"` -- see project-report.md's
-"Refreshing an existing report (full rewrite)" section.
+"Refreshing an existing report" section.
 
 This writes to `project-reports/gdb.md`. To override the path, add an absolute `"slug"`
 field to the args object to output to `project-reports/<slug>.md`.
@@ -138,7 +138,7 @@ The script derives the output path as `project-reports/<slug>.md`. Add an option
 `"slug"` field only when you need to override that default. Add an optional
 `"existingReportPath"` (absolute path to the current report file) to fully rewrite an
 existing report instead of writing a brand-new one -- see project-report.md's "Refreshing
-an existing report (full rewrite)" section.
+an existing report" section.
 
 ---
 
@@ -367,19 +367,14 @@ with different `name` values.
 
 ## Updating Existing Reports
 
-Two different update modes exist -- pick the one that matches what's actually needed:
+There is only one way to refresh a report: a full rewrite. Re-run the same workflow call,
+adding `"existingReportPath"` (absolute path to the current report file) to args -- see
+project-report.md's "Refreshing an existing report" section. The Synthesize phase reads the
+existing report and merges it with a full fresh 17-agent research pass into one standalone
+report; nothing in the output references "the previous version," and there is no Updates
+section to append to -- the report format has none.
 
-- **Light touch (the ~6-month default):** per project-report.md's "Update cadence", hand-edit
-  the report to append a new `## 15. Updates` subsection describing only what changed. Do not
-  re-run the workflow or rewrite the rest of the report for this.
-- **Full rewrite:** re-run the same workflow call, adding `"existingReportPath"` (absolute path
-  to the current report file) to args -- see project-report.md's "Refreshing an existing report
-  (full rewrite)" section. The Synthesize phase reads the existing report and merges it with a
-  full fresh 17-agent research pass into one standalone report; nothing in the output references
-  "the previous version." Use this when the report needs to be regenerated wholesale (e.g. a
-  batch of reports has gone stale, or a report's factual accuracy needs re-verifying from
-  scratch), not for routine 6-month touch-ups -- it costs the same as generating a brand-new
-  report.
+Never hand-append a changelog-style entry to a report instead of running this.
 
 After writing either way, diff against the previous version to confirm no regressions in
 factual accuracy, then commit.

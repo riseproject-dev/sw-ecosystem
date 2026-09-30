@@ -513,7 +513,7 @@ CRITICAL RULES:
 6. Section 10 (Ecosystem Status) -- include only if the project has a significant ecosystem of packages, plugins, or extensions that must also be enabled on riscv64 (e.g., Python packages, npm packages, Kubernetes operators, Maven JARs). Skip it for system libraries, runtimes, and standalone tools that have no dependent package ecosystem.
 7. Section 13 (Readiness Assessment) -- invoke the /project-color-coding skill on this project to determine the color. That skill is the authoritative source for the color model and decision rules. Pass this project (name + repo + the research findings already gathered) to the skill. Take the skill's output fields directly: color, color_case, release_provider, optimization_gap. Write those values into the YAML frontmatter color: field, the **Readiness:** header field, and (for optimization-purpose projects only) the **Optimization level:** header field. Then write Section 13 using the skill's justification and pending-work notes.
 8. Section 9 (Dependencies) -- its table MUST include every dependency listed below under "Direct dependencies", using that EXACT name (do not rename or omit one), plus any additional indirect/recursed dependencies found via research. The direct/indirect distinction and the frontmatter dependencies: block are handled outside this prompt; just make sure Section 9's prose table is consistent with the direct list.
-${existingReport ? `9. This is a full rewrite of an existing report, reproduced below in the EXISTING REPORT block. Merge it with the LIVE RESEARCH FINDINGS into ONE standalone, cohesive report: keep whatever information from the existing report the live findings do not contradict, correct or replace anything the live findings show has changed, and add whatever new information the live findings reveal that the existing report lacked. Write it exactly as you would a brand-new report written today -- do NOT mention "the previous version", "previously reported", "this report has been updated", "no longer the case", a change log, or any other language that references the fact that an earlier version exists. Section 15 (Updates) must read as a normal fresh initial report (i.e. "No updates yet -- initial report dated ${reportDate}."), not as an update log against the prior version.` : ''}
+${existingReport ? `9. This is a full rewrite of an existing report, reproduced below in the EXISTING REPORT block. Merge it with the LIVE RESEARCH FINDINGS into ONE standalone, cohesive report: keep whatever information from the existing report the live findings do not contradict, correct or replace anything the live findings show has changed, and add whatever new information the live findings reveal that the existing report lacked. Write it exactly as you would a brand-new report written today -- do NOT mention "the previous version", "previously reported", "this report has been updated", "no longer the case", a change log, or any other language that references the fact that an earlier version exists. There is no Updates/changelog section in this report format -- never add one.` : ''}
 
 READINESS COLOR MODEL (condensed reference -- the /project-color-coding skill is authoritative):
 
@@ -640,10 +640,7 @@ Before sizing: check what RISE has already done or funded. Do not size work alre
 |---|---|---|---|---|
 | Functional | ... | ... | ... | Critical/High/Medium/Low |
 
-## 15. Updates
-(No updates yet -- initial report dated ${reportDate}.)
-
-## 16. References
+## 15. References
 
 Complete list of every source cited. Format: [descriptive text](URL).`, {label: `${proj.name}:synthesize`, phase: 'Synthesize'})
 
