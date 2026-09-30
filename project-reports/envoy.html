@@ -264,11 +264,13 @@
   
 </h1>
     
+
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange (no-upstream-ci-no-release-no-distro)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for Envoy<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -278,15 +280,19 @@
 </h2>
     
 
-<p>Envoy is a high-performance L4/L7 proxy and service mesh data plane, originally created by Lyft. It graduated from the CNCF on November 28, 2018 (accepted September 13, 2017). License: Apache 2.0. Governed under the Linux Foundation trademark umbrella.</p>
+<p>Envoy is a high-performance L4/L7 proxy and service mesh data plane, originally created by Lyft. It is a <a href="https://www.envoyproxy.io/">Cloud Native Computing Foundation graduated project</a> (accepted 2017-09-13, graduated 2018-11-28). License: Apache-2.0. Companies listed as users on envoyproxy.io include Airbnb, AWS, Booking.com, Databricks, Datadog, Google, Microsoft, Netflix, Stripe and Uber, though the site does not distinguish “users” from formal financial sponsors.</p>
 
-<p><strong>Governance model:</strong> Consensus-first with formal voting on disputes. Senior maintainers receive 2 votes; regular maintainers receive 1. New maintainers require roughly 2-3 months of progressive contribution and approximately 25% ongoing time commitment. xDS API shepherds govern the <code class="language-plaintext highlighter-rouge">api/</code> tree and coordinate with the CNCF xDS Working Group. No formal steering committee exists. <code class="language-plaintext highlighter-rouge">EXTENSION_POLICY.md</code> and <code class="language-plaintext highlighter-rouge">DEPENDENCY_POLICY.md</code> govern extensions and dependencies separately.</p>
+<p><strong>Governance model</strong> (<a href="https://github.com/envoyproxy/envoy/blob/main/GOVERNANCE.md">GOVERNANCE.md</a>): two maintainer tiers, Senior Maintainers and (regular) Maintainers, plus a separate API Shepherds tier for xDS API changes. Becoming a maintainer requires expressing interest to envoy-maintainers, contributing increasingly complex PRs under guidance for roughly 2-3 months, then a formal review. Maintainers must commit at least 25% of their time (about 1.25 days/week) and take on-call/triage rotations. Disputes are resolved amicably first; unresolved issues escalate to a maintainer vote in which senior maintainers get 2 votes and regular maintainers get 1.</p>
 
-<p><strong>Corporate maintainers (as of 2025, from OWNERS.md):</strong></p>
+<p><strong>Maintainers and corporate affiliation</strong> (from <a href="https://github.com/envoyproxy/envoy/blob/main/OWNERS.md">OWNERS.md</a>, inferred from email domains):</p>
 
-<p>Senior maintainers include Yan Avlasov (Google), Ryan Hamilton (Google), Boteng Yao (Google), Greg Greenway (Apple), Raven Black (Dropbox), Takeshi Yoneda (Netflix), Rohit Agrawal (Databricks), Kuo-Chung Hsu (Pinterest), and several independents (Matt Klein, Stephan Zuercher, Ryan Northey, Baiping Wang). Google holds roughly 7 of 22 named maintainer slots, making it the dominant corporate sponsor. Red Hat has one maintainer (Jonh Wendell).</p>
+<p>Senior Maintainers: Matt Klein (independent), Harvey Tuch (independent), Greg Greenway (Apple), Yan Avlasov (Google), Ryan Northey (Synca, consultancy), Ryan Hamilton (Google), Baiping Wang (independent), Boteng Yao (Google), Rohit Agrawal (Databricks), Kateryna Nezdolii (independent).</p>
 
-<p><strong>Community culture on new architecture ports:</strong> Hostile-to-neutral via inaction. Both RISC-V issues were closed as “not planned” with no substantive maintainer engagement. The only on-record maintainer statement (yanavlasov, 2025-12-31) explicitly declined a roadmap. The project has no documented process for proposing a new architecture tier. The effective prerequisite – RISC-V CI capacity on AWS or GCP – does not currently exist.</p><hr />
+<p>Maintainers: Kevin Baichoo, Keith Smiley, Tony Allen, Takeshi Yoneda, Mike Krinkin (independent); Kuat Yessenov, Tianyu Xia, Paul Ogilby, Yanjun Xiang (Google); Raven Black (Dropbox); Jonh Wendell (Red Hat).</p>
+
+<p>Google holds the largest single-company share of named maintainer slots (7 of roughly 21), followed by single representatives from Apple, Databricks, Dropbox and Red Hat. No RISC-V silicon vendor (SiFive, Andes, Alibaba DAMO, Qualcomm, etc.) has a maintainer seat. CODEOWNERS confirms <code class="language-plaintext highlighter-rouge">@envoyproxy/maintainers</code> as the default owner, with sub-teams for docs/CI and many extensions marked <code class="language-plaintext highlighter-rouge">@UNOWNED</code>.</p>
+
+<p><strong>Community culture on new architecture ports:</strong> Inaction rather than active rejection. Both RISC-V issues on record were closed <code class="language-plaintext highlighter-rouge">not_planned</code> by stalebot with a single substantive maintainer reply each and no further engagement. The only maintainer statement on RISC-V (<code class="language-plaintext highlighter-rouge">yanavlasov</code>, 2025-12-31, on <a href="https://github.com/envoyproxy/envoy/issues/42787">issue #42787</a>): <em>“We do not have a roadmap for RISC-V. The main issue is that there is no RISC-V support on AWS, or GCP where we have CI capacity.”</em> There is no documented process for proposing a new architecture tier, and the stated prerequisite, riscv64 CI capacity on AWS or GCP, does not currently exist for Envoy’s CI setup.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -307,63 +313,65 @@
   <tbody>
     <tr>
       <td>2021-10-08</td>
-      <td><a href="https://github.com/envoyproxy/envoy/pull/18474">PR #18474</a> merged, bumping zlib-ng to 2.0.5; zlib-ng upstream gains riscv32/riscv64 arch detection in its cmake scripts. RISC-V reference is incidental to the dependency bump, not a deliberate Envoy port.</td>
+      <td><a href="https://github.com/envoyproxy/envoy/pull/18474">PR #18474</a> merged (zlib-ng bump to 2.0.5); zlib-ng upstream gains riscv32/riscv64 arch-detection logic in its cmake scripts. Incidental to the dependency bump, not a deliberate Envoy port. First release: v1.21.0 (2022-01-12).</td>
       <td>GitHub PR #18474</td>
     </tr>
     <tr>
       <td>2024-09-26</td>
-      <td><a href="https://github.com/envoyproxy/envoy/issues/36342">Issue #36342</a> filed by Boring545: build failure on riscv64 compiling Envoy v1.26.4 – missing QUICHE header due to <code class="language-plaintext highlighter-rouge">bazel/BUILD</code> not defining a <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting. User self-found the fix and reported it.</td>
+      <td><a href="https://github.com/envoyproxy/envoy/issues/36342">Issue #36342</a> filed by Boring545: build failure on riscv64 compiling Envoy v1.26.4, missing QUICHE header (<code class="language-plaintext highlighter-rouge">quic_gso_batch_writer.h</code>), caused by <code class="language-plaintext highlighter-rouge">bazel/BUILD</code> having no <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting so all <code class="language-plaintext highlighter-rouge">select()</code> expressions evaluate to empty on riscv64.</td>
       <td>GitHub Issue #36342</td>
     </tr>
     <tr>
       <td>2024-09-27</td>
-      <td>Maintainer phlax notes v1.26 is end-of-life and asks whether the issue reproduces on supported versions. No further maintainer action.</td>
+      <td>Boring545 self-patches by adding a <code class="language-plaintext highlighter-rouge">linux_riscv64</code> <code class="language-plaintext highlighter-rouge">config_setting</code> and updating the <code class="language-plaintext highlighter-rouge">linux</code>/<code class="language-plaintext highlighter-rouge">not_x86</code> <code class="language-plaintext highlighter-rouge">select()</code> groups in <code class="language-plaintext highlighter-rouge">bazel/BUILD</code>; build then succeeds except for the V8 extension, which fails to compile on riscv64 and must be disabled. Maintainer <code class="language-plaintext highlighter-rouge">phlax</code> notes v1.26 is already EOL and asks if the problem reproduces on a current release.</td>
       <td>GitHub Issue #36342</td>
     </tr>
     <tr>
       <td>2024-09-28</td>
-      <td>Boring545 reports a second blocker on current versions: <code class="language-plaintext highlighter-rouge">rules_python</code> lacks riscv64 support, preventing Bazel from running on current Envoy.</td>
+      <td>Boring545 reports a second blocker: <code class="language-plaintext highlighter-rouge">rules_python</code> is incompatible with riscv64, preventing any test on a current, supported Envoy version. The maintainer’s reproduction request is never answered.</td>
       <td>GitHub Issue #36342</td>
     </tr>
     <tr>
       <td>2024-11-04</td>
-      <td>Issue #36342 auto-closed as “not planned” / stale. Fix never upstreamed.</td>
+      <td>Issue #36342 auto-closed <code class="language-plaintext highlighter-rouge">not_planned</code> by stalebot after 37 days of inactivity. Fix never upstreamed.</td>
       <td>GitHub Issue #36342</td>
     </tr>
     <tr>
-      <td>2025-07-15</td>
-      <td><a href="https://github.com/envoyproxy/envoy/pull/40235">PR #40235</a> opened as WIP: V8 dependency bump to 13.6.233.8, which incidentally includes a v8-riscv foundation component. Not a deliberate riscv64 enablement effort.</td>
-      <td>GitHub PR #40235</td>
-    </tr>
-    <tr>
-      <td>2025-07-23</td>
-      <td>PR #40235 closed without merge. Superseded by an internal Google effort on the same V8 bump. No riscv64 work extracted.</td>
-      <td>GitHub PR #40235</td>
+      <td>2025-11-12 to 2025-11-19</td>
+      <td><a href="https://github.com/envoyproxy/envoy/pull/41975">PR #41975</a> (dependabot: bump frozendict 2.4.6 to 2.4.7) opened and then closed unmerged (“no longer needed”) on 2025-11-19. Matched the riscv search only because frozendict’s own changelog added riscv64 wheels; irrelevant to Envoy itself.</td>
+      <td>GitHub PR #41975</td>
     </tr>
     <tr>
       <td>2025-12-28</td>
-      <td><a href="https://github.com/envoyproxy/envoy/issues/42787">Issue #42787</a> filed by wcz0910: formal feature request for official riscv64 support. Reporter states they successfully built v1.26.4 on a native riscv64 machine running Linux 6.6.0.</td>
+      <td><a href="https://github.com/envoyproxy/envoy/issues/42787">Issue #42787</a> filed by wcz0910: formal request for an official riscv64 support roadmap. Reporter states successful native compilation of Envoy v1.26.4 on RISC-V hardware (<code class="language-plaintext highlighter-rouge">Linux 6.6.0.mlu370 riscv64</code>).</td>
       <td>GitHub Issue #42787</td>
     </tr>
     <tr>
       <td>2025-12-31</td>
-      <td>Maintainer yanavlasov responds: “We do not have a roadmap for RISC-V. The main issue is that there is no RISC-V support on AWS, or GCP where we have CI capacity. […] The best you can do at this point is to build Envoy releases using your own resources.”</td>
+      <td>Maintainer <code class="language-plaintext highlighter-rouge">yanavlasov</code> replies there is no roadmap because Envoy’s CI providers (AWS, GCP) have no RISC-V capacity.</td>
       <td>GitHub Issue #42787</td>
     </tr>
     <tr>
       <td>2026-01-04</td>
-      <td>wcz0910 acknowledges CI limitation; states intention to port patches to main branch and submit a PR. No PR is ever filed.</td>
+      <td>wcz0910 states intent to port the v1.26.4 patches to <code class="language-plaintext highlighter-rouge">main</code> and open a PR, using a native RISC-V environment for build/test. No PR is ever filed.</td>
       <td>GitHub Issue #42787</td>
     </tr>
     <tr>
+      <td>2026-01-09 to 2026-01-11</td>
+      <td><a href="https://github.com/envoyproxy/envoy/pull/42919">PR #42919</a> (draft, Copilot bot, emsdk bzlmod patch) opened and closed unmerged; matched incidentally, not riscv-related, and left no trace in any branch history.</td>
+      <td>GitHub PR #42919</td>
+    </tr>
+    <tr>
       <td>2026-02-12</td>
-      <td>Issue #42787 auto-closed as “not planned” / stale, 37 days after the only maintainer response.</td>
+      <td>Issue #42787 auto-closed <code class="language-plaintext highlighter-rouge">not_planned</code> by stalebot, 37 days after the only maintainer reply and with no PR from wcz0910 ever materializing.</td>
       <td>GitHub Issue #42787</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Summary:</strong> Zero riscv64-specific commits have ever landed in envoyproxy/envoy. The port does not exist upstream. No tracking issue is open. No contributor has submitted a patch since v1.26.4 (now end-of-life).</p><hr />
+<p><strong>Merge-status verification</strong> (via anonymous filtered clone of all branches/tags, cross-checked against rendered GitHub PR pages): of the PRs that incidentally matched a “riscv” search, only <a href="https://github.com/envoyproxy/envoy/pull/18474">#18474</a> (zlib-ng bump) actually merged, landing in v1.21.0. <a href="https://github.com/envoyproxy/envoy/pull/42919">#42919</a>, <a href="https://github.com/envoyproxy/envoy/pull/41975">#41975</a> and <a href="https://github.com/envoyproxy/envoy/pull/40235">#40235</a> (WIP V8 bump to 13.6.233.8, closed 2025-07-23 without merge) never merged. GitHub commit search for “riscv”, “riscv64” and “risc-v” scoped to <code class="language-plaintext highlighter-rouge">envoyproxy/envoy</code> returns zero results. A downstream, out-of-tree fork (<a href="https://github.com/rcore-os/tgoskits/pull/1559">rcore-os/tgoskits PR #1559</a>, via the “higress” project) cross-compiles Envoy v1.38.3 from source for riscv64/loongarch64 using musl and clang-18, but this work is not part of envoyproxy/envoy and has not been proposed upstream.</p>
+
+<p><strong>Summary:</strong> Zero riscv64-specific commits have ever landed in envoyproxy/envoy. No tracking issue is open. No contributor has submitted a patch against a version newer than v1.26.4 (now end-of-life). The closest thing to a tracking issue, #42787, is closed.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -373,9 +381,7 @@
 </h2>
     
 
-<p>Envoy defines no formal tiered support framework (no Tier 1/2/3 architecture policy). Support is implicitly binary: an architecture either has CI and official binaries, or it does not.</p>
-
-<p><strong>Effective support tiers inferred from build system and CI:</strong></p>
+<p>Envoy defines no formal tiered architecture-support policy (no Tier 1/2/3 document, no <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code> or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> file; each path returns 404 on the main branch). The authoritative statement instead lives in the public install docs: <em>“The Envoy project currently supports <code class="language-plaintext highlighter-rouge">amd64</code> and <code class="language-plaintext highlighter-rouge">arm64</code> architectures for its Linux build and images.”</em> riscv64 is absent. Support is effectively binary: an architecture either has CI and official binaries, or it does not.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -388,57 +394,57 @@
   </thead>
   <tbody>
     <tr>
-      <td>Bazel platform constraint in <code class="language-plaintext highlighter-rouge">bazel/BUILD</code></td>
-      <td>Yes (19 references, composite groups, tcmalloc/http3 toggles)</td>
-      <td>Yes (8 references, engflow RBE runner, composite groups)</td>
-      <td>No (0 references)</td>
+      <td>Bazel platform constraint in <code class="language-plaintext highlighter-rouge">bazel/BUILD</code>, <code class="language-plaintext highlighter-rouge">bazel/platforms/BUILD</code></td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Missing (no platform entry, no <code class="language-plaintext highlighter-rouge">@platforms//cpu:riscv64</code> constraint)</td>
     </tr>
     <tr>
-      <td>CI build jobs (<code class="language-plaintext highlighter-rouge">.github/workflows/</code>)</td>
+      <td>CI build/test jobs</td>
       <td>Yes (primary target)</td>
-      <td>Yes (dedicated arm64 jobs)</td>
+      <td>Yes (dedicated jobs)</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>BoringSSL FIPS build</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Hard error if attempted</td>
+      <td>BoringSSL-FIPS crypto backend</td>
+      <td>Full, officially supported</td>
+      <td>Full, officially supported</td>
+      <td>Not supported, <code class="language-plaintext highlighter-rouge">bazel/SSL.md</code> lists only “Linux x86_64, aarch64[, ppc64le]”</td>
+    </tr>
+    <tr>
+      <td>tcmalloc allocator selection (<code class="language-plaintext highlighter-rouge">envoy_internal.bzl</code>)</td>
+      <td><code class="language-plaintext highlighter-rouge">-DTCMALLOC</code> selected</td>
+      <td><code class="language-plaintext highlighter-rouge">-DTCMALLOC</code> selected</td>
+      <td>Falls through to the generic, untuned branch</td>
     </tr>
     <tr>
       <td>Official release binaries</td>
-      <td>Yes (<code class="language-plaintext highlighter-rouge">envoy-*-linux-x86_64</code>)</td>
-      <td>Yes (<code class="language-plaintext highlighter-rouge">envoy-*-linux-aarch_64</code>)</td>
-      <td>No</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (direct probe of v1.39.1’s riscv64 asset URL: HTTP 404)</td>
     </tr>
     <tr>
       <td>Official Docker images</td>
-      <td>Yes (<code class="language-plaintext highlighter-rouge">linux/amd64</code>)</td>
-      <td>Yes (<code class="language-plaintext highlighter-rouge">linux/arm64</code>)</td>
-      <td>No</td>
+      <td><code class="language-plaintext highlighter-rouge">linux/amd64</code></td>
+      <td><code class="language-plaintext highlighter-rouge">linux/arm64</code></td>
+      <td>No <code class="language-plaintext highlighter-rouge">linux/riscv64</code> manifest</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">ci/do_ci.sh</code> explicit dispatch</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No (falls through to unvalidated generic path)</td>
+      <td>Distro packages (Debian, Ubuntu, Arch)</td>
+      <td>Not packaged (Envoy itself is not in major distros)</td>
+      <td>Not packaged</td>
+      <td>Not packaged</td>
     </tr>
     <tr>
-      <td>Distro packages (Debian/Ubuntu/Arch)</td>
-      <td>No (Envoy not in distros)</td>
-      <td>No</td>
-      <td>No</td>
-    </tr>
-    <tr>
-      <td>Maintainer-stated support commitment</td>
+      <td>Maintainer-stated commitment</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Explicitly declined (2025-12-31)</td>
+      <td>Explicitly declined, 2025-12-31</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>riscv64 is not a supported architecture. It has no tier designation because no tier structure exists. The maintainer statement on record explicitly declines to establish one.</p><hr />
+<p>riscv64 is not a supported architecture under any definition the project uses, and the one maintainer statement on record explicitly declines to create a roadmap for it.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -448,9 +454,7 @@
 </h2>
     
 
-<p>Envoy’s own C++ source is largely architecture-agnostic. It contains essentially no <code class="language-plaintext highlighter-rouge">#ifdef __x86_64__</code> or <code class="language-plaintext highlighter-rouge">#ifdef __aarch64__</code> guards in its own code. Architecture-specific performance work is entirely delegated to dependencies (BoringSSL for TLS crypto, Abseil for CRC32C and hash, zlib-ng for compression, simdutf for Unicode transcoding, highway for SIMD dispatch). Envoy itself provides no hand-tuned assembly or SIMD intrinsics.</p>
-
-<p><strong>Per-component architecture coverage:</strong></p>
+<p>Envoy’s own C++ source contains essentially no per-architecture guards (<code class="language-plaintext highlighter-rouge">#ifdef __x86_64__</code>, <code class="language-plaintext highlighter-rouge">#ifdef __aarch64__</code>, or <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code>); a repository-wide code search for <code class="language-plaintext highlighter-rouge">__riscv</code> returns zero matches anywhere in <code class="language-plaintext highlighter-rouge">source/</code>, <code class="language-plaintext highlighter-rouge">contrib/</code> or <code class="language-plaintext highlighter-rouge">bazel/</code>. Architecture-specific performance work is delegated entirely to vendored dependencies: BoringSSL (TLS crypto asm), Abseil (CRC32C, hashing), zlib-ng/zstd/brotli (compression SIMD), simdutf (Unicode transcoding), Highway (SIMD dispatch), LuaJIT/V8/Wasmtime/WAMR (script/Wasm JIT backends), Hyperscan/Vectorscan (regex acceleration). Envoy itself contributes no hand-tuned assembly or intrinsics of its own.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -460,7 +464,6 @@
       <th>amd64</th>
       <th>arm64</th>
       <th>riscv64</th>
-      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
@@ -469,141 +472,138 @@
       <td>Build system</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing</td>
-      <td>No <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting; see Section 5</td>
+      <td>Missing: no <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting (see Section 5)</td>
     </tr>
     <tr>
       <td>BoringSSL crypto</td>
       <td>TLS/AEAD/hash</td>
       <td>Hand-tuned asm (AES-NI, AVX-512, SHA-NI)</td>
       <td>Hand-tuned asm (NEON, SHA2, AES)</td>
-      <td>Scalar fallback only</td>
-      <td>No riscv64 crypto assembly; BoringSSL FIPS build rejects riscv64 with a hard error</td>
+      <td>Scalar C fallback only; zero riscv64 asm files (vs. 23 for x86_64); compile-tested only via Android NDK cross-compile CI</td>
     </tr>
     <tr>
       <td>QUICHE (HTTP/3)</td>
       <td>HTTP/3 + QUIC</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Build failure</td>
-      <td>GSO batch writer header missing on riscv64; root cause: <code class="language-plaintext highlighter-rouge">select()</code> not resolving riscv64 as linux target</td>
+      <td>Build failure (missing header), root cause is the missing <code class="language-plaintext highlighter-rouge">linux_riscv64</code> platform, not QUICHE itself</td>
     </tr>
     <tr>
       <td>LuaJIT</td>
       <td>Lua filter JIT</td>
       <td>Full JIT</td>
       <td>Full JIT</td>
-      <td>Interpreter only</td>
-      <td>No riscv64 JIT backend; PR #1267 open since Sep 2024, unmerged</td>
+      <td>Interpreter only; no upstream riscv64 DynASM backend exists outside an unmerged PR</td>
     </tr>
     <tr>
       <td>V8</td>
       <td>Wasm JIT</td>
       <td>Full JIT</td>
       <td>Full JIT</td>
-      <td>Active backend (experimental)</td>
-      <td>Full assembler and ISA-extension support (RVV, Zbb, Zba, Zbc) in <code class="language-plaintext highlighter-rouge">src/codegen/riscv/</code>; officially experimental</td>
+      <td>“Unofficially supported” external port (ISCAS/PLCT team); Google’s core owners retain veto over merges; not Google-committed</td>
+    </tr>
+    <tr>
+      <td>Wasmtime</td>
+      <td>Wasm JIT (Cranelift)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Formal Tier 3, but CI does build, test (QEMU) and release official riscv64gc and C-API artifacts; Winch baseline compiler has zero riscv64 support</td>
+    </tr>
+    <tr>
+      <td>WAMR</td>
+      <td>Wasm JIT/AOT/interpreter</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Self-classified “Tier C” (experimental, “users accept full responsibility”), the lowest of WAMR’s three tiers</td>
     </tr>
     <tr>
       <td>Hyperscan</td>
       <td>Regex acceleration</td>
-      <td>Full (AVX-512)</td>
-      <td>No (not applicable)</td>
-      <td>No</td>
-      <td>x86-only; Envoy guards behind x86 feature detection</td>
+      <td>Full (AVX-512/SSE intrinsics)</td>
+      <td>Not applicable</td>
+      <td>Not applicable by design; hand-written x86 SIMD only, Intel has not pursued a port</td>
     </tr>
     <tr>
       <td>Vectorscan</td>
-      <td>Regex acceleration (ARM/SVE)</td>
-      <td>No</td>
-      <td>Full</td>
-      <td>No</td>
-      <td>Issue #74 (“Add riscv64 support”) closed wontfix Feb 2026</td>
+      <td>Regex acceleration (portable Hyperscan fork)</td>
+      <td>N/A</td>
+      <td>Full (SVE)</td>
+      <td>Confirmed build failures on real riscv64 hardware; no RVV1.0 backend in its SIMDe scalar-emulation fallback</td>
     </tr>
     <tr>
       <td>re2</td>
       <td>Regex fallback</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full</td>
-      <td>Pure C++; portable; no RISC-V issues</td>
+      <td>Builds (confirmed via Debian buildd), but no upstream CI exists for riscv64 or even for arm64</td>
     </tr>
     <tr>
       <td>simdutf</td>
-      <td>UTF-8/Base64</td>
+      <td>UTF-8/UTF-16/Base64</td>
       <td>AVX-512, SSE4.2</td>
       <td>NEON</td>
-      <td>RVV partial</td>
-      <td>Multiple correctness bugs fixed 2024-2025; Base64 RVV path still missing (issue #380)</td>
+      <td>RVV support exists but partial; a Base64 RVV path is still missing</td>
     </tr>
     <tr>
-      <td>highway</td>
+      <td>Highway</td>
       <td>SIMD dispatch</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Partial</td>
-      <td>RVV runtime dispatch enabled for Clang 19+/GCC 15+ (Apr 2026); older toolchains fall back to scalar</td>
+      <td>Partial; RVV runtime dispatch requires Clang 19+/GCC 15+, older toolchains fall back to scalar</td>
+    </tr>
+    <tr>
+      <td>zlib-ng</td>
+      <td>Compression (gzip)</td>
+      <td>Full SIMD</td>
+      <td>Full SIMD</td>
+      <td>Dedicated <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory with RVV and Zbc SIMD paths; CI-tested but QEMU-only (no native runner); binaries limited to Alpine edge</td>
     </tr>
     <tr>
       <td>zstd</td>
       <td>Compression</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Scalar only</td>
-      <td>Arch detection landed Dec 2025 (#4525); RVV optimizations in open PRs, not yet merged</td>
+      <td>Arch detection added; RVV optimization work exists in open PRs, not yet merged</td>
     </tr>
     <tr>
-      <td>BoringSSL FIPS</td>
-      <td>FIPS-mode TLS</td>
+      <td>brotli</td>
+      <td>Compression</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Hard error</td>
-      <td><code class="language-plaintext highlighter-rouge">boringssl_fips.genrule_cmd</code> rejects non-x86_64/non-aarch64 with a hard Bazel error</td>
+      <td>No CI build job at all for riscv64; upstream PR #1410 is CLA-blocked 6+ months, PR #1489 has zero maintainer comments</td>
     </tr>
     <tr>
-      <td>tcmalloc / gperftools</td>
-      <td>Memory allocator</td>
-      <td>tcmalloc (optimized)</td>
-      <td>tcmalloc (optimized)</td>
-      <td>gperftools or system allocator</td>
-      <td>tcmalloc disabled by default on unsupported archs</td>
+      <td>xxHash</td>
+      <td>Hashing (LB/consistent-hash)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>RVV scalar+vector support merged and CI-tested on real hardware (SpacemiT X60, BananaPi BPI-F3, Sophgo SG2044) since v0.8.2 (2025-07), but not yet in a tagged release</td>
+    </tr>
+    <tr>
+      <td>Abseil</td>
+      <td>Base C++ utilities, CRC32C</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Compiles (source-only for every arch), but has no CI at all for riscv64 (no GitHub Actions for any arch; internal Kokoro covers only amd64/arm64)</td>
+    </tr>
+    <tr>
+      <td>tcmalloc</td>
+      <td>Allocator</td>
+      <td>Optimized (per-CPU RSEQ asm)</td>
+      <td>Optimized (per-CPU RSEQ asm)</td>
+      <td>Not officially supported; riscv64 is absent from Google’s own supported-platform docs, no per-CPU RSEQ assembly exists</td>
     </tr>
     <tr>
       <td>jemalloc</td>
-      <td>Memory allocator (option)</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Unknown</td>
-      <td>Cross-build unresolved (issue #2399, open Mar 2023)</td>
-    </tr>
-    <tr>
-      <td>nghttp2</td>
-      <td>HTTP/2</td>
+      <td>Allocator (option)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (expected)</td>
-      <td>Pure C; no riscv64 issues; portable</td>
-    </tr>
-    <tr>
-      <td>c-ares</td>
-      <td>Async DNS</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Full (expected)</td>
-      <td>Pure C; no riscv64 issues; portable</td>
-    </tr>
-    <tr>
-      <td>liburing</td>
-      <td>io_uring async I/O</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Full (expected)</td>
-      <td>Linux kernel interface; works wherever kernel supports io_uring</td>
+      <td>Builds via generic fallback, not in upstream CI matrix; no riscv64-specific atomics/spin-wait (falls back to libatomic and a no-op spin-wait), functional but unoptimized</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>ISA extensions in scope for Envoy workloads on RISC-V:</strong> Zbb (bit manipulation, relevant for hash functions), Zbc (carry-less multiply, relevant for CRC/GCM), V/RVV (vectorized compression, Unicode, regex), Zba (address generation). None are currently used by Envoy or its critical-path dependencies in production builds for riscv64. V8 is the furthest along with explicit RVV support in its riscv64 backend.</p><hr />
+<p><strong>ISA extensions relevant to Envoy’s workload:</strong> Zbb (bit manipulation, hash functions), Zbc (carry-less multiply, CRC/GCM), V/RVV (compression, Unicode transcoding, regex), Zba (address generation). xxHash and zlib-ng already ship RVV/Zbc paths; simdutf and zstd have partial or in-flight RVV work; BoringSSL, Hyperscan/Vectorscan, LuaJIT and Highway (on older toolchains) have none. No Envoy-critical-path dependency has production-quality RVV coverage across the board.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -613,20 +613,20 @@
 </h2>
     
 
-<p><strong>Build system:</strong> Bazel exclusively. No CMake, no autoconf. All build flags are Bazel flags.</p>
+<p><strong>Build system:</strong> Bazel exclusively (bzlmod, <code class="language-plaintext highlighter-rouge">MODULE.bazel</code>). No CMake, autoconf, or other build backend exists for Envoy.</p>
 
-<p><strong>Officially supported toolchain (x86_64 and aarch64, from <code class="language-plaintext highlighter-rouge">bazel/README.md</code>):</strong></p>
+<p><strong>Officially documented toolchain (amd64/arm64 only):</strong></p>
 <ul>
-  <li>Clang &gt;= 18 required (C++20); CI runs exactly Clang 18</li>
+  <li>Clang &gt;= 18 required for C++20; CI runs exactly Clang 18</li>
   <li>GCC &gt;= 13 also supported</li>
-  <li>Go &gt;= 1.17 (BoringSSL and Buildifier)</li>
+  <li>Go &gt;= 1.17 (used for BoringSSL and Buildifier tooling)</li>
   <li>Python &gt;= 3.8.0</li>
-  <li>Bazel via Bazelisk (version pinned in <code class="language-plaintext highlighter-rouge">.bazelversion</code>)</li>
+  <li>Bazel via Bazelisk, version pinned in <code class="language-plaintext highlighter-rouge">.bazelversion</code></li>
 </ul>
 
-<p>No riscv64-specific toolchain requirements are documented because the architecture is unsupported.</p>
+<p>No riscv64-specific toolchain requirements are documented anywhere because the architecture is unsupported.</p>
 
-<p><strong>Official build commands (for supported architectures only):</strong></p>
+<p><strong>Official build commands (supported architectures only):</strong></p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bazel build -c opt envoy
 bazel build -c dbg envoy
@@ -635,7 +635,7 @@ bazel build --config=gcc envoy
 bazel --bazelrc=/dev/null build -c opt envoy.stripped
 </code></pre></div></div>
 
-<p><strong>Relevant flags for reduced/cross builds:</strong></p>
+<p><strong>Flags relevant to a reduced/riscv64-shaped build:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -647,27 +647,19 @@ bazel --bazelrc=/dev/null build -c opt envoy.stripped
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--define tcmalloc=disabled</code></td>
-      <td>Disable tcmalloc (required on non-x86_64/aarch64)</td>
+      <td>Disable tcmalloc (required off x86_64/aarch64)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--define tcmalloc=gperftools</code></td>
-      <td>Use gperftools tcmalloc (non-x86_64/aarch64 default)</td>
+      <td>Use the gperftools-based allocator path instead</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--//bazel:http3=False</code></td>
-      <td>Disable HTTP/3 and QUICHE entirely (workaround for riscv64 QUICHE build failure)</td>
+      <td>Disable HTTP/3 and QUICHE (workaround for the riscv64 QUICHE build failure)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--//source/extensions/wasm_runtime/v8:enabled=false</code></td>
-      <td>Disable V8 Wasm runtime (required on riscv64 per issue #36342)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--define hot_restart=disabled</code></td>
-      <td>Disable hot restart</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--define signal_trace=disabled</code></td>
-      <td>Disable signal handlers</td>
+      <td>Disable the V8 Wasm runtime (required per issue #36342’s self-patch)</td>
     </tr>
   </tbody>
 </table></div>
@@ -675,27 +667,15 @@ bazel --bazelrc=/dev/null build -c opt envoy.stripped
 <p><strong>Known riscv64 build failures:</strong></p>
 
 <ol>
-  <li>
-    <p><strong>QUICHE GSO batch writer header</strong> (Issue #36342, closed “not planned”, Nov 2024): <code class="language-plaintext highlighter-rouge">fatal error: quiche/quic/core/batch_writer/quic_gso_batch_writer.h: No such file or directory</code>. Root cause: <code class="language-plaintext highlighter-rouge">bazel/BUILD</code> does not define a <code class="language-plaintext highlighter-rouge">linux_riscv64</code> <code class="language-plaintext highlighter-rouge">config_setting</code>, so all <code class="language-plaintext highlighter-rouge">select({"@envoy//bazel:linux": [...]})</code> expressions evaluate to the empty default on riscv64. User Boring545 self-found the fix: add <code class="language-plaintext highlighter-rouge">config_setting(name = "linux_riscv64", values = {"cpu": "riscv64"})</code> and include <code class="language-plaintext highlighter-rouge">:linux_riscv64</code> in both the <code class="language-plaintext highlighter-rouge">linux</code> and <code class="language-plaintext highlighter-rouge">not_x86</code> <code class="language-plaintext highlighter-rouge">selects.config_setting_group</code> entries in <code class="language-plaintext highlighter-rouge">bazel/BUILD</code>. Fix never upstreamed. Workaround: pass <code class="language-plaintext highlighter-rouge">--//bazel:http3=False</code> to disable QUICHE.</p>
-  </li>
-  <li>
-    <p><strong>rules_python riscv64 incompatibility</strong> (reported by Boring545, Sep 2024): <code class="language-plaintext highlighter-rouge">rules_python</code> does not support riscv64, blocking Bazel from running on current Envoy versions (post-1.26) even with the QUICHE fix applied. This is an unresolved second-order blocker. [NEEDS VERIFICATION – no upstream rules_python issue linked in the Envoy issue]</p>
-  </li>
-  <li>
-    <p><strong>BoringSSL FIPS hard error</strong> (from <code class="language-plaintext highlighter-rouge">bazel/external/boringssl_fips.genrule_cmd</code>): Explicitly rejects non-x86_64/non-aarch64 targets. Any attempt to build Envoy with <code class="language-plaintext highlighter-rouge">--config=boringssl-fips</code> on riscv64 will fail at the Bazel rule level.</p>
-  </li>
+  <li><strong>QUICHE GSO batch writer header</strong> (<a href="https://github.com/envoyproxy/envoy/issues/36342">issue #36342</a>, closed <code class="language-plaintext highlighter-rouge">not_planned</code>, 2024-11-04): <code class="language-plaintext highlighter-rouge">fatal error: quiche/quic/core/batch_writer/quic_gso_batch_writer.h: No such file or directory</code>. Root cause: <code class="language-plaintext highlighter-rouge">bazel/BUILD</code> defines no <code class="language-plaintext highlighter-rouge">linux_riscv64</code> <code class="language-plaintext highlighter-rouge">config_setting</code>, so <code class="language-plaintext highlighter-rouge">select({"@envoy//bazel:linux": [...]})</code> expressions never match on riscv64. Reporter’s self-found fix (add <code class="language-plaintext highlighter-rouge">config_setting(name = "linux_riscv64", values = {"cpu": "riscv64"})</code> and add it to the <code class="language-plaintext highlighter-rouge">linux</code> and <code class="language-plaintext highlighter-rouge">not_x86</code> group memberships) was never upstreamed. Workaround: <code class="language-plaintext highlighter-rouge">--//bazel:http3=False</code>.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">rules_python</code> riscv64 incompatibility</strong> (reported by Boring545, 2024-09-28): blocks Bazel from running on any Envoy version newer than the unsupported v1.26.4, which is why the maintainer’s request to reproduce on a current release was never answered. [NEEDS VERIFICATION: no linked upstream <code class="language-plaintext highlighter-rouge">rules_python</code> issue was found in the Envoy thread itself.]</li>
+  <li><strong>BoringSSL FIPS hard error:</strong> <code class="language-plaintext highlighter-rouge">bazel/external/boringssl_fips.genrule_cmd</code> explicitly rejects non-x86_64/non-aarch64 targets; any <code class="language-plaintext highlighter-rouge">--config=boringssl-fips</code> build on riscv64 fails at the Bazel rule level, independent of the QUICHE issue.</li>
+  <li><strong>V8 Wasm extension:</strong> failed to compile on riscv64 in the reporter’s v1.26.4 build and had to be explicitly disabled.</li>
 </ol>
 
-<p><strong>Docker / QEMU:</strong> <code class="language-plaintext highlighter-rouge">ci/run_envoy_docker.sh</code> supports QEMU via <code class="language-plaintext highlighter-rouge">multiarch/qemu-user-static</code>, but the pinned build image (<code class="language-plaintext highlighter-rouge">envoyproxy/envoy-build-ubuntu:v0.1.6</code>) has no riscv64 variant and ships no riscv64 cross-compiler or sysroot. QEMU emulation cannot be used without a corresponding riscv64 build image, which does not exist.</p>
+<p><strong>Cross-compilation and QEMU:</strong> <code class="language-plaintext highlighter-rouge">ci/run_envoy_docker.sh</code> uses <code class="language-plaintext highlighter-rouge">multiarch/qemu-user-static</code>/<code class="language-plaintext highlighter-rouge">tonistiigi/binfmt</code> for multi-arch Docker builds, but the pinned build image (<code class="language-plaintext highlighter-rouge">envoyproxy/envoy-build-ubuntu:v0.1.6</code>) has no riscv64 variant and ships no riscv64 cross-compiler or sysroot, so QEMU emulation cannot be exercised without a corresponding build image that does not exist. <code class="language-plaintext highlighter-rouge">ci/do_ci.sh</code> maps <code class="language-plaintext highlighter-rouge">ENVOY_BUILD_ARCH</code> to <code class="language-plaintext highlighter-rouge">amd64</code>/<code class="language-plaintext highlighter-rouge">arm64</code> build-arch directories explicitly; riscv64 falls through to a generic, undefined path.</p>
 
-<p><strong>Toolchain arch dispatch in <code class="language-plaintext highlighter-rouge">ci/do_ci.sh</code>:</strong></p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>if [[ "${ENVOY_BUILD_ARCH}" == "x86_64" ]]; then
-  BUILD_ARCH_DIR="/linux/amd64"
-elif [[ "${ENVOY_BUILD_ARCH}" == "aarch64" ]]; then
-  BUILD_ARCH_DIR="/linux/arm64"
-fi
-</code></pre></div></div>
-<p>riscv64 falls through to a generic <code class="language-plaintext highlighter-rouge">/linux/${ENVOY_BUILD_ARCH}</code> path with no corresponding Docker image or build path defined anywhere.</p><hr />
+<p><strong>Out-of-tree alternative:</strong> the only documented successful riscv64 build path beyond the abandoned v1.26.4 self-patch is <a href="https://github.com/rcore-os/tgoskits/pull/1559">rcore-os/tgoskits PR #1559</a>, which cross-compiles Envoy v1.38.3 from source for riscv64 using musl and clang-18, entirely outside envoyproxy/envoy’s own build infrastructure.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -705,7 +685,7 @@ fi
 </h2>
     
 
-<p><strong>Functional gaps (features that cannot work at all on riscv64):</strong></p>
+<p><strong>Functional gaps (cannot work at all on riscv64):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -723,69 +703,67 @@ fi
       <td>Full</td>
       <td>Full</td>
       <td>Build failure</td>
-      <td>QUICHE <code class="language-plaintext highlighter-rouge">select()</code> does not resolve riscv64 as linux; workaround: disable HTTP/3</td>
+      <td><code class="language-plaintext highlighter-rouge">select()</code> never resolves riscv64 as a linux target; workaround is to disable HTTP/3 entirely</td>
     </tr>
     <tr>
       <td>BoringSSL FIPS mode</td>
       <td>Full</td>
       <td>Full</td>
       <td>Hard build error</td>
-      <td><code class="language-plaintext highlighter-rouge">boringssl_fips.genrule_cmd</code> rejects riscv64 at Bazel rule level</td>
+      <td><code class="language-plaintext highlighter-rouge">boringssl_fips.genrule_cmd</code> rejects riscv64 at the Bazel rule level</td>
     </tr>
     <tr>
       <td>Hyperscan regex acceleration</td>
       <td>Full (AVX-512)</td>
-      <td>Unavailable</td>
-      <td>Unavailable</td>
-      <td>x86-only; re2 fallback works</td>
+      <td>Not applicable</td>
+      <td>Not applicable</td>
+      <td>x86-only by design; <a href="https://github.com/intel/hyperscan/issues/340">intel/hyperscan#340</a> confirms non-x86 is out of scope</td>
     </tr>
     <tr>
       <td>Vectorscan regex acceleration</td>
-      <td>Unavailable</td>
+      <td>N/A</td>
       <td>Full (SVE)</td>
-      <td>Unavailable</td>
-      <td>wontfix for riscv64 (issue #74, closed Feb 2026); re2 fallback works</td>
+      <td>Not applicable</td>
+      <td><a href="https://github.com/VectorCamp/vectorscan/issues/74">#74</a> “Add RISC-V support” closed duplicate/wontfix; confirmed build failures on real hardware</td>
     </tr>
     <tr>
-      <td>Lua filter JIT performance</td>
-      <td>Full (LuaJIT x86 JIT)</td>
-      <td>Full (LuaJIT ARM64 JIT)</td>
-      <td>~10x slower (interpreter only)</td>
-      <td>No LuaJIT riscv64 JIT backend; PR #1267 open Sep 2024, not merged</td>
+      <td>Lua filter JIT</td>
+      <td>Full (x86 JIT)</td>
+      <td>Full (ARM64 JIT)</td>
+      <td>Interpreter only</td>
+      <td>No upstream LuaJIT riscv64 backend; PR #1267 open since Sep 2024, unmerged</td>
     </tr>
     <tr>
       <td>V8 Wasm JIT</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Experimental (must be explicitly disabled per user report)</td>
-      <td>V8 upstream has riscv64 backend; build-time integration in Envoy unresolved</td>
+      <td>Externally maintained, non-Google-committed</td>
+      <td>Reachable only via an unofficial third-party port</td>
     </tr>
     <tr>
-      <td>Official binaries</td>
+      <td>Official binaries/images</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td>No release artifacts exist</td>
+      <td>No GitHub release assets, no Docker manifest entry</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Performance gaps (from missing SIMD, hardware acceleration):</strong></p>
+<p><strong>Performance gaps (from missing SIMD/hardware acceleration):</strong></p>
 
 <ul>
-  <li><strong>TLS throughput:</strong> BoringSSL has no riscv64 crypto assembly (no AES-GCM hardware acceleration, no SHA hardware acceleration). TLS termination throughput will be substantially lower than amd64/arm64. No benchmark data is available to quantify this gap.</li>
-  <li><strong>Compression (zstd, zlib-ng):</strong> Both lack RVV-vectorized paths on riscv64 at present. Scalar fallback is functional. RVV optimization PRs are open upstream for zstd but not yet merged.</li>
-  <li><strong>Lua filter throughput:</strong> Interpreter-only LuaJIT on riscv64 results in roughly 10x lower throughput for Lua-heavy filter chains compared to amd64/arm64. [NEEDS VERIFICATION – 10x figure is a general LuaJIT JIT-vs-interpreter estimate, not a measured Envoy-specific benchmark]</li>
-  <li><strong>Regex:</strong> Hyperscan and Vectorscan acceleration unavailable; re2 fallback is functional but slower for complex regex patterns on high-traffic paths.</li>
+  <li><strong>TLS throughput:</strong> BoringSSL has no riscv64 crypto assembly (no AES-GCM or SHA hardware acceleration). TLS termination throughput will be materially lower than amd64/arm64. Data not available: no public riscv64 BoringSSL benchmark was found.</li>
+  <li><strong>Compression:</strong> zlib-ng has RVV/Zbc SIMD paths but only QEMU-tested; zstd and brotli lag behind, with brotli having no riscv64 CI build at all.</li>
+  <li><strong>Lua filter throughput:</strong> interpreter-only LuaJIT on riscv64 is expected to be substantially slower than the JIT path on amd64/arm64 for Lua-heavy filter chains. [NEEDS VERIFICATION: no Envoy-specific measured figure exists; this is inferred from LuaJIT’s general JIT-vs-interpreter characteristics, not a measured benchmark.]</li>
+  <li><strong>Regex:</strong> neither Hyperscan nor Vectorscan is usable on riscv64; Envoy would fall back to re2, which itself has no riscv64 CI of its own.</li>
 </ul>
 
-<p><strong>Security hardening gaps:</strong></p>
+<p><strong>Security hardening gaps:</strong> BoringSSL FIPS mode is unavailable on riscv64 (hard build error), so FIPS-validated cryptography cannot currently be achieved with Envoy on riscv64 through the default TLS provider.</p>
 
-<ul>
-  <li>BoringSSL FIPS mode unavailable on riscv64 (hard build error). Deployments requiring FIPS-validated cryptography cannot use Envoy on riscv64.</li>
-</ul>
+<p><strong>Ecosystem consumer impact:</strong> two independent downstream projects have dropped or limited Envoy specifically because of the missing riscv64 image: KinD v0.33 substitutes HAProxy for Envoy because “the upstream Envoy image does not publish <code class="language-plaintext highlighter-rouge">linux/riscv64</code>,” and Cilium’s riscv64 support is explicitly marked experimental with cilium-envoy (its L7 proxy) excluded, meaning no HTTP-aware policies are available on riscv64 Cilium deployments.</p>
 
-<p><strong>Floating-point / NaN correctness:</strong> No riscv64-specific floating-point or NaN correctness issues found in the envoyproxy/envoy issue tracker. Data not available: no riscv64-specific numerical correctness search was performed against Envoy dependencies.</p><hr />
+<p><strong>Floating-point / NaN correctness:</strong> No riscv64-specific floating-point or NaN correctness issues were found in the envoyproxy/envoy issue tracker via targeted searches (“riscv64 performance”, “riscv64 bug”, “riscv nan floating point”), all of which returned zero results. Data not available: no riscv64-specific numerical-correctness investigation of Envoy’s dependencies was performed beyond issue-tracker search.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -795,7 +773,7 @@ fi
 </h2>
     
 
-<p><strong>CI system:</strong> GitHub Actions exclusively. 58 workflow YAML files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were read in full. Zero files contain “riscv” in any form (case-insensitive). There is no riscv64 CI of any kind – no build-only job, no QEMU-emulated job, no nightly job, no <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>-only job.</p>
+<p><strong>CI system:</strong> GitHub Actions exclusively. All 60 files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were read and grepped in full (a secondary source, RISE’s own Envoy report, cites 58 files; the discrepancy is likely due to a different point-in-time snapshot, and the 60-file count here reflects a direct, current full-clone read). Zero files contain “riscv” in any casing. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists anywhere in the repository. There is no riscv64 CI of any kind: no build-only job, no QEMU-emulated job, no nightly job, no <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>-only job. A repository-wide, case-insensitive grep for “riscv” surfaces exactly two non-CI, vendored-boilerplate matches (a BoringSSL compat patch script and an auto-generated Rust/cargo target-triple table), neither under <code class="language-plaintext highlighter-rouge">.github/</code> and neither defining any trigger, runner, or build/test step.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -809,8 +787,8 @@ fi
   <tbody>
     <tr>
       <td>Build jobs</td>
-      <td>Yes (primary target)</td>
-      <td>Yes (dedicated jobs)</td>
+      <td>Yes, primary target</td>
+      <td>Yes, dedicated jobs</td>
       <td>No</td>
     </tr>
     <tr>
@@ -829,7 +807,7 @@ fi
       <td>QEMU emulation option</td>
       <td>N/A</td>
       <td>N/A</td>
-      <td>No (build image missing)</td>
+      <td>No (no matching build image exists)</td>
     </tr>
     <tr>
       <td>RBE (Remote Build Execution)</td>
@@ -852,9 +830,9 @@ fi
   </tbody>
 </table></div>
 
-<p><strong>Stated blocker (yanavlasov, 2025-12-31):</strong> AWS and GCP do not offer riscv64 instance types. Envoy’s CI infrastructure relies exclusively on these two providers. Until a major cloud provider offers riscv64 instances, adding riscv64 CI requires either a third-party CI provider (RISE, Equinix Metal, etc.) or self-hosted hardware, neither of which the Envoy maintainers have committed to pursuing.</p>
+<p><strong>Stated blocker</strong> (<code class="language-plaintext highlighter-rouge">yanavlasov</code>, 2025-12-31): Envoy’s CI runs exclusively on AWS and GCP, neither of which offers riscv64 instance types. Until a major cloud provider (or an alternative CI provider the maintainers accept) offers riscv64 compute, there is no way to build or test riscv64 binaries in CI.</p>
 
-<p><strong>RISE involvement:</strong> None. The RISE project blog (27 posts enumerated) has no post mentioning Envoy. The RISE riscv64 wheel builder lists 78 packages; Envoy is not among them. No RISE-funded work or RISE CI runners are associated with Envoy.</p><hr />
+<p><strong>RISE involvement:</strong> None found. The RISE project blog (36 posts, May 2024-Sept 2026, fully enumerated) contains no post about Envoy; topics covered instead include Go on RISC-V, Rust’s Tier 1 port, LLVM/SLEEF vectorized math, V8 for RISC-V, PyTorch and Python’s official RISC-V support, OpenSBI, IREE, Yocto, and RISC-V CI runners. The RISE riscv64 wheel builder lists 78 packages; Envoy is not among them. The RISE GitHub org (52 repos across both enumerated pages, including <code class="language-plaintext highlighter-rouge">cilium</code> but not <code class="language-plaintext highlighter-rouge">envoy</code>) has no Envoy-related repository. No RISE-funded work or RISE CI runners are associated with Envoy.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -864,30 +842,30 @@ fi
 </h2>
     
 
-<p><strong>Official release binaries (GitHub Releases, confirmed against v1.38.2, v1.37.4, v1.36.9, v1.36.8, v1.35.13):</strong></p>
+<p><strong>Official release binaries:</strong> confirmed against v1.39.1 (latest), v1.39.0, v1.38.4, v1.37.6 and v1.36.10. Each release publishes exactly: <code class="language-plaintext highlighter-rouge">envoy-&lt;ver&gt;-linux-aarch_64</code>, <code class="language-plaintext highlighter-rouge">envoy-&lt;ver&gt;-linux-x86_64</code>, <code class="language-plaintext highlighter-rouge">envoy-contrib-&lt;ver&gt;-linux-aarch_64</code>, <code class="language-plaintext highlighter-rouge">envoy-contrib-&lt;ver&gt;-linux-x86_64</code>, <code class="language-plaintext highlighter-rouge">debs.tar.gz</code>, <code class="language-plaintext highlighter-rouge">checksums.txt.asc</code>, and source archives. No riscv64 asset exists in any release. Direct HTTP probes confirm this live: <code class="language-plaintext highlighter-rouge">.../releases/download/v1.39.1/envoy-1.39.1-linux-x86_64</code> and <code class="language-plaintext highlighter-rouge">...-linux-aarch_64</code> both return HTTP 200, while <code class="language-plaintext highlighter-rouge">...-linux-riscv64</code> and <code class="language-plaintext highlighter-rouge">envoy-contrib-1.39.1-linux-riscv64</code> both return HTTP 404.</p>
 
-<p>Each release publishes exactly: <code class="language-plaintext highlighter-rouge">envoy-&lt;ver&gt;-linux-aarch_64</code>, <code class="language-plaintext highlighter-rouge">envoy-&lt;ver&gt;-linux-x86_64</code>, <code class="language-plaintext highlighter-rouge">envoy-contrib-&lt;ver&gt;-linux-aarch_64</code>, <code class="language-plaintext highlighter-rouge">envoy-contrib-&lt;ver&gt;-linux-x86_64</code>, <code class="language-plaintext highlighter-rouge">debs.tar.gz</code>, <code class="language-plaintext highlighter-rouge">checksums.txt.asc</code>. No riscv64 asset exists in any release.</p>
+<p><strong>Docker images:</strong> the official <code class="language-plaintext highlighter-rouge">envoyproxy/envoy</code> Docker Hub repository lists only <code class="language-plaintext highlighter-rouge">linux/amd64</code> and <code class="language-plaintext highlighter-rouge">linux/arm64</code> manifests for current tags (e.g. <code class="language-plaintext highlighter-rouge">tools-dev</code>: amd64 179.6 MB, arm64 171.73 MB). No <code class="language-plaintext highlighter-rouge">linux/riscv64</code> variant exists. This absence is the documented reason KinD v0.33 substitutes HAProxy for Envoy.</p>
 
-<p><strong>Docker images:</strong> Official <code class="language-plaintext highlighter-rouge">envoyproxy/envoy</code> images declare only <code class="language-plaintext highlighter-rouge">linux/amd64</code> and <code class="language-plaintext highlighter-rouge">linux/arm64</code> in their manifests. No <code class="language-plaintext highlighter-rouge">linux/riscv64</code> image is published.</p>
+<p><strong>PyPI:</strong> there is a package literally named <code class="language-plaintext highlighter-rouge">envoy</code> on PyPI (<code class="language-plaintext highlighter-rouge">envoy-0.0.3-py2.py3-none-any.whl</code>, <code class="language-plaintext highlighter-rouge">.tar.gz</code>), but it is an unrelated project (Kenneth Reitz’s “Python Subprocesses for Humans” subprocess wrapper, abandoned since 2013), not envoyproxy/envoy. It is architecture-independent and irrelevant to the C++ proxy’s riscv64 status.</p>
 
-<p><strong>Debian:</strong> The package name “envoy” does not exist in Debian (tracker.debian.org returns HTTP 404). The Debian archive contains only arch-independent helper libraries (<code class="language-plaintext highlighter-rouge">golang-github-envoyproxy-go-control-plane-dev</code>, <code class="language-plaintext highlighter-rouge">golang-github-envoyproxy-protoc-gen-validate-dev</code>, <code class="language-plaintext highlighter-rouge">python3-envoy-utils</code>). No binary proxy package for any architecture is in Debian.</p>
+<p><strong>RISE wheel builder:</strong> the same PyPI <code class="language-plaintext highlighter-rouge">envoy</code> package name redirects through the RISE GitLab wheel-builder API to plain PyPI, with no riscv64-specific wheel and, per the above, no relevance to the actual Envoy proxy.</p>
 
-<p><strong>Ubuntu:</strong> Envoy is not packaged in Ubuntu noble (24.04). Not available in any Ubuntu suite via <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code>.</p>
+<p><strong>Ubuntu (26.04 “resolute”):</strong> there is no package literally named <code class="language-plaintext highlighter-rouge">envoy</code> for any architecture, including riscv64. The only name matches are <code class="language-plaintext highlighter-rouge">golang-github-envoyproxy-protoc-gen-validate-dev</code> (an unrelated Go protobuf codegen tool) and <code class="language-plaintext highlighter-rouge">python3-envoy-utils</code> (utilities for Enphase Envoy solar inverter hardware, an unrelated product). Debian similarly has no <code class="language-plaintext highlighter-rouge">envoy</code> binary package; its only matches are the same category of unrelated, architecture-independent helper packages.</p>
 
-<p><strong>Arch Linux RISC-V:</strong> Envoy is not present in the Arch Linux RISC-V mirror (archriscv.felixc.at).</p>
+<p><strong>Arch Linux RISC-V port</strong> (archriscv.felixc.at): no package named <code class="language-plaintext highlighter-rouge">envoy</code> or <code class="language-plaintext highlighter-rouge">envoyproxy</code> is listed.</p>
 
 <p><strong>What a user must do to get a working riscv64 binary today:</strong></p>
 <ol>
-  <li>Apply an unpublished patch to <code class="language-plaintext highlighter-rouge">bazel/BUILD</code> to add <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting (self-found fix from issue #36342; never upstreamed)</li>
-  <li>Disable HTTP/3 via <code class="language-plaintext highlighter-rouge">--//bazel:http3=False</code></li>
-  <li>Disable V8 Wasm runtime via <code class="language-plaintext highlighter-rouge">--//source/extensions/wasm_runtime/v8:enabled=false</code></li>
-  <li>Disable tcmalloc via <code class="language-plaintext highlighter-rouge">--define tcmalloc=gperftools</code> or <code class="language-plaintext highlighter-rouge">--define tcmalloc=disabled</code></li>
-  <li>Resolve the <code class="language-plaintext highlighter-rouge">rules_python</code> riscv64 incompatibility (no documented workaround for current versions)</li>
-  <li>Build on a native riscv64 machine or with a riscv64 cross-compiler (no official cross-compilation setup provided)</li>
-  <li>The result is an unofficial, untested binary with HTTP/3, Lua JIT, and Wasm JIT disabled</li>
+  <li>Apply the unpublished <code class="language-plaintext highlighter-rouge">bazel/BUILD</code> patch adding a <code class="language-plaintext highlighter-rouge">linux_riscv64</code> <code class="language-plaintext highlighter-rouge">config_setting</code> (from issue #36342; never upstreamed).</li>
+  <li>Disable HTTP/3 via <code class="language-plaintext highlighter-rouge">--//bazel:http3=False</code>.</li>
+  <li>Disable the V8 Wasm runtime via <code class="language-plaintext highlighter-rouge">--//source/extensions/wasm_runtime/v8:enabled=false</code>.</li>
+  <li>Disable tcmalloc via <code class="language-plaintext highlighter-rouge">--define tcmalloc=gperftools</code> or <code class="language-plaintext highlighter-rouge">--define tcmalloc=disabled</code>.</li>
+  <li>Resolve the <code class="language-plaintext highlighter-rouge">rules_python</code> riscv64 incompatibility (no documented fix exists for current Envoy versions).</li>
+  <li>Build natively on riscv64 hardware or via an out-of-tree cross-compile path such as the musl/clang-18 approach used by <a href="https://github.com/rcore-os/tgoskits/pull/1559">rcore-os/tgoskits PR #1559</a>.</li>
+  <li>The result is an unofficial, unpublished binary with HTTP/3, Lua JIT acceleration, and the V8 Wasm runtime disabled.</li>
 </ol>
 
-<p>The last confirmed successful build is Envoy v1.26.4 (end-of-life). No confirmed successful build of a current supported release on riscv64 is documented.</p><hr />
+<p>The last confirmed successful native build is Envoy v1.26.4 (end-of-life). No confirmed successful build of a current supported release exists in any source reviewed.</p>
 <h2 id="9-dependencies">
   
   
@@ -897,13 +875,12 @@ fi
 </h2>
     
 
-<p><strong>Summary table:</strong></p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
-      <th>Role</th>
+      <th>Relation</th>
+      <th>Criticality</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
       <th>riscv64 Release</th>
@@ -912,233 +889,336 @@ fi
   </thead>
   <tbody>
     <tr>
-      <td>BoringSSL</td>
-      <td>TLS/crypto (default)</td>
-      <td>Partial (scalar fallback)</td>
-      <td>Unknown</td>
+      <td>Bazel</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>No Bazel-proper riscv64 build/CI research was performed; Envoy’s use of it is already blocked indirectly by the <code class="language-plaintext highlighter-rouge">rules_python</code> gap below</td>
+    </tr>
+    <tr>
+      <td>LLVM</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Envoy requires Clang (LLVM) &gt;= 18; no riscv64-specific LLVM/Clang status was researched for this report</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Envoy also supports GCC &gt;= 13 as a toolchain option; no riscv64-specific research performed</td>
+    </tr>
+    <tr>
+      <td>Go</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Required for BoringSSL and Buildifier tooling; no riscv64-specific research performed for this report (RISE’s blog inventory lists a “Go on RISC-V” post, but its content was not reviewed here)</td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Required &gt;= 3.8; RISE’s blog inventory lists a “Python official RISC-V support” post, but its content was not reviewed here</td>
+    </tr>
+    <tr>
+      <td>rules_python</td>
+      <td>build-dependency</td>
+      <td>critical</td>
       <td>No</td>
-      <td>No riscv64 crypto asm; FIPS mode hard error</td>
+      <td>No</td>
+      <td>No</td>
+      <td>Confirmed incompatible with riscv64 per <a href="https://github.com/envoyproxy/envoy/issues/36342">issue #36342</a>; this blocks Bazel itself from running on any current Envoy version on riscv64, independent of the QUICHE fix</td>
+    </tr>
+    <tr>
+      <td>googletest</td>
+      <td>test-dependency</td>
+      <td>critical</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>No riscv64-specific research performed for this report</td>
+    </tr>
+    <tr>
+      <td>BoringSSL</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>Partial (Android NDK cross-compile CI only, compile-only, 2 builders)</td>
+      <td>No</td>
+      <td>No (source-only)</td>
+      <td>Zero riscv64 assembly optimizations (0 asm files vs. 23 for x86_64); FIPS-module riscv64 status is [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>OpenSSL</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (backported across active stable branches)</td>
+      <td>Dedicated <code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code> CI covering 13 RVV-extension configurations; the strongest riscv64 story of any Envoy crypto dependency</td>
     </tr>
     <tr>
       <td>aws-lc</td>
-      <td>TLS/crypto (alternative)</td>
-      <td>Partial</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Partial [NEEDS VERIFICATION]</td>
       <td>Unknown</td>
       <td>No</td>
-      <td>BUILDING.md lists x86_64 and ARM/AArch64 only; no riscv64 CI detected</td>
-    </tr>
-    <tr>
-      <td>OpenSSL 3.x</td>
-      <td>TLS/crypto (alternative)</td>
-      <td>Yes</td>
-      <td>Partial</td>
-      <td>Yes (via distros)</td>
-      <td>Builds on riscv64; no RVV crypto acceleration</td>
-    </tr>
-    <tr>
-      <td>ipp-crypto</td>
-      <td>Crypto acceleration</td>
-      <td>No</td>
-      <td>No</td>
-      <td>No</td>
-      <td>Intel x86/AVX-512 only; not applicable to riscv64; skipped on non-x86</td>
+      <td>BUILDING.md reportedly lists x86_64 and ARM/AArch64 only, with no riscv64 CI detected; single-source claim</td>
     </tr>
     <tr>
       <td>LuaJIT</td>
-      <td>Lua scripting JIT</td>
-      <td>Interpreter only</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>No (interpreter only)</td>
       <td>No</td>
       <td>No</td>
-      <td>No riscv64 JIT backend; PR #1267 open Sep 2024, unmerged</td>
+      <td>No upstream riscv64 DynASM backend outside <a href="https://github.com/LuaJIT/LuaJIT/pull/1267">PR #1267</a> (Sep 2024, 11k+ lines, unmerged; sole maintainer Mike Pall has never commented); Ubuntu Noble excludes the riscv64 JIT binary entirely; Debian trixie/sid ship a JIT build only via the OpenResty fork, not upstream</td>
     </tr>
     <tr>
       <td>V8</td>
-      <td>Wasm JIT host</td>
-      <td>Yes (experimental)</td>
-      <td>Partial</td>
-      <td>Experimental</td>
-      <td>Full riscv64 assembler + RVV/Zbb/Zba/Zbc in <code class="language-plaintext highlighter-rouge">src/codegen/riscv/</code>; officially experimental</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Partial (community-maintained)</td>
+      <td>Partial (RISC-V team’s own CI, non-release-blocking)</td>
+      <td>No official binaries</td>
+      <td>“Unofficially supported” port owned by an external ISCAS/PLCT team; Google’s core owners retain a required second <code class="language-plaintext highlighter-rouge">+2</code> veto; CLs can stall behind <code class="language-plaintext highlighter-rouge">Review-Enforcement</code></td>
     </tr>
     <tr>
       <td>Wasmtime</td>
-      <td>Wasm JIT (alternative)</td>
-      <td>Yes (active)</td>
-      <td>Partial</td>
-      <td>Yes (unofficial)</td>
-      <td>Cranelift riscv64 backend active; open: frame pointer ABI mismatch (#10281), TLSDESC TLS (#12087)</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Yes</td>
+      <td>Yes (QEMU only, no native hardware runner, no continuous fuzzing)</td>
+      <td>Yes (official riscv64gc-linux and C-API tarballs)</td>
+      <td>No full-time maintainer for the port (organizational, not technical); Winch baseline compiler has zero riscv64 support; open Cranelift crashes: <a href="https://github.com/bytecodealliance/wasmtime/issues/12195">#12195</a>, <a href="https://github.com/bytecodealliance/wasmtime/issues/11050">#11050</a>, <a href="https://github.com/bytecodealliance/wasmtime/issues/13959">#13959</a></td>
     </tr>
     <tr>
       <td>WAMR</td>
-      <td>Wasm interpreter</td>
-      <td>Partial</td>
-      <td>Partial</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Experimental</td>
+      <td>Partial (QEMU+NuttX job only, non-blocking)</td>
       <td>No</td>
-      <td>AOT relocation bugs at opt &gt; 0 (issue #4765, Dec 2025); interpreter functional</td>
+      <td>Self-classified “Tier C” (“experimental…users accept full responsibility”), the lowest of WAMR’s three tiers; no committed maintainer, no release path</td>
     </tr>
     <tr>
-      <td>Hyperscan</td>
-      <td>Regex acceleration</td>
+      <td>hyperscan</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>No</td>
       <td>No</td>
       <td>No</td>
-      <td>x86/SIMD only; incompatible with riscv64 by design</td>
+      <td>x86-only by design (hand-written SSE/AVX intrinsics); <a href="https://github.com/intel/hyperscan/issues/340">intel/hyperscan#340</a> confirms non-x86 is out of scope</td>
     </tr>
     <tr>
       <td>Vectorscan</td>
-      <td>Regex acceleration</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>No (confirmed build failures on real hardware)</td>
+      <td>No (no RVV1.0 backend in SIMDe)</td>
       <td>No</td>
-      <td>No</td>
-      <td>No</td>
-      <td>Issue #74 closed wontfix Feb 2026</td>
+      <td><a href="https://github.com/VectorCamp/vectorscan/issues/74">#74</a> “Add RISC-V support” closed duplicate/wontfix; <a href="https://github.com/VectorCamp/vectorscan/issues/329">#329</a> “How can I build on real RISC-V?” unanswered/closed; <a href="https://github.com/VectorCamp/vectorscan/issues/330">#330</a> RVV1.0 optimization request, no timeline</td>
     </tr>
     <tr>
       <td>re2</td>
-      <td>Regex fallback</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Pure C++; portable</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>Yes (confirmed via Debian buildd)</td>
+      <td>No (no upstream CI for riscv64, or even arm64)</td>
+      <td>No official binaries (distro packages exist)</td>
+      <td>Treated as “equivalent to arm64,” but this is unverified by upstream CI</td>
     </tr>
     <tr>
       <td>simdutf</td>
-      <td>UTF-8/UTF-16/Base64</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Partial</td>
       <td>Partial</td>
       <td>Partial</td>
-      <td>RVV support exists; Base64 RVV path missing (issue #380); correctness bugs fixed 2024-2025</td>
+      <td>RVV support exists; Base64 RVV path still missing (<a href="https://github.com/simdutf/simdutf/issues/380">issue #380</a>)</td>
     </tr>
     <tr>
-      <td>google/highway</td>
-      <td>SIMD abstraction</td>
+      <td>Highway</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Partial</td>
       <td>Partial</td>
       <td>Partial</td>
-      <td>RVV dispatch for Clang 19+/GCC 15+ (Apr 2026); older toolchains fall to scalar; mold linker issue (#2854)</td>
+      <td>RVV runtime dispatch requires Clang 19+/GCC 15+; older toolchains fall back to scalar; mold linker issue reported</td>
     </tr>
     <tr>
-      <td>zstd</td>
-      <td>Compression</td>
-      <td>Partial</td>
-      <td>Partial</td>
-      <td>Yes</td>
-      <td>Arch detection landed Dec 2025; RVV optimizations open PRs, not merged</td>
+      <td>Abseil</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>Yes (compiles, source-only)</td>
+      <td>No CI at all for riscv64 (no GitHub Actions for any arch; internal Kokoro covers amd64/arm64 only)</td>
+      <td>No official binaries</td>
+      <td>Zero CI gating for riscv64 means regressions ship undetected</td>
     </tr>
     <tr>
-      <td>zlib-ng</td>
-      <td>Compression (zlib)</td>
-      <td>Partial</td>
-      <td>Unknown</td>
-      <td>Yes</td>
-      <td>No riscv64 SIMD; scalar only</td>
-    </tr>
-    <tr>
-      <td>lz4</td>
-      <td>Compression</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Pure C fallback; no riscv64 issues</td>
-    </tr>
-    <tr>
-      <td>brotli</td>
-      <td>Compression</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Pure C path; no riscv64 issues</td>
-    </tr>
-    <tr>
-      <td>Abseil-cpp</td>
-      <td>Base C++ utilities, CRC32C</td>
-      <td>Partial</td>
-      <td>Partial</td>
-      <td>Yes</td>
-      <td>Basic riscv64 since 2020; CRC32C HW acceleration PR #1986 open Dec 2025; stack alignment bug for ILP32E (#1236)</td>
-    </tr>
-    <tr>
-      <td>Protobuf</td>
-      <td>Serialization</td>
+      <td>Protocol Buffers</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
       <td>Yes</td>
       <td>Partial</td>
       <td>Yes</td>
-      <td>Builds on riscv64; prior build failure (abseil-related) fixed 2023</td>
+      <td>Builds on riscv64; a prior abseil-related build failure was fixed in 2023 [carried from prior report, NEEDS VERIFICATION]</td>
     </tr>
     <tr>
       <td>gRPC</td>
-      <td>RPC transport</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
       <td>Partial</td>
       <td>Partial</td>
-      <td>No (Python wheels)</td>
-      <td>C++ core likely builds; Python riscv64 wheels not published (issue #41591, Feb 2026)</td>
+      <td>No (Python wheels not published; <a href="https://github.com/grpc/grpc/issues/41591">grpc/grpc#41591</a>, Feb 2026)</td>
+      <td>C++ core likely builds; the missing item is Python riscv64 wheel publication, lower impact for Envoy’s C++ data plane</td>
+    </tr>
+    <tr>
+      <td>quiche</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Blocked by Envoy-side integration, not QUICHE itself</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Envoy’s own <code class="language-plaintext highlighter-rouge">select()</code> gap (Section 5) is the proximate cause of the riscv64 QUICHE build failure, not a QUICHE upstream defect</td>
     </tr>
     <tr>
       <td>jemalloc</td>
-      <td>Memory allocator</td>
-      <td>Unknown</td>
-      <td>Unknown</td>
-      <td>Unknown</td>
-      <td>Cross-build unresolved (issue #2399, Mar 2023)</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Yes, via generic fallback (not in upstream CI matrix) [contradicts a separate, single-source claim that riscv64 cross-builds are unresolved per jemalloc/jemalloc#2399 – flagged as a discrepancy]</td>
+      <td>No</td>
+      <td>No official binaries (distro packages work unpatched)</td>
+      <td>No riscv64-specific atomics/spin-wait optimization; falls back to libatomic and a no-op spin-wait, functional but unoptimized</td>
     </tr>
     <tr>
       <td>tcmalloc</td>
-      <td>Memory allocator</td>
-      <td>Unknown</td>
-      <td>Unknown</td>
-      <td>Unknown</td>
-      <td>No issues filed; likely falls back to system allocator on riscv64</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Not officially supported</td>
+      <td>No CI runner</td>
+      <td>N/A (source-only, zero GitHub releases for any arch)</td>
+      <td>riscv64 absent from Google’s own supported-platform docs entirely; no per-CPU RSEQ assembly for riscv64, the core tcmalloc performance mechanism</td>
     </tr>
     <tr>
-      <td>gperftools</td>
-      <td>CPU/heap profiler</td>
+      <td>zlib-ng</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Yes, dedicated <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory with RVV + Zbc SIMD paths</td>
+      <td>Yes, but QEMU-only (no native runner; test corpora skipped for QEMU slowness)</td>
+      <td>Alpine edge only; no broad official binaries</td>
+      <td>Corrects an earlier, weaker “scalar only” characterization; zlib-ng’s riscv64 story is materially better than previously assessed</td>
+    </tr>
+    <tr>
+      <td>zstd</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Partial</td>
       <td>Partial</td>
       <td>Yes</td>
-      <td>Critical riscv64 stack trace bug fixed Jul 2023; slower generic stack trace method vs x86 optimized</td>
+      <td>Architecture detection landed; RVV optimizations exist in open PRs, not yet merged</td>
     </tr>
     <tr>
-      <td>nghttp2</td>
-      <td>HTTP/2</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Pure C; portable</td>
-    </tr>
-    <tr>
-      <td>c-ares</td>
-      <td>Async DNS</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Pure C; portable</td>
-    </tr>
-    <tr>
-      <td>liburing</td>
-      <td>io_uring async I/O</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Linux kernel interface; portable</td>
-    </tr>
-    <tr>
-      <td>QATzip / QAT-ZSTD</td>
-      <td>Intel QAT HW compression</td>
+      <td>brotli</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>No (no CI build job at all for riscv64)</td>
       <td>No</td>
+      <td>No official binaries (distro packages exist)</td>
+      <td>Upstream PR #1410 is CLA-blocked 6+ months; PR #1489 has zero maintainer comments; this corrects an earlier, overly optimistic “portable, no issues” characterization</td>
+    </tr>
+    <tr>
+      <td>xxHash</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Yes, RVV scalar+vector CI since v0.8.2 (Jul 2025), tested on real SpacemiT X60 / BananaPi BPI-F3 / Sophgo SG2044 hardware</td>
+      <td>Yes, full <code class="language-plaintext highlighter-rouge">make check</code> under QEMU and real-hardware benchmarks</td>
+      <td>No, RVV support exists only on the dev branch, not yet in a tagged release</td>
+      <td>A pure release-cadence gap, not a technical one</td>
+    </tr>
+    <tr>
+      <td>ipp-crypto</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>No</td>
-      <td>No</td>
-      <td>Intel x86 PCIe hardware; not applicable to riscv64</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Architecturally x86-only (AVX2/AVX-512/SSE intrinsics); the GitHub repo could not be resolved via search this session (possibly renamed/archived)</td>
+    </tr>
+    <tr>
+      <td>qatlib</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Tied to Intel QuickAssist PCIe accelerator hardware, which has no RISC-V equivalent; should be disabled/excluded on riscv64 builds rather than tracked as “blocked.” Related packages QATzip and QAT-ZSTD-Plugin share the same status</td>
+    </tr>
+    <tr>
+      <td>nghttp2 (indirect)</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Confirmed as an actual Envoy dependency (a dedicated <code class="language-plaintext highlighter-rouge">project-reports/nghttp2.md</code> exists per live research), but its riscv64 specifics were not re-verified in this pass</td>
+    </tr>
+    <tr>
+      <td>libevent (indirect)</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Confirmed as an actual Envoy dependency; riscv64 specifics not re-verified here</td>
+    </tr>
+    <tr>
+      <td>flatbuffers (indirect)</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Confirmed as an actual Envoy dependency; riscv64 specifics not re-verified here</td>
+    </tr>
+    <tr>
+      <td>uadk (indirect)</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Linaro/Huawei Kunpeng (ARM64) accelerator offload; no riscv64 hardware target exists, same disposition as qatlib</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Deep-dive on critical blocking dependencies:</strong></p>
+<p><strong>Correction to prior assumptions:</strong> Envoy’s <code class="language-plaintext highlighter-rouge">MODULE.bazel</code> does not depend on gperftools; only tcmalloc, via the Bazel Central Registry. gperftools was investigated as a candidate dependency and dropped after confirming it is not actually referenced. (For context, an unrelated <code class="language-plaintext highlighter-rouge">gperftools/gperftools</code> riscv64 stack-trace issue, #1359, exists and is closed, but it is not a live Envoy dependency issue.)</p>
 
-<p><strong>LuaJIT:</strong> The Lua filter is widely used for lightweight request/response transformation. LuaJIT has no riscv64 JIT backend. Upstream PR #1267 (riscv64 JIT port) has been open since September 2024 and has not merged. Without a JIT backend, LuaJIT runs in interpreter mode on riscv64, delivering roughly one-tenth the throughput of the JIT path. Envoy does not fall back to PUC Lua; it depends specifically on LuaJIT. Lua filter performance on riscv64 is severely degraded.</p>
+<p><strong>Deep-dive on the critical blocking dependencies:</strong></p>
 
-<p><strong>BoringSSL:</strong> BoringSSL is Envoy’s default TLS provider. It has hand-tuned assembly for x86_64 (AES-NI, VAES, AVX-512, SHA-NI, PCLMULQDQ) and AArch64 (NEON, AES, SHA2, PMULL). riscv64 has no equivalent assembly paths; all crypto falls to the generic C implementation. TLS termination throughput will be materially lower. Exact throughput delta: data not available (no riscv64 BoringSSL benchmarks found in any public source). Additionally, BoringSSL FIPS mode (<code class="language-plaintext highlighter-rouge">boringssl_fips.genrule_cmd</code>) has a hard rejection for non-x86_64/non-aarch64, making FIPS-compliant Envoy deployments on riscv64 impossible without removing that guard.</p>
+<p><strong>LuaJIT.</strong> The Lua filter is widely used for lightweight request/response transformation, and Envoy depends specifically on LuaJIT, not PUC Lua. With no riscv64 JIT backend, LuaJIT runs in interpreter mode on riscv64. PR #1267 has been open, unmerged, and uncommented by LuaJIT’s sole maintainer since September 2024. This is the single largest identified performance gap for Lua-heavy Envoy deployments on riscv64.</p>
 
-<p><strong>V8 (Wasm runtime):</strong> V8 has a full riscv64 backend in <code class="language-plaintext highlighter-rouge">src/codegen/riscv/</code> with explicit support for RVV, Zbb, Zba, and Zbc extensions. This is the most complete RISC-V implementation among Envoy’s major JIT dependencies. However, the Envoy-side build integration is unresolved: user Boring545 had to explicitly disable V8 (<code class="language-plaintext highlighter-rouge">--//source/extensions/wasm_runtime/v8:enabled=false</code>) to get a successful build of v1.26.4. The WIP PR #40235 that would have bumped V8 to a newer version was closed without merge.</p>
+<p><strong>BoringSSL.</strong> Envoy’s default TLS provider. Hand-tuned assembly exists for x86_64 (AES-NI, VAES, AVX-512, SHA-NI, PCLMULQDQ) and AArch64 (NEON, AES, SHA2, PMULL); riscv64 has none, and the only CI coverage is a compile-only Android NDK cross-compile job with two builders. TLS termination throughput on riscv64 will be materially lower than amd64/arm64; exact delta is data not available. The FIPS build path additionally hard-rejects riscv64 at the Bazel rule level.</p>
 
-<p><strong>jemalloc:</strong> Issue #2399 (Mar 2023, open) describes an unresolved cross-build problem for riscv64. No confirmed working riscv64 build of jemalloc is documented. If jemalloc fails to build or link on riscv64, Envoy must fall back to the system allocator, which may affect performance and memory fragmentation characteristics.</p><hr />
+<p><strong>Vectorscan / Hyperscan.</strong> Envoy’s default regex engine since v1.30 is Vectorscan (a portable Hyperscan fork). Neither Hyperscan (x86-only by design) nor Vectorscan (confirmed riscv64 build failures, no RVV1.0 SIMDe backend) works on riscv64. Envoy’s fallback, re2, itself has no upstream riscv64 CI, so the entire regex-matching stack on riscv64 is either unusable or unverified by any upstream CI signal.</p>
+
+<p><strong>V8 (Wasm runtime).</strong> The most technically advanced RISC-V implementation among Envoy’s JIT dependencies is owned by an external team (ISCAS/PLCT), not by Google’s core V8 owners, who retain merge veto. This is an organizational risk as much as a technical one: V8’s riscv64 capability exists, but its integration path into Envoy is unresolved, and the one WIP PR attempting a V8 version bump (#40235) closed unmerged.</p>
+
+<p><strong>Wasmtime.</strong> The strongest link among Envoy’s optional runtime dependencies: official riscv64gc release artifacts exist, and CI builds, tests (via QEMU) and releases them. The gaps are organizational (no full-time riscv64 maintainer) and in the Winch baseline compiler (zero riscv64 support), not in the default Cranelift JIT path.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1162,23 +1242,23 @@ fi
     <tr>
       <td><a href="https://github.com/envoyproxy/envoy/issues/36342">#36342</a></td>
       <td>Build Error: Missing quiche header on RISC-V 64 (v1.26.4)</td>
-      <td>Closed “not planned” Nov 2024</td>
+      <td>Closed <code class="language-plaintext highlighter-rouge">not_planned</code>, 2024-11-04</td>
       <td>High (blocks build)</td>
-      <td><code class="language-plaintext highlighter-rouge">bazel/BUILD</code> missing <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting; user self-found fix, never upstreamed; same root cause applies to all current versions</td>
+      <td><code class="language-plaintext highlighter-rouge">bazel/BUILD</code> missing <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting; user self-found fix never upstreamed; root cause applies to all current versions</td>
     </tr>
     <tr>
       <td><a href="https://github.com/envoyproxy/envoy/issues/42787">#42787</a></td>
       <td>arch: official support for RISC-V (riscv64)</td>
-      <td>Closed “not planned” Feb 2026</td>
-      <td>Informational / strategic</td>
-      <td>Maintainer explicitly declined roadmap; CI blocker (no riscv64 on AWS/GCP) cited as primary reason</td>
+      <td>Closed <code class="language-plaintext highlighter-rouge">not_planned</code>, 2026-02-12</td>
+      <td>Informational/strategic</td>
+      <td>Maintainer explicitly declined a roadmap, citing no riscv64 CI capacity on AWS/GCP; submitter’s stated intent to port a PR never materialized</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>No open riscv64-specific correctness or performance bugs exist in the envoyproxy/envoy issue tracker.</strong> Both riscv64-related issues are closed. No floating-point correctness issues, no NaN bugs, no runtime crashes specific to riscv64 are documented.</p>
+<p>No open riscv64-specific correctness or performance bugs exist in the envoyproxy/envoy issue tracker: targeted searches for “riscv64 performance,” “riscv64 bug,” and “riscv nan floating point” scoped to the repo all returned zero results. Both riscv64-related issues that do exist are closed.</p>
 
-<p><strong>Open bugs in dependencies affecting Envoy on riscv64 (not in envoyproxy/envoy itself):</strong></p>
+<p><strong>Open bugs in dependencies affecting Envoy on riscv64 (tracked in the dependency projects, not in envoyproxy/envoy itself):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1191,46 +1271,46 @@ fi
   <tbody>
     <tr>
       <td>LuaJIT</td>
-      <td>PR #1267 (riscv64 JIT backend, open Sep 2024)</td>
+      <td><a href="https://github.com/LuaJIT/LuaJIT/pull/1267">PR #1267</a>, riscv64 JIT backend, open since Sep 2024, uncommented by the maintainer</td>
       <td>High (performance)</td>
     </tr>
     <tr>
-      <td>WAMR</td>
-      <td>Issue #4765 (AOT relocation bugs at opt &gt; 0, Dec 2025)</td>
-      <td>Medium (Wasm AOT mode)</td>
+      <td>Vectorscan</td>
+      <td><a href="https://github.com/VectorCamp/vectorscan/issues/74">#74</a> closed wontfix; <a href="https://github.com/VectorCamp/vectorscan/issues/329">#329</a>, <a href="https://github.com/VectorCamp/vectorscan/issues/330">#330</a> open/unanswered</td>
+      <td>High (regex path unavailable)</td>
+    </tr>
+    <tr>
+      <td>Hyperscan</td>
+      <td><a href="https://github.com/intel/hyperscan/issues/340">intel/hyperscan#340</a>, non-x86 out of scope</td>
+      <td>High (regex path unavailable)</td>
+    </tr>
+    <tr>
+      <td>Wasmtime</td>
+      <td><a href="https://github.com/bytecodealliance/wasmtime/issues/12195">#12195</a>, <a href="https://github.com/bytecodealliance/wasmtime/issues/11050">#11050</a>, <a href="https://github.com/bytecodealliance/wasmtime/issues/13959">#13959</a>, open Cranelift riscv64 crashes</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>brotli</td>
+      <td><a href="https://github.com/google/brotli">PR #1410</a> CLA-blocked 6+ months; PR #1489 uncommented</td>
+      <td>Medium (compression path)</td>
     </tr>
     <tr>
       <td>simdutf</td>
-      <td>Issue #380 (Base64 RVV path missing)</td>
+      <td><a href="https://github.com/simdutf/simdutf/issues/380">#380</a>, Base64 RVV path missing</td>
       <td>Low</td>
-    </tr>
-    <tr>
-      <td>Abseil-cpp</td>
-      <td>PR #1986 (CRC32C HW acceleration, open Dec 2025)</td>
-      <td>Low (performance)</td>
     </tr>
     <tr>
       <td>jemalloc</td>
-      <td>Issue #2399 (riscv64 cross-build unresolved, Mar 2023)</td>
-      <td>Medium (build)</td>
+      <td><a href="https://github.com/jemalloc/jemalloc/issues/2399">#2399</a>, riscv64 cross-build (single-source claim; contradicted by a separate finding that jemalloc builds via generic fallback)</td>
+      <td>Medium, [NEEDS VERIFICATION due to the contradiction]</td>
     </tr>
     <tr>
       <td>gRPC</td>
-      <td>Issue #41591 (Python riscv64 wheels not published, Feb 2026)</td>
-      <td>Low for C++ data plane</td>
-    </tr>
-    <tr>
-      <td>google/highway</td>
-      <td>Issue #2854 (mold linker on riscv64)</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>Vectorscan</td>
-      <td>Issue #74 (riscv64 support, closed wontfix Feb 2026)</td>
-      <td>Medium (performance path unavailable)</td>
+      <td><a href="https://github.com/grpc/grpc/issues/41591">#41591</a>, Python riscv64 wheels not published</td>
+      <td>Low for Envoy’s C++ data plane</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1243,108 +1323,122 @@ fi
 <p><strong>Stated objections (on record):</strong></p>
 
 <ol>
-  <li>
-    <p><strong>No CI capacity on major cloud providers (yanavlasov, 2025-12-31):</strong> “There is no RISC-V support on AWS, or GCP where we have CI capacity.” This is the maintainers’ primary stated reason for declining a roadmap. Until a major cloud provider or a CI provider accepted by the Envoy project offers riscv64 instances, no CI integration is possible without external infrastructure contribution.</p>
-  </li>
-  <li>
-    <p><strong>No maintainer willing to own riscv64:</strong> The governance model requires a contributor willing to commit approximately 25% of their time to maintaining the port. No such contributor has emerged. The reporter of #42787 (wcz0910) offered to contribute build configuration patches but did not follow through.</p>
-  </li>
+  <li><strong>No CI capacity on major cloud providers</strong> (<code class="language-plaintext highlighter-rouge">yanavlasov</code>, 2025-12-31, <a href="https://github.com/envoyproxy/envoy/issues/42787">issue #42787</a>): <em>“There is no RISC-V support on AWS, or GCP where we have CI capacity.”</em> This is the sole documented maintainer reason for declining a roadmap.</li>
+  <li><strong>No maintainer willing to own riscv64:</strong> the governance model requires roughly 25% time commitment from an owning maintainer. No such contributor has emerged. The submitter of #42787 (wcz0910) offered to contribute build patches but never followed through with a PR.</li>
 </ol>
 
-<p><strong>Technical blockers (in order of severity):</strong></p>
+<p><strong>Technical blockers, in order of severity:</strong></p>
 
 <ol>
-  <li><code class="language-plaintext highlighter-rouge">bazel/BUILD</code> missing <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting – self-found fix exists but not upstreamed. Trivial one-line change plus group membership additions.</li>
-  <li><code class="language-plaintext highlighter-rouge">rules_python</code> riscv64 incompatibility – blocks Bazel on current (post-1.26) Envoy versions. Requires upstream rules_python fix or a workaround.</li>
-  <li>BoringSSL FIPS hard rejection – cannot be resolved without either patching <code class="language-plaintext highlighter-rouge">boringssl_fips.genrule_cmd</code> or accepting that FIPS mode is unavailable on riscv64.</li>
-  <li>LuaJIT has no riscv64 JIT backend – requires upstream LuaJIT work (PR #1267, open 9+ months).</li>
-  <li>V8 Wasm runtime build integration unresolved in current Envoy versions.</li>
-  <li>jemalloc riscv64 cross-build unresolved.</li>
+  <li><code class="language-plaintext highlighter-rouge">bazel/BUILD</code> missing a <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting; a self-found fix exists but was never upstreamed. Small, well-scoped change.</li>
+  <li><code class="language-plaintext highlighter-rouge">rules_python</code> riscv64 incompatibility, blocking Bazel itself on any current, supported Envoy version.</li>
+  <li>BoringSSL FIPS hard rejection of non-x86_64/non-aarch64 targets.</li>
+  <li>LuaJIT has no riscv64 JIT backend (upstream PR #1267, open 12+ months, uncommented).</li>
+  <li>V8 Wasm runtime integration on riscv64 is unresolved on the Envoy side and depends on an externally-owned, Google-vetoed port.</li>
+  <li>Vectorscan/Hyperscan regex acceleration is entirely unavailable, forcing a fallback to re2, which itself carries no riscv64 CI signal.</li>
 </ol>
 
 <p><strong>Organizational blockers:</strong></p>
 
 <ul>
-  <li>Both riscv64 issues were closed “not planned” without follow-through from contributors. The stalebot closed both without maintainer action, which is a signal that riscv64 is not considered a priority by any active contributor.</li>
-  <li>No RISE involvement, no CNCF working group, no chip vendor (including current Qualcomm, SiFive, or Alibaba DAMO Academy representation on the maintainer list) has proposed sponsoring riscv64 CI or a maintainer slot.</li>
+  <li>Both riscv64 issues closed <code class="language-plaintext highlighter-rouge">not_planned</code> via stalebot without follow-through from either submitter.</li>
+  <li>No RISE involvement of any kind was found (Section 7). RISE’s Premier members (Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent) and General members (Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE) include Google, a company with seven Envoy maintainer seats, yet no RISE-Envoy connection of any kind (blog post, wheel-builder entry, CI runner arrangement) was found despite that overlap.</li>
+  <li>No chip vendor with a current Envoy maintainer seat exists; the one company (Google) that sits on both the RISE Premier member list and the Envoy maintainer list has not, per available evidence, directed any riscv64 effort toward Envoy specifically.</li>
 </ul>
 
-<p><strong>Acceptance probability for an upstreaming PR:</strong> Low in the short term if submitted without CI infrastructure. The maintainer position (yanavlasov) is that CI is a prerequisite for acceptance, and CI requires riscv64 instances on AWS or GCP. A PR that includes a CI provider agreement (RISE runners, Equinix Metal, Hetzner riscv64) alongside the build fix has a reasonable chance of acceptance based on the governance model’s openness to new maintainers with resources.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability for an upstreaming PR:</strong> Low in the short term if submitted without accompanying CI infrastructure. The maintainer’s position is that CI capability is a prerequisite, and CI capability requires riscv64 instances on AWS or GCP (neither currently available) or an alternative CI provider the maintainers agree to accept. A PR paired with a concrete, maintainer-accepted CI provider arrangement (for example RISE-hosted runners) has a materially better chance, consistent with the project’s stated willingness to add maintainers who bring resources.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no funded work on Envoy. No work is pre-done. All items below represent net new investment.</p>
-<h3 id="131-functional-enablement">
+<p><strong>Color:</strong> orange (no-upstream-ci-no-release-no-distro)</p>
+
+<p><strong>Release provider:</strong> none</p>
+
+<p><strong>Justification:</strong> Envoy has zero riscv64 upstream CI (all ~58-60 <code class="language-plaintext highlighter-rouge">.github/workflows/*.yml</code> files contain no riscv/riscv64 references, and no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>/<code class="language-plaintext highlighter-rouge">Jenkinsfile</code>/<code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exist), publishes no riscv64 release binaries or container images (only <code class="language-plaintext highlighter-rouge">linux-aarch_64</code>/<code class="language-plaintext highlighter-rouge">linux-x86_64</code> GitHub release assets and <code class="language-plaintext highlighter-rouge">linux/amd64,linux/arm64</code> Docker images; a direct probe of v1.39.1’s riscv64 asset URL returned HTTP 404), and is not packaged for riscv64 by any major distro (Ubuntu resolute, Debian, Arch RISC-V all lack an “envoy” package). Maintainer <code class="language-plaintext highlighter-rouge">yanavlasov</code> stated on <a href="https://github.com/envoyproxy/envoy/issues/42787">issue #42787</a> (2025-12-31): “We do not have a roadmap for RISC-V. The main issue is that there is no RISC-V support on AWS, or GCP where we have CI capacity.” This is not “confirmed broken” (red) because the one documented build failure, <a href="https://github.com/envoyproxy/envoy/issues/36342">issue #36342</a>, was against an EOL v1.26.4 build and was never re-verified on a current supported release. It lands at orange under the “no upstream CI / no test / no release” classification.</p>
+
+<p><strong>Pending work that could change the grade:</strong> Issue #42787, the closest thing to a tracking issue, was closed <code class="language-plaintext highlighter-rouge">not_planned</code> by stalebot on 2026-02-12 after the submitter (wcz0910) stated intent to port patches to <code class="language-plaintext highlighter-rouge">main</code> and open a PR, which never materialized. Issue #36342’s self-found fix (adding a <code class="language-plaintext highlighter-rouge">linux_riscv64</code> Bazel <code class="language-plaintext highlighter-rouge">config_setting</code>) was likewise never upstreamed. No RISE involvement was found anywhere (no RISE blog post, wheel-builder entry, or CI-runner arrangement mentions Envoy). The hard blocker maintainers cite is CI capacity: no riscv64 instances on AWS or GCP, Envoy’s only current CI providers. Absent a change in cloud-provider riscv64 availability, a maintainer willing to own the port, or a third-party CI arrangement the maintainers accept, this grade is not expected to change.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has no funded work on Envoy of any kind (Section 7, Section 12). Every item below is net-new, unfunded investment; nothing is pre-done.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
 <ol>
-  <li><strong>Fix <code class="language-plaintext highlighter-rouge">bazel/BUILD</code> <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting</strong> – Add one <code class="language-plaintext highlighter-rouge">config_setting</code> block and two group membership entries. One engineer-day. The fix is already documented in issue #36342 and requires only upstreaming.</li>
-  <li><strong>Resolve <code class="language-plaintext highlighter-rouge">rules_python</code> riscv64 incompatibility</strong> – Requires diagnosing the exact failure mode on current Envoy versions and either contributing a fix upstream to <code class="language-plaintext highlighter-rouge">rules_python</code> or implementing a workaround in Envoy’s Bazel setup. Estimated 2-4 person-weeks depending on rules_python root cause.</li>
-  <li><strong>Verify and enable HTTP/3 (QUICHE) on riscv64</strong> – Once <code class="language-plaintext highlighter-rouge">linux_riscv64</code> is registered as a linux target, the QUICHE build failure should resolve. Requires integration testing. Estimated 1-2 person-weeks.</li>
-  <li><strong>Resolve BoringSSL FIPS hard rejection</strong> – For non-FIPS deployments this is not blocking. For FIPS-required deployments, requires either upstreaming a riscv64 FIPS build to BoringSSL or substituting aws-lc (which has its own riscv64 gap). Estimated 4-8 person-weeks.</li>
-  <li><strong>V8 Wasm runtime build integration</strong> – Requires bumping V8 to a version with a working riscv64 backend and resolving the Envoy-side integration issues. Estimated 2-4 person-weeks.</li>
-  <li><strong>jemalloc riscv64 cross-build</strong> – Requires contributing to upstream jemalloc (issue #2399, open 3+ years). Estimated 2-4 person-weeks.</li>
+  <li><strong>Fix <code class="language-plaintext highlighter-rouge">bazel/BUILD</code> <code class="language-plaintext highlighter-rouge">linux_riscv64</code> config_setting and upstream it.</strong> The fix is already documented (issue #36342); this is a one-block <code class="language-plaintext highlighter-rouge">config_setting</code> plus two group-membership additions. Roughly 1 engineer-day.</li>
+  <li><strong>Resolve <code class="language-plaintext highlighter-rouge">rules_python</code> riscv64 incompatibility.</strong> Requires diagnosing the exact failure mode on a current Envoy version and either contributing a fix upstream to <code class="language-plaintext highlighter-rouge">rules_python</code> or implementing a Bazel-side workaround. Estimated 2-4 person-weeks.</li>
+  <li><strong>Verify and enable HTTP/3 (QUICHE) on riscv64</strong> once <code class="language-plaintext highlighter-rouge">linux_riscv64</code> is a registered linux target; requires integration testing. Estimated 1-2 person-weeks.</li>
+  <li><strong>Resolve the BoringSSL FIPS hard rejection.</strong> Not blocking for non-FIPS deployments. For FIPS-required deployments, requires either upstreaming a riscv64 FIPS build to BoringSSL or substituting aws-lc (which has its own, weaker, single-source riscv64 story). Estimated 4-8 person-weeks.</li>
+  <li><strong>V8 Wasm runtime build integration.</strong> Requires engaging the externally-owned ISCAS/PLCT riscv64 port and resolving Google’s <code class="language-plaintext highlighter-rouge">Review-Enforcement</code> veto path, in addition to Envoy-side integration. Estimated 2-4 person-weeks of Envoy-side work, contingent on unblocking merges upstream in V8 (outside Envoy’s control).</li>
 </ol>
-<h3 id="132-performance-optimization">
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
 <ol>
-  <li><strong>LuaJIT riscv64 JIT backend</strong> – Blocked on upstream PR #1267 (open Sep 2024). Contributing to or taking ownership of that PR. Estimated 12-20 person-weeks for a production-quality JIT backend; partial JIT (basic blocks only) estimated 4-8 person-weeks. High leverage for Lua-filter-heavy deployments.</li>
-  <li><strong>BoringSSL riscv64 crypto assembly</strong> – AES-GCM, ChaCha20-Poly1305, SHA-256/384/512 using Zbc (CLMUL), Zbkb, and RVV. This is a substantial undertaking equivalent to the AArch64 crypto assembly effort. Estimated 16-24 person-weeks for a complete set matching the AArch64 coverage.</li>
-  <li><strong>zstd RVV optimization</strong> – Merge or contribute to open upstream PRs for RVV-vectorized compression/decompression paths. Estimated 4-8 person-weeks.</li>
-  <li><strong>simdutf Base64 RVV path</strong> – Issue #380. Estimated 2-4 person-weeks.</li>
+  <li><strong>LuaJIT riscv64 JIT backend.</strong> Blocked on upstream PR #1267 (open since Sep 2024, uncommented by the sole maintainer). Contributing to or effectively taking ownership of that PR. Estimated 12-20 person-weeks for a production-quality backend; a partial JIT (basic blocks only) is estimated at 4-8 person-weeks. Highest-leverage item for Lua-filter-heavy deployments.</li>
+  <li><strong>BoringSSL riscv64 crypto assembly</strong> (AES-GCM, ChaCha20-Poly1305, SHA-256/384/512 using Zbc/Zbkb/RVV). Comparable in scope to the existing AArch64 crypto-assembly effort. Estimated 16-24 person-weeks.</li>
+  <li><strong>Vectorscan riscv64 RVV1.0 backend</strong> (per open issue #330). No current upstream commitment exists; this would need to be driven externally. Estimated 8-16 person-weeks, speculative given no stated maintainer interest.</li>
+  <li><strong>zstd RVV vectorization.</strong> Merge or contribute to existing open upstream PRs. Estimated 4-8 person-weeks.</li>
+  <li><strong>simdutf Base64 RVV path</strong> (issue #380). Estimated 2-4 person-weeks.</li>
+  <li><strong>brotli riscv64 CI and build enablement</strong>, unblocking the CLA-stalled PR #1410 or contributing a fresh one. Estimated 4-6 person-weeks, contingent on resolving the CLA blocker (outside engineering control).</li>
 </ol>
-<h3 id="133-cicd-infrastructure">
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
 <ol>
-  <li><strong>Provision riscv64 CI runners accepted by Envoy</strong> – Requires agreement with Envoy maintainers on which CI provider is acceptable. RISE-hosted runners or a dedicated Equinix Metal / cloud provider arrangement. Estimated 2-4 person-weeks engineering plus ongoing infrastructure cost.</li>
-  <li><strong>riscv64 build image (<code class="language-plaintext highlighter-rouge">envoyproxy/envoy-build-ubuntu</code> variant)</strong> – Produce and maintain a riscv64-compatible Envoy build Docker image with Clang 18, Bazelisk, and required toolchain. Estimated 2-4 person-weeks initial, plus maintenance overhead.</li>
-  <li><strong>Native riscv64 CI jobs in <code class="language-plaintext highlighter-rouge">.github/workflows/</code></strong> – Add build and test jobs mirroring the arm64 job structure. Estimated 1-2 person-weeks once runners and build image are available.</li>
+  <li><strong>Provision riscv64 CI runners acceptable to Envoy maintainers.</strong> Requires explicit agreement with maintainers on provider (RISE-hosted runners or a dedicated cloud/bare-metal arrangement), since AWS/GCP are ruled out. Estimated 2-4 person-weeks engineering, plus ongoing infrastructure cost. This is the gating item for all upstreaming per the maintainer’s own stated position.</li>
+  <li><strong>riscv64 build image</strong> (an <code class="language-plaintext highlighter-rouge">envoyproxy/envoy-build-ubuntu</code> riscv64 variant with Clang 18, Bazelisk, and the required toolchain). Estimated 2-4 person-weeks initial, plus maintenance overhead.</li>
+  <li><strong>Native riscv64 CI jobs in <code class="language-plaintext highlighter-rouge">.github/workflows/</code></strong>, mirroring the existing arm64 job structure. Estimated 1-2 person-weeks once runners and a build image exist.</li>
 </ol>
-<h3 id="134-ecosystem-enablement">
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
 
-<p>Envoy is not distributed through a significant dependent package ecosystem (no PyPI wheels, no Maven JARs, no npm packages for the proxy binary itself). This section is not applicable. The primary distribution gap is official release binaries and Docker images.</p>
+<p>Envoy itself has no significant dependent package ecosystem (no PyPI wheels, no npm packages, no Maven JARs distribute the proxy binary; the PyPI package named “envoy” is an unrelated project). The relevant gap is distribution of the proxy binary and image itself, not a dependent-package ecosystem.</p>
 
 <ol>
-  <li><strong>Official riscv64 release binary</strong> – Add <code class="language-plaintext highlighter-rouge">envoy-&lt;ver&gt;-linux-riscv64</code> to the GitHub release process. Requires CI to be in place first. Estimated 1-2 person-weeks once CI is operational.</li>
-  <li><strong>Official riscv64 Docker image</strong> – Add <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to the Docker manifest. Requires build image and CI. Estimated 1-2 person-weeks.</li>
+  <li><strong>Official riscv64 release binary</strong>: add <code class="language-plaintext highlighter-rouge">envoy-&lt;ver&gt;-linux-riscv64</code> to the GitHub release process. Requires CI to exist first. Estimated 1-2 person-weeks once CI is operational.</li>
+  <li><strong>Official riscv64 Docker image</strong>: add a <code class="language-plaintext highlighter-rouge">linux/riscv64</code> manifest entry. Requires the build image and CI from Section 14.3. Estimated 1-2 person-weeks. This single change would directly restore Envoy as a viable L7 proxy for downstream consumers such as KinD and Cilium, which currently work around its absence.</li>
 </ol>
-<h3 id="135-summary-table">
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1377,7 +1471,7 @@ fi
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Verify QUICHE/HTTP3 on riscv64 after Bazel fix</td>
+      <td>Verify QUICHE/HTTP3 on riscv64 after the Bazel fix</td>
       <td>1-2</td>
       <td>Envoy contributor</td>
       <td>High</td>
@@ -1385,20 +1479,13 @@ fi
     <tr>
       <td>Functional</td>
       <td>V8 Wasm runtime build integration on riscv64</td>
-      <td>2-4</td>
-      <td>Envoy + V8 contributor</td>
+      <td>2-4 (plus upstream-dependent V8 work)</td>
+      <td>Envoy + V8/ISCAS-PLCT contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>jemalloc riscv64 cross-build (upstream contribution)</td>
-      <td>2-4</td>
-      <td>jemalloc upstream</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>BoringSSL FIPS riscv64 (FIPS deployments only)</td>
+      <td>BoringSSL FIPS on riscv64 (FIPS deployments only)</td>
       <td>4-8</td>
       <td>BoringSSL / aws-lc upstream</td>
       <td>Medium</td>
@@ -1408,21 +1495,21 @@ fi
       <td>Provision riscv64 CI runners + build image</td>
       <td>2-4</td>
       <td>Infrastructure / RISE</td>
-      <td>Critical (gate for upstreaming)</td>
+      <td>Critical, gates all upstreaming</td>
     </tr>
     <tr>
       <td>CI/CD</td>
       <td>Add riscv64 CI jobs to <code class="language-plaintext highlighter-rouge">.github/workflows/</code></td>
       <td>1-2</td>
       <td>Envoy contributor</td>
-      <td>Critical (gate for upstreaming)</td>
+      <td>Critical, gates upstreaming</td>
     </tr>
     <tr>
       <td>CI/CD</td>
       <td>Official riscv64 release binary + Docker image</td>
-      <td>1-2</td>
+      <td>1-2 each</td>
       <td>Envoy contributor</td>
-      <td>High</td>
+      <td>High, restores downstream ecosystem viability (KinD, Cilium)</td>
     </tr>
     <tr>
       <td>Performance</td>
@@ -1433,39 +1520,43 @@ fi
     </tr>
     <tr>
       <td>Performance</td>
-      <td>BoringSSL riscv64 crypto assembly (AES-GCM, SHA, ChaCha20)</td>
+      <td>BoringSSL riscv64 crypto assembly</td>
       <td>16-24</td>
       <td>BoringSSL upstream</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>zstd RVV vectorization (upstream PRs)</td>
+      <td>Vectorscan riscv64 RVV1.0 backend</td>
+      <td>8-16</td>
+      <td>Vectorscan upstream</td>
+      <td>Medium, speculative</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
+      <td>zstd RVV vectorization (merge open PRs)</td>
       <td>4-8</td>
       <td>zstd upstream</td>
       <td>Low</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>simdutf Base64 RVV path (issue #380)</td>
+      <td>simdutf Base64 RVV path</td>
       <td>2-4</td>
       <td>simdutf upstream</td>
       <td>Low</td>
     </tr>
+    <tr>
+      <td>Performance</td>
+      <td>brotli riscv64 CI/build enablement</td>
+      <td>4-6</td>
+      <td>brotli upstream</td>
+      <td>Low, CLA-blocked</td>
+    </tr>
   </tbody>
 </table></div>
 
-<p><strong>Critical path:</strong> CI infrastructure (runners + build image) is the gate for all upstreaming. Without CI, the Envoy maintainers will not accept architecture additions. The Bazel config fix is trivial once CI is in place. LuaJIT JIT backend is the highest-leverage performance investment for workloads using the Lua filter.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p><strong>Critical path:</strong> CI infrastructure (runners plus build image) is the gate for all upstreaming, per the maintainers’ own stated position. The Bazel config fix is trivial once CI exists. LuaJIT’s JIT backend is the highest-leverage performance investment for Lua-filter-heavy workloads; BoringSSL crypto assembly is the highest-leverage investment for TLS-heavy workloads.</p>
 <h2 id="15-references">
   
   
@@ -1480,23 +1571,36 @@ fi
   <li><a href="https://github.com/envoyproxy/envoy/issues/36342">Issue #36342: Build Error: Missing quiche header on RISC-V 64</a></li>
   <li><a href="https://github.com/envoyproxy/envoy/pull/18474">PR #18474: deps: Bump com_github_zlib_ng_zlib_ng -&gt; 2.0.5</a></li>
   <li><a href="https://github.com/envoyproxy/envoy/pull/40235">PR #40235: WIP deps: bump up V8 to 13.6.233.8</a></li>
-  <li><a href="https://api.github.com/repos/envoyproxy/envoy/releases?per_page=5">Envoy GitHub Releases API (v1.38.2 assets)</a></li>
+  <li><a href="https://github.com/envoyproxy/envoy/pull/41975">PR #41975: build(deps): bump frozendict 2.4.6 to 2.4.7</a></li>
+  <li><a href="https://github.com/envoyproxy/envoy/pull/42919">PR #42919: Add bzlmod-only patch for emsdk 4.0.22</a></li>
+  <li><a href="https://github.com/envoyproxy/envoy/pull/15386">PR #15386: Attempt to fix buildx/multiarch build flakiness</a></li>
+  <li><a href="https://github.com/envoyproxy/envoy/blob/main/GOVERNANCE.md">Envoy GOVERNANCE.md</a></li>
   <li><a href="https://github.com/envoyproxy/envoy/blob/main/OWNERS.md">Envoy OWNERS.md</a></li>
-  <li><a href="https://github.com/envoyproxy/envoy/blob/main/bazel/BUILD">Envoy bazel/BUILD (architecture constraints)</a></li>
-  <li><a href="https://github.com/envoyproxy/envoy/blob/main/ci/do_ci.sh">Envoy ci/do_ci.sh (architecture dispatch)</a></li>
-  <li><a href="https://github.com/envoyproxy/envoy/blob/main/bazel/toolchains.bzl">Envoy bazel/toolchains.bzl</a></li>
+  <li><a href="https://github.com/envoyproxy/envoy/blob/main/bazel/BUILD">Envoy bazel/BUILD</a></li>
+  <li><a href="https://github.com/envoyproxy/envoy/blob/main/bazel/SSL.md">Envoy bazel/SSL.md</a></li>
   <li><a href="https://github.com/envoyproxy/envoy/blob/main/bazel/external/boringssl_fips.genrule_cmd">Envoy bazel/external/boringssl_fips.genrule_cmd</a></li>
-  <li><a href="https://github.com/envoyproxy/envoy/blob/main/bazel/README.md">Envoy bazel/README.md (toolchain requirements)</a></li>
-  <li><a href="https://github.com/envoyproxy/envoy/blob/main/ci/run_envoy_docker.sh">Envoy ci/run_envoy_docker.sh (QEMU setup)</a></li>
-  <li><a href="https://github.com/VectorCamp/vectorscan/issues/74">Vectorscan Issue #74: riscv64 support closed wontfix</a></li>
+  <li><a href="https://github.com/envoyproxy/envoy/blob/main/bazel/README.md">Envoy bazel/README.md</a></li>
+  <li><a href="https://github.com/envoyproxy/envoy/blob/main/ci/do_ci.sh">Envoy ci/do_ci.sh</a></li>
+  <li><a href="https://github.com/envoyproxy/envoy/blob/main/ci/run_envoy_docker.sh">Envoy ci/run_envoy_docker.sh</a></li>
+  <li><a href="https://www.envoyproxy.io/">Envoy install docs (architecture support statement)</a></li>
+  <li><a href="https://github.com/rcore-os/tgoskits/pull/1559">rcore-os/tgoskits PR #1559 (out-of-tree riscv64/loongarch64 cross-compile)</a></li>
   <li><a href="https://github.com/LuaJIT/LuaJIT/pull/1267">LuaJIT PR #1267: riscv64 JIT backend</a></li>
-  <li><a href="https://github.com/jemalloc/jemalloc/issues/2399">jemalloc Issue #2399: riscv64 cross-build unresolved</a></li>
+  <li><a href="https://github.com/VectorCamp/vectorscan/issues/74">Vectorscan Issue #74: Add RISC-V support, closed wontfix</a></li>
+  <li><a href="https://github.com/VectorCamp/vectorscan/issues/329">Vectorscan Issue #329: How can I build on real RISC-V?</a></li>
+  <li><a href="https://github.com/VectorCamp/vectorscan/issues/330">Vectorscan Issue #330: RVV1.0 optimization request</a></li>
+  <li><a href="https://github.com/intel/hyperscan/issues/340">intel/hyperscan Issue #340: non-x86 architecture support out of scope</a></li>
+  <li><a href="https://github.com/bytecodealliance/wasmtime/issues/12195">Wasmtime Issue #12195</a></li>
+  <li><a href="https://github.com/bytecodealliance/wasmtime/issues/11050">Wasmtime Issue #11050</a></li>
+  <li><a href="https://github.com/bytecodealliance/wasmtime/issues/13959">Wasmtime Issue #13959</a></li>
   <li><a href="https://github.com/simdutf/simdutf/issues/380">simdutf Issue #380: Base64 RVV path missing</a></li>
   <li><a href="https://github.com/grpc/grpc/issues/41591">gRPC Issue #41591: Python riscv64 wheels not published</a></li>
-  <li><a href="https://github.com/abseil/abseil-cpp/pull/1986">Abseil-cpp PR #1986: CRC32C riscv64 HW acceleration</a></li>
-  <li><a href="https://github.com/google/highway/issues/2854">google/highway Issue #2854: mold linker on riscv64</a></li>
-  <li><a href="https://github.com/bytecodealliance/wasm-micro-runtime/issues/4765">WAMR Issue #4765: AOT relocation bugs at opt &gt; 0</a></li>
-  <li><a href="https://riseproject.dev">RISE Project member list</a></li>
+  <li><a href="https://github.com/jemalloc/jemalloc/issues/2399">jemalloc Issue #2399: riscv64 cross-build status</a></li>
+  <li><a href="https://github.com/gperftools/gperftools/issues/1359">gperftools Issue #1359: broken stack trace on riscv64 (unrelated, non-dependency reference)</a></li>
+  <li><a href="https://github.com/go-riscv/kind">go-riscv/kind: HAProxy retained in place of Envoy for riscv64</a></li>
+  <li><a href="https://github.com/12345qwert123456/k3s.RISC-V/releases/tag/v1.20.2-cilium-riscv64">Cilium riscv64 release notes: cilium-envoy excluded</a></li>
+  <li><a href="https://riseproject.dev">RISE Project homepage</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project member list</a></li>
+  <li><a href="https://riseproject.dev/category/blog/">RISE Project blog</a></li>
   <li><a href="https://www.cncf.io/projects/envoy/">Envoy CNCF project page</a></li>
   <li><a href="https://www.envoyproxy.io/">Envoy homepage</a></li>
 </ul>
