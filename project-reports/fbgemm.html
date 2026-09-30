@@ -265,11 +265,13 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a>
-<strong>Date:</strong> 2026-07-20
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for FBGEMM
-<strong>Audience:</strong> Technical leadership, resource allocation strategy
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].</p><hr />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> red<br />
+<strong>Optimization level:</strong> absent<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for FBGEMM<br />
+<strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,15 +281,15 @@
 </h2>
     
 
-<p>FBGEMM (Facebook GEMM) is Meta’s high-performance low-level GEMM and quantized GEMM library. It serves as the primary backend for PyTorch quantized operators on x86 machines and, more recently, AArch64. The library provides manually tuned SIMD kernels for INT8, INT16, FP16, BF16, and FP32 matrix multiplication, embedding table lookup (Sparse Dense Matrix Multiply, SpMDM), and depthwise convolution. It is architecturally distinct from a reference BLAS: kernels are generated at runtime via the asmjit JIT framework, and the dispatch table is populated by build-time ISA probing and runtime CPUID.</p>
+<p>FBGEMM (Facebook GEMM) is Meta’s high-performance low-level GEMM and quantized GEMM library. It is the primary backend for PyTorch’s quantized CPU operators on x86 machines and, more recently, AArch64. The library provides manually tuned SIMD kernels for INT8, INT16, FP16, BF16, and FP32 matrix multiplication, embedding table lookup (Sparse Dense Matrix Multiply, SpMDM), and depthwise convolution. Architecturally it differs from a reference BLAS: GEMM kernels are generated at runtime via the asmjit JIT framework, and the ISA dispatch table is populated by build-time processor detection plus runtime CPUID/cpuinfo probing.</p>
 
-<p><strong>Governance:</strong> Meta-controlled. No foundation membership (not Linux Foundation, not Apache, not RISE). No MAINTAINERS, OWNERS, or CODEOWNERS file. Contribution requires signing the Meta CLA. Development happens internally at Meta and is synced to GitHub via the <code class="language-plaintext highlighter-rouge">meta-codesync[bot]</code> pipeline. There is no TSC, no governance committee, and no public RFC process.</p>
+<p><strong>Governance:</strong> Meta-controlled, hosted under the <code class="language-plaintext highlighter-rouge">pytorch</code> GitHub org. No <code class="language-plaintext highlighter-rouge">GOVERNANCE.md</code>, <code class="language-plaintext highlighter-rouge">MAINTAINERS.md</code>, <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, or <code class="language-plaintext highlighter-rouge">SUPPORT.md</code> exist in the repository (all return 404). There is no TSC and no public RFC process. Community interaction happens via GitHub Issues/Discussions and a <code class="language-plaintext highlighter-rouge">#fbgemm</code> channel on PyTorch Slack. No PyTorch Foundation/Linux Foundation charter text is published on the repo itself.</p>
 
 <p><strong>License:</strong> BSD (permissive).</p>
 
-<p><strong>Corporate sponsors:</strong> Meta is the dominant maintainer. Google (<code class="language-plaintext highlighter-rouge">pganssle-google</code>) has made isolated contributions. No other corporate affiliates are identifiable from public commit history.</p>
+<p><strong>Corporate sponsors:</strong> Meta is the dominant and effectively sole corporate maintainer; the project originated at Facebook. No named MAINTAINERS/CODEOWNERS roster with company affiliations could be identified from primary sources (both files return 404/not found). Isolated outside contributions exist (e.g. Google) but no second corporate maintainer organization is identifiable.</p>
 
-<p><strong>Community culture toward new ports:</strong> Effectively absent. The repository has one unanswered RISC-V question from 2023 (issue <a href="https://github.com/pytorch/FBGEMM/issues/2101">#2101</a>). The recent removal of AArch64 compatibility shims (PRs <a href="https://github.com/pytorch/FBGEMM/pull/5779">#5779</a> and <a href="https://github.com/pytorch/FBGEMM/pull/5921">#5921</a>, May-June 2026) indicates Meta is actively reducing generic code paths, not broadening architecture coverage. A RISC-V port would require either Meta internal interest or a community contributor willing to deliver CMake detection, RVV kernels, and CI coverage, with no existing precedent or expressed maintainer support.</p><hr />
+<p><strong>Community culture toward new ports:</strong> Effectively absent for RISC-V. The only RISC-V-related community signal in the repository’s entire history is one unanswered 2023 issue (<a href="https://github.com/pytorch/FBGEMM/issues/2101">#2101</a>). No RISC-V PR, commit, or tracking issue has ever been opened. The one existing non-Meta hardware port that does exist, <strong>fbgemm-ascend</strong> (a community-maintained Huawei Ascend NPU implementation of selected FBGEMM_GPU operators, distributed via PyPI/GitCode, not RISC-V), is explicitly labeled “community-maintained” rather than integrated upstream, suggesting third-party architecture ports are tolerated as unofficial add-ons rather than folded into a formal support process – this is inferred from that one precedent, not documented policy.</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -308,28 +310,33 @@
   <tbody>
     <tr>
       <td>Oct 28, 2023</td>
-      <td>User <code class="language-plaintext highlighter-rouge">condy0919</code> opens issue <a href="https://github.com/pytorch/FBGEMM/issues/2101">#2101</a>: “porting fp16 multiplication of fbgemm to riscv” – asks about <code class="language-plaintext highlighter-rouge">partition_avx512</code> auto-tuning. No maintainer response. No PR follows.</td>
+      <td>User <code class="language-plaintext highlighter-rouge">condy0919</code> opens issue <a href="https://github.com/pytorch/FBGEMM/issues/2101">#2101</a>, “porting fp16 multiplication of fbgemm to riscv,” asking how <code class="language-plaintext highlighter-rouge">partition_avx512</code> is auto-tuned. No maintainer response to date.</td>
       <td><a href="https://github.com/pytorch/FBGEMM/issues/2101">GitHub issue #2101</a></td>
     </tr>
     <tr>
       <td>(never)</td>
       <td>First RISC-V commit</td>
-      <td>No commits containing “riscv” exist in pytorch/FBGEMM</td>
+      <td>Zero results from <code class="language-plaintext highlighter-rouge">search_commits</code> for “riscv” and “riscv64” scoped to <code class="language-plaintext highlighter-rouge">repo:pytorch/FBGEMM</code>; confirmed independently by full <code class="language-plaintext highlighter-rouge">git grep -i riscv</code> across all tracked files at HEAD (commit <code class="language-plaintext highlighter-rouge">87f08e6cca999aeac7b26e981c09b24dcde2c746</code>)</td>
     </tr>
     <tr>
       <td>(never)</td>
-      <td>Tracking issue opened</td>
-      <td>No tracking issue exists</td>
+      <td>RISC-V pull request</td>
+      <td>Zero results from <code class="language-plaintext highlighter-rouge">search_pull_requests</code> for “riscv”, “riscv64”, “risc-v” scoped to the repo</td>
+    </tr>
+    <tr>
+      <td>(never)</td>
+      <td>RISC-V tracking issue</td>
+      <td>No master/tracking issue for a riscv64 port exists</td>
     </tr>
     <tr>
       <td>(never)</td>
       <td>RISE project involvement</td>
-      <td>Not listed in any RISE blog post, project page, or wheel builder</td>
+      <td>FBGEMM does not appear on <a href="https://riseproject.dev">riseproject.dev</a>, in the <a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel builder listing</a>, or among the 26 repos in the <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub org</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>There is no RISC-V port history. The single community reference is an unanswered 2023 question from an individual learning the codebase.</p><hr />
+<p>There is no RISC-V port history for FBGEMM. The single community reference is an unanswered 2023 question from an individual contributor exploring the codebase, not a maintainer-sanctioned porting effort. FBGEMM is not upstream on RISC-V in any sense – there is nothing to be “fully upstream” of.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -339,7 +346,7 @@
 </h2>
     
 
-<p>FBGEMM has no documented tier policy for architecture support. There is no PLATFORMS.md, SUPPORT.md, or equivalent. Architecture scope is inferred from the CMakeLists.txt processor detection and the CI matrix.</p>
+<p>FBGEMM has no documented platform-tier policy. No <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, or equivalent exists. Architecture scope must be inferred from <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> processor detection and the CI matrix, both of which recognize only two architecture families.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -355,11 +362,11 @@
       <td>CMake detection</td>
       <td>Yes – <code class="language-plaintext highlighter-rouge">x86_64\|amd64\|AMD64\|i386\|i686</code> branch</td>
       <td>Yes – <code class="language-plaintext highlighter-rouge">aarch64\|ARM64\|arm64</code> branch</td>
-      <td>No – falls through silently</td>
+      <td>No branch exists; falls through silently</td>
     </tr>
     <tr>
       <td>ISA-specific kernels</td>
-      <td>Full (AVX2, AVX512, VNNI, BF16)</td>
+      <td>Full (AVX2, AVX512, VNNI)</td>
       <td>Partial (NEON, SVE, SVE2, KleidiAI)</td>
       <td>None</td>
     </tr>
@@ -376,21 +383,21 @@
       <td>No</td>
     </tr>
     <tr>
-      <td>Release wheels (PyPI)</td>
-      <td>Yes – all 5 wheels in v1.7.0 are <code class="language-plaintext highlighter-rouge">manylinux_2_28_x86_64</code></td>
-      <td>None [NEEDS VERIFICATION – no aarch64 wheel found on PyPI]</td>
-      <td>None</td>
+      <td>Release wheels (PyPI, <code class="language-plaintext highlighter-rouge">fbgemm-gpu</code> 1.9.0)</td>
+      <td>Yes – all wheels (<code class="language-plaintext highlighter-rouge">cp310</code>-<code class="language-plaintext highlighter-rouge">cp314</code>) are <code class="language-plaintext highlighter-rouge">manylinux_2_28_x86_64</code></td>
+      <td>None found on PyPI [NEEDS VERIFICATION – no aarch64 wheel identified]</td>
+      <td>None – zero riscv64 wheels across the full release history 0.0.1 through 1.9.0</td>
     </tr>
     <tr>
       <td>Blocking status</td>
       <td>Primary target</td>
-      <td>Secondary target</td>
-      <td>Not a target</td>
+      <td>Secondary, actively invested target</td>
+      <td>Not a recognized target</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The aarch64 tier is receiving active investment as of June 2026 (native NEON kernels replacing compatibility shims, ArmPL replacing MKL for benchmarks). riscv64 is not a recognized tier.</p><hr />
+<p>aarch64 is a live investment area; riscv64 has no formal or informal tier standing whatsoever.</p><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -400,7 +407,7 @@
 </h2>
     
 
-<p>FBGEMM’s architecture-specific engineering consists of four layers: (1) JIT code emission via asmjit, (2) hand-written C++ SIMD intrinsic kernels, (3) runtime ISA dispatch via cpuinfo, and (4) a build-time autovectorized fallback. Each layer is examined below.</p>
+<p>FBGEMM’s architecture-specific engineering consists of four layers: (1) JIT code emission via asmjit, (2) hand-written C++ SIMD intrinsic/assembly kernels, (3) runtime ISA dispatch via cpuinfo, and (4) a build-time autovectorized fallback.</p>
 <h3 id="41-jit-code-generation-asmjit">
   
   
@@ -410,7 +417,7 @@
 </h3>
     
 
-<p>asmjit is a hard build dependency linked to all FBGEMM targets, including the autovec target. It supports only x86/x64 and AArch64 backends. RISC-V is listed as “Pending / Not supported” on the asmjit roadmap with no timeline and no maintainer assigned. asmjit compiles on riscv64 (the library has a no-op path) but provides no RVV or RISC-V assembler backend. JIT kernel emission is entirely non-functional on riscv64.</p>
+<p>asmjit is a hard build dependency linked into every FBGEMM kernel target, including the autovec target. It supports x86/x64 and AArch64 code-generation backends. The <a href="https://asmjit.com/roadmap.html">asmjit roadmap</a> lists RISC-V as “Pending / Not supported,” confirmed current as of 2026-09-30, with no timeline and no assigned maintainer. Two GitHub issues asking about RISC-V support – <a href="https://github.com/asmjit/asmjit/issues/393">asmjit#393</a> (“RISC-V port,” opened Dec 2022, closed) and <a href="https://github.com/asmjit/asmjit/issues/479">asmjit#479</a> (“Question about port status for RISC-V,” opened Jun 2025 by a ByteDance contributor) – both received zero maintainer response. asmjit’s <code class="language-plaintext highlighter-rouge">arch_traits.cpp</code> marks RISCV32/RISCV64 as <code class="language-plaintext highlighter-rouge">no_arch_traits</code>: the library builds and links on riscv64 (it is present as <code class="language-plaintext highlighter-rouge">libasmjit-dev</code>/<code class="language-plaintext highlighter-rouge">libasmjit0</code> in Ubuntu resolute/riscv64) but emits no RISC-V machine code whatsoever. JIT kernel emission is entirely non-functional on riscv64.</p>
 <h3 id="42-simd-dispatch-table">
   
   
@@ -420,11 +427,31 @@
 </h3>
     
 
-<p>The <code class="language-plaintext highlighter-rouge">inst_set_t</code> enum in <code class="language-plaintext highlighter-rouge">include/fbgemm/SimdUtils.h</code> defines: <code class="language-plaintext highlighter-rouge">anyarch</code>, <code class="language-plaintext highlighter-rouge">avx2</code>, <code class="language-plaintext highlighter-rouge">avx512</code>, <code class="language-plaintext highlighter-rouge">avx512_ymm</code>, <code class="language-plaintext highlighter-rouge">avx512_vnni</code>, <code class="language-plaintext highlighter-rouge">avx512_vnni_ymm</code>, <code class="language-plaintext highlighter-rouge">sve</code>. No <code class="language-plaintext highlighter-rouge">rvv</code> value exists. The <code class="language-plaintext highlighter-rouge">fbgemmPacked()</code> dispatch has a <code class="language-plaintext highlighter-rouge">default</code> branch that throws <code class="language-plaintext highlighter-rouge">std::runtime_error("unknown architecture")</code>. On riscv64, any GEMM call reaches this branch and crashes.</p>
-<h3 id="43-architecture-specific-source-files">
+<p>FBGEMM’s <code class="language-plaintext highlighter-rouge">inst_set_t</code> enum (<code class="language-plaintext highlighter-rouge">include/fbgemm/SimdUtils.h</code>) contains only <code class="language-plaintext highlighter-rouge">anyarch</code>, <code class="language-plaintext highlighter-rouge">avx2</code>, <code class="language-plaintext highlighter-rouge">avx512</code>, <code class="language-plaintext highlighter-rouge">avx512_ymm</code>, <code class="language-plaintext highlighter-rouge">avx512_vnni</code>, <code class="language-plaintext highlighter-rouge">avx512_vnni_ymm</code>, <code class="language-plaintext highlighter-rouge">sve</code>. No <code class="language-plaintext highlighter-rouge">rvv</code> value exists. Dispatch functions that switch on this enum fall through to a <code class="language-plaintext highlighter-rouge">default</code> branch that throws <code class="language-plaintext highlighter-rouge">std::runtime_error("unknown architecture")</code> at runtime – on riscv64, any GEMM call reaching this dispatch crashes.</p>
+<h3 id="43-confirmed-link-time-defect-code-level-finding">
   
   
-    <a href="#43-architecture-specific-source-files" class="anchor-heading" aria-labelledby="43-architecture-specific-source-files"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Architecture-Specific Source Files
+    <a href="#43-confirmed-link-time-defect-code-level-finding" class="anchor-heading" aria-labelledby="43-confirmed-link-time-defect-code-level-finding"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Confirmed Link-Time Defect (Code-Level Finding)
+  
+  
+</h3>
+    
+
+<p>Direct inspection of <code class="language-plaintext highlighter-rouge">src/FbgemmFP16.cc</code> and <code class="language-plaintext highlighter-rouge">src/fp32/FbgemmFP32.cc</code> at commit <code class="language-plaintext highlighter-rouge">87f08e6</code> shows these generic-object-library files (compiled on every platform, including riscv64) unconditionally reference AVX2 kernel symbols such as <code class="language-plaintext highlighter-rouge">gemmkernel_1x2_Avx2_fp16_fA0fB0fC0</code>, guarded only by <code class="language-plaintext highlighter-rouge">#if !defined(__aarch64__)</code>:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">constexpr</span> <span class="n">kernel_array_t</span><span class="o">&lt;</span><span class="n">float16</span><span class="o">&gt;</span> <span class="n">kernel_fp16_avx2</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">{</span><span class="n">nullptr</span><span class="p">,</span>
+<span class="cp">#if !defined(__aarch64__)
+</span>     <span class="n">gemmkernel_1x2_Avx2_fp16_fA0fB0fC0</span><span class="p">,</span>
+     <span class="n">gemmkernel_2x2_Avx2_fp16_fA0fB0fC0</span><span class="p">,</span> <span class="p">...</span>
+<span class="cp">#endif
+</span></code></pre></div></div>
+
+<p>These symbols are declared in <code class="language-plaintext highlighter-rouge">src/FbgemmFP16UKernelsAvx2.h</code> under the same <code class="language-plaintext highlighter-rouge">!defined(__aarch64__)</code> guard but are only <em>defined</em> in <code class="language-plaintext highlighter-rouge">.cc</code> files that CMake compiles solely under the x86_64 branch. On riscv64, the declarations are referenced but the definitions are never compiled, producing an <strong>undefined-reference link failure</strong>, not merely a missing-optimization gap. The same pattern repeats in <code class="language-plaintext highlighter-rouge">include/fbgemm/FbgemmFPCommon.h</code> (lines 126/149) and <code class="language-plaintext highlighter-rouge">src/fp32/FbgemmFP32.cc</code> (lines 14/35/48/70). A fix would require extending these guards to also exclude non-x86/non-aarch64 targets (e.g. <code class="language-plaintext highlighter-rouge">&amp;&amp; !defined(__riscv)</code>) or defining <code class="language-plaintext highlighter-rouge">FBGEMM_FP16_FALLBACK_TO_REF_KERNEL</code>/<code class="language-plaintext highlighter-rouge">FBGEMM_FP32_FALLBACK_TO_REF_KERNEL</code> for riscv64 the way it is already done for aarch64 – but CMake never sets these for riscv64 today, because no riscv64 branch exists at all. This is the specific, confirmed mechanism by which FBGEMM as shipped would fail to link on riscv64, independent of the JIT/dispatch-table gaps above.</p>
+<h3 id="44-architecture-specific-source-files">
+  
+  
+    <a href="#44-architecture-specific-source-files" class="anchor-heading" aria-labelledby="44-architecture-specific-source-files"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Architecture-Specific Source Files
   
   
 </h3>
@@ -434,56 +461,44 @@
   <thead>
     <tr>
       <th>Architecture</th>
-      <th>Source Files</th>
-      <th>Header Files</th>
+      <th>Source Files (sampled)</th>
       <th>Kernel Type</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>x86 AVX2</td>
-      <td>15+</td>
-      <td>8+</td>
+      <td>14 files (<code class="language-plaintext highlighter-rouge">UtilsAvx2.cc</code>, <code class="language-plaintext highlighter-rouge">QuantUtilsAvx2.cc</code>, <code class="language-plaintext highlighter-rouge">EmbeddingSpMDMAvx2.cc</code>, <code class="language-plaintext highlighter-rouge">GroupwiseConvAcc32Avx2.cc</code>, <code class="language-plaintext highlighter-rouge">FbgemmFP16UKernelsAvx2.cc</code>, etc.)</td>
       <td>Hand-tuned intrinsics + asmjit JIT</td>
     </tr>
     <tr>
       <td>x86 AVX512/VNNI</td>
-      <td>10+</td>
-      <td>5+</td>
+      <td>18 files, including hand-written JIT-codegen kernels (<code class="language-plaintext highlighter-rouge">GenerateKernelU8S8S32ACC16Avx512VNNI.cc</code>, <code class="language-plaintext highlighter-rouge">GenerateKernelU8S8S32ACC32Avx512VNNI.cc</code>)</td>
       <td>Hand-tuned intrinsics + asmjit JIT</td>
     </tr>
     <tr>
-      <td>AArch64 NEON</td>
-      <td>3</td>
-      <td>3</td>
-      <td>C++ intrinsics</td>
+      <td>AArch64 NEON/SVE/SVE2</td>
+      <td>~20 files (<code class="language-plaintext highlighter-rouge">UtilsSve.cc</code>, <code class="language-plaintext highlighter-rouge">FbgemmFP16UKernelsSve128.cc</code> with raw <code class="language-plaintext highlighter-rouge">asm volatile</code> SVE assembly, <code class="language-plaintext highlighter-rouge">QuantUtilsNeon.cc</code>, <code class="language-plaintext highlighter-rouge">EmbeddingSpMDMAutovec.cc</code> using <code class="language-plaintext highlighter-rouge">arm_sve.h</code>)</td>
+      <td>C++ intrinsics and hand-written inline assembly</td>
     </tr>
     <tr>
-      <td>AArch64 SVE/SVE2</td>
-      <td>4</td>
-      <td>3</td>
-      <td>C++ intrinsics (GCC&gt;=14 / Clang&gt;=17)</td>
-    </tr>
-    <tr>
-      <td>AArch64 KleidiAI</td>
-      <td>2</td>
-      <td>2</td>
-      <td>Vendor micro-kernel library (ARM Ltd.)</td>
+      <td>AArch64 dispatch guards</td>
+      <td>49 hits for <code class="language-plaintext highlighter-rouge">__aarch64__</code> across ~20 files (<code class="language-plaintext highlighter-rouge">Fbgemm.cc</code>, <code class="language-plaintext highlighter-rouge">PackMatrix.cc</code>, <code class="language-plaintext highlighter-rouge">ExecuteKernelU8S8.cc</code>, <code class="language-plaintext highlighter-rouge">Utils.cc</code>)</td>
+      <td>–</td>
     </tr>
     <tr>
       <td>riscv64</td>
-      <td>0</td>
-      <td>0</td>
-      <td>Missing</td>
+      <td>0 files, 0 guards</td>
+      <td>Missing entirely</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No file in the repository <code class="language-plaintext highlighter-rouge">src/</code> or <code class="language-plaintext highlighter-rouge">include/</code> directory contains the strings <code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">rvv</code>, <code class="language-plaintext highlighter-rouge">rv64</code>, or <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>.</p>
-<h3 id="44-per-component-coverage">
+<p>No file anywhere in <code class="language-plaintext highlighter-rouge">src/</code> or <code class="language-plaintext highlighter-rouge">include/</code> contains the strings <code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">rvv</code>, <code class="language-plaintext highlighter-rouge">rv64</code>, <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, or <code class="language-plaintext highlighter-rouge">__riscv</code>. The single “RISC-V” text match in the entire repository is a textbook citation (“Computer Organization and Design, RISC-V edition, Chapter 3.5”) in a code comment in <code class="language-plaintext highlighter-rouge">fbgemm_gpu/experimental/gemm/test/fp4_quantize_test.py</code>, unrelated to any functional support.</p>
+<h3 id="45-per-component-coverage">
   
   
-    <a href="#44-per-component-coverage" class="anchor-heading" aria-labelledby="44-per-component-coverage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Per-Component Coverage
+    <a href="#45-per-component-coverage" class="anchor-heading" aria-labelledby="45-per-component-coverage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Per-Component Coverage
   
   
 </h3>
@@ -500,16 +515,16 @@
   </thead>
   <tbody>
     <tr>
-      <td>FP16 GEMM (<code class="language-plaintext highlighter-rouge">FbgemmFP16</code>)</td>
+      <td>FP16 GEMM</td>
       <td>Full – AVX2/AVX512 JIT kernels</td>
       <td>Partial – SVE128 + KleidiAI</td>
-      <td>Missing</td>
+      <td>Missing (link failure per 4.3)</td>
     </tr>
     <tr>
       <td>FP32 GEMM</td>
       <td>Full – AVX2/AVX512</td>
       <td>Partial – KleidiAI NEON</td>
-      <td>Missing</td>
+      <td>Missing (link failure per 4.3)</td>
     </tr>
     <tr>
       <td>Embedding SpMDM (TBE)</td>
@@ -536,41 +551,23 @@
       <td>Missing</td>
     </tr>
     <tr>
-      <td>FP16/BF16 convert</td>
-      <td>Full – AVX2/AVX512</td>
-      <td>Partial – SVE</td>
-      <td>Missing</td>
-    </tr>
-    <tr>
-      <td>Quantization utils</td>
-      <td>Full – AVX2/AVX512</td>
-      <td>Partial – NEON</td>
-      <td>Missing</td>
-    </tr>
-    <tr>
-      <td>Transpose utils</td>
-      <td>Full – AVX2</td>
-      <td>Partial – NEON/SVE</td>
-      <td>Missing</td>
-    </tr>
-    <tr>
       <td>Runtime ISA dispatch</td>
       <td>Functional</td>
       <td>Functional</td>
-      <td>Crashes (throws at runtime)</td>
+      <td>Throws <code class="language-plaintext highlighter-rouge">std::runtime_error</code> (would be reached only if linking succeeded)</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="45-autovectorization-fallback">
+<h3 id="46-autovectorization-fallback">
   
   
-    <a href="#45-autovectorization-fallback" class="anchor-heading" aria-labelledby="45-autovectorization-fallback"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Autovectorization Fallback
+    <a href="#46-autovectorization-fallback" class="anchor-heading" aria-labelledby="46-autovectorization-fallback"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.6 Autovectorization Fallback
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">EmbeddingSpMDMAutovec.cc</code> uses compiler auto-vectorization without architecture-specific intrinsics. This file would compile on riscv64 with <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>, and the compiler could emit RVV instructions. However: (a) asmjit is still linked, (b) the dispatch table in <code class="language-plaintext highlighter-rouge">Utils.h</code> does not include an RVV branch, so the autovec path is only reached as an unrecognized-architecture fallback, not a first-class RVV path. The <code class="language-plaintext highlighter-rouge">RefImplementations.cc</code> scalar layer exists but routes only from test scaffolding, not from the production dispatch.</p><hr />
+<p><code class="language-plaintext highlighter-rouge">EmbeddingSpMDMAutovec.cc</code> relies on compiler auto-vectorization rather than architecture-specific intrinsics and would in principle compile on riscv64 with <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>. However, this path is unreachable in practice: the binary would not link in the first place (section 4.3), asmjit is still linked as a static dependency regardless, and the dispatch table has no RVV-aware branch routing GEMM calls to autovec.</p><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -579,44 +576,38 @@
   
 </h2>
     
-<h3 id="51-supported-architectures-in-cmakeliststxt">
+<h3 id="51-processor-detection">
   
   
-    <a href="#51-supported-architectures-in-cmakeliststxt" class="anchor-heading" aria-labelledby="51-supported-architectures-in-cmakeliststxt"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Supported Architectures in CMakeLists.txt
-  
-  
-</h3>
-    
-
-<p>The root <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> gates ISA-specific code behind <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> regex:</p>
-
-<ul>
-  <li>x86/x64: <code class="language-plaintext highlighter-rouge">"x86_64|amd64|AMD64|i386|i686"</code> – activates AVX2 and AVX512 targets</li>
-  <li>AArch64: <code class="language-plaintext highlighter-rouge">"aarch64|ARM64|arm64"</code> – activates NEON, SVE, SVE2, KleidiAI targets</li>
-</ul>
-
-<p>riscv64 falls through both branches with no explicit rejection. The build succeeds but produces only generic/scalar code.</p>
-<h3 id="52-standard-build-commands-from-official-buildinstructionsrst">
-  
-  
-    <a href="#52-standard-build-commands-from-official-buildinstructionsrst" class="anchor-heading" aria-labelledby="52-standard-build-commands-from-official-buildinstructionsrst"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Standard Build Commands (from official <a href="https://github.com/pytorch/FBGEMM/tree/main/fbgemm_gpu/docs/src/fbgemm/development/BuildInstructions.rst">BuildInstructions.rst</a>)
+    <a href="#51-processor-detection" class="anchor-heading" aria-labelledby="51-processor-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Processor Detection
   
   
 </h3>
     
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake -DFBGEMM_BUILD_TESTS=0 \
-      -DFBGEMM_BUILD_BENCHMARKS=OFF \
-      -DCMAKE_BUILD_TYPE=Release \
-      ..
-cmake --build . --parallel
+<p>The root <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> gates ISA-specific targets behind a <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> regex: <code class="language-plaintext highlighter-rouge">"x86_64|amd64|AMD64|i386|i686"</code> activates AVX2/AVX512 targets; <code class="language-plaintext highlighter-rouge">"aarch64|ARM64|arm64"</code> activates NEON/SVE/SVE2/KleidiAI targets. There is no <code class="language-plaintext highlighter-rouge">elseif</code> branch, no <code class="language-plaintext highlighter-rouge">-DUSE_*=OFF</code> flag, and no toolchain file for riscv64 – it falls through both regexes silently, with no <code class="language-plaintext highlighter-rouge">FATAL_ERROR</code> raised for an unrecognized architecture.</p>
+<h3 id="52-standard-build-commands">
+  
+  
+    <a href="#52-standard-build-commands" class="anchor-heading" aria-labelledby="52-standard-build-commands"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Standard Build Commands
+  
+  
+</h3>
+    
+
+<p>From the official <a href="https://github.com/pytorch/FBGEMM/tree/main/fbgemm_gpu/docs/src/fbgemm/development/BuildInstructions.rst">BuildInstructions.rst</a>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone --recurse-submodules https://github.com/pytorch/FBGEMM.git
+cd FBGEMM &amp;&amp; mkdir build &amp;&amp; cd build
+cmake -DFBGEMM_USE_SANITIZER=address -DFBGEMM_LIBRARY_TYPE=shared -DPYTHON_EXECUTABLE=$(which python3) ..
+make -j VERBOSE=1 &amp;&amp; make test &amp;&amp; make install
 </code></pre></div></div>
 
-<p>No riscv64-specific flags exist. No cross-compilation toolchain files (<code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code>) exist in the repository.</p>
-<h3 id="53-compiler-version-requirements">
+<p>No riscv64-specific flags or documentation exist. There is no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, <code class="language-plaintext highlighter-rouge">docs/building.md</code>, or <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> in the repository. No <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code> or <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code> exists; <code class="language-plaintext highlighter-rouge">cmake/modules/</code> contains only <code class="language-plaintext highlighter-rouge">Utilities.cmake</code>, <code class="language-plaintext highlighter-rouge">CppLibrary.cmake</code>, <code class="language-plaintext highlighter-rouge">CudaSetup.cmake</code>, <code class="language-plaintext highlighter-rouge">FindAVX.cmake</code>, <code class="language-plaintext highlighter-rouge">RocmSetup.cmake</code>, <code class="language-plaintext highlighter-rouge">PyTorchSetup.cmake</code>, <code class="language-plaintext highlighter-rouge">GpuCppLibrary.cmake</code>, <code class="language-plaintext highlighter-rouge">FindSphinx.cmake</code>, <code class="language-plaintext highlighter-rouge">FindMKL.cmake</code>, <code class="language-plaintext highlighter-rouge">CxxCompilerSetup.cmake</code>, <code class="language-plaintext highlighter-rouge">FindGnuH2fIeee.cmake</code> – no cross-compilation toolchain file for any architecture, and <code class="language-plaintext highlighter-rouge">CMAKE_TOOLCHAIN_FILE</code> is not referenced anywhere in the repository.</p>
+<h3 id="53-compiler-and-toolchain-requirements">
   
   
-    <a href="#53-compiler-version-requirements" class="anchor-heading" aria-labelledby="53-compiler-version-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Compiler Version Requirements
+    <a href="#53-compiler-and-toolchain-requirements" class="anchor-heading" aria-labelledby="53-compiler-and-toolchain-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Compiler and Toolchain Requirements
   
   
 </h3>
@@ -639,49 +630,42 @@ cmake --build . --parallel
     <tr>
       <td>C++ standard</td>
       <td>C++20</td>
-      <td>Fatal error if <code class="language-plaintext highlighter-rouge">CMAKE_CXX_STANDARD &lt; 20</code></td>
+      <td><code class="language-plaintext highlighter-rouge">FATAL_ERROR</code> in <code class="language-plaintext highlighter-rouge">cmake/modules/CxxCompilerSetup.cmake</code> if not met</td>
     </tr>
     <tr>
-      <td>GCC (fbgemm_gpu)</td>
-      <td>11.4</td>
-      <td>Fatal error in <code class="language-plaintext highlighter-rouge">fbgemm_gpu/CMakeLists.txt</code></td>
+      <td>GCC</td>
+      <td>10.4.0 (tested baseline, per docs, for GLIBCXX ABI compatibility)</td>
+      <td>Documentation; <code class="language-plaintext highlighter-rouge">fbgemm_gpu/CMakeLists.txt</code> enforces a related fatal minimum for the GPU build</td>
     </tr>
     <tr>
-      <td>Clang (fbgemm_gpu)</td>
-      <td>16.0.6</td>
-      <td>Fatal error in <code class="language-plaintext highlighter-rouge">fbgemm_gpu/CMakeLists.txt</code></td>
+      <td>LLVM/Clang</td>
+      <td>16.0.6 (“Minimum LLVM+Clang version required for FBGEMM_GPU”)</td>
+      <td>Documentation; requires <code class="language-plaintext highlighter-rouge">-fopenmp=libomp -stdlib=libc++</code>; GCC is still required as a co-dependency even for Clang+CUDA builds</td>
     </tr>
     <tr>
-      <td>GCC for SVE/SVE2</td>
-      <td>14+</td>
-      <td>Guards <code class="language-plaintext highlighter-rouge">arm_neon_sve_bridge.h</code> availability</td>
-    </tr>
-    <tr>
-      <td>Clang for SVE/SVE2</td>
-      <td>17+</td>
-      <td>Same guard</td>
+      <td>GCC/Clang for SVE/SVE2</td>
+      <td>GCC&gt;=14 / Clang&gt;=17</td>
+      <td>Guards <code class="language-plaintext highlighter-rouge">arm_neon_sve_bridge.h</code> availability (aarch64-only)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The C++20 requirement is enforceable on riscv64 with GCC&gt;=11 or Clang&gt;=13, both available in Debian sid and Ubuntu 24.04.</p>
-<h3 id="54-riscv64-build-path-hypothetical">
+<p>Nothing in the C++20/CMake 3.21 baseline is riscv64-prohibitive by itself – both are available in current Debian/Ubuntu riscv64 archives – the blocker is architecture detection and dispatch, not toolchain version floors.</p>
+<h3 id="54-riscv64-build-path-as-shipped-today">
   
   
-    <a href="#54-riscv64-build-path-hypothetical" class="anchor-heading" aria-labelledby="54-riscv64-build-path-hypothetical"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 riscv64 Build Path (Hypothetical)
+    <a href="#54-riscv64-build-path-as-shipped-today" class="anchor-heading" aria-labelledby="54-riscv64-build-path-as-shipped-today"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 riscv64 Build Path (As Shipped Today)
   
   
 </h3>
     
 
-<p>If built on riscv64:</p>
 <ol>
-  <li>CMake detects <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR=riscv64</code></li>
-  <li>Neither x86 nor AArch64 branch matches</li>
-  <li>Only generic C++ reference files compile – no SIMD optimization</li>
-  <li>Build technically succeeds (no explicit <code class="language-plaintext highlighter-rouge">FATAL_ERROR</code> for unrecognized arch)</li>
-  <li>Runtime: any GEMM call hits <code class="language-plaintext highlighter-rouge">default</code> branch and throws <code class="language-plaintext highlighter-rouge">std::runtime_error</code></li>
-  <li>Only <code class="language-plaintext highlighter-rouge">EmbeddingSpMDMAutovec.cc</code> provides a viable (but untuned) code path</li>
+  <li>CMake detects <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR=riscv64</code>; neither the x86 nor AArch64 regex matches.</li>
+  <li>Only <code class="language-plaintext highlighter-rouge">fbgemm_generic</code> (OBJECT lib) and <code class="language-plaintext highlighter-rouge">fbgemm_autovec</code> (unless <code class="language-plaintext highlighter-rouge">-DDISABLE_FBGEMM_AUTOVEC=ON</code>) targets get built.</li>
+  <li><strong>Link failure</strong>: the generic object files in <code class="language-plaintext highlighter-rouge">FbgemmFP16.cc</code>/<code class="language-plaintext highlighter-rouge">FbgemmFP32.cc</code> reference AVX2 symbols that are declared but never defined on this path (section 4.3). The build does not complete.</li>
+  <li>Even hypothetically patched past the link failure, any GEMM call would hit the dispatch table’s <code class="language-plaintext highlighter-rouge">default</code> branch and throw <code class="language-plaintext highlighter-rouge">std::runtime_error("unknown architecture")</code> at runtime.</li>
+  <li>Only <code class="language-plaintext highlighter-rouge">EmbeddingSpMDMAutovec.cc</code> provides a code path that would run correctly if reached, but it is not reached by default dispatch logic.</li>
 </ol>
 <h3 id="55-qemu-usage">
   
@@ -692,7 +676,7 @@ cmake --build . --parallel
 </h3>
     
 
-<p>No QEMU usage exists in any CI workflow or build documentation. AArch64 CI uses native AWS Graviton runners, not emulation.</p><hr />
+<p>No QEMU usage exists anywhere in FBGEMM’s CI workflows or build documentation. AArch64 CI uses native ARM64 GitHub-hosted/self-hosted runners, not emulation. For contrast: sibling PyTorch repositories do have riscv64 build infrastructure that FBGEMM lacks – <code class="language-plaintext highlighter-rouge">pytorch/pytorch</code> has <code class="language-plaintext highlighter-rouge">.ci/docker/ubuntu-cross-riscv/Dockerfile</code> (cross-compilation via <code class="language-plaintext highlighter-rouge">crossenv</code>), and <code class="language-plaintext highlighter-rouge">pytorch/executorch</code> has <code class="language-plaintext highlighter-rouge">examples/riscv/setup.sh</code>/<code class="language-plaintext highlighter-rouge">run.sh</code> (installs <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>, <code class="language-plaintext highlighter-rouge">qemu-user-static</code>, runs via <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code>) plus <code class="language-plaintext highlighter-rouge">tools/cmake/preset/riscv64_linux.cmake</code>. None of this exists in or is referenced by FBGEMM.</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -710,9 +694,7 @@ cmake --build . --parallel
 </h3>
     
 
-<p>The production dispatch path crashes on riscv64 for all GEMM operations. This is not a missing-optimization issue – it is a correctness failure. Any PyTorch model running quantized operators on riscv64 will encounter a hard runtime exception when FBGEMM is invoked.</p>
-
-<p>The autovec fallback path (<code class="language-plaintext highlighter-rouge">EmbeddingSpMDMAutovec.cc</code>) is the only code that would execute correctly on riscv64, covering only embedding lookup operations and only when the dispatch is explicitly routed to autovec (which does not happen today on unrecognized architectures by default – the dispatch throws before reaching autovec for GEMM calls).</p>
+<p>As shipped, FBGEMM does not build on riscv64 at all: the generic object library fails to link due to the AVX2 symbol-guard defect in section 4.3. This is a confirmed, code-level, build-blocking defect, not an untested-CI gap. Even setting that defect aside hypothetically, the production dispatch path would still crash on any GEMM call via the <code class="language-plaintext highlighter-rouge">default: throw std::runtime_error</code> branch, since no <code class="language-plaintext highlighter-rouge">rvv</code> entry exists in <code class="language-plaintext highlighter-rouge">inst_set_t</code>. Corroborating this from the consumer side, the <a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE Project blog post “PyTorch is available on riscv64!”</a> (2026-08-18) states directly that PyTorch’s riscv64 build ships with <strong>no quantization backend at all</strong>, because neither FBGEMM nor QNNPACK supports RISC-V – accounting for 9 of 191 documented test failures in PyTorch’s riscv64 test suite.</p>
 <h3 id="62-performance-gaps">
   
   
@@ -722,9 +704,7 @@ cmake --build . --parallel
 </h3>
     
 
-<p>Data not available: no riscv64 FBGEMM benchmark data exists in any public source. Published benchmarks from Meta (2018) cover only Intel Xeon E5-2680 v4 (x86 Broadwell). No arm64 vs riscv64 vs x86_64 comparative figures exist.</p>
-
-<p>Structurally: all published performance gains from FBGEMM (up to 2.4x speedup on production workloads) come from AVX-512 VNNI and AVX2 microkernels. Without RVV kernels, a riscv64 build would operate at scalar throughput only, approximately 4-8x slower than a comparable AVX2 implementation on equivalent clock rates [NEEDS VERIFICATION – estimate based on SIMD width ratio, not measured data].</p>
+<p>Data not available: no riscv64 FBGEMM benchmark data exists in any public source (GitHub, arXiv, or the RISE blog). Since FBGEMM has no functional riscv64 backend at all, a riscv64-vs-arm64 or riscv64-vs-amd64 FBGEMM performance comparison does not exist to report – this reflects the absence of an implementation, not a search gap. Structurally, all of FBGEMM’s published performance gains (up to 2.4x speedup in Meta’s production workloads) derive from AVX-512 VNNI and AVX2 microkernels; without any RVV kernels, a hypothetically patched riscv64 build would run at scalar throughput only [NEEDS VERIFICATION – no measured riscv64 figures exist to confirm a specific multiplier].</p>
 <h3 id="63-nan--floating-point-semantics">
   
   
@@ -734,9 +714,7 @@ cmake --build . --parallel
 </h3>
     
 
-<p>PR <a href="https://github.com/pytorch/FBGEMM/pull/5843">#5843</a> (closed June 2026, not merged) identified a correctness bug on AArch64+SVE: the <code class="language-plaintext highlighter-rouge">HAVE_SVE</code> branch of <code class="language-plaintext highlighter-rouge">Fused8BitRowwiseQuantizedSBFloatToFloatOrHalf</code> silently ignored the <code class="language-plaintext highlighter-rouge">is_uint16_t_of_type_bf16</code> template parameter, routing bf16 callers to fp16 bit patterns. The fix routes bf16 output to the scalar Ref kernel on SVE. This class of dispatch-table correctness bug would affect any new architecture, including riscv64, at every point where an ISA-specific specialization is absent but not explicitly guarded.</p>
-
-<p>Additionally, the AVX2 and NEON fp32-&gt;bf16 helpers use round-half-away-from-zero rather than round-to-nearest-even, differing by up to 1 ULP from scalar and AVX-512 paths. A riscv64 scalar fallback would use round-to-nearest-even, producing numerically different results from the x86 production path.</p><hr />
+<p>PR <a href="https://github.com/pytorch/FBGEMM/pull/5843">#5843</a> (closed, not merged, June 2026) documented a correctness bug on AArch64+SVE where the <code class="language-plaintext highlighter-rouge">HAVE_SVE</code> branch of a dequantization routine silently ignored a bf16/fp16 type-selection template parameter, producing wrong bit patterns. This class of dispatch-table correctness bug – a missing ISA specialization silently producing wrong results rather than a compile error – is a structural risk for any new architecture, including a future riscv64 port, at every point where an ISA-specific specialization is absent but not explicitly guarded. Separately, the AVX2 and NEON fp32-to-bf16 helpers use round-half-away-from-zero rather than round-to-nearest-even, differing by up to 1 ULP from the scalar/AVX-512 paths; a riscv64 scalar fallback would use round-to-nearest-even and would therefore differ numerically from the production x86 path.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -745,23 +723,10 @@ cmake --build . --parallel
   
 </h2>
     
-<h3 id="71-fbgemm-ci-matrix">
-  
-  
-    <a href="#71-fbgemm-ci-matrix" class="anchor-heading" aria-labelledby="71-fbgemm-ci-matrix"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.1 FBGEMM CI Matrix
-  
-  
-</h3>
-    
 
-<p>All 22 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were examined. Zero files contain “riscv”, “riscv64”, “rv64”, or any RISC-V reference.</p>
+<p>All 22 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were inspected directly (not via search index) at commit <code class="language-plaintext highlighter-rouge">87f08e6cca999aeac7b26e981c09b24dcde2c746</code>: <code class="language-plaintext highlighter-rouge">_fbgemm_gpu_cuda_build.yml</code>, <code class="language-plaintext highlighter-rouge">_fbgemm_gpu_cuda_test.yml</code>, <code class="language-plaintext highlighter-rouge">_fbgemm_gpu_generate_ci_matrix.yml</code>, <code class="language-plaintext highlighter-rouge">build_wheels_genai_linux_aarch64.yml</code>, <code class="language-plaintext highlighter-rouge">build_wheels_genai_linux_x86.yml</code>, <code class="language-plaintext highlighter-rouge">build_wheels_linux_aarch64.yml</code>, <code class="language-plaintext highlighter-rouge">build_wheels_linux_x86.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_ci.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_benchmark_cpu.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_benchmark_cuda.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_benchmark_rocm.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_ci_cpu.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_ci_cuda.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_ci_genai_generic_infra.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_ci_rocm.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_docs.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_lint.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_pip.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_release_cpu.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_release_cuda.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_release_genai.yml</code>, <code class="language-plaintext highlighter-rouge">fbgemm_gpu_torchrec_ci_cpu.yml</code>. <code class="language-plaintext highlighter-rouge">grep -ril riscv</code> across this directory, plus a full-repository <code class="language-plaintext highlighter-rouge">git grep -i riscv</code> and a full <code class="language-plaintext highlighter-rouge">git ls-tree -r</code> filename scan (for a <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, or any riscv-named file), each returned <strong>zero matches</strong>.</p>
 
-<p>The primary CI (<code class="language-plaintext highlighter-rouge">fbgemm_ci.yml</code>) matrix:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{ arch: x86, instance: "linux.12xlarge" }
-{ arch: arm, instance: "linux.arm64.m7g.4xlarge" }
-</code></pre></div></div>
-
-<p>The CPU wheel build matrix covers <code class="language-plaintext highlighter-rouge">build_wheels_linux_x86.yml</code> and <code class="language-plaintext highlighter-rouge">build_wheels_linux_aarch64.yml</code>. No QEMU emulation jobs exist for any architecture.</p>
+<p>The only architecture-specific CI variants are x86 (<code class="language-plaintext highlighter-rouge">build_wheels_linux_x86.yml</code>, <code class="language-plaintext highlighter-rouge">build_wheels_genai_linux_x86.yml</code>) and aarch64 (<code class="language-plaintext highlighter-rouge">build_wheels_linux_aarch64.yml</code>, <code class="language-plaintext highlighter-rouge">build_wheels_genai_linux_aarch64.yml</code>), driven by a reusable <code class="language-plaintext highlighter-rouge">pytorch/test-infra</code> matrix generator (<code class="language-plaintext highlighter-rouge">os: linux-aarch64</code>, <code class="language-plaintext highlighter-rouge">runner-fleet: osdc</code>). The primary CI (<code class="language-plaintext highlighter-rouge">fbgemm_ci.yml</code>) matrix runs <code class="language-plaintext highlighter-rouge">{ arch: x86, instance: "linux.12xlarge" }</code> and <code class="language-plaintext highlighter-rouge">{ arch: arm, instance: "linux.arm64.m7g.4xlarge" }</code>.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -788,7 +753,7 @@ cmake --build . --parallel
     <tr>
       <td>Wheel build CI</td>
       <td>Yes</td>
-      <td>Yes (aarch64 workflow exists)</td>
+      <td>Yes</td>
       <td>No</td>
     </tr>
     <tr>
@@ -799,8 +764,8 @@ cmake --build . --parallel
     </tr>
     <tr>
       <td>Native hardware runner</td>
-      <td>Yes (x86 AWS)</td>
-      <td>Yes (Graviton AWS)</td>
+      <td>Yes</td>
+      <td>Yes (ARM64)</td>
       <td>No</td>
     </tr>
     <tr>
@@ -817,16 +782,8 @@ cmake --build . --parallel
     </tr>
   </tbody>
 </table></div>
-<h3 id="72-rise-project-involvement">
-  
-  
-    <a href="#72-rise-project-involvement" class="anchor-heading" aria-labelledby="72-rise-project-involvement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.2 RISE Project Involvement
-  
-  
-</h3>
-    
 
-<p>FBGEMM does not appear in any RISE project blog post, project page, wiki, or wheel builder listing. The RISE wheel builder (riseproject.gitlab.io) does not list fbgemm or fbgemm-gpu. GitHub API search <code class="language-plaintext highlighter-rouge">FBGEMM org:riseproject-dev</code> returns 0 results.</p><hr />
+<p><strong>RISE Project involvement:</strong> none. FBGEMM does not appear on <a href="https://riseproject.dev">riseproject.dev</a>, in the <a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel builder</a> (80+ packages checked, FBGEMM absent), or in the <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub org (26 repos reviewed, none FBGEMM-related; <code class="language-plaintext highlighter-rouge">search_repositories query="FBGEMM org:riseproject-dev"</code> returns 0 results). RISE’s <a href="https://riseproject.dev">RISC-V Runners</a> (Scaleway EM-RV1, <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>) are used for general PyTorch CI but have no FBGEMM-specific usage. RISE’s stated investment areas are PyTorch, Llama.cpp, IREE, oneDNN, and OpenBLAS – FBGEMM is not among them.</p><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -846,49 +803,49 @@ cmake --build . --parallel
   </thead>
   <tbody>
     <tr>
-      <td>PyPI (<code class="language-plaintext highlighter-rouge">fbgemm-gpu</code>)</td>
+      <td>PyPI (<code class="language-plaintext highlighter-rouge">fbgemm-gpu</code>, the actual upstream package name)</td>
       <td>No</td>
-      <td>All 5 wheels in v1.7.0 are <code class="language-plaintext highlighter-rouge">manylinux_2_28_x86_64</code> only. This holds across all 10 published releases (v0.8.0 through v1.7.0).</td>
+      <td>Every release checked programmatically from 0.0.1 through the latest 1.9.0: wheels exist only as <code class="language-plaintext highlighter-rouge">manylinux_2_28_x86_64</code> for CPython 3.10-3.14. No riscv64 wheel has ever been published.</td>
     </tr>
     <tr>
       <td>PyPI (<code class="language-plaintext highlighter-rouge">fbgemm</code>)</td>
       <td>No</td>
-      <td>HTTP 404 – package does not exist.</td>
+      <td><code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/fbgemm/json</code> returns HTTP 404 – this package name does not exist.</td>
     </tr>
     <tr>
-      <td>GitHub Releases</td>
+      <td>GitHub tags/releases</td>
       <td>No</td>
-      <td>Releases v1.3.0 through v1.7.0 contain only source tarballs (2 default GitHub assets each). No binary assets of any kind.</td>
+      <td>Tags through v1.9.0 exist (<code class="language-plaintext highlighter-rouge">v1.9.0</code>, <code class="language-plaintext highlighter-rouge">v1.8.0</code>, <code class="language-plaintext highlighter-rouge">v1.7.0</code>, <code class="language-plaintext highlighter-rouge">v1.6.0</code>, <code class="language-plaintext highlighter-rouge">v1.5.0-rc3</code>, etc.); no riscv64 build artifact identified in any release.</td>
     </tr>
     <tr>
       <td>RISE wheel builder</td>
       <td>No</td>
-      <td>Not listed.</td>
+      <td><code class="language-plaintext highlighter-rouge">https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/fbgemm-gpu/</code> 302-redirects straight through to upstream PyPI – RISE has no custom riscv64 build for this package.</td>
     </tr>
     <tr>
-      <td>Ubuntu 24.04 (noble)</td>
+      <td>Ubuntu 26.04 (resolute)</td>
       <td>No</td>
-      <td>Zero results for “FBGEMM” in Ubuntu package search.</td>
+      <td><code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> search for “fbgemm” returns “Sorry, your search gave no results” for suite <code class="language-plaintext highlighter-rouge">resolute</code>, all sections, all architectures. Alternate spellings (<code class="language-plaintext highlighter-rouge">python3-fbgemm</code>, <code class="language-plaintext highlighter-rouge">fbgemm-gpu</code>, <code class="language-plaintext highlighter-rouge">python3-fbgemm-gpu</code>) also return no results.</td>
     </tr>
     <tr>
       <td>Debian (any suite)</td>
       <td>No</td>
-      <td>HTTP 404 on Debian tracker; “No packages found” in package search across all suites.</td>
+      <td>HTTP 404 on the Debian package tracker; “No packages found” across all suites.</td>
     </tr>
     <tr>
-      <td>Arch Linux RISC-V</td>
+      <td>Arch Linux (mainline or RISC-V port)</td>
       <td>No</td>
-      <td>Not found in archriscv.felixc.at index.</td>
+      <td>Official Arch package DB (<code class="language-plaintext highlighter-rouge">archlinux.org/packages/search/json/?name=fbgemm</code>) returns <code class="language-plaintext highlighter-rouge">{"results": [], "count": 0}</code> on any architecture – FBGEMM is not packaged standalone, it is vendored inside PyTorch’s build. The Arch RISC-V site (<code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code>) has a non-functional/decorative search field and cannot be cited as independent evidence either way.</td>
     </tr>
     <tr>
       <td>Fedora</td>
-      <td>Data not available: Fedora package search was not checked.</td>
+      <td>Data not available: Fedora package search was not checked in this research pass.</td>
       <td> </td>
     </tr>
   </tbody>
 </table></div>
 
-<p>To use FBGEMM on riscv64 today, a user must build from source, accept the scalar/autovec-only fallback (no GEMM JIT), and patch the dispatch table to avoid the <code class="language-plaintext highlighter-rouge">throw std::runtime_error</code> on GEMM calls. No pre-built path exists.</p><hr />
+<p>There is no path to a working riscv64 FBGEMM binary today through any distribution channel. A user attempting to build FBGEMM from source on riscv64 will encounter the link failure documented in section 4.3 before reaching any runtime dispatch question.</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -897,20 +854,13 @@ cmake --build . --parallel
   
 </h2>
     
-<h3 id="91-summary-table">
-  
-  
-    <a href="#91-summary-table" class="anchor-heading" aria-labelledby="91-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 Summary Table
-  
-  
-</h3>
-    
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
+      <th>Criticality</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
       <th>riscv64 Release</th>
@@ -920,82 +870,84 @@ cmake --build . --parallel
   <tbody>
     <tr>
       <td>asmjit</td>
-      <td>JIT code generation for all kernel targets</td>
-      <td>Compiles (no-op)</td>
-      <td>No</td>
-      <td>No</td>
-      <td>Yes – primary blocker; no RVV backend</td>
+      <td>Runtime dependency – JIT code generation for all kernel targets, including autovec</td>
+      <td>Critical</td>
+      <td>Compiles (no-op/inert build; present in Ubuntu resolute/riscv64 as <code class="language-plaintext highlighter-rouge">libasmjit-dev</code>)</td>
+      <td>No functional backend to test</td>
+      <td>No dedicated release; ships as a source-built distro package, functionally inert on this arch</td>
+      <td>Yes – primary blocker. Roadmap lists RISC-V “Pending / Not supported”; issues <a href="https://github.com/asmjit/asmjit/issues/393">#393</a> and <a href="https://github.com/asmjit/asmjit/issues/479">#479</a> both unanswered by maintainers. No RVV code-generation backend exists.</td>
     </tr>
     <tr>
       <td>cpuinfo</td>
-      <td>CPU feature detection, ISA dispatch</td>
-      <td>Partial (builds, skeleton)</td>
-      <td>Build-only</td>
-      <td>No</td>
-      <td>Partial – ISA detection incomplete</td>
+      <td>Runtime dependency – CPU/ISA feature detection populating the dispatch table</td>
+      <td>Critical</td>
+      <td>Builds; has real <code class="language-plaintext highlighter-rouge">src/riscv/</code> runtime-detection code (unlike asmjit)</td>
+      <td>Build-only in CI (QEMU); uarch always returns “unknown,” cache topology empty, only 9 of ~28 available hwprobe ISA extensions surfaced</td>
+      <td>No GitHub Releases (source-only); present in Debian sid and Ubuntu Noble/Questing/Resolute as <code class="language-plaintext highlighter-rouge">libcpuinfo0</code></td>
+      <td>Secondary blocker – functionally incomplete but not the primary obstacle. Tracking issue <a href="https://github.com/pytorch/cpuinfo/issues/124">pytorch/cpuinfo#124</a> open since 2022; PR <a href="https://github.com/pytorch/cpuinfo/pull/397">#397</a> (filed 2026-06-22) would close most gaps but is unreviewed and stalled.</td>
     </tr>
     <tr>
-      <td>OpenMP</td>
-      <td>Parallel threading</td>
+      <td>GCC</td>
+      <td>Build dependency – primary supported compiler</td>
+      <td>Critical</td>
+      <td>Full riscv64 support upstream (GCC&gt;=14 required elsewhere in the PyTorch riscv64 ecosystem for RVV target support, per the RISE blog); FBGEMM’s own documented baseline is GCC 10.4.0 for ABI compatibility</td>
       <td>Full</td>
+      <td>Distro packages available</td>
+      <td>No – compiler itself is not a riscv64 blocker</td>
+    </tr>
+    <tr>
+      <td>LLVM</td>
+      <td>Build dependency – alternate supported compiler (Clang 16.0.6 minimum per FBGEMM docs)</td>
+      <td>Critical</td>
+      <td>Full riscv64 support upstream</td>
       <td>Full</td>
       <td>Distro packages available</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>Python (build-time)</td>
-      <td>CMake configure helper</td>
+      <td>CMake</td>
+      <td>Build dependency – build configuration (&gt;=3.21 required)</td>
+      <td>Critical</td>
+      <td>Full riscv64 support</td>
       <td>Full</td>
-      <td>N/A</td>
-      <td>N/A</td>
+      <td>Distro packages available</td>
+      <td>No – the blocker is FBGEMM’s own <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> processor-detection logic, not CMake itself</td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td>Build dependency – build-time configure helper and <code class="language-plaintext highlighter-rouge">fbgemm_gpu</code> bindings</td>
+      <td>Critical</td>
+      <td>Full riscv64 support</td>
+      <td>Full</td>
+      <td>Distro packages available</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>GTest</td>
-      <td>Unit test framework</td>
+      <td>OpenMP</td>
+      <td>Runtime dependency – parallel threading, resolved via system <code class="language-plaintext highlighter-rouge">find_package</code>, not a vendored submodule</td>
+      <td>Optional</td>
+      <td>Full (mature via GCC/Clang libomp on riscv64)</td>
       <td>Full</td>
-      <td>Mostly (one flaky test)</td>
-      <td>N/A</td>
+      <td>Distro packages available</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>MKL (bench only)</td>
-      <td>BLAS backend for benchmarks</td>
-      <td>Not available (Intel product)</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>No (bench only)</td>
-    </tr>
-    <tr>
-      <td>KleidiAI</td>
-      <td>ARM micro-kernels</td>
-      <td>N/A (AArch64 guard)</td>
-      <td>N/A</td>
+      <td>googletest</td>
+      <td>Test dependency – unit test framework (vendored submodule)</td>
+      <td>Optional</td>
+      <td>Full</td>
+      <td>Mostly (one flaky test reported in prior testing)</td>
       <td>N/A</td>
       <td>No</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="92-asmjit-primary-blocker">
-  
-  
-    <a href="#92-asmjit-primary-blocker" class="anchor-heading" aria-labelledby="92-asmjit-primary-blocker"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 asmjit (Primary Blocker)
-  
-  
-</h3>
-    
 
-<p><a href="https://github.com/asmjit/asmjit">asmjit</a> is linked to every FBGEMM build target. Its architecture support is x86/x64 and AArch64. The <a href="https://asmjit.com/roadmap.html">asmjit roadmap</a> lists RISC-V as “Pending” with no timeline and no assigned maintainer. asmjit issue <a href="https://github.com/asmjit/asmjit/issues/332">#332</a> (closed as a question) confirms no concrete plan exists. On riscv64, asmjit compiles but cannot emit any instructions – all JIT paths are non-functional. FBGEMM’s GEMM kernels depend on JIT emission; without a working asmjit RVV backend, they cannot execute. This is not a performance gap – it is a hard functional blocker.</p>
-<h3 id="93-cpuinfo">
-  
-  
-    <a href="#93-cpuinfo" class="anchor-heading" aria-labelledby="93-cpuinfo"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 cpuinfo
-  
-  
-</h3>
-    
+<p><strong>asmjit deep-dive:</strong> <a href="https://github.com/asmjit/asmjit">asmjit</a> is linked into every FBGEMM build target. Its supported code-generation backends are x86/x64 and AArch64 only. The <a href="https://asmjit.com/roadmap.html">asmjit roadmap</a> lists RISC-V as “Pending,” with no timeline and no assigned maintainer, confirmed current as of 2026-09-30. FBGEMM’s GEMM kernels depend on JIT emission at runtime; without a working asmjit RVV backend, JIT-based GEMM cannot execute on riscv64 under any circumstance, independent of FBGEMM’s own code changes. This is FBGEMM’s single largest riscv64 blocker and is prerequisite, out-of-tree work relative to FBGEMM itself.</p>
 
-<p><a href="https://github.com/pytorch/cpuinfo">pytorch/cpuinfo</a> has partial riscv64 support. PR #190 (merged Nov 2023) added skeleton support; PR #375 (merged Apr 2026) adds <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zfh()</code> and <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code>. CI runs build-only on riscv64 under QEMU – no functional tests. Uarch always returns “unknown.” Cache info is empty. Two open PRs (issue #148, PR #397) propose improved detection using Linux <code class="language-plaintext highlighter-rouge">hwprobe</code> and sysfs cache topology, but both lack reviewers. For FBGEMM, cpuinfo returning partial ISA data on riscv64 would cause fallback to scalar/autovec kernels – correct behavior, but the JIT crash occurs before ISA dispatch is reached.</p><hr />
+<p><strong>cpuinfo deep-dive:</strong> <a href="https://github.com/pytorch/cpuinfo">pytorch/cpuinfo</a> has genuine, if incomplete, riscv64 support (<code class="language-plaintext highlighter-rouge">src/riscv/</code> contains real detection code, unlike asmjit’s inert riscv64 build). CI builds on riscv64 under QEMU but does not execute functional tests. For FBGEMM specifically, cpuinfo returning partial ISA data on riscv64 would at most cause a fallback to scalar/autovec kernels – correct behavior in principle – but this path is moot today because the build does not link in the first place (section 4.3), and the JIT/dispatch-table gap would still be hit before cpuinfo’s incompleteness became the operative constraint.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">cutlass</code> fork (<code class="language-plaintext highlighter-rouge">jwfromm/cutlass</code>, CUDA-only), <code class="language-plaintext highlighter-rouge">composable_kernel</code> and <code class="language-plaintext highlighter-rouge">hipify_torch</code> (ROCm-only), and <code class="language-plaintext highlighter-rouge">nlohmann/json</code> (generic JSON, not architecture-sensitive) are also vendored via <code class="language-plaintext highlighter-rouge">.gitmodules</code> but never enter a riscv64 CPU build path and are excluded from the table above as out of scope.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1026,17 +978,19 @@ cmake --build . --parallel
   <tbody>
     <tr>
       <td><a href="https://github.com/pytorch/FBGEMM/issues/2101">#2101</a></td>
-      <td>“How <code class="language-plaintext highlighter-rouge">partition_avx512</code> is auto-tuned?”</td>
-      <td>Open, unanswered</td>
-      <td>N/A (community question)</td>
-      <td>Only RISC-V mention in the repository. User <code class="language-plaintext highlighter-rouge">condy0919</code> was porting fp16 GEMM to RISC-V and hit the AVX512-specific static partition lookup table. No maintainer response. The partition table is hardcoded for AVX-512 register counts and would need a separate table auto-tuned for RVV LMUL widths.</td>
+      <td>“porting fp16 multiplication of fbgemm to riscv” / “How <code class="language-plaintext highlighter-rouge">partition_avx512</code> is auto-tuned?”</td>
+      <td>Open, unanswered since Oct 2023</td>
+      <td>N/A (community question, not a tracked bug)</td>
+      <td>The only RISC-V-related item in the repository’s history. The user hit the AVX512-specific static partition-size lookup table while attempting to port fp16 GEMM to RISC-V. The partition table is hardcoded for AVX-512 register geometry and would need a separate table auto-tuned for RVV LMUL widths. No maintainer response.</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="112-architecture-porting-related-non-risc-v">
+
+<p>No open GitHub issue in pytorch/FBGEMM references RISC-V/riscv64 for correctness, NaN/floating-point, or performance problems – confirmed by direct <code class="language-plaintext highlighter-rouge">search_issues</code> queries (“riscv64 performance,” “riscv64 bug,” “riscv nan floating,” “riscv,” “label:riscv”), all scoped to <code class="language-plaintext highlighter-rouge">repo:pytorch/FBGEMM</code>, all returning zero genuine matches.</p>
+<h3 id="112-architecture-porting-related-non-risc-v-informative-context">
   
   
-    <a href="#112-architecture-porting-related-non-risc-v" class="anchor-heading" aria-labelledby="112-architecture-porting-related-non-risc-v"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Architecture-Porting Related (Non-RISC-V)
+    <a href="#112-architecture-porting-related-non-risc-v-informative-context" class="anchor-heading" aria-labelledby="112-architecture-porting-related-non-risc-v-informative-context"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Architecture-Porting Related (Non-RISC-V, Informative Context)
   
   
 </h3>
@@ -1048,7 +1002,6 @@ cmake --build . --parallel
       <th>ID</th>
       <th>Title</th>
       <th>Status</th>
-      <th>Severity</th>
       <th>Relevance to RISC-V</th>
     </tr>
   </thead>
@@ -1057,36 +1010,32 @@ cmake --build . --parallel
       <td><a href="https://github.com/pytorch/FBGEMM/pull/5779">PR #5779</a></td>
       <td>Implement PackDepthwiseConvMatrix in NEON + deprecate aarch64 compat layers</td>
       <td>Merged May 2026</td>
-      <td>–</td>
-      <td>Removes the compatibility shims that non-x86 platforms previously relied on for compilation. After this PR, riscv64 encounters compile failures without its own kernel path.</td>
+      <td>Removes compatibility shims non-x86 platforms previously relied on for compilation. After this PR, a hypothetical riscv64 port faces the same problem the AVX2-symbol-guard defect in section 4.3 already demonstrates: no generic fallback path is maintained for architectures without dedicated kernels.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/pytorch/FBGEMM/pull/5921">PR #5921</a></td>
       <td>Remove aarch64 compatibility layers</td>
       <td>Merged June 2026</td>
-      <td>–</td>
-      <td>Completes compat-layer removal. Codebase is now strictly x86+MKL or aarch64+armpl. No generic path remains for other architectures in the core.</td>
+      <td>Codebase is now strictly x86+MKL or aarch64+ArmPL in its maintained paths; no generic path remains for other architectures in the core.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/pytorch/FBGEMM/pull/5813">PR #5813</a></td>
       <td>Fix aarch64+gcc OSS build break</td>
       <td>Merged June 2026</td>
-      <td>–</td>
-      <td>Required days after #5779 due to ISA-specific intrinsics leaking into generic code. Illustrates the fragility of new-architecture ports – a RISC-V contributor would face the same and would need to self-maintain fixes.</td>
+      <td>Required days after #5779 due to ISA-specific intrinsics leaking into generic code – illustrates that new-architecture ports require active, ongoing maintenance, which a RISC-V port would need to self-supply.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/pytorch/FBGEMM/pull/5843">PR #5843</a></td>
       <td>Fix bf16 dequant: SVE 8-bit fallback, rounding docs, robust test</td>
-      <td>Closed (not merged) June 2026</td>
-      <td>Medium (correctness)</td>
-      <td>Demonstrates the dispatch-table correctness risk for any architecture without full kernel coverage: missing ISA specialization silently produces wrong bit patterns.</td>
+      <td>Closed, not merged, June 2026</td>
+      <td>Demonstrates the dispatch-table correctness risk described in section 6.3: a missing ISA specialization silently produces wrong bit patterns rather than failing loudly.</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="113-general-open-correctness-bugs">
+<h3 id="113-general-open-correctness-bugs-not-risc-v-specific">
   
   
-    <a href="#113-general-open-correctness-bugs" class="anchor-heading" aria-labelledby="113-general-open-correctness-bugs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 General Open Correctness Bugs
+    <a href="#113-general-open-correctness-bugs-not-risc-v-specific" class="anchor-heading" aria-labelledby="113-general-open-correctness-bugs-not-risc-v-specific"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 General Open Correctness Bugs (Not RISC-V Specific)
   
   
 </h3>
@@ -1102,6 +1051,12 @@ cmake --build . --parallel
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td><a href="https://github.com/pytorch/FBGEMM/issues/4679">#4679</a></td>
+      <td>“Various problems on arm64”</td>
+      <td>Open (filed 2025-08-12)</td>
+      <td>High – SVE kernel correctness, ISA-detection macro mismatches</td>
+    </tr>
     <tr>
       <td><a href="https://github.com/pytorch/FBGEMM/issues/5326">#5326</a></td>
       <td>Incorrect (zeroed) embedding_lookup results when embedding_dim &gt; 1024</td>
@@ -1134,99 +1089,103 @@ cmake --build . --parallel
 <p><strong>Technical blockers:</strong></p>
 
 <ol>
-  <li>
-    <p>asmjit has no RVV backend. This is not an FBGEMM issue – it is a dependency project decision. Filing an issue or contributing an RVV backend to asmjit is prerequisite work, independent of FBGEMM itself, requiring separate effort and a separate upstream acceptance process.</p>
-  </li>
-  <li>
-    <p>The <code class="language-plaintext highlighter-rouge">inst_set_t</code> enum and all dispatch tables must be extended. Every call site that dispatches on architecture (GEMM, SpMDM, quantization, transpose) has a <code class="language-plaintext highlighter-rouge">default</code> branch that throws. Adding RVV requires a new enum value and a new branch in each dispatch function.</p>
-  </li>
-  <li>
-    <p>Static partition tables in the FP16 GEMM path (<code class="language-plaintext highlighter-rouge">cblas_gemm_compute</code>) are hardcoded for AVX-512 register geometry. A RISC-V port requires either auto-tuning a new table for RVV LMUL configurations or replacing the static table with runtime-determined tiling.</p>
-  </li>
-  <li>
-    <p>Recent removal of compatibility shims (PRs #5779, #5921, June 2026) means the codebase is now more hostile to new architectures than it was in 2023 when the only community porting attempt occurred.</p>
-  </li>
+  <li>asmjit has no RVV code-generation backend, and this is a dependency-project decision, not an FBGEMM one. An RVV backend for asmjit is prerequisite work, entirely independent of FBGEMM, requiring its own upstream acceptance process at <a href="https://github.com/asmjit/asmjit">asmjit/asmjit</a>.</li>
+  <li>FBGEMM’s generic (all-platform) object files reference AVX2 symbols under an <code class="language-plaintext highlighter-rouge">__aarch64__</code>-only exclusion guard, producing a confirmed undefined-reference link failure on riscv64 as shipped (section 4.3). This must be fixed in FBGEMM itself before any other riscv64 work is meaningful.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">inst_set_t</code> enum and every dispatch site that switches on it must be extended with an RVV value; each currently has a <code class="language-plaintext highlighter-rouge">default</code> branch that throws.</li>
+  <li>Static partition tables in the FP16 GEMM path (<code class="language-plaintext highlighter-rouge">partition_avx512</code>) are hardcoded for AVX-512 register geometry (per issue #2101) and would need a separate RVV LMUL-aware table or a runtime-determined tiling scheme.</li>
+  <li>The recent removal of AArch64 compatibility shims (PRs #5779, #5921, merged May-June 2026) means the codebase is now structurally less hospitable to a new generic/fallback architecture path than it was in 2023, when the only community porting attempt (#2101) occurred.</li>
 </ol>
 
 <p><strong>Organizational blockers:</strong></p>
 
 <ol>
-  <li>
-    <p>Meta has no expressed interest in RISC-V. The internal-sync governance model means a RISC-V port funded externally would arrive as external PRs, which have no prioritized review path.</p>
-  </li>
-  <li>
-    <p>FBGEMM is GPU-focused in its active development trajectory (CUDA, ROCm, MTIA). The CPU library is maintained but not receiving new architecture investment beyond ARM.</p>
-  </li>
-  <li>
-    <p>No RISE project involvement. There is no working group, funding, or committed contributor organization driving this work.</p>
-  </li>
+  <li>Meta has expressed no interest in RISC-V for FBGEMM. The internally-synced (<code class="language-plaintext highlighter-rouge">meta-codesync[bot]</code>) governance model means an externally funded RISC-V port would arrive as unsolicited external PRs with no established review priority.</li>
+  <li>FBGEMM’s active development trajectory is GPU-focused (CUDA, ROCm, MTIA); the CPU library receives maintenance but no new-architecture investment beyond ARM.</li>
+  <li>No RISE project involvement of any kind exists for FBGEMM – confirmed absent from RISE’s blog, wheel builder, and GitHub org (section 7). There is no working group, funding, or committed contributor driving riscv64 work on this project specifically.</li>
 </ol>
 
-<p><strong>Acceptance probability:</strong> Low for a complete port in the near term. A minimal build enablement patch (prevent the cmake fall-through from producing a silently broken binary) has a higher acceptance probability. Full RVV kernel contribution faces the same barriers as any large new-architecture patch to a Meta-controlled project.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability:</strong> Low for a complete functional port in the near term. A minimal patch that prevents the current link failure and replaces the dispatch-table <code class="language-plaintext highlighter-rouge">throw</code> with a safe scalar/autovec fallback has materially higher acceptance probability than full RVV kernel contribution, which faces the same review-priority barriers as any large new-architecture patch to a Meta-controlled project, compounded by the prerequisite, out-of-tree asmjit dependency.</p><hr />
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>The minimum required to run any FBGEMM operation on riscv64 without crashing:</p>
 
 <ul>
-  <li>Patch the dispatch table <code class="language-plaintext highlighter-rouge">default</code> branch to fall through to scalar/autovec rather than throw. This unblocks embedding lookup (SpMDM autovec path) on riscv64.</li>
-  <li>Fix CMakeLists.txt to explicitly recognize riscv64 and define a compiler flag set, even if only <code class="language-plaintext highlighter-rouge">-march=rv64gc</code> for the scalar build.</li>
-  <li>Disable the JIT path (asmjit) for riscv64 at compile time to avoid linking a non-functional code generator.</li>
+  <li><strong>Color:</strong> red (confirmed-broken-link-failure)</li>
+  <li><strong>Release provider:</strong> none</li>
+  <li><strong>Optimization level:</strong> absent</li>
 </ul>
 
-<p>This does not enable optimized GEMM – it enables non-crashing execution on SpMDM workloads only.</p>
+<p>FBGEMM has zero riscv64 support and, per direct source inspection, would fail to even link on riscv64 as shipped. None of the 22 <a href="https://github.com/pytorch/FBGEMM/tree/main/.github/workflows">GitHub Actions workflows</a> reference riscv in any form (only x86 and aarch64 CI variants exist), no riscv64 wheel has ever been published on <a href="https://pypi.org/pypi/fbgemm-gpu/json">PyPI</a> (x86_64-only across all releases 0.0.1-1.9.0), no distro (Ubuntu resolute, Debian, Arch RISC-V) ships a package, and <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>’s <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> detection has no riscv64 branch at all. Beyond the absence of any support, direct code review of <code class="language-plaintext highlighter-rouge">src/FbgemmFP16.cc</code>/<code class="language-plaintext highlighter-rouge">src/fp32/FbgemmFP32.cc</code> found AVX2 kernel-symbol references guarded only by <code class="language-plaintext highlighter-rouge">#if !defined(__aarch64__)</code> (not by an x86-only check), meaning on riscv64 the generic object file references AVX2 symbols that are never compiled/defined, producing an undefined-reference link failure – a confirmed, documented build-blocking defect rather than merely untested/absent CI, which is why this clears the bar for red rather than orange. This is corroborated by the third-party <a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE Project blog</a>, which states PyTorch’s riscv64 build ships with no quantization backend at all because neither FBGEMM nor QNNPACK supports RISC-V.</p>
 
-<p>For full GEMM functionality, an RVV backend for asmjit is required first. That is prerequisite work outside FBGEMM.</p>
-<h3 id="132-performance-optimization">
+<p><strong>Pending work that could change the grade:</strong> None found. No open PR or tracking issue for a riscv64 port exists in pytorch/FBGEMM, and there is no RISE Project involvement (absent from RISE’s blog posts about FBGEMM specifically as a target, its wheel builder listing, and its GitHub org). The only community signal is the unanswered 2023 issue <a href="https://github.com/pytorch/FBGEMM/issues/2101">#2101</a>, “porting fp16 multiplication of fbgemm to riscv,” with no maintainer response. Given FBGEMM’s JIT kernel-generation approach depends on asmjit, which lists RISC-V as “Pending / Not supported” on its own roadmap, a functional (non-link-breaking) riscv64 build would require both an FBGEMM-side dispatch/build fix and prerequisite asmjit RISC-V backend work.</p><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has not funded or performed any FBGEMM-specific work: it is absent from RISE’s blog posts (aside from a one-line limitation note), its wheel builder, and its GitHub org (section 7). Nothing below duplicates existing RISE investment, because none exists for this project.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>No RVV microkernels exist as a starting point. The AArch64 NEON work provides a structural template: separate <code class="language-plaintext highlighter-rouge">.cc</code> files per kernel, intrinsic-based, with ISA guards in the dispatch. The AArch64 port took sustained Meta engineer effort over multiple quarters. An equivalent RVV port (covering FP16 GEMM, INT8 GEMM, SpMDM, quantization utilities) is a multi-quarter effort.</p>
+<p>The minimum required to get FBGEMM to link and run without crashing on riscv64:</p>
 
-<p>The partition auto-tuning problem (issue #2101) adds scope: RVV kernels need a separate table auto-tuned for RVV register file characteristics (LMUL, VLEN), which requires a tuning harness and hardware or high-fidelity emulation.</p>
-<h3 id="133-cicd-infrastructure">
+<ul>
+  <li>Fix the AVX2-symbol-guard defect in <code class="language-plaintext highlighter-rouge">src/FbgemmFP16.cc</code>/<code class="language-plaintext highlighter-rouge">src/fp32/FbgemmFP32.cc</code>/<code class="language-plaintext highlighter-rouge">include/fbgemm/FbgemmFPCommon.h</code> so the generic build path excludes non-x86/non-aarch64 architectures, or define <code class="language-plaintext highlighter-rouge">FBGEMM_FP16_FALLBACK_TO_REF_KERNEL</code>/<code class="language-plaintext highlighter-rouge">FBGEMM_FP32_FALLBACK_TO_REF_KERNEL</code> for riscv64 (section 4.3). This is the confirmed link-failure blocker and must be fixed first.</li>
+  <li>Add an explicit riscv64 branch to <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>’s <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> detection, defining a baseline compiler flag set (e.g. <code class="language-plaintext highlighter-rouge">-march=rv64gc</code>).</li>
+  <li>Patch the dispatch table <code class="language-plaintext highlighter-rouge">default</code> branch to fall through to scalar/autovec rather than <code class="language-plaintext highlighter-rouge">throw std::runtime_error</code>, unblocking the <code class="language-plaintext highlighter-rouge">EmbeddingSpMDMAutovec.cc</code> path for SpMDM workloads.</li>
+  <li>Disable the asmjit-based JIT path for riscv64 at compile time to avoid linking a code generator with no functional backend for this target.</li>
+</ul>
+
+<p>This does not enable optimized GEMM – it enables non-crashing execution limited to SpMDM (embedding lookup) workloads. Full GEMM functionality additionally requires an asmjit RVV backend, which is prerequisite work outside FBGEMM’s own repository.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>RISE GitHub Actions runners for riscv64 are available (per RISE blog, free for open-source projects). Adding a riscv64 CI job to <code class="language-plaintext highlighter-rouge">fbgemm_ci.yml</code> is low effort once a working build exists. The prerequisite is the functional enablement work above.</p>
-<h3 id="134-ecosystem-enablement">
+<p>No RVV microkernels exist as a starting point anywhere in FBGEMM. The AArch64 NEON/SVE work provides a structural template (separate <code class="language-plaintext highlighter-rouge">.cc</code> files per kernel, intrinsic-based, ISA guards in the dispatch table) but took sustained Meta engineer effort over multiple quarters to reach its current partial state. An equivalent RVV port covering FP16 GEMM, INT8 GEMM, SpMDM, and quantization utilities is a multi-quarter effort. The partition auto-tuning problem raised in issue #2101 adds scope: RVV kernels need a table auto-tuned for RVV register-file characteristics (LMUL, VLEN), requiring a tuning harness and either RISC-V hardware or high-fidelity emulation.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>FBGEMM does not have its own downstream package ecosystem. It is a dependency of PyTorch. Enabling FBGEMM on riscv64 is prerequisite to fully enabling PyTorch CPU quantization on riscv64. The inverse is not true – PyTorch can build on riscv64 with FBGEMM disabled.</p>
-<h3 id="135-summary-table">
+<p>RISE GitHub Actions runners for riscv64 (Scaleway EM-RV1, <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>) exist and are available to open-source projects generally, per the RISE blog, but are not currently used by FBGEMM in any capacity. Adding a riscv64 CI job to <code class="language-plaintext highlighter-rouge">fbgemm_ci.yml</code> is low effort once a working build exists; it is gated entirely on the functional-enablement work in 14.1.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>FBGEMM has no downstream package ecosystem of its own – it is consumed as a dependency of PyTorch, not depended upon by a wide plugin/package ecosystem (see also the omission of Section 10). Enabling FBGEMM on riscv64 is prerequisite to full PyTorch CPU quantization support on riscv64, as documented directly by the <a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE blog post</a>: PyTorch’s riscv64 build today has no quantization backend specifically because of this gap. The inverse is not true – PyTorch builds on riscv64 today with FBGEMM disabled/unavailable.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1245,8 +1204,8 @@ cmake --build . --parallel
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Patch dispatch table: <code class="language-plaintext highlighter-rouge">default</code> branch falls through to scalar/autovec instead of throwing; disable JIT path for riscv64</td>
-      <td>2</td>
+      <td>Fix AVX2-symbol-guard link failure in FbgemmFP16.cc/FbgemmFP32.cc/FbgemmFPCommon.h</td>
+      <td>1</td>
       <td>FBGEMM contributor</td>
       <td>Critical</td>
     </tr>
@@ -1259,10 +1218,17 @@ cmake --build . --parallel
     </tr>
     <tr>
       <td>Functional</td>
-      <td>asmjit RVV backend (prerequisite – separate project)</td>
+      <td>Patch dispatch table: <code class="language-plaintext highlighter-rouge">default</code> branch falls through to scalar/autovec instead of throwing; disable JIT path for riscv64</td>
+      <td>2</td>
+      <td>FBGEMM contributor</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>asmjit RVV backend (prerequisite, separate upstream project)</td>
       <td>40-80</td>
       <td>asmjit community / sponsored contributor</td>
-      <td>Critical (blocks JIT GEMM)</td>
+      <td>Critical (blocks all JIT GEMM)</td>
     </tr>
     <tr>
       <td>Performance</td>
@@ -1301,7 +1267,7 @@ cmake --build . --parallel
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>riscv64 wheel build in <code class="language-plaintext highlighter-rouge">build_wheels_linux_riscv64.yml</code></td>
+      <td>riscv64 wheel build workflow</td>
       <td>2</td>
       <td>CI engineer</td>
       <td>Medium</td>
@@ -1309,18 +1275,8 @@ cmake --build . --parallel
   </tbody>
 </table></div>
 
-<p>Total for minimal non-crashing build: approximately 3 person-weeks (excluding asmjit).
-Total for functional + partial RVV performance: approximately 63 person-weeks (excluding asmjit RVV backend, which is the dominant unknown).</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p>Total for a minimal non-crashing build (excluding asmjit RVV backend): approximately 4 person-weeks.
+Total for functional enablement plus partial RVV performance work (excluding asmjit RVV backend, the dominant unknown at 40-80 person-weeks): approximately 64 person-weeks.</p><hr />
 <h2 id="15-references">
   
   
@@ -1332,22 +1288,37 @@ Total for functional + partial RVV performance: approximately 63 person-weeks (e
 
 <ul>
   <li><a href="https://github.com/pytorch/FBGEMM">pytorch/FBGEMM repository</a></li>
-  <li><a href="https://github.com/pytorch/FBGEMM/issues/2101">FBGEMM issue #2101 – “How partition_avx512 is auto-tuned?” (RISC-V porting question, open, unanswered)</a></li>
+  <li><a href="https://github.com/pytorch/FBGEMM/tree/main/.github/workflows">FBGEMM .github/workflows directory (22 files, no riscv variant)</a></li>
+  <li><a href="https://github.com/pytorch/FBGEMM/issues/2101">FBGEMM issue #2101 – “porting fp16 multiplication of fbgemm to riscv” (open, unanswered)</a></li>
+  <li><a href="https://github.com/pytorch/FBGEMM/issues/4679">FBGEMM issue #4679 – “Various problems on arm64” (open)</a></li>
+  <li><a href="https://github.com/pytorch/FBGEMM/issues/3734">FBGEMM issue #3734 – “Arm64 CI on Github runners” (closed)</a></li>
   <li><a href="https://github.com/pytorch/FBGEMM/pull/5779">FBGEMM PR #5779 – Implement PackDepthwiseConvMatrix in NEON + deprecate aarch64 compat layers (merged May 2026)</a></li>
   <li><a href="https://github.com/pytorch/FBGEMM/pull/5921">FBGEMM PR #5921 – Remove aarch64 compatibility layers (merged June 2026)</a></li>
   <li><a href="https://github.com/pytorch/FBGEMM/pull/5813">FBGEMM PR #5813 – Fix aarch64+gcc OSS build break (merged June 2026)</a></li>
-  <li><a href="https://github.com/pytorch/FBGEMM/pull/5843">FBGEMM PR #5843 – Fix bf16 dequant: SVE 8-bit fallback (closed June 2026)</a></li>
+  <li><a href="https://github.com/pytorch/FBGEMM/pull/5843">FBGEMM PR #5843 – Fix bf16 dequant: SVE 8-bit fallback (closed, not merged, June 2026)</a></li>
+  <li><a href="https://github.com/pytorch/FBGEMM/pull/6377">FBGEMM PR #6377 – Add INT4 autovec test and benchmark harness (AArch64, not RISC-V)</a></li>
   <li><a href="https://github.com/pytorch/FBGEMM/issues/5326">FBGEMM issue #5326 – Incorrect embedding_lookup results when embedding_dim &gt; 1024 (open)</a></li>
   <li><a href="https://github.com/pytorch/FBGEMM/issues/5088">FBGEMM issue #5088 – Fix NAN for the prediction (open)</a></li>
   <li><a href="https://github.com/pytorch/FBGEMM/issues/5736">FBGEMM issue #5736 – Make float16/bfloat16 distinct types (open)</a></li>
-  <li><a href="https://pypi.org/project/fbgemm-gpu/">fbgemm-gpu on PyPI – v1.7.0, manylinux_2_28_x86_64 only</a></li>
-  <li><a href="https://asmjit.com/roadmap.html">asmjit roadmap – RISC-V listed as Pending</a></li>
-  <li><a href="https://github.com/asmjit/asmjit/issues/332">asmjit issue #332 – RISC-V support question (closed)</a></li>
+  <li><a href="https://pypi.org/pypi/fbgemm-gpu/json">fbgemm-gpu on PyPI – v1.9.0, manylinux_2_28_x86_64 only, across all releases 0.0.1-1.9.0</a></li>
+  <li><a href="https://asmjit.com/roadmap.html">asmjit roadmap – RISC-V listed as Pending / Not supported</a></li>
+  <li><a href="https://github.com/asmjit/asmjit/issues/393">asmjit issue #393 – “RISC-V port” (closed, unanswered)</a></li>
+  <li><a href="https://github.com/asmjit/asmjit/issues/479">asmjit issue #479 – “Question about port status for RISC-V” (closed, unanswered)</a></li>
   <li><a href="https://github.com/pytorch/cpuinfo">pytorch/cpuinfo repository</a></li>
-  <li><a href="https://riseproject.dev">RISE project website</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/issues/124">pytorch/cpuinfo issue #124 – riscv64 tracking issue (open since 2022)</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/397">pytorch/cpuinfo PR #397 – riscv64 hwprobe/vendor/cache improvements (filed 2026-06-22, unreviewed)</a></li>
+  <li><a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE Project blog – “PyTorch is available on riscv64!” (2026-08-18, Ludovic Henry, Qualcomm)</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Project wheel builder listing (FBGEMM absent)</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members page</a></li>
+  <li><a href="https://riseproject.dev">RISE Project homepage</a></li>
+  <li><a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">RISE Project blog – “Easy Installation of Binary Python Packages on riscv64 Devices” (no FBGEMM mention)</a></li>
+  <li><a href="https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/453148705/Project+RP013+Optimizing+PyTorch+ATen+Operators+for+High-Performance+RISC-V+Hardware">Project RP013 – Optimizing PyTorch ATen Operators for High-Performance RISC-V Hardware (RISE Confluence)</a></li>
   <li><a href="https://github.com/pytorch/FBGEMM/tree/main/fbgemm_gpu/docs/src/fbgemm/development/BuildInstructions.rst">FBGEMM build instructions (official)</a></li>
-  <li><a href="https://archriscv.felixc.at/">Arch Linux RISC-V package mirror</a></li>
+  <li><a href="https://github.com/pytorch/pytorch/tree/main/.ci/docker/ubuntu-cross-riscv">pytorch/pytorch riscv cross-compile Dockerfile (sibling repo, not FBGEMM)</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=fbgemm&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu package search – “fbgemm” in suite resolute (no results)</a></li>
   <li><a href="https://tracker.debian.org/pkg/fbgemm">Debian package tracker – fbgemm (404)</a></li>
+  <li><a href="https://archlinux.org/packages/search/json/?name=fbgemm">Arch Linux package search API – “fbgemm” (zero results, any architecture)</a></li>
+  <li><a href="https://archriscv.felixc.at/">Arch Linux RISC-V package mirror</a></li>
 </ul>
 
           
