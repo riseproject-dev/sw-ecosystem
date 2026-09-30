@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <code class="language-plaintext highlighter-rouge">&lt;ludovic.henry@qti.qualcomm.com&gt;</code>
-<strong>Date:</strong> 2026-07-20<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for linux-perf<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,17 +280,25 @@
 </h2>
     
 
-<p>linux-perf is not a standalone project. It is the Linux kernel’s performance analysis subsystem, comprising two components that must be considered separately:</p>
+<p>linux-perf is not a standalone project with its own repository, release cadence, or governance body. It is the Linux kernel’s performance-analysis subsystem, split across two components that must be evaluated separately:</p>
 
 <ul>
-  <li><strong>Kernel side:</strong> <code class="language-plaintext highlighter-rouge">kernel/events/</code>, <code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu*.c</code>, <code class="language-plaintext highlighter-rouge">arch/riscv/kernel/perf_*.c</code> – the <code class="language-plaintext highlighter-rouge">perf_event_open(2)</code> syscall implementation, hardware PMU drivers, and callchain infrastructure.</li>
-  <li><strong>Userspace tool:</strong> <code class="language-plaintext highlighter-rouge">tools/perf/</code> – the <code class="language-plaintext highlighter-rouge">perf</code> CLI and supporting libraries for record, report, stat, trace, kvm, probe, and script subcommands.</li>
+  <li><strong>Kernel side:</strong> <code class="language-plaintext highlighter-rouge">kernel/events/</code> (arch-neutral core), <code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu*.c</code> (RISC-V PMU drivers), <code class="language-plaintext highlighter-rouge">arch/riscv/kernel/perf_*.c</code> (register ABI and callchain unwinding) – the <code class="language-plaintext highlighter-rouge">perf_event_open(2)</code> syscall implementation and hardware counter drivers.</li>
+  <li><strong>Userspace tool:</strong> <code class="language-plaintext highlighter-rouge">tools/perf/</code> – the <code class="language-plaintext highlighter-rouge">perf</code> CLI (record, report, stat, trace, kvm, probe, script, annotate) and its supporting libraries.</li>
 </ul>
 
-<p>Both components have RISC-V support. Neither is a RISE-funded RFP project. RISC-V perf work is tracked as kernel upstreaming tasks within the RISE Debug &amp; Profiling Working Group (now merged into the Kernel and Virtualization Working Group effective 2026-06-25), not as a discrete funded engagement.</p>
+<p>Both components carry RISC-V support. The project is governed by the standard Linux kernel process: no separate foundation, no board, no membership tiers. Changes go through mailing-list review (lkml, linux-riscv, linux-perf-users) and land via the <code class="language-plaintext highlighter-rouge">tip</code> tree or the dedicated perf-tools trees, merged by Linus Torvalds. There is no GitHub repository, no GitHub issues/PRs for this project – it is developed entirely on kernel.org mailing lists as patch series, a scope constraint confirmed across every research pass in this report.</p>
+
+<p>Top-level PERFORMANCE EVENTS SUBSYSTEM maintainers (from <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>): Peter Zijlstra, Ingo Molnar (Red Hat), Arnaldo Carvalho de Melo (Red Hat, perf-tools lead), Mark Rutland (Arm, reviewer). RISC-V PMU drivers have their own <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> entry: Atish Patra (Rivos Inc.) as the named PMU maintainer, with Anup Patel (Ventana Micro Systems) and Albert Ou reviewing. RISC-V architecture maintainers Palmer Dabbelt (Rivos) and Conor Dooley (Microchip) oversee the surrounding arch tree. Git trees: <code class="language-plaintext highlighter-rouge">git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git</code> and <code class="language-plaintext highlighter-rouge">git://git.kernel.org/pub/scm/linux/kernel/git/acme/linux.git</code>. Mailing list: <code class="language-plaintext highlighter-rouge">linux-perf-users@vger.kernel.org</code>.</p>
+
+<p>License: GPLv2, kernel-standard. <code class="language-plaintext highlighter-rouge">perf</code> has been part of mainline since Linux 2.6.31 (2009). <code class="language-plaintext highlighter-rouge">perf.wiki.kernel.org</code> now redirects to <code class="language-plaintext highlighter-rouge">perfwiki.github.io</code>, a JS-rendered GitHub Pages site whose content could not be extracted by automated fetch during this research.</p>
+
+<p>Neither the kernel-side PMU driver nor the userspace <code class="language-plaintext highlighter-rouge">perf</code> tool is a RISE-funded RFP project. Per the project’s own RISE sw-ecosystem status report, RISC-V perf work is tracked informally as kernel-upstreaming line items by RISE’s Debug and Profiling Working Group, merged into the Kernel and Virtualization Working Group effective 2026-06-25, not as a discrete funded engagement.</p>
+
+<p>Community stance on new ports is the standard upstream-kernel posture: no special gatekeeping beyond normal <code class="language-plaintext highlighter-rouge">linux-riscv</code> / <code class="language-plaintext highlighter-rouge">linux-perf-users</code> maintainer review. RISC-V perf/PMU patches are accepted or rejected on technical merit through the ordinary review cycle (see Section 12 for specific rejections).</p>
 
 <p>Repository: <a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git">git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git</a>
-Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><hr />
+Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -299,188 +308,66 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
 </h2>
     
 
-<p>RISC-V perf support has been built incrementally since 2019. The table below lists confirmed merged commits in chronological order. All SHAs are verified against <a href="https://github.com/torvalds/linux">github.com/torvalds/linux</a>.</p>
+<p>The first RISC-V PMU driver was introduced by Alan Kao (Andes Technology) in “[PATCH 0/2] perf: riscv: Preliminary Perf Event Support on RISC-V”, posted to LKML in March-April 2018. Full-content fetch of the v3/v4 threads confirms an 802-line, two-patch series: a baseline PMU driver (<code class="language-plaintext highlighter-rouge">arch/riscv/kernel/perf_event.c</code>, +468 lines, implementing <code class="language-plaintext highlighter-rouge">riscv_base_pmu</code> with two hardware events – instructions and cycles) plus a porting-guide document (<code class="language-plaintext highlighter-rouge">Documentation/riscv/pmu.txt</code>, +249 lines). This was merged for <strong>Linux 4.18</strong> (commit <code class="language-plaintext highlighter-rouge">178e9fc47aae</code>, merged 2018-06-16 via the <code class="language-plaintext highlighter-rouge">riscv-for-linus-4.18-merge_window</code> tag, released 2018-08-12), independently confirmed by Phoronix (“RISC-V Changes Merged For Linux 4.18, Early Perf Subsystem Work”).</p>
+
+<p>The original CSR-only PMU implementation was replaced wholesale on 2022-03-21 (<code class="language-plaintext highlighter-rouge">9dc6ce8</code>, “RISC-V: Remove current perf implementation”) by the SBI PMU extension driver (<code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu_sbi.c</code>). All modern hardware counter access goes through SBI ecalls rather than direct CSR reads; the legacy driver (<code class="language-plaintext highlighter-rouge">riscv_pmu_legacy.c</code>) remains only as a fallback exposing CYCLE and INSTRET.</p>
+
+<p>Confirmed merges, verified against actual commit SHAs in <code class="language-plaintext highlighter-rouge">torvalds/linux</code>:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Date</th>
+      <th>Date merged</th>
       <th>SHA</th>
       <th>Title</th>
-      <th>Author</th>
-      <th>Company</th>
+      <th>Author / Company</th>
+      <th>First release</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>2019-09-04</td>
-      <td><code class="language-plaintext highlighter-rouge">dbeb90b</code></td>
-      <td>riscv: Add perf callchain support</td>
-      <td>(see note)</td>
-      <td>–</td>
+      <td>2018-06-16</td>
+      <td><a href="https://github.com/torvalds/linux/commit/178e9fc47aaec1b8952b553444e94802d7570599"><code class="language-plaintext highlighter-rouge">178e9fc47aae</code></a></td>
+      <td>perf: riscv: preliminary RISC-V support</td>
+      <td>Alan Kao, Andes Technology</td>
+      <td>v4.18</td>
     </tr>
     <tr>
-      <td>2019-09-05</td>
-      <td><code class="language-plaintext highlighter-rouge">51bc620</code></td>
-      <td>riscv: Add support for libdw</td>
-      <td>Mao Han</td>
-      <td>C-SKY / Alibaba T-Head</td>
+      <td>2021-11-08</td>
+      <td><a href="https://github.com/torvalds/linux/commit/0ba37e05c240c7b38e5a327a96f404798a8698ff"><code class="language-plaintext highlighter-rouge">0ba37e05c240</code></a></td>
+      <td>perf annotate: Add riscv64 support</td>
+      <td>William Cohen, Red Hat</td>
+      <td>v5.16</td>
     </tr>
     <tr>
-      <td>2021-11-17</td>
-      <td><code class="language-plaintext highlighter-rouge">84af21d</code></td>
-      <td>perf: Drop dead guest support from riscv</td>
-      <td>–</td>
-      <td>–</td>
+      <td>2023-09-01</td>
+      <td><a href="https://github.com/torvalds/linux/commit/7aa7d502e4d5a42353325cb4bf2aa880b10168e9"><code class="language-plaintext highlighter-rouge">7aa7d502e4d5</code></a></td>
+      <td>riscv: Allow userspace to directly access perf counters (10-patch series, v6/final)</td>
+      <td>Alexandre Ghiti, Rivos Inc.</td>
+      <td>v6.6</td>
     </tr>
     <tr>
-      <td>2022-03-21</td>
-      <td><code class="language-plaintext highlighter-rouge">9dc6ce8</code></td>
-      <td>RISC-V: Remove current perf implementation (replaced by SBI PMU)</td>
-      <td>–</td>
-      <td>–</td>
+      <td>2024-03-01</td>
+      <td><a href="https://github.com/torvalds/linux/commit/34b567868777e9fd39ec5333969728a7f0cf179c"><code class="language-plaintext highlighter-rouge">34b567868777</code></a></td>
+      <td>perf: RISCV: Fix panic on pmu overflow handler (CVE-2024-26902 fix)</td>
+      <td>Fei Wu</td>
+      <td>v6.8 (backported to 6.7.11)</td>
     </tr>
     <tr>
-      <td>2022-04-11</td>
-      <td><code class="language-plaintext highlighter-rouge">335f70f</code></td>
-      <td>perf jitdump: Add riscv64 support</td>
-      <td>–</td>
-      <td>–</td>
-    </tr>
-    <tr>
-      <td>2022-10-27</td>
-      <td><code class="language-plaintext highlighter-rouge">25c2e59</code></td>
-      <td>perf tools riscv: Add get_cpuid_str support</td>
-      <td>–</td>
-      <td>–</td>
-    </tr>
-    <tr>
-      <td>2024-06-26</td>
-      <td><code class="language-plaintext highlighter-rouge">da7b1b5</code></td>
-      <td>perf kvm/riscv: Port perf kvm stat to RISC-V</td>
-      <td>Shenlin Liang</td>
-      <td>–</td>
-    </tr>
-    <tr>
-      <td>2024-09-15</td>
-      <td><code class="language-plaintext highlighter-rouge">1a74833</code></td>
-      <td>riscv: stacktrace: Add USER_STACKTRACE support</td>
-      <td>ruanjinjie-eng</td>
-      <td>–</td>
-    </tr>
-    <tr>
-      <td>2024-09-15</td>
-      <td><code class="language-plaintext highlighter-rouge">22ab089</code></td>
-      <td>riscv: Fix fp alignment bug in perf_callchain_user()</td>
-      <td>ruanjinjie-eng</td>
-      <td>–</td>
-    </tr>
-    <tr>
-      <td>2024-10-28</td>
-      <td><code class="language-plaintext highlighter-rouge">5bb5ccb</code></td>
-      <td>riscv: perf: add guest vs host distinction</td>
-      <td>zcxGGmu</td>
-      <td>ISCAS</td>
-    </tr>
-    <tr>
-      <td>2024-10-31</td>
-      <td><code class="language-plaintext highlighter-rouge">8c0d120</code></td>
-      <td>perf, riscv: Wire up perf trace support for RISC-V</td>
-      <td>bjorn-rivos</td>
-      <td>Rivos Inc.</td>
-    </tr>
-    <tr>
-      <td>2024-11-09</td>
-      <td><code class="language-plaintext highlighter-rouge">a90c451</code></td>
-      <td>perf riscv: Remove dwarf-regs.c, add dwarf-regs-table.h</td>
-      <td>Ian Rogers</td>
-      <td>Google</td>
-    </tr>
-    <tr>
-      <td>2024-11-12</td>
-      <td><code class="language-plaintext highlighter-rouge">57f7c7d</code></td>
-      <td>drivers/perf: riscv: Fix wrong put_cpu() placement</td>
-      <td>Alexandre Ghiti</td>
-      <td>Rivos Inc.</td>
-    </tr>
-    <tr>
-      <td>2025-01-09</td>
-      <td><code class="language-plaintext highlighter-rouge">4a73aff</code></td>
-      <td>perf tools: Create generic syscall table support</td>
-      <td>Charlie Jenkins</td>
-      <td>Rivos Inc.</td>
-    </tr>
-    <tr>
-      <td>2025-02-03</td>
-      <td><code class="language-plaintext highlighter-rouge">16dccbb</code></td>
-      <td>perf regs: Remove __weak arch__xxx_reg_mask() functions</td>
-      <td>Dapeng Mi</td>
-      <td>–</td>
-    </tr>
-    <tr>
-      <td>2025-02-13</td>
-      <td>(merged)</td>
-      <td>perf vendor events riscv: Update SiFive CPU PMU events</td>
-      <td>Samuel Holland</td>
-      <td>SiFive</td>
-    </tr>
-    <tr>
-      <td>2025-04-09</td>
-      <td><code class="language-plaintext highlighter-rouge">e4c39a4</code></td>
-      <td>perf symbols: Ignore mapping symbols on riscv</td>
-      <td>Haibo Xu</td>
-      <td>Intel</td>
-    </tr>
-    <tr>
-      <td>2025-08-04</td>
-      <td><code class="language-plaintext highlighter-rouge">568a2fa</code></td>
-      <td>riscv: perf: skip empty batches in counter start</td>
-      <td>Yunhui Cui</td>
-      <td>ByteDance</td>
-    </tr>
-    <tr>
-      <td>2025-09-16</td>
-      <td><code class="language-plaintext highlighter-rouge">880fcc3</code>+</td>
-      <td>Add SBI v3.0 PMU enhancements (4-commit group)</td>
-      <td>Atish Patra</td>
-      <td>Rivos Inc.</td>
-    </tr>
-    <tr>
-      <td>2025-07-28</td>
-      <td><code class="language-plaintext highlighter-rouge">3b7270c</code></td>
-      <td>RISC-V: perf/kvm: Add reporting of interrupt events</td>
-      <td>zcxGGmu</td>
-      <td>ISCAS</td>
-    </tr>
-    <tr>
-      <td>2025-12-04</td>
-      <td>(accepted)</td>
-      <td>perf vendor events riscv: Add CVA6 JSON file</td>
-      <td>Manuel Hernandez</td>
-      <td>OpenChip</td>
-    </tr>
-    <tr>
-      <td>2026-02-06</td>
-      <td><code class="language-plaintext highlighter-rouge">16dccbb</code></td>
-      <td>perf regs: Remove __weak arch__xxx_reg_mask()</td>
-      <td>Dapeng Mi</td>
-      <td>–</td>
-    </tr>
-    <tr>
-      <td>2026-05-23</td>
-      <td>(applied)</td>
-      <td>perf riscv: Fix discarded const qualifier in _get_field()</td>
-      <td>Li Guan</td>
-      <td>ISCAS</td>
+      <td>2024-11-08</td>
+      <td><a href="https://github.com/torvalds/linux/commit/5bb5ccb3e8d8dba29941cd78d5c1bcd27b227b4a"><code class="language-plaintext highlighter-rouge">5bb5ccb3e8d8</code></a> + <a href="https://github.com/torvalds/linux/commit/eded6754f398b5b4950e8f593f75fee63a8b49ad"><code class="language-plaintext highlighter-rouge">eded6754f398</code></a></td>
+      <td>riscv: perf: add guest vs host distinction + riscv: KVM: basic host vs guest profiling</td>
+      <td>Quan Zhou, ISCAS</td>
+      <td>v6.13</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Note on 2019-09-04 <code class="language-plaintext highlighter-rouge">dbeb90b</code>: the author and company are not recorded in the research findings. The first author confirmed in research is Mao Han (C-SKY Microsystems, a subsidiary of Alibaba/T-Head) for <code class="language-plaintext highlighter-rouge">51bc620</code> (2019-09-05), which added DWARF register mappings and libdw support and was merged into Linux v5.4-rc1.</p>
+<p>Additional merges reported in the existing project tracking (not independently re-verified against commit SHAs in this round, retained with [NEEDS VERIFICATION]): <code class="language-plaintext highlighter-rouge">perf jitdump: Add riscv64 support</code> (2022-04-11, <code class="language-plaintext highlighter-rouge">335f70f</code>); <code class="language-plaintext highlighter-rouge">perf tools riscv: Add get_cpuid_str support</code> (2022-10-27, <code class="language-plaintext highlighter-rouge">25c2e59</code>); <code class="language-plaintext highlighter-rouge">riscv: stacktrace: Add USER_STACKTRACE support</code> and <code class="language-plaintext highlighter-rouge">riscv: Fix fp alignment bug in perf_callchain_user()</code> (both 2024-09-15); <code class="language-plaintext highlighter-rouge">perf riscv: Remove dwarf-regs.c, add dwarf-regs-table.h</code> (Ian Rogers, Google, 2024-11-09); <code class="language-plaintext highlighter-rouge">drivers/perf: riscv: Fix wrong put_cpu() placement</code> (Alexandre Ghiti, Rivos, 2024-11-12); <code class="language-plaintext highlighter-rouge">perf tools: Create generic syscall table support</code> (Charlie Jenkins, Rivos, 2025-01-09); <code class="language-plaintext highlighter-rouge">perf regs: Remove __weak arch__xxx_reg_mask() functions</code> (Dapeng Mi, 2025-02-03/2026-02-06); SiFive CPU PMU vendor events (Samuel Holland, SiFive, 2025-02-13); <code class="language-plaintext highlighter-rouge">perf symbols: Ignore mapping symbols on riscv</code> (Haibo Xu, Intel, 2025-04-09); <code class="language-plaintext highlighter-rouge">riscv: perf: skip empty batches in counter start</code> (Yunhui Cui, ByteDance, 2025-08-04); SBI v3.0 PMU enhancements (Atish Patra, Rivos, 2025-09-16); KVM interrupt event reporting (Quan Zhou, ISCAS, 2025-07-28); CVA6 vendor JSON (Manuel Hernandez, OpenChip, 2025-12-04); and <code class="language-plaintext highlighter-rouge">perf riscv: Fix discarded const qualifier in _get_field()</code>, confirmed independently below as commit <code class="language-plaintext highlighter-rouge">7378b6656aa4</code> (Li Guan, applied 2026-06-26).</p>
 
-<p>The original CSR-only PMU implementation was replaced wholesale in 2022-03-21 by the SBI PMU extension driver (<code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu_sbi.c</code>). All current hardware counter access goes through SBI ecalls rather than direct CSR reads, except for the legacy driver (<code class="language-plaintext highlighter-rouge">riscv_pmu_legacy.c</code>) which exposes only CYCLE and INSTRET.</p>
+<p>Two threads were explicitly verified as <strong>not merged</strong>, correcting the implied trajectory of a strictly linear, all-accepted upstreaming path: “[PATCH v5 0/4] RISC-V: Create unique identification for SoC PMU” (Nikita Shubin, posted 2022-06-28, stalled at v5, no matching commit found in <code class="language-plaintext highlighter-rouge">torvalds/linux</code>), and “[PATCH] perf callchain: Support riscv cross-platform” (Paran Lee, 2023-11-22), which the 0-Day kernel test robot flagged with multiple compile failures in <code class="language-plaintext highlighter-rouge">util/unwind-libunwind.c</code> (undefined labels, unused variables, a missing <code class="language-plaintext highlighter-rouge">tools/arch/riscv/include/uapi/asm/kvm.h</code>) and which has no merged follow-up.</p>
 
-<p><strong>Total confirmed merged commits to <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code>:</strong> 33 as of early 2026 [NEEDS VERIFICATION – figure sourced from a single search result].</p><hr />
+<p>Two more recent build-regression fixes, confirmed via full thread fetch, are notable data points on ongoing RISC-V perf build health rather than feature work: a GCC-13-only <code class="language-plaintext highlighter-rouge">-Werror=alloc-size-larger-than=</code> false positive in <code class="language-plaintext highlighter-rouge">cpumap.c</code> introduced by commit <code class="language-plaintext highlighter-rouge">5cf6e76e4f4f</code> (reported by Haixiao Yan, 2026-03-19, fixed by Ian Rogers, Google, backport requested to linux-6.6.y), and a GCC-14 <code class="language-plaintext highlighter-rouge">-Werror=discarded-qualifiers</code> regression in <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/util/header.c</code> (Li Guan, submitted 2026-05-13, applied as commit <code class="language-plaintext highlighter-rouge">7378b6656aa4</code> on 2026-06-26 after Ian Rogers rejected a broader, incorrect first attempt that would have decoupled arch-specific auxtrace decoders – code that is deliberately built in so perf.data recorded on x86/ARM can be analyzed on RISC-V).</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -490,15 +377,50 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
 </h2>
     
 
-<p>linux-perf has no formal tier system comparable to Rust’s or Node.js’s. The kernel uses an implicit status model per <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>:</p>
+<p>linux-perf has no formal tier system comparable to a language runtime’s Tier-1/Tier-2 classification. Kernel status is implicit via <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> entries:</p>
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu*.c</code> is classified <strong>Supported</strong> (the highest kernel status level) with a named maintainer: Atish Patra (atishp@rivosinc.com, Rivos Inc.) and reviewer Anup Patel (anup@brainfault.org, Ventana Micro Systems).</li>
-  <li><code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code> has no dedicated MAINTAINERS entry equivalent to the ARM64 tooling reviewer team. RISC-V perf tool patches are handled by the top-level PERFORMANCE EVENTS SUBSYSTEM maintainers (Arnaldo Carvalho de Melo, Namhyung Kim, Peter Zijlstra, Ingo Molnar) on an ad hoc basis.</li>
-  <li>There is no gating policy for new RISC-V perf patches. All 33 merged commits were accepted without recorded mailing list objection.</li>
+  <li><code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu*.c</code> carries a named maintainer (Atish Patra, Rivos Inc.) and reviewer (Anup Patel, Ventana Micro), the kernel’s highest informal support signal.</li>
+  <li><code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code> has <strong>no dedicated MAINTAINERS entry</strong>. Patches to it are handled ad hoc by the top-level PERFORMANCE EVENTS SUBSYSTEM maintainers, who are not RISC-V specialists. This is a structural gap relative to arm64, which has its own tooling reviewer coverage via Arm-affiliated maintainers.</li>
+  <li>There is no gating policy specific to new RISC-V perf patches beyond ordinary review. Acceptance and rejection both occur on technical grounds (see Section 12).</li>
 </ul>
 
-<p>The absence of a dedicated RISC-V reviewer team in MAINTAINERS for <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code> is a structural gap relative to ARM64. It means review latency depends on the bandwidth of top-level maintainers who are not RISC-V specialists.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Tier signal</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Named PMU driver maintainer</td>
+      <td>Yes (x86 team)</td>
+      <td>Yes (Arm)</td>
+      <td>Yes (Atish Patra, Rivos)</td>
+    </tr>
+    <tr>
+      <td>Dedicated <code class="language-plaintext highlighter-rouge">tools/perf/arch/*</code> reviewer</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No – handled by top-level maintainers</td>
+    </tr>
+    <tr>
+      <td>Release-blocking on CI failure</td>
+      <td>De facto (build fails block merge)</td>
+      <td>De facto</td>
+      <td>Build-only (see Section 7); no functional test gating</td>
+    </tr>
+    <tr>
+      <td>Distro-shipped official binary</td>
+      <td>Yes, primary arch</td>
+      <td>Yes, primary arch</td>
+      <td>Yes, but via Ubuntu’s ports (secondary) pocket at an older version (Section 8)</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -507,89 +429,84 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
   
 </h2>
     
-<h3 id="41-kernel-side-register-abi">
-  
-  
-    <a href="#41-kernel-side-register-abi" class="anchor-heading" aria-labelledby="41-kernel-side-register-abi"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Kernel-side register ABI
-  
-  
-</h3>
-    
 
-<p><code class="language-plaintext highlighter-rouge">arch/riscv/include/uapi/asm/perf_regs.h</code> defines <code class="language-plaintext highlighter-rouge">enum perf_event_riscv_regs</code> with 32 entries covering PC, RA, SP, GP, TP, T0-T6, S0-S11, and A0-A7, plus <code class="language-plaintext highlighter-rouge">PERF_REG_RISCV_MAX</code>. This is the userspace ABI for register sampling.</p>
+<p>Component-level maturity, established by direct reading of current mainline source (<code class="language-plaintext highlighter-rouge">git.kernel.org</code> cgit, cross-checked via <code class="language-plaintext highlighter-rouge">github.com/torvalds/linux</code> mirror; a prior AI-generated summary of this tree was discarded after it was found to hallucinate filenames):</p>
 
-<p><code class="language-plaintext highlighter-rouge">arch/riscv/kernel/perf_regs.c</code> implements:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">perf_reg_value()</code>: reads any of 32 registers by casting <code class="language-plaintext highlighter-rouge">pt_regs</code> to <code class="language-plaintext highlighter-rouge">unsigned long</code> array.</li>
-  <li><code class="language-plaintext highlighter-rouge">perf_reg_abi()</code>: compile-time branch on <code class="language-plaintext highlighter-rouge">__riscv_xlen == 64</code> returning <code class="language-plaintext highlighter-rouge">PERF_SAMPLE_REGS_ABI_64</code>, else <code class="language-plaintext highlighter-rouge">ABI_32</code>.</li>
-  <li><code class="language-plaintext highlighter-rouge">perf_get_regs_user()</code>: populates perf_regs from <code class="language-plaintext highlighter-rouge">task_pt_regs</code>.</li>
-</ul>
-<h3 id="42-callchain-unwinding">
-  
-  
-    <a href="#42-callchain-unwinding" class="anchor-heading" aria-labelledby="42-callchain-unwinding"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Callchain unwinding
-  
-  
-</h3>
-    
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>File(s)</th>
+      <th>Size</th>
+      <th>Rating</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Kernel PMU driver (SBI)</td>
+      <td><code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu_sbi.c</code></td>
+      <td>1630 lines</td>
+      <td>Full, hand-tuned</td>
+      <td>Raw/cache events, overflow-IRQ handling with CVE-2024-26902’s <code class="language-plaintext highlighter-rouge">BIT_ULL(lidx)</code> fix present and correct, sysctl-gated userspace direct counter access, legacy fallback</td>
+    </tr>
+    <tr>
+      <td>Legacy PMU driver</td>
+      <td><code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu_legacy.c</code></td>
+      <td>177 lines</td>
+      <td>Full</td>
+      <td>Pre-SBI-PMU fallback, CYCLE/INSTRET only</td>
+    </tr>
+    <tr>
+      <td>KVM guest PMU virtualization</td>
+      <td><code class="language-plaintext highlighter-rouge">arch/riscv/kvm/vcpu_pmu.c</code></td>
+      <td>947 lines</td>
+      <td>Full, hand-tuned</td>
+      <td>Substantial implementation, not a shim</td>
+    </tr>
+    <tr>
+      <td>perf_regs / uprobe SDT arg parsing</td>
+      <td><code class="language-plaintext highlighter-rouge">tools/perf/util/perf-regs-arch/perf_regs_riscv.c</code></td>
+      <td>221 lines</td>
+      <td>Full</td>
+      <td>Complete register table, ip/sp accessors, full SDT operand regex parser – on par with aarch64’s 229-line equivalent</td>
+    </tr>
+    <tr>
+      <td>perf annotate (disassembly classification)</td>
+      <td><code class="language-plaintext highlighter-rouge">tools/perf/util/annotate-arch/annotate-riscv64.c</code></td>
+      <td>41 lines</td>
+      <td>Partial</td>
+      <td>Classifies jal/jr/call/ret/branch opcodes so call-graph arrows render, but has no custom operand/target parsing – unlike arm64 (127 lines, resolves adrp+add PC-relative targets to symbol names) or x86 (852 lines). RISC-V’s auipc+jalr far-call idiom is not specially resolved</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">perf kvm stat</code> (host-side guest/host attribution)</td>
+      <td>–</td>
+      <td>–</td>
+      <td>Missing</td>
+      <td>No <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/util/kvm-stat.c</code>, zero “riscv” hits in <code class="language-plaintext highlighter-rouge">builtin-kvm.c</code>. Quan Zhou’s series (item 7, Section 2) remains unmerged upstream as of this research date, despite the existing project tracking having recorded it as landed – this is a direct correction: the patch adds host/guest PMU-interrupt disambiguation and was tested with QEMU 9.0.0 nested KVM (perf kvm top distinguishing host/guest symbols, perf kvm record capturing ~18,000 samples in 60s), but is still “under active revision” per the mailing-list thread, not confirmed merged by direct source inspection</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">perf trace</code> (syscall tracing)</td>
+      <td>–</td>
+      <td>–</td>
+      <td>Missing</td>
+      <td>No <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/entry/</code>, no <code class="language-plaintext highlighter-rouge">trace/beauty/riscv/</code>, no arch syscall table header found in current tree. The Dec 2024 thread “Re: [PATCH] perf, riscv: Wire up perf trace support for RISC-V” was “in discussion,” not confirmed merged</td>
+    </tr>
+    <tr>
+      <td>DWARF/CFI call-graph unwind</td>
+      <td>–</td>
+      <td>–</td>
+      <td>Not arch-specific</td>
+      <td><code class="language-plaintext highlighter-rouge">unwind-libdw.c</code> / <code class="language-plaintext highlighter-rouge">unwind-libunwind.c</code> carry no riscv-specific code; relies on generic code plus external libdw/elfutils, same situation as most other perf-tools arches</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><code class="language-plaintext highlighter-rouge">arch/riscv/kernel/perf_callchain.c</code> implements:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">perf_callchain_user()</code>: frame-pointer based, calls <code class="language-plaintext highlighter-rouge">arch_stack_walk_user()</code>. Requires <code class="language-plaintext highlighter-rouge">-fno-omit-frame-pointer</code> in profiled binaries for correctness.</li>
-  <li><code class="language-plaintext highlighter-rouge">perf_callchain_kernel()</code>: calls <code class="language-plaintext highlighter-rouge">walk_stackframe()</code>.</li>
-  <li>Guest OS callchain: <strong>not supported</strong>. The source contains explicit TODO comments.</li>
-</ul>
+<p>Note: the current tree’s layout differs from what the 2021 “perf annotate: Add riscv64 support” patch (Section 2, item 2) implies. <code class="language-plaintext highlighter-rouge">perf_regs</code> and <code class="language-plaintext highlighter-rouge">annotate</code> logic have since been refactored into shared cross-arch directories (<code class="language-plaintext highlighter-rouge">tools/perf/util/perf-regs-arch/</code>, <code class="language-plaintext highlighter-rouge">tools/perf/util/annotate-arch/</code>) that build every architecture into one binary, enabling cross-arch trace analysis (a perf.data file recorded on x86 can be parsed on riscv64). <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code> proper is now deliberately thin by design: <code class="language-plaintext highlighter-rouge">Build</code>, <code class="language-plaintext highlighter-rouge">Makefile</code>, two headers, and a 104-line <code class="language-plaintext highlighter-rouge">util/header.c</code> for CPU-ID string generation (<code class="language-plaintext highlighter-rouge">mvendorid-marchid-mimpid</code> parsed from <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code>).</p>
 
-<p>User-space callchain was partially broken prior to 2024-09-15, when <code class="language-plaintext highlighter-rouge">1a74833</code> added <code class="language-plaintext highlighter-rouge">USER_STACKTRACE</code> support and <code class="language-plaintext highlighter-rouge">22ab089</code> fixed a frame-pointer alignment bug in the user-space callchain walker.</p>
-<h3 id="43-pmu-driver-stack-three-tiers">
-  
-  
-    <a href="#43-pmu-driver-stack-three-tiers" class="anchor-heading" aria-labelledby="43-pmu-driver-stack-three-tiers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 PMU driver stack (three tiers)
-  
-  
-</h3>
-    
+<p>No <code class="language-plaintext highlighter-rouge">.S</code> assembly files exist anywhere in the RISC-V perf port – all code is C. There is no SIMD dispatch code specific to perf (the generic <code class="language-plaintext highlighter-rouge">arch/riscv/kernel/vector.c</code> handles RVV context-switch support but is not perf-specific) and no JIT backend within perf itself (<code class="language-plaintext highlighter-rouge">PERF_HAVE_JITDUMP := 1</code> lets perf consume JIT dump files emitted by JVMs/JIT runtimes; this is a consumer feature, not a JIT compiler in perf).</p>
 
-<p><strong>Legacy driver (<code class="language-plaintext highlighter-rouge">riscv_pmu_legacy.c</code>):</strong> Exposes only CYCLE (index 0) and INSTRET (index 2) CSRs. Sets <code class="language-plaintext highlighter-rouge">PERF_PMU_CAP_NO_INTERRUPT</code> and <code class="language-plaintext highlighter-rouge">PERF_PMU_CAP_NO_EXCLUDE</code>. Handles 32-bit counter pairs: <code class="language-plaintext highlighter-rouge">(u64)csr_read(CSR_CYCLEH) &lt;&lt; 32 | val</code>. Registered via <code class="language-plaintext highlighter-rouge">late_initcall</code>. Suppressed by the SBI driver when SBI PMU is present.</p>
-
-<p><strong>SBI driver (<code class="language-plaintext highlighter-rouge">riscv_pmu_sbi.c</code>):</strong> Full SBI PMU extension driver supporting SBI v2 and v3. Key mechanisms:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">pmu_sbi_ctr_get_idx()</code>: allocates a physical counter via SBI <code class="language-plaintext highlighter-rouge">COUNTER_CFG_MATCH</code> ecall.</li>
-  <li><code class="language-plaintext highlighter-rouge">pmu_sbi_snapshot_setup()</code>: per-CPU shared memory page with firmware for bulk counter reads.</li>
-  <li><code class="language-plaintext highlighter-rouge">pmu_sbi_stop_hw_ctrs()</code>: stops all active HW counters and saves snapshot values.</li>
-  <li>Vendor-specific overrides via <code class="language-plaintext highlighter-rouge">ALT_SBI_PMU_OVERFLOW</code> for T-Head and Andes cores.</li>
-  <li><code class="language-plaintext highlighter-rouge">CSR_SCOUNTEREN</code> control for userspace counter read access.</li>
-</ul>
-
-<p><strong>Core infrastructure (<code class="language-plaintext highlighter-rouge">riscv_pmu.c</code>):</strong> Provides <code class="language-plaintext highlighter-rouge">riscv_pmu_alloc()</code> and the event init/add/del/start/stop callbacks. <code class="language-plaintext highlighter-rouge">csr_read_num()</code> is a macro-generated switch reading any of 32 HPM counter CSRs (CSR_CYCLE through CSR_HPMCOUNTER31H). User-space counter access via <code class="language-plaintext highlighter-rouge">PERF_EVENT_FLAG_USER_READ_CNT</code>.</p>
-<h3 id="44-userspace-tool-arch-support">
-  
-  
-    <a href="#44-userspace-tool-arch-support" class="anchor-heading" aria-labelledby="44-userspace-tool-arch-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Userspace tool arch support
-  
-  
-</h3>
-    
-
-<p><code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code> contains:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">Makefile</code>: Sets <code class="language-plaintext highlighter-rouge">PERF_HAVE_JITDUMP := 1</code>. This enables perf to consume JIT dump files from JVM/JIT runtimes; it is not a JIT compiler in perf itself.</li>
-  <li><code class="language-plaintext highlighter-rouge">util/header.c</code>: <code class="language-plaintext highlighter-rouge">get_cpuid()</code> reads <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code>, parses <code class="language-plaintext highlighter-rouge">mvendorid</code>, <code class="language-plaintext highlighter-rouge">marchid</code>, <code class="language-plaintext highlighter-rouge">mimpid</code>, returns <code class="language-plaintext highlighter-rouge">"MVENDORID-MARCHID-MIMPID"</code>.</li>
-  <li><code class="language-plaintext highlighter-rouge">include/dwarf-regs-table.h</code>: maps all 32 integer registers (x0-x31) to DWARF numbering with ABI names (<code class="language-plaintext highlighter-rouge">%zero</code>, <code class="language-plaintext highlighter-rouge">%ra</code>, <code class="language-plaintext highlighter-rouge">%sp</code>, etc.). Included by <code class="language-plaintext highlighter-rouge">tools/perf/util/dwarf-regs.c</code> via <code class="language-plaintext highlighter-rouge">DEFINE_DWARF_REGSTR_TABLE</code>.</li>
-  <li><code class="language-plaintext highlighter-rouge">include/perf_regs.h</code>: <code class="language-plaintext highlighter-rouge">PERF_REGS_MASK = (1ULL &lt;&lt; PERF_REG_RISCV_MAX) - 1</code>.</li>
-</ul>
-
-<p>No <code class="language-plaintext highlighter-rouge">.S</code> assembly files exist in the RISC-V perf arch port. All code is pure C. No SIMD dispatch code. No JIT compiler backend.</p>
-<h3 id="45-kvm-perf-integration">
-  
-  
-    <a href="#45-kvm-perf-integration" class="anchor-heading" aria-labelledby="45-kvm-perf-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 KVM perf integration
-  
-  
-</h3>
-    
-
-<p><code class="language-plaintext highlighter-rouge">perf kvm stat</code> was ported to RISC-V in 2024-06-26 (<code class="language-plaintext highlighter-rouge">da7b1b5</code>). Prior to 2024-10-28 (<code class="language-plaintext highlighter-rouge">5bb5ccb</code>), samples taken in KVM guest context were incorrectly attributed as host kernel samples. Both issues are now fixed. KVM interrupt events were previously labeled <code class="language-plaintext highlighter-rouge">UNKNOWN</code> in <code class="language-plaintext highlighter-rouge">perf kvm stat</code> output; this was fixed in 2025-07-28 (<code class="language-plaintext highlighter-rouge">3b7270c</code>) by replacing <code class="language-plaintext highlighter-rouge">riscv_exception_types.h</code> with a unified <code class="language-plaintext highlighter-rouge">riscv_trap_types.h</code> covering both interrupts and exceptions.</p><hr />
+<p><code class="language-plaintext highlighter-rouge">arch/riscv/kernel/perf_regs.c</code> implements <code class="language-plaintext highlighter-rouge">perf_reg_value()</code> (casts <code class="language-plaintext highlighter-rouge">pt_regs</code> to an <code class="language-plaintext highlighter-rouge">unsigned long</code> array, indexable across 32 registers), <code class="language-plaintext highlighter-rouge">perf_reg_abi()</code> (compile-time branch on <code class="language-plaintext highlighter-rouge">__riscv_xlen</code>), and <code class="language-plaintext highlighter-rouge">perf_get_regs_user()</code>. <code class="language-plaintext highlighter-rouge">arch/riscv/kernel/perf_callchain.c</code> implements frame-pointer-based <code class="language-plaintext highlighter-rouge">perf_callchain_user()</code> (requires <code class="language-plaintext highlighter-rouge">-fno-omit-frame-pointer</code> in profiled binaries for correctness) and <code class="language-plaintext highlighter-rouge">perf_callchain_kernel()</code>; guest-OS callchain support is explicitly absent (TODO comments in source), consistent with the missing <code class="language-plaintext highlighter-rouge">perf kvm stat</code> finding above.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -598,170 +515,63 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
   
 </h2>
     
-<h3 id="51-build-system">
-  
-  
-    <a href="#51-build-system" class="anchor-heading" aria-labelledby="51-build-system"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Build system
-  
-  
-</h3>
-    
 
-<p>linux-perf uses GNU Make exclusively. No CMake, no configure script. The wrapper <code class="language-plaintext highlighter-rouge">tools/perf/Makefile</code> delegates to <code class="language-plaintext highlighter-rouge">tools/perf/Makefile.perf</code>, which includes <code class="language-plaintext highlighter-rouge">Makefile.arch</code> (ARCH/SRCARCH detection) and <code class="language-plaintext highlighter-rouge">Makefile.config</code> (feature detection and <code class="language-plaintext highlighter-rouge">NO_*</code> flag resolution).</p>
-<h3 id="52-arch-detection">
-  
-  
-    <a href="#52-arch-detection" class="anchor-heading" aria-labelledby="52-arch-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 ARCH detection
-  
-  
-</h3>
-    
-
-<p><code class="language-plaintext highlighter-rouge">uname -m</code> output <code class="language-plaintext highlighter-rouge">riscv64</code> maps to <code class="language-plaintext highlighter-rouge">ARCH=riscv</code> and <code class="language-plaintext highlighter-rouge">SRCARCH=riscv</code> automatically on native builds.</p>
-<h3 id="53-exact-make-commands">
-  
-  
-    <a href="#53-exact-make-commands" class="anchor-heading" aria-labelledby="53-exact-make-commands"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Exact make commands
-  
-  
-</h3>
-    
+<p>linux-perf uses GNU Make exclusively (<code class="language-plaintext highlighter-rouge">Makefile</code> -&gt; <code class="language-plaintext highlighter-rouge">Makefile.perf</code> -&gt; <code class="language-plaintext highlighter-rouge">tools/build/Makefile.build</code>). There is no CMake, no <code class="language-plaintext highlighter-rouge">configure</code> script, and no Dockerfile anywhere under <code class="language-plaintext highlighter-rouge">tools/perf/</code> – confirmed by direct directory listing of the tree (<code class="language-plaintext highlighter-rouge">.clang-format .gitignore Build CREDITS Documentation MANIFEST Makefile Makefile.config Makefile.perf arch bench bpf_skel.mak ...</code>).</p>
 
 <p><strong>Native build on riscv64:</strong></p>
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="nt">-C</span> tools/perf
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make -C tools/perf
 </code></pre></div></div>
 
-<p><strong>Cross-compilation from x86_64 (GCC):</strong></p>
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="nt">-C</span> tools/perf <span class="se">\</span>
-  <span class="nv">ARCH</span><span class="o">=</span>riscv <span class="se">\</span>
-  <span class="nv">CROSS_COMPILE</span><span class="o">=</span>riscv64-linux-gnu-
+<p><strong>Cross-compilation (GCC):</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -C tools/perf
 </code></pre></div></div>
 
 <p><strong>Cross-compilation (static):</strong></p>
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="nt">-C</span> tools/perf <span class="se">\</span>
-  <span class="nv">ARCH</span><span class="o">=</span>riscv <span class="se">\</span>
-  <span class="nv">CROSS_COMPILE</span><span class="o">=</span>riscv64-linux-gnu- <span class="se">\</span>
-  <span class="nv">LDFLAGS</span><span class="o">=</span><span class="s2">"-static"</span> <span class="se">\</span>
-  <span class="nv">NO_PERF_READ_VDSO32</span><span class="o">=</span>1 <span class="se">\</span>
-  <span class="nv">NO_PERF_READ_VDSOX32</span><span class="o">=</span>1
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- LDFLAGS="-static" -C tools/perf
 </code></pre></div></div>
-<p><code class="language-plaintext highlighter-rouge">NO_PERF_READ_VDSO32</code> and <code class="language-plaintext highlighter-rouge">NO_PERF_READ_VDSOX32</code> are required for all non-x86 builds; these are x86-only 32-bit VDSO readers.</p>
 
-<p><strong>Cross-compilation with Clang:</strong></p>
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="nt">-C</span> tools/perf <span class="se">\</span>
-  <span class="nv">ARCH</span><span class="o">=</span>riscv <span class="se">\</span>
-  <span class="nv">CROSS_COMPILE</span><span class="o">=</span>riscv64-linux-gnu- <span class="se">\</span>
-  <span class="nv">CC</span><span class="o">=</span>clang <span class="nv">CXX</span><span class="o">=</span>clang++ <span class="nv">HOSTCC</span><span class="o">=</span>clang
+<p><strong>With explicit pkg-config sysroot (embedded/cross toolchains):</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PKG_CONFIG_SYSROOT_DIR="/path/to/cross/build/sysroot" \
+PKG_CONFIG_LIBDIR="/usr/lib/:/usr/local/lib" \
+make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -C tools/perf
 </code></pre></div></div>
-<p><code class="language-plaintext highlighter-rouge">Makefile.config</code> contains <code class="language-plaintext highlighter-rouge">CLANG_TARGET_FLAGS_riscv := riscv64-linux-gnu</code> and auto-constructs <code class="language-plaintext highlighter-rouge">--target=riscv64-linux-gnu</code> when <code class="language-plaintext highlighter-rouge">CROSS_COMPILE</code> is set.</p>
 
-<p><strong>Rust cross-target:</strong> <code class="language-plaintext highlighter-rouge">RUST_TARGET_FLAGS_riscv := riscv64gc-unknown-linux-gnu</code>.</p>
-
-<p><strong>Minimal build (strip all optional features):</strong></p>
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="nt">-C</span> tools/perf <span class="se">\</span>
-  <span class="nv">ARCH</span><span class="o">=</span>riscv <span class="se">\</span>
-  <span class="nv">CROSS_COMPILE</span><span class="o">=</span>riscv64-linux-gnu- <span class="se">\</span>
-  <span class="nv">NO_LIBELF</span><span class="o">=</span>1 <span class="nv">NO_LIBDW</span><span class="o">=</span>1 <span class="nv">NO_LIBUNWIND</span><span class="o">=</span>1 <span class="nv">NO_LIBBPF</span><span class="o">=</span>1 <span class="se">\</span>
-  <span class="nv">NO_ZLIB</span><span class="o">=</span>1 <span class="nv">NO_LIBZSTD</span><span class="o">=</span>1 <span class="nv">NO_LZMA</span><span class="o">=</span>1 <span class="nv">NO_LIBNUMA</span><span class="o">=</span>1 <span class="se">\</span>
-  <span class="nv">NO_LIBPYTHON</span><span class="o">=</span>1 <span class="nv">NO_LIBPERL</span><span class="o">=</span>1 <span class="nv">NO_SLANG</span><span class="o">=</span>1 <span class="nv">NO_LIBLLVM</span><span class="o">=</span>1 <span class="se">\</span>
-  <span class="nv">NO_CAPSTONE</span><span class="o">=</span>1 <span class="nv">NO_LIBBABELTRACE</span><span class="o">=</span>1 <span class="nv">NO_JVMTI</span><span class="o">=</span>1 <span class="nv">NO_RUST</span><span class="o">=</span>1 <span class="se">\</span>
-  <span class="nv">NO_LIBTRACEEVENT</span><span class="o">=</span>1 <span class="nv">NO_SDT</span><span class="o">=</span>1 <span class="nv">NO_AIO</span><span class="o">=</span>1 <span class="nv">NO_LIBPFM4</span><span class="o">=</span>1 <span class="se">\</span>
-  <span class="nv">LDFLAGS</span><span class="o">=</span><span class="s2">"-static"</span> <span class="se">\</span>
-  <span class="nv">NO_PERF_READ_VDSO32</span><span class="o">=</span>1 <span class="nv">NO_PERF_READ_VDSOX32</span><span class="o">=</span>1
+<p><strong>With Clang</strong> (confirmed via <code class="language-plaintext highlighter-rouge">Makefile.config</code>’s <code class="language-plaintext highlighter-rouge">CLANG_TARGET_FLAGS_riscv := riscv64-linux-gnu</code>, auto-constructing <code class="language-plaintext highlighter-rouge">--target=riscv64-linux-gnu</code>):</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HOSTCC=clang CC=clang CXX=clang++ ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- make -C tools/perf
 </code></pre></div></div>
-<p><code class="language-plaintext highlighter-rouge">NO_LIBTRACEEVENT=1</code> is required when <code class="language-plaintext highlighter-rouge">libtraceevent-dev</code> is absent; without it the build fails hard with <code class="language-plaintext highlighter-rouge">"ERROR: libtraceevent is missing."</code>.</p>
-<h3 id="54-toolchain-minimum-versions">
-  
-  
-    <a href="#54-toolchain-minimum-versions" class="anchor-heading" aria-labelledby="54-toolchain-minimum-versions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Toolchain minimum versions
-  
-  
-</h3>
-    
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Tool</th>
-      <th>Minimum</th>
-      <th>Source</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>GCC</td>
-      <td>8.1.0</td>
-      <td><code class="language-plaintext highlighter-rouge">scripts/min-tool-version.sh</code></td>
-    </tr>
-    <tr>
-      <td>Clang (general)</td>
-      <td>17.0.1</td>
-      <td><code class="language-plaintext highlighter-rouge">scripts/min-tool-version.sh</code></td>
-    </tr>
-    <tr>
-      <td>Clang (BPF skeletons)</td>
-      <td>12.0.1</td>
-      <td><code class="language-plaintext highlighter-rouge">Makefile.config</code></td>
-    </tr>
-    <tr>
-      <td>Binutils</td>
-      <td>2.30</td>
-      <td><code class="language-plaintext highlighter-rouge">scripts/min-tool-version.sh</code></td>
-    </tr>
-    <tr>
-      <td>Binutils (non-distro)</td>
-      <td>2.42</td>
-      <td><code class="language-plaintext highlighter-rouge">Makefile.config</code></td>
-    </tr>
-    <tr>
-      <td>GNU make</td>
-      <td>4.0</td>
-      <td>kernel docs</td>
-    </tr>
-    <tr>
-      <td>elfutils/libdw</td>
-      <td>0.157</td>
-      <td><code class="language-plaintext highlighter-rouge">Makefile.config</code></td>
-    </tr>
-    <tr>
-      <td>libunwind</td>
-      <td>1.1</td>
-      <td><code class="language-plaintext highlighter-rouge">Makefile.config</code></td>
-    </tr>
-    <tr>
-      <td>Python</td>
-      <td>3.6 (jevents), 3.9 (kernel-wide)</td>
-      <td><code class="language-plaintext highlighter-rouge">scripts/min-tool-version.sh</code></td>
-    </tr>
-    <tr>
-      <td>pahole (BTF/CO-RE)</td>
-      <td>1.26</td>
-      <td><code class="language-plaintext highlighter-rouge">Makefile.config</code></td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="55-libunwind-gap">
-  
-  
-    <a href="#55-libunwind-gap" class="anchor-heading" aria-labelledby="55-libunwind-gap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 libunwind gap
-  
-  
-</h3>
-    
+<p><strong>Install:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- DESTDIR=/usr -C tools/perf install
+</code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">Makefile.config</code> lists per-architecture libunwind library mappings only for: arm, aarch64, x86_64, mips, loongarch64, powerpc, s390. <strong>riscv64 is absent.</strong> libunwind on riscv64 falls through to generic detection. The recommended and validated unwinding path on riscv64 is DWARF via libdw (<code class="language-plaintext highlighter-rouge">--call-graph=dwarf</code>), not libunwind.</p>
+<p><strong>Minimal build, stripping optional features:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make -C tools/perf ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- \
+  NO_LIBELF=1 NO_LIBDW=1 NO_LIBUNWIND=1 NO_LIBBPF=1 NO_ZLIB=1 NO_LIBZSTD=1 \
+  NO_LZMA=1 NO_LIBNUMA=1 NO_LIBPYTHON=1 NO_SLANG=1 NO_LIBLLVM=1 NO_CAPSTONE=1 \
+  NO_LIBBABELTRACE=1 NO_JVMTI=1 NO_RUST=1 NO_LIBTRACEEVENT=1 NO_SDT=1 NO_AIO=1 \
+  NO_LIBPFM4=1 LDFLAGS="-static"
+</code></pre></div></div>
+<p><code class="language-plaintext highlighter-rouge">NO_LIBTRACEEVENT=1</code> is required whenever <code class="language-plaintext highlighter-rouge">libtraceevent-dev</code> is absent from the sysroot; without it, the build fails hard with <code class="language-plaintext highlighter-rouge">"ERROR: libtraceevent is missing."</code> – this is a hard, silent-cross-compile-failure risk flagged in the dependency research (Section 9).</p>
 
-<p>A 7-patch series (Ian Rogers, Google, v5, 2026-05-13) adds <code class="language-plaintext highlighter-rouge">libunwind-riscv.c</code> implementing <code class="language-plaintext highlighter-rouge">UNW_RISCV_X1</code>-<code class="language-plaintext highlighter-rouge">X31</code> and <code class="language-plaintext highlighter-rouge">UNW_RISCV_PC</code> register mapping. This patch is currently in “New” status with no merge date.</p>
-<h3 id="56-qemu-integration">
-  
-  
-    <a href="#56-qemu-integration" class="anchor-heading" aria-labelledby="56-qemu-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 QEMU integration
-  
-  
-</h3>
-    
+<p>Rust cross-target for perf’s optional Rust components: <code class="language-plaintext highlighter-rouge">RUST_TARGET_FLAGS_riscv := riscv64gc-unknown-linux-gnu</code>.</p>
 
-<p>The perf build system has no built-in QEMU integration. <code class="language-plaintext highlighter-rouge">perf_event_open</code> is available in QEMU system-mode on riscv64 for software counters. Hardware PMU events require real hardware or a PMU-emulating QEMU plugin. The counter delegation series (v6, patch #17) explicitly requires QEMU with flags <code class="language-plaintext highlighter-rouge">smstateen=true,sscofpmf=true,ssccfg=true,smcdeleg=true,smcsrind=true,sscsrind=true</code>, available in the <code class="language-plaintext highlighter-rouge">rv-etrace</code> branch at <code class="language-plaintext highlighter-rouge">gitlab.com/danielhb/qemu.git</code> [NEEDS VERIFICATION – sourced from patch cover letter only].</p><hr />
+<p>Feature-selection flags (the functional equivalent of CMake’s <code class="language-plaintext highlighter-rouge">-DUSE_X=OFF</code>) are <code class="language-plaintext highlighter-rouge">NO_&lt;FEATURE&gt;=1</code> make variables read from <code class="language-plaintext highlighter-rouge">Makefile.config</code>: <code class="language-plaintext highlighter-rouge">NO_LIBUNWIND, NO_LIBDW, NO_LIBBPF, NO_JVMTI, NO_LIBELF, NO_SDT, NO_LIBDEBUGINFOD, NO_AIO, NO_ZLIB, NO_SLANG, NO_GTK2, NO_LIBPYTHON, NO_JEVENTS, NO_LIBLLVM, NO_DEMANGLE, NO_LZMA, NO_LIBZSTD, NO_BACKTRACE, NO_LIBNUMA, NO_PERF_READ_VDSO32, NO_PERF_READ_VDSOX32, NO_BABELTRACE2, NO_CAPSTONE, NO_JVMTI_CMLR, NO_LIBPFM4, NO_LIBTRACEEVENT, NO_RUST, NO_LOCAL_LIBUNWIND</code>.</p>
+
+<p>riscv-relevant <code class="language-plaintext highlighter-rouge">Makefile.config</code> entries:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CLANG_TARGET_FLAGS_riscv    := riscv64-linux-gnu
+RUST_TARGET_FLAGS_riscv     := riscv64gc-unknown-linux-gnu
+LIBUNWIND_ARCHS := aarch64 arm loongarch64 mips ppc32 ppc64 riscv s390x x86 x86_64
+ifeq ($(SRCARCH),riscv)
+  LIBUNWIND_LIBS := -lunwind -lunwind-riscv
+endif
+</code></pre></div></div>
+<p>Note <code class="language-plaintext highlighter-rouge">NO_PERF_READ_VDSO32</code> and <code class="language-plaintext highlighter-rouge">NO_PERF_READ_VDSOX32</code> should be set on all non-x86 cross builds – these guard x86-only 32-bit VDSO readers that otherwise fail on riscv64 targets.</p>
+
+<p><strong>Toolchain minimum versions</strong>, from <code class="language-plaintext highlighter-rouge">Documentation/process/changes.rst</code> (kernel-wide, applying to the headers/uapi perf consumes; no separate riscv-specific minimums were found – the <code class="language-plaintext highlighter-rouge">Documentation/riscv/patch-acceptance.rst</code> / toolchain pages returned 404 on this fetch, so this is flagged rather than guessed): GCC 8.1, Clang/LLVM 17.0.1 (12.0.1 specifically for BPF skeleton compilation per <code class="language-plaintext highlighter-rouge">Makefile.config</code>), GNU binutils 2.30 (2.42 for non-distro builds per <code class="language-plaintext highlighter-rouge">Makefile.config</code>), GNU make 4.0, bash 4.2, flex 2.5.35, bison 2.0, Rust 1.85.0 (optional), bindgen 0.71.1 (optional). These matter for riscv64 specifically because the RVV/newer-ISA-extension assembler and disassembler support (and libunwind’s riscv backend) depend on toolchain version, not a perf-internal check.</p>
+
+<p><strong>libunwind gap:</strong> <code class="language-plaintext highlighter-rouge">Makefile.config</code> lists per-architecture libunwind mappings for arm, aarch64, x86_64, mips, loongarch64, powerpc, and s390 – <strong>riscv64 is absent</strong> from this explicit map, falling through to generic detection. The production-validated unwinding path on riscv64 is therefore DWARF via libdw (<code class="language-plaintext highlighter-rouge">--call-graph=dwarf</code>), not libunwind. A 7-patch series from Ian Rogers (Google), v5 as of 2026-05-13, adds <code class="language-plaintext highlighter-rouge">libunwind-riscv.c</code> with <code class="language-plaintext highlighter-rouge">UNW_RISCV_X1</code>-<code class="language-plaintext highlighter-rouge">X31</code> / <code class="language-plaintext highlighter-rouge">UNW_RISCV_PC</code> mapping; it remains unmerged (Section 11/12).</p>
+
+<p><strong>QEMU:</strong> no QEMU integration is documented in <code class="language-plaintext highlighter-rouge">tools/perf/Documentation/</code>, and no perf-specific QEMU test harness exists in the tree. <code class="language-plaintext highlighter-rouge">perf_event_open</code> works in QEMU system-mode for software counters; hardware PMU events require real hardware or a PMU-emulating QEMU plugin. The counter-delegation series (Section 11) requires QEMU built with <code class="language-plaintext highlighter-rouge">smstateen=true,sscofpmf=true,ssccfg=true,smcdeleg=true,smcsrind=true,sscsrind=true</code>, reportedly available on the <code class="language-plaintext highlighter-rouge">rv-etrace</code> branch at <code class="language-plaintext highlighter-rouge">gitlab.com/danielhb/qemu.git</code> [NEEDS VERIFICATION – sourced only from a patch cover letter, not independently confirmed this round].</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -787,14 +597,14 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes (SBI PMU)</td>
-      <td>riscv64 PMU access goes through SBI ecalls, adding firmware round-trip overhead vs direct CSR access</td>
+      <td>SBI ecalls add firmware round-trip latency vs direct CSR access on amd64/arm64</td>
     </tr>
     <tr>
-      <td>Named hardware PMU events (perf list)</td>
+      <td>Named hardware PMU events (<code class="language-plaintext highlighter-rouge">perf list</code>)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Partial</td>
-      <td>JSON vendor files merged for SiFive (U74, P550, P650), CVA6; missing for most commercial RISC-V SoCs</td>
+      <td>JSON vendor files merged for SiFive U74/P550/P650 and CVA6; missing for most commercial SoCs</td>
     </tr>
     <tr>
       <td>Kernel callchain unwinding</td>
@@ -807,137 +617,132 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
       <td>User callchain (frame pointer)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (since v6.12)</td>
-      <td>Fixed in 2024-09-15</td>
+      <td>Yes</td>
+      <td>Fixed by <code class="language-plaintext highlighter-rouge">1a74833</code> (2024-09-15) [NEEDS VERIFICATION on exact SHA]</td>
     </tr>
     <tr>
       <td>User callchain (DWARF)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>via libdw; primary production path on riscv64</td>
+      <td>Via libdw; primary production path</td>
     </tr>
     <tr>
       <td>User callchain (libunwind)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Partial</td>
-      <td>Not wired in <code class="language-plaintext highlighter-rouge">Makefile.config</code>; in-review patch v5</td>
+      <td>Not wired</td>
+      <td>See Section 5; v5 patch in review</td>
     </tr>
     <tr>
       <td>Guest vs host callchain (KVM)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (since v6.12)</td>
-      <td>Fixed in 2024-10-28</td>
+      <td>Unmerged</td>
+      <td>Quan Zhou’s series remains under active revision, not confirmed merged (see Section 4 correction)</td>
     </tr>
     <tr>
-      <td>Guest callchain</td>
+      <td>Guest-OS callchain</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
       <td>Explicit TODO in source</td>
     </tr>
     <tr>
-      <td>perf kvm stat</td>
+      <td><code class="language-plaintext highlighter-rouge">perf kvm stat</code></td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (since v6.10)</td>
-      <td>Ported 2024-06-26</td>
+      <td>Not confirmed merged</td>
+      <td>Source inspection found no <code class="language-plaintext highlighter-rouge">kvm-stat.c</code> arch backend for riscv (Section 4)</td>
     </tr>
     <tr>
-      <td>perf trace (syscall tracing)</td>
+      <td><code class="language-plaintext highlighter-rouge">perf trace</code> (syscall tracing)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (since v6.13)</td>
-      <td>Wired 2024-10-31</td>
+      <td>In discussion</td>
+      <td>Dec 2024 thread; not confirmed merged</td>
     </tr>
     <tr>
       <td>JIT profiling (jitdump)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>PERF_HAVE_JITDUMP=1</td>
+      <td><code class="language-plaintext highlighter-rouge">PERF_HAVE_JITDUMP=1</code></td>
     </tr>
     <tr>
       <td>BPF-based profiling</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>eBPF JIT present since kernel 5.4</td>
+      <td>eBPF JIT present since kernel 5.4; BPF skeletons need clang’s riscv64 BPF backend (available since LLVM 12)</td>
     </tr>
     <tr>
-      <td>perf probe (uprobes/kprobes)</td>
+      <td><code class="language-plaintext highlighter-rouge">perf probe</code> (uprobes/kprobes)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Requires libelf</td>
     </tr>
     <tr>
-      <td>perf annotate (disassembly)</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Partial</td>
-      <td>Depends on libcapstone/libllvm; no riscv64-specific issues noted</td>
+      <td><code class="language-plaintext highlighter-rouge">perf annotate</code> (disassembly)</td>
+      <td>Full (852 lines)</td>
+      <td>Partial-plus (127 lines, resolves PC-relative targets)</td>
+      <td>Partial (41 lines)</td>
+      <td>No custom target resolution for RISC-V’s auipc+jalr far-call idiom</td>
     </tr>
     <tr>
       <td>Counter delegation (Ssccfg/Smcdeleg)</td>
       <td>N/A</td>
       <td>N/A</td>
       <td>No</td>
-      <td>v6 series in review, 2 years in review cycle</td>
+      <td>v6 series in review, in the review cycle since RFC (Feb 2024); build failures reported on rv64-clang/gcc-allmodconfig</td>
     </tr>
     <tr>
       <td>Hardware instruction tracing (AUX)</td>
       <td>Yes (Intel PT)</td>
       <td>Yes (CoreSight)</td>
       <td>No</td>
-      <td>v4 trace decoder series in review, stub only</td>
+      <td>v4 trace decoder series (Qualcomm) in review, user-ABI not yet agreed per Greg Kroah-Hartman</td>
     </tr>
     <tr>
-      <td>PMU event throttle correctness</td>
-      <td>Yes</td>
-      <td>Yes</td>
+      <td>PMU throttle correctness</td>
+      <td>Correct</td>
+      <td>Correct</td>
       <td>Buggy</td>
-      <td>ByteDance patch in review; build error present; not merged</td>
+      <td>ByteDance fix has a build error and an unresolved reviewer objection</td>
     </tr>
     <tr>
-      <td>Fixed counter stop bug</td>
-      <td>Yes</td>
-      <td>Yes</td>
+      <td>Fixed-counter-stop correctness</td>
+      <td>Correct</td>
+      <td>Correct</td>
       <td>Buggy</td>
-      <td>Alibaba patch in review; needs rework per maintainer</td>
+      <td>Alibaba fix’s design was rejected by the maintainer</td>
     </tr>
     <tr>
       <td>libpfm4 named events</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td>No RISC-V hardware PMU tables in libpfm4 upstream</td>
+      <td>No RISC-V hardware PMU event tables exist in libpfm4 upstream; <code class="language-plaintext highlighter-rouge">perf list</code> falls back to raw event codes</td>
     </tr>
     <tr>
-      <td>perf annotate –gtk</td>
-      <td>Yes</td>
-      <td>Partial</td>
-      <td>Unknown</td>
-      <td>GTK2 deprecated; status on riscv64 not assessed</td>
-    </tr>
-    <tr>
-      <td>perf script (Python)</td>
+      <td><code class="language-plaintext highlighter-rouge">perf script</code> (Python bindings)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Partial</td>
-      <td>CPython issue #121201: perf_jit_trampoline.c build failure on Python 3.13+ on riscv64</td>
+      <td>Open CPython bug blocks <code class="language-plaintext highlighter-rouge">perf_jit_trampoline.c</code> on riscv64 for Python 3.13-3.15 (see Section 9)</td>
     </tr>
     <tr>
-      <td>MAINTAINERS reviewer team</td>
+      <td>Dedicated <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> tooling reviewer</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td>No dedicated RISC-V tooling reviewer entry</td>
+      <td>See Section 3</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p>No quantitative benchmark data comparing raw <code class="language-plaintext highlighter-rouge">perf</code> sampling overhead on riscv64 against arm64 or amd64 was found in any source consulted. Two academic measurements exist for overhead/accuracy on RISC-V specifically (not comparative against other arches): a CVA6-on-FPGA study (Linux 5.7, 100 MHz) measured <strong>perf monitoring overhead at 0.283%</strong> running CoreMark v1.0 (score 174.59), with IPC of 0.6195 and a branch-misprediction rate of 18.14% recorded via HPM counters (<a href="https://arxiv.org/abs/2112.11767">arXiv:2112.11767</a>). A separate, more recent PMU-profiling/roofline study on production silicon found real-world profiling gaps rather than overhead numbers: on a SpacemiT X60, <code class="language-plaintext highlighter-rouge">sqlite3VdbeExec</code> showed IPC 0.86 versus 3.38 on an Intel Core i5-1135G7 for the same workload, and roofline analysis measured only 1.58 GFLOP/s achieved against a 25.6 GFLOP/s theoretical peak (versus 34-48 GFLOP/s achieved on the Intel comparator) (<a href="https://arxiv.org/html/2507.22451v1">arXiv:2507.22451</a>). That paper also documents that RISC-V developers “frequently encounter unreliable hardware counters, incomplete kernel support, or outright hardware bugs that prevent standard profiling,” and describes a workaround for the SpacemiT X60’s missing <code class="language-plaintext highlighter-rouge">mcycle</code>/<code class="language-plaintext highlighter-rouge">minstret</code> overflow interrupts using non-standard <code class="language-plaintext highlighter-rouge">u_mode_cycle</code>/<code class="language-plaintext highlighter-rouge">m_mode_cycle</code>/<code class="language-plaintext highlighter-rouge">s_mode_cycle</code> counters. The architectural root cause – the base RISC-V ISA historically lacked standardized performance-counter overflow interrupts – is addressed incrementally via the Sscofpmf extension and the SBI PMU extension (<a href="https://lwn.net/Articles/879905/">LWN: Improve RISC-V Perf support using SBI PMU and sscofpmf extension</a>), but hardware support remains inconsistent across vendors: the SiFive U74 has no out-of-order execution, no RVV, and no overflow interrupts but full upstream Linux support; the T-Head C910 has OoO and RVV 0.7.1 with partial upstream support; the SpacemiT X60 has RVV 1.0 but limited overflow-interrupt support and is not upstream.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -946,51 +751,52 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
   
 </h2>
     
-<h3 id="71-what-exists">
-  
-  
-    <a href="#71-what-exists" class="anchor-heading" aria-labelledby="71-what-exists"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.1 What exists
-  
-  
-</h3>
-    
 
-<p>The <code class="language-plaintext highlighter-rouge">linux-riscv/linux</code> repository (the RISC-V maintainer staging tree) has a GitHub Actions workflow (<code class="language-plaintext highlighter-rouge">.github/workflows/patchwork.yml</code>) that runs on self-hosted runners via <code class="language-plaintext highlighter-rouge">ghcr.io/linux-riscv/pw-builder:latest</code>. The CI is driven by <code class="language-plaintext highlighter-rouge">.github/scripts/pw_ci.py</code>, whose <code class="language-plaintext highlighter-rouge">create_test_list()</code> function generates the following RISC-V build checks:</p>
+<p>Direct fetch of the <code class="language-plaintext highlighter-rouge">torvalds/linux.git</code> root tree and the <code class="language-plaintext highlighter-rouge">tools/perf</code> subtree (raw listings, not summarized) confirms <strong>no CI configuration exists inside the repository at all</strong>, for any architecture: no <code class="language-plaintext highlighter-rouge">.github/</code>, no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, no <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, no <code class="language-plaintext highlighter-rouge">ci/</code> directory. <code class="language-plaintext highlighter-rouge">tools/perf/tests/</code> is perf’s own in-tree self-test harness (<code class="language-plaintext highlighter-rouge">perf test</code>, run manually or by distro packagers), not an automated CI pipeline definition.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">build-rv64-clang-allmodconfig</code></li>
-  <li><code class="language-plaintext highlighter-rouge">build-rv64-gcc-allmodconfig</code></li>
-  <li><code class="language-plaintext highlighter-rouge">build-rv64-nommu-k210-defconfig</code></li>
-  <li><code class="language-plaintext highlighter-rouge">build-rv64-nommu-k210-virt</code></li>
-</ul>
+<p>riscv64 CI coverage for linux-perf exists <strong>outside</strong> this repository, in two places:</p>
 
-<p>These checks run for all patches submitted to the linux-riscv patchwork project, including perf patches. They are compile-only checks against <code class="language-plaintext highlighter-rouge">ARCH=riscv allmodconfig</code>.</p>
-<h3 id="72-what-does-not-exist">
-  
-  
-    <a href="#72-what-does-not-exist" class="anchor-heading" aria-labelledby="72-what-does-not-exist"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.2 What does not exist
-  
-  
-</h3>
-    
+<ol>
+  <li><strong>linux-riscv maintainer staging tree</strong> (<code class="language-plaintext highlighter-rouge">github.com/linux-riscv/linux</code>) runs GitHub Actions (<code class="language-plaintext highlighter-rouge">.github/workflows/patchwork.yml</code>, self-hosted runners via <code class="language-plaintext highlighter-rouge">ghcr.io/linux-riscv/pw-builder:latest</code>), generating <code class="language-plaintext highlighter-rouge">build-rv64-clang-allmodconfig</code> and <code class="language-plaintext highlighter-rouge">build-rv64-gcc-allmodconfig</code> jobs (plus two nommu/k210 defconfig jobs) for every patch submitted to the linux-riscv patchwork project, including perf patches. These are compile-only checks against <code class="language-plaintext highlighter-rouge">ARCH=riscv allmodconfig</code> – they verify that <code class="language-plaintext highlighter-rouge">drivers/perf/</code> and <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code> compile, nothing more.</li>
+  <li><strong>Intel’s 0-Day / kernel-test-robot</strong> (the <code class="language-plaintext highlighter-rouge">lkp-tests</code> project) independently cross-builds <code class="language-plaintext highlighter-rouge">tools/perf</code> for riscv64 using config <code class="language-plaintext highlighter-rouge">riscv-allnoconfig-bpf</code> and <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code>, watching <code class="language-plaintext highlighter-rouge">linux-perf-users@vger.kernel.org</code> and other mailing lists plus patchwork, posting build reports back to-list. Concrete examples: a build failure in <code class="language-plaintext highlighter-rouge">tools/perf/tests/pmu-events.c</code> bisected to commit <code class="language-plaintext highlighter-rouge">e4c41d658075</code> (<a href="https://ratatoskr.run/oe-kbuild/2026/06/17078974">2026-06 report</a>); a <code class="language-plaintext highlighter-rouge">riscv-allnoconfig-bpf</code> build of a perf-record patch (<a href="https://ratatoskr.run/oe-kbuild/2026/03/14472731">2026-03</a>); and the November 2023 build-failure report on the unmerged “perf callchain: Support riscv” patch (<a href="https://ratatoskr.run/oe-kbuild-all/2023/11/2409541">2023-11</a>).</li>
+</ol>
 
-<ul>
-  <li>No dedicated linux-perf CI project targeting riscv64.</li>
-  <li>No CI that runs <code class="language-plaintext highlighter-rouge">perf</code> userspace test cases on riscv64. The <code class="language-plaintext highlighter-rouge">build-rv64-*</code> checks verify that the kernel tree (including <code class="language-plaintext highlighter-rouge">drivers/perf/</code>) compiles; they do not execute perf functionality.</li>
-  <li>The upstream Torvalds tree (<code class="language-plaintext highlighter-rouge">torvalds/linux</code>) has no <code class="language-plaintext highlighter-rouge">.github</code> directory and no GitHub Actions CI of any kind.</li>
-  <li>KernelCI lists RISC-V as a partner ecosystem, but no publicly accessible CI configuration for linux-perf + riscv64 was found in <code class="language-plaintext highlighter-rouge">kernelci/kernelci-core</code>.</li>
-  <li>The RISE Confluence wiki explicitly states: “Perf CI on open source projects (LKP etc.): just build check, no function/perf test and profiling” – with enabling functional/perf CI listed as future work.</li>
-</ul>
-<h3 id="73-practical-consequence">
-  
-  
-    <a href="#73-practical-consequence" class="anchor-heading" aria-labelledby="73-practical-consequence"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.3 Practical consequence
-  
-  
-</h3>
-    
+<p>No Buildbot, Jenkins, or GitLab CI pipeline dedicated to linux-perf + riscv64 was found; Jenkins itself has no native RISC-V support. <code class="language-plaintext highlighter-rouge">git.kernel.org</code>’s cgit interface carries no CI integration of any kind – it is a bare source mirror.</p>
 
-<p>Build regressions in <code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu_sbi.c</code> and <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code> are caught by the linux-riscv <code class="language-plaintext highlighter-rouge">allmodconfig</code> CI. Runtime regressions (wrong counter values, callchain corruption, KVM attribution errors) are caught only by developers with physical hardware or by reports from downstream users. There is no automated functional regression coverage.</p><hr />
+<p>Per the project’s own RISE sw-ecosystem status report, this CI is explicitly characterized as “just build check, no function/perf test and profiling.” <strong>This is a build-only CI job: it compiles riscv64, it runs no test suite.</strong> No RISE-funded RFP or RISE RISC-V Runner-based CI exists for linux-perf; it is tracked only informally by the (now-merged) Debug and Profiling Working Group.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>CI dimension</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Compile-checked on every patch</td>
+      <td>Yes (0-Day CI, native CI)</td>
+      <td>Yes</td>
+      <td>Yes (linux-riscv staging tree + 0-Day riscv-allnoconfig-bpf)</td>
+    </tr>
+    <tr>
+      <td>Functional/regression test execution</td>
+      <td>Yes (x86 selftests, KUnit)</td>
+      <td>Partial</td>
+      <td>No – build-only</td>
+    </tr>
+    <tr>
+      <td>Hardware-in-the-loop perf accuracy testing</td>
+      <td>Ad hoc</td>
+      <td>Ad hoc</td>
+      <td>None identified</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Practical consequence:</strong> build regressions in <code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu_sbi.c</code> and <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code> are caught automatically. Runtime regressions – wrong counter values, callchain corruption, KVM attribution errors – are caught only by developers with physical hardware or downstream bug reports. The single change that would move linux-perf’s grade above build-only CI is adding riscv64 functional/test execution to either the linux-riscv staging tree or the 0-Day CI, rather than compile checks alone.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -1000,68 +806,21 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
 </h2>
     
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Distribution</th>
-      <th>Package Name</th>
-      <th>riscv64 Available</th>
-      <th>Version</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>kernel.org</td>
-      <td>N/A (source only)</td>
-      <td>N/A</td>
-      <td>v7.1 (2026-06-14)</td>
-      <td>Latest stable; perf is in tools/perf/</td>
-    </tr>
-    <tr>
-      <td>Debian sid</td>
-      <td><code class="language-plaintext highlighter-rouge">linux-perf</code></td>
-      <td>Yes</td>
-      <td>7.0.12-2</td>
-      <td>Official port; riscv64 binary built alongside amd64, arm64, loong64, s390x</td>
-    </tr>
-    <tr>
-      <td>Ubuntu 24.04</td>
-      <td><code class="language-plaintext highlighter-rouge">linux-tools-generic</code></td>
-      <td>Indirectly</td>
-      <td>–</td>
-      <td>Kernel perf binary shipped as <code class="language-plaintext highlighter-rouge">linux-tools-&lt;kernel-version&gt;</code>, not <code class="language-plaintext highlighter-rouge">linux-perf</code></td>
-    </tr>
-    <tr>
-      <td>Ubuntu 24.04</td>
-      <td><code class="language-plaintext highlighter-rouge">librust-linux-perf-data-dev</code></td>
-      <td>Yes</td>
-      <td>0.6.0-1</td>
-      <td>Rust crate wrapper; riscv64 present</td>
-    </tr>
-    <tr>
-      <td>Arch Linux RISC-V</td>
-      <td><code class="language-plaintext highlighter-rouge">perf</code></td>
-      <td>Yes</td>
-      <td>7.0.10-1</td>
-      <td><code class="language-plaintext highlighter-rouge">perf-7.0.10-1-riscv64.pkg.tar.zst</code>, 3.0 MB, 2026-05-29</td>
-    </tr>
-    <tr>
-      <td>PyPI</td>
-      <td><code class="language-plaintext highlighter-rouge">linux-perf</code></td>
-      <td>No</td>
-      <td>N/A</td>
-      <td>HTTP 404; package does not exist</td>
-    </tr>
-    <tr>
-      <td>RISE wheel builder</td>
-      <td><code class="language-plaintext highlighter-rouge">linux-perf</code></td>
-      <td>No</td>
-      <td>N/A</td>
-      <td>Redirects to PyPI; also 404</td>
-    </tr>
-  </tbody>
-</table></div><hr />
+<p><strong>PyPI:</strong> no package. <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/linux-perf/json</code> returns HTTP 404 (<code class="language-plaintext highlighter-rouge">{"message": "Not Found"}</code>), confirmed on repeated checks including a no-hyphen variant (<code class="language-plaintext highlighter-rouge">linuxperf</code>, also 404). This is expected: linux-perf is not a Python package, it is the kernel’s <code class="language-plaintext highlighter-rouge">perf</code> tool. The RISE GitLab wheel-builder endpoint (<code class="language-plaintext highlighter-rouge">gitlab.com/api/v4/.../packages/pypi/simple/linux-perf/</code>) redirects (HTTP 302) to the same PyPI 404.</p>
+
+<p><strong>Ubuntu 26.04 (resolute):</strong> confirmed available for riscv64 via three independent live checks (search page, direct package page, and a HEAD request on the actual <code class="language-plaintext highlighter-rouge">.deb</code>, all HTTP 200). Critically, riscv64 ships only through the <strong>ports</strong> pocket at an older build, not the primary security-tracked build:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">7.0.0-34.34</code> [security pocket]: amd64, arm64 only.</li>
+  <li><code class="language-plaintext highlighter-rouge">7.0.0-14.14</code> [<strong>ports</strong> pocket]: ppc64el, <strong>riscv64</strong>, s390x.</li>
+</ul>
+
+<p>The riscv64 <code class="language-plaintext highlighter-rouge">.deb</code> itself was verified reachable: <code class="language-plaintext highlighter-rouge">http://ports.ubuntu.com/pool/main/l/linux/linux-perf_7.0.0-14.14_riscv64.deb</code> returns HTTP 200, content-length 5,914,818 bytes, matching the listed 5,776.2 kB – a real binary artifact, not a placeholder. This is a secondary-tier, currently-stale build relative to the primary architectures: riscv64 lags the amd64/arm64 build by roughly 20 point releases (14.14 vs 34.34) within the same 7.0.0 series. On Ubuntu 24.04, the kernel-matched perf binary is instead shipped as <code class="language-plaintext highlighter-rouge">linux-tools-&lt;kernel-version&gt;</code> (indirect path).</p>
+
+<p><strong>Debian sid:</strong> per the project’s own prior status research and the readiness-grade justification, Debian sid ships <code class="language-plaintext highlighter-rouge">linux-perf</code>/<code class="language-plaintext highlighter-rouge">perf</code> for riscv64 built from unmodified upstream source with no riscv64-specific packaging patches identified. This was not independently re-fetched in the current research round; it is consistent with, and not contradicted by, any live finding here.</p>
+
+<p><strong>Arch Linux RISC-V:</strong> <strong>contradictory evidence.</strong> The readiness-grade justification and an earlier dependency pass both state Arch Linux RISC-V ships <code class="language-plaintext highlighter-rouge">perf</code> for riscv64 (a specific version, <code class="language-plaintext highlighter-rouge">perf-7.0.10-1-riscv64.pkg.tar.zst</code>, 3.0 MB, dated 2026-05-29, appears in project tracking). However, a direct verification pass against <code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code> – checking the search endpoint, the full repo listing, and the site home page – found <strong>no package named <code class="language-plaintext highlighter-rouge">linux-perf</code>, and no hit at all for the substring “perf” anywhere on the site</strong>. This is a genuine discrepancy between sources: either the earlier claim is stale/inaccurate, the package is hosted under a different name or a different repo mirror than the one checked, or the <code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code> mirror is itself incomplete relative to the canonical Arch Linux RISC-V repository. [NEEDS VERIFICATION – re-check against the authoritative Arch Linux RISC-V package index directly, not the felixc.at mirror, before treating Arch as a confirmed riscv64 distribution channel.]</p>
+
+<p><strong>What a user must do to get a working binary today:</strong> on Ubuntu 26.04, enable the ports pocket and install the riscv64 <code class="language-plaintext highlighter-rouge">.deb</code> directly (accepting a ~20-release-behind version relative to amd64/arm64); on Debian sid, install the standard <code class="language-plaintext highlighter-rouge">linux-perf</code> package (riscv64 believed current, not independently re-verified this round); Arch Linux RISC-V availability is unconfirmed pending resolution of the discrepancy above. There is no first-class, always-current riscv64 binary channel; the kernel itself publishes no binaries (packaging is distro-owned).</p>
 <h2 id="9-dependencies">
   
   
@@ -1076,351 +835,183 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>riscv64 Build Status</th>
-      <th>riscv64 Release Status</th>
-      <th>Blocking Issues</th>
+      <th>Criticality</th>
+      <th>riscv64 build status</th>
+      <th>riscv64 release status</th>
+      <th>Notes / blocking issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>libelf (elfutils)</td>
-      <td>ELF/DWARF parsing; required for symbol resolution, kprobes, uprobes, JVMTI; disabling cascades to disable libdw, libbpf, and JVMTI</td>
+      <td>elfutils</td>
+      <td>ELF/DWARF parsing (libelf/libdw); symbol resolution, uprobes/kprobes, JVMTI, DWARF unwinding</td>
+      <td>Critical</td>
       <td>Builds</td>
-      <td>Debian sid, Ubuntu 24.04, Arch Linux riscv64 all package libelf; Arch riscv64 lags at 0.192 vs. 0.195 upstream</td>
-      <td>Version lag on riscv64 distros; no build blockers</td>
-    </tr>
-    <tr>
-      <td>libdw (elfutils)</td>
-      <td>DWARF stack unwinding (<code class="language-plaintext highlighter-rouge">--call-graph=dwarf</code>); primary production unwinder on riscv64</td>
-      <td>Builds</td>
-      <td>Same packages as libelf</td>
-      <td>None specific to riscv64; this is the dominant unwinder on riscv64 in practice</td>
-    </tr>
-    <tr>
-      <td>libunwind</td>
-      <td>Stack unwinding (<code class="language-plaintext highlighter-rouge">--call-graph=fp</code>); not wired for riscv64 in <code class="language-plaintext highlighter-rouge">Makefile.config</code></td>
-      <td>Builds (generic path)</td>
-      <td>Debian sid 1.8.1, Arch riscv64 1.8.1</td>
-      <td>Not wired in <code class="language-plaintext highlighter-rouge">Makefile.config</code> per-arch map; Ian Rogers v5 patch in review; medium severity</td>
-    </tr>
-    <tr>
-      <td>libbpf</td>
-      <td>BPF program loading, <code class="language-plaintext highlighter-rouge">perf stat --bpf-counters</code>, <code class="language-plaintext highlighter-rouge">perf trace</code>, BPF skeletons</td>
-      <td>Builds</td>
-      <td>Debian sid 1.7.0; official port</td>
-      <td>BPF skeletons on riscv64 require clang with riscv64 BPF backend (available since LLVM 12); not blocking</td>
-    </tr>
-    <tr>
-      <td>OpenSSL</td>
-      <td>Required for <code class="language-plaintext highlighter-rouge">BUILD_BPF_SKEL</code>; perf kvm key validation</td>
-      <td>Builds</td>
-      <td>Debian sid, Ubuntu 24.04, Arch riscv64 all package OpenSSL 3.x; some distros lag vs. upstream</td>
-      <td>Version lag on some riscv64 distros; see <code class="language-plaintext highlighter-rouge">project-reports/openssl.md</code> (not yet written)</td>
-    </tr>
-    <tr>
-      <td>zlib</td>
-      <td>Compressed debug sections</td>
-      <td>Builds</td>
-      <td>Debian sid 1.3.x</td>
-      <td>None; architecture-neutral</td>
-    </tr>
-    <tr>
-      <td>libzstd</td>
-      <td>zstd-compressed trace data</td>
-      <td>Builds</td>
-      <td>Available in Debian sid, Arch riscv64</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>Python 3</td>
-      <td><code class="language-plaintext highlighter-rouge">perf script</code> Python bindings; <code class="language-plaintext highlighter-rouge">jevents</code> event table generation</td>
-      <td>Partial</td>
-      <td>Available; build failure on Python 3.13+</td>
-      <td>CPython issue #121201 (open): <code class="language-plaintext highlighter-rouge">perf_jit_trampoline.c</code> fails to build on riscv64 for Python 3.13-3.15; affects JIT profiling integration</td>
-    </tr>
-    <tr>
-      <td>libpfm4</td>
-      <td>Hardware PMU event name resolution (<code class="language-plaintext highlighter-rouge">perf list</code>)</td>
-      <td>Builds</td>
-      <td>Debian sid 4.13.0+git106 for riscv64</td>
-      <td>No RISC-V hardware PMU event tables defined in libpfm4 upstream; <code class="language-plaintext highlighter-rouge">perf list</code> falls back to raw event codes</td>
-    </tr>
-    <tr>
-      <td>glibc</td>
-      <td>C runtime; <code class="language-plaintext highlighter-rouge">perf_event_open</code> ABI</td>
-      <td>Partial</td>
-      <td>Available in all major riscv64 distros</td>
-      <td>Known test failures in glibc test suite on riscv64; see <code class="language-plaintext highlighter-rouge">project-reports/glibc.md</code> (not yet written)</td>
+      <td>Debian sid, Ubuntu, Arch Linux RISC-V package it for riscv64; Arch lags at 0.192 vs 0.195 upstream</td>
+      <td>Disabling it cascades to disable libdw, libbpf-dependent features, and JVMTI. DWARF unwinding via libdw is the dominant unwinder on riscv64 in practice</td>
     </tr>
     <tr>
       <td>libtraceevent</td>
-      <td>Trace event parsing; hard required unless <code class="language-plaintext highlighter-rouge">NO_LIBTRACEEVENT=1</code></td>
+      <td>Trace event parsing</td>
+      <td>Critical</td>
       <td>Builds</td>
-      <td>Debian sid for riscv64</td>
-      <td>Cross-compilation fails silently if absent without explicit <code class="language-plaintext highlighter-rouge">NO_LIBTRACEEVENT=1</code></td>
+      <td>Packaged in Debian sid for riscv64</td>
+      <td>Hard build failure (<code class="language-plaintext highlighter-rouge">"ERROR: libtraceevent is missing."</code>) unless <code class="language-plaintext highlighter-rouge">NO_LIBTRACEEVENT=1</code> is set explicitly when absent – a silent cross-compile trap</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Primary build toolchain</td>
+      <td>Critical (build)</td>
+      <td>Riscv64 cross-compiler (<code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code>) widely available and is the toolchain used by both 0-Day CI and distro packagers</td>
+      <td>N/A (toolchain, not a runtime artifact)</td>
+      <td>GCC 13.3.0/13.4.0 had a confirmed false-positive <code class="language-plaintext highlighter-rouge">-Werror=alloc-size-larger-than=</code> regression building perf’s <code class="language-plaintext highlighter-rouge">cpumap.c</code> on riscv64 (fixed by Ian Rogers, March 2026); GCC 11.5.0, 12.5.0, 14.3.0, 15.2.0 unaffected. Minimum version 8.1 kernel-wide</td>
+    </tr>
+    <tr>
+      <td>GNU binutils</td>
+      <td>Assembler/linker</td>
+      <td>Critical (build)</td>
+      <td>Riscv64 cross-binutils widely available</td>
+      <td>N/A</td>
+      <td>Minimum 2.30 (2.42 for non-distro builds per <code class="language-plaintext highlighter-rouge">Makefile.config</code>); riscv64 relies on reasonably current binutils for RVV/newer-ISA-extension assembler support</td>
+    </tr>
+    <tr>
+      <td>LLVM</td>
+      <td>Optional Clang build path, BPF skeleton compilation</td>
+      <td>Optional (build)</td>
+      <td>Builds; riscv64 is a Tier-1 LLVM backend</td>
+      <td>Available on all major riscv64 distros</td>
+      <td>Clang 12.0.1+ required specifically for BPF skeletons; <code class="language-plaintext highlighter-rouge">CLANG_TARGET_FLAGS_riscv := riscv64-linux-gnu</code> auto-configures the target triple</td>
+    </tr>
+    <tr>
+      <td>libunwind</td>
+      <td>Frame-pointer/LBR-style stack unwinding (<code class="language-plaintext highlighter-rouge">--call-graph=fp</code>)</td>
+      <td>Optional (runtime)</td>
+      <td>Builds via generic fallback path only</td>
+      <td>Debian sid 1.8.1; Arch riscv64 1.8.1 (subject to the Section 8 Arch discrepancy)</td>
+      <td><strong>Not wired into <code class="language-plaintext highlighter-rouge">Makefile.config</code>’s per-architecture map</strong> (riscv64 absent from the explicit <code class="language-plaintext highlighter-rouge">LIBUNWIND_ARCHS</code> handling seen at build time; a 7-patch wiring series from Ian Rogers, Google, v5 as of 2026-05-13, remains unmerged, “New” status, no recorded reviewer activity as of the last check)</td>
+    </tr>
+    <tr>
+      <td>libbpf</td>
+      <td>BPF program loading, <code class="language-plaintext highlighter-rouge">perf stat --bpf-counters</code>, BPF skeletons</td>
+      <td>Optional (runtime)</td>
+      <td>Builds</td>
+      <td>Debian sid 1.7.0, official port</td>
+      <td>BPF skeletons require a riscv64 clang BPF backend, available since LLVM 12; not currently blocking</td>
+    </tr>
+    <tr>
+      <td>OpenSSL</td>
+      <td>Required for <code class="language-plaintext highlighter-rouge">BUILD_BPF_SKEL</code>, KVM key validation</td>
+      <td>Optional (runtime)</td>
+      <td>Builds</td>
+      <td>Debian sid, Ubuntu, Arch riscv64 all package OpenSSL 3.x</td>
+      <td>Some riscv64 distro builds lag upstream OpenSSL by a version or two; not a hard blocker</td>
+    </tr>
+    <tr>
+      <td>zlib</td>
+      <td>Compressed debug-section support</td>
+      <td>Optional (runtime)</td>
+      <td>Builds</td>
+      <td>Debian sid 1.3.x for riscv64</td>
+      <td>Architecture-neutral; no riscv64-specific issues</td>
+    </tr>
+    <tr>
+      <td>zstd</td>
+      <td>zstd trace-data compression</td>
+      <td>Optional (runtime)</td>
+      <td>Builds</td>
+      <td>Available in Debian sid, Arch riscv64 (subject to Section 8 caveat)</td>
+      <td>None identified</td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td><code class="language-plaintext highlighter-rouge">perf script</code> bindings, <code class="language-plaintext highlighter-rouge">jevents</code> PMU event-table generation</td>
+      <td>Optional (runtime)</td>
+      <td>Partial – fails for Python 3.13-3.15</td>
+      <td>Available on all major riscv64 distros at the interpreter level</td>
+      <td>Open bug, CPython issue #120400/#121201: <code class="language-plaintext highlighter-rouge">Python/perf_jit_trampoline.c</code> fails to build on riscv64 for CPython 3.13-3.15 (<code class="language-plaintext highlighter-rouge">HAVE_PERF_TRAMPOLINE</code> reports 0). A fix attempt (PR #120089) was followed by a reversion (PR #121328) that disabled <code class="language-plaintext highlighter-rouge">perf_trampoline</code> on riscv64 again after implementation problems surfaced; the issue is closed with the feature effectively deferred, not fixed. This breaks <code class="language-plaintext highlighter-rouge">perf script</code> JIT/Python-call visibility on riscv64 specifically</td>
+    </tr>
+    <tr>
+      <td>libpfm4</td>
+      <td>Hardware PMU event-name resolution for <code class="language-plaintext highlighter-rouge">perf list</code></td>
+      <td>Optional (runtime)</td>
+      <td>Builds</td>
+      <td>Debian sid 4.13.0+git106 for riscv64</td>
+      <td>No RISC-V hardware PMU event tables exist in libpfm4 upstream at all; <code class="language-plaintext highlighter-rouge">perf list</code> falls back to raw event codes on every RISC-V platform</td>
     </tr>
     <tr>
       <td>libnuma</td>
-      <td>NUMA topology in <code class="language-plaintext highlighter-rouge">perf stat</code>, <code class="language-plaintext highlighter-rouge">perf bench numa</code></td>
+      <td>NUMA topology in <code class="language-plaintext highlighter-rouge">perf stat</code>/<code class="language-plaintext highlighter-rouge">perf bench numa</code></td>
+      <td>Optional (runtime)</td>
       <td>Builds</td>
       <td>Debian sid 2.0.19-1 for riscv64</td>
-      <td>NUMA on riscv64 requires kernel NUMA support; mainstream RISC-V SoCs are single-node</td>
+      <td>Mainstream RISC-V SoCs are currently single-node; low practical impact</td>
     </tr>
     <tr>
-      <td>libslang2</td>
-      <td>TUI for <code class="language-plaintext highlighter-rouge">perf top</code>, <code class="language-plaintext highlighter-rouge">perf report</code></td>
-      <td>Builds</td>
-      <td>Debian sid 2.3.3-6 for riscv64</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>libbabeltrace</td>
-      <td>CTF conversion in <code class="language-plaintext highlighter-rouge">perf data --to-ctf</code></td>
-      <td>Builds</td>
-      <td>Debian sid 1.5.11-6 for riscv64</td>
-      <td>None; optional path</td>
+      <td>babeltrace</td>
+      <td>CTF trace conversion (<code class="language-plaintext highlighter-rouge">perf data --to-ctf</code>)</td>
+      <td>Optional (runtime)</td>
+      <td>Builds (Debian sid ships 1.5.11-6, an older libbabeltrace2)</td>
+      <td>Packaged for riscv64 in Debian sid</td>
+      <td>Optional code path; no riscv64-specific issues found</td>
     </tr>
     <tr>
       <td>GTK2</td>
       <td><code class="language-plaintext highlighter-rouge">perf annotate --gtk</code> GUI</td>
-      <td>Unknown</td>
-      <td>Minimal riscv64 availability; GTK2 is EOL</td>
-      <td>GTK2 deprecated; not a production use case blocker</td>
+      <td>Optional (runtime)</td>
+      <td>Status unassessed for riscv64</td>
+      <td>Minimal riscv64 availability; GTK2 is EOL upstream</td>
+      <td>Deprecated toolkit generally; not a production blocker</td>
     </tr>
     <tr>
-      <td>clang</td>
-      <td>Required for <code class="language-plaintext highlighter-rouge">BUILD_BPF_SKEL</code></td>
+      <td>glibc</td>
+      <td>C runtime, <code class="language-plaintext highlighter-rouge">perf_event_open</code> ABI</td>
+      <td>Critical</td>
+      <td>Available on all major riscv64 distros</td>
+      <td>Available</td>
+      <td>Known riscv64 glibc test-suite failures exist upstream (tracked separately, outside this report’s scope); no perf-specific glibc blocker identified</td>
+    </tr>
+    <tr>
+      <td>flex</td>
+      <td>Build-time parser generator</td>
+      <td>Build (indirect, not in the direct-dependency list above)</td>
+      <td>Architecture-neutral tool</td>
+      <td>Universal</td>
+      <td>Not a riscv64 concern</td>
+    </tr>
+    <tr>
+      <td>bison</td>
+      <td>Build-time parser generator</td>
+      <td>Build (indirect)</td>
+      <td>Architecture-neutral tool</td>
+      <td>Universal</td>
+      <td>Not a riscv64 concern</td>
+    </tr>
+    <tr>
+      <td>libslang2</td>
+      <td>TUI for <code class="language-plaintext highlighter-rouge">perf top</code>/<code class="language-plaintext highlighter-rouge">perf report</code></td>
+      <td>Optional (indirect)</td>
       <td>Builds</td>
-      <td>Available in all major riscv64 distros</td>
-      <td>LLVM riscv64 backend is Tier-1; see <code class="language-plaintext highlighter-rouge">project-reports/lldb.md</code></td>
-    </tr>
-  </tbody>
-</table></div><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-<h3 id="101-governance-and-maintainership">
-  
-  
-    <a href="#101-governance-and-maintainership" class="anchor-heading" aria-labelledby="101-governance-and-maintainership"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 Governance and maintainership
-  
-  
-</h3>
-    
-
-<p>linux-perf is governed by the Linux Foundation / kernel.org development process. No separate foundation exists.</p>
-
-<p>Top-level PERFORMANCE EVENTS SUBSYSTEM maintainers (from <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>):</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Role</th>
-      <th>Name</th>
-      <th>Company</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Maintainer</td>
-      <td>Peter Zijlstra</td>
-      <td>Intel</td>
+      <td>Debian sid 2.3.3-6 for riscv64</td>
+      <td>None identified</td>
     </tr>
     <tr>
-      <td>Maintainer</td>
-      <td>Ingo Molnar</td>
-      <td>Red Hat / IBM</td>
+      <td>libcapstone</td>
+      <td>Disassembly engine for <code class="language-plaintext highlighter-rouge">perf annotate</code></td>
+      <td>Optional (indirect)</td>
+      <td>Status not directly confirmed for riscv64</td>
+      <td>Not directly confirmed in prior research</td>
+      <td>No riscv64-specific issues noted</td>
     </tr>
     <tr>
-      <td>Maintainer</td>
-      <td>Arnaldo Carvalho de Melo</td>
-      <td>Red Hat / IBM</td>
-    </tr>
-    <tr>
-      <td>Maintainer</td>
-      <td>Namhyung Kim</td>
-      <td>Google</td>
-    </tr>
-    <tr>
-      <td>Reviewer</td>
-      <td>Mark Rutland</td>
-      <td>Arm</td>
-    </tr>
-    <tr>
-      <td>Reviewer</td>
-      <td>Alexander Shishkin</td>
-      <td>Intel</td>
-    </tr>
-    <tr>
-      <td>Reviewer</td>
-      <td>Jiri Olsa</td>
-      <td>Red Hat / IBM</td>
-    </tr>
-    <tr>
-      <td>Reviewer</td>
-      <td>Ian Rogers</td>
-      <td>Google</td>
-    </tr>
-    <tr>
-      <td>Reviewer</td>
-      <td>Adrian Hunter</td>
-      <td>Intel</td>
-    </tr>
-    <tr>
-      <td>Reviewer</td>
-      <td>James Clark</td>
-      <td>Linaro</td>
+      <td>liblzma (xz)</td>
+      <td>xz decompression</td>
+      <td>Optional (indirect)</td>
+      <td>Builds</td>
+      <td>Tracked upstream, architecture-neutral</td>
+      <td>None expected</td>
     </tr>
   </tbody>
 </table></div>
-
-<p>RISC-V PMU DRIVERS (<code class="language-plaintext highlighter-rouge">drivers/perf/riscv_pmu*.c</code>) maintainers:</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Role</th>
-      <th>Name</th>
-      <th>Company</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Maintainer</td>
-      <td>Atish Patra</td>
-      <td>Rivos Inc.</td>
-    </tr>
-    <tr>
-      <td>Reviewer</td>
-      <td>Anup Patel</td>
-      <td>Ventana Micro Systems</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>Dominant corporate presence in top-level maintainers: Red Hat/IBM (two of four maintainers), Intel (one maintainer + one reviewer), Google (one maintainer + one reviewer). Rivos Inc. owns RISC-V PMU driver maintenance.</p>
-
-<p>Git trees:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git perf/core</code></li>
-  <li><code class="language-plaintext highlighter-rouge">git://git.kernel.org/pub/scm/linux/kernel/git/perf/perf-tools.git</code></li>
-  <li><code class="language-plaintext highlighter-rouge">git://git.kernel.org/pub/scm/linux/kernel/git/perf/perf-tools-next.git</code></li>
-</ul>
-<h3 id="102-active-contributors-to-risc-v-perf-2024-2026">
-  
-  
-    <a href="#102-active-contributors-to-risc-v-perf-2024-2026" class="anchor-heading" aria-labelledby="102-active-contributors-to-risc-v-perf-2024-2026"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 Active contributors to RISC-V perf (2024-2026)
-  
-  
-</h3>
-    
-
-<p>Contributors with merged or in-review RISC-V perf patches in the last two years:</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Contributor</th>
-      <th>Affiliation</th>
-      <th>Work</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Atish Patra</td>
-      <td>Rivos Inc. / Meta</td>
-      <td>SBI v3.0 PMU, counter delegation (v6), primary PMU maintainer</td>
-    </tr>
-    <tr>
-      <td>Ian Rogers</td>
-      <td>Google</td>
-      <td>libunwind support (v5), DWARF refactor, perf regs cleanup</td>
-    </tr>
-    <tr>
-      <td>Charlie Jenkins</td>
-      <td>Rivos Inc.</td>
-      <td>perf trace syscall table, code reading fix</td>
-    </tr>
-    <tr>
-      <td>Haibo Xu</td>
-      <td>Intel</td>
-      <td>perf symbols mapping fix</td>
-    </tr>
-    <tr>
-      <td>Alexandre Ghiti</td>
-      <td>Rivos Inc.</td>
-      <td>put_cpu() fix</td>
-    </tr>
-    <tr>
-      <td>Yunhui Cui</td>
-      <td>ByteDance</td>
-      <td>empty batch optimization</td>
-    </tr>
-    <tr>
-      <td>Zhanpeng Zhang</td>
-      <td>ByteDance</td>
-      <td>throttle bug fix (blocked)</td>
-    </tr>
-    <tr>
-      <td>Chen Pei</td>
-      <td>Alibaba</td>
-      <td>fixed counter bug (blocked), SDT argument parsing</td>
-    </tr>
-    <tr>
-      <td>zcxGGmu (Quan Zhou)</td>
-      <td>ISCAS</td>
-      <td>KVM interrupt events, guest/host distinction</td>
-    </tr>
-    <tr>
-      <td>Anup Patel / Mayuresh Chitale</td>
-      <td>Qualcomm</td>
-      <td>RISC-V trace framework + perf decoder</td>
-    </tr>
-    <tr>
-      <td>Samuel Holland</td>
-      <td>SiFive</td>
-      <td>SiFive P550/P650 vendor event files</td>
-    </tr>
-    <tr>
-      <td>Manuel Hernandez</td>
-      <td>OpenChip</td>
-      <td>CVA6 vendor event file</td>
-    </tr>
-    <tr>
-      <td>Li Guan</td>
-      <td>ISCAS</td>
-      <td>const qualifier fix</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="103-rise-involvement">
-  
-  
-    <a href="#103-rise-involvement" class="anchor-heading" aria-labelledby="103-rise-involvement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 RISE involvement
-  
-  
-</h3>
-    
-
-<p>The RISE Debug &amp; Profiling Working Group tracks linux-perf as kernel upstreaming tasks, not as a funded RFP project. Tracked items include:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">DP_04_001</code> – Userspace cycle/instret access: Completed and upstreamed (Q3 2023).</li>
-  <li><code class="language-plaintext highlighter-rouge">DP_04_002</code> – Perf event discovery/encoding from JSON: Development done; upstreaming in progress via counter delegation series.</li>
-  <li><code class="language-plaintext highlighter-rouge">DP_04_003</code> – Perf CTR (Control Transfer Records, equivalent to Intel PT/LBR): Development done; upstreaming in progress as of December 2024.</li>
-  <li><code class="language-plaintext highlighter-rouge">LK_01_024</code> – Supervisor counter delegation (Smcdeleg/Ssccfg): Tracked separately; v6 series in review.</li>
-  <li><code class="language-plaintext highlighter-rouge">LK_01_025</code> – Control Transfer Record perf driver: Development done, upstreaming WIP (December 2024 webinar).</li>
-  <li><code class="language-plaintext highlighter-rouge">LK_01_053</code> – RISC-V eTrace perf support: Development completed, upstreaming ongoing; companies: Ventana; contacts: Mayuresh Chitale, Aravind Buduri.</li>
-</ul>
-
-<p>No quantitative benchmark data comparing linux-perf on riscv64 vs arm64 was found in RISE publications. The RISE Confluence wiki explicitly states that RISC-V perf CI is currently build-check only with no functional or performance testing.</p>
-
-<p>RISE member companies with confirmed contributors to RISC-V perf patches: ByteDance, ISCAS, Qualcomm, SiFive. Rivos Inc. is the primary maintainer but is not listed as a current RISE member on the homepage [NEEDS VERIFICATION – member list may lag actual membership status].</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1429,163 +1020,81 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
   
 </h2>
     
-<h3 id="111-open-patches-in-new-status-unmerged-as-of-2026-06-17">
-  
-  
-    <a href="#111-open-patches-in-new-status-unmerged-as-of-2026-06-17" class="anchor-heading" aria-labelledby="111-open-patches-in-new-status-unmerged-as-of-2026-06-17"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.1 Open patches in “New” status (unmerged as of 2026-06-17)
-  
-  
-</h3>
-    
-
-<p><strong>PMU throttle incorrectness (ByteDance):</strong></p>
-<ul>
-  <li>Patch: <a href="https://patchwork.kernel.org/project/linux-riscv/patch/20260415032017.10712-1-zhangzhanpeng.jasper@bytedance.com/">20260415032017.10712-1-zhangzhanpeng.jasper@bytedance.com</a></li>
-  <li>Author: Zhanpeng Zhang (ByteDance), 2026-04-15</li>
-  <li>Problem: The RISC-V SBI PMU overflow handler unconditionally restarts all counters, bypassing the perf core throttle mechanism. A small sampling period (e.g., <code class="language-plaintext highlighter-rouge">perf top -c 20</code>) can trigger an IRQ storm and soft lockup.</li>
-  <li>Current status: Build failure (<code class="language-plaintext highlighter-rouge">MAX_INTERRUPTS</code> undeclared; missing header include). Reviewer objection from Michael Ellerman questioning the implementation approach. Not accepted as-is.</li>
-  <li>Severity: High – can produce IRQ storms under normal usage conditions.</li>
-</ul>
-
-<p><strong>Fixed counter stops counting (Alibaba):</strong></p>
-<ul>
-  <li>Patch: <a href="https://patchwork.kernel.org/project/linux-riscv/patch/20260131112440.2915-1-cp0613@linux.alibaba.com/">20260131112440.2915-1-cp0613@linux.alibaba.com</a></li>
-  <li>Author: Chen Pei (Alibaba), 2026-01-31</li>
-  <li>Problem: Fixed hardware counters (CYCLE, INSTRET) stop counting unexpectedly under certain conditions.</li>
-  <li>Current status: Maintainer (Atish Patra) rejected the proposed fix approach on 2026-03-28, stating counting should only be enabled in explicit legacy mode and citing side-channel concerns. Needs rework.</li>
-  <li>Severity: Medium – affects measurement accuracy when fixed counters are used.</li>
-</ul>
-
-<p><strong>errno misalignment for unsupported perf types (Huawei):</strong></p>
-<ul>
-  <li>Patch: submitted 2024-08-29</li>
-  <li>Author: Pu Lehui (Huawei)</li>
-  <li>Problem: <code class="language-plaintext highlighter-rouge">pmu_sbi_event_map()</code> returns incorrect errno values for unsupported perf event types, violating API contracts.</li>
-  <li>Current status: New, unmerged since August 2024 – 10 months open.</li>
-  <li>Severity: Low – API contract violation that may confuse tooling.</li>
-</ul>
-
-<p><strong>Stale patches (unmerged since 2022):</strong> Four patches have been open with “New” status since 2022 with no recorded reviewer activity:</p>
-<ul>
-  <li>T-Head C9xx PMU variant (Heiko Stubner, 2022-09-05): PMU support for T-Head C9xx cores not upstream via SBI PMU.</li>
-  <li><code class="language-plaintext highlighter-rouge">perf_user_access</code> sysctl missing (Heiko Stubner, 2022-08-26): No sysctl knob for controlling userspace counter access.</li>
-  <li>Unique SoC PMU identification (Nikita Shubin, 2022-06-28 v5): No mechanism to uniquely identify SoC-level PMU instances.</li>
-  <li>PMU PM notifier missing (Eric Lin, SiFive, 2022-07-05): No power management notifier; PM state transitions may corrupt counter state.</li>
-</ul>
-<h3 id="112-major-feature-gaps-in-review-series">
-  
-  
-    <a href="#112-major-feature-gaps-in-review-series" class="anchor-heading" aria-labelledby="112-major-feature-gaps-in-review-series"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Major feature gaps (in-review series)
-  
-  
-</h3>
-    
-
-<p><strong>Counter delegation ISA extension support:</strong></p>
-<ul>
-  <li>Series: 21 patches, <a href="https://patchwork.kernel.org/project/linux-riscv/cover/20260608-counter_delegation-v6-0-285b72ed65a9@meta.com/">v6 cover letter</a></li>
-  <li>Author: Atish Patra (Meta/Rivos Inc.), 2026-06-08</li>
-  <li>RFC first appeared 2024-02-17 – two years in review cycle.</li>
-  <li>Current status: New; build failures on <code class="language-plaintext highlighter-rouge">rv64-clang-allmodconfig</code> and <code class="language-plaintext highlighter-rouge">rv64-gcc-allmodconfig</code>; two TEST patches marked do-not-upstream.</li>
-  <li>Impact: Without Ssccfg/Smcdeleg support, supervisor software cannot delegate PMU counters to guest VMs; KVM PMU passthrough is incomplete. Vendor-specific named events in perf JSON (the preferred event encoding path) depend on this series.</li>
-</ul>
-
-<p><strong>libunwind stack unwinding:</strong></p>
-<ul>
-  <li>Series: 7 patches, <a href="https://patchwork.kernel.org/project/linux-riscv/patch/20260513233151.572332-8-irogers@google.com/">v5 patch 7/7</a></li>
-  <li>Author: Ian Rogers (Google), 2026-05-13</li>
-  <li>Current status: New; all CI checks pass except one checkpatch warning; no reviewer activity recorded.</li>
-  <li>Impact: <code class="language-plaintext highlighter-rouge">--call-graph=fp</code> and <code class="language-plaintext highlighter-rouge">--call-graph=lbr</code> via libunwind unavailable on riscv64. DWARF via libdw works but is slower and requires debug info in binaries.</li>
-</ul>
-
-<p><strong>RISC-V trace decoder:</strong></p>
-<ul>
-  <li>Series: 12 patches, <a href="https://patchwork.kernel.org/project/linux-riscv/patch/20260429125135.1983498-12-anup.patel@oss.qualcomm.com/">v4 patch 11/12</a></li>
-  <li>Author: Mayuresh Chitale / Anup Patel (Qualcomm), 2026-04-29</li>
-  <li>Current status: New; build failures on allmodconfig; Reviewed-by from Adrian Hunter (Intel) on 2026-05-20. Greg Kroah-Hartman commented 2026-05-21 that the user ABI must be agreed upon before upstreaming.</li>
-  <li>Impact: No <code class="language-plaintext highlighter-rouge">perf record</code> with AUX-buffer instruction tracing (equivalent to Intel PT or ARM CoreSight) on RISC-V. The decoder is currently a stub with no decoding logic.</li>
-</ul>
-
-<p><strong>IOMMU hardware performance monitoring:</strong></p>
-<ul>
-  <li>Series: v5, 2026-02-28</li>
-  <li>Author: Zong Li (SiFive) / Lv Zheng</li>
-  <li>Current status: New</li>
-  <li>Impact: No perf events from RISC-V IOMMU; cannot profile DMA/IO traffic.</li>
-</ul>
-<h3 id="113-python-313-build-failure">
-  
-  
-    <a href="#113-python-313-build-failure" class="anchor-heading" aria-labelledby="113-python-313-build-failure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 Python 3.13+ build failure
-  
-  
-</h3>
-    
-
-<p>CPython issue #121201 (open as of June 2026): <code class="language-plaintext highlighter-rouge">Python/perf_jit_trampoline.c</code> fails to build on riscv64 for Python 3.13-3.15. <code class="language-plaintext highlighter-rouge">test_c_stack_unwind</code> and <code class="language-plaintext highlighter-rouge">test_frame_pointer_unwind</code> fail on Fedora 44/riscv64. This is a CPython upstream bug, not a distro packaging issue. Affects <code class="language-plaintext highlighter-rouge">perf script</code> JIT unwinding integration.</p>
-<h3 id="114-vendor-event-coverage">
-  
-  
-    <a href="#114-vendor-event-coverage" class="anchor-heading" aria-labelledby="114-vendor-event-coverage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.4 Vendor event coverage
-  
-  
-</h3>
-    
-
-<p>Named PMU events in <code class="language-plaintext highlighter-rouge">perf list</code> depend on vendor JSON files being merged. Status:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Vendor / Core</th>
+      <th>Item</th>
       <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>SiFive U74 (Bullet)</td>
-      <td>Merged (2025-02-13)</td>
+      <td>CVE-2024-26902: perf panic on PMU overflow handler</td>
+      <td>Fixed, merged v6.8, backported to stable (e.g. 6.7.11)</td>
+      <td>Was Medium (CVSS 5.5, local DoS)</td>
+      <td>Introduced by commits <code class="language-plaintext highlighter-rouge">4905ec2</code>/<code class="language-plaintext highlighter-rouge">cc4c07c</code>: a plain bitwise-OR instead of <code class="language-plaintext highlighter-rouge">BIT()</code> on the <code class="language-plaintext highlighter-rouge">overflowed_ctrs</code> bitmap in the SBI PMU overflow handler caused a NULL-pointer-dereference kernel panic reproducible via <code class="language-plaintext highlighter-rouge">perf record -e branches</code> on Sophgo SG2042 hardware. Fix confirmed present and correct (<code class="language-plaintext highlighter-rouge">BIT_ULL(lidx)</code>) in current mainline. <a href="https://ubuntu.com/security/CVE-2024-26902">Ubuntu CVE tracker</a></td>
     </tr>
     <tr>
-      <td>SiFive P550</td>
-      <td>Merged (2025-02-13)</td>
+      <td>PMU throttle IRQ-storm bug (ByteDance)</td>
+      <td>Open, build error, unresolved reviewer objection</td>
+      <td>High</td>
+      <td>Zhanpeng Zhang’s fix (submitted 2026-04-15) for the SBI PMU overflow handler unconditionally restarting all counters (bypassing perf-core throttle, risking IRQ storm/soft lockup under a small sampling period e.g. <code class="language-plaintext highlighter-rouge">perf top -c 20</code>) has an undeclared-identifier build error (<code class="language-plaintext highlighter-rouge">MAX_INTERRUPTS</code>) and an unaddressed question from a reviewer about using <code class="language-plaintext highlighter-rouge">PERF_HES_STOPPED</code> instead</td>
     </tr>
     <tr>
-      <td>SiFive P650</td>
-      <td>Merged (2025-02-13)</td>
+      <td>Fixed-counter-stop bug (Alibaba)</td>
+      <td>Open, design rejected by maintainer</td>
+      <td>Medium</td>
+      <td>Chen Pei’s fix (submitted 2026-01-31) for CYCLE/INSTRET counters unexpectedly stopping was explicitly rejected by maintainer Atish Patra (2026-03-28) over side-channel concerns; needs a full design rework</td>
     </tr>
     <tr>
-      <td>CVA6 (OpenChip)</td>
-      <td>Accepted (2025-12-04)</td>
+      <td>GCC-13 riscv64 build regression</td>
+      <td>Fixed</td>
+      <td>Was build-blocking</td>
+      <td>A commit preserving external <code class="language-plaintext highlighter-rouge">EXTRA_CFLAGS</code> leaked <code class="language-plaintext highlighter-rouge">-O6</code> into libperf, triggering a false-positive GCC-13-only <code class="language-plaintext highlighter-rouge">-Werror=alloc-size-larger-than=</code> warning in <code class="language-plaintext highlighter-rouge">cpumap.c</code>. Fixed by Ian Rogers (Google); confirmed working on riscv64/ppc64 with GCC 13.4.0; backport to linux-6.6.y requested</td>
     </tr>
     <tr>
-      <td>T-Head C920V2</td>
-      <td>Awaiting upstream (2025-10)</td>
+      <td>GCC-14 cross-arch <code class="language-plaintext highlighter-rouge">-Werror=discarded-qualifiers</code></td>
+      <td>Fixed, applied as <code class="language-plaintext highlighter-rouge">7378b6656aa4</code> (2026-06-26)</td>
+      <td>Was build-blocking</td>
+      <td><code class="language-plaintext highlighter-rouge">strrchr()</code> return assigned to non-const <code class="language-plaintext highlighter-rouge">char *</code> in <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/util/header.c</code> broke under GCC 14’s stricter glibc prototype. Maintainer rejected the initial, broader fix approach (would have incorrectly decoupled arch-specific auxtrace decoders needed for cross-arch perf.data analysis); accepted v2 narrowed to a <code class="language-plaintext highlighter-rouge">const char *</code> correction</td>
     </tr>
     <tr>
-      <td>T-Head C930</td>
-      <td>Handled elsewhere (2025-09)</td>
+      <td><code class="language-plaintext highlighter-rouge">perf-regs</code> abort bug</td>
+      <td>In review (v3, 2026-02-03)</td>
+      <td>Medium</td>
+      <td><code class="language-plaintext highlighter-rouge">perf record -I</code>/<code class="language-plaintext highlighter-rouge">--user-regs</code> with no explicit register list aborts instead of defaulting to all GP registers; traced to commit <code class="language-plaintext highlighter-rouge">3d06db9bad1a</code>. Fix centralizes register-mask handling into <code class="language-plaintext highlighter-rouge">util/perf-regs-arch/</code> for cross-arch perf.data portability</td>
     </tr>
     <tr>
-      <td>SpacemiT T100</td>
-      <td>In review (v5, 2026-02)</td>
+      <td>“perf callchain: Support riscv” build failure</td>
+      <td>Unmerged since Nov 2023</td>
+      <td>Medium</td>
+      <td>0-Day CI found multiple compile errors (undefined labels, unused variables, missing header); no accepted follow-up version found</td>
     </tr>
     <tr>
-      <td>QEMU virt machine</td>
-      <td>Part of counter delegation v6; not yet merged</td>
+      <td>SoC PMU unique identification (Nikita Shubin)</td>
+      <td>Stalled at v5, no commit found, open since 2022-06-28</td>
+      <td>Low</td>
+      <td>No vendor-specific PMU SoC-ID mechanism upstream</td>
     </tr>
     <tr>
-      <td>Andes (any core)</td>
-      <td>Data not available</td>
+      <td>CPython perf trampoline on riscv64</td>
+      <td>Closed as deferred/reverted, not fixed</td>
+      <td>Medium</td>
+      <td>python/cpython issue #120400: <code class="language-plaintext highlighter-rouge">HAVE_PERF_TRAMPOLINE</code> is 0 on riscv64; a fix (PR #120089) was reverted (PR #121328) after implementation problems. <code class="language-plaintext highlighter-rouge">perf script</code> cannot see Python calls on riscv64</td>
     </tr>
     <tr>
-      <td>Qualcomm (any core)</td>
-      <td>Data not available</td>
+      <td><code class="language-plaintext highlighter-rouge">libtraceevent</code> silent cross-compile failure mode</td>
+      <td>Ongoing build-process risk, not a bug per se</td>
+      <td>Low-Medium</td>
+      <td>Absent <code class="language-plaintext highlighter-rouge">NO_LIBTRACEEVENT=1</code>, cross builds fail without a clear diagnostic when the library is missing from the sysroot</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The majority of commercial RISC-V SoCs have no named PMU events upstream. <code class="language-plaintext highlighter-rouge">perf list</code> on those systems shows only generic SBI PMU events.</p><hr />
+<p>Stale, long-open (since 2022) items with no recorded reviewer activity, per prior project tracking [NEEDS VERIFICATION – not re-fetched this round]: T-Head C9xx PMU variant support (Heiko Stubner), a missing <code class="language-plaintext highlighter-rouge">perf_user_access</code> sysctl knob (Heiko Stubner), and a missing PMU power-management notifier (Eric Lin, SiFive).</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1595,67 +1104,92 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
 </h2>
     
 
-<p><strong>Counter delegation series (v6) build failures:</strong> The CI shows compile errors on both <code class="language-plaintext highlighter-rouge">rv64-clang-allmodconfig</code> and <code class="language-plaintext highlighter-rouge">rv64-gcc-allmodconfig</code>. These must be resolved before the series can merge. The series has been in review since February 2024 (RFC) with six revision cycles and remains open. The complexity (21 patches, 3 new ISA extensions, changes to both kernel driver and perf tool JSON format) contributes to review friction.</p>
+<p><strong>Counter delegation series (v6, Atish Patra, 21 patches):</strong> in review since RFC (2024-02) – over two years in the review cycle as of this writing. CI shows compile errors on both <code class="language-plaintext highlighter-rouge">rv64-clang-allmodconfig</code> and <code class="language-plaintext highlighter-rouge">rv64-gcc-allmodconfig</code>. The scope (21 patches spanning three new ISA extensions, kernel driver changes, and perf JSON event-encoding format changes) is itself a contributor to review friction.</p>
 
-<p><strong>PMU throttle patch build error:</strong> <code class="language-plaintext highlighter-rouge">MAX_INTERRUPTS</code> not visible in <code class="language-plaintext highlighter-rouge">riscv_pmu_sbi.c</code> due to missing header include. Additionally, reviewer Michael Ellerman questioned whether <code class="language-plaintext highlighter-rouge">PERF_HES_STOPPED</code> should be used instead. The patch author has not responded to either issue as of 2026-06-17.</p>
+<p><strong>PMU throttle patch:</strong> blocked on an undeclared-identifier build error (<code class="language-plaintext highlighter-rouge">MAX_INTERRUPTS</code>) plus an unresolved reviewer question about whether <code class="language-plaintext highlighter-rouge">PERF_HES_STOPPED</code> should be used instead. No author response recorded as of the last check.</p>
 
-<p><strong>Fixed counter patch approach rejected:</strong> Maintainer Atish Patra explicitly rejected the proposed implementation on 2026-03-28 citing side-channel concerns. The patch needs a complete design revision.</p>
+<p><strong>Fixed-counter patch:</strong> design explicitly rejected by the PMU maintainer over side-channel exposure concerns (enabling counting outside explicit legacy mode was judged to open a measurable side channel). Requires a full redesign, not an incremental fix.</p>
 
-<p><strong>RISC-V trace decoder user ABI:</strong> Greg Kroah-Hartman stated on 2026-05-21 that submissions “should be as patches, not a pull request, after you get everyone to agree that the user API is ok.” The user ABI for RISC-V trace auxtrace data has not been agreed upon by the community.</p>
+<p><strong>RISC-V trace decoder (Qualcomm, Anup Patel / Mayuresh Chitale, v4, 12 patches):</strong> build failures on allmodconfig; received a <code class="language-plaintext highlighter-rouge">Reviewed-by</code> from Adrian Hunter (Intel) on one revision, but Greg Kroah-Hartman stated the user ABI for RISC-V trace auxtrace data must be agreed upon by the community before upstreaming proceeds as submissions rather than a pull request. This is an organizational blocker (ABI consensus), not purely a technical one.</p>
 
-<p><strong>No dedicated RISC-V tooling reviewer:</strong> The absence of a named RISC-V reviewer in <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> for <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code> means review depends on top-level maintainer bandwidth. The libunwind v5 patch (Ian Rogers, Google) has been in “New” status since 2026-05-13 with no recorded reviewer activity.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>libunwind riscv64 wiring (Ian Rogers, Google, v5):</strong> no build failures reported, but no recorded reviewer activity since the 2026-05-13 posting – a direct consequence of the Section 3 structural gap (no dedicated RISC-V tooling reviewer in <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> for <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code>), leaving review dependent on top-level maintainer bandwidth for a component most top-level maintainers are not RISC-V specialists in.</p>
+
+<p><strong>“perf build: Fix cross-arch build failures” (Li Guan):</strong> a useful data point on review discipline – the maintainer (Ian Rogers) explicitly rejected two of three patches in the original series (decoupling arch-specific auxtrace decoders, and weak-symbol stubs he called “the devil’s work” over C-spec violations and LTO risk), accepting only a narrowly scoped <code class="language-plaintext highlighter-rouge">const</code>-qualifier fix. This indicates active, substantive maintainer engagement on riscv64 build-correctness patches specifically, even where the broader design proposal is rejected.</p>
+
+<p>No organizational blocker was found against RISC-V PMU/perf support in general; rejections found were narrowly scoped to specific patch designs (side-channel concerns, incorrect refactors), not to RISC-V support as a category. The trace-decoder ABI-consensus requirement is the one clear case of a structural/process blocker rather than a code-quality objection.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> yellow (build-only-ci)</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p>linux-perf (<code class="language-plaintext highlighter-rouge">tools/perf</code> plus the RISC-V PMU driver in <code class="language-plaintext highlighter-rouge">drivers/perf/</code> and <code class="language-plaintext highlighter-rouge">arch/riscv/kernel/perf_*.c</code>) has no CI in the <code class="language-plaintext highlighter-rouge">torvalds/linux</code> tree itself, confirmed by direct inspection of the repository’s root and <code class="language-plaintext highlighter-rouge">tools/perf</code> file listings (Section 7) – there is no GitHub-hosted issue tracker or PR flow for this project at all, since it is developed entirely on the lkml/linux-riscv/linux-perf-users mailing lists. The closest thing to upstream CI is the linux-riscv maintainer staging tree’s GitHub Actions (<code class="language-plaintext highlighter-rouge">build-rv64-clang-allmodconfig</code>, <code class="language-plaintext highlighter-rouge">build-rv64-gcc-allmodconfig</code>) plus Intel’s 0-Day/kernel-test-robot, which explicitly cross-builds <code class="language-plaintext highlighter-rouge">tools/perf</code> for riscv64 (config <code class="language-plaintext highlighter-rouge">riscv-allnoconfig-bpf</code>, e.g. <a href="https://ratatoskr.run/oe-kbuild/2026/06/17078974">a June 2026 build-failure report</a>) – but per the project’s own status report and the RISE Debug and Profiling Working Group’s tracking, this is “just build check, no function/perf test and profiling.” That is a textbook build-only CI job (compiles riscv64, runs no test suite), which caps the color at yellow regardless of the otherwise-solid functional coverage confirmed in Section 4 (SBI PMU driver, DWARF/frame-pointer callchains, and the merged userspace access model). The distribution floor independently supports yellow: Ubuntu ships <code class="language-plaintext highlighter-rouge">linux-perf</code> for riscv64 via the ports pocket at an older build (Section 8), and the project’s own prior status research indicates Debian sid does as well, with no riscv64-specific packaging patches identified (the Arch Linux RISC-V claim carries an open discrepancy per Section 8 and should not be relied on without re-verification).</p>
+
+<p>linux-perf is a profiling/observability tool, not an optimization-purpose project – it would still deliver its core value (exposing PMU counters and producing profiles) on RISC-V even without any RVV/SIMD-style tuning – so no optimization-level rating applies here. The <code class="language-plaintext highlighter-rouge">perf annotate</code>/disassembly and callchain code under <code class="language-plaintext highlighter-rouge">tools/perf/util/annotate-arch/</code> is architecture support, not a performance-optimization hot path.</p>
+
+<p><strong>Pending work that could change the grade:</strong> four open patch series are live at the time of this research: (1) the RISC-V trace decoder (Qualcomm, v4, in review, would add AUX instruction-tracing support, currently blocked on user-ABI consensus rather than code); (2) libunwind riscv64 wiring (Ian Rogers/Google, v5, in review, no recorded reviewer activity); (3) counter delegation / Ssccfg-Smcdeleg (Atish Patra, v6, in review, with reported build failures on rv64-clang/gcc-allmodconfig); and (4) the PMU throttle IRQ-storm fix (ByteDance, build error, unresolved reviewer objection) and the fixed-counter-stop bug (Alibaba, design rejected by maintainer) – both still open. If either of the last two turns out to affect mainline behavior rather than only the pending (unmerged) patch, that is a candidate for a future downgrade to red. No RISE-funded RFP or RISE-runner CI exists for linux-perf; it is tracked only informally by the RISE Debug and Profiling Working Group, now merged into the Kernel and Virtualization Working Group. The single change that would raise this project to blue is adding riscv64 functional/test execution to the linux-riscv staging tree or the 0-Day CI, in place of build-only checks.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing any item below: RISE has funded no dedicated RFP for linux-perf. The only RISE artifact referencing the project is a passive status-tracking page maintained by the (now-merged) Debug and Profiling Working Group – there is no RISE-runner CI, no RISE-funded engineering, and no RISE blog coverage of the perf tool itself (RISE’s public benchmarking work touches LLVM, OpenJDK, V8, IREE, and Go, not <code class="language-plaintext highlighter-rouge">perf</code>). None of the work below is already covered by existing RISE funding.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The core sampling and profiling path on riscv64 is functional: hardware PMU counters via SBI, DWARF callchain unwinding, KVM stat, perf trace, JIT profiling. The gaps are in advanced features (instruction tracing, counter delegation, libunwind) and correctness bugs (throttle IRQ storm, fixed counter stop). The throttle bug is the highest-priority correctness issue given it can cause soft lockups under normal usage.</p>
-<h3 id="132-performance-optimization">
+<p>Core sampling and profiling on riscv64 is solid: hardware PMU counters via SBI, DWARF callchain unwinding, and the merged userspace direct-access model. The confirmed gaps are: <code class="language-plaintext highlighter-rouge">perf kvm stat</code> and <code class="language-plaintext highlighter-rouge">perf trace</code> support, both still under active revision or discussion rather than confirmed merged (Section 4, a correction against the prior assumption that these had already landed); two open correctness bugs (PMU throttle IRQ storm, fixed-counter stop) with a clear severity ranking – the throttle bug is the higher-priority fix given its soft-lockup potential under ordinary <code class="language-plaintext highlighter-rouge">perf top</code>/<code class="language-plaintext highlighter-rouge">perf record</code> usage with a tight sampling period; the unwired libunwind path; and the unmerged counter-delegation and trace-decoder feature series.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>No quantitative benchmark data comparing linux-perf overhead on riscv64 vs arm64 or amd64 was found in any public source. The architectural difference with potential performance impact is that the SBI PMU driver goes through firmware ecalls for counter configuration and overflow handling, adding kernel-to-firmware round-trip latency that direct CSR access (as used on x86 and arm64) avoids. The counter delegation extension (Ssccfg/Smcdeleg), once merged, eliminates this overhead for supervisor mode. Quantifying the overhead difference requires hardware measurement; no published data exists.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The current state – build-only CI, no functional test coverage – is the highest-leverage gap relative to arm64 and amd64. Regressions in counter accuracy, callchain correctness, and KVM attribution are invisible until a user with hardware reports them. RISE has explicitly identified functional/perf CI for RISC-V as future work.</p>
-<h3 id="134-ecosystem-enablement">
+<p>Not applicable in the “optimization-purpose project” sense (Section 13), but architecturally relevant: the SBI PMU driver’s firmware-ecall path for counter configuration and overflow handling adds kernel-to-firmware round-trip latency that amd64/arm64 avoid via direct CSR access. The counter-delegation extension (Ssccfg/Smcdeleg), once merged, removes this overhead for supervisor-mode counter access. No published data quantifies this overhead delta; the one directly relevant academic measurement (0.283% perf monitoring overhead on a CVA6 FPGA core) predates SBI PMU and is not architecture-comparative.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>The missing libpfm4 RISC-V PMU event tables block named-event access in <code class="language-plaintext highlighter-rouge">perf list</code> for all RISC-V hardware not covered by the merged vendor JSON files. For a chip company shipping a new SoC, contributing a vendor event JSON file (relatively small effort) provides named event access; contributing libpfm4 tables provides access via the libpfm4 path used by some tooling.</p>
-<h3 id="135-summary-table">
+<p>This is the single highest-leverage gap identified in this report. Build-only CI (Section 7) means counter-accuracy regressions, callchain-correctness regressions, and KVM-attribution regressions are invisible until a developer with physical RISC-V hardware notices, or a downstream user reports it. Both open correctness bugs in Section 11 (throttle IRQ storm, fixed-counter stop) are exactly the class of defect functional CI would catch before merge.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>libpfm4’s complete absence of RISC-V hardware PMU event tables blocks named-event access via that path for every RISC-V SoC; <code class="language-plaintext highlighter-rouge">perf list</code> falls back to raw event codes universally. Contributing a vendor event JSON file for a specific SoC (the merged SiFive U74/P550/P650 and CVA6 files are precedent) is comparatively low effort and unlocks named-event usability for that hardware immediately; contributing libpfm4 tables is a separate, larger effort that benefits tooling beyond perf itself.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1674,28 +1208,35 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Fix PMU throttle bug (ByteDance patch rebuild + address reviewer feedback)</td>
+      <td>Fix PMU throttle IRQ-storm bug (resolve build error, address reviewer objection)</td>
       <td>1-2</td>
       <td>RISC-V PMU contributor</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix fixed counter stop bug (rework per Atish Patra feedback)</td>
+      <td>Rework fixed-counter-stop fix per maintainer’s side-channel objection</td>
       <td>2-3</td>
       <td>RISC-V PMU contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Resolve libunwind riscv64 wiring in <code class="language-plaintext highlighter-rouge">Makefile.config</code> (complement Ian Rogers v5)</td>
-      <td>1</td>
-      <td>perf tooling contributor</td>
+      <td>Confirm and, if needed, complete <code class="language-plaintext highlighter-rouge">perf kvm stat</code> / <code class="language-plaintext highlighter-rouge">perf trace</code> upstreaming (verify actual merge status, finish review)</td>
+      <td>2-4</td>
+      <td>Kernel contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Push counter delegation v6 to merge (fix build failures, address review)</td>
+      <td>Wire libunwind riscv64 into <code class="language-plaintext highlighter-rouge">Makefile.config</code>’s per-arch map (complement Ian Rogers’ v5)</td>
+      <td>1</td>
+      <td>perf-tooling contributor</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Drive counter delegation v6 to merge (fix allmodconfig build failures, address review)</td>
       <td>4-8</td>
       <td>Rivos Inc. / any RISC-V contributor</td>
       <td>High</td>
@@ -1709,7 +1250,7 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix CPython issue #121201 (perf_jit_trampoline.c on riscv64)</td>
+      <td>Resolve CPython perf-trampoline build/regression on riscv64 (#120400/#121201)</td>
       <td>2-4</td>
       <td>CPython / downstream contributor</td>
       <td>Medium</td>
@@ -1723,58 +1264,48 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Add PMU PM notifier (SiFive patch, stale since 2022)</td>
-      <td>1-2</td>
-      <td>RISC-V PMU contributor</td>
+      <td>Extend <code class="language-plaintext highlighter-rouge">perf annotate</code> riscv64 target resolution to match arm64’s PC-relative symbol resolution</td>
+      <td>2-3</td>
+      <td>perf-tooling contributor</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Drive RISC-V trace decoder to merge (resolve user ABI, fix build failures)</td>
+      <td>Drive RISC-V trace decoder to merge (resolve user-ABI consensus first, then fix build failures)</td>
       <td>8-16</td>
       <td>Qualcomm / RISC-V trace contributors</td>
-      <td>Low (long horizon)</td>
+      <td>Low (long horizon, ABI-gated)</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 functional perf test execution to linux-riscv CI (QEMU system-mode)</td>
+      <td>Add riscv64 functional perf test execution (QEMU system-mode or hardware runner) to the linux-riscv staging tree or 0-Day CI</td>
       <td>4-8</td>
       <td>Infrastructure contributor</td>
-      <td>High</td>
+      <td>High – directly moves the readiness grade</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 perf runtime tests to KernelCI</td>
+      <td>Extend riscv64 perf coverage into KernelCI</td>
       <td>8-16</td>
-      <td>KernelCI / RISE infrastructure</td>
+      <td>KernelCI / infrastructure contributor</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Add RISC-V reviewer entry to MAINTAINERS for <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code></td>
+      <td>Add a named RISC-V reviewer entry to <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> for <code class="language-plaintext highlighter-rouge">tools/perf/arch/riscv/</code></td>
       <td>0 (nomination)</td>
       <td>Existing active contributor</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Contribute stale 2022 patches (perf_user_access sysctl, PM notifier, SoC PMU ID)</td>
-      <td>2-4 per patch</td>
-      <td>RISC-V PMU contributor</td>
+      <td>Clarify Arch Linux RISC-V <code class="language-plaintext highlighter-rouge">linux-perf</code>/<code class="language-plaintext highlighter-rouge">perf</code> packaging status (resolve Section 8 discrepancy)</td>
+      <td>&lt;1</td>
+      <td>Packaging contributor</td>
       <td>Low</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1785,28 +1316,63 @@ Homepage: <a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></p><h
     
 
 <ul>
-  <li><a href="https://github.com/torvalds/linux/tree/master/tools/perf/arch/riscv">linux-perf kernel source: tools/perf/arch/riscv/</a></li>
-  <li><a href="https://github.com/torvalds/linux/tree/master/drivers/perf">linux-perf kernel source: drivers/perf/</a></li>
-  <li><a href="https://patchwork.kernel.org/project/linux-riscv/list/?q=perf">linux-riscv patchwork: perf patches</a></li>
-  <li><a href="https://patchwork.kernel.org/project/linux-riscv/list/?q=drivers%2Fperf">linux-riscv patchwork: drivers/perf patches</a></li>
-  <li><a href="https://patchwork.kernel.org/project/linux-riscv/cover/20260608-counter_delegation-v6-0-285b72ed65a9@meta.com/">v6 counter delegation cover letter</a></li>
-  <li><a href="https://patchwork.kernel.org/project/linux-riscv/patch/20260513233151.572332-8-irogers@google.com/">v5 libunwind riscv64 patch</a></li>
-  <li><a href="https://patchwork.kernel.org/project/linux-riscv/patch/20260429125135.1983498-12-anup.patel@oss.qualcomm.com/">v4 RISC-V trace decoder patch</a></li>
-  <li><a href="https://patchwork.kernel.org/project/linux-riscv/patch/20260415032017.10712-1-zhangzhanpeng.jasper@bytedance.com/">PMU throttle fix patch</a></li>
-  <li><a href="https://patchwork.kernel.org/project/linux-riscv/patch/20260131112440.2915-1-cp0613@linux.alibaba.com/">Fixed counter stop fix patch</a></li>
-  <li><a href="https://github.com/torvalds/linux/commit/880fcc329e2473ba02ffbc446fcd403972ab1fca">SBI v3.0 PMU commit 880fcc3</a></li>
-  <li><a href="https://github.com/torvalds/linux/commit/e4c39a45a0ea93c9c8e0e682a1f55a7683ba78bb">perf symbols mapping fix e4c39a4</a></li>
-  <li><a href="https://github.com/torvalds/linux/commit/da7b1b525e972b8c5b16640fa5b2ff2497b5c652">perf kvm stat RISC-V port da7b1b5</a></li>
-  <li><a href="https://github.com/torvalds/linux/commit/1a7483318274d0ec60f160e604c2a1dbce27fc0a">USER_STACKTRACE support 1a74833</a></li>
-  <li><a href="https://github.com/torvalds/linux/commit/8c0d1202bad3aa6e40fb078dc08158f0bb4e03e2">perf trace wiring 8c0d120</a></li>
-  <li><a href="https://github.com/torvalds/linux/commit/568a2fa10dd06bbd8160e3f8cce9483fabcb7121">skip empty batches 568a2fa</a></li>
-  <li><a href="https://github.com/torvalds/linux/commit/16dccbb84203196dab2e578b27c3c8f549ebff66">perf regs __weak removal 16dccbb</a></li>
-  <li><a href="https://tracker.debian.org/pkg/linux-perf">Debian linux-perf tracker</a></li>
-  <li><a href="https://archriscv.felixc.at/repo/extra/">Arch Linux RISC-V repo</a></li>
-  <li><a href="https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/8589360/Debug+and+Profiling+WG+-+Projects">RISE Debug and Profiling WG projects</a></li>
-  <li><a href="https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/8591190/Debug+and+Profiling+-+Status+of+Opensource+Projects">RISE Debug and Profiling: opensource project status</a></li>
-  <li><a href="https://riseproject.dev/wp-content/uploads/sites/25/2024/12/RISE-Webinar-December-2024.pdf">RISE December 2024 Webinar PDF</a></li>
-  <li><a href="https://github.com/linux-riscv/linux/blob/workflow/.github/workflows/patchwork.yml">linux-riscv CI workflow</a></li>
+  <li><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git">git.kernel.org: torvalds/linux.git</a></li>
+  <li><a href="https://perf.wiki.kernel.org/">perf.wiki.kernel.org</a></li>
+  <li><a href="https://lkml.iu.edu/hypermail/linux/kernel/1804.0/00404.html">PATCH 0/2: perf: riscv: Preliminary Perf Event Support on RISC-V</a></li>
+  <li><a href="https://github.com/torvalds/linux/commit/178e9fc47aaec1b8952b553444e94802d7570599">Commit 178e9fc47aae: perf: riscv: preliminary RISC-V support</a></li>
+  <li><a href="https://lore.kernel.org/linux-riscv/20210927005115.610264-1-wcohen@redhat.com/">PATCH: perf annotate: Add riscv64 support (William Cohen)</a></li>
+  <li><a href="https://github.com/torvalds/linux/commit/0ba37e05c240c7b38e5a327a96f404798a8698ff">Commit 0ba37e05c240: perf annotate riscv64 support merged</a></li>
+  <li><a href="https://lore.kernel.org/linux-arm-kernel/20220628114625.166665-1-nikita.shubin@maquefel.me/">PATCH v5 0/4: RISC-V: Create unique identification for SoC PMU</a></li>
+  <li><a href="https://patchew.org/linux/20230703124647.215952-1-alexghiti@rivosinc.com/">PATCH v4: riscv: Allow userspace to directly access perf counters (Ghiti)</a></li>
+  <li><a href="https://github.com/torvalds/linux/commit/7aa7d502e4d5a42353325cb4bf2aa880b10168e9">Commit 7aa7d502e4d5: userspace perf counter access merged series</a></li>
+  <li><a href="https://ratatoskr.run/oe-kbuild-all/2023/11/2409541">Re: PATCH perf callchain: Support riscv (build-bot thread)</a></li>
+  <li><a href="https://ubuntu.com/security/CVE-2024-26902">Ubuntu CVE tracker: CVE-2024-26902</a></li>
+  <li><a href="https://lore.kernel.org/linux-cve-announce/2024041745-CVE-2024-26902-5f77@gregkh/">lore.kernel.org CVE-2024-26902 announcement</a></li>
+  <li><a href="https://github.com/torvalds/linux/commit/34b567868777e9fd39ec5333969728a7f0cf179c">Commit 34b567868777: perf RISCV panic fix</a></li>
+  <li><a href="https://lkml.iu.edu/hypermail/linux/kernel/2410.1/10926.html">PATCH v5: riscv perf KVM guest statistics (Quan Zhou)</a></li>
+  <li><a href="https://patchew.org/linux/cover.1726126795.git.zhouquan@iscas.ac.cn/">PATCH v3 cover: riscv perf KVM guest statistics</a></li>
+  <li><a href="https://github.com/torvalds/linux/commit/5bb5ccb3e8d8dba29941cd78d5c1bcd27b227b4a">Commit 5bb5ccb3e8d8: riscv perf guest vs host distinction</a></li>
+  <li><a href="https://github.com/torvalds/linux/commit/eded6754f398b5b4950e8f593f75fee63a8b49ad">Commit eded6754f398: riscv KVM host vs guest profiling</a></li>
+  <li><a href="https://lore.kernel.org/lkml/20260319081843.1650640-1-irogers@google.com/">REGRESSION: perf build failed after 5cf6e76e4f4f on riscv64 with GCC 13</a></li>
+  <li><a href="https://ratatoskr.run/linux-riscv/2026/05/9004202/t">PATCH 0/3: perf build cross-arch GCC14 fix (Li Guan)</a></li>
+  <li><a href="https://ratatoskr.run/linux-perf-users/2026/04/3494464/t">PATCHES v2 perf-tools-next 0/4: Cleanups and a fix</a></li>
+  <li><a href="https://ratatoskr.run/oe-kbuild-all/2026/08/17400390">avpatel riscv_trace_support_v5 build-bot thread</a></li>
+  <li><a href="https://lkml.iu.edu/hypermail/linux/kernel/2412.1/06014.html">Re: PATCH perf riscv: Wire up perf trace support</a></li>
+  <li><a href="https://ratatoskr.run/oe-kbuild/2026/06/17078974">0-Day CI riscv64 tools/perf build report (pmu-events.c failure)</a></li>
+  <li><a href="https://ratatoskr.run/oe-kbuild/2026/03/14472731">0-Day CI riscv-allnoconfig-bpf build report (perf-record patch)</a></li>
+  <li><a href="https://github.com/intel/lkp-tests/wiki">intel/lkp-tests wiki (0-Day CI test-runner codebase)</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=linux-perf&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu packages: linux-perf search, resolute suite</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/riscv64/linux-perf">Ubuntu packages: linux-perf riscv64 direct page, resolute</a></li>
+  <li><a href="https://archriscv.felixc.at/">Arch Linux RISC-V package mirror</a></li>
+  <li><a href="https://pypi.org/pypi/linux-perf/json">PyPI: linux-perf project page</a></li>
+  <li><a href="https://ratatoskr.run/linux-riscv/2026/02/3398512/t">Perf tools: perf-regs bug fix and optimization, v3</a></li>
+  <li><a href="https://ratatoskr.run/linux-riscv/2026/03/3467688/t">REGRESSION: perf build failure GCC13 riscv64 (thread)</a></li>
+  <li><a href="https://ratatoskr.run/linux-riscv/2026/05/9004202/t">PATCH: perf build cross-arch GCC14 fix (thread)</a></li>
+  <li><a href="https://ratatoskr.run/llvm/2026/04/3538963">drivers/perf: riscv throttled events patch, kernel test robot report</a></li>
+  <li><a href="https://lwn.net/Articles/879905/">LWN: Improve RISC-V Perf support using SBI PMU and sscofpmf extension</a></li>
+  <li><a href="https://forums.sifive.com/t/linux-perf-tool-support/3926">SiFive Forums: Linux perf tool support - RISC-V</a></li>
+  <li><a href="https://arxiv.org/html/2507.22451v1">Dissecting RISC-V Performance: Practical PMU Profiling and Hardware-Agnostic Roofline Analysis (arXiv 2507.22451)</a></li>
+  <li><a href="https://arxiv.org/abs/2112.11767">Supporting RISC-V Performance Counters through Perf (arXiv 2112.11767)</a></li>
+  <li><a href="https://hpcas.inesc-id.pt/~unify/papers/conf_asap23.pdf">Supporting RISC-V Performance Counters Through Linux Performance Analysis Tools (INESC-ID / ASAP23 PDF)</a></li>
+  <li><a href="https://www.phoronix.com/review/risc-v-5-year-performance">Phoronix: RISC-V CPU Performance Up 8x In Five Years</a></li>
+  <li><a href="https://www.phoronix.com/review/spacemit-k3-pico-itx/2">Phoronix: Initial Benchmarks Of The SpacemiT K3 RVA23 RISC-V CPU</a></li>
+  <li><a href="https://www.phoronix.com/review/risc-v-rvv-vector-benchmarks">Phoronix: RISC-V RVV Vector Performance Benchmarks With The SpacemiT K3 SoC</a></li>
+  <li><a href="https://www.phoronix.com/linux/RISC-V">Phoronix RISC-V archive</a></li>
+  <li><a href="https://github.com/python/cpython/issues/120400">python/cpython issue #120400: perf profile can not see Python calls on RISC-V</a></li>
+  <li><a href="https://github.com/python/cpython/issues/157688">python/cpython issue #157688: test_linux_ext_suffix riscv64</a></li>
+  <li><a href="https://github.com/golang/go/issues/53745">golang/go issue #53745: x/perf storage test slow on linux-riscv64 builder</a></li>
+  <li><a href="https://riseproject-dev.github.io/sw-ecosystem/project-reports/linux-perf.html">RISE sw-ecosystem project report: linux-perf</a></li>
+  <li><a href="https://riseproject-dev.github.io/sw-ecosystem/">RISE sw-ecosystem tracker</a></li>
+  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
+  <li><a href="https://riseproject.dev/2025/05/08/project-rp009-llvm-spec-optimization/">RISE Project: Project RP009: LLVM SPEC Optimization</a></li>
+  <li><a href="https://riseproject.dev/2025/09/24/openjdk-supercharging-vectorized-math-with-sleef/">RISE Project: OpenJDK: Supercharging Vectorized Math with SLEEF</a></li>
+  <li><a href="https://riseproject.dev/2026/07/07/optimizing-iree-compilation-and-end-to-end-object-detection-pipeline-for-risc-v/">RISE Project: Optimizing IREE Compilation for RISC-V</a></li>
+  <li><a href="https://riseproject.dev/2025/12/09/a-glimpse-into-v8-development-for-risc-v/">RISE Project: A Glimpse Into V8 Development for RISC-V</a></li>
+  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE Project: RISE RISC-V Runners: six weeks in</a></li>
+  <li><a href="https://riseproject.dev/2026/07/30/rise-working-groups-move-their-project-tracking-to-github/">RISE Project: RISE Working Groups move their project tracking to GitHub</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE python-wheels builder index</a></li>
+  <li><a href="https://github.com/riseproject-dev">riseproject-dev GitHub organization</a></li>
 </ul>
 
           
