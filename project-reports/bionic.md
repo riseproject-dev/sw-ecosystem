@@ -30,7 +30,7 @@ dependencies:
 # Bionic
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-09-30<br/>
+**Date:** 2026-07-20<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Android Bionic<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -382,15 +382,11 @@ Android Bionic does not appear in any RISE blog post (all 27 posts checked, May 
 | [#14](https://github.com/google/android-riscv64/issues/14) | security: hardware shadow call stack | Correctness/Security |
 | [#13](https://github.com/google/android-riscv64/issues/13) | external/aac: inline assembler | Performance |
 | [#5](https://github.com/google/android-riscv64/issues/5) | bionic/tests/sys_ptrace_test.cpp: add instruction writing > 64 bits | Correctness (test gap) |
-| [#163](https://github.com/google/android-riscv64/issues/163) | Cuttlefish fails with "Subprocess was interrupted by a signal: 11" on GCP Debian 11 -- suspected EGL/Vulkan/Display issue | Infra/testing -- not Bionic code, but blocks the QEMU/Cuttlefish-based validation path described in Section 7 |
 
 ### Recently closed issues relevant to Bionic
 
 | Issue | Title | Notes |
 |---|---|---|
-| [#168](https://github.com/google/android-riscv64/issues/168) | Prebuilt android OS Image for RISCV | User request for a flashable image for Banana Pi BPI-F3; not a Bionic code issue. Filed 2025-10-04, closed |
-| [#166](https://github.com/google/android-riscv64/issues/166) | Missing CPU Variant LD flags in Rust LinkFlags | Build-config gap: riscv64 C/C++ builds get both arch-level and CPU-variant compiler flags, but Rust's LinkFlags only get arch-level flags -- inconsistent with the C/C++ path. Filed 2025-08-26, closed |
-| [#164](https://github.com/google/android-riscv64/issues/164) | Question about malloc performance | Directly relevant to Section 9 (Scudo vs. jemalloc): reporter (MaoHan001, Alibaba -- same contributor as the original RFC) compares Scudo's memset-on-init overhead, jemalloc's better prefetching on contiguous access, and Scudo's advantage on many small allocations, and asks whether Scudo's `zero_contents` can be tuned for riscv64. Filed 2025-04-08, closed with no resolution visible in the public thread |
 | [#162](https://github.com/google/android-riscv64/issues/162) | Structure accesses with NDK r27 produce more instructions than expected | Missed optimization: 3-byte struct read generates 3x lbu instead of 1x lhu + 1x lbu; LLVM backend not exploiting `zbb` |
 | [#160](https://github.com/google/android-riscv64/issues/160) | `$x.*` symbol in libc.so | `$x.0` at 6.37% cpu-cycles in profiling; compiler mapping symbols obscure real hotspot names |
 | [#111](https://github.com/google/android-riscv64/issues/111) | clang driver: enable fast unaligned access for android | Fast unaligned access was not enabled by default |
@@ -493,16 +489,7 @@ The LTO ABI correctness bug ([#61](https://github.com/google/android-riscv64/iss
 
 ## 14. Updates
 
-**2026-09-30 refresh.** Re-searched for RISC-V-related Bionic activity via `android.googlesource.com/platform/bionic`, Gerrit, the `google/android-riscv64` GitHub issue tracker, and general web search (`site:github.com Bionic riscv64`, `Bionic riscv64 patch`, `Bionic riscv64 support`). Bionic is not a Linux-kernel-mailing-list project (it has no LKML/lore.kernel.org presence of its own), so a `site:lore.kernel.org` search for "Bionic riscv" returns only unrelated RISC-V kernel patches and Wikipedia -- confirmed by searching and finding nothing project-specific.
-
-Findings since the 2026-07-20 version:
-- Four new issues on `google/android-riscv64` postdate the prior report's issue list: [#163](https://github.com/google/android-riscv64/issues/163) (open, Cuttlefish/GCP crash, infra not Bionic code), [#164](https://github.com/google/android-riscv64/issues/164) (closed, malloc/Scudo-vs-jemalloc performance question directly relevant to Section 9), [#166](https://github.com/google/android-riscv64/issues/166) (closed, Rust LinkFlags CPU-variant-flag gap), and [#168](https://github.com/google/android-riscv64/issues/168) (closed, prebuilt-image user request, not a Bionic code issue). Added to Section 11's tables.
-- No new Gerrit changes under `topic:riscv` for `platform/bionic` were found beyond what was already documented; Gerrit's change-list UI did not return fetchable content via search tooling, so the only-open-change entry (#2320311) is carried forward unverified this cycle [NEEDS VERIFICATION -- could not confirm whether it has since merged, been abandoned, or is still New/WIP].
-- No new Gerrit-merged riscv64 commits to `platform/bionic` were identified beyond the January 2025 entries already listed in Section 2; activity remains quiet.
-- No master/umbrella tracking issue for the riscv64 Bionic port was found in this pass either -- consistent with the original finding in Section 2 that the original RFC (#2142912) was the closest thing to one and was abandoned once split into atomic changes.
-- No new PRs or issues specific to Bionic were found on GitHub outside the `google/android-riscv64` tracker; general search for "Bionic riscv64 support" and "site:github.com Bionic riscv64" surfaced only unrelated projects (Rust `libc` bindings, third-party header packages, build tooling) already reflected in Sections 9-10.
-
-Prior: no updates before this -- initial report dated 2026-07-20.
+No updates yet -- initial report dated 2026-07-20.
 
 ---
 
@@ -527,8 +514,6 @@ Prior: no updates before this -- initial report dated 2026-07-20.
 - [android-riscv64#161 -- ART: implement custom __memcmp16?](https://github.com/google/android-riscv64/issues/161)
 - [android-riscv64#141 -- ART: unimplemented intrinsics](https://github.com/google/android-riscv64/issues/141)
 - [android-riscv64#160 -- $x.* symbol in libc.so](https://github.com/google/android-riscv64/issues/160)
-- [android-riscv64#164 -- Question about malloc performance](https://github.com/google/android-riscv64/issues/164)
-- [android-riscv64#166 -- Missing CPU Variant LD flags in Rust LinkFlags](https://github.com/google/android-riscv64/issues/166)
 - [LLVM D87579 -- RISC-V frame pointer workaround](https://reviews.llvm.org/D87579)
 - [RISC-V psABI issue #18 -- frame pointer convention](https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/18)
 - [RISC-V psABI issue #94 -- TLSDESC relocations](https://github.com/riscv-non-isa/riscv-elf-psabi-doc/issues/94)

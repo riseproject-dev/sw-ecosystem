@@ -17,7 +17,7 @@ dependencies:
 
 # Abseil-cpp
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-09-30
+**Date:** 2026-07-20
 **Scope:** RISC-V (riscv64/linux) support status for Abseil-cpp
 **Audience:** Technical leadership, resource allocation strategy
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
@@ -34,7 +34,7 @@ Abseil-cpp is Google's collection of C++ foundation libraries covering container
 
 **Corporate sponsors:** Google Inc. exclusively.
 
-**RISE Project membership:** None. Abseil-cpp is not a RISE working-group deliverable, has no RISE-funded engineering effort, and no dedicated RISE-org repository targets it (`Abseil org:riseproject-dev` on GitHub returns zero repositories). RISE's involvement is indirect and consumer-side only: the [`riseproject-dev/python-wheels`](https://github.com/riseproject-dev/python-wheels) repository builds riscv64 wheels for several Python packages (`dm-tree`, `grain`, `pytorch-tokenizers`, `runai-model-streamer-gcs`, `ydf`, and others) that statically link abseil-cpp as a bundled C++ dependency; RISE did not modify abseil-cpp itself in these builds. One RISE blog post references Abseil directly: ["PyTorch is available on riscv64!"](https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/) (2026-08-18) notes in passing that "abseil's subword-atomics `static_assert` fails on GCC 13, which breaks sentencepiece" -- one of several compiler-version incompatibilities RISE hit while enabling PyTorch on riscv64. The post gives no issue number, PR link, or fix; it is not tracked in this report's known-issues table (Section 11) because no corresponding upstream report could be located. [NEEDS VERIFICATION: whether this GCC 13 static_assert failure was ever filed against abseil/abseil-cpp or GCC.] Abseil-cpp does not appear on the RISE Python wheel builder's supported-package list ([riseproject.gitlab.io/python/wheel_builder](https://riseproject.gitlab.io/python/wheel_builder/) checked 2026-09-30: no "abseil" entry among its ~89 listed packages), consistent with it being bundled rather than shipped as a standalone wheel.
+**RISE Project membership:** None. No RISE blog post, working group, or funded engineering effort mentions Abseil-cpp.
 
 **Community stance on new ports:** The governance model creates a structural barrier for community-contributed architecture ports. The 2024 RDCYCLE/RDTIME series (PRs [#1550](https://github.com/abseil/abseil-cpp/pull/1550), [#1631](https://github.com/abseil/abseil-cpp/pull/1631)) and the 2024-2025 warning-fix series (PRs [#1783](https://github.com/abseil/abseil-cpp/pull/1783), [#1788](https://github.com/abseil/abseil-cpp/pull/1788), [#1929](https://github.com/abseil/abseil-cpp/pull/1929)) illustrate the pattern: patches from community contributors are accepted only when a Google engineer champions them internally. Two of the three abandoned RDCYCLE PRs were never merged; the third was merged only after the Google reviewer decided to accept removal of the feature entirely (PR [#1644](https://github.com/abseil/abseil-cpp/pull/1644)). PR [#1986](https://github.com/abseil/abseil-cpp/pull/1986) (CRC32C hardware acceleration) is currently blocked waiting for a Google engineer to find RISC-V hardware for internal verification.
 
@@ -373,7 +373,7 @@ There are no JIT backends, GPU paths, or deep numeric dependency chains in absei
 
 ## 13. Investment Analysis
 
-RISE has no direct engineering investment in Abseil-cpp -- no RISE-funded PR, no RISE-org repository targets it, and no working group claims it. All RISC-V work to date on abseil-cpp itself has been community-driven without coordinated external funding. RISE's only documented contact with Abseil is consumer-side: the `riseproject-dev/python-wheels` project statically links abseil-cpp into several wheels it builds for riscv64 (see Section 1), and the 2026-08-18 RISE blog post "PyTorch is available on riscv64!" surfaced a GCC 13 subword-atomics `static_assert` failure in Abseil that broke sentencepiece during that enablement work -- a real, RISE-discovered riscv64 defect that is not the same issue as #1702 (missing `-latomic` on GCC 11-12) and has not been filed upstream as far as this research could determine.
+RISE has no prior investment in Abseil-cpp. All RISC-V work to date has been community-driven without coordinated external funding.
 
 ### 13.1 Functional Enablement
 
@@ -415,9 +415,7 @@ Not applicable. Abseil-cpp is a C++ library with no dependent package ecosystem 
 
 ## 14. Updates
 
-**2026-09-30:** Refreshed RISE-involvement research (Section 1, Section 13.1). Confirmed via GitHub search (`Abseil org:riseproject-dev`, zero results) that no dedicated riseproject-dev repository targets Abseil-cpp. Found one RISE blog post referencing Abseil -- ["PyTorch is available on riscv64!"](https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/) (2026-08-18) -- documenting a GCC 13 subword-atomics `static_assert` failure that broke sentencepiece; this is new information not in the 2026-07-20 version of this report and is distinct from tracked issue #1702. Confirmed `riseproject-dev/python-wheels` bundles abseil-cpp statically into several riscv64 wheels (dm-tree, grain, pytorch-tokenizers, runai-model-streamer-gcs, ydf) as a consumer, not a contributor. Confirmed abseil-cpp is absent from the RISE Python wheel builder's supported-package list. No change to the underlying upstream port status (Sections 2-12).
-
-**2026-07-20:** Initial report.
+No updates yet -- initial report dated 2026-07-20.
 
 ---
 
@@ -442,6 +440,3 @@ Not applicable. Abseil-cpp is a C++ library with no dependent package ecosystem 
 - [Ubuntu packages: libabsl-dev noble](https://packages.ubuntu.com/search?keywords=libabsl&suite=noble&searchon=names)
 - [Google Foundational C++ Support Policy matrix](https://github.com/google/oss-policies-info/blob/main/foundational-cxx-support-matrix.md)
 - [Abseil homepage](https://abseil.io/)
-- [RISE Project blog: "PyTorch is available on riscv64!" (2026-08-18)](https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/)
-- [riseproject-dev/python-wheels GitHub repository](https://github.com/riseproject-dev/python-wheels)
-- [RISE Python wheel builder supported packages](https://riseproject.gitlab.io/python/wheel_builder/)

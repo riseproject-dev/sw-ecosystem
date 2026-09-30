@@ -28,7 +28,7 @@ dependencies:
 
 # BoringSSL
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-09-30
+**Date:** 2026-07-20
 **Scope:** RISC-V (riscv64/linux) support status for BoringSSL
 **Audience:** Technical leadership, resource allocation strategy
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
@@ -48,7 +48,7 @@ BoringSSL is Google's internal fork of OpenSSL, created in approximately 2014 to
 - Rudolf Polzer - P-256 assembly, X.509
 - Lily Chen - TLS handshake hints
 
-**Community posture on new ports:** BoringSSL accepts minimally-invasive porting fixes from external contributors but does not prioritize new architecture work internally. The RISC-V port evidence (one external cleanup commit from StarFive with no follow-up assembly work from any party) confirms this posture. Internal Google interest in riscv64 assembly does exist but is unactioned: [google/android-riscv64 issue #36](https://github.com/google/android-riscv64/issues/36) ("external/boringssl: optimization"), opened February 2023 by Elliott Hughes (enh-google, Android bionic/toolchain maintainer at Google), explicitly requests RISC-V vector-crypto assembly for BoringSSL in preference to scalar C, citing that equivalent patches had already been submitted upstream to OpenSSL. The issue remains open and unresolved as of this report, with no linked BoringSSL Gerrit CL. The `BUILDING.md` documents assembly support for x86, x86_64, ARM, and AArch64; all other architectures are implicitly generic C with no tier commitment or explicit mention. RISE membership: Google is a Premier Member of RISE, but BoringSSL is not listed as a RISE-supported project. A full review of all 35 RISE blog posts (May 2024 through September 2026, riseproject.dev/blog) found zero mentions of BoringSSL in any title or summary. No riseproject-dev GitHub organization repository is named or scoped to BoringSSL (an org-scoped GitHub search for "boringssl" under riseproject-dev returns zero results), and BoringSSL's own CI runs exclusively on Google's LUCI infrastructure with no RISE-provided runner usage. No RISE-funded patches or RFPs targeting BoringSSL exist. The only identified touchpoint is indirect: BoringSSL appears as a transitively statically-linked C++ dependency (pulled in via Bazel/`google-cloud-cpp` and via `abseil-cpp`/`grpc`) inside two unrelated Python wheels built by RISE's [python-wheels](https://github.com/riseproject-dev/python-wheels) project for riscv64 -- `ydf` ([PR #2416](https://github.com/riseproject-dev/python-wheels/pull/2416)) and `runai-model-streamer-gcs` ([PR #2406](https://github.com/riseproject-dev/python-wheels/pull/2406)) -- meaning RISE has compiled BoringSSL for riscv64 as an incidental build artifact, not as a funded or tracked BoringSSL work item. BoringSSL itself does not appear as a standalone package on the RISE Python wheel builder (riseproject.gitlab.io/python/wheel_builder/, 89 packages listed as of this check; confirmed absent).
+**Community posture on new ports:** BoringSSL accepts minimally-invasive porting fixes from external contributors but does not prioritize new architecture work internally. The RISC-V port evidence (one external cleanup commit from StarFive with no follow-up assembly work from any party) confirms this posture. The `BUILDING.md` documents assembly support for x86, x86_64, ARM, and AArch64; all other architectures are implicitly generic C with no tier commitment or explicit mention. RISE membership: Google is a Premier Member of RISE, but BoringSSL is not listed as a RISE-supported project. A full review of all 27 RISE blog posts (May 2024 through June 2026) found zero mentions of BoringSSL. No RISE-funded patches, RFPs, or repositories for BoringSSL exist.
 
 ---
 
@@ -58,7 +58,7 @@ All six RISC-V-related commits are on the main branch (no outstanding patches aw
 
 | Date | Event | Source |
 |---|---|---|
-| 2021-02-25 | First RISC-V commit: `include/openssl/base.h` adds `#if defined(__riscv)` block setting `OPENSSL_32_BIT` or `OPENSSL_64_BIT`. Author: Adam Langley (agl, Google). Reviewed by David Benjamin. | [commit 565226278d](https://github.com/google/boringssl/commit/565226278d6b863672bb5c3f24197d8bb6e58b50) |
+| 2021-02-25 | First RISC-V commit: `include/openssl/base.h` adds `#if defined(__riscv)` block setting `OPENSSL_32_BIT` or `OPENSSL_64_BIT`. Reviewed by David Benjamin and Adam Langley. | [commit 565226278d](https://github.com/google/boringssl/commit/565226278d6b863672bb5c3f24197d8bb6e58b50) |
 | 2022-06-08 | Primary port commit: CMakeLists.txt and base.h updated for riscv64; adds `OPENSSL_RISCV64` identity macro. Author: Rebecca Chang Swee Fun (StarFive Technology). Reviewer: Adam Langley. | [commit 4566bb5fe5](https://github.com/google/boringssl/commit/4566bb5fe517f7f141b5fe935c559fc4311af35d) |
 | 2022-08-02 | `NR_getrandom` syscall number (278) defined for riscv64 in `crypto/fipsmodule/rand/getrandom_fillin.h`, required for Android Keystore key generation on riscv64. Authors: Liu Cunyuan, Mao Han (Alibaba Linux). Reviewer: David Benjamin. | [commit 45aadce331](https://github.com/google/boringssl/commit/45aadce3311b6ed765fae4d7bdfa17a9a809623b) |
 | 2022-08-24 | Header cleanup: consolidates duplicate `__riscv` detection blocks in `include/openssl/base.h`. Author: Rebecca Chang Swee Fun (StarFive Technology). Reviewer: David Benjamin. | [commit b2d3c10cdc](https://github.com/google/boringssl/commit/b2d3c10cdc8fb642a842db2c6061743b4604b0b5) |
@@ -66,9 +66,9 @@ All six RISC-V-related commits are on the main branch (no outstanding patches aw
 | 2024-08-17 | CIPD dependency on qemu-static (version 10.0.8) added for riscv64 checkouts, wiring QEMU into Google's internal CI toolchain bootstrap. References Chromium bug 342657857 (authentication-gated). | [commit f64d50dcd5](https://github.com/google/boringssl/commit/f64d50dcd59e1758d4472fe2c6f5a717288f2138) |
 
 **Key contributors by organization:**
-- Google: Adam Langley (first riscv detection macro, 2021-02-25); QEMU test runner and CI wiring (authors unidentified)
 - StarFive Technology: Rebecca Chang Swee Fun (initial port + cleanup)
 - Alibaba Linux: Liu Cunyuan, Mao Han (getrandom syscall)
+- Google (unidentified): QEMU test runner and CI wiring
 
 No RISC-V assembly contributions have been made by any organization.
 
@@ -219,7 +219,7 @@ BoringSSL distributes no pre-compiled binaries through any channel. The project 
 |---|---|---|
 | github.com/google/boringssl releases | No | Source tarballs only; no architecture-specific binary artifacts |
 | PyPI | No | No `boringssl` package exists on PyPI (HTTP 404) |
-| RISE wheel builder | No | 89-package list at riseproject.gitlab.io/python/wheel_builder/ does not include a standalone BoringSSL wheel (re-checked 2026-09-30); BoringSSL is only present incidentally as a statically-linked transitive dependency inside unrelated wheels (`ydf`, `runai-model-streamer-gcs`) built by riseproject-dev/python-wheels |
+| RISE wheel builder | No | Redirects to PyPI (HTTP 404); 76-package list does not include BoringSSL |
 | Debian sid (android-platform-external-boringssl) | Yes (qualified) | `android-libboringssl` 14.0.0+r45-3+b2 available for riscv64; this is the Android fork, not upstream BoringSSL |
 | Ubuntu 24.04 (noble) | Yes (qualified) | `android-libboringssl` at 14.0.0+r11-4build1 for riscv64; same Android fork caveat |
 | Standalone Debian package named `boringssl` | No | No such package exists in Debian |
@@ -263,7 +263,7 @@ No correctness bugs, no performance regression reports, no FIPS build failures f
 
 ## 12. Objections and Upstream Blockers
 
-**Stated objections:** None publicly visible. The project does not solicit external contributors and has no public forum where objections to RISC-V work would be recorded. Conversely, there is unactioned demand for the work from within Google itself: [android-riscv64 issue #36](https://github.com/google/android-riscv64/issues/36) (Elliott Hughes, Google, Feb 2023) requests RISC-V vector-crypto assembly for BoringSSL and remains open with no BoringSSL Gerrit CL filed against it, indicating the blocker is contributor bandwidth/priority rather than opposition to the work.
+**Stated objections:** None publicly visible. The project does not solicit external contributors and has no public forum where objections to RISC-V work would be recorded.
 
 **Technical blockers:**
 - No CPU feature detection infrastructure for RISC-V. Adding RVV or Zvkn acceleration requires building `crypto/cpu_riscv.cc` (analogous to `cpu_aarch64_linux.cc`) to query the kernel for ISA extension support at runtime. This is prerequisite work before any assembly can be conditionally dispatched.
@@ -324,13 +324,7 @@ Total estimated contributor-owned effort: 22-38 person-weeks for full functional
 
 ## 14. Updates
 
-**2026-09-30:** Report refreshed. riscv64 CI findings re-verified directly against primary sources (`infra/config/generated/commit-queue.cfg` and `infra/config/generated/cr-buildbucket.cfg` at boringssl.googlesource.com): the two mandatory, compile-only LUCI builders (`android_riscv64_compile_only`, `android_riscv64_prefixed_compile`) described in Section 7 are still present and unchanged. No GitHub Actions, Jenkins, GitLab CI, or Buildbot riscv64 configuration exists for BoringSSL (the project is not GitHub-hosted and is not a Linux kernel project, so GitHub Actions and lore.kernel.org are not applicable). No new riscv64-related commits, CI changes, or bug tracker entries were found since the prior report.
-
-RISE Project involvement re-checked in full: fetched riseproject.dev/blog (35 posts, May 2024-September 2026) and the RISE Python wheel builder (89 packages) directly; searched the web for "RISE project BoringSSL riscv64", "riseproject.dev BoringSSL", and GitHub org riseproject-dev for a BoringSSL repository. No RISE blog post mentions BoringSSL, no riseproject-dev repository is scoped to BoringSSL, and BoringSSL is not listed as a standalone package on the RISE wheel builder. New finding versus the prior report: BoringSSL is pulled in as a transitive statically-linked dependency inside two RISE-built Python wheels (`ydf`, `runai-model-streamer-gcs`) via their `google-cloud-cpp`/Bazel dependency chains -- an incidental riscv64 compile of BoringSSL with no associated funding, tracking, or upstream contribution. This does not change the report's conclusion that RISE has no direct BoringSSL investment; Section 1 and Section 8 updated accordingly.
-
-**2026-09-30 (same-day follow-up):** Re-verified governance and RISE-membership findings directly: fetched `boringssl.googlesource.com/boringssl` (confirms no formal governance model, no license statement on the landing page, no foundation-membership statement, security issues routed through "the Chromium process") and `riseproject.dev` (confirms RISE is a Linux Foundation-hosted project; BoringSSL is not named anywhere on the site; no member/project roster naming BoringSSL). A direct fetch of `MAINTAINERS.md` at the repository root returned HTTP 404 -- BoringSSL has no standalone MAINTAINERS file; maintainer identity is inferred from commit review history as in prior reports. Two corrections/additions from this pass: (1) the first RISC-V commit (2021-02-25, `565226278d`) was authored by Adam Langley (Google), not an external contributor -- Section 2 and the contributor list updated accordingly; (2) discovered [google/android-riscv64 issue #36](https://github.com/google/android-riscv64/issues/36), opened February 2023 by Elliott Hughes (Google, Android bionic/toolchain team), explicitly requesting RISC-V vector-crypto assembly for BoringSSL and citing equivalent patches already upstreamed to OpenSSL; the issue is still open with no linked BoringSSL Gerrit CL. This is the first documented evidence of active, named internal demand for the work described in Section 13.2, and is reflected in Section 1 and Section 12.
-
-Initial report dated 2026-07-20.
+No updates yet -- initial report dated 2026-07-20.
 
 ---
 
@@ -354,4 +348,3 @@ Initial report dated 2026-07-20.
 - [libunwind issue #531 - C++ exception handling on riscv64 Linux](https://github.com/libunwind/libunwind/issues/531)
 - [RISE Project member list](https://riseproject.dev)
 - [BoringSSL upstream Gerrit code review](https://boringssl-review.googlesource.com)
-- [google/android-riscv64 issue #36 - external/boringssl: optimization (Feb 2023, open)](https://github.com/google/android-riscv64/issues/36)
