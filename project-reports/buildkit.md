@@ -1,6 +1,7 @@
 ---
 title: BuildKit
 parent: Project Reports
+color: yellow
 categories:
   - containers
 dependencies:
@@ -376,6 +377,10 @@ BuildKit itself has no package ecosystem (no plugins, no extensions, no language
 ---
 
 ## 14. Updates
+
+**2026-09-30 -- RISC-V readiness color assigned via the project-color-coding methodology: yellow (build-only-ci).**
+
+BuildKit's upstream CI builds riscv64 -- `docker-bake.hcl`'s `binaries-cross`, `image-cross`, and `frontend-image-cross` targets all include `linux/riscv64`, and `buildkit.yml`/`frontend.yml` invoke them on every push to master/version branches, every pull request, and a daily schedule (Section 7) -- but no test suite is ever executed against riscv64: `.test.yml`, `test-os.yml`, and `dockerd.yml` contain zero riscv64 references, every job runs on a standard `ubuntu-24.04` x86_64 runner, and there is no native or QEMU-backed riscv64 execution anywhere in the pipeline (Section 3, Section 7). Per the color model's CI evidence rule, a job that builds riscv64 without running the test suite is build-only CI, which caps the primary grade at yellow regardless of release status. `release_provider: upstream` -- BuildKit does publish official `linux/riscv64` release binaries directly (continuously since v0.31.0 through the current v0.33.0, confirmed via a direct HTTP 200 check against the release-download endpoint, Section 8) and an official `moby/buildkit` Docker Hub multi-arch image layer, so this is not a downstream/third-party release situation; the release channel alone just cannot lift a build-only-CI project past yellow. BuildKit is a build-graph execution engine, not a performance-optimization library -- it delivers its full value proposition on generic scalar code -- so the Step 2 optimization-purpose modifier does not apply (`optimization_gap: N/A`). This is not orange because upstream CI does build and publish riscv64 artifacts (the orange "no upstream CI" case does not apply), and not blue or green because no upstream job ever exercises the test suite on riscv64 (Section 7: "No unit test, no integration test, no sandbox test ever runs on/against riscv64"). Primary sources: [`docker-bake.hcl`](https://github.com/moby/buildkit/blob/master/docker-bake.hcl) and [`.github/workflows/buildkit.yml`](https://github.com/moby/buildkit/blob/master/.github/workflows/buildkit.yml) (platform matrix and triggers), [`.github/workflows/.test.yml`](https://github.com/moby/buildkit/blob/master/.github/workflows/.test.yml) (zero riscv64 hits in the test workflow), [BuildKit v0.33.0 release](https://github.com/moby/buildkit/releases/tag/v0.33.0) (current riscv64 tarball still shipped).
 
 No updates yet -- initial report dated 2026-07-20.
 
