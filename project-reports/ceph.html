@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for Ceph<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,13 +280,15 @@
 </h2>
     
 
-<p><a href="https://ceph.io/">Ceph</a> is a distributed storage system providing object, block, and file storage from a single unified cluster. The upstream source repository is <a href="https://github.com/ceph/ceph">ceph/ceph</a> on GitHub. Ceph is organized as a directed fund under the Linux Foundation. The license is LGPL-2.1.</p>
+<p><a href="https://ceph.io/">Ceph</a> is a distributed storage system providing object, block, and file storage from a single unified cluster. The upstream source repository is <a href="https://github.com/ceph/ceph">ceph/ceph</a> on GitHub. Ceph is organized as a directed fund under the Linux Foundation, governed by the Ceph Foundation (<a href="https://ceph.io/en/foundation/">ceph.io/en/foundation</a>). The Foundation publishes five membership tiers (Diamond, Platinum, Gold, Silver, Associate), but its member directory renders company logos rather than a text roster, so a named member list by tier could not be extracted [NEEDS VERIFICATION].</p>
 
-<p>Governance is a three-tier model. The Ceph Executive Council (3 seats, 2-year terms, multi-employer requirement) currently holds: Dan van der Ster (Clyso), Neha Ojha (Red Hat), Patrick Donnelly (IBM). Below that sits the Ceph Steering Committee (34 members), which elects the executive council and amends governance by two-thirds supermajority. Component Team Leads are appointed by the executive council on team recommendation.</p>
+<p>Governance is documented in prose (<code class="language-plaintext highlighter-rouge">doc/governance.rst</code>), not via a <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>/<code class="language-plaintext highlighter-rouge">OWNERS</code>/<code class="language-plaintext highlighter-rouge">CODEOWNERS</code> file, and is a three-tier model. The Executive Council (3 seats, annual ranked-choice election by the Steering Committee, with a rule requiring more than one represented employer) currently holds: Dan van der Ster (Clyso), Neha Ojha (Red Hat), Patrick Donnelly (IBM). The Steering Committee (34 members) elects the Council and amends governance by two-thirds supermajority; it is open to non-voting public attendance. Component Team Leads are appointed by the Council on team recommendation.</p>
 
-<p>Major employer representation on the steering committee: Red Hat (16 members), IBM (5), Clyso (3), Intel (1), Bloomberg (1), ZTE (1), Xsky (1), croit (1), UI.com (1), and independents (4). By commit volume, the dominant maintainers are Kefu Chai / tchaikov (Proxmox, 12,141 commits), Casey Bodley (Red Hat, 4,684), Patrick Donnelly (IBM, 4,282), Gregory Farnum (Red Hat, 3,511), Josh Durgin (Red Hat, 2,637).</p>
+<p>Steering Committee employer representation: Red Hat (16 members), IBM (5), Clyso (3), Intel (1), Bloomberg (1), ZTE (1), Xsky (1), croit (1), UI.com (1), independents (4). This is employer representation on the Steering Committee, not confirmed to be identical to the Foundation’s own Diamond/Platinum/Gold/Silver/Associate roster; the two lists should not be conflated. By commit volume, the dominant maintainers are Kefu Chai / tchaikov (Proxmox, 12,141 commits), Casey Bodley (Red Hat, 4,684), Patrick Donnelly (IBM, 4,282), Gregory Farnum (Red Hat, 3,511), Josh Durgin (Red Hat, 2,637).</p>
 
-<p>Decision-making is consensus-driven by those who participate. The governance model explicitly favors meritocratic contribution and creates no stated barrier to architecture patches, provided they add value without burdening existing CI infrastructure.</p><hr />
+<p>License: primarily LGPL-2.1/LGPL-3 for the core project, with BSD-3-Clause (CMake modules, Intel code, ZFS plugin), CC-BY-SA-3.0 (docs), GPLv3 (git archive script), Boost-1.0, Apache-2.0 (s390x code, cpp-btree), MIT (JSON Spirit, jQuery), and AGPLv3 (backport scripts) covering specific vendored subtrees, per <code class="language-plaintext highlighter-rouge">COPYING</code>.</p>
+
+<p>Community stance on new architecture ports is consensus-driven and meritocratic, with no stated architectural gatekeeping: patches are merged by core maintainers (chiefly tchaikov) when correct and non-disruptive to CI. Maintainer tchaikov explicitly waived integration testing for the riscv64 ISA-L enablement PR (“since RISC-V is not exercised by our test bed, we can skip the integration test”), confirming a permissive but CI-gap-aware posture toward new-port contributions.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -295,15 +298,15 @@
 </h2>
     
 
-<p>There is no dedicated master tracking issue for a riscv64 port on GitHub or <a href="https://tracker.ceph.com">tracker.ceph.com</a>. Work is organic and distributed across individual feature PRs. The contributors driving RISC-V work are Sun Yuechi / sunyuechi (ISCAS, iscas.ac.cn), WenLei / leiwen2025 (ZTE, lei.wen2@zte.com.cn), lvshuo2016 (Sanechips / ZTE affiliate, sanechips.com.cn), and laokz (ISCAS). The primary reviewer and merger is Kefu Chai / tchaikov (Proxmox).</p>
+<p>No dedicated master tracking issue for a riscv64 port exists on GitHub or <a href="https://tracker.ceph.com">tracker.ceph.com</a> - confirmed by a zero-result GitHub Issues search for “riscv”/”riscv64” against ceph/ceph and by no umbrella riscv64 epic on the tracker. Work is organized as individual feature PRs plus one long-standing build bug (<a href="https://tracker.ceph.com/issues/57350">#57350</a>).</p>
 
-<p>The chronological sequence of merged contributions:</p>
+<p>The primary contributors are Sun Yuechi / sunyuechi (ISCAS, iscas.ac.cn), WenLei / leiwen2025 (ZTE), lvshuo2016 (Sanechips/ZTE affiliate), and laokz (ISCAS); the primary merging maintainer is Kefu Chai / tchaikov (Proxmox), and batrick closes non-viable backports.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Date</th>
-      <th>PR</th>
+      <th>PR/commit</th>
       <th>Author</th>
       <th>Description</th>
     </tr>
@@ -313,13 +316,13 @@
       <td>2023-12-15</td>
       <td><a href="https://github.com/ceph/ceph/pull/51732">#51732</a></td>
       <td>andreas-schwab (SUSE)</td>
-      <td>Enable riscv64 in openSUSE RPM spec (ExclusiveArch)</td>
+      <td>Enable riscv64 in openSUSE RPM spec (<code class="language-plaintext highlighter-rouge">ExclusiveArch</code>) - first riscv64-related change of any kind (packaging, not code)</td>
     </tr>
     <tr>
-      <td>2025-09-04</td>
+      <td>2025-09-03/04</td>
       <td><a href="https://github.com/ceph/ceph/pull/65120">#65120</a></td>
       <td>leiwen2025 (ZTE)</td>
-      <td>Add <code class="language-plaintext highlighter-rouge">rdtime</code> cycle counter for riscv64 (RDCYCLE privileged since Linux 6.6)</td>
+      <td>Add <code class="language-plaintext highlighter-rouge">rdtime</code> cycle counter for riscv64. Note: a literal commit-token search (<code class="language-plaintext highlighter-rouge">riscv repo:ceph/ceph</code>, author-date ascending) instead surfaces commit <code class="language-plaintext highlighter-rouge">60e95dba</code> (Sun Yuechi, 2025-09-03, merged as #65354) as the earliest hit, because GitHub’s tokenizer does not substring-match <code class="language-plaintext highlighter-rouge">riscv64</code> under a <code class="language-plaintext highlighter-rouge">riscv</code> query. Both PRs land in the same week and community; the “first” answer depends on search method</td>
     </tr>
     <tr>
       <td>2025-09-25</td>
@@ -337,7 +340,7 @@
       <td>2026-03-29</td>
       <td><a href="https://github.com/ceph/ceph/pull/68047">#68047</a></td>
       <td>leiwen2025 (ZTE)</td>
-      <td>Fix hwprobe include path and wrong ZBC/ZVBC bit offsets</td>
+      <td>Fix hwprobe include path and wrong ZBC/ZVBC bit offsets (hardware CRC32C acceleration had been silently disabled since #66026)</td>
     </tr>
     <tr>
       <td>2026-04-16</td>
@@ -346,16 +349,28 @@
       <td>Optimize CRC32C via Zbc extension; tested on SG2044</td>
     </tr>
     <tr>
+      <td>2026-05-31</td>
+      <td><a href="https://github.com/ceph/ceph/pull/69185">#69185</a></td>
+      <td>sunyuechi (ISCAS)</td>
+      <td>Adds opt-in <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> and <code class="language-plaintext highlighter-rouge">Findspdk.cmake</code>, the durable fix for the SPDK/riscv64 build gap (bundled DPDK has no riscv64 support); tested on openRuyi riscv64 with system SPDK 25.09/DPDK 25.07. First shipped in v21.0.1</td>
+    </tr>
+    <tr>
       <td>2026-06-02</td>
       <td><a href="https://github.com/ceph/ceph/pull/68098">#68098</a></td>
       <td>sunyuechi (ISCAS)</td>
-      <td>Enable ISA-L erasure coding plugin and zlib on RISC-V</td>
+      <td>Enable ISA-L erasure coding plugin and zlib compressor on RISC-V</td>
     </tr>
     <tr>
-      <td>2026-06-08</td>
-      <td><a href="https://github.com/ceph/ceph/pull/69315">#69315</a></td>
-      <td>zmc</td>
-      <td>Bump sccache; add riscv64 support to build container download script</td>
+      <td>2026-06-09</td>
+      <td><a href="https://github.com/ceph/ceph/pull/69367">#69367</a></td>
+      <td>lvshuo2016</td>
+      <td>reef backport of riscv64/WITH_SPDK support - closed same day, unmerged</td>
+    </tr>
+    <tr>
+      <td>2026-06-10/07-15</td>
+      <td><a href="https://github.com/ceph/ceph/pull/69376">#69376</a></td>
+      <td>lvshuo2016</td>
+      <td>Near-duplicate reef backport attempt - closed by batrick 2026-07-15; a partial backport that omitted the <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> infrastructure from #69185 could not build on riscv64</td>
     </tr>
     <tr>
       <td>2026-06-22</td>
@@ -363,10 +378,72 @@
       <td>sunyuechi (ISCAS)</td>
       <td>Fix Boost.Context CMake Jamfile ordering under ASan on riscv64</td>
     </tr>
+    <tr>
+      <td>2026-07-03</td>
+      <td><a href="https://github.com/ceph/ceph/pull/69908">#69908</a></td>
+      <td>sunyuechi (ISCAS)</td>
+      <td>Fix Zbc CRC32C assembly clobbering ABI-reserved <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> registers, fixing SIGSEGV crashes in <code class="language-plaintext highlighter-rouge">unittest-transaction-manager</code>/<code class="language-plaintext highlighter-rouge">unittest-omap-manager</code>. Merged by tchaikov; fixes <a href="https://tracker.ceph.com/issues/77904">tracker #77904</a></td>
+    </tr>
+    <tr>
+      <td>2026-07-08</td>
+      <td><a href="https://github.com/ceph/ceph/pull/69783">#69783</a></td>
+      <td>-</td>
+      <td>Add <code class="language-plaintext highlighter-rouge">%{?openruyi}</code> RPM-spec conditionals to <code class="language-plaintext highlighter-rouge">ceph.spec.in</code></td>
+    </tr>
+    <tr>
+      <td>2026-07-15</td>
+      <td><a href="https://github.com/ceph/ceph/pull/70211">#70211</a></td>
+      <td>leiwen2025 (ZTE)</td>
+      <td>Zvbc CRC32C throughput optimization (~33% claimed gain) - open, blocked on review (reuses <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code>, the same bug class just fixed in #69908)</td>
+    </tr>
+    <tr>
+      <td>2026-07-28</td>
+      <td><a href="https://github.com/ceph/ceph/pull/68209">#68209</a></td>
+      <td>-</td>
+      <td>Adds a riscv64 CRC32C performance benchmark to <code class="language-plaintext highlighter-rouge">unittest_crc32c</code> - merged, not yet in a tagged release</td>
+    </tr>
+    <tr>
+      <td>2026-07-28</td>
+      <td><a href="https://github.com/ceph/ceph/pull/69726">#69726</a></td>
+      <td>-</td>
+      <td>Drops the BlueStore PMEM (PMDK) backend entirely, retiring the riscv64 PMDK gap for BlueStore</td>
+    </tr>
+    <tr>
+      <td>2026-08-12</td>
+      <td><a href="https://github.com/ceph/ceph/pull/69448">#69448</a></td>
+      <td>sunyuechi (ISCAS)</td>
+      <td>Attempted fix switching PMDK from archived ceph/pmdk 1.10 to daos-stack/pmdk 2.1.3 for riscv64 - closed unmerged, superseded by #69726</td>
+    </tr>
+    <tr>
+      <td>2026-09-09</td>
+      <td><a href="https://github.com/ceph/ceph/pull/70141">#70141</a></td>
+      <td>-</td>
+      <td>Add openRuyi as a selectable distro in the local <code class="language-plaintext highlighter-rouge">build-with-container.py</code> dev-build script</td>
+    </tr>
+    <tr>
+      <td>open, updated 2026-09-18</td>
+      <td><a href="https://github.com/ceph/ceph/pull/68184">#68184</a></td>
+      <td>sunyuechi (ISCAS)</td>
+      <td>Add RISC-V ZBC/ZVBC architecture probe unit tests - open, awaiting approval</td>
+    </tr>
+    <tr>
+      <td>open, updated 2026-09-28</td>
+      <td><a href="https://github.com/ceph/ceph/pull/71935">#71935</a></td>
+      <td>sunyuechi (ISCAS)</td>
+      <td>Default <code class="language-plaintext highlighter-rouge">WITH_RADOSGW_LANCEDB</code> off on riscv64/ppc64le/s390x (lance-linalg SIMD unimplemented) - open, lgtm from tchaikov, not yet merged; live build blocker until it lands</td>
+    </tr>
+    <tr>
+      <td>open</td>
+      <td><a href="https://github.com/ceph/ceph/pull/70618">#70618</a></td>
+      <td>-</td>
+      <td>Drop the PMEM backend of RBD’s persistent write-log cache; once merged, fully retires the riscv64 PMDK gap project-wide</td>
+    </tr>
   </tbody>
 </table></div>
 
-<p>The first meaningful architecture-level contribution was PR #65120 (September 2025). The critical correctness fix (PR #68047, wrong ZBC/ZVBC bit offsets) was merged March 2026, meaning hardware CRC32C acceleration was silently disabled on all hardware for the six months between #66026 and #68047. The ISA-L erasure coding enablement (June 2026) is the most significant recent milestone: it closes the primary performance gap for production workloads.</p><hr />
+<p>Additionally, a dedicated but non-upstream riscv64 CI now exists at <a href="https://github.com/openRuyi-Project/ceph-ci">openRuyi-Project/ceph-ci</a>, maintained by ISCAS, which clones Ceph, applies riscv64/openRuyi patches, and runs <code class="language-plaintext highlighter-rouge">make check</code> on real riscv64 hardware. It closes part of the CI gap in practice but is single-vendor and not wired into ceph/ceph’s own GitHub Actions or Jenkins/Sepia infrastructure.</p>
+
+<p>The core storage path (RADOS, RBD, CephFS) is functionally usable on riscv64 as of mid-2026, but the port is not fully upstream in the CI sense: no upstream automated riscv64 CI exists (Section 7), and two build-affecting PRs (#70211, #71935) remain open as of 2026-09-30.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -376,11 +453,54 @@
 </h2>
     
 
-<p>Ceph does not publish a formal tier policy for CPU architectures. The project’s OS support tiers (defined in <code class="language-plaintext highlighter-rouge">doc/start/os-recommendations.rst</code>) apply to Linux distributions, not processor architectures. The documentation states “Ceph is sometimes ported to non-Linux systems but these are not supported by the core Ceph effort,” framing non-Linux ports as best-effort while leaving Linux architectures implicitly covered.</p>
+<p>Ceph does not publish a formal tier policy for CPU architectures. <code class="language-plaintext highlighter-rouge">doc/start/os-recommendations.rst</code> covers Linux-distribution tiers only; the closest comparable precedent language covers other non-default platforms - ARM (“limited set of daemons… check availability before you plan an ARM deployment”) and the Windows client (“best effort, with no full-time maintainer”). No riscv64-specific sentence exists in this file.</p>
 
-<p>In practice, riscv64 functions as an unofficial community-supported tier: patches are merged by core maintainers when they are correct and non-disruptive, but no automated CI runs on riscv64, and the architecture is absent from the official OS platform support table. The SUSE openSUSE OBS service does build riscv64 packages (ExclusiveArch in <code class="language-plaintext highlighter-rouge">ceph.spec.in</code>), which is the only formal distribution declaration. Debian sid includes riscv64 as an unofficial ports architecture.</p>
+<p>In practice, riscv64 functions as an unofficial, community-supported tier by the same de facto posture as ARM/Windows, not by written policy: patches are merged by core maintainers when correct and non-disruptive, but no automated CI runs on riscv64 (Section 7), and the architecture is absent from the official OS/platform support table. The formal declaration that does exist is packaging-level: <code class="language-plaintext highlighter-rouge">ceph.spec.in</code>’s <code class="language-plaintext highlighter-rouge">ExclusiveArch: x86_64 aarch64 ppc64le s390x riscv64</code> line (merged via PR #51732, December 2023), which enables OBS/openSUSE and (per PR #69783/#70141) openRuyi RPM builds. Separately, and materially, Ubuntu’s own archive (not Ceph’s release process) now builds and ships riscv64 Ceph packages in its 26.04 main archive (Section 8) - this is distribution-driven, not an upstream Ceph commitment.</p>
 
-<p>There is no evidence that any chipmaker or cloud provider has committed to funding or maintaining riscv64 as a first-class supported tier.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Aspect</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Upstream GitHub Actions CI</td>
+      <td>Yes (all 12 workflow jobs)</td>
+      <td>No (workflows are governance/bot only, not build/test, on any arch)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Jenkins/Sepia periodic build/test</td>
+      <td>Yes</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">ceph-pull-requests-arm64</code>)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">qa/archs/</code> config</td>
+      <td><code class="language-plaintext highlighter-rouge">x86_64.yaml</code></td>
+      <td><code class="language-plaintext highlighter-rouge">aarch64.yaml</code>, <code class="language-plaintext highlighter-rouge">armv7.yaml</code></td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Official release-blocking status</td>
+      <td>Yes</td>
+      <td>No (best-effort)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Distro main-archive binary</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes, as of Ubuntu 26.04 (Section 8)</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>No evidence that any chipmaker or cloud provider has committed to funding riscv64 as a first-class supported tier; the RISE Project (Section 12/13) has no documented Ceph relationship.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -389,6 +509,8 @@
   
 </h2>
     
+
+<p>A direct audit of ceph/ceph HEAD plus its <code class="language-plaintext highlighter-rouge">src/isa-l</code> submodule (ceph/isa-l fork) found riscv64-specific code split across both repositories: roughly 1,100-1,200 lines in ceph/ceph proper and roughly 390 lines in the isa-l submodule, about 1,500 lines total (excluding build/test/packaging glue). Coverage spans base RV64I/RV64GC, RVV (“V”), Zbc (scalar carry-less multiply), and Zvbc (vector carry-less multiply). No Zba/Zbb/Zbs bit-manipulation intrinsics and no floating-point RVV usage were found anywhere in the tree. There is no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> subdirectory (RISC-V follows the same flat-file convention, e.g. <code class="language-plaintext highlighter-rouge">src/arch/riscv.c</code>/<code class="language-plaintext highlighter-rouge">.h</code>, as every other architecture) and no JIT backend of any kind for riscv64.</p>
 <h3 id="41-architecture-feature-probing">
   
   
@@ -398,13 +520,7 @@
 </h3>
     
 
-<p>Ceph implements runtime CPU feature detection per architecture. For riscv64, this is <code class="language-plaintext highlighter-rouge">src/arch/riscv.c</code> and <code class="language-plaintext highlighter-rouge">src/arch/riscv.h</code>. Three runtime flags are exposed: <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_rvv</code> (RVV vector), <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_zbc</code> (Zbc scalar carry-less multiply), <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_zvbc</code> (Zvbc vector carry-less multiply).</p>
-
-<p>Detection uses the Linux <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall (<code class="language-plaintext highlighter-rouge">syscall(__NR_riscv_hwprobe)</code>) querying <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_KEY_IMA_EXT_0</code>. Fallback macro definitions guard against older kernel headers. The include path is <code class="language-plaintext highlighter-rouge">&lt;asm/hwprobe.h&gt;</code> (fixed from <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> in PR #68047; the sys/ path requires glibc &gt;= 2.40, which is absent on Ubuntu 22.04 / glibc 2.35 and Debian 12 / glibc 2.36). The <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall was introduced in Linux 6.4; on older kernels all flags remain 0.</p>
-
-<p>The bit offsets for ZBC and ZVBC were wrong in the initial submission: ZBC was coded as <code class="language-plaintext highlighter-rouge">1ULL&lt;&lt;15</code> (correct: <code class="language-plaintext highlighter-rouge">1&lt;&lt;7</code>) and ZVBC as <code class="language-plaintext highlighter-rouge">1ULL&lt;&lt;20</code> (correct: <code class="language-plaintext highlighter-rouge">1&lt;&lt;18</code>). This bug (fixed in PR #68047) silently disabled all hardware CRC32C acceleration from March to March 2026.</p>
-
-<p>RISC-V is wired into <code class="language-plaintext highlighter-rouge">src/arch/probe.cc</code> under <code class="language-plaintext highlighter-rouge">#elif defined(__riscv)</code> as a peer to ARM, Intel, PPC, and s390x. <code class="language-plaintext highlighter-rouge">src/arch/CMakeLists.txt</code> includes <code class="language-plaintext highlighter-rouge">riscv.c</code> in the same <code class="language-plaintext highlighter-rouge">elseif</code> chain as <code class="language-plaintext highlighter-rouge">arm.c</code>, <code class="language-plaintext highlighter-rouge">intel.c</code>, <code class="language-plaintext highlighter-rouge">ppc.c</code>, and <code class="language-plaintext highlighter-rouge">s390x.c</code>.</p>
+<p><code class="language-plaintext highlighter-rouge">src/arch/riscv.c</code>/<code class="language-plaintext highlighter-rouge">.h</code> implement runtime CPU-feature detection via the Linux <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall, querying <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_KEY_IMA_EXT_0</code> and exposing three flags: <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_rvv</code>, <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_zbc</code>, <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_zvbc</code>. The include path was fixed from <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> (requires glibc &gt;= 2.40, absent on Ubuntu 22.04/Debian 12) to <code class="language-plaintext highlighter-rouge">&lt;asm/hwprobe.h&gt;</code> in PR #68047, which also fixed the ZBC/ZVBC bit offsets (originally <code class="language-plaintext highlighter-rouge">1ULL&lt;&lt;15</code> and <code class="language-plaintext highlighter-rouge">1ULL&lt;&lt;20</code>; correct values <code class="language-plaintext highlighter-rouge">1&lt;&lt;7</code> and <code class="language-plaintext highlighter-rouge">1&lt;&lt;18</code>). This bug silently disabled all hardware CRC32C acceleration on riscv64 for roughly six months between #66026 (March 2026) and #68047 (March 2026, eleven days apart). RISC-V is wired into <code class="language-plaintext highlighter-rouge">src/arch/probe.cc</code> under <code class="language-plaintext highlighter-rouge">#elif defined(__riscv)</code> and <code class="language-plaintext highlighter-rouge">src/arch/CMakeLists.txt</code>’s <code class="language-plaintext highlighter-rouge">elseif(HAVE_RISCV)</code>, as a peer to ARM, Intel, PPC, and s390x.</p>
 <h3 id="42-crc32c">
   
   
@@ -414,15 +530,16 @@
 </h3>
     
 
-<p>Two distinct hardware-accelerated paths:</p>
+<p>Two independent hardware-accelerated paths exist in <code class="language-plaintext highlighter-rouge">src/common/crc32c_riscv.c</code>/<code class="language-plaintext highlighter-rouge">.h</code> and <code class="language-plaintext highlighter-rouge">src/common/crc32c_riscv_zbc_asm.S</code>/<code class="language-plaintext highlighter-rouge">.h</code>:</p>
 
-<p><strong>Zvbc path</strong> (<code class="language-plaintext highlighter-rouge">src/common/crc32c_riscv.c</code>, gated on <code class="language-plaintext highlighter-rouge">HAVE_RISCV_ZVBC</code>): hand-written inline assembly using <code class="language-plaintext highlighter-rouge">vclmul.vv</code>, <code class="language-plaintext highlighter-rouge">vclmulh.vv</code>, <code class="language-plaintext highlighter-rouge">vredxor.vs</code>, plus scalar <code class="language-plaintext highlighter-rouge">clmul</code>/<code class="language-plaintext highlighter-rouge">clmulh</code>. Implements a folding loop over 64-byte chunks with Barrett reduction (polynomial <code class="language-plaintext highlighter-rouge">0x105ec76f1</code>, mu <code class="language-plaintext highlighter-rouge">0x4869ec38dea713f1</code>). Falls back to <code class="language-plaintext highlighter-rouge">ceph_crc32c_sctp</code> for inputs under 64 bytes. This is the same algorithmic approach as x86 (PCLMUL) and AArch64 (PMULL).</p>
+<ul>
+  <li><strong>Zvbc path</strong>: hand-written inline assembly using <code class="language-plaintext highlighter-rouge">vclmul.vv</code>, <code class="language-plaintext highlighter-rouge">vclmulh.vv</code>, <code class="language-plaintext highlighter-rouge">vredxor.vs</code>. Folding loop over 64-byte chunks with Barrett reduction; falls back to scalar table lookup (<code class="language-plaintext highlighter-rouge">ceph_crc32c_sctp</code>) under 64 bytes.</li>
+  <li><strong>Zbc path</strong>: a dedicated GNU assembly file (<code class="language-plaintext highlighter-rouge">.option arch, +zbc</code>) implementing align, fold-by-4, fold-by-1, and Barrett reduction via macros in <code class="language-plaintext highlighter-rouge">crc32c_riscv_zbc_asm.h</code>. Instructions: <code class="language-plaintext highlighter-rouge">clmul</code>, <code class="language-plaintext highlighter-rouge">clmulh</code>, <code class="language-plaintext highlighter-rouge">clmulr</code> plus base RV64I. Falls back to <code class="language-plaintext highlighter-rouge">ceph_crc32c_sctp</code> under 16 bytes.</li>
+</ul>
 
-<p><strong>Zbc path</strong> (<code class="language-plaintext highlighter-rouge">src/common/crc32c_riscv_zbc_asm.S</code>, gated on <code class="language-plaintext highlighter-rouge">HAVE_RISCV_ZBC</code>): dedicated GNU assembly file (copyright ZTE Corporation, 2026) using <code class="language-plaintext highlighter-rouge">.option arch, +zbc</code>. Implements align, fold-by-4 loop, fold-by-1 loop, Barrett reduction, and excess byte handling via macros defined in <code class="language-plaintext highlighter-rouge">src/common/crc32c_riscv_zbc_asm.h</code>. Instructions: <code class="language-plaintext highlighter-rouge">clmul</code>, <code class="language-plaintext highlighter-rouge">clmulh</code>, <code class="language-plaintext highlighter-rouge">clmulr</code> plus base RV64I. Falls back to <code class="language-plaintext highlighter-rouge">ceph_crc32c_sctp</code> for inputs under 16 bytes.</p>
+<p>Dispatch in <code class="language-plaintext highlighter-rouge">ceph_choose_crc32()</code> (<code class="language-plaintext highlighter-rouge">src/common/crc32c.cc</code>) checks <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_zvbc</code> first, then <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_zbc</code>.</p>
 
-<p>Dispatch in <code class="language-plaintext highlighter-rouge">ceph_choose_crc32()</code> (<code class="language-plaintext highlighter-rouge">src/common/crc32c.cc</code>) checks <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_zvbc</code> first, then <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_zbc</code>. No benchmark numbers were published in either PR.</p>
-
-<p><strong>Comparison to AArch64:</strong> AArch64 uses <code class="language-plaintext highlighter-rouge">__crc32cd</code> intrinsics plus inline-asm PMULL with a 1024-byte pipelined three-way loop and explicit prefetch. The riscv64 implementation has no explicit prefetch and no multi-way loop – it is slightly less optimized per cycle, but not qualitatively different in approach.</p>
+<p>This assembly has had two correctness bugs. The first (ZBC/ZVBC bit-offset, above) was undetected for six months. The second, fixed by <a href="https://github.com/ceph/ceph/pull/69908">PR #69908</a> (merged 2026-07-03), was the Zbc fold-by-4 loop using ABI-reserved <code class="language-plaintext highlighter-rouge">gp</code> (global pointer) and <code class="language-plaintext highlighter-rouge">tp</code> (thread pointer) as scratch registers; if a signal (e.g. Seastar’s stall-detector timer in Crimson) landed mid-loop, the handler saw a corrupted <code class="language-plaintext highlighter-rouge">tp</code> and crashed resolving TLS, reliably taking down <code class="language-plaintext highlighter-rouge">unittest-transaction-manager</code>/<code class="language-plaintext highlighter-rouge">unittest-omap-manager</code>. The current tree, confirmed by direct grep, no longer references <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> in this file. The fix leaves a 16-byte unused stack hole, accepted by tchaikov as immaterial (“we have enough space on stack”). This class of bug is now an established review red flag: the currently open <a href="https://github.com/ceph/ceph/pull/70211">PR #70211</a> (Zvbc CRC32C throughput optimization, ~33% gain claimed - 2384 to 3177 MB/s on SpacemiT K3, per the PR body) is blocked specifically because it reuses <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> again, per reviewer sunyuechi’s explicit citation of #69908. A related upstream issue, <a href="https://github.com/intel/isa-l/issues/428">intel/isa-l#428</a> (“Using gp and tp in riscv64 may cause problems,” open since 2026-07-02), shows the same defect class independently affects the upstream ISA-L library’s own riscv64 CRC path, unresolved as of this writing.</p>
 <h3 id="43-mem_is_zero">
   
   
@@ -432,9 +549,7 @@
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">src/include/inline_memory.h</code> contains an RVV C intrinsic path gated on <code class="language-plaintext highlighter-rouge">#elif defined(__riscv_v_intrinsic)</code>. Uses <code class="language-plaintext highlighter-rouge">__riscv_vsetvl_e8m8(len)</code>, <code class="language-plaintext highlighter-rouge">__riscv_vle8_v_u8m8</code>, <code class="language-plaintext highlighter-rouge">__riscv_vmsne_vx_u8m8_b1</code>. Variable-length vector loop with early exit. Only activates when compiled with <code class="language-plaintext highlighter-rouge">-march=rv..v</code>.</p>
-
-<p>Benchmark data from PR #65354 (BPI-F3 / SpacemiT K1, <code class="language-plaintext highlighter-rouge">ctest -V -R unittest_memory</code>):</p>
+<p><code class="language-plaintext highlighter-rouge">src/include/inline_memory.h</code> contains an RVV C-intrinsic path (<code class="language-plaintext highlighter-rouge">#elif defined(__riscv_v_intrinsic)</code>) using <code class="language-plaintext highlighter-rouge">__riscv_vsetvl_e8m8</code>, <code class="language-plaintext highlighter-rouge">__riscv_vle8_v_u8m8</code>, <code class="language-plaintext highlighter-rouge">__riscv_vmsne_vx_u8m8_b1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vfirst_m_b1</code> - a variable-length vector loop with early exit. This is the only quantitatively benchmarked riscv64 code path in Ceph, from PR #65354 (<code class="language-plaintext highlighter-rouge">ctest -V -R unittest_memory</code> on a BPI-F3/SpacemiT K1):</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -479,9 +594,7 @@
   </tbody>
 </table></div>
 
-<p>This is the only published quantitative benchmark for Ceph on RISC-V hardware.</p>
-
-<p><strong>Comparison to other arches:</strong> x86-64 uses 128-bit <code class="language-plaintext highlighter-rouge">uint128_t</code> (GCC TI-mode, no SIMD intrinsics). AArch64 uses NEON <code class="language-plaintext highlighter-rouge">vld1q_u64_x2</code>. The riscv64 RVV intrinsic path is at the same tier as AArch64.</p>
+<p>No end-to-end storage benchmarks (IOPS/throughput/latency) exist for riscv64 Ceph on any hardware; extensive GitHub code/repo search and WebSearch (where the session’s budget allowed) found no such data anywhere.</p>
 <h3 id="44-cycle-counter">
   
   
@@ -491,7 +604,7 @@
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">src/common/Cycles.h</code> uses <code class="language-plaintext highlighter-rouge">asm volatile ("rdtime %0" : "=r" (tsc))</code> for riscv64. The <code class="language-plaintext highlighter-rouge">RDCYCLE</code> CSR became privileged (unavailable to userspace) starting with Linux 6.6. <code class="language-plaintext highlighter-rouge">rdtime</code> reads the system timer and is always accessible to userspace. PR #65120 (merged 2025-09-04). This is equivalent to x86 <code class="language-plaintext highlighter-rouge">rdtsc</code>, AArch64 <code class="language-plaintext highlighter-rouge">cntvct_el0</code>, and PowerPC <code class="language-plaintext highlighter-rouge">mftbu/mftb</code>.</p>
+<p><code class="language-plaintext highlighter-rouge">src/common/Cycles.h</code> uses <code class="language-plaintext highlighter-rouge">asm volatile ("rdtime %0" : "=r" (tsc))</code> on riscv64. <code class="language-plaintext highlighter-rouge">RDCYCLE</code> became privileged (unavailable to userspace) starting with Linux 6.6; <code class="language-plaintext highlighter-rouge">rdtime</code> reads the system timer and remains userspace-accessible. Equivalent to x86 <code class="language-plaintext highlighter-rouge">rdtsc</code>, AArch64 <code class="language-plaintext highlighter-rouge">cntvct_el0</code>, PowerPC <code class="language-plaintext highlighter-rouge">mftbu/mftb</code>.</p>
 <h3 id="45-isa-l-erasure-coding-and-compression">
   
   
@@ -501,15 +614,18 @@
 </h3>
     
 
-<p>PR #68098 (merged 2026-06-02) enables the ISA-L erasure coding plugin and zlib compressor on RISC-V, motivated by ISA-L v2.32.0 adding riscv64 support. RVV is detected at runtime via <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_rvv</code> (set by the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> path). Falls back to scalar C when RVV is absent. Requires Linux 6.5+ for the hardware acceleration path; the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall was introduced in Linux 6.5 (used for RVV detection), with older kernels using software fallback only.</p>
+<p>PR #68098 (merged 2026-06-02) enables the ISA-L erasure coding plugin and zlib compressor on RISC-V, gated on <code class="language-plaintext highlighter-rouge">ceph_arch_riscv_rvv</code>; falls back to scalar C when RVV is absent. However, a deeper audit of the <code class="language-plaintext highlighter-rouge">src/isa-l</code> submodule (<code class="language-plaintext highlighter-rouge">ceph/isa-l</code>, a fork of <code class="language-plaintext highlighter-rouge">intel/isa-l</code>) found the RVV vectorization is narrower than the “ISA-L enabled for riscv64” framing implies:</p>
 
-<p>ISA-L’s erasure coding plugin (<code class="language-plaintext highlighter-rouge">ec_isa</code>) is the primary Reed-Solomon data protection path in Ceph. Enabling it on riscv64 closes the most significant production-performance gap compared to x86 and aarch64.</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">igzip/riscv64/igzip_multibinary_riscv64_dispatcher.c</code> and <code class="language-plaintext highlighter-rouge">igzip_multibinary_riscv64.S</code> implement a runtime dispatcher (<code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> + <code class="language-plaintext highlighter-rouge">HWCAP_RV('V')</code>, further branching on vector register length via <code class="language-plaintext highlighter-rouge">csrr vlenb</code>), but <strong>only <code class="language-plaintext highlighter-rouge">isal_adler32</code> gets a real RVV interface</strong> (<code class="language-plaintext highlighter-rouge">igzip_isal_adler32_rvv.S</code>, general-vlen; <code class="language-plaintext highlighter-rouge">igzip_isal_adler32_rvv128.S</code>, fixed 128-bit VLEN). Every other ISA-L kernel (deflate hash/icf/huffman/histogram, roughly 16 functions) is wired via <code class="language-plaintext highlighter-rouge">mbin_interface_base</code> straight to its scalar <code class="language-plaintext highlighter-rouge">_base</code> implementation.</li>
+  <li>Net effect: ISA-L is buildable and correct on riscv64, and its erasure-coding path (Reed-Solomon, the primary production data-protection workload) is enabled, but ISA-L’s actual DEFLATE/Huffman compression hot path receives essentially no RVV acceleration on riscv64 - only the Adler-32 checksum is vectorized. All three isa-l <code class="language-plaintext highlighter-rouge">.S</code> files carry a “Copyright (c) 2025 Institute of Software Chinese Academy of Sciences (ISCAS)” notice.</li>
+</ul>
 
-<p>The <code class="language-plaintext highlighter-rouge">WITH_EC_ISA_PLUGIN</code> CMake option is now set <code class="language-plaintext highlighter-rouge">TRUE</code> automatically when <code class="language-plaintext highlighter-rouge">HAVE_RISCV_RVV</code> is detected (same condition as x86 AVX2, AArch64 SIMD, and PowerPC AltiVec).</p>
-<h3 id="46-file-count-comparison-arch-specific-source-files">
+<p><code class="language-plaintext highlighter-rouge">WITH_EC_ISA_PLUGIN</code> is auto-enabled when <code class="language-plaintext highlighter-rouge">HAVE_RISCV_RVV</code> is set, the same gating condition as x86 AVX2, AArch64 SIMD, and PowerPC AltiVec.</p>
+<h3 id="46-file-count-comparison">
   
   
-    <a href="#46-file-count-comparison-arch-specific-source-files" class="anchor-heading" aria-labelledby="46-file-count-comparison-arch-specific-source-files"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.6 File Count Comparison: Arch-Specific Source Files
+    <a href="#46-file-count-comparison" class="anchor-heading" aria-labelledby="46-file-count-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.6 File Count Comparison
   
   
 </h3>
@@ -519,34 +635,45 @@
   <thead>
     <tr>
       <th>Architecture</th>
-      <th>Files</th>
+      <th>Files (ceph/ceph, probe+crc32c core)</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>x86/amd64</td>
-      <td>9 (includes multiple NASM .asm files for AVX512)</td>
+      <td>9</td>
+      <td>Includes multiple NASM <code class="language-plaintext highlighter-rouge">.asm</code> files for AVX512</td>
     </tr>
     <tr>
       <td>AArch64/ARM</td>
       <td>4</td>
+      <td> </td>
     </tr>
     <tr>
-      <td>RISC-V</td>
-      <td>5 (<code class="language-plaintext highlighter-rouge">riscv.c</code>, <code class="language-plaintext highlighter-rouge">riscv.h</code>, <code class="language-plaintext highlighter-rouge">crc32c_riscv.c</code>, <code class="language-plaintext highlighter-rouge">crc32c_riscv.h</code>, <code class="language-plaintext highlighter-rouge">crc32c_riscv_zbc_asm.S</code>)</td>
+      <td>RISC-V (ceph/ceph)</td>
+      <td>6</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv.c</code>, <code class="language-plaintext highlighter-rouge">riscv.h</code>, <code class="language-plaintext highlighter-rouge">crc32c_riscv.c</code>, <code class="language-plaintext highlighter-rouge">crc32c_riscv.h</code>, <code class="language-plaintext highlighter-rouge">crc32c_riscv_zbc_asm.S</code>, <code class="language-plaintext highlighter-rouge">crc32c_riscv_zbc_asm.h</code></td>
+    </tr>
+    <tr>
+      <td>RISC-V (isa-l submodule, additional)</td>
+      <td>5</td>
+      <td>Dispatcher <code class="language-plaintext highlighter-rouge">.c</code>, multibinary <code class="language-plaintext highlighter-rouge">.S</code>, two adler32 <code class="language-plaintext highlighter-rouge">.S</code> variants, <code class="language-plaintext highlighter-rouge">Makefile.am</code></td>
     </tr>
     <tr>
       <td>PowerPC</td>
       <td>5</td>
+      <td> </td>
     </tr>
     <tr>
       <td>s390x</td>
       <td>4</td>
+      <td> </td>
     </tr>
   </tbody>
 </table></div>
 
-<p>RISC-V matches or exceeds all architectures except x86.</p><hr />
+<p>RISC-V matches or exceeds every architecture except x86 once the isa-l submodule files are counted.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -555,81 +682,48 @@
   
 </h2>
     
-<h3 id="51-compiler-minimums">
-  
-  
-    <a href="#51-compiler-minimums" class="anchor-heading" aria-labelledby="51-compiler-minimums"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Compiler Minimums
-  
-  
-</h3>
-    
 
-<p>Enforced by <code class="language-plaintext highlighter-rouge">src/CMakeLists.txt</code>:</p>
+<p>Standard build (from <code class="language-plaintext highlighter-rouge">README.md</code>/<code class="language-plaintext highlighter-rouge">doc/install/build-ceph.rst</code>):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/ceph/ceph.git
+cd ceph &amp;&amp; git submodule update --init --recursive --progress
+./install-deps.sh
+./do_cmake.sh
+cd build
+ninja -j3
+ninja install
+</code></pre></div></div>
+
+<p>No riscv64-specific configure invocation, <code class="language-plaintext highlighter-rouge">--host</code> cross flag, or riscv64 CMake preset exists anywhere in the tree. No <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code>, or any cross-compilation guide exists (<code class="language-plaintext highlighter-rouge">find . -iname "*cross*compil*"</code> returns nothing).</p>
+
+<p><strong>Compiler minimums</strong> (enforced in <code class="language-plaintext highlighter-rouge">src/CMakeLists.txt</code>, none architecture-conditional - the same floors apply identically on riscv64):</p>
 <ul>
-  <li>GCC (standard build): minimum 11 (C++23 standard enforced; error message cites C++20 but standard is set to 23)</li>
-  <li>GCC (with <code class="language-plaintext highlighter-rouge">-DWITH_CRIMSON=ON</code>): minimum 13 (Crimson / Seastar require C++20 coroutines)</li>
-  <li>Clang: minimum 16</li>
+  <li>GCC &gt;= 11 (standard build - C++20 support required for the enforced check; the project compiles as C++23 in practice)</li>
+  <li>GCC &gt;= 13 (with <code class="language-plaintext highlighter-rouge">-DWITH_CRIMSON=ON</code> - Seastar coroutines need C++20 coroutine support, <a href="https://tracker.ceph.com/issues/64375">tracker #64375</a>)</li>
+  <li>GCC &gt;= 10 (Win32/MinGW target only, not riscv64-relevant)</li>
+  <li>Clang &gt;= 16 (C++20 support)</li>
+  <li>CMake &gt;= 3.22.1 (<code class="language-plaintext highlighter-rouge">cmake_minimum_required</code>, root <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>). Note: <code class="language-plaintext highlighter-rouge">ceph.spec.in</code> still lists <code class="language-plaintext highlighter-rouge">cmake &gt; 3.5</code> as a BuildRequires - stale and inconsistent with the enforced floor.</li>
 </ul>
 
-<p>CMake minimum: 3.22.1 (from <code class="language-plaintext highlighter-rouge">cmake_minimum_required</code> in <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>). Note: the RPM spec <code class="language-plaintext highlighter-rouge">ceph.spec.in</code> lists <code class="language-plaintext highlighter-rouge">cmake &gt; 3.5</code> as a BuildRequires, which is stale and inconsistent.</p>
-<h3 id="52-risc-v-architecture-detection-in-cmake">
-  
-  
-    <a href="#52-risc-v-architecture-detection-in-cmake" class="anchor-heading" aria-labelledby="52-risc-v-architecture-detection-in-cmake"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 RISC-V Architecture Detection in CMake
-  
-  
-</h3>
-    
+<p><strong>RISC-V detection</strong> (<code class="language-plaintext highlighter-rouge">cmake/modules/SIMDExt.cmake</code>): matches <code class="language-plaintext highlighter-rouge">riscv64|RISCV64</code> in <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code>, sets <code class="language-plaintext highlighter-rouge">HAVE_RISCV=1</code> unconditionally, then compiler-flag-probes in priority order: <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zbc_zvbc</code> (sets <code class="language-plaintext highlighter-rouge">HAVE_RISCV_RVV</code> + <code class="language-plaintext highlighter-rouge">HAVE_RISCV_ZVBC</code>) &gt; <code class="language-plaintext highlighter-rouge">-march=rv64gc_zbc</code> (<code class="language-plaintext highlighter-rouge">HAVE_RISCV_ZBC</code>) &gt; <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code> (<code class="language-plaintext highlighter-rouge">HAVE_RISCV_RVV</code> only, fallback). This is a <code class="language-plaintext highlighter-rouge">CHECK_C_COMPILER_FLAG</code> capability probe, not a pinned toolchain-version requirement; any GCC/Clang accepting these <code class="language-plaintext highlighter-rouge">-march</code> strings works.</p>
 
-<p><code class="language-plaintext highlighter-rouge">cmake/modules/SIMDExt.cmake</code> matches <code class="language-plaintext highlighter-rouge">riscv64|RISCV64</code> in <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> and sets:</p>
+<p><strong>Cross-compilation</strong>: no toolchain file exists in the repository (<code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code> - neither exists). No in-tree QEMU cross-build tooling or documentation (<code class="language-plaintext highlighter-rouge">grep -rli qemu</code> across docs/scripts/Dockerfiles returns only RBD-QEMU storage-integration docs, unrelated to cross-building Ceph itself). A user must supply their own <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR=riscv64</code>/compiler/<code class="language-plaintext highlighter-rouge">CMAKE_SYSROOT</code> toolchain file and, if not building natively, their own <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code> setup.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">HAVE_RISCV=1</code> (unconditional)</li>
-  <li><code class="language-plaintext highlighter-rouge">HAVE_RISCV_ZBC</code> – if compiler accepts <code class="language-plaintext highlighter-rouge">-march=rv64gc_zbc</code></li>
-  <li><code class="language-plaintext highlighter-rouge">HAVE_RISCV_RVV</code> + <code class="language-plaintext highlighter-rouge">HAVE_RISCV_ZVBC</code> – if compiler accepts <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zbc_zvbc</code></li>
-  <li><code class="language-plaintext highlighter-rouge">HAVE_RISCV_RVV</code> alone – if compiler accepts <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code> (fallback if Zvbc unsupported)</li>
-</ul>
+<p><strong>Dockerfiles</strong>: no dedicated <code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code> and no <code class="language-plaintext highlighter-rouge">.ci/docker/</code> directory exist. The generic <code class="language-plaintext highlighter-rouge">Dockerfile.build</code> (repo root) contains one riscv64-specific stanza: it remaps <code class="language-plaintext highlighter-rouge">uname -m</code> output <code class="language-plaintext highlighter-rouge">riscv64</code> to <code class="language-plaintext highlighter-rouge">riscv64gc</code> when constructing the sccache release-asset download URL. The <code class="language-plaintext highlighter-rouge">$DISTRO</code> base image for a riscv64 build is supplied by <code class="language-plaintext highlighter-rouge">src/script/build-with-container.py</code>, which as of PR #70141 (merged 2026-09-09) has an <code class="language-plaintext highlighter-rouge">OPENRUYI</code> distro option mapped to <code class="language-plaintext highlighter-rouge">community-ci.openruyi.cn/openruyi-oci:riscv64</code>, selectable via <code class="language-plaintext highlighter-rouge">-d openruyi</code>/<code class="language-plaintext highlighter-rouge">-d openruyi-creek</code>. This is local developer tooling (“test changes before submitting to a real CI job,” per the script’s own docstring), not wired into any CI trigger.</p>
 
-<p><code class="language-plaintext highlighter-rouge">SIMD_COMPILE_FLAGS</code> is set to the highest supported <code class="language-plaintext highlighter-rouge">-march</code> value. These flags drive <code class="language-plaintext highlighter-rouge">WITH_EC_ISA_PLUGIN</code> (erasure coding acceleration enabled when <code class="language-plaintext highlighter-rouge">HAVE_RISCV_RVV</code> is set).</p>
-<h3 id="53-cross-compilation">
-  
-  
-    <a href="#53-cross-compilation" class="anchor-heading" aria-labelledby="53-cross-compilation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Cross-Compilation
-  
-  
-</h3>
-    
-
-<p>No riscv64 CMake toolchain file exists in the repository (<code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code> and <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code> both return HTTP 404 from the main branch). No riscv64-specific <code class="language-plaintext highlighter-rouge">Dockerfile</code> exists in <code class="language-plaintext highlighter-rouge">.ci/docker/</code> or the repo root.</p>
-
-<p>Cross-compilation requires a user-supplied CMake toolchain file specifying <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR=riscv64</code>, <code class="language-plaintext highlighter-rouge">CMAKE_C_COMPILER</code>, <code class="language-plaintext highlighter-rouge">CMAKE_CXX_COMPILER</code>, and <code class="language-plaintext highlighter-rouge">CMAKE_SYSROOT</code>. QEMU user-mode (<code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code>) can be used for native-style builds inside a riscv64 rootfs; no documentation or tooling for this is shipped in-tree.</p>
-<h3 id="54-recommended-flags-for-riscv64-builds">
-  
-  
-    <a href="#54-recommended-flags-for-riscv64-builds" class="anchor-heading" aria-labelledby="54-recommended-flags-for-riscv64-builds"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Recommended Flags for riscv64 Builds
-  
-  
-</h3>
-    
-
-<p>The following flags should be explicitly disabled on riscv64 (some are auto-disabled by CMake arch guards, some require explicit <code class="language-plaintext highlighter-rouge">-DFOO=OFF</code>):</p>
+<p><strong>Flags recommended off for riscv64 builds:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Flag</th>
-      <th>Status on riscv64</th>
-      <th>Notes</th>
+      <th>Status</th>
+      <th>Reason</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">WITH_QATLIB</code></td>
-      <td>Auto-OFF</td>
-      <td>x86-only arch guard</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">WITH_QATZIP</code></td>
+      <td><code class="language-plaintext highlighter-rouge">WITH_QATLIB</code>, <code class="language-plaintext highlighter-rouge">WITH_QATZIP</code></td>
       <td>Auto-OFF</td>
       <td>x86-only arch guard</td>
     </tr>
@@ -639,52 +733,44 @@
       <td>aarch64-only arch guard</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">WITH_RBD_RWL</code></td>
-      <td>Auto-OFF (Debian rules)</td>
-      <td>Persistent write-back cache using pmem; pmem not available on riscv64</td>
+      <td><code class="language-plaintext highlighter-rouge">WITH_RADOSGW_LANCEDB</code></td>
+      <td>Defaults OFF on riscv64 once <a href="https://github.com/ceph/ceph/pull/71935">PR #71935</a> merges (open, approved, not yet merged as of 2026-09-30)</td>
+      <td><code class="language-plaintext highlighter-rouge">lance-linalg</code>’s SIMD kernels target only x86_64/aarch64/loongarch64; enabling this by default (the current behavior on <code class="language-plaintext highlighter-rouge">main</code> since commit <code class="language-plaintext highlighter-rouge">047c9e29a9b</code>) breaks the riscv64 build</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">WITH_RDMA</code></td>
       <td>Explicit <code class="language-plaintext highlighter-rouge">-DWITH_RDMA=OFF</code></td>
-      <td>Defaults ON; requires <code class="language-plaintext highlighter-rouge">librdmacm</code>/<code class="language-plaintext highlighter-rouge">libibverbs</code>, absent in most riscv64 environments</td>
+      <td>Defaults ON; requires <code class="language-plaintext highlighter-rouge">libibverbs</code>/<code class="language-plaintext highlighter-rouge">librdmacm</code>, typically absent on riscv64</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">WITH_BLUESTORE_PMEM</code></td>
-      <td>Explicit <code class="language-plaintext highlighter-rouge">-DWITH_BLUESTORE_PMEM=OFF</code></td>
-      <td>PMDK (libpmem) does not support riscv64</td>
+      <td>Removed entirely (PR #69726, merged 2026-07-28)</td>
+      <td>PMDK has no riscv64 support; feature retired project-wide (Intel Optane DC discontinued 2022), not riscv64-specific</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">WITH_SYSTEM_PMDK</code></td>
-      <td>Explicit <code class="language-plaintext highlighter-rouge">-DWITH_SYSTEM_PMDK=OFF</code></td>
-      <td>Same reason</td>
+      <td><code class="language-plaintext highlighter-rouge">WITH_SYSTEM_PMDK</code> / <code class="language-plaintext highlighter-rouge">WITH_RBD_RWL</code></td>
+      <td>Auto-OFF by default; <code class="language-plaintext highlighter-rouge">WITH_RBD_RWL</code>’s PMEM backend removal is proposed in open <a href="https://github.com/ceph/ceph/pull/70618">PR #70618</a></td>
+      <td>Same PMDK gap, remaining only in RBD’s persistent write-log cache until #70618 merges</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">WITH_LTTNG</code></td>
       <td>Explicit <code class="language-plaintext highlighter-rouge">-DWITH_LTTNG=OFF</code></td>
-      <td>SUSE spec enables only for x86_64/aarch64/ppc64le</td>
+      <td>SUSE spec restricts to x86_64/aarch64/ppc64le</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">WITH_SPDK</code></td>
+      <td>CMake guard permits riscv64, but requires <code class="language-plaintext highlighter-rouge">-DWITH_SYSTEM_SPDK=ON</code> (added by PR #69185) plus a separately built system SPDK</td>
+      <td>Bundled DPDK inside SPDK has no riscv64 support</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">WITH_CRIMSON</code></td>
-      <td>Optional; requires GCC 13+</td>
-      <td>Use only if toolchain is confirmed GCC 13+</td>
+      <td>Optional; bumps GCC floor to 13</td>
+      <td>Use only with a confirmed GCC 13+ toolchain</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="55-rpm-packaging">
-  
-  
-    <a href="#55-rpm-packaging" class="anchor-heading" aria-labelledby="55-rpm-packaging"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 RPM Packaging
-  
-  
-</h3>
-    
 
-<p><code class="language-plaintext highlighter-rouge">ceph.spec.in</code> includes <code class="language-plaintext highlighter-rouge">riscv64</code> in the SUSE-conditional <code class="language-plaintext highlighter-rouge">ExclusiveArch</code> line:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ExclusiveArch: x86_64 aarch64 ppc64le s390x riscv64
-</code></pre></div></div>
-
-<p>This was merged in PR #51732 (December 2023), enabling openSUSE Build Service to produce riscv64 packages. No equivalent Fedora/RHEL ExclusiveArch addition was found.</p><hr />
+<p><code class="language-plaintext highlighter-rouge">ceph.spec.in</code> carries <code class="language-plaintext highlighter-rouge">ExclusiveArch: x86_64 aarch64 ppc64le s390x riscv64</code> (merged PR #51732) and 39 <code class="language-plaintext highlighter-rouge">%{?openruyi}</code> conditionals (PR #69783) enabling OBS/openSUSE and openRuyi RPM packaging.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -710,21 +796,21 @@
       <td>CPUID</td>
       <td><code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code></td>
       <td><code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall</td>
-      <td>None – equivalent mechanism</td>
+      <td>None, equivalent mechanism</td>
     </tr>
     <tr>
       <td>CRC32C acceleration</td>
-      <td>PCLMUL + SSE4.2 (NASM .asm)</td>
+      <td>PCLMUL + SSE4.2</td>
       <td>PMULL + <code class="language-plaintext highlighter-rouge">__crc32cd</code> intrinsics</td>
-      <td>Zvbc inline asm + Zbc .S file</td>
-      <td>Minor – riscv64 lacks multi-way pipeline loop and prefetch</td>
+      <td>Zvbc inline asm + Zbc <code class="language-plaintext highlighter-rouge">.S</code> file</td>
+      <td>Minor - no multi-way pipeline/prefetch; further Zvbc optimization (#70211, ~33% claimed) blocked in review</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">mem_is_zero</code></td>
       <td><code class="language-plaintext highlighter-rouge">uint128_t</code> (no SIMD)</td>
       <td>NEON C intrinsics</td>
       <td>RVV C intrinsics</td>
-      <td>None at intrinsic level; scalar x86 is weaker</td>
+      <td>None at intrinsic level</td>
     </tr>
     <tr>
       <td>Cycle counter</td>
@@ -736,84 +822,70 @@
     <tr>
       <td>ISA-L erasure coding</td>
       <td>AVX2/AVX512</td>
-      <td>NEON (AArch64)</td>
-      <td>RVV (Linux 6.5+ required)</td>
-      <td>None for ISA-L; SPDK path blocked (see below)</td>
-    </tr>
-    <tr>
-      <td>ISA-L zlib/gzip</td>
-      <td>AVX-512</td>
       <td>NEON</td>
-      <td>RVV</td>
-      <td>None</td>
+      <td>RVV (runtime-detected)</td>
+      <td>None functionally; requires Linux 6.5+ for hwprobe-gated acceleration</td>
     </tr>
     <tr>
-      <td>Compressor (QAT)</td>
-      <td>Intel QAT</td>
-      <td>Not available</td>
-      <td>Not available</td>
-      <td>Not applicable to non-x86</td>
-    </tr>
-    <tr>
-      <td>Compressor (UADK)</td>
-      <td>Not available</td>
-      <td>AArch64 UADK</td>
-      <td>Not available</td>
-      <td>riscv64 has no equivalent hardware compression accelerator</td>
+      <td>ISA-L DEFLATE/Huffman compression</td>
+      <td>AVX-512 vectorized</td>
+      <td>NEON vectorized</td>
+      <td>Scalar only (<code class="language-plaintext highlighter-rouge">mbin_interface_base</code>)</td>
+      <td>Real gap - only Adler-32 checksum is RVV-vectorized in the submodule (Section 4.5)</td>
     </tr>
     <tr>
       <td>SPDK NVMe-oF</td>
       <td>Supported</td>
       <td>Supported</td>
-      <td>Blocked (DPDK)</td>
-      <td>DPDK bundled by SPDK does not support riscv64; <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> is the workaround</td>
+      <td>Buildable via <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> (PR #69185) with a separately built system SPDK</td>
+      <td>Bundled DPDK has no riscv64 support; naive backport (#69367/#69376) rejected</td>
     </tr>
     <tr>
-      <td>PMEM / persistent write-back</td>
+      <td>BlueStore/RBD PMEM write-back cache</td>
       <td>Supported</td>
       <td>Supported</td>
-      <td>Not supported</td>
-      <td>PMDK does not support riscv64</td>
+      <td>Removed project-wide (PR #69726 merged; #70618 open for the RBD side)</td>
+      <td>Feature retirement, not a riscv64-specific gap</td>
     </tr>
     <tr>
-      <td>Arrow Flight (RadosGW)</td>
+      <td>RGW LanceDB vector search (<code class="language-plaintext highlighter-rouge">WITH_RADOSGW_LANCEDB</code>)</td>
       <td>Supported</td>
       <td>Supported</td>
-      <td>Submodule stale</td>
-      <td>PR #65976 auto-closed without merge; Arrow C++ builds but Python wheels absent</td>
+      <td>Build-breaking on <code class="language-plaintext highlighter-rouge">main</code> until PR #71935 merges</td>
+      <td><code class="language-plaintext highlighter-rouge">lance-linalg</code> SIMD kernels only target x86_64/aarch64/loongarch64</td>
     </tr>
     <tr>
-      <td>BLAKE3</td>
-      <td>Upstream RVV backend absent</td>
-      <td>Upstream RVV backend absent</td>
-      <td>Upstream RVV backend absent</td>
-      <td>No riscv64 BLAKE3 assembly in the bundled BLAKE3 submodule; affects any cryptographic path using BLAKE3 [NEEDS VERIFICATION – no direct search of BLAKE3 submodule was confirmed in findings]</td>
+      <td>Compressor hardware offload (QAT/UADK)</td>
+      <td>Intel QAT</td>
+      <td>AArch64 UADK</td>
+      <td>None available</td>
+      <td>No equivalent hardware compression accelerator path</td>
     </tr>
     <tr>
       <td>LZ4 compression</td>
       <td>Vectorized</td>
       <td>Vectorized</td>
       <td>Scalar only</td>
-      <td>RVV LZ4 patch not merged upstream (PR <a href="https://github.com/lz4/lz4/issues/1738">#1738</a>); 4.7-4.8x claimed speedup pending</td>
+      <td>RVV optimization proposed upstream (<a href="https://github.com/lz4/lz4/issues/1635">lz4 #1635</a>), not merged</td>
     </tr>
     <tr>
       <td>zstd compression</td>
       <td>Huffman fast loop enabled</td>
       <td>Enabled</td>
       <td>Disabled</td>
-      <td>Huffman 4-way fast loop explicitly disabled for riscv64 (<a href="https://github.com/facebook/zstd/issues/4622">zstd #4622</a>); RVV matching path not implemented</td>
+      <td>Huffman 4-way fast loop disabled for riscv64 (<a href="https://github.com/facebook/zstd/issues/4622">zstd #4622</a>/<a href="https://github.com/facebook/zstd/issues/4546">#4546</a>); RVV XXH3 path proposed but unmerged (<a href="https://github.com/facebook/zstd/issues/4471">#4471</a>)</td>
     </tr>
     <tr>
       <td>Python dashboard wheels</td>
       <td>Full</td>
       <td>Full</td>
       <td>Partial</td>
-      <td>Some pip dependencies lack riscv64 wheels; PR #65142 (PyPI upgrade) closed stale</td>
+      <td>Some pip dependencies lack riscv64 wheels</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The core storage path (RADOS, RBD, CephFS) has no blocking gaps. All gaps identified above are in optional or peripheral subsystems (SPDK, PMEM, Python tooling, auxiliary compression).</p><hr />
+<p>The core storage path (RADOS, RBD, CephFS) has no functional blocking gaps. Remaining gaps are in optional/peripheral subsystems: RGW LanceDB (currently blocking the default build pending #71935), SPDK NVMe-oF (workable but requires system SPDK), and compression/erasure-coding hot-path performance versus x86/aarch64. No architecture-specific NaN/floating-point semantics issue was found; no RVV floating-point code exists in the tree at all (Section 4).</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -823,25 +895,137 @@
 </h2>
     
 
-<p><strong>No automated riscv64 CI exists in the ceph/ceph repository.</strong></p>
+<p><strong>No automated riscv64 CI exists in ceph/ceph’s own GitHub Actions.</strong> This was confirmed independently three separate times in this research pass: by direct reading of all 12 <code class="language-plaintext highlighter-rouge">.github/workflows/*.yml</code>/<code class="language-plaintext highlighter-rouge">.yaml</code> files, by <code class="language-plaintext highlighter-rouge">grep -n "runs-on:"</code> across every file, by <code class="language-plaintext highlighter-rouge">grep -ril riscv .github/</code>, and by GitHub’s own code-search index (<code class="language-plaintext highlighter-rouge">riscv repo:ceph/ceph path:.github/workflows</code> -&gt; 0 hits; <code class="language-plaintext highlighter-rouge">riscv64</code> same path -&gt; 0 hits).</p>
 
-<p>All 12 GitHub Actions workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were audited:</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Purpose</th>
+      <th>Runner</th>
+      <th>riscv present?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">author-ci-perms.yml</code></td>
+      <td>PR-author CI-permission gating</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">check-license.yml</code></td>
+      <td>Greps PR diff for GPL license text</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">diff-ceph-config.yml</code></td>
+      <td>Diffs config option files, posts PR comment</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">needs-rebase.yml</code></td>
+      <td>Flags merge conflicts</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">pr-check-deps.yml</code></td>
+      <td>Runs dependencies-action bot</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">pr-checklist.yml</code></td>
+      <td>Runs PR checklist action</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">pr-triage.yml</code></td>
+      <td>File-based labeling, project/milestone assignment</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">qa-symlink.yml</code></td>
+      <td>Verifies <code class="language-plaintext highlighter-rouge">.qa</code> symlinks</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">redmine-upkeep.yml</code></td>
+      <td>Syncs Redmine tracker issues</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">releng-audit.yaml</code></td>
+      <td>Backport/PTL audit bot</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">retrigger-rtd.yml</code></td>
+      <td>Triggers Read the Docs rebuild</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">stale.yml</code></td>
+      <td>Closes stale issues/PRs</td>
+      <td>ubuntu-latest</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">check-license.yml</code>, <code class="language-plaintext highlighter-rouge">create-backport-trackers.yml</code>, <code class="language-plaintext highlighter-rouge">diff-ceph-config.yml</code>, <code class="language-plaintext highlighter-rouge">needs-rebase.yml</code>, <code class="language-plaintext highlighter-rouge">pr-check-deps.yml</code>, <code class="language-plaintext highlighter-rouge">pr-checklist.yml</code>, <code class="language-plaintext highlighter-rouge">pr-triage.yml</code>, <code class="language-plaintext highlighter-rouge">qa-symlink.yml</code>, <code class="language-plaintext highlighter-rouge">redmine-upkeep.yml</code>, <code class="language-plaintext highlighter-rouge">releng-audit.yaml</code>, <code class="language-plaintext highlighter-rouge">retrigger-rtd.yml</code>, <code class="language-plaintext highlighter-rouge">stale.yml</code></li>
-</ul>
+<p><strong>None of these 12 workflows compile, build, or test Ceph code, on any architecture</strong> - they are exclusively PR-governance/bot automation. <code class="language-plaintext highlighter-rouge">create-backport-trackers.yml</code> was removed and <code class="language-plaintext highlighter-rouge">author-ci-perms.yml</code> added between audits; the total count (12) is unchanged. There is also no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.star</code> anywhere in the repository tree (checked at root and recursively), and <code class="language-plaintext highlighter-rouge">qa/archs/</code> contains <code class="language-plaintext highlighter-rouge">aarch64.yaml</code>, <code class="language-plaintext highlighter-rouge">armv7.yaml</code>, <code class="language-plaintext highlighter-rouge">i686.yaml</code>, <code class="language-plaintext highlighter-rouge">x86_64.yaml</code> but no <code class="language-plaintext highlighter-rouge">riscv64.yaml</code>.</p>
 
-<p>All 12 are administrative or triage workflows (license checks, backport tracking, PR labeling, stale issue management). Every job uses <code class="language-plaintext highlighter-rouge">runs-on: ubuntu-latest</code> (x86-64). Zero files contain the string “riscv”. No QEMU emulation step for riscv64 exists anywhere. No GitHub-hosted or self-hosted riscv64 runner is configured.</p>
+<p>Ceph’s actual build/integration testing runs on Jenkins in the Sepia lab via Teuthology, triggered by PR comments (visible indirectly via <code class="language-plaintext highlighter-rouge">retrigger-rtd.yml</code>’s comment-trigger pattern for docs) - this repository’s GitHub Actions give no visibility into that system, so this audit can refute GitHub-Actions-based riscv64 CI specifically but cannot independently confirm or deny riscv64 legs in Jenkins/Sepia. The <code class="language-plaintext highlighter-rouge">ceph-build</code> Jenkins repository is known to contain arm64 (<code class="language-plaintext highlighter-rouge">ceph-pull-requests-arm64</code>) and ppc64 (<code class="language-plaintext highlighter-rouge">ceph-make-check-periodic-ppc64</code>) periodic jobs; no equivalent riscv64 job was found.</p>
 
-<p>Ceph’s actual build and integration testing runs through Teuthology, an external test framework operating the Sepia test lab. The <code class="language-plaintext highlighter-rouge">ceph-build</code> Jenkins repository contains arm64 (<code class="language-plaintext highlighter-rouge">ceph-pull-requests-arm64</code>) and ppc64 (<code class="language-plaintext highlighter-rouge">ceph-make-check-periodic-ppc64</code>) periodic CI jobs. No equivalent riscv64 job exists.</p>
+<p>A dedicated riscv64 CI does exist, but outside upstream: <a href="https://github.com/openRuyi-Project/ceph-ci">openRuyi-Project/ceph-ci</a>, an ISCAS-maintained pipeline that clones Ceph, applies riscv64/openRuyi patches (“1xxx” upstream-destined, “2xxx” downstream-only), builds, and runs <code class="language-plaintext highlighter-rouge">make check</code>/ctest on real riscv64 hardware inside an openRuyi container - single-node scope, mirroring the scope of upstream’s own containerized PR job. This closes part of the CI gap in practice as of September 2026 but is single-vendor and not wired into ceph/ceph’s own infrastructure.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">qa/archs/</code> directory contains <code class="language-plaintext highlighter-rouge">aarch64.yaml</code>, <code class="language-plaintext highlighter-rouge">armv7.yaml</code>, <code class="language-plaintext highlighter-rouge">i686.yaml</code>, and <code class="language-plaintext highlighter-rouge">x86_64.yaml</code>. There is no <code class="language-plaintext highlighter-rouge">riscv64.yaml</code>.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Aspect</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GitHub Actions build/test</td>
+      <td>None (governance only, all archs)</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Jenkins/Sepia periodic job</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>Dedicated third-party CI</td>
+      <td>n/a</td>
+      <td>n/a</td>
+      <td>Yes (openRuyi-Project/ceph-ci, non-upstream)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">qa/archs/*.yaml</code></td>
+      <td><code class="language-plaintext highlighter-rouge">x86_64.yaml</code></td>
+      <td><code class="language-plaintext highlighter-rouge">aarch64.yaml</code>, <code class="language-plaintext highlighter-rouge">armv7.yaml</code></td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>The <code class="language-plaintext highlighter-rouge">Dockerfile.build</code> does contain riscv64 logic (sccache arch remapping added in PR #69315). This enables the build container to be used on a riscv64 host, but it is not wired to any CI trigger. It is developer convenience, not automated gating.</p>
-
-<p>PR #68098 (ISA-L enablement) was merged with the explicit acknowledgment from tchaikov: “since RISC-V is not exercised by our test bed, we can skip the integration test.” This confirms the maintainer team is aware of the CI gap and is proceeding on manual hardware testing from contributors.</p>
-
-<p>The consequence: every riscv64 bug introduced by a non-riscv64 patch will not be caught until a contributor manually tests on riscv64 hardware. The corrected ZBC/ZVBC bit offset bug (PR #68047) went six months between initial submission (PR #66026, March 2026) and fix – consistent with the absence of automated regression detection.</p><hr />
+<p>The consequence: riscv64-only code changes have no automated regression guard before merge. This has manifested twice in the same file (<code class="language-plaintext highlighter-rouge">crc32c_riscv_zbc_asm.S</code>): the ZBC/ZVBC bit-offset bug (six months undetected, PR #66026 to #68047) and the <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> ABI-register clobbering bug (PR #69908). PR #68098 (ISA-L enablement) was merged with tchaikov’s explicit acknowledgment that riscv64 is “not exercised by our test bed.”</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -855,7 +1039,7 @@
   <thead>
     <tr>
       <th>Channel</th>
-      <th>riscv64 Present</th>
+      <th>riscv64 present</th>
       <th>Version</th>
       <th>Notes</th>
     </tr>
@@ -863,50 +1047,50 @@
   <tbody>
     <tr>
       <td>GitHub Releases (ceph/ceph)</td>
-      <td>No</td>
-      <td>–</td>
-      <td>Source-tag releases only; zero binary assets for any architecture</td>
+      <td>N/A</td>
+      <td>-</td>
+      <td>Upstream publishes no GitHub Releases at all, for any architecture (“There aren’t any releases here.”); source tags plus download.ceph.com tarballs and distro packages are the actual delivery mechanism</td>
     </tr>
     <tr>
       <td>PyPI</td>
-      <td>No</td>
-      <td>–</td>
-      <td><code class="language-plaintext highlighter-rouge">ceph</code> package name returns HTTP 404 on PyPI; no files exist</td>
+      <td>N/A</td>
+      <td>-</td>
+      <td>No PyPI project literally named <code class="language-plaintext highlighter-rouge">ceph</code> exists (<code class="language-plaintext highlighter-rouge">pypi.org/pypi/ceph/json</code> returns HTTP 404, confirmed a second way via <code class="language-plaintext highlighter-rouge">pypi.org/simple/ceph/</code>)</td>
     </tr>
     <tr>
       <td>RISE Python wheel builder</td>
       <td>No</td>
-      <td>–</td>
-      <td>Ceph is not among the ~80 packages built by the RISE wheel_builder project</td>
+      <td>-</td>
+      <td>GitLab’s PyPI proxy for the RISE wheel builder redirects to upstream PyPI for this name and 404s identically; Ceph is not among the 86 packages the RISE wheel_builder project builds</td>
     </tr>
     <tr>
-      <td>Ubuntu 24.04 Noble</td>
-      <td>Yes</td>
-      <td>19.2.0~git20240301…-0ubuntu6</td>
-      <td>In ubuntu-ports (unofficial), not the main archive; lags behind amd64/arm64 main archive version (19.2.3)</td>
+      <td><strong>Ubuntu 26.04 (Resolute), main archive</strong></td>
+      <td><strong>Yes</strong></td>
+      <td><strong>20.2.0-0ubuntu2</strong></td>
+      <td>Verified via Launchpad (three independent, mutually consistent pages): <code class="language-plaintext highlighter-rouge">ceph_20.2.0-0ubuntu2</code> built for riscv64 on builder <code class="language-plaintext highlighter-rouge">bos03-riscv64-032</code>, build <code class="language-plaintext highlighter-rouge">+build/32377273</code>, <code class="language-plaintext highlighter-rouge">[FULLYBUILT] Successfully built</code>, producing 60 binary packages plus debug symbols, published in the <code class="language-plaintext highlighter-rouge">main</code> component (not ports/unofficial). Also riscv64-enabled at the same version: <code class="language-plaintext highlighter-rouge">ceph-base</code>, <code class="language-plaintext highlighter-rouge">ceph-common</code>, <code class="language-plaintext highlighter-rouge">ceph-mon</code>, <code class="language-plaintext highlighter-rouge">ceph-osd</code>, <code class="language-plaintext highlighter-rouge">ceph-mds</code>, <code class="language-plaintext highlighter-rouge">ceph-mgr</code>, <code class="language-plaintext highlighter-rouge">ceph-immutable-object-cache</code>, <code class="language-plaintext highlighter-rouge">cephfs-mirror</code>, <code class="language-plaintext highlighter-rouge">libcephfs-dev</code>, <code class="language-plaintext highlighter-rouge">libcephfs-jni</code>, <code class="language-plaintext highlighter-rouge">libcephfs2</code>, <code class="language-plaintext highlighter-rouge">libsqlite3-mod-ceph</code>, <code class="language-plaintext highlighter-rouge">libsqlite3-mod-ceph-dev</code>, <code class="language-plaintext highlighter-rouge">python3-ceph-argparse</code>, <code class="language-plaintext highlighter-rouge">python3-cephfs</code>. <code class="language-plaintext highlighter-rouge">python3-ceph</code> and <code class="language-plaintext highlighter-rouge">libceph</code> are not distinct binary package names in this archive; whether Ubuntu’s packaging carries riscv64-specific patches beyond building unmodified upstream source was not verified</td>
     </tr>
     <tr>
       <td>Debian sid</td>
       <td>Yes</td>
       <td>18.2.8+ds-2.1</td>
-      <td>Built on buildd host <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code>, completed 2026-06-10 [NEEDS VERIFICATION – build log status was “Maybe-Successful” before promotion to “Installed”]; Debian riscv64 is a ports (unofficial) architecture</td>
+      <td>Built on buildd host <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code> [NEEDS VERIFICATION - build-log status was “Maybe-Successful” before promotion to “Installed”]; Debian riscv64 is a ports (unofficial) architecture</td>
     </tr>
     <tr>
       <td>openSUSE Factory (OBS)</td>
       <td>Expected yes</td>
-      <td>–</td>
-      <td>ExclusiveArch in <code class="language-plaintext highlighter-rouge">ceph.spec.in</code> enables OBS builds; direct OBS verification not performed in research</td>
+      <td>-</td>
+      <td><code class="language-plaintext highlighter-rouge">ExclusiveArch</code> in <code class="language-plaintext highlighter-rouge">ceph.spec.in</code> enables OBS builds; direct OBS build-log verification not performed</td>
     </tr>
     <tr>
       <td>Arch Linux RISC-V</td>
-      <td>Unverified</td>
-      <td>–</td>
-      <td>Page uses dynamic rendering; ceph is AUR-only in Arch and AUR packages are not ported to Arch RISC-V binary repos</td>
+      <td>No</td>
+      <td>-</td>
+      <td>Neither the archriscv homepage nor its detailed status table (<code class="language-plaintext highlighter-rouge">archriscv.felixc.at/.status/status.htm</code>) lists a <code class="language-plaintext highlighter-rouge">ceph</code> row</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Ceph does not publish official binary release artifacts directly. Distributions are the intended delivery mechanism. The riscv64 availability is currently limited to ports/unofficial channels (ubuntu-ports, Debian ports, openSUSE OBS). No stable distribution (Ubuntu LTS main, Debian stable, RHEL/CentOS Stream) carries riscv64 Ceph packages.</p><hr />
+<p>Ceph does not publish official binary release artifacts itself; distribution packaging is the intended delivery mechanism, and Ubuntu’s 26.04 main-archive build is now the strongest available signal of riscv64 binary availability - a material change from ports-only/unofficial status. No stable RHEL/CentOS Stream riscv64 Ceph package was found. A user who needs a working riscv64 Ceph binary today should use Ubuntu 26.04 (Resolute) main-archive packages, or build from source using the openRuyi container target (PR #70141) or a manual toolchain (Section 5).</p>
 <h2 id="9-dependencies">
   
   
@@ -915,16 +1099,16 @@
   
 </h2>
     
-<h3 id="91-blocking-dependencies-for-default-build">
+<h3 id="91-blocking-dependencies-for-the-default-build">
   
   
-    <a href="#91-blocking-dependencies-for-default-build" class="anchor-heading" aria-labelledby="91-blocking-dependencies-for-default-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 Blocking Dependencies (for default build)
+    <a href="#91-blocking-dependencies-for-the-default-build" class="anchor-heading" aria-labelledby="91-blocking-dependencies-for-the-default-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 Blocking Dependencies for the Default Build
   
   
 </h3>
     
 
-<p>None. All optional components with riscv64 gaps are disabled by default.</p>
+<p>None currently that halt a build outright on riscv64: all optional components with unresolved riscv64 gaps are disabled by default. The one live exception is transitional - <code class="language-plaintext highlighter-rouge">WITH_RADOSGW_LANCEDB</code> defaults ON on <code class="language-plaintext highlighter-rouge">main</code> since commit <code class="language-plaintext highlighter-rouge">047c9e29a9b</code> and breaks the riscv64 build until PR #71935 merges (open, approved as of 2026-09-28).</p>
 <h3 id="92-dependency-status-table">
   
   
@@ -939,303 +1123,415 @@
     <tr>
       <th>Dependency</th>
       <th>Role</th>
+      <th>Criticality</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
+      <th>riscv64 Release</th>
       <th>Blocking Issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>OpenSSL</td>
-      <td>TLS, AES, SHA, CRC</td>
-      <td>Builds; <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> target added 2022</td>
-      <td>CI in OS Zoo; intermittent <code class="language-plaintext highlighter-rouge">test_lhash</code> failures on riscv64 (<a href="https://github.com/openssl/openssl/issues/30880">#30880</a>)</td>
-      <td>AES without Zkn ISA extension is non-constant-time (<a href="https://github.com/openssl/openssl/issues/20980">#20980</a>); not a build blocker</td>
+      <td>TLS, AES/SHA/CRC crypto</td>
+      <td>Critical (runtime)</td>
+      <td>Builds; <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> target since 2022</td>
+      <td>CI in “OS Zoo”; intermittent <code class="language-plaintext highlighter-rouge">test_lhash</code> failures (<a href="https://github.com/openssl/openssl/issues/30880">#30880</a>, open)</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>AES without Zkn is non-constant-time (<a href="https://github.com/openssl/openssl/issues/20980">#20980</a>); musl <code class="language-plaintext highlighter-rouge">RISCV_HAS_ZBB()</code> mis-detection (<a href="https://github.com/openssl/openssl/issues/28118">#28118</a>, open); SHA256 asm optimization proposal open (<a href="https://github.com/openssl/openssl/issues/28664">#28664</a>)</td>
     </tr>
     <tr>
-      <td>Boost 1.87</td>
-      <td>Boost.Asio, Boost.Context, containers</td>
-      <td>Builds; Boost.Context riscv64 asm issues fixed (boostorg/context <a href="https://github.com/boostorg/context/issues/306">#306</a> closed Jul 2025); Ceph CMake Jamfile ordering fixed (PR #69611)</td>
-      <td>No dedicated riscv64 CI lane visible</td>
-      <td>None blocking</td>
+      <td>Boost</td>
+      <td>Fiber context switching (Context), async I/O (Asio)</td>
+      <td>Critical (runtime)</td>
+      <td>Builds; asm issues fixed (<a href="https://github.com/boostorg/context/issues/306">boostorg/context#306</a>, closed 2025-07-10); Ceph Jamfile-ordering fix (PR #69611)</td>
+      <td>No dedicated riscv64 CI lane found</td>
+      <td>Ships in distro riscv64 ports</td>
+      <td>None currently open specific to riscv64 in boostorg/context</td>
     </tr>
     <tr>
       <td>RocksDB</td>
       <td>BlueStore KV engine</td>
-      <td>Builds; linux-riscv64 support merged (<a href="https://github.com/facebook/rocksdb/issues/12139">#12139</a>) December 2023</td>
-      <td>Build tested under QEMU (slow, ~5h at -j6)</td>
-      <td>None; musl/Alpine riscv64 excluded (no OpenJDK musl/riscv64)</td>
-    </tr>
-    <tr>
-      <td>jemalloc</td>
-      <td>Memory allocator (optional, preferred)</td>
-      <td>Builds; riscv64gc support merged (<a href="https://github.com/jemalloc/jemalloc/issues/2323">#2323</a>); atomics crash (<a href="https://github.com/jemalloc/jemalloc/issues/1401">#1401</a>) closed</td>
-      <td>No visible riscv64 CI</td>
-      <td>Cross-build issue (<a href="https://github.com/jemalloc/jemalloc/issues/2399">#2399</a>) open; native builds unaffected</td>
-    </tr>
-    <tr>
-      <td>gperftools / tcmalloc</td>
-      <td>Memory allocator (default if found)</td>
-      <td>Builds; riscv64 port merged December 2020 (<a href="https://github.com/gperftools/gperftools/issues/1222">#1222</a>); atomics crash (<a href="https://github.com/gperftools/gperftools/issues/1359">#1359</a>) closed</td>
-      <td>No visible riscv64 CI</td>
-      <td>Note: Ceph ASan builds require tcmalloc/jemalloc to be disabled (PR #69621 open)</td>
-    </tr>
-    <tr>
-      <td>ISA-L</td>
-      <td>Erasure coding, zlib</td>
-      <td>Builds on riscv64 since ISA-L v2.32.0; Ceph enablement merged June 2026 (PR #68098)</td>
-      <td>No dedicated riscv64 CI</td>
-      <td>Requires Linux 6.5+ for hardware acceleration; older kernels use software fallback</td>
-    </tr>
-    <tr>
-      <td>LZ4</td>
-      <td>Compression (BlueStore, OSD)</td>
-      <td>Builds; basic riscv64 support merged October 2023 (<a href="https://github.com/lz4/lz4/pull/1298">#1298</a>); aligned access fix via Zicclsm merged (<a href="https://github.com/lz4/lz4/pull/1648">#1648</a>)</td>
-      <td>No dedicated riscv64 CI</td>
-      <td>RVV optimization path (claimed 4.7-4.8x speedup) not yet merged; scalar performance is suboptimal</td>
-    </tr>
-    <tr>
-      <td>zstd</td>
-      <td>Compression (general)</td>
-      <td>Builds; 64-bit arch detection merged (<a href="https://github.com/facebook/zstd/pull/4525">#4525</a>); Zicclsm unaligned access issue open (<a href="https://github.com/facebook/zstd/issues/4584">#4584</a>)</td>
-      <td>CI with GCC for riscv64 (<a href="https://github.com/facebook/zstd/pull/4502">#4502</a>)</td>
-      <td>Huffman 4-way fast loop disabled for riscv64 (<a href="https://github.com/facebook/zstd/issues/4622">#4622</a>); decompression slower than optimal</td>
-    </tr>
-    <tr>
-      <td>snappy</td>
-      <td>Compression (RGW, general)</td>
-      <td>Builds; benchmark submodule RISC-V update merged (<a href="https://github.com/google/snappy/pull/208">#208</a>)</td>
-      <td>No visible riscv64 CI</td>
-      <td>None known</td>
+      <td>Critical (runtime)</td>
+      <td>Builds; riscv64 <code class="language-plaintext highlighter-rouge">-march</code> fixes merged and closed (<a href="https://github.com/facebook/rocksdb/issues/11994">#11994</a>, <a href="https://github.com/facebook/rocksdb/issues/7051">#7051</a>)</td>
+      <td>QEMU-based build tests only, slow</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>No open riscv64 issues found</td>
     </tr>
     <tr>
       <td>liburing</td>
       <td>BlueStore/Crimson async I/O</td>
-      <td>Builds; nolibc support added August 2023 (<a href="https://github.com/axboe/liburing/pull/930">#930</a>); GitHub CI riscv64 build added (<a href="https://github.com/axboe/liburing/pull/928">#928</a>)</td>
-      <td>CI riscv64 build active</td>
-      <td>None</td>
+      <td>Optional (runtime)</td>
+      <td>Builds; nolibc support added (<a href="https://github.com/axboe/liburing/pull/930">axboe/liburing#930</a>)</td>
+      <td>CI riscv64 build active (<a href="https://github.com/axboe/liburing/pull/928">#928</a>)</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>None open</td>
+    </tr>
+    <tr>
+      <td>LZ4</td>
+      <td>Compression (BlueStore/OSD)</td>
+      <td>Optional (runtime)</td>
+      <td>Builds; basic support merged Oct 2023; Zicclsm alignment fix merged</td>
+      <td>No dedicated riscv64 CI</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>RVV optimization proposal open/unmerged (<a href="https://github.com/lz4/lz4/issues/1635">#1635</a>); scalar performance remains suboptimal (Section 6)</td>
+    </tr>
+    <tr>
+      <td>snappy</td>
+      <td>Compression (RGW/general)</td>
+      <td>Optional (runtime)</td>
+      <td>Builds</td>
+      <td>No dedicated riscv64 CI</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>1 open performance issue, not correctness (<a href="https://github.com/google/snappy/issues/209">#209</a>, “FindMatchLength on RISC-V”)</td>
+    </tr>
+    <tr>
+      <td>zstd</td>
+      <td>General compression</td>
+      <td>Optional (runtime)</td>
+      <td>Builds; 64-bit arch detection merged; CI with GCC for riscv64 added (<a href="https://github.com/facebook/zstd/pull/4502">#4502</a>)</td>
+      <td>Some CI coverage exists</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>2 open: RVV support for XXH3 (<a href="https://github.com/facebook/zstd/issues/4471">#4471</a>); unaligned access / disabled Huffman fast loop (<a href="https://github.com/facebook/zstd/issues/4546">#4546</a>)</td>
+    </tr>
+    <tr>
+      <td>ISA-L</td>
+      <td>Erasure coding, zlib codec</td>
+      <td>Optional (runtime)</td>
+      <td>Builds on riscv64 since v2.32.0; Ceph enablement merged (PR #68098)</td>
+      <td>No dedicated riscv64 CI</td>
+      <td>Not independently verified as packaged for riscv64 in Ubuntu 26.04</td>
+      <td>Only Adler-32 is RVV-vectorized in the isa-l submodule (Section 4.5); upstream <code class="language-plaintext highlighter-rouge">intel/isa-l</code> shares the <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> scratch-register defect class (<a href="https://github.com/intel/isa-l/issues/428">intel/isa-l#428</a>, open), independent of Ceph’s own local fix; general support tracking issue also open (<a href="https://github.com/intel/isa-l/issues/239">#239</a>)</td>
     </tr>
     <tr>
       <td>SPDK</td>
-      <td>BlueStore NVMe backend (WITH_SPDK=OFF default)</td>
-      <td>Partially builds; riscv64 in CMake allowed-processor list; bundled DPDK blocks</td>
+      <td>BlueStore NVMe backend</td>
+      <td>Optional (runtime, default OFF)</td>
+      <td>Buildable via <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> (PR #69185, merged); bundled DPDK blocks the default <code class="language-plaintext highlighter-rouge">WITH_SPDK</code> path</td>
       <td>No riscv64 CI</td>
-      <td><strong>BLOCKING for SPDK path:</strong> DPDK bundled by SPDK has no riscv64 support; NVMe controller init fails on riscv64 hardware (<a href="https://github.com/spdk/spdk/issues/3475">spdk #3475</a> open); <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> is the workaround; reef backport PR #69376 unreviewed</td>
+      <td>Not packaged for riscv64</td>
+      <td>NVMe controller init timeout on riscv64 hardware (<a href="https://github.com/spdk/spdk/issues/3475">spdk#3475</a>, open); naive backport of the fix to the <code class="language-plaintext highlighter-rouge">reef</code> stable branch was rejected (PR #69367/#69376)</td>
     </tr>
     <tr>
       <td>DPDK</td>
-      <td>Network acceleration (WITH_DPDK=OFF default)</td>
-      <td>Cross-compile guide exists; limited hardware testing</td>
+      <td>Network acceleration; also vendored inside SPDK</td>
+      <td>Optional (runtime, default OFF)</td>
+      <td>Cross-compile possible; no official riscv64 release; the copy bundled by SPDK specifically lacks riscv64 support, which is the direct cause of the SPDK blocker above</td>
       <td>No riscv64 CI</td>
-      <td>No official riscv64 release; not a blocker (disabled by default)</td>
+      <td>Not packaged for riscv64</td>
+      <td>Not independently re-searched against dpdk.org this pass</td>
+    </tr>
+    <tr>
+      <td>jemalloc</td>
+      <td>Memory allocator (optional/preferred)</td>
+      <td>Optional (runtime)</td>
+      <td>Builds; riscv64gc support merged (<a href="https://github.com/jemalloc/jemalloc/issues/2323">#2323</a>, closed)</td>
+      <td>No dedicated riscv64 CI</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>Cross-build (not native) gap open (<a href="https://github.com/jemalloc/jemalloc/issues/2399">#2399</a>)</td>
+    </tr>
+    <tr>
+      <td>gperftools</td>
+      <td>Memory allocator (tcmalloc, default if found)</td>
+      <td>Optional (runtime)</td>
+      <td>Builds; riscv64 port merged December 2020</td>
+      <td>No dedicated riscv64 CI</td>
+      <td>Not independently re-searched this pass</td>
+      <td>Ceph-side: ASan builds require tcmalloc/jemalloc disabled (PR #69621, open)</td>
     </tr>
     <tr>
       <td>Apache Arrow</td>
-      <td>RadosGW Arrow Flight (WITH_RADOSGW_ARROW_FLIGHT=OFF default)</td>
-      <td>C++ builds functional; Ceph submodule update PR #65976 auto-closed stale</td>
+      <td>RadosGW Arrow Flight</td>
+      <td>Optional (runtime, default OFF)</td>
+      <td>C++ builds functional</td>
       <td>No riscv64 CI</td>
-      <td>Python manylinux riscv64 wheels not released; Arrow Flight disabled by default – not blocking</td>
+      <td>Python manylinux riscv64 wheels not released</td>
+      <td>Ceph’s own Arrow submodule riscv-detect update (PR #65976) auto-closed stale with no champion</td>
     </tr>
     <tr>
-      <td>Jerasure / GF-Complete</td>
-      <td>Erasure coding (bundled fallback)</td>
-      <td>Builds; pure C with lookup tables, no SIMD paths</td>
-      <td>No CI</td>
-      <td>No blocking issues; ISA-L plugin now preferred on riscv64</td>
-    </tr>
-    <tr>
-      <td>Python 3</td>
+      <td>Python</td>
       <td>Dashboard, management, build scripts</td>
+      <td>Optional (runtime)</td>
       <td>Builds; riscv64 support well-established</td>
       <td>Standard Python CI</td>
-      <td>Some dashboard pip dependencies lack riscv64 wheels; workaround is <code class="language-plaintext highlighter-rouge">--system-site-packages</code></td>
-    </tr>
-  </tbody>
-</table></div><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-<h3 id="101-contributor-organizations">
-  
-  
-    <a href="#101-contributor-organizations" class="anchor-heading" aria-labelledby="101-contributor-organizations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 Contributor Organizations
-  
-  
-</h3>
-    
-
-<p>Active riscv64 contributors to ceph/ceph:</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Organization</th>
-      <th>Contributor</th>
-      <th>Role</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>ISCAS (Institute of Software, Chinese Academy of Sciences)</td>
-      <td>sunyuechi</td>
-      <td>RVV optimizations, ISA-L enablement, build fixes</td>
+      <td>Ships in distro riscv64 (<code class="language-plaintext highlighter-rouge">python3-cephfs</code> etc. confirmed in Ubuntu 26.04, Section 8)</td>
+      <td>Some dashboard pip dependencies lack riscv64 wheels (PR #65142 attempted a fix, auto-closed stale); workaround is <code class="language-plaintext highlighter-rouge">--system-site-packages</code></td>
     </tr>
     <tr>
-      <td>ZTE Corporation</td>
-      <td>leiwen2025</td>
-      <td>CRC32C hardware acceleration, hwprobe fixes, cycle counter</td>
+      <td>Seastar</td>
+      <td>Crimson OSD async/coroutine reactor framework</td>
+      <td>Optional (runtime, Crimson only)</td>
+      <td>Data not available: no riscv64-specific Seastar build/CI status was found in this research pass beyond the general <code class="language-plaintext highlighter-rouge">WITH_CRIMSON</code> GCC 13 floor (Section 5) that applies identically on riscv64</td>
+      <td>Data not available: no dedicated riscv64 Seastar CI found</td>
+      <td>Data not available</td>
+      <td>[NEEDS VERIFICATION] - not independently searched against seastar’s own GitHub repo this pass</td>
     </tr>
     <tr>
-      <td>ZTE / Sanechips affiliate</td>
-      <td>lvshuo2016</td>
-      <td>SPDK riscv64 backport, Arrow submodule</td>
+      <td>LanceDB</td>
+      <td>RGW vector-search/Lance integration (<code class="language-plaintext highlighter-rouge">WITH_RADOSGW_LANCEDB</code>)</td>
+      <td>Optional (runtime)</td>
+      <td>Fails to build on riscv64 (and ppc64le/s390x): its <code class="language-plaintext highlighter-rouge">lance-linalg</code> SIMD kernels (f32x8/16, f64x4/8, i32x8) only target x86_64/aarch64/loongarch64; fix is open PR #71935 (defaults the feature off on unsupported arches)</td>
+      <td>No riscv64 CI</td>
+      <td>Not packaged for riscv64</td>
+      <td>Live build blocker on <code class="language-plaintext highlighter-rouge">main</code> until #71935 merges (<a href="https://tracker.ceph.com/issues/80688">tracker #80688</a>, “Fix Under Review,” nominally scoped to ppc64le by its reporter but the linked PR names riscv64 as failing too); upstream <code class="language-plaintext highlighter-rouge">lance-format/lance</code> has since merged SIMD support per PR #71935’s own discussion, but the author argues it is still slow enough to keep disabled by default</td>
     </tr>
     <tr>
-      <td>ISCAS</td>
-      <td>laokz</td>
-      <td>Early cycle counter attempt (PR #57756, superseded)</td>
+      <td>CMake</td>
+      <td>Build system generator</td>
+      <td>Critical (build)</td>
+      <td>No riscv64-specific issues found; <code class="language-plaintext highlighter-rouge">cmake_minimum_required(VERSION 3.22.1)</code> applies identically on riscv64</td>
+      <td>n/a</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>None found</td>
     </tr>
     <tr>
-      <td>SUSE</td>
-      <td>andreas-schwab</td>
-      <td>RPM spec riscv64 enablement</td>
+      <td>GCC</td>
+      <td>Primary compiler</td>
+      <td>Critical (build)</td>
+      <td>Builds; version floor (11, or 13 under <code class="language-plaintext highlighter-rouge">WITH_CRIMSON</code>) is not architecture-conditional</td>
+      <td>n/a</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>None found specific to Ceph’s use</td>
+    </tr>
+    <tr>
+      <td>LLVM</td>
+      <td>Alternate compiler (Clang)</td>
+      <td>Optional (build)</td>
+      <td>Builds; version floor 16, not architecture-conditional</td>
+      <td>n/a</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>GNU make</td>
+      <td>Build tooling (alongside/instead of ninja)</td>
+      <td>Optional (build)</td>
+      <td>No riscv64-specific issues found</td>
+      <td>n/a</td>
+      <td>Ships universally</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>sccache</td>
+      <td>Build cache, used in containerized dev builds</td>
+      <td>Optional (build)</td>
+      <td><code class="language-plaintext highlighter-rouge">Dockerfile.build</code> explicitly remaps <code class="language-plaintext highlighter-rouge">riscv64</code> to <code class="language-plaintext highlighter-rouge">riscv64gc</code> to fetch the correct sccache release asset (Section 5)</td>
+      <td>n/a</td>
+      <td>Distributed as prebuilt Rust binaries; riscv64gc target published by the sccache project</td>
+      <td>None found; this remap is the only riscv64-specific logic in <code class="language-plaintext highlighter-rouge">Dockerfile.build</code></td>
+    </tr>
+    <tr>
+      <td>googletest</td>
+      <td>Unit test framework (<code class="language-plaintext highlighter-rouge">unittest_crc32c</code>, <code class="language-plaintext highlighter-rouge">unittest_memory</code>, etc.)</td>
+      <td>Critical (test)</td>
+      <td>Data not available: no riscv64-specific googletest build/CI issue was found in this research pass; all riscv64 unit tests referenced in this report (e.g. <code class="language-plaintext highlighter-rouge">unittest_crc32c</code>, <code class="language-plaintext highlighter-rouge">test_arch.cc</code>) run against it without a documented framework-level riscv64 gap</td>
+      <td>n/a</td>
+      <td>Ships in Debian/Ubuntu riscv64</td>
+      <td>[NEEDS VERIFICATION] - not independently searched against googletest’s own repo this pass</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Proxmox (tchaikov / Kefu Chai) functions as the primary merger and reviewer for riscv64 patches.</p>
-<h3 id="102-rise-project-relationship">
-  
-  
-    <a href="#102-rise-project-relationship" class="anchor-heading" aria-labelledby="102-rise-project-relationship"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 RISE Project Relationship
-  
-  
-</h3>
-    
+<p>Indirect/recursed dependencies surfaced during this research:</p>
 
-<p>RISE Project General Members include ISCAS (sunyuechi’s organization) and ZTE (leiwen2025’s organization). However, no RISE funding for Ceph work was found. The 27 RISE blog posts (May 2024 through June 2026) contain zero mentions of Ceph. Ceph is not listed among the ~80 packages built by the RISE Python wheel_builder project. No RISE RFP (publicly documented RP004, RP009, RP012, and others covering compilers, kernel CI, Java, Go, V8, Python, Yocto) covers Ceph. The RISE project is not a member of the Ceph Foundation.</p>
-
-<p>The riscv64 work in Ceph is being driven by ISCAS and ZTE contributors under their own organizational mandates, not through a publicly documented RISE funded project.</p>
-<h3 id="103-hardware-tested-by-contributors">
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dependency</th>
+      <th>Role</th>
+      <th>riscv64 status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PMDK / libpmem (via <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_PMDK</code>/<code class="language-plaintext highlighter-rouge">WITH_BLUESTORE_PMEM</code>/<code class="language-plaintext highlighter-rouge">WITH_RBD_RWL</code>)</td>
+      <td>BlueStore and RBD PMEM-backed caches</td>
+      <td>No riscv64 support in the archived <code class="language-plaintext highlighter-rouge">ceph/pmdk</code> 1.10 fork (“unsupported architecture: riscv64”); a fix attempt switching to the maintained <code class="language-plaintext highlighter-rouge">daos-stack/pmdk</code> 2.1.3 (PR #69448) was superseded when the BlueStore PMEM backend was removed outright (PR #69726, merged); the RBD write-log cache’s PMEM backend removal (PR #70618) is open and would retire this dependency from Ceph entirely once merged</td>
+    </tr>
+    <tr>
+      <td>Jerasure / GF-Complete</td>
+      <td>Erasure coding, bundled fallback when ISA-L is unavailable</td>
+      <td>Builds; pure C with lookup tables, no SIMD paths, no CI; no blocking issues, and ISA-L is now the preferred riscv64 erasure-coding path (Section 4.5)</td>
+    </tr>
+    <tr>
+      <td>lance-linalg (upstream of LanceDB)</td>
+      <td>SIMD kernel layer underlying LanceDB’s vector search</td>
+      <td>Root cause of the riscv64 LanceDB build failure (Section 9.2, LanceDB row); its SIMD types target only x86_64/aarch64/loongarch64</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="10-known-bugs-and-active-issues">
   
   
-    <a href="#103-hardware-tested-by-contributors" class="anchor-heading" aria-labelledby="103-hardware-tested-by-contributors"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 Hardware Tested by Contributors
-  
-  
-</h3>
-    
-
-<ul>
-  <li>BPI-F3 (SpacemiT K1 SoC) – used for PR #65354 (mem_is_zero RVV benchmark)</li>
-  <li>SG2044 (Sophon SG2044, running Linux 6.12.47) – used for PR #68047 (hwprobe fix) and PR #68154 (CRC32C Zbc optimization)</li>
-</ul>
-
-<p>No server-grade RISC-V hardware was cited in any PR.</p><hr />
-<h2 id="11-known-bugs-and-active-issues">
-  
-  
-    <a href="#11-known-bugs-and-active-issues" class="anchor-heading" aria-labelledby="11-known-bugs-and-active-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11. Known Bugs and Active Issues
-  
-  
-</h2>
-    
-<h3 id="111-open-tracker-issue">
-  
-  
-    <a href="#111-open-tracker-issue" class="anchor-heading" aria-labelledby="111-open-tracker-issue"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.1 Open Tracker Issue
-  
-  
-</h3>
-    
-
-<p><strong><a href="https://tracker.ceph.com/issues/57350">tracker.ceph.com #57350</a></strong> – “failed to build on riscv64”</p>
-<ul>
-  <li>Status: Open (New), Priority: Normal, filed against Ceph 16.2.10</li>
-  <li>Root cause: missing <code class="language-plaintext highlighter-rouge">-latomic</code> linkage on riscv64; sub-word atomic operations require a runtime call into <code class="language-plaintext highlighter-rouge">libatomic</code> on riscv64. Affected archives: <code class="language-plaintext highlighter-rouge">libos.a</code>, <code class="language-plaintext highlighter-rouge">libblk.a</code>, <code class="language-plaintext highlighter-rouge">librocksdb.a</code>. Exact linker errors: <code class="language-plaintext highlighter-rouge">undefined reference to __atomic_fetch_add_2</code>, <code class="language-plaintext highlighter-rouge">__atomic_fetch_sub_2</code>, <code class="language-plaintext highlighter-rouge">__atomic_compare_exchange_1</code>.</li>
-  <li>Linked PR #47883 (proposed fix, auto-closed 2023-06-26 after 90 days with zero maintainer review).</li>
-  <li>Backport scope was debated; Ilya Dryomov and Konstantin Shalygin removed backport targets. No assignee.</li>
-  <li>The Debian sid build of 18.2.8 explicitly passes <code class="language-plaintext highlighter-rouge">-latomic</code> in its linker invocations (observed in build log), confirming the issue was worked around in Debian packaging if not resolved upstream.</li>
-</ul>
-<h3 id="112-open-pull-requests">
-  
-  
-    <a href="#112-open-pull-requests" class="anchor-heading" aria-labelledby="112-open-pull-requests"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Open Pull Requests
-  
-  
-</h3>
-    
-
-<p><strong><a href="https://github.com/ceph/ceph/pull/69376">PR #69376</a></strong> – “reef: [backport] Add riscv64 support to WITH_SPDK”</p>
-<ul>
-  <li>Status: Open as of June 10, 2026. Author: lvshuo2016 (Sanechips). CI not triggered (author is not a Ceph GitHub org member).</li>
-  <li>Partial backport of upstream commit <code class="language-plaintext highlighter-rouge">6af1a85</code> to the stable <code class="language-plaintext highlighter-rouge">reef</code> branch.</li>
-  <li>Core concern raised by sunyuechi: SPDK bundles DPDK internally, and DPDK does not support riscv64. This was precisely the reason <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> was added upstream. A backport without <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> is likely to fail to build on riscv64.</li>
-  <li>This PR is blocked, unreviewed, and probably incorrect in its current form.</li>
-</ul>
-
-<p><strong><a href="https://github.com/ceph/ceph/pull/69621">PR #69621</a></strong> – “build,test: fix issues surfaced by tests after enabling ASan”</p>
-<ul>
-  <li>Status: Open, June 22, 2026. Author: sunyuechi. Approved by tchaikov; awaiting RBD maintainer review (via extracted PR #69623).</li>
-  <li>Six fixes: forces libc allocator under <code class="language-plaintext highlighter-rouge">WITH_ASAN</code> (tcmalloc/jemalloc export <code class="language-plaintext highlighter-rouge">operator new/delete</code> causing SIGSEGV when sanitizer-allocated memory is freed through tcmalloc); fixes Seastar allocator init race in Crimson; fixes <code class="language-plaintext highlighter-rouge">setarch $(uname -m) -R</code> failure on riscv64 (bare <code class="language-plaintext highlighter-rouge">setarch -R</code> is the fix); adds LSan suppressions in vstart.sh; adds third-party leak suppressions.</li>
-  <li>riscv64-specific note from PR author: without ASan the slowest test takes 2000s; with ASan it times out at 6000s and causes OOM on available riscv64 hardware.</li>
-</ul>
-
-<p><strong><a href="https://github.com/ceph/ceph/pull/69622">PR #69622</a></strong> – “cmake: define BOOST_USE_UCONTEXT tree-wide under ASan”</p>
-<ul>
-  <li>Status: Open, June 22, 2026. Author: sunyuechi. Approved by tchaikov; awaiting cbodley review.</li>
-  <li>Exact link error being fixed: <code class="language-plaintext highlighter-rouge">mold: error: undefined symbol: boost::context::detail::make_fcontext</code></li>
-  <li>riscv64 is explicitly excluded from the BOOST_USE_UCONTEXT path with the stated reason: “riscv64’s ASan runtime mis-handles makecontext/swapcontext, so the ucontext fiber backend reports false-positive heap-buffer-overflows on fiber switch that can’t be suppressed.”</li>
-  <li>This is a test-infrastructure issue, not a production correctness issue.</li>
-</ul>
-<h3 id="113-auto-closed-prs-without-resolution">
-  
-  
-    <a href="#113-auto-closed-prs-without-resolution" class="anchor-heading" aria-labelledby="113-auto-closed-prs-without-resolution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 Auto-Closed PRs Without Resolution
-  
-  
-</h3>
-    
-
-<p><strong><a href="https://github.com/ceph/ceph/pull/65976">PR #65976</a></strong> – “Update arrow submodule to support riscv detect”</p>
-<ul>
-  <li>Closed April 3, 2026 by inactivity bot after 90 days with zero code review. No champion.</li>
-</ul>
-
-<p><strong><a href="https://github.com/ceph/ceph/pull/65142">PR #65142</a></strong> – “Upgrade PyPI dependencies to enable installation on riscv64”</p>
-<ul>
-  <li>Closed April 25, 2026 by inactivity bot. Documented that <code class="language-plaintext highlighter-rouge">golang-github-prometheus</code>, <code class="language-plaintext highlighter-rouge">libpmem-devel</code>, and <code class="language-plaintext highlighter-rouge">libpmemobj-devel</code> are missing for riscv64; workaround is <code class="language-plaintext highlighter-rouge">--system-site-packages</code>.</li>
-</ul><hr />
-<h2 id="12-objections-and-upstream-blockers">
-  
-  
-    <a href="#12-objections-and-upstream-blockers" class="anchor-heading" aria-labelledby="12-objections-and-upstream-blockers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12. Objections and Upstream Blockers
+    <a href="#10-known-bugs-and-active-issues" class="anchor-heading" aria-labelledby="10-known-bugs-and-active-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Known Bugs and Active Issues
   
   
 </h2>
     
 
-<p><strong>Objection 1: “The bit offset bug (PR #68047) was in mainline for six months without detection.”</strong>
-Accurate. The hwprobe bit offsets were wrong from PR #66026 (March 2026) until PR #68047 (March 2026) – the two PRs were merged eleven days apart, but the bug was present in the initial submission. The absence of CI means no automated test would catch a regression where ZBC/ZVBC acceleration was silently disabled. This will recur: any future patch touching the hwprobe path has no automated regression guard.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://tracker.ceph.com/issues/57350">tracker #57350</a></td>
+      <td>“failed to build on riscv64” (missing <code class="language-plaintext highlighter-rouge">-latomic</code>)</td>
+      <td>Open (New), unassigned since 2022</td>
+      <td>Build blocker (older Ceph versions)</td>
+      <td>Sub-word atomics on riscv64 require explicit <code class="language-plaintext highlighter-rouge">libatomic</code> linkage; affects <code class="language-plaintext highlighter-rouge">libos.a</code>, <code class="language-plaintext highlighter-rouge">libblk.a</code>, <code class="language-plaintext highlighter-rouge">librocksdb.a</code>. Linked fix PR #47883 was auto-closed unreviewed. Debian sid’s 18.2.8 build works around this by passing <code class="language-plaintext highlighter-rouge">-latomic</code> explicitly in packaging</td>
+    </tr>
+    <tr>
+      <td><a href="https://tracker.ceph.com/issues/77904">tracker #77904</a></td>
+      <td>RISC-V Zbc CRC32C clobbers <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code>, crashing Crimson unittests with SIGSEGV in TLS</td>
+      <td><strong>Resolved</strong></td>
+      <td>Major (correctness)</td>
+      <td>Fixed by PR #69908, merge commit <code class="language-plaintext highlighter-rouge">9cb50428b303efea4b166781ec39169a648236fe</code>, first in <code class="language-plaintext highlighter-rouge">v21.3.0-684-g9cb50428b3</code>; filed 2026-07-02, resolved 2026-07-03 (within 24 hours)</td>
+    </tr>
+    <tr>
+      <td>PR #70211 review thread</td>
+      <td>Zvbc CRC32C optimization reuses <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> as scratch (same class as #77904)</td>
+      <td>Open, unresolved as of 2026-09-15</td>
+      <td>Correctness (would-be regression)</td>
+      <td>Blocks merge of the ~33%-throughput-gain PR; also flagged for indentation/style and dead register assignments</td>
+    </tr>
+    <tr>
+      <td><a href="https://tracker.ceph.com/issues/80688">tracker #80688</a></td>
+      <td>Lance SIMD build failure (nominally scoped to ppc64le)</td>
+      <td>Fix Under Review (open)</td>
+      <td>Build blocker</td>
+      <td>Linked PR #71935 explicitly treats riscv64 as one of three affected architectures, though the tracker ticket text itself only names ppc64le</td>
+    </tr>
+    <tr>
+      <td><a href="https://tracker.ceph.com/issues/77501">tracker #77501</a></td>
+      <td>Use-after-free race in <code class="language-plaintext highlighter-rouge">librbd/cache/pwl</code> timer shutdown, discovered on riscv64 (sg2044)</td>
+      <td>Resolved</td>
+      <td>Major, non-arch-specific race</td>
+      <td>Riscv64 hardware timing surfaced a general race condition more reliably than other architectures - relevant to future riscv64 test-flakiness triage</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/intel/isa-l/issues/428">intel/isa-l#428</a></td>
+      <td>Using <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> in riscv64 CRC path “may cause problems”</td>
+      <td>Open, filed 2026-07-02</td>
+      <td>Correctness (upstream)</td>
+      <td>Same bug class as #77904, unresolved in upstream ISA-L (as distinct from Ceph’s own bundled fix); relevant to whoever owns the ISA-L relationship</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/intel/isa-l/issues/239">intel/isa-l#239</a></td>
+      <td>“RISCV CPU supported?” (general tracking)</td>
+      <td>Open since 2023</td>
+      <td>Informational</td>
+      <td>Long-running support tracking issue</td>
+    </tr>
+    <tr>
+      <td>PR #69621</td>
+      <td>ASan allocator/Seastar init-race fixes; <code class="language-plaintext highlighter-rouge">setarch -R</code> fix for riscv64</td>
+      <td>Open</td>
+      <td>Test-infrastructure</td>
+      <td>Without ASan the slowest test takes ~2000s on riscv64 hardware; with ASan it times out at 6000s and OOMs</td>
+    </tr>
+    <tr>
+      <td>PR #69622</td>
+      <td><code class="language-plaintext highlighter-rouge">BOOST_USE_UCONTEXT</code> tree-wide under ASan, riscv64 explicitly excluded</td>
+      <td>Open</td>
+      <td>Test-infrastructure</td>
+      <td>riscv64’s ASan runtime mis-handles <code class="language-plaintext highlighter-rouge">makecontext</code>/<code class="language-plaintext highlighter-rouge">swapcontext</code>, producing unsuppressable false-positive heap-buffer-overflow reports on fiber switch</td>
+    </tr>
+    <tr>
+      <td>PR #65976</td>
+      <td>Update Arrow submodule for riscv detect</td>
+      <td>Closed (auto-closed, stale)</td>
+      <td>Ecosystem</td>
+      <td>90 days with zero code review; no champion</td>
+    </tr>
+    <tr>
+      <td>PR #65142</td>
+      <td>Upgrade PyPI dependencies to enable riscv64 dashboard install</td>
+      <td>Closed (auto-closed, stale)</td>
+      <td>Ecosystem</td>
+      <td>Documents missing riscv64 packages for <code class="language-plaintext highlighter-rouge">golang-github-prometheus</code>, <code class="language-plaintext highlighter-rouge">libpmem-devel</code>, <code class="language-plaintext highlighter-rouge">libpmemobj-devel</code></td>
+    </tr>
+    <tr>
+      <td>PR #69367 / #69376</td>
+      <td>reef backport of <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> (two near-duplicate attempts)</td>
+      <td>Closed, rejected</td>
+      <td>Build (stable branch)</td>
+      <td>Both omitted the surrounding CMake infrastructure from PR #69185, so neither could build on riscv64; batrick closed #69376 on sunyuechi’s technical objection</td>
+    </tr>
+    <tr>
+      <td>PR #69448</td>
+      <td>Switch PMDK to daos-stack fork for riscv64</td>
+      <td>Closed, unmerged</td>
+      <td>Build</td>
+      <td>Superseded by outright removal of the BlueStore PMEM backend (PR #69726)</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>Objection 2: “SPDK NVMe-oF on riscv64 is blocked with no clear resolution timeline.”</strong>
-Accurate. The bundled DPDK inside SPDK does not support riscv64. The upstream Ceph workaround is <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code>, but this requires the operator to supply a separately-built SPDK without bundled DPDK. The reef backport PR #69376 appears to be technically incorrect (it does not include <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code>) and has no reviewer. This is not a blocker for standard Ceph deployments (SPDK is <code class="language-plaintext highlighter-rouge">OFF</code> by default), but it is a blocker for deployments requiring NVMe-oF with SPDK.</p>
+<p>No “nan”/floating-point-specific RISC-V issue exists in ceph/ceph: both issue and PR searches scoped to <code class="language-plaintext highlighter-rouge">owner:ceph repo:ceph</code> for “riscv nan floating” returned zero results.</p>
+<h2 id="11-objections-and-upstream-blockers">
+  
+  
+    <a href="#11-objections-and-upstream-blockers" class="anchor-heading" aria-labelledby="11-objections-and-upstream-blockers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11. Objections and Upstream Blockers
+  
+  
+</h2>
+    
 
-<p><strong>Objection 3: “LZ4 and zstd performance is suboptimal on riscv64.”</strong>
-Accurate. LZ4 RVV optimization patches are not merged upstream (claimed 4.7-4.8x speedup still pending in <a href="https://github.com/lz4/lz4/issues/1738">lz4 #1738</a>). zstd’s Huffman 4-way fast loop is explicitly disabled for riscv64 (<a href="https://github.com/facebook/zstd/issues/4622">zstd #4622</a>). For workloads that are compression-bound, riscv64 will underperform x86 and aarch64.</p>
+<p><strong>Objection 1: “riscv64-only code has no CI safety net, and this has bitten Ceph twice in the same file.”</strong>
+Confirmed. The ZBC/ZVBC bit-offset bug was live for roughly six months (PR #66026 to #68047), and the <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> register-clobbering bug (PR #69908, fixed within 24 hours of being reported but only after landing on <code class="language-plaintext highlighter-rouge">main</code>) recurred in the same assembly file. The currently open PR #70211 hits the identical <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> mistake a third time, still under review as of 2026-09-15. Section 7 confirms zero upstream GitHub Actions or Jenkins/Sepia riscv64 coverage exists to catch this class of regression pre-merge.</p>
 
-<p><strong>Objection 4: “No stable distribution ships riscv64 Ceph packages.”</strong>
-Accurate. Ubuntu 24.04 LTS carries riscv64 Ceph only in ubuntu-ports (unofficial) at a version behind the main archive. Debian riscv64 is a ports architecture (unofficial). No RHEL/CentOS Stream, no Ubuntu LTS main archive, no Debian stable riscv64 Ceph package exists.</p>
+<p><strong>Objection 2: “SPDK NVMe-oF on riscv64 required real infrastructure work, and a shortcut was rejected.”</strong>
+Confirmed, but resolved at the infrastructure level. PR #69185 (merged) is the durable fix (<code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> plus <code class="language-plaintext highlighter-rouge">Findspdk.cmake</code>), tested on openRuyi riscv64. Naive stable-branch backports that tried to skip this plumbing (#69367, #69376) were both closed as non-viable. SPDK remains off by default and is not a blocker for standard deployments.</p>
 
-<p><strong>Objection 5: “The only published benchmark is a micro-benchmark on an embedded SBC.”</strong>
-Accurate. The only quantitative data is the <code class="language-plaintext highlighter-rouge">mem_is_zero</code> RVV speedup from PR #65354, run on a BPI-F3 (SpacemiT K1). No IOPS, throughput, or latency benchmarks comparing riscv64 Ceph to x86 or aarch64 Ceph on any hardware have been published. CRC32C, ISA-L, and Zbc optimization PRs were all merged without published numbers.</p>
+<p><strong>Objection 3: “A brand-new RGW feature broke the default riscv64 build without anyone intending to.”</strong>
+Confirmed and live as of 2026-09-30. <code class="language-plaintext highlighter-rouge">WITH_RADOSGW_LANCEDB</code> defaults ON on <code class="language-plaintext highlighter-rouge">main</code> and fails to compile on riscv64 because <code class="language-plaintext highlighter-rouge">lance-linalg</code>’s SIMD kernels don’t target it. The fix (PR #71935) is approved (tchaikov lgtm) but not yet merged; this is the most build-critical open item in the port.</p>
 
-<p><strong>Objection 6: “Ceph ASan testing on riscv64 is fundamentally broken.”</strong>
-Partially accurate. Two open PRs (#69621, #69622) document multiple ASan-related crashes specific to riscv64, including allocator conflicts and an explicit <code class="language-plaintext highlighter-rouge">BOOST_USE_UCONTEXT</code> exclusion due to ASan false-positives on ucontext fiber switch that “can’t be suppressed.” These are test-infrastructure issues; production binaries run without ASan. However, ASan coverage is a standard quality gate for new code, and its absence on riscv64 means new contributions targeting riscv64 cannot be validated through the same tooling used on other architectures.</p><hr />
+<p><strong>Objection 4: “LZ4/zstd compression performance is suboptimal on riscv64.”</strong>
+Confirmed. Neither library’s RVV/vectorized fast paths are merged upstream for riscv64 (Section 6, Section 9). This does not block deployment but affects compression-bound workload performance.</p>
+
+<p><strong>Objection 5: “No stable distribution shipped riscv64 Ceph packages.”</strong>
+No longer accurate as a blanket statement. Ubuntu 26.04 (Resolute) now builds and publishes <code class="language-plaintext highlighter-rouge">ceph</code> and most subpackages for riscv64 in its main archive at 20.2.0-0ubuntu2 (Section 8), a materially stronger signal than the previously ports-only/unofficial status on Ubuntu 24.04 and Debian sid. Whether Ubuntu’s packaging carries riscv64-specific patches versus building unmodified upstream source was not verified, which is why this does not by itself move the readiness color (Section 12).</p>
+
+<p><strong>Objection 6: “The only published benchmark is a microbenchmark on an embedded SBC.”</strong>
+Largely still accurate. The <code class="language-plaintext highlighter-rouge">mem_is_zero</code> RVV speedup from PR #65354 (BPI-F3/SpacemiT K1) remains the only published quantitative Ceph riscv64 data with actual numbers; the CRC32C Zvbc figures in PR #70211 (SpacemiT K3, ~33% gain) exist but come from an unmerged, still-blocked PR. No IOPS/throughput/latency benchmark comparing riscv64 to x86/aarch64 Ceph deployments has been published by any method searched (GitHub code/repo search, WebSearch where budget allowed, RISE blog).</p>
+
+<p><strong>Objection 7: “Ceph’s ASan test tooling is broken on riscv64.”</strong>
+Partially accurate. PRs #69621/#69622 document allocator conflicts and an unsuppressable Boost.Context/ASan false-positive specific to riscv64’s ucontext fiber-switch handling. Production (non-ASan) binaries are unaffected, but new riscv64-targeting contributions cannot currently be validated with the same sanitizer tooling used on other architectures.</p>
+
+<p><strong>Organizational blocker: no RISE Project involvement.</strong> Multiple independent checks (RISE blog, 35 posts through 2026-09-28; RISE Python wheel_builder, 86 packages; RISE member roster; GitHub search of <code class="language-plaintext highlighter-rouge">riseproject-dev</code>) found zero Ceph-specific funded work, RFP, or runner usage. The port is driven entirely by ISCAS and ZTE under their own mandates, which are independently RISE General Members but do not tie that membership to documented Ceph funding.</p>
+<h2 id="12-readiness-assessment">
+  
+  
+    <a href="#12-readiness-assessment" class="anchor-heading" aria-labelledby="12-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12. Readiness Assessment
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li>Ceph is a distributed storage system, not an optimization-purpose project - its core value (object/block/file storage) does not depend on RISC-V-specific SIMD/CRC acceleration, so no optimization-level rating applies.</li>
+</ul>
+
+<p><strong>Justification:</strong> No upstream riscv64 CI exists: all 12 GitHub Actions workflows in ceph/ceph run only on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> with zero riscv references, and no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>/<code class="language-plaintext highlighter-rouge">Jenkinsfile</code>/<code class="language-plaintext highlighter-rouge">.cirrus</code> config or <code class="language-plaintext highlighter-rouge">qa/archs/riscv64.yaml</code> exists, confirmed by direct audit of the repository tree (<a href="https://github.com/ceph/ceph/tree/main/.github/workflows">ceph/ceph/.github/workflows</a>). Applying the distribution floor: Ubuntu 26.04 (Resolute) main archive now builds <code class="language-plaintext highlighter-rouge">ceph</code> and its subpackages for riscv64 at 20.2.0-0ubuntu2 (<a href="https://packages.ubuntu.com/search?keywords=Ceph&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com search</a>), but whether Ubuntu’s packaging carries riscv64-specific patches versus building unmodified upstream source was not verified in this research pass. Per the grading rule that an unknown patch status upgrades the color to orange, this lands at orange/downstream-only rather than yellow.</p>
+
+<p><strong>Pending work that could change the grade:</strong></p>
+<ul>
+  <li>Open PR <a href="https://github.com/ceph/ceph/pull/70211">ceph/ceph#70211</a> (Zvbc CRC32C optimization, ~33% claimed throughput gain), blocked on ABI review feedback for reusing <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> scratch registers.</li>
+  <li>Open, approved PR <a href="https://github.com/ceph/ceph/pull/71935">#71935</a> (defaults <code class="language-plaintext highlighter-rouge">WITH_RADOSGW_LANCEDB</code> off on riscv64/ppc64le/s390x), lgtm from tchaikov as of 2026-09-28, not yet merged - this is a live build blocker until merged.</li>
+  <li>Open PR <a href="https://github.com/ceph/ceph/pull/70618">#70618</a> (drop the PMEM backend from RBD’s write-log cache) would fully retire the riscv64 PMDK gap once merged.</li>
+  <li>A dedicated but non-upstream riscv64 CI now exists at <a href="https://github.com/openRuyi-Project/ceph-ci">openRuyi-Project/ceph-ci</a> (ISCAS-driven, single-vendor, not wired into ceph/ceph’s own GitHub Actions/Jenkins/Sepia infrastructure) - closes part of the CI gap in practice but does not change the upstream-CI-based color.</li>
+  <li>No RISE Project funding or involvement with Ceph was found (RISE blog, wheel_builder, and RISE membership roster all checked); ISCAS and ZTE are independently RISE General Members but drive Ceph riscv64 work under their own mandates, not a documented RISE RFP.</li>
+  <li><a href="https://tracker.ceph.com/issues/57350">Tracker #57350</a> (missing <code class="language-plaintext highlighter-rouge">-latomic</code> on riscv64) remains open/unassigned since 2022.</li>
+</ul>
 <h2 id="13-investment-analysis">
   
   
@@ -1244,6 +1540,8 @@ Partially accurate. Two open PRs (#69621, #69622) document multiple ASan-related
   
 </h2>
     
+
+<p>Before sizing new work: RISE has not funded or otherwise engaged with Ceph (Section 11), so none of the items below are already covered by RISE-funded effort. The SPDK infrastructure fix (<code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code>, PR #69185) and the PMEM/PMDK retirement (PR #69726, in progress via #70618) are already merged or in flight through ISCAS/ZTE community effort and should not be re-sized.</p>
 <h3 id="131-functional-enablement">
   
   
@@ -1253,9 +1551,7 @@ Partially accurate. Two open PRs (#69621, #69622) document multiple ASan-related
 </h3>
     
 
-<p>The core storage path (RADOS, RBD, CephFS) is functionally complete on riscv64 as of June 2026. The critical milestones have been reached: arch probe infrastructure, CRC32C hardware acceleration (both Zvbc and Zbc paths), ISA-L erasure coding, and cycle counter. No blocking gaps exist for deploying a standard Ceph cluster on riscv64.</p>
-
-<p>Remaining functional gaps are peripheral: SPDK NVMe-oF (DPDK blocker, no timeline), Arrow Flight for RadosGW (submodule stale, no champion), PMEM persistent write-back cache (PMDK does not support riscv64, no upstream commitment). For customers who require SPDK NVMe-oF, this is a hard blocker requiring either a system SPDK solution or upstream DPDK riscv64 enablement.</p>
+<p>The core storage path (RADOS, RBD, CephFS) is functionally usable on riscv64. The single live functional blocker is PR #71935 (LanceDB default-off fix), approved but unmerged - getting it merged is near-zero-cost review time, not new engineering. Remaining functional gaps are peripheral: SPDK NVMe-oF (workable via system SPDK, no default support), Arrow Flight for RadosGW (stale submodule PR, no champion), and the PMDK/PMEM write-log cache (retirement in progress).</p>
 <h3 id="132-performance-optimization">
   
   
@@ -1265,9 +1561,7 @@ Partially accurate. Two open PRs (#69621, #69622) document multiple ASan-related
 </h3>
     
 
-<p>The only published quantitative data is a 3.5x speedup for <code class="language-plaintext highlighter-rouge">mem_is_zero</code> on 1-8KB buffers using RVV intrinsics on a SpacemiT K1. No end-to-end storage performance numbers (IOPS, throughput, latency) exist for riscv64 Ceph. The following optimizations are merged but unbenchmarked: CRC32C (Zvbc and Zbc), ISA-L erasure coding with RVV. The following are not merged: LZ4 RVV (4.7-4.8x claimed), zstd Huffman fast loop. OpenSSL AES without Zkn is non-constant-time.</p>
-
-<p>Investment in benchmarking on server-grade riscv64 hardware would establish the performance baseline needed to make a data-driven deployment decision.</p>
+<p>The only published end-to-end quantitative data remains the <code class="language-plaintext highlighter-rouge">mem_is_zero</code> RVV microbenchmark (3.5x on a SpacemiT K1, Section 4.3). The CRC32C Zvbc optimization (~33% claimed gain, PR #70211) is unmerged and unbenchmarked outside the PR author’s own numbers. No IOPS/throughput/latency benchmark exists for riscv64 Ceph on any hardware. LZ4 and zstd remain unoptimized for RVV upstream. Investment in benchmarking on server-grade riscv64 hardware would establish the performance baseline needed for a data-driven deployment decision, and would materially strengthen (or weaken) the case for further CRC32C/erasure-coding optimization investment.</p>
 <h3 id="133-cicd-infrastructure">
   
   
@@ -1277,9 +1571,7 @@ Partially accurate. Two open PRs (#69621, #69622) document multiple ASan-related
 </h3>
     
 
-<p>Zero automated riscv64 CI exists. This is the highest-leverage investment: without CI, every regression is silent until a contributor manually tests on hardware. The ZBC/ZVBC bit offset bug (six months of broken hardware acceleration, no automated detection) illustrates the risk concretely.</p>
-
-<p>Minimum CI investment: a self-hosted riscv64 runner (physical or QEMU) executing <code class="language-plaintext highlighter-rouge">make check</code> per PR against riscv64 target. This would provide regression gating without full Teuthology integration. Adding <code class="language-plaintext highlighter-rouge">riscv64.yaml</code> to <code class="language-plaintext highlighter-rouge">qa/archs/</code> would signal official tier intent to the community.</p>
+<p>This is the highest-leverage investment. Zero upstream riscv64 CI means every riscv64-only regression is silent until manually caught on hardware - already demonstrated twice in the same assembly file. The openRuyi-Project/ceph-ci pipeline is a usable template but is not upstream; the highest-value action is getting an equivalent job wired into ceph/ceph’s own Jenkins/Sepia infrastructure (GitHub Actions is not the right integration point, since none of Ceph’s 12 workflows do builds on any architecture) and adding <code class="language-plaintext highlighter-rouge">qa/archs/riscv64.yaml</code>.</p>
 <h3 id="134-ecosystem-enablement">
   
   
@@ -1289,9 +1581,7 @@ Partially accurate. Two open PRs (#69621, #69622) document multiple ASan-related
 </h3>
     
 
-<p>The two auto-closed PRs (#65976 Arrow submodule, #65142 PyPI wheels) indicate contributor work that failed to reach merge due to maintainer attention, not technical unsolvability. Adopting or championing these PRs would unblock Arrow Flight for RISC-V RadosGW deployments and eliminate the Python dashboard wheel workaround.</p>
-
-<p>The SPDK/DPDK gap requires either: (a) contributing riscv64 support to DPDK upstream and propagating it through the SPDK bundled version, or (b) ensuring <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> is the documented path for riscv64 and that reef backport PR #69376 is corrected. Option (b) is lower effort.</p>
+<p>Not scored as a standalone investment area: Ceph does not have a significant dependent package ecosystem in the sense of npm/PyPI/Kubernetes-operator-style downstream packages that separately require riscv64 enablement (Section 9’s client bindings, e.g. <code class="language-plaintext highlighter-rouge">python3-cephfs</code>, ride along with the main Ceph build and already build for riscv64 in Ubuntu 26.04). The two relevant stalled contributor efforts are the Arrow submodule update (PR #65976) and PyPI dependency upgrades for the dashboard (PR #65142), both auto-closed for lack of maintainer attention rather than technical unsolvability.</p>
 <h3 id="135-summary-table">
   
   
@@ -1314,44 +1604,51 @@ Partially accurate. Two open PRs (#69621, #69622) document multiple ASan-related
   <tbody>
     <tr>
       <td>CI/CD</td>
-      <td>Add self-hosted riscv64 runner to Ceph CI (physical or QEMU); add <code class="language-plaintext highlighter-rouge">riscv64.yaml</code> to <code class="language-plaintext highlighter-rouge">qa/archs/</code>; wire to PR gate</td>
+      <td>Wire a riscv64 build/test job into Ceph’s own Jenkins/Sepia infrastructure (physical or QEMU runner), informed by the existing openRuyi-Project/ceph-ci pipeline; add <code class="language-plaintext highlighter-rouge">riscv64.yaml</code> to <code class="language-plaintext highlighter-rouge">qa/archs/</code></td>
       <td>4-6</td>
       <td>Infrastructure + Ceph community</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix and merge SPDK riscv64 path via <code class="language-plaintext highlighter-rouge">WITH_SYSTEM_SPDK</code> (correct PR #69376)</td>
-      <td>2-3</td>
-      <td>Ceph storage/bluestore team</td>
-      <td>High (if SPDK NVMe-oF required)</td>
+      <td>Review and merge open PR #71935 (LanceDB default-off)</td>
+      <td>&lt;1 (reviewer/CI time)</td>
+      <td>Ceph RGW team</td>
+      <td>Critical (live build blocker)</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Merge PR #69621 (ASan allocator/Seastar fixes) and PR #69622 (Boost ucontext under ASan, with riscv64 exclusion)</td>
+      <td>Review and merge open PR #70211 (Zvbc CRC32C) after fixing the <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> ABI violation</td>
+      <td>1-2</td>
+      <td>sunyuechi/leiwen2025 + reviewer</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Merge open PR #70618 (drop RBD write-log PMEM backend), retiring the PMDK gap entirely</td>
+      <td>&lt;1 (reviewer time)</td>
+      <td>RBD maintainer</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Merge open PRs #69621/#69622 (ASan allocator/Seastar and Boost ucontext fixes)</td>
       <td>1 (reviewer time)</td>
       <td>RBD maintainer + cbodley</td>
-      <td>High (unblocks test coverage)</td>
+      <td>High (unblocks sanitizer test coverage)</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix tracker #57350 (-latomic linkage for older Ceph versions); new PR to replace stale #47883</td>
+      <td>Fix tracker #57350 (<code class="language-plaintext highlighter-rouge">-latomic</code> linkage); replace stale, auto-closed PR #47883</td>
       <td>1</td>
       <td>Ceph build team</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Revive and merge PR #65976 (Arrow submodule riscv detect)</td>
-      <td>1-2</td>
-      <td>Arrow + Ceph RadosGW team</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>Revive and merge PR #65142 (PyPI wheel upgrades for riscv64)</td>
-      <td>1</td>
-      <td>Ceph dashboard team</td>
+      <td>Revive PR #65976 (Arrow submodule riscv detect) and PR #65142 (PyPI wheel upgrades)</td>
+      <td>2-3</td>
+      <td>Arrow + Ceph dashboard team</td>
       <td>Medium</td>
     </tr>
     <tr>
@@ -1363,41 +1660,38 @@ Partially accurate. Two open PRs (#69621, #69622) document multiple ASan-related
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Upstream and merge LZ4 RVV optimization (<a href="https://github.com/lz4/lz4/issues/1738">lz4 #1738</a>)</td>
-      <td>3-4</td>
-      <td>LZ4 upstream + Ceph</td>
+      <td>Complete RVV vectorization of ISA-L’s DEFLATE/Huffman path (currently Adler-32 only)</td>
+      <td>3-5</td>
+      <td>ISCAS/upstream ISA-L</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Enable zstd Huffman fast loop for riscv64 (<a href="https://github.com/facebook/zstd/issues/4622">zstd #4622</a>)</td>
-      <td>2-3</td>
-      <td>zstd upstream</td>
+      <td>Upstream LZ4 RVV optimization (<a href="https://github.com/lz4/lz4/issues/1635">lz4#1635</a>) and zstd Huffman fast-loop enablement (<a href="https://github.com/facebook/zstd/issues/4622">zstd#4622</a>)</td>
+      <td>4-6 combined</td>
+      <td>LZ4/zstd upstream + Ceph</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>Ecosystem</td>
-      <td>Formal Ceph Foundation membership discussion to signal investment</td>
+      <td>Organizational</td>
+      <td>Fix the shared <code class="language-plaintext highlighter-rouge">gp</code>/<code class="language-plaintext highlighter-rouge">tp</code> ABI-register defect once at the review-guidance level (document it, add a lint/CI check) rather than relying on manual reviewer memory across recurring PRs</td>
+      <td>1</td>
+      <td>sunyuechi + Ceph build team</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Organizational</td>
+      <td>Formal Ceph Foundation / RISE engagement to signal investment and potentially fund the CI item above</td>
       <td>0 (executive)</td>
       <td>Business development</td>
       <td>Low</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
+</table></div>
+<h2 id="14-references">
   
   
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
-<h2 id="15-references">
-  
-  
-    <a href="#15-references" class="anchor-heading" aria-labelledby="15-references"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 15. References
+    <a href="#14-references" class="anchor-heading" aria-labelledby="14-references"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. References
   
   
 </h2>
@@ -1405,31 +1699,57 @@ Partially accurate. Two open PRs (#69621, #69622) document multiple ASan-related
 
 <ul>
   <li><a href="https://github.com/ceph/ceph">ceph/ceph GitHub repository</a></li>
+  <li><a href="https://github.com/ceph/ceph/tree/main/.github/workflows">ceph/ceph GitHub Actions workflows</a></li>
   <li><a href="https://ceph.io/">Ceph homepage</a></li>
-  <li><a href="https://tracker.ceph.com/issues/57350">tracker.ceph.com #57350 – failed to build on riscv64</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/47883">PR #47883 – cmake: fix CheckCxxAtomic.cmake (closed unmerged)</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/51732">PR #51732 – ceph.spec.in: enable build on riscv64 for openSUSE Factory</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/57756">PR #57756 – common/Cycles.h: add rdtsc riscv64 implementation (superseded)</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/65120">PR #65120 – common/Cycles: Add high-precision counter support for riscv64</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/65142">PR #65142 – Upgrade PyPI dependencies to enable installation on riscv64 (closed stale)</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/65354">PR #65354 – inline_memory: optimize mem_is_zero for riscv using RVV intrinsics</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/65976">PR #65976 – Update arrow submodule to support riscv detect (closed stale)</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/66026">PR #66026 – src/common: add crc32c support for riscv64</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/68047">PR #68047 – src/arch: fix hwprobe include path and ZBC/ZVBC offsets for riscv64</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/68098">PR #68098 – isa-l: enable on RISC-V</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/68154">PR #68154 – src/common: optimize crc32c using zbc extension for riscv64</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/69315">PR #69315 – Dockerfile.build: bump sccache and fetch it on riscv64</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/69376">PR #69376 – reef: [backport] Add riscv64 support to WITH_SPDK</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/69611">PR #69611 – cmake/boost: load context Jamfile before passing context-impl to b2</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/69621">PR #69621 – build,test: fix issues surfaced by tests after enabling ASan</a></li>
-  <li><a href="https://github.com/ceph/ceph/pull/69622">PR #69622 – cmake: define BOOST_USE_UCONTEXT tree-wide under ASan</a></li>
+  <li><a href="https://ceph.io/en/foundation/">Ceph Foundation</a></li>
+  <li><a href="https://tracker.ceph.com/issues/57350">tracker.ceph.com #57350 - failed to build on riscv64</a></li>
+  <li><a href="https://tracker.ceph.com/issues/77904">tracker.ceph.com #77904 - RISC-V Zbc CRC32C clobbers gp/tp</a></li>
+  <li><a href="https://tracker.ceph.com/issues/77501">tracker.ceph.com #77501 - librbd pwl use-after-free, discovered on riscv64</a></li>
+  <li><a href="https://tracker.ceph.com/issues/80688">tracker.ceph.com #80688 - disable LanceDB builds for unsupported architectures</a></li>
+  <li><a href="https://tracker.ceph.com/issues/64375">tracker.ceph.com #64375 - GCC 13 floor for Crimson coroutines</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/47883">PR #47883 - cmake: fix CheckCxxAtomic.cmake (closed unmerged)</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/51732">PR #51732 - ceph.spec.in: enable build on riscv64 for openSUSE Factory</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/65120">PR #65120 - common/Cycles: add rdtime for riscv64</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/65142">PR #65142 - Upgrade PyPI dependencies to enable installation on riscv64 (closed stale)</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/65354">PR #65354 - inline_memory: optimize mem_is_zero for riscv using RVV intrinsics</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/65976">PR #65976 - Update arrow submodule to support riscv detect (closed stale)</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/66026">PR #66026 - src/common: add crc32c support for riscv64</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/68047">PR #68047 - src/arch: fix hwprobe include path and ZBC/ZVBC offsets for riscv64</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/68098">PR #68098 - isa-l: enable on RISC-V</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/68154">PR #68154 - src/common: optimize crc32c using zbc extension for riscv64</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/68184">PR #68184 - test: add RISC-V architecture probe tests (open)</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/68209">PR #68209 - test/common: add RISC-V CRC32C performance benchmark</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69185">PR #69185 - cmake,blk/spdk: support WITH_SYSTEM_SPDK</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69367">PR #69367 - reef backport: add riscv64 support to WITH_SPDK (closed unmerged)</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69376">PR #69376 - reef backport: add riscv64 support to WITH_SPDK (closed, rejected)</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69448">PR #69448 - cmake: build pmdk from the maintained daos-stack fork (closed unmerged)</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69611">PR #69611 - cmake/boost: fix context Jamfile ordering</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69621">PR #69621 - build,test: fix issues surfaced by tests after enabling ASan</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69622">PR #69622 - cmake: define BOOST_USE_UCONTEXT tree-wide under ASan</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69726">PR #69726 - blk,build: drop BlueStore PMEM support</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69783">PR #69783 - ceph.spec.in: add support for openRuyi</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69843">PR #69843 - Add Debian support for containers</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/69908">PR #69908 - common/crc32c: stop using gp/tp as scratch in RISC-V Zbc CRC32C</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/70141">PR #70141 - build: add openRuyi as a containerized build target</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/70211">PR #70211 - src/common: optimize Zvbc CRC32C for riscv64 (open)</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/70618">PR #70618 - librbd,build: drop the PMEM backend of the write log cache (open)</a></li>
+  <li><a href="https://github.com/ceph/ceph/pull/71935">PR #71935 - build: default WITH_RADOSGW_LANCEDB off where lance cannot build (open)</a></li>
+  <li><a href="https://github.com/openRuyi-Project/ceph-ci">openRuyi-Project/ceph-ci</a></li>
+  <li><a href="https://github.com/intel/isa-l/issues/428">intel/isa-l #428 - gp/tp scratch-register bug in riscv64 CRC path</a></li>
+  <li><a href="https://github.com/intel/isa-l/issues/239">intel/isa-l #239 - RISCV CPU supported?</a></li>
   <li><a href="https://buildd.debian.org/status/package.php?p=ceph&amp;suite=sid">Debian buildd riscv64 Ceph status</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=Ceph&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu packages search, Ceph, Resolute suite</a></li>
   <li><a href="https://riseproject.dev/">RISE Project</a></li>
-  <li><a href="https://github.com/boostorg/context/issues/306">boostorg/context issue #306 – Boost context support for riscv64</a></li>
-  <li><a href="https://github.com/spdk/spdk/issues/3475">SPDK issue #3475 – NVMe controller init timeout on riscv64</a></li>
-  <li><a href="https://github.com/lz4/lz4/issues/1738">lz4 RVV optimization issue #1738</a></li>
-  <li><a href="https://github.com/facebook/zstd/issues/4622">zstd Huffman fast loop disabled for riscv64 – issue #4622</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/20980">OpenSSL AES non-constant-time without Zkn – issue #20980</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
+  <li><a href="https://github.com/boostorg/context/issues/306">boostorg/context issue #306 - Boost context support for riscv64</a></li>
+  <li><a href="https://github.com/spdk/spdk/issues/3475">SPDK issue #3475 - NVMe controller init timeout on riscv64</a></li>
+  <li><a href="https://github.com/lz4/lz4/issues/1635">lz4 RVV optimization issue #1635</a></li>
+  <li><a href="https://github.com/facebook/zstd/issues/4622">zstd Huffman fast loop disabled for riscv64 - issue #4622</a></li>
+  <li><a href="https://github.com/facebook/zstd/issues/4546">zstd unaligned access issue #4546</a></li>
+  <li><a href="https://github.com/facebook/zstd/issues/4471">zstd RVV XXH3 support issue #4471</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/20980">OpenSSL AES non-constant-time without Zkn - issue #20980</a></li>
+  <li><a href="https://github.com/google/snappy/issues/209">snappy performance issue on RISC-V - issue #209</a></li>
 </ul>
 
           
