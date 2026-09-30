@@ -2,9 +2,6 @@
 title: Go
 parent: Project Reports
 color: green
-categories:
-  - runtimes
-  - containers
 dependencies:
   - name: golang.org/x/sys
     relation: runtime-dependency
@@ -12,14 +9,17 @@ dependencies:
   - name: golang.org/x/crypto
     relation: runtime-dependency
     criticality: optional
-  - name: glibc
+  - name: Linux kernel
     relation: runtime-dependency
-    criticality: optional
-  - name: OpenSSL
+    criticality: critical
+  - name: glibc
     relation: runtime-dependency
     criticality: optional
   - name: BoringSSL
     relation: runtime-dependency
+    criticality: optional
+  - name: GCC
+    relation: build-dependency
     criticality: optional
 ---
 
@@ -28,222 +28,233 @@ dependencies:
 # Go
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
+**Readiness:** green<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Go<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
----
-
 ## 1. Project Overview
 
-Go is a compiled, garbage-collected systems programming language developed and maintained by Google. It is not affiliated with any independent foundation (no CNCF, Linux Foundation, or similar body). The project is governed by a small core team of Google employees. Final merge authority rests with the Google core team; the contribution process requires +2 Code-Review approval from a Go maintainer. Significant language or runtime changes require a formal accepted proposal. Go is not a RISE Project member. RISE Premier Members include Google, Red Hat, NVIDIA, SiFive, Qualcomm, MediaTek, Andes Tech, Tenstorrent, and DAMO Academy (Alibaba).
+Go is a compiled, garbage-collected systems programming language and self-hosted toolchain (compiler, assembler, linker, runtime) developed and maintained by a team at Google, with contributions from the open source community. It is not affiliated with any independent foundation (no CNCF, Linux Foundation, or similar governance body); go.dev describes Go as "supported by Google."
 
-- **Repository:** [https://github.com/golang/go](https://github.com/golang/go)
-- **Homepage:** [https://golang.org/](https://golang.org/)
+Governance is centralized: significant language or runtime changes require a formal, accepted change proposal, releases follow a 6-month cycle with a 3-month feature freeze, and code review requires +2 approval from a Go maintainer. The clearest corporate-control mechanism is procedural: per the contribution guide, two Google employees must be involved in every change (as uploader or +1 reviewer) "for compliance and supply chain security reasons," meaning even community-authored patches require Google sign-off before merge. Copyright is held by Google LLC; the license is BSD 3-Clause.
+
+Google LLC is a Premier Member of the RISE Project (RISC-V Software Ecosystem), alongside Alibaba Damo, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, and Tenstorrent. Go itself is not a RISE member (RISE membership is by organization, not by language project), and riseproject.dev makes no mention of Go/golang on its homepage.
+
+Community stance toward new architecture ports is structurally welcoming but disciplined: Go's documented porting policy (go.dev/wiki/PortingPolicy) requires an accepted proposal, at least two named maintainers, a dedicated builder maintainer, and a working builder before a new port is merged. The riscv64 port, led by an independent, non-Google contributor, reached inclusion within roughly 18 months of serious work starting, evidencing that the bar is real but not prohibitive for a well-resourced effort.
+
+- **Repository:** [github.com/golang/go](https://github.com/golang/go)
+- **Homepage:** [golang.org](https://golang.org/)
 - **License:** BSD 3-Clause
-- **Language:** Go (self-hosted compiler), C (cgo bridge), Assembly
-
----
+- **Language:** Go (self-hosted compiler), C (cgo bridge), Plan 9-style assembly
 
 ## 2. Port History and Upstreaming Timeline
 
-The linux/riscv64 port was a community-driven effort initiated by Tobias Klauser (Cilium/Isovalent) and completed primarily by Joel Sing (OpenBSD developer). An early out-of-tree port existed at `github.com/riscv/riscv-go` but was abandoned by 2018, which motivated the upstream effort.
+The linux/riscv64 port was initiated by Tobias Klauser (Cilium/Isovalent, independent of Google) and implemented primarily by Joel Sing (independent developer, OpenBSD project), building on a since-abandoned out-of-tree prototype, `riscv-go` (based on Go 1.8). Early prep work and review also involved Google engineers (Benjamin Barenblat, Michael Yenik, Cherry Zhang).
 
 | Date | Event | Source |
 |---|---|---|
-| 2018-04-11 | First RISC-V commit: `go/build, runtime/internal/sys: reserve RISC-V arch names` (Tobias Klauser) | commit `9446eaa9443c` |
-| 2018-04-18 | `debug/elf: add riscv64 relocations` (Tobias Klauser), references out-of-tree port | commit `96f6cc15949c` |
-| 2018-09-06 | Issue [#27532](https://github.com/golang/go/issues/27532) "all: port to RISC-V" filed as official tracking issue | issue #27532 |
-| 2019-09-07 | Joel Sing submits assembler and register definitions for `cmd/internal/obj/riscv` | upstream Gerrit |
-| 2020-01-22 | Joel Sing adds missing runtime code for linux/riscv64 | upstream Gerrit |
-| Feb 2020 | **Go 1.14:** First official release with `linux/riscv64`, marked **experimental** | Go 1.14 release notes |
-| ~2020 | CGo support added for the riscv port, issue [#36641](https://github.com/golang/go/issues/36641) closed | issue #36641 |
-| 2024-01-25 | `openbsd/riscv64` port completed, issue [#55999](https://github.com/golang/go/issues/55999) closed | issue #55999 |
-| 2025-02-20 | Plugin build mode (`-buildmode=plugin`) implemented for riscv64 (Gerrit CL 420114) | commit `cdc9560` |
-| 2026 (current) | Active development: vector ISA, compressed instructions, crypto, jump tables, atomic intrinsics | tracker below |
+| 2018-04-11 | First RISC-V commit: reserve `riscv`/`riscv64` GOARCH names, citing HiFive Unleashed and Debian/Fedora RISC-V ports (Tobias Klauser) | commit `9446eaa9443c` |
+| 2018-04-18 | `debug/elf: add riscv64 relocations` (Tobias Klauser) | commit `96f6cc15949c` |
+| 2018-09-06 | Issue [#27532](https://github.com/golang/go/issues/27532) "all: port to RISC-V" filed as master tracking issue | issue #27532 |
+| 2019-09 | Joel Sing begins submitting the assembler, register definitions, compiler backend, linker, runtime, syscall, math/big, and reflect support via Gerrit CLs | Gerrit history referenced in issue #27532 |
+| Feb 2020 (Go 1.14) | First official release with `linux/riscv64` support | Go 1.14 release notes |
+| 2020-08 | PR [#41063](https://github.com/golang/go/pull/41063) "doc: add linux/riscv64 valid combination" merged, marking linux/riscv64 as an officially documented port | PR #41063 |
+| 2021-02 | cgo support for riscv64 merged (PR [#41930](https://github.com/golang/go/pull/41930)); issue [#36641](https://github.com/golang/go/issues/36641) ("add cgo support to the riscv port") closed | PR #41930, issue #36641 |
+| 2022-06 | Plugin build mode enabled for riscv64 (PR [#53029](https://github.com/golang/go/pull/53029)) | PR #53029 |
+| Go 1.19 (2022) | Register-based calling convention extended to riscv64 | RISC-V Bytes (Daniel Mangum), proposal #18597 |
+| Go 1.21 (2023) | linux-riscv64 becomes an officially downloadable binary target at [go.dev/dl](https://go.dev/dl/) | RISE blog post (April 2025) |
+| 2023-2024 | freebsd/riscv64 (issue [#53466](https://github.com/golang/go/issues/53466)) and openbsd/riscv64 (issue [#55999](https://github.com/golang/go/issues/55999)) ports added | issues #53466, #55999 |
+| 2025-01 | Issue [#71105](https://github.com/golang/go/issues/71105), the umbrella compressed-instruction proposal, opened and formally Proposal-Accepted, driving the current wave of extension-support PRs | issue #71105 |
+| 2025-2026 | Continuous extension work: Zicond, Zbc, Zfa, CMO, Zicbop, compressed instructions, jump tables, framepointer, atomic intrinsics (210+ commits found in commit search) | commit search, PR list below |
+| 2026-09-30 | RVV SIMD intrinsics under `GOEXPERIMENT` proposed (issue [#81892](https://github.com/golang/go/issues/81892)), newest open riscv64 issue found | issue #81892 |
 
-The port graduated from experimental status at some point after Go 1.14. The exact release that removed the experimental caveat is not recorded in the research findings. Data not available: precise Go version when linux/riscv64 was promoted from experimental to secondary port.
-
----
+The port is fully upstream: there is no out-of-tree riscv64 fork in active use, and an active `@golang/riscv64` maintainer team exists (confirmed by governance/membership issues [#79815](https://github.com/golang/go/issues/79815) and [#74742](https://github.com/golang/go/issues/74742)). Data not available: the precise Go release that formally reclassified linux/riscv64 from "experimental" to "secondary port" was not identified in research findings.
 
 ## 3. Upstream Support Tier
 
-Go defines two port tiers.
+Go's documented policy (go.dev/wiki/PortingPolicy) defines two tiers:
 
-**First-class ports** (broken builds block releases, Google-owned builders required): darwin/amd64, darwin/arm64, linux/386, linux/amd64, linux/arm, linux/arm64, windows/386, windows/amd64.
+**First-class ports** (release-blocking, Google-owned builders, officially documented installs): darwin/amd64, darwin/arm64, linux/386, linux/amd64, linux/arm, linux/arm64, windows/386, windows/amd64.
 
-**Secondary ports** (broken builds do not block releases, community-maintained builders): `linux/riscv64` is a **secondary port**. The consequences are:
+**Secondary ports** (lower priority; "a change that breaks a secondary port will not necessarily be rolled back"; maintained by the port's named maintainers; a builder failing repeatedly with no fix in progress can get the port removed): `linux/riscv64` is a secondary port, as is essentially every other architecture Go supports.
 
-- A broken riscv64 build does not require a release rollback or delay.
-- The port requires at least two named maintainers listed in the golang/port-maintainers GitHub team subgroups.
-- Port-specific changes must be reviewed by a port maintainer before merge.
-- If a builder fails repeatedly with no fix in progress, the port may be removed in the next release.
-
-The supported GOOS/GOARCH combinations for riscv64 are:
+Evidence of upstream investment despite secondary-tier status: upstream CI builds and runs the full `dist` test suite on dedicated, physical native riscv64 hardware builders (`linux-riscv64-unmatched`, `linux-riscv64-jsing`, per [golang.org/x/build/dashboard/builders.go](https://github.com/golang/build/blob/master/dashboard/builders.go)), and upstream publishes official riscv64 binary releases directly from [go.dev/dl](https://go.dev/dl/).
 
 | GOOS | GOARCH | CGo | Status |
 |---|---|---|---|
 | linux | riscv64 | yes | supported |
-| freebsd | riscv64 | yes | **Broken** ([go.dev/issue/76475](https://github.com/golang/go/issues/76475)) |
+| freebsd | riscv64 | yes | Broken ([#76475](https://github.com/golang/go/issues/76475), open) |
 | openbsd | riscv64 | yes | supported |
 
----
+| Dimension | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| Tier | First-class | First-class (linux/darwin) | Secondary |
+| Release-blocking | Yes | Yes | No |
+| Official go.dev/dl binaries | Yes | Yes | Yes (since Go 1.21) |
+| Native CI hardware | Cloud VMs | Cloud VMs + Apple hardware | Community-donated physical boards |
+| LUCI migration | Complete | Complete | Not complete (open: [#81534](https://github.com/golang/go/issues/81534), [#80880](https://github.com/golang/go/issues/80880)) |
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-The Go toolchain is self-hosted. RISC-V support spans the following subsystems.
+The toolchain is self-hosted; riscv64 support spans compiler, assembler, linker, and runtime as a mature, non-stub architecture port. Line counts and TODO/FIXME density below were verified directly against a live clone of `golang/go` at commit `01e4798b9842e9df4d8fa2bfcd34f5fed522ffdb` (2026-09-30).
 
-### 4.1 Compiler Backend
+### 4.1 Compiler backend
 
-- **`src/cmd/compile/internal/riscv64/ssa.go`** (~650 lines): SSA code generation. Covers RV64I, M (mul/div), A (atomics LR/SC/AMO), F/D (float/FMA), Zba (SH1ADD/SH2ADD/SH3ADD), Zbb (CLZ/CTZ/CPOP/REV8/MIN/MAX/ANDN/ORN/XNOR), Zicond (CZEROEQZ/CZERONEZ).
-- **`src/cmd/compile/internal/ssa/rewriteRISCV64.go`** (11,227 lines, auto-generated): Full generic-to-RISC-V SSA translation. Zba/Zbb rules are gated on `GORISCV64 >= 22`.
-- **`src/cmd/compile/internal/ssa/rewriteRISCV64latelower.go`** (~330 lines, auto-generated): Late-lowering -- fuses AND/OR/XOR+NOT into Zbb ANDN/ORN/XNOR; shift-extend elision.
+- `src/cmd/compile/internal/riscv64/ssa.go` (1,190 lines): SSA-to-machine-code lowering. Covers RV64I, M, A (atomics), F/D, Zba, Zbb, Zicond.
+- `src/cmd/compile/internal/ssa/rewrite/riscv64/rewriteRISCV64.go` (11,871 lines, generated): generic-to-RISC-V SSA rewrite rules; the largest riscv64-specific file in the repository.
+- `src/cmd/compile/internal/ssa/_gen/RISCV64Ops.go` (588 lines): SSA opcode/register-mask generator source.
+- `src/cmd/compile/internal/riscv64/ggen.go`, `gsubr.go`, `galign.go`: stack-zeroing codegen, misc subroutines, architecture init.
 
-### 4.2 Assembler Object Backend
+There is no `simdssa.go` equivalent for riscv64 (amd64 has 4,400 lines, arm64 has 759 across NEON/SVE); riscv64 has no compiler-level auto-vectorization or SIMD-intrinsic code generation path. The V (RVV) extension exists only at the assembler-encoding level, never reached by the compiler's automatic lowering.
 
-- **`src/cmd/internal/obj/riscv/cpu.go`** (~950 lines): All register constants (X0-X31, F0-F31, V0-V31), instruction mnemonics, relocation types, rounding modes, `EncodeVectorType()`. Covers RV64I, Zicsr, Zicond, M, Zalrsc, Zaamo, F/D/Q, C, Zba/Zbb/Zbc/Zbs, V, Zvbb/Zvbc, Privileged ISA.
-- **`src/cmd/internal/obj/riscv/inst.go`** (2,191 lines, auto-generated): `encode()` maps ~1,080+ instruction mnemonics to raw opcode tuples across 29 extension families.
-- **`src/cmd/internal/obj/riscv/obj.go`** (2,500+ lines): Full assembler pass including compressed instructions (CA/CB/CI/CIW/CJ/CL/CR/CS/CSS), vector config (Vsetvli/Vsetivli/Vsetvl), all R/I/S/B/U/J-type variants.
+### 4.2 Assembler object backend
 
-The compressed instruction (RVC) support was added in November 2025 via commits `9859b43` and `b9ef063`.
+- `src/cmd/internal/obj/riscv/obj.go` (5,344 lines): instruction encoder/optimizer, including compressed-instruction (RVC) support and RVV `rVVV`/`rVIV`/`rVVi` vector encodings.
+- `src/cmd/internal/obj/riscv/inst.go` (2,233 lines, generated): opcode/funct3/funct7 encoding tables, including all vector-op mnemonics (`VORVV`, `VXORVV`, `VANDVI`, etc.).
+- `src/cmd/internal/obj/riscv/cpu.go` (1,835 lines): register/opcode constants, special-operand definitions including `SPOP_RVV_BEGIN..SPOP_RVV_END`.
+- `src/cmd/internal/obj/riscv/anames.go` (1,022 lines, generated), `doc.go` (344 lines), `list.go` (68 lines).
+
+Combined, the assembler backend is approximately 9,400 lines, comparable in scale to amd64's ~11,500 and arm64's ~10,600 equivalents. TODO/FIXME density is low: 4 markers total across riscv64 compiler+assembler+linker code, versus 19 for the equivalent arm64 files, and no `panic("not implemented")` guards exist in the core compile/assemble/link/runtime paths.
 
 ### 4.3 Linker
 
-- **`src/cmd/link/internal/riscv64/asm.go`** (~430 lines): ELF relocations, PLT/GOT, trampolines. Handles R_RISCV_CALL, R_RISCV_JAL, R_RISCV_PCREL_HI20/LO12, R_RISCV_GOT_HI20, R_RISCV_TLS_IE/LE, R_RISCV_RVC_BRANCH/JUMP, R_RISCV_ADD32/SUB32, R_RISCV_RELAX.
+- `src/cmd/link/internal/riscv64/asm.go` (781 lines): ELF relocation handling (approximately 18 `R_RISCV_*` types), PLT/GOT, trampolines.
+- `src/cmd/link/internal/riscv64/obj.go` (73 lines), `l.go` (14 lines).
+
+`machoreloc1` in the riscv64 linker is a literal `log.Fatalf("machoreloc1 not implemented")` stub; this is architecturally correct (no darwin/riscv64 port exists) rather than a gap, since arm64's equivalent is implemented only because darwin/arm64 exists.
 
 ### 4.4 Runtime
 
-- **`src/runtime/asm_riscv64.s`** (~820 lines): Entry points, goroutine control, stack management, CGo interop, GC write barriers, reflection dispatch (27 CALLFN variants), `cputicks` via RDTIME.
-- **`src/internal/cpu/cpu_riscv64_linux.go`** (~97 lines): Runtime extension detection via `riscv_hwprobe` syscall (syscall 258). Detects: V, Zbb, Zbc, Zvbb, Zvbc, Zvkb, Zvkg, Zvkned, Zvknha/b, Zvksed, Zvksh, Zvkt, and fast-misaligned. Note: AT_HWCAP V-bit detection is used but documented as unreliable across vendors.
-- **`src/runtime/cgo/gcc_riscv64.S`** (~72 lines): `crosscall1` -- saves 14 integer + 12 float callee-saved registers for GCC-to-Go ABI bridge.
+- `src/runtime/asm_riscv64.s` (979 lines): goroutine switch, syscall trampolines, `_rt0_riscv64_lib`, GC write barriers, reflection dispatch.
+- `src/internal/cpu/cpu_riscv64.go` / `cpu_riscv64_linux.go` / `cpu_riscv64.s` / `cpu_riscv64_other.go` (185 lines total): runtime extension detection via the Linux `riscv_hwprobe` syscall. Detected features: `HasFastMisaligned`, `HasV` (RVV 1.0), `HasZbb`, `HasZbc`, and the vector-crypto set `Zvbb`, `Zvbc`, `Zvkg`, `Zvkned`, `Zvknha`, `Zvknhb`, `Zvksed`, `Zvksh`, `Zvkt`, plus `VLENB`.
+- `src/runtime/cgo/gcc_riscv64.S` (the only capital-`.S` file in the riscv64 tree): cgo crossing-call thunks, saving 14 integer + 12 float callee-saved registers.
+- Full OS port across three kernels: `os_linux_riscv64.go`, `vdso_linux_riscv64.go`, `vdso_freebsd_riscv64.go`, `defs_{linux,freebsd,openbsd}_riscv64.go`, `sys_{linux,freebsd,openbsd}_riscv64.s`.
 
-### 4.5 Standard Library -- RISC-V-Specific Assembly
+### 4.5 Standard library assembly (hand-optimized hot paths)
 
-| Package | File | ISA Extensions | Notes |
+RVV vector assembly is hand-written in a narrow set of performance-critical routines, each gated by a runtime `HasV` check with a scalar fallback:
+
+| File | Extension | Status |
+|---|---|---|
+| `crypto/internal/fips140/subtle/xor_riscv64.s` | V (RVV 1.0) | Complete; vector XOR loop with scalar fallback |
+| `internal/chacha8rand/chacha8_riscv64.s` | V (RVV) | Complete; `VADDVV`/`VXORVV`/`VSLLVI`/`VSRLVI` ChaCha8 core |
+| `internal/bytealg/equal_riscv64.s` | V (RVV) | Complete; vector memequal with scalar fallback |
+| `internal/bytealg/compare_riscv64.s` | V (RVV) | Complete; vector compare with scalar fallback |
+| `internal/bytealg/indexbyte_riscv64.s` | V (RVV) | Complete; vector IndexByte with scalar fallback; further optimization PR [#79997](https://github.com/golang/go/pull/79997) open |
+| `internal/bytealg/count_riscv64.s` | scalar | Complete (calls indexbyte) |
+| `crypto/internal/fips140/sha256/sha256block_riscv64.s` | Zbb (scalar rotate) | Complete, scalar only, no Zvknha |
+| `crypto/internal/fips140/sha512/sha512block_riscv64.s` | Zbb (scalar rotate) | Complete, scalar only, no Zvknhb |
+| `crypto/md5/md5block_riscv64.s` | scalar | Complete, plain scalar |
+| `crypto/internal/fips140/bigmod/nat_riscv64.s` | M (MUL/MULHU) | Complete |
+| `runtime/memmove_riscv64.s`, `memclr_riscv64.s` | scalar | Complete |
+
+Feature bits exist in `internal/cpu` for `Zvbb`, `Zvbc`, `Zvkg`, `Zvkned`, `Zvknha`, `Zvknhb`, `Zvksed`, `Zvksh`, `Zvkt` (vector crypto) but are not yet consumed by any `.s` file found in the repository: no AES/GCM riscv64 assembly exists anywhere (`crypto/internal/fips140/aes/`, `.../gcm/` have zero riscv64 files, versus arm64's `aes_arm64.s`, `ctr_arm64.s`, `gcm_arm64.s` using ARM Crypto Extensions).
+
+### 4.6 SIMD/JIT dispatch
+
+Go's generics-based SIMD package `src/simd/archsimd/` has real backends only for amd64 (AVX/AVX2/AVX-512) and arm64 (NEON/SVE), plus a wasm stub. The generator's `arch.go` contains only an aspirational comment: "a future RVV target is scalable and owns its package." RVV is explicitly deferred, not implemented, at the generics-SIMD layer, though tracked as a live proposal (issue [#81892](https://github.com/golang/go/issues/81892), opened 2026-09-30). Go is ahead-of-time compiled only; there is no JIT in Go itself, so JIT-backend comparisons are not applicable.
+
+| Component | riscv64 | amd64 | arm64 |
 |---|---|---|---|
-| `crypto/internal/fips140/sha256` | `sha256block_riscv64.s` (~175 lines) | Zbb (RORW) | Scalar only -- no Zvknha/b |
-| `crypto/internal/fips140/sha512` | `sha512block_riscv64.s` (~215 lines) | Zbb (ROR) | Scalar only -- no Zvknhb |
-| `crypto/internal/fips140/bigmod` | `nat_riscv64.s` (~90 lines) | M (MUL/MULHU) | `addMulVVW{1024,1536,2048}` |
-| `math` | `dim_riscv64.s`, `exp_riscv64.s`, `floor_riscv64.s` | D, FMA | `FMAXD`/`FMIND`, `FMADDD`/`FNMSUBD` |
-| `internal/bytealg` | `indexbyte_riscv64.s` | RV64I | Optimization open, PR [#79997](https://github.com/golang/go/pull/79997) pending |
-| `internal/bytealg` | memequal | V (rva23u64) | Vectorized, merged (commit `75ea2d05`) |
-| `reflect` | `float32reg_riscv64.s` | F, D | NaN-box handling |
-
-### 4.6 ISA Extension Coverage Summary
-
-| Extension | Assembler | Compiler codegen | Runtime detection | Stdlib assembly |
-|---|---|---|---|---|
-| RV64I (base) | Yes | Yes | N/A | Yes |
-| M (multiply) | Yes | Yes | N/A | Yes (bigmod) |
-| A / Zalrsc / Zaamo (atomics) | Yes | Yes | N/A | -- |
-| F/D (float) | Yes | Yes | N/A | Yes (math) |
-| C (compressed) | Yes | -- | N/A | -- |
-| Zba | Yes | Yes (rva22u64+) | -- | -- |
-| Zbb | Yes | Yes | Yes | Yes (sha256, sha512) |
-| Zbc | Yes | -- | Yes | -- |
-| Zbs | Yes | -- | -- | -- |
-| Zicond | Yes | Yes | -- | -- |
-| Zicsr | Yes | -- | N/A | -- |
-| V (RVV 1.0) | Yes (full) | -- | Yes | Yes (bytealg) |
-| Zvbb/Zvbc | Yes (encoding) | -- | Yes | -- |
-| Zvkg/Zvkned/Zvknha/b/Zvksed/Zvksh/Zvkt | Yes (encoding) | -- | Yes | -- |
-
----
+| Scalar compiler codegen | Full, hand-tuned | Full | Full |
+| Vector/SIMD compiler codegen (`simdssa.go`) | Missing | Full (4,400 lines) | Full (759 lines, NEON/SVE) |
+| Assembler/object encoder | Full, hand-tuned (9,412 lines) | Full (~11,462 lines) | Full (~10,634 lines) |
+| Linker | Full, hand-tuned (781 lines) | Full (741 lines) | Full (1,473 lines) |
+| Runtime entry + cgo bridge | Full | Full | Full |
+| AES/GCM crypto assembly | Missing | Full | Full |
+| Vector-crypto (Zvk*) assembly | Missing (detection only) | N/A | Full (ARM Crypto Extensions) |
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-Go uses its own `make.bash` / `all.bash` build system. There are no CMake files, no Dockerfiles, and no GitHub Actions workflow files in the repository.
+Go uses its own `make.bash` / `all.bash` build system. There are no CMake files, no Dockerfiles, and no GitHub Actions workflow files anywhere in the repository (verified directly, see Section 7).
 
-### 5.1 GORISCV64 Environment Variable
+### 5.1 GORISCV64 environment variable
 
-Controls the minimum RISC-V ISA profile for generated code. Invalid values produce a fatal build error.
+Controls the minimum RISC-V ISA profile for generated code; invalid values are a fatal build error.
 
 | Value | Meaning | Default |
 |---|---|---|
 | `rva20u64` | RVA20U64 mandatory extensions only | Yes |
-| `rva22u64` | RVA22U64 mandatory extensions | -- |
-| `rva23u64` | RVA23U64 mandatory extensions (Go 1.23+) | -- |
+| `rva22u64` | RVA22U64 mandatory extensions | No |
+| `rva23u64` | RVA23U64 mandatory extensions | No |
 
-The value is passed to the assembler as `-D GORISCV64_rva20u64` (etc.) so assembly can perform conditional compilation per profile.
+Separately, issue [#71105](https://github.com/golang/go/issues/71105) (Proposal-Accepted) is changing what `rva20u64` itself means: because RISC-V International's board subsequently made the C (compressed-instruction) extension mandatory in both RVA20 and RVA22 profiles, Go's original decision to exclude compressed instructions from `rva20u64` is being reversed. This is the umbrella issue that the current wave of compressed-instruction PRs references via "Updates #71105."
 
-### 5.2 Build Commands
+### 5.2 Build commands
 
 Native build on a riscv64 host:
-```bash
+```
 cd src && ./all.bash
 ```
 
-Cross-compile from x86-64 (CGo disabled):
-```bash
+Cross-compile from x86-64 (cgo disabled):
+```
 export GOOS=linux GOARCH=riscv64 GORISCV64=rva20u64 CGO_ENABLED=0
 cd src && ./make.bash
 ```
 
-Cross-compile with CGo (requires riscv64 C toolchain):
-```bash
+Cross-compile with cgo (requires a riscv64 C toolchain):
+```
 export GOOS=linux GOARCH=riscv64 CGO_ENABLED=1
 export CC_FOR_TARGET=riscv64-linux-gnu-gcc
 cd src && ./make.bash
 ```
 
-### 5.3 Bootstrap Compiler Requirements
+### 5.3 Bootstrap and C compiler requirements
 
-Go 1.4 does not support linux/riscv64. A newer binary release or cross-compiled bootstrap tree is required. General rule: Go 1.N requires Go 1.(N-2, rounded to even) as bootstrap.
+Go 1.4 does not support linux/riscv64; a newer binary release or cross-compiled bootstrap tree is required (general rule: Go 1.N requires Go 1.(N-2, rounded to even) as bootstrap). Cgo requires a C compiler; the typical cross-compiler is `riscv64-linux-gnu-gcc` (Debian package `gcc-riscv64-linux-gnu`). Cross-compilation disables cgo by default unless `CGO_ENABLED=1` is set explicitly. `freebsd/riscv64` is listed as cgo-supported in the platform matrix but the port itself is broken ([#76475](https://github.com/golang/go/issues/76475)).
 
-### 5.4 C Compiler Requirements
+### 5.4 Known build failures
 
-- CGo requires a C compiler. Typical cross-compiler: `riscv64-linux-gnu-gcc` (Debian package: `gcc-riscv64-linux-gnu`).
-- Cross-compilation disables cgo by default unless `CGO_ENABLED=1` is explicitly set.
-- `freebsd/riscv64` CGo is marked supported in the platform matrix but the port is `Broken` (issue [#76475](https://github.com/golang/go/issues/76475)).
-
----
+- [#70401](https://github.com/golang/go/issues/70401): build failure on `gotip-linux-riscv64` (open).
+- [#79270](https://github.com/golang/go/issues/79270): `plugin` build mode failure on riscv64 ("consistent failure"); closed 2026-05-19.
+- [#74734](https://github.com/golang/go/issues/74734) / [#73516](https://github.com/golang/go/issues/73516): riscv64 cannot build on FreeBSD with cgo, including a Go 1.23 backport; closed.
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
-### 6.1 Build Modes
+### 6.1 Build modes
 
 | Build mode | linux/riscv64 | linux/arm64 | Notes |
 |---|---|---|---|
-| `exe` (default) | Yes | Yes | -- |
-| `pie` (external linker) | Yes | Yes | External linker required |
-| `pie` (internal linker) | **No** | Yes | Blocked; CLs 741860+742200 pending |
-| `plugin` | Yes | Yes | Added Go 1.25 (CL 420114, merged 2025-02-20) |
-| `shared` | **No** | Yes | Not implemented |
-| `c-archive` | Yes | Yes | -- |
-| `c-shared` | Yes | Yes | -- |
+| `exe` (default) | Yes | Yes | |
+| `pie` (external linker) | Yes | Yes | |
+| `pie` (internal linker) | No | Yes | Blocked; CLs 741860, 742200 pending |
+| `plugin` | Yes | Yes | Enabled via PR [#53029](https://github.com/golang/go/pull/53029) |
+| `shared` | No | Yes | Not implemented |
+| `c-archive` / `c-shared` | Yes | Yes | |
 
-### 6.2 Sanitizers and Instrumentation
+### 6.2 Sanitizers and instrumentation
 
 | Feature | linux/riscv64 | linux/arm64 | Notes |
 |---|---|---|---|
-| Race detector (`-race`) | Yes | Yes | Builder too slow for regular racebuild ([#78258](https://github.com/golang/go/issues/78258)) |
-| Address sanitizer (`-asan`) | Yes | Yes | TestASAN failures reported ([#57691](https://github.com/golang/go/issues/57691), open) |
-| Memory sanitizer (`-msan`) | **No** | Yes | Requires compiler-rt support; not available for riscv64 |
-| Thread sanitizer (TSAN) | Partial | Yes | TestTSAN/tsan8 failing ([#76816](https://github.com/golang/go/issues/76816), open) |
-| Fuzzing instrumentation | **No** | Yes | riscv64 excluded from `FuzzInstrumented` list (issue [#14565](https://github.com/golang/go/issues/14565) TODO in source) |
-| DWARF `prologue_end` | Yes | Yes | Added Oct 2024 (commit `b45c7f1`) |
+| Race detector (`-race`) | Yes | Yes | riscv64 builder too slow for regular racebuild ([#78258](https://github.com/golang/go/issues/78258)) |
+| Address sanitizer (`-asan`) | Yes | Yes | `TestASAN` fails with SEGV on riscv64 ([#57691](https://github.com/golang/go/issues/57691), open since Jan 2023) |
+| Memory sanitizer (`-msan`) | No | Yes | Requires compiler-rt support not available for riscv64 |
+| Thread sanitizer (TSAN) | Partial | Yes | `TestTSAN/tsan8` failing ([#76816](https://github.com/golang/go/issues/76816), open) |
+| Fuzzing instrumentation | No | Yes | riscv64 excluded from `FuzzInstrumented` list |
 
 ### 6.3 Crypto and FIPS
 
 | Feature | linux/riscv64 | linux/arm64 | Notes |
 |---|---|---|---|
-| Pure-Go crypto (stdlib) | Yes | Yes | -- |
-| Scalar assembly crypto (sha256, sha512) | Yes | Yes | riscv64 uses Zbb rotation, added Go 1.23 |
-| Vector/SIMD crypto (AES, GCM, ChaCha20) | **No** | Yes | No Zvkned/Zvknha/b assembly yet |
-| BoringCrypto (`GOEXPERIMENT=boringcrypto`) | **No** | Yes | No `goboringcrypto_linux_riscv64.syso` exists |
-| FIPS140 with `-buildmode=pie` | **Broken** | Yes | Issue [#74683](https://github.com/golang/go/issues/74683), fix CLs posted but not merged |
-| `x/crypto` SIMD paths (ChaCha20, Poly1305) | **No** | Yes | Pure Go fallback used; arm64/ppc64x/s390x have SIMD |
+| Pure-Go crypto (stdlib) | Yes | Yes | |
+| Scalar assembly crypto (sha256, sha512, md5) | Yes | Yes | riscv64 uses Zbb rotation; scalar only |
+| Vector/SIMD crypto (AES, GCM, ChaCha20, vector hashing) | No | Yes | No Zvkned/Zvknha/b assembly exists; confirmed by direct source inspection (Section 4.6) |
+| BoringCrypto (`GOEXPERIMENT=boringcrypto`) | No | Yes | No `goboringcrypto_linux_riscv64.syso` exists; only linux/amd64 and linux/arm64 have precompiled `.syso` files |
+| FIPS140 with `-buildmode=pie` | Broken | Yes | [#74683](https://github.com/golang/go/issues/74683), open; fix CLs (741860, 742200, 748040) posted but not merged as of research date |
+| `x/crypto` SIMD paths (ChaCha20, Poly1305) | No | Yes | Pure Go fallback used; arm64/ppc64x/s390x have SIMD assembly |
 
 ### 6.4 Performance vs arm64
 
-The only quantified comparison in the research findings comes from issue [#77541](https://github.com/golang/go/issues/77541) (Feb 2026):
+The best-documented gap is quantified in issue [#77541](https://github.com/golang/go/issues/77541) [NEEDS VERIFICATION, single primary source]: approximately 20-40% execution slowdown on riscv64 versus arm64 on CPU-intensive workloads, measured via the `golang.org/x/benchmarks` Bent suite on Go 1.25.6 with `GORISCV64=rva23u64`. Root cause: RISC-V's 12-bit signed immediate range forces a 3-instruction sequence (LUI+ADD recomputation) for large stack-frame offsets where arm64 uses a single instruction; the SSA backend's cost model treats this sequence as cheap enough to rematerialize on every loop iteration rather than hoist it, so it is recomputed repeatedly in hot loops. A structurally related issue, [#79298](https://github.com/golang/go/issues/79298) ("redundant LUI+ADD recomputation on large stack offsets"), is open with no fix landed.
 
-- **~20-40% execution slowdown on riscv64 vs arm64** on CPU-intensive workloads, measured via `golang.org/x/benchmarks` Bent suite on Go 1.25.6 with `GORISCV64=rva23u64`.
-- Root cause: RISC-V's 12-bit signed immediate range forces 3 instructions per large-stack-offset access where ARM64 uses 1. The SSA backend treats these multi-instruction sequences as cheap to rematerialize, causing them to be recomputed every loop iteration.
-- Affected workloads: wazero interpreter benchmarks (`string_manipulation_size_50`, `random_mat_mul_size_20`), kanzi-go SBRT Transform hot loops.
+A second, independently documented slowdown: issue [#50615](https://github.com/golang/go/issues/50615) (open) reports `bytes`/`strings` package tests taking 100-300 seconds on a riscv64 builder versus 1-2 seconds on other architectures (roughly 100x), and the `cmd/go` test suite taking approximately 300 seconds on riscv64 versus approximately 30 seconds elsewhere (roughly 10x) despite `cmd/go` having far more integration tests than `bytes` alone, implying a riscv64-specific slowdown (suspected cause: unoptimized string/byte primitives, not confirmed).
 
-The crypto/sha256 assembler optimization (commit `6d55a017`, Go 1.23) measured on a StarFive VisionFive 2:
+Measured (not merely proposed) optimizations, both requiring `GORISCV64=rva23u64`:
+
+Crypto/sha256 assembler optimization (commit `6d55a017`, Go 1.23), measured on a StarFive VisionFive 2:
 
 | Benchmark | Before | After | Delta |
 |---|---|---|---|
@@ -252,287 +263,259 @@ The crypto/sha256 assembler optimization (commit `6d55a017`, Go 1.23) measured o
 | Hash8K/New | 808.5 us | 493.0 us | -39.0% |
 | Hash1K throughput | 9.041 MiB/s | 14.772 MiB/s | +63.4% |
 
-The vectorized `internal/bytealg` memequal (commit `75ea2d05`, requires `GORISCV64=rva23u64`) measured on a Banana Pi F3:
+Vectorized `internal/bytealg` memequal (commit `75ea2d05`), measured on a Banana Pi F3:
 
 | Benchmark | Before | After | Delta |
 |---|---|---|---|
 | Equal/4K | 925.5 ns | 561.4 ns | -39.3% |
 | Equal/4M | 3.110 ms | 2.463 ms | -20.8% |
 | EqualBothUnaligned/4096_1 | 956.6 ns | 571.4 ns | -40.3% |
-| Geomean timing | -- | -- | -13.9% |
-| Geomean throughput | -- | -- | +17.2% |
+| Geomean timing | - | - | -13.9% |
+| Geomean throughput | - | - | +17.2% |
 
-Data not available: no published full-suite comparison of Go riscv64 vs arm64 across a representative application workload (e.g., HTTP server throughput, JSON parsing, GC-heavy workloads).
+Data not available: no published full-suite, third-party comparison of Go riscv64 versus arm64 across a representative application workload (HTTP server throughput, JSON parsing, GC-heavy workloads) was found in either the RISE blog materials or general web search.
 
----
+### 6.5 Floating-point / correctness
+
+No open NaN-handling or floating-point correctness bug specific to riscv64 was found in the current open-issue set beyond a capability gap: riscv64 lacks a true softfloat mode (issue [#75015](https://github.com/golang/go/issues/75015), open proposal) -- unlike MIPS, binaries built with `softfloat` on riscv64 still emit FPU instructions in assembly, so FPU-less riscv64 hardware cannot run them. A previously reported NaN-conversion bug (`uint32(math.NaN())` returning -1 on riscv64) was fixed in January 2024. Separately, two real compiler-correctness (miscompilation) bugs were found in this research pass; see Section 11.1.
 
 ## 7. CI/CD Infrastructure
 
-Go does not use GitHub Actions, `.cirrus.yml`, `Jenkinsfile`, or `.travis.yml`. The `.github/` directory contains only `ISSUE_TEMPLATE/`, `CODE_OF_CONDUCT.md`, `PULL_REQUEST_TEMPLATE`, and `SUPPORT.md` -- no workflow files exist.
+**Go does not use GitHub Actions for its actual CI, on any architecture.** This was directly verified against a shallow clone of `golang/go` (HEAD `01e4798b9842e9df4d8fa2bfcd34f5fed522ffdb`, 2026-09-30): the `.github/` directory contains only `CODE_OF_CONDUCT.md`, `ISSUE_TEMPLATE/*.yml` (issue-form schemas, not workflows), `PULL_REQUEST_TEMPLATE`, and `SUPPORT.md`. There is no `.github/workflows/` directory at all, and no `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` either. GitHub is a read-only mirror plus issue tracker; actual code review happens on Gerrit ([go-review.googlesource.com](https://go-review.googlesource.com)), and actual multi-platform CI is driven by Go's own LUCI-based build system (`golangbuild`), configured in the separate `golang.org/x/build` repository.
 
-All CI runs via the `build.golang.org` coordinator, configured in [`golang.org/x/build/dashboard/builders.go`](https://github.com/golang/build/blob/master/dashboard/builders.go).
+### 7.1 Active riscv64 builders
 
-### 7.1 Active riscv64 Builders
-
-All RISC-V builders are **reverse buildlets running on physical hardware** -- no QEMU, no cloud VMs.
+All RISC-V builders are reverse buildlets running on physical hardware, not QEMU or cloud VMs, per [golang.org/x/build/dashboard/builders.go](https://github.com/golang/build/blob/master/dashboard/builders.go):
 
 | Builder name | Hardware | RAM/Cores | Owner | OS | Timeout scale |
 |---|---|---|---|---|---|
 | `linux-riscv64-unmatched` | SiFive HiFive Unmatched | 16 GB, 4 cores | mengzhuo (PLCT Lab) | Linux | 4x |
-| `linux-riscv64-jsing` | SiFive HiFive Unleashed | 8 GB, 4 cores | 4a6f656c (Joel Sing) | Linux | 4x |
-| `freebsd-riscv64-unmatched` | SiFive HiFive Unmatched | 16 GB, 4 cores, FreeBSD 13.1-RELEASE | mengzhuo (PLCT Lab) | FreeBSD | 4x |
-| `openbsd-riscv64-jsing` | physical reverse buildlet | -- | 4a6f656c (Joel Sing) | OpenBSD | 3x |
+| `linux-riscv64-jsing` | SiFive HiFive Unleashed | 8 GB, 4 cores | Joel Sing | Linux | 4x |
+| `freebsd-riscv64-unmatched` | SiFive HiFive Unmatched, FreeBSD 13.1-RELEASE | 16 GB, 4 cores | mengzhuo (PLCT Lab) | FreeBSD | 4x |
+| `openbsd-riscv64-jsing` | physical reverse buildlet | - | Joel Sing | OpenBSD | 3x |
 
-All builders apply `riscvDistTestPolicy`, which skips the `api` and `reboot` dist tests (same policy as MIPS). `linux-riscv64-unmatched` and `freebsd-riscv64-unmatched` use a private Go proxy (builder is behind a firewall).
+All builders apply `riscvDistTestPolicy`, which skips the `api` and `reboot` dist tests (the same policy applied to MIPS). Three additional `linux-riscv64-rva22u64-mengzhuo--bbw-{1,2,3}` (Banana Pi F3) bots are reported broken ([#79067](https://github.com/golang/go/issues/79067), [#79068](https://github.com/golang/go/issues/79068), [#79069](https://github.com/golang/go/issues/79069), open since April 2026), and `openbsd-riscv64-jsing` itself has an open "bot reported broken" issue ([#80506](https://github.com/golang/go/issues/80506)).
 
-Three of mengzhuo's linux-riscv64-rva22u64 Banana Pi F3 bots (bbw-1, bbw-2, bbw-3) are currently broken ([#79067](https://github.com/golang/go/issues/79067), [#79068](https://github.com/golang/go/issues/79068), [#79069](https://github.com/golang/go/issues/79069), opened 2026-04-30).
+### 7.2 Cross-compilation-only coverage
 
-### 7.2 Cross-Compilation Builders (no execution)
+`freebsd/riscv64` and `openbsd/riscv64` (Go 1.23+) are additionally exercised via misc-compile-only builders (compile, no execution); `golang.org/x/build` itself is excluded from riscv64 misc-compile due to a separate issue.
 
-```
-addMiscCompile("freebsd", "riscv64")
-addMiscCompileGo1(23, "openbsd", "riscv64", "-go1.23")
-addMiscCompile("linux", "riscv64")
-```
+### 7.3 LUCI migration status
 
-Note: `golang.org/x/build` itself is excluded from riscv64 misc-compile due to issue #58307.
-
-### 7.3 LUCI Migration Status
-
-riscv64 builders are **not yet migrated to LUCI**, unlike ppc64, loong64, and wasm which have been ported. All riscv64 CI remains on the old `build.golang.org` coordinator system [NEEDS VERIFICATION].
+riscv64 builders have not been migrated to LUCI, unlike ppc64, loong64, and wasm, which have completed migration. This is corroborated by two open feature requests as of the research date: [#81534](https://github.com/golang/go/issues/81534) ("x/build: add LUCI linux-riscv64 builders with ISCAS," opened 2026-09-15) and [#80880](https://github.com/golang/go/issues/80880) ("x/build: add LUCI linux-riscv64 builder," opened 2026-08-14). Both being open and unresolved directly confirms riscv64 LUCI migration is still pending.
 
 ### 7.4 RISE Runners
 
-RISE provides free native RISC-V CI on GitHub Actions (`ubuntu-24.04-riscv` label, Scaleway EM-RV1 hardware). As of the May 2026 "six weeks in" report, the Go upstream project is **not** listed among the 197 organizations using RISE RISC-V Runners for its own CI. The RISE blog post from September 2024 confirms Go received Scaleway bare-metal RISC-V infrastructure for development use.
+RISE provides free native RISC-V CI on GitHub Actions ("RISE RISC-V Runners," Scaleway EM-RV1 hardware), announced March 2026 and reported on again in May 2026 ("six weeks in," covering 197 organizations at that point). The Go upstream project is not listed among organizations using RISE RISC-V Runners for its own CI as of that report; separately, RISE provided Scaleway EM-RV1 bare-metal RISC-V CI infrastructure to the Go project directly (September 2024 blog post), which is distinct infrastructure from the shared GitHub Actions runner service.
 
----
+| Dimension | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| CI system | LUCI (`golang.org/x/build`) | LUCI | Legacy `build.golang.org` coordinator; LUCI migration pending ([#81534](https://github.com/golang/go/issues/81534), [#80880](https://github.com/golang/go/issues/80880)) |
+| Hardware | Cloud VMs | Cloud VMs + Apple hardware | Physical, community-donated boards (3 of 4 core builders owned by one maintainer) |
+| GitHub Actions used | No | No | No |
 
 ## 8. Distribution and Release Status
 
-| Source | riscv64 Present | Version / Notes |
+| Source | riscv64 present | Version / notes |
 |---|---|---|
-| [go.dev/dl (official upstream)](https://go.dev/dl/) | Yes | `go1.26.4.linux-riscv64.tar.gz`, `go1.25.11.linux-riscv64.tar.gz`, `go1.26.4.openbsd-riscv64.tar.gz`, `go1.25.11.freebsd-riscv64.tar.gz` |
-| [Arch Linux RISC-V mirror](https://riscv.mirror.pkgbuild.com/repo/extra/) | Yes | `go-2:1.26.4-1-riscv64.pkg.tar.zst` (40 MB), built 2026-06-03 |
-| [Debian (buildd)](https://buildd.debian.org/status/package.php?p=golang-defaults) | Yes | `golang-defaults 2:1.26~1`, status: Installed, built on `rv-manda-04` |
-| Ubuntu 24.04 Noble | Yes | `golang-1.22` stack, riscv64 listed as supported arch |
-| GitHub release assets | N/A | Go does not ship binaries as GitHub release assets |
+| [go.dev/dl](https://go.dev/dl/) (official upstream) | Yes | `go1.27.1.linux-riscv64.tar.gz`, `go1.27.1.openbsd-riscv64.tar.gz`, `go1.26.8.linux-riscv64.tar.gz`, `go1.26.8.openbsd-riscv64.tar.gz`, `go1.27.0.linux-riscv64.tar.gz`, `go1.26.7.linux-riscv64.tar.gz`, and the same pattern back through the 1.25.x series; also `freebsd-riscv64` tarballs (e.g. `go1.25.11.freebsd-riscv64.tar.gz`) |
+| GitHub Releases (`github.com/golang/go/releases`) | N/A | Go does not publish binaries through GitHub Releases at all; the releases page shows "There aren't any releases here." All official distribution is via go.dev/dl tarballs |
+| Ubuntu 26.04 ("resolute") | Yes | Confirmed via the Launchpad archive API (`packages.ubuntu.com` returned HTTP 503 throughout research and could not be used directly): `golang-go` version `2:1.26~1`, `distro_arch_series=ubuntu/resolute/riscv64`, status Published, published 2026-03-17 |
+| Debian (buildd) | Yes | `golang-defaults 2:1.26~1`, status Installed, built on the `rv-manda-04` riscv64 buildd |
+| Arch Linux RISC-V port | Contradictory, likely currently unavailable | An earlier build (`go-2:1.26.4-1-riscv64.pkg.tar.zst`, 40 MB, built 2026-06-03) previously existed on the mirror, but the port's own build-status tracker (`archriscv.felixc.at/.status/status.htm`), checked in this research pass, explicitly lists **"go - DEP MISSING: go=2:1.26.6 (make)"**, cited as a missing build dependency blocking the `dagger` package. This indicates the `go` package has since dropped out of the Arch RISC-V repo (a regression from a previously-built state, not a claim that it never built); current availability should be re-verified directly before relying on it [NEEDS VERIFICATION] |
+| PyPI (`pypi.org/pypi/go/json`) | Not applicable | The `go` PyPI package is an unrelated namesake ("Quick directory changing," by Trent Mick), not the Go language; confirms PyPI is not a distribution channel for Go and has no riscv64 artifact of any kind |
 
-linux/riscv64 binaries have been available from go.dev/dl since Go 1.21, per the RISE blog post "Advancing Go on RISC-V" (April 2025).
-
----
+A user on riscv64 gets a working Go toolchain by downloading the appropriate `go1.2X.Y.linux-riscv64.tar.gz` from go.dev/dl and extracting it, or via their distribution's package manager where riscv64 builds exist (confirmed: Debian, Ubuntu 26.04; unconfirmed/possibly regressed: Arch Linux RISC-V).
 
 ## 9. Dependencies
 
-### 9.1 Go Module Dependencies (golang.org/x/*)
+Go is largely self-hosted; most of its true runtime dependencies are OS/kernel-level rather than library-level. The table below covers every dependency specified for this assessment plus additional dependencies surfaced by research (`golang.org/x/net`, `golang.org/x/text`, OpenSSL), none of which were independently re-verified against live GitHub issue data in this pass because this session's GitHub access was scoped to `riseproject-dev/sw-ecosystem` only and could not reach `golang/go`, `google/boringssl`, or other dependency repositories directly.
 
-Go is largely self-hosted with few external dependencies when built with `CGO_ENABLED=0`.
+| Dependency | Relation | Criticality | riscv64 status | Notes |
+|---|---|---|---|---|
+| golang.org/x/sys | runtime-dependency | critical | Builds, passes | Low-level OS syscall wrappers; two abandoned 2019 PRs (epoll_event padding fix, endian_little tag) whose resolution status could not be re-verified this pass [NEEDS VERIFICATION] |
+| golang.org/x/crypto | runtime-dependency | optional | Builds (pure-Go fallback) | Extended crypto (ChaCha20, Poly1305, Curve25519, BLAKE2b); no riscv64 SIMD assembly exists, unlike the arm64/ppc64x/s390x paths |
+| Linux kernel | runtime-dependency | critical | Functional | Required for the riscv64 syscall ABI, vdso, and the `riscv_hwprobe` syscall (258) used for runtime extension detection. Data not available: the minimum Linux kernel version required for full riscv64 hwprobe support was not identified in research findings |
+| glibc | runtime-dependency | optional | Functional since glibc 2.27 (2018) | System C library for cgo and dynamic linking; present in all major riscv64 distributions |
+| BoringSSL | runtime-dependency | optional | Not supported | Consumed via Go's BoringCrypto integration (`GOEXPERIMENT=boringcrypto`); no `goboringcrypto_linux_riscv64.syso` exists -- only linux/amd64 and linux/arm64 have precompiled `.syso` files. This blocks any deployment requiring FIPS validation via the BoringCrypto path on riscv64 |
+| GCC | build-dependency | optional | Functional | Required only for cgo builds; `riscv64-linux-gnu-gcc` is available (Debian package `gcc-riscv64-linux-gnu`); clang also supports riscv64 as an alternative |
+| golang.org/x/net (indirect) | runtime-dependency | optional | Builds, passes | HTTP/2, QUIC, DNS, websocket; no known riscv64-specific open issues |
+| golang.org/x/text (indirect) | runtime-dependency | optional | Builds, passes | Unicode/text processing; no known riscv64-specific issues |
+| OpenSSL (indirect, alternate FIPS path) | runtime-dependency | optional | Conditional | Alternative FIPS crypto backend via `GODEBUG=fips140=on`; availability depends entirely on the completeness of OpenSSL's own riscv64 assembly, not verified in this pass |
 
-| Module | Role | riscv64 Status | Notes |
-|---|---|---|---|
-| `golang.org/x/crypto` | Extended crypto (ChaCha20, Poly1305, Curve25519, BLAKE2b) used directly by stdlib | Builds (pure Go fallback) | No riscv64 assembly for ChaCha20/Poly1305/Curve25519; arm64/ppc64x/s390x have SIMD paths |
-| `golang.org/x/net` | HTTP/2, QUIC, DNS, websocket | Builds, passes | No known riscv64-specific open issues |
-| `golang.org/x/sys` | Low-level OS syscall wrappers | Builds, passes | Two abandoned PRs from 2019 (epoll_event padding fix, endian_little tag) -- whether underlying issues were resolved through another path requires verification [NEEDS VERIFICATION] |
-| `golang.org/x/text` | Unicode and text processing | Builds, passes | No known riscv64-specific issues |
-
-### 9.2 Optional C / Platform Dependencies
-
-| Dependency | Role | riscv64 Status | Notes |
-|---|---|---|---|
-| BoringCrypto (`google/boringssl` `.syso`) | FIPS-validated crypto backend (`GOEXPERIMENT=boringcrypto`) | **Not supported** | No `goboringcrypto_linux_riscv64.syso` exists; only linux/amd64 and linux/arm64 have pre-compiled `.syso` files |
-| glibc | System C library for cgo and dynamic linking | Functional since glibc 2.27 (2018) | -- |
-| OpenSSL (`GODEBUG=fips140=on`) | FIPS crypto backend alternative | Builds where OpenSSL 3.x is available | Depends on OpenSSL riscv64 assembly completeness |
-| C compiler (gcc/clang) | Required for cgo builds only | Functional | Both gcc and clang support riscv64 |
-
----
-
-## 10. Ecosystem Status
-
-### 10.1 RISE Project Involvement
-
-RISE funded **RP001: Accelerate the Go Runtime on RISC-V**, executed by Ludovic Henry and Mark Ryan (RIVOS Inc.). Deliverables documented in the [April 2025 RISE blog post](https://riseproject.dev/2025/04/04/advancing-go-on-risc-v-progress-through-the-rise-project/):
-
-- Vector ISA assembler support (integer arithmetic, FP ops, bitwise ops)
-- Dynamic runtime probing for available extensions (`riscv_hwprobe`)
-- Vectorized `internal/bytealg` (memory equality)
-- Build-time RISC-V profiles (RVA20, RVA22, RVA23)
-- Reduced instruction count via Bitmanip extension
-- Handcoded riscv64 assembler routines for `math/big`
-- Scalar assembler routines for md5, sha256, sha512
-- Plugin support for riscv64
-
-RISE also provided Scaleway EM-RV1 bare-metal RISC-V CI infrastructure to the Go project (September 2024).
-
-### 10.2 Key Active Contributors
-
-| Contributor | Handle | Affiliation | Role |
-|---|---|---|---|
-| Meng Zhuo | @mengzhuo | PLCT Lab | linux-riscv64-unmatched builder owner (x2); freebsd-riscv64-unmatched builder owner; high commit volume in obj/riscv |
-| Joel Sing | @4a6f656c | Independent/OpenBSD | linux-riscv64-joelsing and openbsd-riscv64-jsing builder owner; highest commit count in obj/riscv in research period |
-| Mark Ryan | @markdryan | Data not available: company affiliation not found in research | Active assembler contributor (CSR maps, vector fixes, documentation) |
-| Tobias Klauser | @tklauser | Cilium/Isovalent | Authored first RISC-V commits (arch reservation, ELF relocations) |
-
----
+Go's own riscv64-specific bugs (memory corruption [#78161](https://github.com/golang/go/issues/78161), FIPS+PIE [#74683](https://github.com/golang/go/issues/74683), the ~20-40% performance gap [#77541](https://github.com/golang/go/issues/77541)) are internal to the Go toolchain itself, not dependency issues, and are covered in Sections 6 and 11.
 
 ## 11. Known Bugs and Active Issues
 
-### 11.1 Open Correctness Bugs
+### 11.1 Correctness bugs
 
-| Issue | Title | Severity | Status |
+| Issue | Title | Status | Notes |
 |---|---|---|---|
-| [#78161](https://github.com/golang/go/issues/78161) | runtime: memory corruption leading to panic on linux/riscv64 | Critical | Open, Backlog, no assignee, help wanted. Compiler inlining miscompile on riscv64 (workaround: `-gcflags '-l'`). Actively blocking Alpine Linux package builds. |
-| [#74683](https://github.com/golang/go/issues/74683) | FIPS140 broken on RISC-V with `-buildmode=pie` | Critical (FIPS deployments) | Open, Backlog, assigned @mengzhuo. Fix CLs posted (CL 741860, 742200, 748040) and partially verified on MilkV Megrez, but binary still crashes at runtime in a later test; not merged. |
-| [#79275](https://github.com/golang/go/issues/79275) | cmd/link: J-type instruction relocation offset out of range | High (build failure) | Open, assigned @cherrymui. Fix CL 777120 (ByteDance) passed TryBot on PS2 (2026-05-20); awaiting Code-Review +2 from Cherry Mui or Joel Sing. |
-| [#68862](https://github.com/golang/go/issues/68862) | runtime: SIGSEGV in preemptone (riscv64) | High | Open, assigned @mengzhuo. Root cause: faulty BananaPi-F3/SpacemiT K1 SoC builder hardware with kernel-level mmap hang bug on kernel 6.6.36. Blocked on SpacemiT kernel fix. |
-| [#76816](https://github.com/golang/go/issues/76816) | TestTSAN/tsan8 failed on riscv64 | Medium | Open |
-| [#57691](https://github.com/golang/go/issues/57691) | runtime: TestASAN fails with SEGV on linux/riscv64 | Medium | Open (since Jan 2023) |
-| [#64791](https://github.com/golang/go/issues/64791) | syscall: TestExec failures with SIGSEGV on riscv64 | Medium | Open |
+| [#80127](https://github.com/golang/go/issues/80127) | cmd/compile: riscv64 miscompiles struct copy, corrupting a []byte slice field | Closed, fixed, backported ([#80477](https://github.com/golang/go/issues/80477), [#80478](https://github.com/golang/go/issues/80478)) | Confirmed compiler correctness bug, default-optimization-only (bug disappears under `-N -l`), found via Kubernetes-style test failures. A `RawExtension{Raw: []byte}` field embedded in a struct was corrupted on a second struct-copy on riscv64 only; amd64 unaffected. Fixed and backported to Go 1.25/1.26 |
+| [#78161](https://github.com/golang/go/issues/78161) | runtime: memory corruption leading to panic on linux/riscv64 | Open, no assignee, help wanted, NeedsInvestigation | SIGSEGV inside `fmt.(*buffer).writeString` on go1.26.1 / MilkV Pioneer (Alpine); a struct field held a corrupted value (1342943200 instead of 77). Inserting an unused statement made the bug disappear, strongly suggesting a compiler code-layout/inlining bug analogous to #80127 rather than a hardware fault; unresolved as of research date |
+| [#77328](https://github.com/golang/go/issues/77328) | cmd/internal/obj/riscv: add Zvkned extension support | Open | Vector-crypto extension support gap; a prior PR (#77326) was abandoned |
 
-### 11.2 Open Performance Issues
+### 11.2 Performance issues
 
 | Issue | Title | Impact | Status |
 |---|---|---|---|
-| [#77541](https://github.com/golang/go/issues/77541) | Instruction bloat in hot loops -- large stack frame offsets | ~20-40% vs arm64 | Open, NeedsInvestigation |
-| [#79298](https://github.com/golang/go/issues/79298) | Redundant LUI+ADD recomputation for large riscv stack offsets | Structural inefficiency, ~10 wasted instructions per access sequence | Open |
+| [#77541](https://github.com/golang/go/issues/77541) | Instruction bloat in hot loops from large stack-frame offsets | ~20-40% vs arm64 | Open, NeedsInvestigation, root-caused, no fix CL |
+| [#79298](https://github.com/golang/go/issues/79298) | Redundant LUI+ADD recomputation on large riscv stack offsets | Structural inefficiency | Open |
+| [#50615](https://github.com/golang/go/issues/50615) | bytes,strings tests appear to take ~100x as long on riscv | ~100x on targeted tests, ~10x on cmd/go suite | Open, NeedsInvestigation |
 | [#78258](https://github.com/golang/go/issues/78258) | linux-riscv64 builder too slow to run racebuild | Blocks race-enabled testing | Open |
 
-### 11.3 Open Feature / Infrastructure Issues
+### 11.3 Open feature / infrastructure issues
 
 | Issue | Title | Notes |
 |---|---|---|
-| [#79997](https://github.com/golang/go/issues/79997) | internal/bytealg: optimize indexbyte_riscv64.s | PR [#79997](https://github.com/golang/go/pull/79997) open |
-| [#79584](https://github.com/golang/go/issues/79584) | cmd/compile: add intrinsic rule for sync atomic and/or 32/64 on RISCV64 | PR [#79584](https://github.com/golang/go/pull/79584) open, one unresolved Gerrit comment |
-| [#78918](https://github.com/golang/go/issues/78918) | hash/crc32: add crc32 assembly support for riscv64 | PR [#78918](https://github.com/golang/go/pull/78918) open |
-| [#78515](https://github.com/golang/go/issues/78515) | cmd/compile: implement jump table on riscv64 | PR [#78515](https://github.com/golang/go/pull/78515) open, has CR+2 [NEEDS VERIFICATION] |
-| [#77328](https://github.com/golang/go/issues/77328) | cmd/internal/obj/riscv: add Zvkned extension support | Open, PR [#77326](https://github.com/golang/go/pull/77326) previously abandoned |
-| [#76475](https://github.com/golang/go/issues/76475) | build: freebsd/riscv64 port is broken | Open |
-| [#76065](https://github.com/golang/go/issues/76065) | proposal: add flag for riscv optional extension support | Open |
-| [#75577](https://github.com/golang/go/issues/75577) | Zicond codegen | Merged 2026-02-24 (Go 1.27) |
-| [#64074](https://github.com/golang/go/pull/64074) | runtime: implement stackcheck for riscv64 | PR open since Nov 2023, has CR+2 [NEEDS VERIFICATION] |
-| [#79069](https://github.com/golang/go/issues/79069)/[68](https://github.com/golang/go/issues/79068)/[67](https://github.com/golang/go/issues/79067) | x/build: bots linux-riscv64-rva22u64-bbw-1/2/3 broken | Open since April 2026 |
+| [#81892](https://github.com/golang/go/issues/81892) | simd/archsimd: support RISC-V RVV SIMD intrinsics under GOEXPERIMENT | Open, newest riscv64 issue found (2026-09-30) |
+| [#81534](https://github.com/golang/go/issues/81534) / [#80880](https://github.com/golang/go/issues/80880) | x/build: add LUCI linux-riscv64 builders | Both open; LUCI migration not complete |
+| [#76475](https://github.com/golang/go/issues/76475) | build: freebsd/riscv64 port is broken | Open, whole-port breakage |
+| [#74683](https://github.com/golang/go/issues/74683) | FIPS140 broken on RISC-V with -buildmode=pie | Open, assigned; fix CLs (741860, 742200, 748040) posted, partially verified on MilkV Megrez, not merged |
+| [#68862](https://github.com/golang/go/issues/68862) | runtime: SIGSEGV in preemptone (riscv64) | Open; suspected BananaPi-F3/SpacemiT K1 kernel-level mmap bug, blocked on vendor kernel fix |
+| [#75015](https://github.com/golang/go/issues/75015) | proposal: runtime softfloat for RISCV target | Open proposal; riscv64 lacks a true softfloat mode, unlike MIPS |
+| [#76065](https://github.com/golang/go/issues/76065) | proposal: add flag to support riscv optional extensions | Open proposal |
+| [#74540](https://github.com/golang/go/issues/74540) | proposal: add GORISCV64=g | Open proposal |
+| [#61416](https://github.com/golang/go/issues/61416) | x/sys/unix, x/sys/cpu: use RISC-V Hardware Probing Interface on Linux | Open |
+| [#57691](https://github.com/golang/go/issues/57691) | TestASAN fails with SEGV on unknown address on linux/riscv64 | Open since Jan 2023 |
+| [#53721](https://github.com/golang/go/issues/53721) | runtime crash on linux-riscv64-jsing during bootstrap | Open, NeedsInvestigation |
+| [#79067](https://github.com/golang/go/issues/79067) / [#79068](https://github.com/golang/go/issues/79068) / [#79069](https://github.com/golang/go/issues/79069) | x/build: bots linux-riscv64-rva22u64-mengzhuo--bbw-1/2/3 broken | Open since April 2026 |
+| [#80506](https://github.com/golang/go/issues/80506) | x/build: bot openbsd-riscv64-jsing reported broken | Open |
 
-### 11.4 Notably Closed/Fixed Bugs
+### 11.4 Notable pull requests
+
+**Open:** Zicbop assembly ([#81193](https://github.com/golang/go/pull/81193)), base64 riscv64 assembly ([#81160](https://github.com/golang/go/pull/81160)), crc32 riscv64 assembly ([#78918](https://github.com/golang/go/pull/78918)), CMO extension assembly ([#77152](https://github.com/golang/go/pull/77152)), Zfa extension assembly ([#76996](https://github.com/golang/go/pull/76996)), Zihintntl/zawrs/spin-lock support ([#76178](https://github.com/golang/go/pull/76178), [#76181](https://github.com/golang/go/pull/76181), [#76183](https://github.com/golang/go/pull/76183)), Zba compiler support ([#76211](https://github.com/golang/go/pull/76211)), P256mul optimization ([#77069](https://github.com/golang/go/pull/77069)), indexbyte/memequal optimizations ([#79997](https://github.com/golang/go/pull/79997), [#79998](https://github.com/golang/go/pull/79998)), predictable prologue ([#63498](https://github.com/golang/go/pull/63498), long-lived since 2023), `X1` named as `RA` ([#52258](https://github.com/golang/go/pull/52258), long-lived since 2022).
+
+**Merged (verified against master commit history via `GitHub-Pull-Request` trailers, since GitHub's own "merged" flag is unreliable for this repository -- see note below):** jump table implementation ([#78515](https://github.com/golang/go/pull/78515), commit `8e35b7dc52`, targets Go 1.28 dev), stackcheck implementation ([#64074](https://github.com/golang/go/pull/64074), commit `e68a67f6de`, Go 1.28 dev, open on GitHub since November 2023 before landing), Zicond codegen ([#75577](https://github.com/golang/go/pull/75577), commit `ca94cf1247`, Go 1.27 released), Zbc extension detection ([#78862](https://github.com/golang/go/pull/78862), commit `122eb7d035`, Go 1.27 released), stackcheck removal for openbsd/riscv64 ([#80553](https://github.com/golang/go/pull/80553), commit `d50f3c4fa8`, Go 1.28 dev), async preemption ([#38146](https://github.com/golang/go/pull/38146), Go 1.15), plugin support ([#53029](https://github.com/golang/go/pull/53029), Go 1.19), cgo support ([#41930](https://github.com/golang/go/pull/41930)).
+
+**Methodology note:** Go develops on Gerrit, not GitHub; GitHub PRs are auto-mirrored and closed (never GitHub-"merged") once the corresponding Gerrit CL submits. A literal `is:merged` search across all riscv64-titled PRs returns zero results even though several of those PRs are verifiably on master today. Merge status above was independently confirmed via `search_commits` matching each commit's `GitHub-Pull-Request: golang/go#NNNNN` trailer, not via GitHub's PR-merged flag.
+
+### 11.5 Other notable closed/fixed bugs
 
 | Issue | Title | Resolution |
 |---|---|---|
-| [#64917](https://github.com/golang/go/issues/64917) | cmd/compile: uint32(math.NaN()) returns -1 on riscv64 | Fixed Jan 2024 -- NaN float-to-uint32 gave wrong result unique to riscv64 |
-| [#74606](https://github.com/golang/go/issues/74606) | cmd/compile: riscv performance regression | Fixed Jul 2025 -- inlining heuristic caused ~4x benchmark variance |
+| [#64917](https://github.com/golang/go/issues/64917) | cmd/compile: uint32(math.NaN()) returns -1 on riscv64 | Fixed Jan 2024 |
+| [#74606](https://github.com/golang/go/issues/74606) | cmd/compile: riscv performance regression | Fixed Jul 2025, inlining heuristic caused ~4x benchmark variance |
 | [#76654](https://github.com/golang/go/issues/76654) | Incorrect use of T0/X5 register causing RAS mismatch | Fixed (Go 1.27) |
 | [#79270](https://github.com/golang/go/issues/79270) | plugin: build failure on riscv64 | Fixed 2026-05-19 |
 | [#78045](https://github.com/golang/go/issues/78045) | go1.26 SIGILL on riscv64 with vector support | Fixed |
 | [#77209](https://github.com/golang/go/issues/77209) | cmd/link: wrong dynamic loader path on Linux riscv64 | Fixed |
-
----
+| [#73591](https://github.com/golang/go/issues/73591) | cmd/link: RISC-V mapping symbols aren't handled correctly | Fixed via PR [#73592](https://github.com/golang/go/pull/73592), closed 2026-05-04 |
+| [#75350](https://github.com/golang/go/issues/75350) | cmd/compile, cmd/asm: add support for Zicond extension | Closed 2026-03-11 |
+| [#80847](https://github.com/golang/go/issues/80847) | cmd/asm: riscv64 VRORVI rejects valid immediate values from 32 to 63 | Fixed, closed 2026-08-19 |
+| [#72840](https://github.com/golang/go/issues/72840) | cmd/link: panic on riscv64 with CGO enabled due to empty container symbol | Fixed |
 
 ## 12. Objections and Upstream Blockers
 
-**Objection 1: The port is secondary tier -- a broken build does not block releases.**
-Assessment: True. This is the correct characterization of the current status. The Go team has accepted this explicitly. Breakage goes to Backlog, not to a release gate. The practical consequence is that issues like #78161 (memory corruption) and #74683 (FIPS PIE broken) may remain open across multiple release cycles. Engineering leadership must weigh whether secondary-tier status is acceptable for production deployments or whether investment is needed to drive first-class status -- which would require Google buy-in.
+**Objection 1: The port is secondary tier -- a broken build does not block releases.** Confirmed as the correct, explicit characterization of current status per Go's own porting policy. Breakage goes to Backlog, not a release gate. The practical consequence is that issues like #78161 (memory corruption) and #74683 (FIPS+PIE broken) can remain open across multiple release cycles. Engineering leadership must weigh whether secondary-tier status is acceptable for production deployments, or whether investment is needed to drive first-class status, which would require Google buy-in given Google's two-reviewer merge-control mechanism (Section 1).
 
-**Objection 2: BoringCrypto is unavailable on riscv64.**
-Assessment: Confirmed. `GOEXPERIMENT=boringcrypto` has no riscv64 `.syso`. This blocks any deployment that mandates FIPS using the BoringCrypto path. The alternative FIPS path (`GOFIPS140=v1.0.0` with the native Go FIPS module) is broken with `-buildmode=pie` on riscv64 (issue #74683). Fix CLs exist (from Joel Sing) but are not merged as of June 2026. A deployment requiring both FIPS and PIE on riscv64 is currently not possible with the Go toolchain.
+**Objection 2: BoringCrypto and vector crypto are unavailable on riscv64.** Confirmed. `GOEXPERIMENT=boringcrypto` has no riscv64 `.syso`. The alternative native-Go FIPS path (`GOFIPS140`) is itself broken with `-buildmode=pie` on riscv64 (#74683); fix CLs exist but are unmerged. A deployment requiring both FIPS and PIE on riscv64 is not currently possible with the Go toolchain. Separately, no AES/GCM or vector-crypto (Zvkned/Zvknha/b) assembly exists at all for riscv64, confirmed by direct source inspection (Section 4.5/4.6).
 
-**Objection 3: There is a structural 20-40% performance gap vs arm64 on CPU-intensive workloads.**
-Assessment: Confirmed (single source: issue #77541). The root cause is architectural -- RISC-V's narrow immediate range combined with the current SSA cost model. Two open issues (#77541, #79298) document the problem. No fix CL has been posted. This is a compiler engineering problem, not a hardware limitation, and is addressable with SSA improvements.
+**Objection 3: There is a structural, unaddressed 20-40% performance gap versus arm64 on CPU-intensive workloads.** Confirmed by a single primary source (#77541) [NEEDS VERIFICATION, corroborating benchmark not independently reproduced]; root cause (SSA cost-model mishandling of RISC-V's narrow immediate range) is architecturally identified and addressable via compiler engineering, but no fix CL has been posted for either #77541 or the related #79298. A second, separately documented slowdown (#50615, ~100x on specific test suites) suggests the performance gap is broader than the single quantified benchmark captures.
 
-**Objection 4: The CI builders are fragile community-donated hardware.**
-Assessment: Confirmed. Three of the four riscv64 builders are owned by a single individual (mengzhuo/PLCT Lab). The BananaPi-F3 hardware has triggered hardware-level mmap bugs (#68862). The `freebsd/riscv64` port is formally broken (#76475). If mengzhuo's machines go offline, linux/riscv64 CI coverage drops to a single SiFive HiFive Unleashed (8 GB, 4 cores) owned by Joel Sing. The builder timeout scale of 4x already indicates the hardware is marginal.
+**Objection 4: CI hardware is fragile and community-donated, not vendor-grade.** Confirmed: 3 of 4 core riscv64 builders are owned by a single individual (mengzhuo/PLCT Lab); the fourth is owned by another individual contributor (Joel Sing). Additional Banana Pi F3 bots have triggered hardware-level bugs (#68862) and are currently reported broken (#79067-69). The `freebsd/riscv64` port is formally broken (#76475). If the PLCT Lab-owned machines go offline, linux/riscv64 CI coverage would drop to a single 8 GB, 4-core SiFive HiFive Unleashed board. LUCI migration, which could bring more robust/scalable infrastructure, remains open and unstarted per #81534/#80880.
 
-**Objection 5: Several significant PRs have stalled.**
-Assessment: Confirmed. PRs for jump tables (#78515, CR+2 but not merged), stackcheck (#64074, open since November 2023), Zba compiler support (#76211, open since November 2025), unaligned memory access optimization (#77207, on Hold), and crc32 assembly (#78918) are all pending without active reviewer engagement. This reflects the limited bandwidth of the riscv64 maintainer team.
+**Objection 5: Multiple significant PRs took a long time to land, and some remain stalled.** Confirmed with an important correction: several PRs previously appearing stalled on GitHub (jump tables #78515, stackcheck #64074, Zicond codegen #75577, Zbc detection #78862, openbsd stackcheck removal #80553) have in fact merged via Gerrit and landed in Go 1.27 (released) or Go 1.28 (dev), despite showing as "closed" rather than "merged" on GitHub's own UI -- this is a structural quirk of Go's Gerrit-mirrored workflow, not evidence of stalled review. Genuinely still-open and unlanded: predictable-prologue (#63498, open since 2023), `X1` register naming (#52258, open since 2022), Zba compiler codegen (#76211), and the Zvkned vector-crypto assembler support (#77328, prior attempt #77326 abandoned).
 
----
+## 13. Readiness Assessment
 
-## 13. Investment Analysis
+- **Color:** green
+- **Release provider:** upstream
+- **Justification:** Go's linux/riscv64 port has upstream CI that builds and runs the full dist test suite on dedicated native hardware builders (linux-riscv64-unmatched, linux-riscv64-jsing per [golang.org/x/build/dashboard/builders.go](https://github.com/golang/build/blob/master/dashboard/builders.go)), and upstream publishes official riscv64 binary releases directly at [go.dev/dl](https://go.dev/dl/) (e.g. go1.26.4.linux-riscv64.tar.gz). Go is a general-purpose language/compiler toolchain, not a RISC-V-optimization-purpose project, so the optimization-gap modifier (Step 2) does not apply.
+- **Pending work that could change the grade:** Open: memory-corruption bug on linux/riscv64 (golang/go#78161, unresolved, compiler-inlining related), freebsd/riscv64 port broken (golang/go#76475), FIPS140+PIE breakage on riscv64 (golang/go#74683, fix CLs posted but unmerged), ~20-40% perf gap vs arm64 rooted in SSA stack-offset handling (golang/go#77541, root-caused, unfixed), and the umbrella compressed-instruction proposal (golang/go#71105) driving many in-flight PRs (Zicbop #81193, CRC32 #78918, base64 #81160, jump tables #78515). RISE Project funded RP001 "Accelerate the Go Runtime on RISC-V" (Ludovic Henry, Mark Ryan) and separately provided Scaleway EM-RV1 bare-metal CI hardware to the Go project. riscv64 remains a "secondary port" under Go's official tiering (not release-blocking), with CI hardware concentrated on community-donated machines (3 of 4 core riscv64 builders owned by a single maintainer, mengzhuo/PLCT Lab).
 
-### 13.1 Functional Enablement
+## 14. Investment Analysis
 
-| Work Item | Current State | Required Work | Priority |
+RISE has already funded substantive upstream work under Project RP001 ("Accelerate the Go Runtime on RISC-V," Ludovic Henry and Mark Ryan): vectorized `internal/bytealg`, handcoded `math/big` and crypto (md5, sha256, sha512) assembly, RVA20/RVA22/RVA23 build-profile support, riscv64 plugin support, dynamic hardware-extension probing, and provision of Scaleway EM-RV1 bare-metal CI hardware. None of the effort estimates below duplicate that already-completed work.
+
+### 14.1 Functional Enablement
+
+| Work item | Current state | Required work | Priority |
 |---|---|---|---|
-| Fix FIPS140 + PIE on riscv64 (#74683) | Fix CLs exist (CL 741860, 742200, 748040), partially verified, not merged | Review and submit existing CLs; validate on additional hardware | Critical |
-| Fix memory corruption / inlining miscompile (#78161) | Open, no CL, help wanted | Bisect compiler inlining path on riscv64; fix SSA or ABI handling | Critical |
-| Fix J-type relocation overflow (#79275) | Fix CL 777120 passed TryBot; awaiting +2 | Reviewer attention from Cherry Mui or Joel Sing | High |
-| Internal PIE linker support | CLs 741860+742200 prerequisite for FIPS fix | Reviewer bandwidth | High |
-| Repair broken CI builders (#79067-69) | 3 of 4 linux builders broken | Hardware replacement or migration to cloud (Scaleway EM-RV1 via RISE) | High |
+| Fix FIPS140 + PIE on riscv64 (#74683) | Fix CLs exist (741860, 742200, 748040), partially verified, not merged | Review and submit existing CLs; validate on additional hardware | Critical |
+| Fix memory corruption / inlining miscompile (#78161) | Open, no CL, help wanted | Bisect compiler inlining path on riscv64; likely related in class to the now-fixed #80127 | Critical |
+| BoringCrypto riscv64 `.syso` | Not supported | Build `goboringcrypto_linux_riscv64.syso` from BoringSSL; FIPS validation scope TBD | Medium (FIPS-mandatory deployments) |
 | freebsd/riscv64 port (#76475) | Broken | Diagnose and fix; evaluate whether to promote or remove | Medium |
-| BoringCrypto riscv64 | Not supported | Build `goboringcrypto_linux_riscv64.syso` from BoringSSL; FIPS validation scope TBD | Medium (FIPS-mandatory deployments) |
+| Land Zvkned vector-crypto assembler support (#77328) | Open, prior attempt (#77326) abandoned | New implementation + review | Medium |
 
-### 13.2 Performance Optimization
+### 14.2 Performance Optimization
 
-| Work Item | Current State | Required Work | Priority |
+| Work item | Current state | Required work | Priority |
 |---|---|---|---|
-| Fix instruction bloat in hot loops (#77541, #79298) | Root cause identified, no CL | SSA cost model improvements; LICM for large stack frame base addresses | High |
-| Land jump table codegen (#78515) | Has CR+2, not merged | Reviewer submission | High |
-| Land atomic intrinsics for sync/atomic And/Or (#79584) | PR open, 1 unresolved comment | Minor iteration + reviewer | Medium |
-| Land Zba compiler codegen (#76211) | PR open Nov 2025 | Reviewer attention | Medium |
-| Vectorized crypto via Zvkned/Zvknha/b (AES, SHA via vector) | No CL exists (#77328 for Zvkned assembler) | Write assembly; issue #79958 (Zvbb SIMD) marked "Not Planned" | Medium |
-| Optimize `x/crypto` (ChaCha20, Poly1305) for riscv64 | Pure Go fallback only | Write assembly similar to arm64 implementation | Medium |
-| Optimize hash/crc32 (#78918) | PR open | Review and merge | Low |
-| Optimize `internal/bytealg` indexbyte (#79997) | PR open | Review and merge | Low |
-| Optimize P256 crypto (#77069) | PR open | Review and merge | Low |
+| Fix instruction bloat in hot loops (#77541, #79298) | Root cause identified, no CL | SSA cost-model improvements; hoist large-stack-offset LUI+ADD sequences out of loops | High |
+| Investigate bytes/strings ~100x slowdown (#50615) | Open, NeedsInvestigation, no root cause confirmed | Profile bytes/strings primitives on riscv64 hardware | High |
+| Land Zba compiler codegen (#76211) | PR open | Reviewer attention | Medium |
+| Vectorized crypto via Zvkned/Zvknha/b (AES, GCM, vector hashing) | No assembly exists | Write assembly and tests | Medium |
+| `x/crypto` SIMD (ChaCha20, Poly1305) | Pure Go fallback only | Write riscv64 assembly analogous to arm64 implementation | Medium |
+| Merge remaining open extension-support PRs (#81193 Zicbop, #81160 base64, #78918 crc32, #77152 CMO, #76996 Zfa, #76178/76181/76183) | Open, part of the #71105 compressed-instruction wave | Reviewer bandwidth | Low-Medium |
 
-### 13.3 CI/CD Infrastructure
+### 14.3 CI/CD Infrastructure
 
-| Work Item | Current State | Required Work | Priority |
+| Work item | Current state | Required work | Priority |
 |---|---|---|---|
-| Repair broken bots (#79067-69) | 3 bots offline | Replace BananaPi-F3 hardware or migrate to Scaleway EM-RV1 via RISE | High |
-| Enable racebuild on riscv64 (#78258) | Builder times out (~2h13m) | Faster hardware (Scaleway EM-RV1) or parallelism | Medium |
-| LUCI migration | riscv64 not yet migrated | Port builder definitions; coordinate with Google infra team | Low |
-| Add openbsd/riscv64 LUCI builder (#73569) | Builder missing | Provision hardware + LUCI registration | Low |
-| Add freebsd/riscv64 LUCI builder (#73568) | Builder missing | Depends on port stability | Low |
+| Repair broken CI bots (#79067-69, #80506) | Multiple bots reported broken | Hardware replacement or migration to cloud (Scaleway EM-RV1 via RISE) | High |
+| Diversify builder ownership | 3 of 4 core builders owned by one maintainer | Add independently-owned/vendor-supported hardware | High |
+| Enable racebuild on riscv64 (#78258) | Builder too slow | Faster hardware or parallelism | Medium |
+| LUCI migration (#81534, #80880) | Not started, both issues open | Port builder definitions; coordinate with Google infra team | Medium |
 
-### 13.4 Ecosystem Enablement
+### 14.4 Ecosystem Enablement
 
-| Work Item | Current State | Required Work | Priority |
+| Work item | Current state | Required work | Priority |
 |---|---|---|---|
-| Fuzzing instrumentation on riscv64 | Not implemented | Port coverage-guided fuzzing (afl/pcguard) to riscv64 | Medium |
-| MSan support on riscv64 | Not supported | Requires compiler-rt port; upstream to llvm and Go | Low |
+| Fuzzing instrumentation on riscv64 | Not implemented | Port coverage-guided fuzzing to riscv64 | Medium |
+| RVV SIMD intrinsics (`simd/archsimd`) for riscv64 (#81892) | Open proposal, no implementation | Design and implement RVV backend for the generics SIMD package | Medium-Low |
+| MSan support on riscv64 | Not supported | Requires an upstream compiler-rt port | Low |
 | Shared library build mode (`-buildmode=shared`) | Not supported | Linker work | Low |
 
-### 13.5 Summary Table
+### 14.5 Summary Table
 
-| Area | Work Item | Effort (person-weeks) | Owner | Priority |
+| Area | Work item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
-| Functional | Fix FIPS140 + PIE (#74683) | 2-4 (review + validate existing CLs) | Reviewer (Cherry Mui / Joel Sing) + QA | Critical |
+| Functional | Fix FIPS140 + PIE (#74683) | 2-4 (review + validate existing CLs) | Reviewer + QA | Critical |
 | Functional | Fix memory corruption / inlining miscompile (#78161) | 4-8 (bisect + fix) | Compiler engineer with riscv64 knowledge | Critical |
-| Functional | Fix J-type relocation overflow (#79275) | 1 (reviewer submission) | Cherry Mui / Joel Sing | High |
-| Infrastructure | Repair broken CI bots (#79067-69) | 1-2 (hardware + config) | mengzhuo / RISE | High |
+| Performance | Investigate bytes/strings ~100x slowdown (#50615) | 2-4 (profiling + fix) | Go runtime/compiler engineer | High |
 | Performance | Fix instruction bloat in hot loops (#77541, #79298) | 6-10 (SSA cost model) | Go compiler engineer (riscv64) | High |
-| Functional | Land jump table codegen (#78515) | 1 (reviewer submission) | Joel Sing / Cherry Mui | High |
-| Performance | Land Zba codegen (#76211) | 1 (reviewer) | riscv64 maintainer | Medium |
-| Performance | Land atomic intrinsics (#79584) | 1 (minor iteration + review) | newborn22 + reviewer | Medium |
+| Infrastructure | Repair and diversify CI bots (#79067-69, #80506) | 2-4 (hardware + config) | mengzhuo / RISE | High |
+| Functional | BoringCrypto riscv64 `.syso` | 4-8 + separate FIPS validation | BoringSSL + FIPS lab | Medium |
 | Performance | Vectorized crypto (Zvkned/Zvknha/b) | 8-16 (write assembly + tests) | Crypto + riscv64 engineer | Medium |
 | Performance | x/crypto SIMD (ChaCha20, Poly1305) | 4-8 | Go crypto engineer | Medium |
-| Functional | BoringCrypto riscv64 `.syso` | 4-8 + FIPS validation (separate) | BoringSSL + FIPS lab | Medium |
-| Infrastructure | Enable racebuild on riscv64 (#78258) | 1-2 (hardware) | mengzhuo / RISE | Medium |
-| Functional | Fuzzing instrumentation | 8-16 | Go runtime engineer | Medium |
-| Infrastructure | LUCI migration | 2-4 | Google infra + riscv64 maintainer | Low |
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
-
----
+| Infrastructure | Enable racebuild (#78258) | 1-2 (hardware) | mengzhuo / RISE | Medium |
+| Infrastructure | LUCI migration (#81534, #80880) | 2-4 | Google infra + riscv64 maintainer | Medium |
+| Ecosystem | Fuzzing instrumentation | 8-16 | Go runtime engineer | Medium |
+| Ecosystem | RVV SIMD intrinsics (#81892) | 8-16 (design + implement) | Go compiler engineer + RISE | Medium-Low |
+| Functional | freebsd/riscv64 port repair (#76475) | 2-4 | riscv64 maintainer | Medium |
 
 ## 15. References
 
 - [golang/go repository](https://github.com/golang/go)
-- [Issue #27532: all: port to RISC-V (closed)](https://github.com/golang/go/issues/27532)
-- [Issue #78161: runtime memory corruption on linux/riscv64](https://github.com/golang/go/issues/78161)
-- [Issue #74683: FIPS140 broken with -buildmode=pie on riscv64](https://github.com/golang/go/issues/74683)
-- [Issue #79275: J-type relocation offset out of range](https://github.com/golang/go/issues/79275)
-- [Issue #77541: instruction bloat in hot loops](https://github.com/golang/go/issues/77541)
-- [Issue #79298: redundant LUI+ADD recomputation](https://github.com/golang/go/issues/79298)
-- [Issue #68862: SIGSEGV in preemptone](https://github.com/golang/go/issues/68862)
-- [Issue #76475: freebsd/riscv64 port broken](https://github.com/golang/go/issues/76475)
-- [Issue #78258: linux-riscv64 builder too slow for racebuild](https://github.com/golang/go/issues/78258)
-- [PR #79584: atomic intrinsics for sync/atomic And/Or](https://github.com/golang/go/pull/79584)
-- [PR #78515: jump table on riscv64](https://github.com/golang/go/pull/78515)
-- [PR #64074: stackcheck for riscv64 (open since 2023)](https://github.com/golang/go/pull/64074)
-- [Gerrit CL 777120: fix JAL overflow for runtime packages](https://go.dev/cl/777120)
+- [Issue #27532: all: port to RISC-V (closed, master tracking issue)](https://github.com/golang/go/issues/27532)
+- [Issue #71105: cmd/compile: change GORISCV64=rva20u64 to include compressed instructions (umbrella proposal)](https://github.com/golang/go/issues/71105)
+- [Issue #80127: cmd/compile: riscv64 miscompiles struct copy, corrupting a []byte slice field](https://github.com/golang/go/issues/80127)
+- [Issue #78161: runtime: memory corruption leading to panic on linux/riscv64](https://github.com/golang/go/issues/78161)
+- [Issue #74683: crypto/internal/fips140,cmd/link: fips140 broken on RISC-V with -buildmode=pie](https://github.com/golang/go/issues/74683)
+- [Issue #77541: instruction bloat in hot loops from large stack-frame offsets](https://github.com/golang/go/issues/77541)
+- [Issue #79298: redundant LUI+ADD recomputation on large riscv stack offsets](https://github.com/golang/go/issues/79298)
+- [Issue #50615: bytes,strings tests appear to take ~100x as long on riscv](https://github.com/golang/go/issues/50615)
+- [Issue #76475: build: freebsd/riscv64 port is broken](https://github.com/golang/go/issues/76475)
+- [Issue #78258: linux-riscv64 builder too slow to run racebuild](https://github.com/golang/go/issues/78258)
+- [Issue #68862: runtime: SIGSEGV in preemptone (riscv64)](https://github.com/golang/go/issues/68862)
+- [Issue #81892: simd/archsimd: support RISC-V RVV SIMD intrinsics under GOEXPERIMENT](https://github.com/golang/go/issues/81892)
+- [Issue #81534: x/build: add LUCI linux-riscv64 builders with ISCAS](https://github.com/golang/go/issues/81534)
+- [Issue #80880: x/build: add LUCI linux-riscv64 builder](https://github.com/golang/go/issues/80880)
+- [Issue #75015: proposal: runtime: softfloat for RISCV target](https://github.com/golang/go/issues/75015)
+- [PR #78515: jump table implementation on riscv64](https://github.com/golang/go/pull/78515)
+- [PR #64074: runtime: implement stackcheck for riscv64](https://github.com/golang/go/pull/64074)
+- [PR #75577: cmd/compile/internal/ssa: add codegen for Zicond extension on riscv64](https://github.com/golang/go/pull/75577)
+- [PR #81193: cmd/internal/obj/riscv: add assembly support for Zicbop on RISCV64](https://github.com/golang/go/pull/81193)
+- [PR #53029: cmd/link: enable go plugin support for riscv64](https://github.com/golang/go/pull/53029)
+- [PR #41063: doc: add linux/riscv64 valid combination](https://github.com/golang/go/pull/41063)
 - [golang.org/x/build dashboard/builders.go](https://github.com/golang/build/blob/master/dashboard/builders.go)
+- [go.dev/wiki/PortingPolicy](https://go.dev/wiki/PortingPolicy)
 - [RISE Project blog: Advancing Go on RISC-V (April 2025)](https://riseproject.dev/2025/04/04/advancing-go-on-risc-v-progress-through-the-rise-project/)
 - [RISE Project blog: Leveraging Scaleway (September 2024)](https://riseproject.dev/2024/09/09/leveraging-scaleway-to-support-the-risc-v-software-ecosystem/)
 - [RISE Project blog: RISC-V Runners six weeks in (May 2026)](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/)
+- [RISE Project members](https://riseproject.dev/members/)
 - [go.dev/dl: Go downloads](https://go.dev/dl/)
+- [RISC-V Bytes: Go 1.19's Register-Based Calling Convention (Daniel Mangum)](https://danielmangum.com/posts/risc-v-bytes-go-1-19-register-calling/)
+- [golang/go proposal #18597 (register-based calling convention)](https://github.com/golang/go/issues/18597)
+- [Arch Linux RISC-V port build status](https://archriscv.felixc.at/.status/status.htm)
