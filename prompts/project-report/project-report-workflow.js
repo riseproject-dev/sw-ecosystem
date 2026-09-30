@@ -547,7 +547,7 @@ CRITICAL RULES:
 5. Your final text output IS the report. Do NOT call any tools, including the Skill tool -- everything you need, including the readiness grade, is already given to you below. Just write the complete report text, all 15 sections, and stop.
 6. Section 10 (Ecosystem Status) -- include only if the project has a significant ecosystem of packages, plugins, or extensions that must also be enabled on riscv64 (e.g., Python packages, npm packages, Kubernetes operators, Maven JARs). Skip it for system libraries, runtimes, and standalone tools that have no dependent package ecosystem.
 7. Section 13 (Readiness Assessment) -- the READINESS GRADE below was already computed by the /project-color-coding skill; do not invoke it or any other skill yourself. Write its color/release_provider/optimization_level values into the YAML frontmatter color: field, the **Readiness:** header field, and (for optimization-purpose projects only) the **Optimization level:** header field. Then write Section 13 using its justification and pending-work notes.
-8. Section 9 (Dependencies) -- its table MUST include every dependency listed below under "Direct dependencies", using that EXACT name (do not rename or omit one), plus any additional indirect/recursed dependencies found via research. The direct/indirect distinction and the frontmatter dependencies: block are handled outside this prompt; just make sure Section 9's prose table is consistent with the direct list.
+8. Section 9 (Dependencies) -- its table MUST include every dependency listed below under "Direct dependencies", using that EXACT name (do not rename or omit one), plus any additional indirect/recursed dependencies found via research. Do NOT write a "dependencies:" key into the YAML frontmatter yourself, even if the EXISTING REPORT block below has one -- it is spliced in automatically after you finish, from the exact list given below, not from anything you write. Writing your own would create a duplicate key. Section 9's prose table is the only place this list appears in your own output.
 ${existingReport ? `9. This is a full rewrite of an existing report, reproduced below in the EXISTING REPORT block. Merge it with the LIVE RESEARCH FINDINGS into ONE standalone, cohesive report: keep whatever information from the existing report the live findings do not contradict, correct or replace anything the live findings show has changed, and add whatever new information the live findings reveal that the existing report lacked. Write it exactly as you would a brand-new report written today -- do NOT mention "the previous version", "previously reported", "this report has been updated", "no longer the case", a change log, or any other language that references the fact that an earlier version exists. There is no Updates/changelog section in this report format -- never add one.` : ''}
 
 READINESS GRADE (already computed by the /project-color-coding skill -- see rule 7; transcribe these values, do not re-derive or second-guess them):
@@ -677,12 +677,19 @@ const depsYaml = dependencies.length
       `  - name: ${d.name}\n    relation: ${d.relation}\n    criticality: ${d.criticality}\n`
     ).join('')
   : ''
-// `m` flag: the synthesize agent sometimes prepends a stray H1 (or other preamble) before the
-// real frontmatter fence, which would put the fence past absolute string position 0 -- match the
-// first '^---' at any LINE start instead of only at the start of the whole string, so the
-// dependency splice below isn't silently skipped whenever that defect occurs (it still always
-// targets the first, i.e. real, frontmatter block).
-let finalReport = report.replace(/^---\n([\s\S]*?)\n---/m, (match, body) => '---\n' + body + '\n' + depsYaml + '---')
+// The synthesize agent sometimes prepends a stray H1 (or other preamble) before the real
+// frontmatter fence -- Jekyll only recognizes frontmatter starting at byte 0 of the file, so
+// leaving such preamble in place would silently break frontmatter parsing entirely (not just
+// look untidy). Strip anything before the first '^---' line outright, rather than just
+// working around its position with a regex flag.
+const fmStart = report.search(/^---\s*$/m)
+const reportFromFm = fmStart > 0 ? report.slice(fmStart) : report
+// The agent also sometimes writes its own `dependencies:` block into the frontmatter --
+// especially likely during a refresh, where it may copy the EXISTING REPORT's frontmatter
+// structure verbatim. Strip any such block(s) before splicing in the deterministic,
+// registry-resolved one below, so the frontmatter never ends up with two `dependencies:` keys.
+const stripOwnDeps = (body) => body.replace(/^dependencies:\n(?:[ \t]+.*\n?)*/gm, '')
+let finalReport = reportFromFm.replace(/^---\n([\s\S]*?)\n---/, (match, body) => '---\n' + stripOwnDeps(body).replace(/\n+$/, '\n') + depsYaml + '---')
 finalReport = finalReport.replace(
   /\n## 1\. Project Overview/,
   `\n{% include dependency-graph.html slug="dependencies" subset="${slug}" %}\n\n## 1. Project Overview`
