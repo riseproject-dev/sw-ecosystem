@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a>
-<strong>Date:</strong> 2026-07-20
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for libwebrtc
-<strong>Audience:</strong> Technical leadership, resource allocation strategy
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].</p><hr />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> Orange (downstream-only)<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for libwebrtc<br />
+<strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -281,15 +282,15 @@
 
 <p>libwebrtc is the Google-maintained native C++ implementation of the WebRTC protocol stack, used in Chrome, Chromium, and any application requiring real-time audio/video communication. The codebase covers audio capture and processing (AEC3 echo cancellation, noise suppression, AGC, FIR filtering), video encode/decode (VP8, VP9, AV1, H.264 via third-party codecs), signaling (SDP, ICE, DTLS, SRTP), and data channels.</p>
 
-<p>The project is not governed by an independent foundation. It is a Google-originated project hosted on <a href="https://webrtc.googlesource.com/src">webrtc.googlesource.com</a> under Google’s Gerrit infrastructure. The W3C WebRTC Working Group standardizes the JavaScript API (W3C Recommendation achieved March 13, 2025). The IETF RTCWEB group specifies underlying protocols (JSEP, RFC 9429). Neither W3C nor IETF controls the libwebrtc native implementation; Google does exclusively.</p>
+<p>The project is hosted on Google’s own Gerrit/Gitiles infrastructure at <a href="https://webrtc.googlesource.com/src">webrtc.googlesource.com/src</a>, not on GitHub - there is no GitHub mirror that accepts issues or pull requests for the core project. There is no independent foundation. Governance runs through Chromium-style per-directory <code class="language-plaintext highlighter-rouge">OWNERS</code>/<code class="language-plaintext highlighter-rouge">OWNERS_INFRA</code>/<code class="language-plaintext highlighter-rouge">ENG_REVIEW_OWNERS</code> files rather than a named-maintainer roster; no <code class="language-plaintext highlighter-rouge">MAINTAINERS</code> file exists (<code class="language-plaintext highlighter-rouge">https://webrtc.googlesource.com/src/+/refs/heads/main/MAINTAINERS</code> returns HTTP 404). The project describes itself as “supported by Google, Mozilla and Opera, amongst others,” but all code review and merge authority runs through Google-run Gerrit (<code class="language-plaintext highlighter-rouge">webrtc-review.googlesource.com</code>), and community commentary (e.g., BlogGeek.me) has raised the fact that Google effectively controls the decision process while other large vendors contribute engineering effort without a formal governance seat. This is an outside critique, not documented policy.</p>
 
-<p><strong>Core OWNERS</strong> (all Google employees): danilchap@webrtc.org, dct@google.com, eshr@webrtc.org, hta@webrtc.org (Harald Alvestrand), stefan@webrtc.org, tommi@webrtc.org.</p>
+<p>License: BSD 3-Clause.</p>
 
-<p>The AUTHORS file lists organizational contributors including Google Inc., Microsoft Corporation, Meta Platforms, Intel Corporation, NVIDIA Corporation, Mozilla Foundation, Twilio, RingCentral, Vonage, Sinch AB, Signal Messenger, LiveKit, and ARM Holdings. However, all governance authority over the native library sits with Google.</p>
+<p>The W3C WebRTC Working Group standardizes the JavaScript API (W3C Recommendation achieved March 13, 2025) and the IETF RTCWEB group specifies the underlying protocols (JSEP, RFC 9429), but neither body controls the native C++ implementation.</p>
 
-<p>WebRTC contributions go through Gerrit on googlesource.com. All core OWNERS are Google employees, so port acceptance is at Google’s discretion. The project’s historical posture toward new architecture ports is passive tolerance: RISC-V received preprocessor-level detection in 2020 and nothing further in over five years.</p>
+<p>There is no documented, formal tier or acceptance policy for new architecture ports. The project’s historical posture toward RISC-V is passive: compiler-macro-level architecture recognition exists, one attempt at a more complete port was opened and later abandoned for lack of follow-up (Section 2), and no further RISC-V-specific work has landed since.</p>
 
-<p>libwebrtc is not listed as a RISE Project member or funded RFP project. The RISE multimedia focus as of 2024-2025 is dav1d, FFmpeg, XNNPACK, and Android Bionic. No RISE blog post (28 posts, May 2024 through June 2026) mentions libwebrtc or WebRTC.</p><hr />
+<p>libwebrtc is not a RISE Project member and has no RISE-funded work. RISE’s 20 member organizations (8 Premier: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent; 12 General members) are listed at riseproject.dev; none of RISE’s 35 blog posts (full sitemap enumerated, May 2024 through September 2026) mention WebRTC or libwebrtc. The only RISE-adjacent activity touching anything named “webrtc” is unrelated wrapper-package work in <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> (Section 2, Section 9).</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -309,24 +310,54 @@
   </thead>
   <tbody>
     <tr>
-      <td>2020-12-17</td>
-      <td>Commit 6215ba804eb5 adds <code class="language-plaintext highlighter-rouge">__riscv</code>/<code class="language-plaintext highlighter-rouge">__riscv_xlen</code> preprocessor guards to <code class="language-plaintext highlighter-rouge">rtc_base/system/arch.h</code>, enabling riscv64 to compile without hitting <code class="language-plaintext highlighter-rouge">#error Please add support for your architecture</code>. Defines <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_64_BITS</code> and <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_LITTLE_ENDIAN</code> only.</td>
-      <td><a href="https://github.com/webrtc-mirror/webrtc/commit/6215ba804eb500f3e28b39088c73af3c4f4cd10a">commit 6215ba8</a></td>
+      <td>Unconfirmed (predates Dec 2020)</td>
+      <td>Basic <code class="language-plaintext highlighter-rouge">__riscv</code>/<code class="language-plaintext highlighter-rouge">__riscv__</code> architecture detection already present in <code class="language-plaintext highlighter-rouge">rtc_base/system/arch.h</code> as a combined block setting 32/64-bit and little-endian macros. Exact originating commit/date could not be confirmed - Gitiles history for this file returns HTTP 401/403 (“Please sign in to view the history pages”) even via direct curl.</td>
+      <td><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/rtc_base/system/arch.h">rtc_base/system/arch.h</a></td>
     </tr>
     <tr>
-      <td>2020-12-17</td>
-      <td>Author: Timothy Gu (timothygu@chromium.org). Reviewer: Mirko Bonadei (mirko.bonadei@webrtc.org), Google. Bug reference: webrtc:12312.</td>
-      <td>same commit</td>
+      <td>2020-12-18</td>
+      <td>Gerrit CL 198241, “Add preprocessor support for additional architectures,” created by Timothy Gu (<code class="language-plaintext highlighter-rouge">timothygu99@gmail.com</code> / <code class="language-plaintext highlighter-rouge">timothygu@chromium.org</code>), reviewed by Mirko Bonadei. This CL did not introduce RISC-V detection from scratch; it reorganized the existing combined riscv block into the current two explicit branches (<code class="language-plaintext highlighter-rouge">__riscv_xlen == 64</code> and <code class="language-plaintext highlighter-rouge">__riscv_xlen == 32</code>) alongside new MIPS/PPC/SPARC/MSVC-ARM macros. Change-Id <code class="language-plaintext highlighter-rouge">I7d0176c38102e5e4cf0fcbe9b06a3520a79b0d71</code>, bug <code class="language-plaintext highlighter-rouge">webrtc:12312</code>.</td>
+      <td><a href="https://webrtc-review.googlesource.com/c/src/+/198241">CL 198241</a>, <a href="https://bugs.chromium.org/p/webrtc/issues/detail?id=12312">bug 12312</a></td>
     </tr>
     <tr>
-      <td>2020-12-17 to present</td>
-      <td>No further riscv64-related commits, issues, CLs, or PRs in the mirror repo or upstream Gerrit.</td>
-      <td>GitHub search: 0 results for <code class="language-plaintext highlighter-rouge">riscv repo:webrtc-mirror/webrtc</code>; Gerrit search: 0 CLs</td>
+      <td>2020-12-31</td>
+      <td>CL 198241 merged (<code class="language-plaintext highlighter-rouge">Cr-Commit-Position: refs/heads/master@{#32897}</code>), 33 insertions / 4 deletions in one file, 0 review comments. A GitHub mirror of this change exists as commit <code class="language-plaintext highlighter-rouge">6215ba804eb500f3e28b39088c73af3c4f4cd10a</code>, dated 2020-12-17 in the mirror’s metadata.</td>
+      <td><a href="https://webrtc-review.googlesource.com/c/src/+/198241">CL 198241</a></td>
+    </tr>
+    <tr>
+      <td>2021-06-15</td>
+      <td>Gerrit CL 222481, “arch.h: Add RISC-V support,” opened by Zhaofeng Li (<code class="language-plaintext highlighter-rouge">hello@zhaofeng.li</code>), built originally for a NixOS RISC-V port and first submitted to the PulseAudio <code class="language-plaintext highlighter-rouge">webrtc-audio-processing</code> fork (<a href="https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing/-/merge_requests/19">MR !19</a>).</td>
+      <td><a href="https://webrtc-review.googlesource.com/c/src/+/222481">CL 222481</a></td>
+    </tr>
+    <tr>
+      <td>2021-06-21</td>
+      <td>Author explains, in review comments, why CI/maintenance was the practical blocker: “Linux-capable RISC-V hardware isn’t widely available or performant enough for rapid feedback. The fastest RISC-V SoC available, SiFive FU740, has roughly the same single-core performance as the Cortex A53 (emulation is even worse). Furthermore, Chromium doesn’t build on RISC-V yet.” Reviewer Harald Alvestrand separately asks whether there is a documented RISC-V platform contact point; this thread is still unresolved.</td>
+      <td><a href="https://webrtc-review.googlesource.com/c/src/+/222481">CL 222481</a></td>
+    </tr>
+    <tr>
+      <td>2021-06-23</td>
+      <td>CL 222481 reaches Patch Set 3 with <code class="language-plaintext highlighter-rouge">Code-Review+1</code> from Mirko Bonadei. A companion tracking bug is opened by Mirko Bonadei (<code class="language-plaintext highlighter-rouge">bugs.chromium.org/p/webrtc</code> issue #12896, later migrated to <code class="language-plaintext highlighter-rouge">issues.webrtc.org/42223066</code>; content of the new tracker could not be read - it requires Google sign-in and renders only via JS).</td>
+      <td><a href="https://webrtc-review.googlesource.com/c/src/+/222481">CL 222481</a></td>
+    </tr>
+    <tr>
+      <td>2023-03-18</td>
+      <td>CL 222481 abandoned by Harald Alvestrand. Reason given verbatim: “No response from submitter for 8 months.” No further CL, PR, or tracking issue against core libwebrtc for a riscv64 port or CI lane exists since.</td>
+      <td><a href="https://webrtc-review.googlesource.com/c/src/+/222481">CL 222481</a></td>
+    </tr>
+    <tr>
+      <td>2022-06-21 (authored) / 2023-11-29 (committed to master)</td>
+      <td><code class="language-plaintext highlighter-rouge">webrtc-audio-processing</code> (a separate downstream PulseAudio project extracting the audio-processing module, not core libwebrtc) commit <code class="language-plaintext highlighter-rouge">f89958d8</code>, “Bring arch.h in line with upstream webrtc,” by Ben Brown, committed by maintainer Arun Raghavan. Resyncs the fork’s copy of <code class="language-plaintext highlighter-rouge">arch.h</code> with CL 198241’s macros. First ships in <code class="language-plaintext highlighter-rouge">webrtc-audio-processing</code> v2.0 (tagged 2025-01-08); its parent commit <code class="language-plaintext highlighter-rouge">8e258a19</code> is the v1.3 tag, so v1.3 does not contain it.</td>
+      <td><a href="https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing/-/commit/f89958d82420cc02c7d80cf8f365e6ed57546c92">commit f89958d8</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-06</td>
+      <td><code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> issue #1136 (“webrtcvad-wheels riscv64 support,” open) and PR #1109 (merged), by luhenry - adds a riscv64 CI build for <code class="language-plaintext highlighter-rouge">webrtcvad-wheels</code> v2.0.14, a thin Python wrapper around libwebrtc’s VAD C code (vendored, not linked). No source patches were required; the vendored VAD C code already compiled on riscv64. This is CI/packaging work in a third-party wrapper, not a libwebrtc-project change, and its output has not been published to PyPI as of 2026-09-30 (see Section 8).</td>
+      <td><a href="https://github.com/riseproject-dev/python-wheels/issues/1136">Issue #1136</a>, <a href="https://github.com/riseproject-dev/python-wheels/pull/1109">PR #1109</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The port history is a single commit in 2020. There is no ongoing porting effort, no tracking issue, and no indication that further work is planned.</p><hr />
+<p><strong>Is it fully upstream?</strong> No. The only dated, URL-bearing artifact in core libwebrtc touching RISC-V is CL 198241, which is general multi-architecture preprocessor cleanup, not a RISC-V initiative, and RISC-V detection predates it. The one attempt at a more deliberate RISC-V contribution (CL 222481) was abandoned for lack of contributor follow-up. There is no open CL, PR, or tracking issue against core libwebrtc for a riscv64 port or CI lane as of 2026-09-30.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -336,9 +367,9 @@
 </h2>
     
 
-<p>No formal platform tier document exists in the WebRTC native codebase. There is no PLATFORMS.md, SUPPORT.md, or docs/platforms/ directory. The officially documented supported platforms are Windows, macOS, Linux, Android, and iOS.</p>
+<p>No formal platform-tier document exists in the WebRTC native codebase (no <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> directory). The officially documented supported platforms, per <code class="language-plaintext highlighter-rouge">g3doc/supported-platforms-and-compilers.md</code>, are Windows, macOS, Linux, Android, and iOS on x86/x86_64/ARM - RISC-V is absent from this list entirely, and the doc states platforms outside it “are not officially supported (which means there is no CI coverage for them),” while welcoming community patches.</p>
 
-<p>Evidence-based tier assignment:</p>
+<p>This is directly corroborated by the live LUCI buildbucket configuration: <code class="language-plaintext highlighter-rouge">infra/config/generated/luci/cr-buildbucket.cfg</code> has zero occurrences of “riscv,” “riscv64,” or “risc-v” across roughly 60+ builders.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -354,19 +385,19 @@
   <tbody>
     <tr>
       <td>amd64 (x86-64)</td>
-      <td>Multiple (Linux, Windows, Mac, Android)</td>
+      <td>Multiple (Android, Linux, Mac, Win32/64)</td>
       <td>N/A (built into Chromium)</td>
       <td>SSE2, SSE3, AVX2, FMA3</td>
       <td><code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_X86_FAMILY</code></td>
-      <td>Tier 1</td>
+      <td>Documented/supported</td>
     </tr>
     <tr>
       <td>arm64</td>
-      <td>Multiple (Linux, iOS, Android, Apple M1)</td>
+      <td>Multiple (Android, iOS, Linux, Mac M1)</td>
       <td>N/A</td>
       <td>NEON</td>
       <td><code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_ARM_FAMILY</code></td>
-      <td>Tier 1</td>
+      <td>Documented/supported</td>
     </tr>
     <tr>
       <td>arm (32-bit)</td>
@@ -374,28 +405,28 @@
       <td>N/A</td>
       <td>NEON</td>
       <td><code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_ARM_FAMILY</code></td>
-      <td>Tier 1</td>
+      <td>Documented/supported</td>
     </tr>
     <tr>
-      <td>MIPS</td>
-      <td>Present in build files</td>
+      <td>Fuchsia</td>
+      <td>Present in LUCI builder list</td>
       <td>N/A</td>
-      <td>MIPS-DSP assembly</td>
-      <td><code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_MIPS_FAMILY</code></td>
-      <td>Tier 2 [NEEDS VERIFICATION]</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Documented/supported</td>
     </tr>
     <tr>
       <td>riscv64</td>
-      <td>None</td>
+      <td>None (0 occurrences in buildbucket cfg)</td>
       <td>None</td>
       <td>None</td>
       <td>None (missing)</td>
-      <td>Unsupported</td>
+      <td>Not officially supported, no CI</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>riscv64 receives no CI, no release artifacts, no SIMD, and no family macro. It compiles via scalar fallback paths only. This is below any recognized support tier.</p><hr />
+<p>riscv64 receives no CI, no release artifacts, no SIMD, and no family macro. It compiles only via scalar fallback paths, and even that scalar path is never built or tested by any upstream automation.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -404,8 +435,6 @@
   
 </h2>
     
-
-<p>libwebrtc’s performance-critical components all have architecture-specific acceleration for x86 and ARM. None have RISC-V equivalents.</p>
 <h3 id="41-architecture-detection">
   
   
@@ -415,17 +444,26 @@
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">rtc_base/system/arch.h</code> defines architecture classification macros. RISC-V detection added Dec 2020 defines bitness and endianness only. The <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_RISCV_FAMILY</code> macro does not exist, while <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_X86_FAMILY</code> and <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_ARM_FAMILY</code> do. This missing family macro means all downstream SIMD dispatch guards (<code class="language-plaintext highlighter-rouge">#ifdef WEBRTC_ARCH_X86_FAMILY</code>, <code class="language-plaintext highlighter-rouge">#ifdef WEBRTC_ARCH_ARM_FAMILY</code>) exclude RISC-V by construction.</p>
+<p><code class="language-plaintext highlighter-rouge">rtc_base/system/arch.h</code> defines architecture classification macros. The riscv64/riscv32 branches (<code class="language-plaintext highlighter-rouge">#elif defined(__riscv) &amp;&amp; __riscv_xlen == 64</code> -&gt; <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_64_BITS</code>, <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_LITTLE_ENDIAN</code>) set bitness and endianness only. There is no <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_RISCV_FAMILY</code> macro, while <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_X86_FAMILY</code> and <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_ARM_FAMILY</code> both exist. Because all downstream SIMD dispatch guards key off the family macros (<code class="language-plaintext highlighter-rouge">#ifdef WEBRTC_ARCH_X86_FAMILY</code>, <code class="language-plaintext highlighter-rouge">#ifdef WEBRTC_ARCH_ARM_FAMILY</code>), RISC-V is excluded from every SIMD dispatch path by construction, not by an explicit decision to skip it.</p>
 
-<p><code class="language-plaintext highlighter-rouge">rtc_base/cpu_info.cc</code> handles runtime CPU feature detection. It covers the x86 family (SSE2, SSE3, AVX2, FMA3 via cpuid) and ARM family (NEON via getauxval/android_getCpuFeatures). RISC-V hits <code class="language-plaintext highlighter-rouge">#else { RTC_UNUSED(isa); return false; }</code>. No RVV detection exists anywhere in libwebrtc core.</p>
-<h3 id="42-audio-signal-processing">
+<p><code class="language-plaintext highlighter-rouge">rtc_base/cpu_info.cc</code> handles runtime CPU feature detection for x86 (SSE2/SSE3/AVX2/FMA3 via cpuid) and ARM (NEON via getauxval/android_getCpuFeatures) [existing-report detail, not re-verified this session]. No RVV detection exists anywhere in libwebrtc core.</p>
+<h3 id="42-confirmed-source-level-verification-this-cycle">
   
   
-    <a href="#42-audio-signal-processing" class="anchor-heading" aria-labelledby="42-audio-signal-processing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Audio Signal Processing
+    <a href="#42-confirmed-source-level-verification-this-cycle" class="anchor-heading" aria-labelledby="42-confirmed-source-level-verification-this-cycle"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Confirmed Source-Level Verification (this cycle)
   
   
 </h3>
     
+
+<p>Direct reads of representative hot-path files confirm the scalar-fallback pattern rather than inferring it from <code class="language-plaintext highlighter-rouge">arch.h</code> alone:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">common_audio/signal_processing/include/spl_inl.h</code>: dispatch is <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_ARM_V7</code> -&gt; hand-written NEON header, else <code class="language-plaintext highlighter-rouge">MIPS32_LE</code> -&gt; MIPS inline-asm header, else generic portable C. No riscv branch exists at all; riscv64 falls into the “none of the above” path.</li>
+  <li><code class="language-plaintext highlighter-rouge">common_audio/resampler/sinc_resampler.cc</code>: runtime CPU dispatch is AVX2+FMA3 -&gt; <code class="language-plaintext highlighter-rouge">Convolve_AVX2</code>, else SSE2 -&gt; <code class="language-plaintext highlighter-rouge">Convolve_SSE</code>, else <code class="language-plaintext highlighter-rouge">Convolve_C</code>; NEON is a separate compile-time <code class="language-plaintext highlighter-rouge">#if WEBRTC_HAS_NEON</code> branch. RISC-V is not mentioned anywhere in this file; it receives <code class="language-plaintext highlighter-rouge">Convolve_C</code>, the scalar reference implementation, by default.</li>
+</ul>
+
+<p>This same idiom (x86 hand-tuned, ARM hand-tuned, MIPS hand-tuned in places, riscv absent and falling to generic C) is pervasive across the audio-processing tree by pattern, though <code class="language-plaintext highlighter-rouge">modules/audio_processing/*</code> (AEC3, noise suppression, AGC) was not individually re-fetched this cycle [NEEDS VERIFICATION for those specific files, inferred from the confirmed pattern in two representative files].</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -438,75 +476,34 @@
   </thead>
   <tbody>
     <tr>
-      <td>FIR filter (<code class="language-plaintext highlighter-rouge">common_audio/fir_filter_*.cc</code>)</td>
+      <td>FIR filter</td>
       <td>SSE, AVX2 (hand-tuned)</td>
       <td>NEON (hand-tuned)</td>
-      <td>Scalar C (FIRFilterC)</td>
+      <td>Scalar C</td>
     </tr>
     <tr>
       <td>Sinc resampler</td>
       <td>SSE2, AVX2</td>
       <td>NEON</td>
-      <td>Scalar C</td>
+      <td>Scalar C (<code class="language-plaintext highlighter-rouge">Convolve_C</code>, confirmed)</td>
     </tr>
     <tr>
-      <td>Signal processing (spl_init, cross-corr, downsample, min/max, filter)</td>
+      <td>Signal processing (<code class="language-plaintext highlighter-rouge">spl_inl.h</code>)</td>
       <td>SSE2</td>
       <td>NEON + assembly</td>
-      <td>Scalar C</td>
+      <td>Scalar C (confirmed, no riscv branch)</td>
     </tr>
     <tr>
-      <td>AEC3 matched filter</td>
+      <td>AEC3 matched filter / adaptive FIR / vector math</td>
       <td>SSE2, AVX2</td>
       <td>NEON</td>
-      <td>Scalar C (<code class="language-plaintext highlighter-rouge">default:</code> branch)</td>
+      <td>Scalar (inferred by pattern)</td>
     </tr>
     <tr>
-      <td>AEC3 adaptive FIR filter</td>
-      <td>SSE2, AVX2</td>
-      <td>NEON</td>
-      <td>Scalar C</td>
-    </tr>
-    <tr>
-      <td>AEC3 vector math</td>
-      <td>SSE2, AVX2</td>
-      <td>NEON</td>
-      <td>Scalar std::</td>
-    </tr>
-    <tr>
-      <td>Noise suppression (ns/)</td>
+      <td>Noise suppression</td>
       <td>None</td>
       <td>None</td>
-      <td>None (no arch code at all)</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>Dedicated arch-specific source file count:</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Architecture</th>
-      <th>Dedicated source files</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>x86/x64 (SSE2/AVX2)</td>
-      <td>~15+</td>
-    </tr>
-    <tr>
-      <td>ARM/NEON</td>
-      <td>~10</td>
-    </tr>
-    <tr>
-      <td>MIPS</td>
-      <td>~8</td>
-    </tr>
-    <tr>
-      <td>riscv64</td>
-      <td>0</td>
+      <td>None (no arch-specific code exists for any architecture)</td>
     </tr>
   </tbody>
 </table></div>
@@ -519,7 +516,7 @@
 </h3>
     
 
-<p>WebRTC wraps third-party codec libraries (libvpx, libaom, dav1d, OpenH264) and does not contain its own codec SIMD. riscv64 status for these libraries is covered in Section 9.</p>
+<p>WebRTC wraps third-party codec libraries (libvpx, libaom, dav1d, libgav1, OpenH264) and does not contain its own codec SIMD. Their individual riscv64 posture is covered in Section 9.</p>
 <h3 id="44-crypto-dtlssrtp">
   
   
@@ -529,7 +526,7 @@
 </h3>
     
 
-<p>WebRTC uses BoringSSL for DTLS and SRTP keying. BoringSSL has no crypto assembly for riscv64; all crypto operations fall back to scalar C. See Section 9 for detail.</p>
+<p>WebRTC uses BoringSSL for DTLS and SRTP keying. Ubuntu/Debian do not package upstream BoringSSL directly; the only riscv64-available package is the Android-fork build (<code class="language-plaintext highlighter-rouge">android-libboringssl</code>), and even that has zero riscv64 perlasm/crypto-assembly files - all crypto operations on riscv64 fall back to scalar C (Section 9).</p>
 <h3 id="45-libyuv-yuv-colorspace-conversion-bundled">
   
   
@@ -539,17 +536,15 @@
 </h3>
     
 
-<p>libyuv (pinned at commit d23308a2, bundled in <code class="language-plaintext highlighter-rouge">third_party/libyuv/</code>) has RVV-accelerated pixel format conversion and scaling:</p>
+<p>libyuv, pinned and bundled in <code class="language-plaintext highlighter-rouge">third_party/libyuv/</code>, has genuine RVV-accelerated pixel-format conversion and scaling - this is the one component in the whole WebRTC dependency tree with hand-written RISC-V vector code [existing-report detail, not re-verified this session but not contradicted by live findings]:</p>
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">source/row_rvv.cc</code>: 53 RVV functions for YUV-to-RGB conversion, channel splitting/merging, blending. Uses <code class="language-plaintext highlighter-rouge">__riscv_vector</code> guard. ~700-750 lines.</li>
-  <li><code class="language-plaintext highlighter-rouge">source/scale_rvv.cc</code>: 27 RVV functions for image scaling (downscale, upscale, bilinear, bicubic). Uses <code class="language-plaintext highlighter-rouge">__riscv_vector</code> and <code class="language-plaintext highlighter-rouge">__riscv_zve64x</code> guards. ~950-1000 lines.</li>
-  <li><code class="language-plaintext highlighter-rouge">source/cpu_id.cc</code>: <code class="language-plaintext highlighter-rouge">RiscvCpuCaps()</code> parses <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> ISA string, detecting <code class="language-plaintext highlighter-rouge">'v'</code> (RVV) and <code class="language-plaintext highlighter-rouge">"zvfh"</code> (ZVFH). Sets <code class="language-plaintext highlighter-rouge">kCpuHasRISCV = 0x4</code>, <code class="language-plaintext highlighter-rouge">kCpuHasRVV = 0x100</code>, <code class="language-plaintext highlighter-rouge">kCpuHasRVVZVFH = 0x200</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">source/row_rvv.cc</code>: roughly 53 RVV functions for YUV-to-RGB conversion, channel splitting/merging, and blending, guarded by <code class="language-plaintext highlighter-rouge">__riscv_vector</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">source/scale_rvv.cc</code>: roughly 27 RVV functions for image scaling, guarded by <code class="language-plaintext highlighter-rouge">__riscv_vector</code> and <code class="language-plaintext highlighter-rouge">__riscv_zve64x</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">source/cpu_id.cc</code>: <code class="language-plaintext highlighter-rouge">RiscvCpuCaps()</code> parses <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code>’s ISA string for <code class="language-plaintext highlighter-rouge">'v'</code> (RVV) and <code class="language-plaintext highlighter-rouge">"zvfh"</code> (ZVFH), setting <code class="language-plaintext highlighter-rouge">kCpuHasRISCV</code>, <code class="language-plaintext highlighter-rouge">kCpuHasRVV</code>, <code class="language-plaintext highlighter-rouge">kCpuHasRVVZVFH</code>.</li>
 </ul>
 
-<p>The RVV files compile unconditionally (no explicit <code class="language-plaintext highlighter-rouge">-march=+v</code> injected by the build system), relying on the compiler’s predefined <code class="language-plaintext highlighter-rouge">__riscv_vector</code>. This means correct RVV compilation depends on the toolchain’s default <code class="language-plaintext highlighter-rouge">-march</code> including <code class="language-plaintext highlighter-rouge">+v</code>; without an explicit flag, compilers targeting <code class="language-plaintext highlighter-rouge">rv64gc</code> will not define <code class="language-plaintext highlighter-rouge">__riscv_vector</code> and libyuv will silently fall back to scalar. This is a build configuration risk.</p>
-
-<p>libyuv RVV support is the only RISC-V SIMD present anywhere in the WebRTC dependency tree that directly affects the WebRTC video pipeline. All WebRTC-owned DSP code (audio processing, AEC3, sinc resampler, FIR filters) is scalar on RISC-V.</p><hr />
+<p>These RVV files compile unconditionally, relying on the compiler’s predefined <code class="language-plaintext highlighter-rouge">__riscv_vector</code> rather than an explicit <code class="language-plaintext highlighter-rouge">-march=+v</code> injected by the build system - if the riscv64 toolchain’s default <code class="language-plaintext highlighter-rouge">-march</code> does not include <code class="language-plaintext highlighter-rouge">+v</code>, libyuv silently falls back to scalar despite the RVV source being present. This creates an asymmetry within the dependency tree: libyuv’s video pixel-conversion path can be RVV-accelerated (conditional on build flags), while every audio-processing path owned directly by libwebrtc (AEC3, FIR filter, sinc resampler, signal processing) is unconditionally scalar.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -559,7 +554,7 @@
 </h2>
     
 
-<p>WebRTC uses GN + Ninja exclusively. CMake, Visual Studio projects, and Xcode projects are not supported. The build is managed via Google’s depot_tools.</p>
+<p>WebRTC uses GN + Ninja exclusively, driven by <code class="language-plaintext highlighter-rouge">depot_tools</code>. Per <code class="language-plaintext highlighter-rouge">docs/native-code/development/README.md</code>: “Other build systems are not supported (and may fail), such as Visual Studio on Windows or Xcode on OSX.” There is no CMake/configure workflow for libwebrtc at all, for riscv64 or any other target.</p>
 <h3 id="51-gn-commands-for-riscv64">
   
   
@@ -569,20 +564,16 @@
 </h3>
     
 
-<p>With Clang (recommended):</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gn gen out/riscv64 --args='target_os="linux" target_cpu="riscv64" is_clang=true'
 autoninja -C out/riscv64
 </code></pre></div></div>
 
-<p>With GCC cross-compiler:</p>
+<p>With a GCC cross-compiler:</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gn gen out/riscv64-gcc --args='target_os="linux" target_cpu="riscv64" is_clang=false'
 autoninja -C out/riscv64-gcc
 </code></pre></div></div>
 
-<p>V8 simulator mode (x64 host, riscv64 target):</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gn gen out/x64-v8-riscv64 --args='target_os="linux" target_cpu="x64" v8_target_cpu="riscv64"'
-autoninja -C out/x64-v8-riscv64
-</code></pre></div></div>
+<p>None of these commands are documented by the project itself - <code class="language-plaintext highlighter-rouge">g3doc</code>/<code class="language-plaintext highlighter-rouge">docs</code> contain no riscv64-specific build guide (confirmed by direct fetch of the supported-platforms doc and the native-code development README); they are reconstructed from GN’s generic <code class="language-plaintext highlighter-rouge">target_cpu</code> plumbing and Chromium’s toolchain definitions [existing-report reconstruction, not upstream-documented].</p>
 <h3 id="52-toolchain">
   
   
@@ -592,134 +583,39 @@ autoninja -C out/x64-v8-riscv64
 </h3>
     
 
-<p><strong>Clang:</strong> WebRTC uses a vendored, pinned Clang downloaded via gclient hooks to <code class="language-plaintext highlighter-rouge">third_party/llvm-build/Release+Asserts/</code>. The pinned version is <code class="language-plaintext highlighter-rouge">llvmorg-23-init-19482-g53d18800</code> (LLVM 23 pre-release). There is no minimum system Clang version; the vendored binary is required.</p>
+<p><strong>Clang</strong> - WebRTC vendors a pinned Clang delivered via gclient hooks. No fixed minimum version is published upstream; the documentation states only that it is “the one used by Chromium,” which tracks near the latest development revision.</p>
 
-<p><strong>GCC cross-compiler:</strong> Tool prefix is <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-</code> (standard Debian/Ubuntu <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> package). No explicit minimum GCC version is stated in build files.</p>
-<h3 id="53-sysroot">
+<p><strong>GCC</strong> - Standard tool prefix is <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-</code> (the Debian/Ubuntu <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> package). No minimum GCC version is documented anywhere in the build files. GCC is not an officially supported or tested compiler for WebRTC at all; Chromium-family projects of this kind are Clang-first.</p>
+<h3 id="53-gn-riscv64-toolchain-and-flag-plumbing">
   
   
-    <a href="#53-sysroot" class="anchor-heading" aria-labelledby="53-sysroot"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Sysroot
+    <a href="#53-gn-riscv64-toolchain-and-flag-plumbing" class="anchor-heading" aria-labelledby="53-gn-riscv64-toolchain-and-flag-plumbing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 GN riscv64 Toolchain and Flag Plumbing
   
   
 </h3>
     
 
-<p>riscv64 uniquely uses Debian Trixie as its sysroot. All other architectures use Debian Bullseye. Setup:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 build/linux/sysroot_scripts/install-sysroot.py --arch riscv64
-</code></pre></div></div>
-
-<p>This downloads <code class="language-plaintext highlighter-rouge">debian_trixie_riscv64_sysroot.tar.xz</code> from <code class="language-plaintext highlighter-rouge">commondatastorage.googleapis.com/chrome-linux-sysroot</code> and installs to <code class="language-plaintext highlighter-rouge">build/linux/debian_trixie_riscv64-sysroot/</code>. GN auto-resolves this path when <code class="language-plaintext highlighter-rouge">target_cpu="riscv64"</code> and <code class="language-plaintext highlighter-rouge">use_sysroot=true</code> (default).</p>
-<h3 id="54-risc-v-architecture-gn-flags">
+<p>Chromium’s build system, which WebRTC’s GN build pulls in via <code class="language-plaintext highlighter-rouge">DEPS</code>, defines only generic <code class="language-plaintext highlighter-rouge">target_cpu</code> plumbing for riscv64 - <code class="language-plaintext highlighter-rouge">webrtc.gni</code> itself has CPU-conditional logic only for <code class="language-plaintext highlighter-rouge">arm</code>/<code class="language-plaintext highlighter-rouge">arm64</code> (NEON enablement); there is no riscv64 branch, flag, or conditional anywhere in it. Chromium’s own build config additionally contains a placeholder <code class="language-plaintext highlighter-rouge">android_clang_riscv64</code> toolchain target (<code class="language-plaintext highlighter-rouge">target_cpu = "riscv64"</code>, <code class="language-plaintext highlighter-rouge">-march=rv64gc -mabi=lp64d</code>), which is explicitly noted upstream as untested/toolchain-not-ready - this is build-config scaffolding, not a working, verified toolchain path.</p>
+<h3 id="54-sysroot-and-deps">
   
   
-    <a href="#54-risc-v-architecture-gn-flags" class="anchor-heading" aria-labelledby="54-risc-v-architecture-gn-flags"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 RISC-V Architecture GN Flags
+    <a href="#54-sysroot-and-deps" class="anchor-heading" aria-labelledby="54-sysroot-and-deps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Sysroot and DEPS
   
   
 </h3>
     
 
-<p>From <code class="language-plaintext highlighter-rouge">build/config/riscv.gni</code> (in the Chromium build submodule):</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>GN Arg</th>
-      <th>Default</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_rvv</code></td>
-      <td><code class="language-plaintext highlighter-rouge">false</code></td>
-      <td>Enable RVV</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_rvv_vlen</code></td>
-      <td><code class="language-plaintext highlighter-rouge">128</code></td>
-      <td>Simulator VLEN; options: 128/256/512/1024</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_profile</code></td>
-      <td><code class="language-plaintext highlighter-rouge">"rv64gc"</code></td>
-      <td>Alternatives: <code class="language-plaintext highlighter-rouge">"rvau22"</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zba</code></td>
-      <td><code class="language-plaintext highlighter-rouge">false</code></td>
-      <td>B-ext address generation</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zbb</code></td>
-      <td><code class="language-plaintext highlighter-rouge">false</code></td>
-      <td>B-ext basic bit manipulation</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zbs</code></td>
-      <td><code class="language-plaintext highlighter-rouge">false</code></td>
-      <td>B-ext single-bit</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zicfiss</code></td>
-      <td><code class="language-plaintext highlighter-rouge">false</code></td>
-      <td>Shadow-stack CFI</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zicond</code></td>
-      <td><code class="language-plaintext highlighter-rouge">false</code></td>
-      <td>Integer conditional operations</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="55-toolchain-definitions">
+<p>The root <code class="language-plaintext highlighter-rouge">DEPS</code> file defines sysroot packages for arm, arm64, x86, mips, and x64 (Linux) - there is no riscv64 sysroot entry. <code class="language-plaintext highlighter-rouge">DEPS</code> also shows that WebRTC’s <code class="language-plaintext highlighter-rouge">third_party</code> tree is largely pulled as one bundle from <code class="language-plaintext highlighter-rouge">chromium.googlesource.com/chromium/src/third_party@&lt;pin&gt;</code> rather than pinned per-library; only libraries WebRTC needs at a different version than stock Chromium get an explicit <code class="language-plaintext highlighter-rouge">deps</code> entry (Section 9).</p>
+<h3 id="55-qemu--docker">
   
   
-    <a href="#55-toolchain-definitions" class="anchor-heading" aria-labelledby="55-toolchain-definitions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Toolchain Definitions
+    <a href="#55-qemu--docker" class="anchor-heading" aria-labelledby="55-qemu--docker"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 QEMU / Docker
   
   
 </h3>
     
 
-<p>From <code class="language-plaintext highlighter-rouge">build/toolchain/linux/BUILD.gn</code> (Chromium build submodule, commit 0cd0da38e2c2014565c29d8fcbe0f9d893b41ce6):</p>
-
-<p>Clang toolchain:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>clang_toolchain("clang_riscv64") {
-  enable_linker_map = true
-  toolchain_args = {
-    current_cpu = "riscv64"
-    current_os = "linux"
-    is_clang = true
-  }
-}
-</code></pre></div></div>
-
-<p>GCC cross-compilation toolchain:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gcc_toolchain("riscv64") {
-  toolprefix = "riscv64-linux-gnu"
-  ...
-  toolchain_args = {
-    current_cpu = "riscv64"
-    current_os = "linux"
-    is_clang = false
-  }
-}
-</code></pre></div></div>
-<h3 id="56-qemu">
-  
-  
-    <a href="#56-qemu" class="anchor-heading" aria-labelledby="56-qemu"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 QEMU
-  
-  
-</h3>
-    
-
-<p>No QEMU configuration files or Dockerfiles for riscv64 exist in the webrtc-mirror/webrtc repository. Standard approach for testing a riscv64 cross-compiled binary on an x64 host:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>qemu-riscv64 -L build/linux/debian_trixie_riscv64-sysroot ./out/riscv64/&lt;target_binary&gt;
-</code></pre></div></div>
-
-<p>The Debian Trixie sysroot serves as the <code class="language-plaintext highlighter-rouge">-L</code> root for shared library resolution.</p><hr />
+<p>No Dockerfile, Docker reference, or QEMU configuration exists anywhere in the libwebrtc repository or its docs (<code class="language-plaintext highlighter-rouge">infra/</code> contains only <code class="language-plaintext highlighter-rouge">config/</code>, <code class="language-plaintext highlighter-rouge">specs/</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>).</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -737,7 +633,7 @@ autoninja -C out/x64-v8-riscv64
 </h3>
     
 
-<p>The codebase compiles and links on riscv64. There are no known correctness failures in the WebRTC stack itself. Functional failures reported in the wild are from embedded RISC-V devices running libwebrtc-based applications (see Section 11), not from the library itself.</p>
+<p>The codebase compiles on riscv64 via scalar fallback (confirmed directly for <code class="language-plaintext highlighter-rouge">spl_inl.h</code> and <code class="language-plaintext highlighter-rouge">sinc_resampler.cc</code>; consistent with <code class="language-plaintext highlighter-rouge">arch.h</code>’s macro coverage). No dedicated report of a libwebrtc-core correctness failure was found. The only field reports of WebRTC problems on RISC-V devices come from an embedded application (sipeed/NanoKVM, a RISC-V SG2002 SoC product), not from libwebrtc itself (Section 11).</p>
 <h3 id="62-performance-gaps">
   
   
@@ -747,14 +643,14 @@ autoninja -C out/x64-v8-riscv64
 </h3>
     
 
-<p>The entire WebRTC DSP pipeline runs scalar C++ on riscv64. No component has RVV, Zba/Zbb, or any RISC-V extension optimization. The performance gap relative to arm64 (with NEON) and amd64 (with SSE2/AVX2) is total for audio processing.</p>
+<p>The entire WebRTC-owned DSP pipeline (AEC3, FIR filter, sinc resampler, signal processing) runs scalar C++ on riscv64; none of it has RVV or any other RISC-V extension optimization. No published benchmark data comparing libwebrtc on riscv64 vs arm64 or amd64 exists in any source checked (RISE blog full sitemap, GitHub code/repo search, general web search) - this was independently re-confirmed this cycle after an exhaustive search.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Component</th>
-      <th>amd64 vs riscv64 (estimated gap)</th>
-      <th>arm64 vs riscv64 (estimated gap)</th>
+      <th>amd64 vs riscv64</th>
+      <th>arm64 vs riscv64</th>
     </tr>
   </thead>
   <tbody>
@@ -764,44 +660,39 @@ autoninja -C out/x64-v8-riscv64
       <td>Large (NEON vectorized vs scalar)</td>
     </tr>
     <tr>
-      <td>FIR filter</td>
-      <td>Large (SSE2/AVX2 vs scalar)</td>
-      <td>Large (NEON vs scalar)</td>
-    </tr>
-    <tr>
-      <td>Sinc resampler</td>
+      <td>FIR filter / sinc resampler</td>
       <td>Large (SSE2/AVX2 vs scalar)</td>
       <td>Large (NEON vs scalar)</td>
     </tr>
     <tr>
       <td>YUV conversion (libyuv)</td>
-      <td>Large if RVV not compiled in; competitive if RVV enabled</td>
+      <td>Competitive if <code class="language-plaintext highlighter-rouge">-march=+v</code> is enabled; large otherwise</td>
       <td>Competitive if RVV enabled</td>
     </tr>
     <tr>
       <td>VP8/VP9 encode/decode (libvpx)</td>
-      <td>Large (libvpx has no riscv64 SIMD)</td>
+      <td>Large (no riscv64 SIMD in libvpx at all)</td>
       <td>Large</td>
     </tr>
     <tr>
       <td>AV1 decode (dav1d)</td>
-      <td>Competitive (dav1d has first-class RVV support)</td>
+      <td>Competitive (dav1d has first-class RVV support and riscv64 CI)</td>
       <td>Competitive</td>
     </tr>
     <tr>
       <td>AV1 encode (libaom)</td>
-      <td>Moderate gap (active upstream RVV work, partial)</td>
-      <td>Moderate gap</td>
+      <td>Moderate (RVV patches merged, but ungated by CI)</td>
+      <td>Moderate</td>
     </tr>
     <tr>
       <td>DTLS/SRTP crypto (BoringSSL)</td>
-      <td>Moderate (no crypto assembly on riscv64)</td>
-      <td>Moderate</td>
+      <td>Moderate/large (no crypto assembly on riscv64 at all)</td>
+      <td>Moderate/large</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Data not available: quantitative benchmark numbers (cycles, fps, latency) comparing libwebrtc on riscv64 vs arm64 or amd64. No such measurements exist in any public source.</p>
+<p>Data not available: quantitative benchmark numbers (cycles, fps, latency) comparing libwebrtc on riscv64 against arm64 or amd64 for any of the above.</p>
 <h3 id="63-security-hardening-gaps">
   
   
@@ -812,20 +703,10 @@ autoninja -C out/x64-v8-riscv64
     
 
 <ul>
-  <li>BoringSSL has no FIPS module for riscv64 [NEEDS VERIFICATION].</li>
-  <li>No shadow-stack CFI (<code class="language-plaintext highlighter-rouge">riscv_use_zicfiss=false</code> by default).</li>
-  <li>No crypto assembly (scalar C fallback only for AES-GCM, ChaCha20, ECDH used in DTLS/SRTP).</li>
+  <li>BoringSSL has no confirmed FIPS module coverage for riscv64 [NEEDS VERIFICATION].</li>
+  <li>No crypto assembly on riscv64 for BoringSSL - AES-GCM, ChaCha20, and ECDH used in DTLS/SRTP run scalar C only (Section 9).</li>
+  <li>No documented shadow-stack CFI or other riscv64-specific hardening in WebRTC’s own build flags was found this cycle.</li>
 </ul>
-<h3 id="64-notable-anomaly-libyuv-vs-webrtc-core">
-  
-  
-    <a href="#64-notable-anomaly-libyuv-vs-webrtc-core" class="anchor-heading" aria-labelledby="64-notable-anomaly-libyuv-vs-webrtc-core"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.4 Notable Anomaly: libyuv vs WebRTC Core
-  
-  
-</h3>
-    
-
-<p>libyuv (bundled dependency) has RVV runtime dispatch and 80+ RVV-accelerated functions, while WebRTC’s own DSP code (audio processing, AEC3) has none. This creates an asymmetry: the video pixel conversion pipeline (libyuv) can be RVV-accelerated, but the audio processing pipeline (AEC3, noise suppression, AGC) cannot.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -835,7 +716,14 @@ autoninja -C out/x64-v8-riscv64
 </h2>
     
 
-<p>WebRTC uses Google’s LUCI/Buildbucket/Swarming CI system (chromium-swarm.appspot.com). It does not use GitHub Actions (<code class="language-plaintext highlighter-rouge">.github/</code> directory does not exist in the repository).</p>
+<p>WebRTC uses Google’s LUCI/Buildbucket/Swarming CI system; there is no <code class="language-plaintext highlighter-rouge">.github/</code> directory and no GitHub Actions usage for the core project.</p>
+
+<p>Directly verified by fetching and reading <code class="language-plaintext highlighter-rouge">infra/config/generated/luci/cr-buildbucket.cfg</code> (both the rendered Gitiles page and the raw <code class="language-plaintext highlighter-rouge">?format=TEXT</code> base64-decoded content):</p>
+
+<ul>
+  <li>Zero occurrences of “riscv,” “riscv64,” or “risc-v” (case-insensitive) anywhere in the file.</li>
+  <li>The ~60+ builders present cover only: Android (x86/x86-64/ARM/ARM64), iOS, Linux (x86/x64/ARM, Asan/MSan/Tsan/UBSan/Libfuzzer variants), Fuchsia, Mac (Intel and ARM64/M1), and Win32/64 (Clang).</li>
+</ul>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -849,8 +737,8 @@ autoninja -C out/x64-v8-riscv64
   <tbody>
     <tr>
       <td>Build CI</td>
-      <td>Yes (multiple builders)</td>
-      <td>Yes (Linux, iOS, Android, Apple M1)</td>
+      <td>Yes</td>
+      <td>Yes</td>
       <td>None</td>
     </tr>
     <tr>
@@ -860,42 +748,23 @@ autoninja -C out/x64-v8-riscv64
       <td>None</td>
     </tr>
     <tr>
-      <td>Commit queue (CQ) gating</td>
+      <td>Commit-queue (CQ) gating</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>None</td>
     </tr>
     <tr>
-      <td>LUCI builder entries in builders.star</td>
+      <td>Entries in <code class="language-plaintext highlighter-rouge">cr-buildbucket.cfg</code></td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Zero</td>
-    </tr>
-    <tr>
-      <td>mb_config.pyl entries</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Zero</td>
-    </tr>
-    <tr>
-      <td>waterfalls.pyl entries</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Zero</td>
+      <td>Zero (directly confirmed)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Sources confirming riscv64 CI absence:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">infra/config/builders.star</code>: zero riscv references; defines all CI/CQ builders exhaustively</li>
-  <li><code class="language-plaintext highlighter-rouge">infra/config/generated/luci/cr-buildbucket.cfg</code>: zero riscv references</li>
-  <li><code class="language-plaintext highlighter-rouge">tools_webrtc/mb/mb_config.pyl</code>: zero riscv references</li>
-  <li><code class="language-plaintext highlighter-rouge">infra/specs/waterfalls.pyl</code>, <code class="language-plaintext highlighter-rouge">mixins.pyl</code>, <code class="language-plaintext highlighter-rouge">variants.pyl</code>: zero riscv references</li>
-  <li>Live CI console at <a href="https://ci.chromium.org/p/webrtc/g/ci/console">ci.chromium.org/p/webrtc</a>: architectures present are x86, x64, arm, arm64, Android arm/arm64/x86/x64, iOS arm64, Apple M1; zero riscv64 entries</li>
-</ul>
+<p>Downstream/adjacent CI that exists but does not count as libwebrtc CI: <code class="language-plaintext highlighter-rouge">webrtc-audio-processing</code> (gitlab.freedesktop.org/pulseaudio) has its own repository, CI, and maintainers, separate from libwebrtc; <code class="language-plaintext highlighter-rouge">webrtcvad-wheels</code> (riseproject-dev/python-wheels, GitHub Actions) builds wheels for a third-party VAD wrapper package, in a different CI system entirely (GitHub Actions vs. LUCI). Neither of these downstream CI configs was fetched and read this cycle, so per a strict evidence standard they should not be cited as “libwebrtc riscv64 CI” even qualitatively.</p>
 
-<p>No RISE CI runners are involved in WebRTC builds. RISE has no funded RFP for libwebrtc.</p><hr />
+<p>No RISE CI runners are involved in WebRTC builds, and no RISE-funded work covers libwebrtc CI.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -905,58 +774,49 @@ autoninja -C out/x64-v8-riscv64
 </h2>
     
 
-<p>The full Google/Chromium WebRTC native library (“libwebrtc”) is not packaged or released as a standalone binary for any architecture. It is always compiled from source as part of Chromium/Chrome or application-specific builds. The webrtc-mirror/webrtc GitHub repository has zero releases and zero tags.</p>
+<p>The full Google/Chromium WebRTC native library (“libwebrtc”) is never packaged or released as a standalone binary, for any architecture, by any distro. It is source-only, always built as part of Chromium/Chrome or an application-specific build via the GN + depot_tools workflow in Section 5.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">webrtc-audio-processing</code> sub-library (an extracted signal processing module, maintained separately at <a href="https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing">gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing</a>) is available as a distro package on riscv64:</p>
+<p><strong>No package literally named <code class="language-plaintext highlighter-rouge">libwebrtc</code> exists on PyPI</strong> - <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/libwebrtc/json</code> returns HTTP 404, confirmed both directly and via the simple index (<code class="language-plaintext highlighter-rouge">https://pypi.org/simple/libwebrtc/</code>, also 404) and via a RISE wheel-builder redirect (<code class="language-plaintext highlighter-rouge">gitlab.com/api/v4/projects/56254198/packages/pypi/simple/libwebrtc/</code>, which 302-redirects to the same 404 PyPI URL).</p>
+
+<p><strong>Ubuntu 26.04 “resolute”</strong> ships only narrower, differently-named sub-libraries, confirmed live against <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> and filtered explicitly to <code class="language-plaintext highlighter-rouge">arch=riscv64</code>:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Distro</th>
       <th>Package</th>
       <th>Version</th>
-      <th>riscv64 status</th>
+      <th>riscv64</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Debian sid</td>
-      <td>webrtc-audio-processing</td>
-      <td>1.3-3+b3</td>
-      <td>Installed (built on rv-osuosl-02 ~66 days ago)</td>
+      <td><code class="language-plaintext highlighter-rouge">libwebrtc-audio-coding-1-3</code></td>
+      <td>(resolute)</td>
+      <td>Confirmed - direct download link on the package page, 136.4 kB package / 272.0 kB installed</td>
     </tr>
     <tr>
-      <td>Ubuntu 24.04 Noble</td>
-      <td>libwebrtc-audio-processing1, libwebrtc-audio-processing-dev</td>
-      <td>0.3.1-0ubuntu6</td>
-      <td>Available</td>
+      <td><code class="language-plaintext highlighter-rouge">libwebrtc-audio-coding-dev</code></td>
+      <td>(resolute)</td>
+      <td>Confirmed</td>
     </tr>
     <tr>
-      <td>Arch Linux RISC-V</td>
-      <td>(none)</td>
-      <td>–</td>
-      <td>Not present</td>
+      <td><code class="language-plaintext highlighter-rouge">libwebrtc-audio-processing-1-3</code></td>
+      <td>(resolute)</td>
+      <td>Confirmed</td>
     </tr>
     <tr>
-      <td>PyPI</td>
-      <td>(none)</td>
-      <td>–</td>
-      <td>Package does not exist</td>
-    </tr>
-    <tr>
-      <td>GitHub releases</td>
-      <td>(none)</td>
-      <td>–</td>
-      <td>No releases at all</td>
+      <td><code class="language-plaintext highlighter-rouge">libwebrtc-audio-processing-dev</code></td>
+      <td>(resolute, universe)</td>
+      <td>Confirmed</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The Ubuntu riscv64 package for <code class="language-plaintext highlighter-rouge">libwebrtc-audio-processing-dev</code> is approximately 5,890 kB installed, versus approximately 1,500 kB for amd64/arm64, consistent with no SIMD dead-code elimination and full scalar fallback code paths compiled in [NEEDS VERIFICATION - size figures from package metadata, not independently cross-checked].</p>
+<p>These are the PulseAudio <code class="language-plaintext highlighter-rouge">webrtc-audio-processing</code> module (AEC/AGC/VAD only, Section 2) packaged under Ubuntu’s own naming - not the full WebRTC engine (no video codecs, no ICE/PeerConnection, no full stack). Debian sid has separately shipped <code class="language-plaintext highlighter-rouge">webrtc-audio-processing</code> 1.3-3 (trixie/forky/sid) on riscv64 since that version, predating the Ubuntu 26.04 data point above.</p>
 
-<p>Chromium (which embeds the full libwebrtc) is not available for riscv64 in Debian sid; autopkgtest is skipped on riscv64 as “not installable (which is allowed).”</p>
+<p><strong>webrtcvad-wheels</strong> (the third-party VAD wrapper, Section 2): a riscv64 CI build workflow merged 2026-09-06 (PR #1109), but as of 2026-09-30 no <code class="language-plaintext highlighter-rouge">webrtcvad</code> tag or release exists in that repository’s tags/releases list - the workflow has merged but has not produced a published wheel. Separately, the actual upstream <code class="language-plaintext highlighter-rouge">webrtcvad</code> package on PyPI tops out at v2.0.10 (released 2017-01-07, no riscv64 wheels, no activity since); the <code class="language-plaintext highlighter-rouge">2.0.14</code> target version riseproject-dev is building is from a fork, not mainline PyPI <code class="language-plaintext highlighter-rouge">webrtcvad</code>.</p>
 
-<p>A user who needs the full libwebrtc stack on riscv64 must build from source using the GN + depot_tools workflow described in Section 5.</p><hr />
+<p><strong>Bottom line:</strong> a user who needs the full libwebrtc stack on riscv64 must build from source using the GN + depot_tools workflow in Section 5. The only riscv64 binaries that exist anywhere are for narrower, differently-named downstream sub-components, and even those are limited to the audio-processing module - no channel provides a riscv64 binary for libwebrtc itself.</p>
 <h2 id="9-dependencies">
   
   
@@ -974,13 +834,16 @@ autoninja -C out/x64-v8-riscv64
 </h3>
     
 
+<p>Direct dependencies, using the names given in the project’s current dependency manifest, plus indirect/transitive dependencies found via the live DEPS-file analysis:</p>
+
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
+      <th>Criticality</th>
       <th>riscv64 build</th>
-      <th>riscv64 test (CI)</th>
+      <th>riscv64 test/CI</th>
       <th>riscv64 release</th>
       <th>Notes</th>
     </tr>
@@ -989,159 +852,202 @@ autoninja -C out/x64-v8-riscv64
     <tr>
       <td>BoringSSL</td>
       <td>DTLS/SRTP crypto</td>
-      <td>Builds</td>
-      <td>Compile-only, no test exec CI</td>
-      <td>No official binaries</td>
-      <td>No FIPS, no crypto ASM; scalar C only</td>
+      <td>Critical</td>
+      <td>Compiles (Android NDK cross-compile CI only); 0 perlasm/crypto-asm files for riscv64</td>
+      <td>No test-execution CI (compile-only)</td>
+      <td>No official upstream binaries (source-only); Debian/Ubuntu ship only the Android-fork package <code class="language-plaintext highlighter-rouge">android-libboringssl</code></td>
+      <td>No CPU-detect/perlasm infra for RISC-V at all; needs an external maintainer to own an asm backend</td>
     </tr>
     <tr>
-      <td>libsrtp (cisco/libsrtp)</td>
+      <td>libsrtp</td>
       <td>SRTP media encryption</td>
+      <td>Critical</td>
       <td>Builds</td>
-      <td>PR #754 open: test timeout under QEMU</td>
-      <td>No official riscv64 binaries</td>
-      <td>No SIMD; functionally equivalent</td>
+      <td>PR #754 open: test timeout under riscv64 QEMU</td>
+      <td>Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">libsrtp2-1</code>/<code class="language-plaintext highlighter-rouge">libsrtp2-dev</code> 2.7.0-3build1 (main tier)</td>
+      <td>Small portable C library; no known SIMD/correctness blockers beyond the QEMU test-timeout issue</td>
     </tr>
     <tr>
       <td>libvpx</td>
       <td>VP8/VP9 encode/decode</td>
-      <td>Builds (generic-gnu fallback)</td>
+      <td>Critical</td>
+      <td>Compiles via <code class="language-plaintext highlighter-rouge">generic-gnu</code> fallback</td>
+      <td>No upstream CI at all, for any architecture</td>
+      <td>Source-only upstream; Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">libvpx-dev</code>/<code class="language-plaintext highlighter-rouge">libvpx12</code> 1.16.0-3 (main tier)</td>
+      <td>Zero riscv64 SIMD; no vendor has engaged (unlike the LoongArch port); AOM has deprioritized VP8/VP9 relative to AV1</td>
+    </tr>
+    <tr>
+      <td>libyuv</td>
+      <td>Frame scaling / colorspace conversion</td>
+      <td>Critical</td>
+      <td>Compiles, RVV source files present (<code class="language-plaintext highlighter-rouge">row_rvv.cc</code>, <code class="language-plaintext highlighter-rouge">scale_rvv.cc</code>)</td>
       <td>No CI</td>
-      <td>No release binaries</td>
-      <td>Zero riscv64 SIMD; major perf gap</td>
+      <td>Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">libyuv-dev</code>/<code class="language-plaintext highlighter-rouge">libyuv0</code> 0.0.1922.20260106-1 (main tier)</td>
+      <td>Only WebRTC-tree component with real RVV code; relies on compiler’s implicit <code class="language-plaintext highlighter-rouge">__riscv_vector</code>, not an explicit <code class="language-plaintext highlighter-rouge">-march=+v</code> build flag - see Section 4.5</td>
+    </tr>
+    <tr>
+      <td>Abseil</td>
+      <td>Core C++ utilities, used pervasively by libwebrtc</td>
+      <td>Critical</td>
+      <td>Source accepted, compiles; no CI of any kind for riscv64, not even compile-gated</td>
+      <td>None found by official Abseil CI</td>
+      <td>Source-only upstream; Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">libabsl-dev</code>/<code class="language-plaintext highlighter-rouge">libabsl20260107</code> 20260107.0-4 (main tier)</td>
+      <td>Google requires an internal champion and internal re-export for every patch; a CRC32C hardware-acceleration PR is blocked purely on Google’s internal riscv64 hardware access</td>
+    </tr>
+    <tr>
+      <td>libopus</td>
+      <td>Default voice/audio codec</td>
+      <td>Critical</td>
+      <td>Compiles via generic C; not recognized as a named CPU family in CMake/autotools (PR #476 rejected)</td>
+      <td>No riscv64 CI</td>
+      <td>Source-only upstream; Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">libopus0</code>/<code class="language-plaintext highlighter-rouge">libopus-dev</code> 1.6.1-1 (main tier)</td>
+      <td>Maintainer (Jean-Marc Valin) never engaged PR #476; an RTCD refactor (#392) blocks clean third-architecture dispatch</td>
     </tr>
     <tr>
       <td>libaom</td>
-      <td>AV1 encode</td>
-      <td>Builds</td>
-      <td>No CI; RVV patches merged without CI</td>
-      <td>No tagged releases</td>
-      <td>Active RVV work from Andes Technology (RISE Premier Member)</td>
+      <td>AV1 encoder</td>
+      <td>Optional</td>
+      <td>Compiles; has an RVV-enabled CMake toolchain file but no riscv64 CI job of any kind, so merged RVV patches are unverified by automation</td>
+      <td>None</td>
+      <td>Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">libaom-dev</code>/<code class="language-plaintext highlighter-rouge">libaom3</code> 3.13.1-2, ports tier only (lags security-updated main-tier archs)</td>
+      <td>12 RVV patches merged from Andes Technology with no CI gate</td>
     </tr>
     <tr>
       <td>dav1d</td>
-      <td>AV1 decode</td>
-      <td>Builds with CI (every commit)</td>
-      <td>QEMU CI job since 2024-02-23</td>
-      <td>Every release since v1.4.0</td>
-      <td>Strongest riscv64 posture; RVV 1.0+ required</td>
+      <td>AV1 decoder (primary)</td>
+      <td>Optional</td>
+      <td>Treated as first-class: <code class="language-plaintext highlighter-rouge">build-debian-riscv64</code> runs on every commit</td>
+      <td>Yes - correctness tests across 4 VLEN configurations under QEMU, the best riscv64 test coverage of any dependency in this table</td>
+      <td>Shipped in release notes since v1.4.0; Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">libdav1d-dev</code>/<code class="language-plaintext highlighter-rouge">libdav1d7</code> 1.5.3-1 (main tier)</td>
+      <td>Strongest riscv64 posture of any dependency; still missing <code class="language-plaintext highlighter-rouge">mc put/prep</code> SIMD kernels, no contributor yet</td>
     </tr>
     <tr>
       <td>libgav1</td>
-      <td>AV1 decode (secondary)</td>
-      <td>Builds (scalar only)</td>
-      <td>No CI</td>
-      <td>No releases</td>
-      <td>No RISC-V code paths</td>
-    </tr>
-    <tr>
-      <td>FFmpeg</td>
-      <td>Audio/video decode/encode</td>
-      <td>Builds (<code class="language-plaintext highlighter-rouge">--arch=riscv64</code>)</td>
-      <td>3 external QEMU nodes (remlab.net), not in-repo CI</td>
-      <td>No official riscv64 binary</td>
-      <td>219+ RISC-V patches upstream; no RVV decode paths for most codecs</td>
+      <td>AV1 decoder (secondary)</td>
+      <td>Optional</td>
+      <td>Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">libgav1-2</code>/<code class="language-plaintext highlighter-rouge">libgav1-dev</code> 0.20.0-2build1 (main tier); build believed generic C/C++, no known SIMD work [NEEDS VERIFICATION]</td>
+      <td>Unknown</td>
+      <td>Ubuntu/Debian ship binaries</td>
+      <td>Not independently deep-dived this cycle</td>
     </tr>
     <tr>
       <td>libjpeg-turbo</td>
-      <td>JPEG encode/decode</td>
-      <td>Builds with RVV C intrinsics</td>
-      <td>No upstream CI</td>
-      <td>Upstream declined riscv64 binaries (Issue #885, “won’t implement”)</td>
-      <td>RVV acceleration in-tree (18 files in <code class="language-plaintext highlighter-rouge">simd/riscv64/</code>)</td>
+      <td>JPEG codec (screen-capture path)</td>
+      <td>Optional</td>
+      <td>RVV SIMD source merged for the upcoming 3.2 release; current stable 3.1.4.1 has none; Ubuntu 26.04’s packaged 2.1.5 predates the RVV merge entirely</td>
+      <td>No riscv64 CI upstream</td>
+      <td>Upstream has declined to provide official riscv64 binaries (Issue #885, “won’t implement”); distro packages lag the RVV merge</td>
+      <td>Single, unpaid maintainer citing a funding deficit; no unsolicited-PR policy; a 5%-performance-gain bar for new SIMD work</td>
     </tr>
     <tr>
-      <td>OpenSSL (fallback)</td>
-      <td>TLS/crypto</td>
-      <td>Builds with extensive riscv64 ASM</td>
-      <td><code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code> (13 configs)</td>
-      <td>Upstream releases include riscv64</td>
-      <td>Rich RVV crypto: AES-Zvkned, SHA-Zvknha/b, GCM-Zvkg, ChaCha20-RVV</td>
-    </tr>
-    <tr>
-      <td>libyuv (bundled)</td>
-      <td>YUV colorspace conversion</td>
-      <td>Builds with RVV source files</td>
+      <td>OpenH264</td>
+      <td>H.264 codec (encode; optional decode)</td>
+      <td>Optional</td>
+      <td>Meson build fix for riscv64 merged August 2024 (PR #3773); Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">libopenh264-dev</code>/<code class="language-plaintext highlighter-rouge">libopenh264-8</code> 2.6.0+dfsg-2build1 (main tier)</td>
       <td>No CI</td>
-      <td>No separate release</td>
-      <td>RVV in-tree but no explicit <code class="language-plaintext highlighter-rouge">-march=+v</code>; see Section 4.5</td>
+      <td>Ubuntu/Debian ship binaries</td>
+      <td>Cisco-maintained; has x86/ARM SIMD only - riscv64 presumably runs generic C [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>OpenH264 (cisco)</td>
-      <td>H.264 encode/decode</td>
-      <td>Builds (meson fix merged Aug 2024, PR #3773)</td>
-      <td>No CI</td>
-      <td>No riscv64 release</td>
-      <td>No SIMD on riscv64; x86 ASM only</td>
-    </tr>
-    <tr>
-      <td>Abseil-cpp</td>
-      <td>Core utilities</td>
-      <td>Mostly builds; Issue #1702 (linker error) open</td>
-      <td>Issues #2002 open: test failures on riscv64-linux-gnu</td>
-      <td>No official riscv64 wheels</td>
-      <td>PR #1986 open: HW CRC32C for riscv64; open linker bug may affect static builds</td>
-    </tr>
-    <tr>
-      <td>Protocol Buffers</td>
-      <td>SDP/signaling serialization</td>
-      <td>Builds (community-patched); maintainers stated riscv64 is unsupported</td>
-      <td>No riscv64 CI</td>
-      <td>No riscv64 Maven/PyPI binaries (Issue #17798 open)</td>
-      <td>Maintainer explicitly declined support; no protoc binary for riscv64</td>
-    </tr>
-    <tr>
-      <td>zstd</td>
-      <td>Compression</td>
-      <td>Builds</td>
-      <td>Cross-compile CI only</td>
-      <td>No riscv64 release binary</td>
-      <td>PR #4557 (fast sequence decode) open since 2025-12-22, no maintainer response</td>
-    </tr>
-    <tr>
-      <td>crc32c</td>
-      <td>CRC checksum</td>
-      <td>Builds (portable fallback)</td>
-      <td>No CI</td>
-      <td>No binary</td>
-      <td>PR #75 open (2026-06-11): adds cmake riscv64 detection; no HW acceleration yet</td>
-    </tr>
-    <tr>
-      <td>cpuinfo</td>
-      <td>CPU feature detection</td>
-      <td>Builds; QEMU CI job fixed (PR #295, merged 2025-05-22)</td>
-      <td>QEMU CI</td>
+      <td>LLVM</td>
+      <td>Build toolchain (Clang)</td>
+      <td>Critical (build)</td>
+      <td>N/A - toolchain, not a runtime dependency</td>
       <td>N/A</td>
-      <td>PR #397 open: complete ISA extension and uarch support for riscv64</td>
+      <td>WebRTC vendors a pinned Clang via gclient hooks; no fixed minimum version is published, only “the one Chromium uses”</td>
+      <td>Data not available: whether this pinned Clang build has full riscv64 codegen parity with x86/ARM in WebRTC’s specific build configuration</td>
     </tr>
     <tr>
-      <td>XNNPACK</td>
-      <td>Neural network inference</td>
-      <td>Builds with RVV</td>
-      <td><code class="language-plaintext highlighter-rouge">cmake-linux-riscv64</code> QEMU CI (every PR since Dec 2023)</td>
-      <td>No official binary</td>
-      <td>No native CI hardware</td>
+      <td>Ninja</td>
+      <td>Build executor</td>
+      <td>Critical (build)</td>
+      <td>N/A - portable build tool</td>
+      <td>N/A</td>
+      <td>Not independently checked this cycle</td>
+      <td>No riscv64-specific issues surfaced in any research pass; Ninja is architecture-independent by design [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>GN</td>
+      <td>Build-file generator</td>
+      <td>Critical (build)</td>
+      <td>Generic <code class="language-plaintext highlighter-rouge">target_cpu="riscv64"</code> plumbing exists; Chromium’s own <code class="language-plaintext highlighter-rouge">android_clang_riscv64</code> placeholder toolchain target is explicitly marked untested/toolchain-not-ready</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td><code class="language-plaintext highlighter-rouge">webrtc.gni</code> itself has no riscv64-specific conditional logic at all - only arm/arm64 NEON gating</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Alternative build compiler</td>
+      <td>Optional (build)</td>
+      <td>Standard <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-</code> cross-compiler toolprefix works with WebRTC’s GN GCC toolchain definition; no minimum version documented</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Not an officially supported/tested compiler for WebRTC at all - Chromium-family projects are Clang-first</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="92-critical-dependency-analysis">
+<h3 id="92-additional-indirect-dependencies-found-via-deps-analysis">
   
   
-    <a href="#92-critical-dependency-analysis" class="anchor-heading" aria-labelledby="92-critical-dependency-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 Critical Dependency Analysis
+    <a href="#92-additional-indirect-dependencies-found-via-deps-analysis" class="anchor-heading" aria-labelledby="92-additional-indirect-dependencies-found-via-deps-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 Additional Indirect Dependencies Found via DEPS Analysis
   
   
 </h3>
     
 
-<p><strong>Protocol Buffers – highest risk.</strong> Maintainers have explicitly stated riscv64 is unsupported and not on their roadmap. No protoc binary is published for riscv64 (Issue #17798 open, PR #23206 open). Any WebRTC build toolchain that auto-downloads protoc from Maven or PyPI will break on riscv64. Workaround: build protoc from source on riscv64 or use a distro package.</p>
+<p>Fetching <code class="language-plaintext highlighter-rouge">DEPS</code> directly (<code class="language-plaintext highlighter-rouge">https://webrtc.googlesource.com/src/+/refs/heads/main/DEPS</code>) surfaced further transitive dependencies not in the curated direct list above but relevant to a riscv64 build:</p>
 
-<p><strong>Abseil-cpp – second highest risk.</strong> Issue #1702 (open linker error with riscv64 toolchain) can block riscv64 static builds depending on toolchain version. Abseil is used directly by libwebrtc and transitively via gRPC.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dependency</th>
+      <th>Role</th>
+      <th>riscv64 status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Protocol Buffers</td>
+      <td>Serialization for RTC event logging</td>
+      <td>Compiles (community-patched); maintainers have stated riscv64 is explicitly unsupported and “not on our roadmap”; no riscv64 protoc binary on Maven/PyPI (Issue #17798 open); highest-risk transitive dependency for automated build pipelines that auto-download protoc</td>
+    </tr>
+    <tr>
+      <td>zlib</td>
+      <td>General compression</td>
+      <td>Compiles cleanly; Ubuntu 26.04 ships <code class="language-plaintext highlighter-rouge">zlib1g</code>/<code class="language-plaintext highlighter-rouge">zlib1g-dev</code> on ports tier only; riscv64 CI exists only on OpenBSD via QEMU, no Linux riscv64 CI; a working RVV Adler32 PR (#1099) has been unmerged 8+ months</td>
+    </tr>
+    <tr>
+      <td>zstd</td>
+      <td>Compression (event-log/diagnostics)</td>
+      <td>Compiles; RVV vectorization partially merged (intrinsics only, no <code class="language-plaintext highlighter-rouge">.S</code> fast path); QEMU-based CI only on specific branches, not full coverage; 7 open RISC-V PRs stalled 2-6 months</td>
+    </tr>
+    <tr>
+      <td>crc32c</td>
+      <td>Checksum utility</td>
+      <td>Compiles via portable fallback; PR #75 (cmake riscv64 detection) open since 2026-06-11; no hardware acceleration yet</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>BoringSSL – performance risk, not correctness.</strong> No FIPS module, no crypto assembly for riscv64. All AES-GCM, ChaCha20, ECDH operations in DTLS/SRTP fall back to scalar C. Not a build blocker but relevant for DTLS handshake performance.</p>
+<p><strong>Architecture correction:</strong> <code class="language-plaintext highlighter-rouge">usrsctp</code> (historically assumed to be WebRTC’s SCTP/data-channel dependency) is confirmed absent from the current <code class="language-plaintext highlighter-rouge">DEPS</code> file - WebRTC has replaced it with an in-tree <code class="language-plaintext highlighter-rouge">net/dcsctp</code> implementation (<code class="language-plaintext highlighter-rouge">src/net/dcsctp</code> returns HTTP 200 on a directory probe). <code class="language-plaintext highlighter-rouge">usrsctp</code> is no longer a build dependency of current libwebrtc and should not be tracked as one going forward; Ubuntu still packages <code class="language-plaintext highlighter-rouge">libusrsctp2</code>/<code class="language-plaintext highlighter-rouge">-dev</code> for riscv64, but for unrelated consumers.</p>
+<h3 id="93-critical-dependency-analysis">
+  
+  
+    <a href="#93-critical-dependency-analysis" class="anchor-heading" aria-labelledby="93-critical-dependency-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 Critical Dependency Analysis
+  
+  
+</h3>
+    
 
-<p><strong>libvpx – performance risk, not correctness.</strong> VP8/VP9 encode/decode has zero SIMD on riscv64. The <code class="language-plaintext highlighter-rouge">generic-gnu</code> fallback configuration is used, meaning all DCT, motion estimation, and prediction operations are scalar. This is the highest-impact codec gap given VP8/VP9 remain the most widely deployed WebRTC codecs.</p>
+<p><strong>Protocol Buffers - highest transitive risk.</strong> Maintainers have explicitly stated riscv64 is unsupported and not on their roadmap; no protoc binary is published for riscv64. Any WebRTC build toolchain that auto-downloads protoc from Maven or PyPI breaks on riscv64.</p>
 
-<p><strong>dav1d – best-in-class.</strong> First-class riscv64 support with QEMU CI on every commit since early 2024. RVV 1.0+ required; on hardware supporting RVV, AV1 decode performance on riscv64 is competitive.</p><hr />
+<p><strong>Abseil - highest risk among the direct critical dependencies.</strong> No CI of any kind runs for riscv64 - not even a compile gate - and every patch requires an internal Google champion plus internal re-export. A CRC32C hardware-acceleration PR is stalled purely on Google’s internal riscv64 hardware access, illustrating that the blocker here is organizational, not technical.</p>
+
+<p><strong>BoringSSL - performance risk, not correctness.</strong> No FIPS module confirmed, no crypto assembly for riscv64; Ubuntu/Debian ship only the Android-fork package, not vanilla upstream BoringSSL. All AES-GCM, ChaCha20, and ECDH operations used in DTLS/SRTP run scalar C. Not a build blocker, but relevant to DTLS handshake performance.</p>
+
+<p><strong>libvpx - performance risk, not correctness.</strong> VP8/VP9 encode/decode has zero SIMD on riscv64 via the <code class="language-plaintext highlighter-rouge">generic-gnu</code> fallback. This is the highest-impact codec gap given VP8/VP9 remain widely deployed WebRTC codecs, and no upstream CI exists for libvpx on any architecture.</p>
+
+<p><strong>dav1d - best-in-class, for contrast.</strong> First-class riscv64 support with QEMU CI on every commit since early 2024, correctness tests across 4 VLEN configurations, and release-note coverage since v1.4.0. It is the one dependency in this table with a genuinely mature riscv64 posture.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1163,56 +1069,65 @@ autoninja -C out/x64-v8-riscv64
   </thead>
   <tbody>
     <tr>
-      <td>(none in webrtc-mirror/webrtc)</td>
-      <td>Zero riscv64 issues exist in the upstream tracker</td>
-      <td>–</td>
-      <td>–</td>
-      <td>GitHub search confirmed 0 results for <code class="language-plaintext highlighter-rouge">riscv</code> in webrtc-mirror/webrtc issues (open or closed)</td>
+      <td>(none in core libwebrtc)</td>
+      <td>Zero riscv64-specific issues/CLs exist against core libwebrtc on Gerrit, issuetracker.google.com/crbug, GitHub, or lore.kernel.org (libwebrtc has no kernel mailing-list presence - it is userspace)</td>
+      <td>-</td>
+      <td>-</td>
+      <td>Confirmed this cycle across all listed trackers</td>
+    </tr>
+    <tr>
+      <td>Gerrit CL 222481</td>
+      <td>“arch.h: Add RISC-V support”</td>
+      <td>Abandoned 2023-03-18</td>
+      <td>-</td>
+      <td>No response from submitter for 8 months; see Section 2</td>
     </tr>
     <tr>
       <td>sipeed/NanoKVM #804</td>
       <td>Switching from WebRTC to MPEG mode wedges NanoKVM-Server until reboot</td>
       <td>Open</td>
-      <td>High (availability)</td>
-      <td>Error: <code class="language-plaintext highlighter-rouge">[lt6911_probe] jump return CVI_FAILURE</code>, <code class="language-plaintext highlighter-rouge">rmmod: can't unload module 'soph_vpss': Resource temporarily unavailable</code>. WebRTC noted as unreliable behind NAT/tunnels on SG2002 RISC-V device [NEEDS VERIFICATION - device-specific, may not reflect libwebrtc itself]</td>
+      <td>High (availability, device-specific)</td>
+      <td>Error: <code class="language-plaintext highlighter-rouge">[lt6911_probe] jump return CVI_FAILURE</code>; noted as unreliable behind NAT/tunnels on this SG2002 RISC-V device [NEEDS VERIFICATION - device-specific, may not reflect libwebrtc itself]</td>
     </tr>
     <tr>
       <td>sipeed/NanoKVM #537</td>
       <td>H264 streaming regressed vs WebRTC between firmware 2.2.7 and 2.2.8</td>
       <td>Closed (May 2025)</td>
       <td>Medium</td>
-      <td>Qualitative observation: “WEBRTC was never good” for responsiveness on this RISC-V device. No benchmark numbers.</td>
+      <td>Qualitative only: “WebRTC was never good” for responsiveness on this device; no benchmark numbers</td>
     </tr>
     <tr>
       <td>libsrtp PR #754</td>
-      <td>test_roc_driver.c timeout under riscv64 QEMU</td>
+      <td><code class="language-plaintext highlighter-rouge">test_roc_driver.c</code> timeout under riscv64 QEMU</td>
       <td>Open</td>
       <td>Low (test-only)</td>
-      <td>Build succeeds; test infrastructure issue under QEMU</td>
+      <td>Build succeeds; this is a QEMU test-infrastructure issue, not a correctness bug</td>
     </tr>
     <tr>
-      <td>Abseil-cpp Issue #1702</td>
-      <td>Link error with riscv64 toolchain</td>
+      <td>github.com/riseproject-dev/python-wheels #1136</td>
+      <td>webrtcvad-wheels riscv64 support</td>
       <td>Open</td>
-      <td>High (build)</td>
-      <td>Affects static builds; toolchain-version-dependent</td>
+      <td>-</td>
+      <td>References PR #1109 as the implementing patch; not a libwebrtc-core issue</td>
     </tr>
     <tr>
-      <td>Abseil-cpp Issue #2002</td>
-      <td><code class="language-plaintext highlighter-rouge">hashtablez_sampler_test</code> and <code class="language-plaintext highlighter-rouge">cordz_sample_token_test</code> fail on riscv64-linux-gnu</td>
+      <td>github.com/riseproject-dev/python-wheels #1079</td>
+      <td>pylibsrtp riscv64 support</td>
       <td>Open</td>
-      <td>Medium (test correctness)</td>
-      <td>May indicate runtime issue in sampling code on riscv64</td>
+      <td>-</td>
+      <td>SRTP Python wrapper, not libwebrtc-core</td>
     </tr>
     <tr>
-      <td>protobuf Issue #17798</td>
+      <td>protobuf #17798</td>
       <td>No riscv64 Maven/PyPI binaries for protoc</td>
       <td>Open</td>
-      <td>High (toolchain)</td>
-      <td>Maintainer stance: not on roadmap; blocks automated build pipelines</td>
+      <td>High (toolchain, transitive)</td>
+      <td>Maintainer stance: not on roadmap</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p>No correctness bugs specific to libwebrtc’s own riscv64 code path were found; the sipeed/NanoKVM reports concern a downstream embedded product, not the library.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1222,84 +1137,93 @@ autoninja -C out/x64-v8-riscv64
 </h2>
     
 
-<p><strong>Organizational:</strong> All core WebRTC OWNERS are Google employees. Google decides what architectures receive CI and optimization investment. RISC-V has received one commit in over five years. There is no signal that Google intends to add riscv64 CI or audio DSP optimizations.</p>
+<p><strong>Organizational.</strong> All core WebRTC OWNERS are Google employees, and contribution acceptance runs exclusively through Google-run Gerrit review. The one substantive attempt at RISC-V work beyond passive macro detection (CL 222481) was abandoned for lack of contributor follow-up, not for a technical objection - the author’s own comments attribute the stall to scarce, slow RISC-V hardware and Chromium itself not yet building on RISC-V at the time (2021). No comparable attempt has been made since.</p>
 
-<p><strong>Technical:</strong> libwebrtc has no <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_RISCV_FAMILY</code> macro, which means adding RVV dispatch to any audio component requires: (a) adding the family macro to arch.h, (b) adding CPU feature detection for RVV in cpu_info.cc, (c) writing RVV-accelerated implementations for each component (AEC3, FIR filter, sinc resampler, signal processing). This is a 4-7 person-month effort.</p>
+<p><strong>Technical.</strong> libwebrtc has no <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_RISCV_FAMILY</code> macro, which is the gating mechanism every SIMD dispatch site keys off. Adding RVV dispatch to any audio component requires, at minimum: (a) adding the family macro to <code class="language-plaintext highlighter-rouge">arch.h</code>, (b) adding RVV feature detection to <code class="language-plaintext highlighter-rouge">cpu_info.cc</code> (a pattern that already exists for libyuv’s <code class="language-plaintext highlighter-rouge">RiscvCpuCaps()</code>), and (c) writing RVV implementations per component (AEC3, FIR filter, sinc resampler, signal processing).</p>
 
-<p><strong>Contribution process:</strong> Contributions must go through googlesource.com Gerrit and require OWNERS approval. All OWNERS are Google employees. Acceptance of external riscv64 SIMD contributions is not guaranteed and has no precedent for this project.</p>
+<p><strong>Contribution process.</strong> Contributions must go through googlesource.com Gerrit and require OWNERS approval; all OWNERS are Google employees. There is no precedent of an external riscv64 SIMD contribution being accepted into core libwebrtc.</p>
 
-<p><strong>Protocol Buffers blocker:</strong> Until protobuf maintainers publish an official riscv64 protoc binary, any CI pipeline that uses the standard proto compilation toolchain requires a workaround. This is a known friction point for new adopters.</p>
+<p><strong>Transitive blockers.</strong> Protocol Buffers’ maintainers have explicitly declined riscv64 support, which is a known friction point for any build pipeline that relies on the standard proto toolchain rather than a distro-packaged or source-built protoc. Abseil has no CI of any kind for riscv64, and Google’s internal-champion requirement for every patch is an organizational bottleneck independent of code quality.</p>
 
-<p><strong>libyuv RVV build flag gap:</strong> The libyuv RVV files compile unconditionally but require the toolchain’s <code class="language-plaintext highlighter-rouge">-march</code> to include <code class="language-plaintext highlighter-rouge">+v</code>. Without an explicit build flag, <code class="language-plaintext highlighter-rouge">rv64gc</code> toolchains do not activate RVV. This is not documented in WebRTC’s build docs.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>libyuv build-flag gap.</strong> libyuv’s RVV files compile unconditionally but depend on the toolchain’s <code class="language-plaintext highlighter-rouge">-march</code> implicitly including <code class="language-plaintext highlighter-rouge">+v</code>; without an explicit flag, <code class="language-plaintext highlighter-rouge">rv64gc</code> toolchains do not activate RVV. This is undocumented in WebRTC’s own build docs and represents an easy-to-miss silent performance regression for anyone building WebRTC for riscv64.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no funded work on libwebrtc. All items below represent un-covered ground.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> Orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> None</li>
+  <li>libwebrtc has zero riscv64 CI: the live LUCI buildbucket config has zero occurrences of “riscv” across roughly 60+ builders (<a href="https://webrtc.googlesource.com/src/+/main/infra/config/generated/luci/cr-buildbucket.cfg">cr-buildbucket.cfg</a>), and riscv64 is absent from the officially documented supported platforms (<a href="https://webrtc.googlesource.com/src/+/refs/heads/main/g3doc/supported-platforms-and-compilers.md">supported-platforms-and-compilers.md</a>). The full engine is never packaged or released as a standalone binary by any distro (source-only, built into Chromium/apps); the only riscv64 artifacts that exist anywhere are downstream/patched forks of a sub-component - <code class="language-plaintext highlighter-rouge">webrtc-audio-processing</code> (commit <code class="language-plaintext highlighter-rouge">f89958d8</code>, synced from upstream’s arch.h) and Ubuntu’s separately built <code class="language-plaintext highlighter-rouge">libwebrtc-audio-coding</code>/<code class="language-plaintext highlighter-rouge">libwebrtc-audio-processing</code> packages (<a href="https://packages.ubuntu.com/resolute/libwebrtc-audio-coding-1-3">packages.ubuntu.com</a>) - not the core libwebrtc project itself. This places the project at the patched/uncertain “downstream-only” floor (capped at orange, not yellow’s clean-distro-build), rather than reflecting a genuine upstream or distro release of libwebrtc itself.</li>
+  <li>Code does compile on riscv64 (passive <code class="language-plaintext highlighter-rouge">__riscv</code>/<code class="language-plaintext highlighter-rouge">__riscv_xlen</code> macros in <code class="language-plaintext highlighter-rouge">rtc_base/system/arch.h</code>, confirmed cleanly building in the third-party <code class="language-plaintext highlighter-rouge">webrtcvad-wheels</code> PR #1109), which rules out red.</li>
+  <li>This is not an optimization-purpose project: WebRTC’s value proposition is protocol and feature completeness, not raw throughput relative to an alternative library.</li>
+  <li><strong>Pending work that could change the grade:</strong> Gerrit CL 222481 (“arch.h: Add RISC-V support”) was abandoned 2023-03-18 for lack of contributor follow-up (<a href="https://webrtc-review.googlesource.com/c/src/+/222481">CL 222481</a>). No open CL/PR/tracking issue exists against core libwebrtc for a riscv64 port or CI lane. The only open items are unrelated third-party wrapper repos - <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> issue #1136 (webrtcvad-wheels riscv64 wheel request) and issue #1079 (pylibsrtp) - neither of which touches core libwebrtc source or CI. No RISE membership or funded RFP for libwebrtc was found.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has no funded work on libwebrtc; everything below is uncovered ground.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The codebase already compiles and runs in scalar mode on riscv64. No functional gaps block deployment. Effort here is CI infrastructure (Section 13.3) and protobuf workaround documentation.</p>
-<h3 id="132-performance-optimization">
+<p>The codebase already compiles and runs in scalar mode on riscv64. No functional gap blocks deployment today. The remaining work is entirely about making that scalar build official (a family macro, a re-opened porting CL) and documenting the Protocol Buffers workaround for build pipelines.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The largest performance gaps, in priority order:</p>
+<p>In priority order:</p>
 
 <ol>
-  <li>
-    <p><strong>libvpx riscv64 SIMD</strong> – VP8/VP9 encode/decode is zero-SIMD on riscv64. Given that VP8/VP9 are the dominant WebRTC codecs in deployed systems, this is the highest-impact optimization target. This is a libvpx project effort, not a libwebrtc project effort, but it directly determines WebRTC video performance on riscv64.</p>
-  </li>
-  <li>
-    <p><strong>WebRTC audio DSP RVV</strong> – AEC3, FIR filter, sinc resampler. Requires adding <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_RISCV_FAMILY</code>, RVV detection in cpu_info.cc, and RVV implementations per component. Precedent exists from libyuv (which has complete RVV audio-adjacent code).</p>
-  </li>
-  <li>
-    <p><strong>BoringSSL crypto assembly</strong> – Unblocks DTLS handshake performance. BoringSSL riscv64 crypto assembly does not exist; OpenSSL has it (AES-Zvkned, ChaCha20-RVV, etc.) and could serve as a reference.</p>
-  </li>
-  <li>
-    <p><strong>libyuv RVV build flag</strong> – Ensure <code class="language-plaintext highlighter-rouge">-march=+v</code> is applied when building libyuv within WebRTC’s GN build for riscv64 when <code class="language-plaintext highlighter-rouge">riscv_use_rvv=true</code>. Low effort, high impact if RVV hardware is available.</p>
-  </li>
+  <li><strong>libvpx riscv64 SIMD</strong> - VP8/VP9 is zero-SIMD on riscv64 and remains the dominant deployed WebRTC codec pair; this is a libvpx-project effort, not a libwebrtc-project effort, but it directly determines WebRTC video performance on riscv64.</li>
+  <li><strong>WebRTC audio DSP RVV</strong> - AEC3, FIR filter, sinc resampler. Requires adding <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_RISCV_FAMILY</code> and RVV detection to <code class="language-plaintext highlighter-rouge">cpu_info.cc</code> first (precedent already exists in libyuv’s <code class="language-plaintext highlighter-rouge">RiscvCpuCaps()</code>).</li>
+  <li><strong>BoringSSL crypto assembly</strong> - unblocks DTLS handshake performance; BoringSSL has zero riscv64 crypto assembly today, unlike OpenSSL, which could serve as a reference implementation.</li>
+  <li><strong>libyuv RVV build-flag fix</strong> - ensure <code class="language-plaintext highlighter-rouge">-march=+v</code> is applied when WebRTC’s GN build targets riscv64 with <code class="language-plaintext highlighter-rouge">riscv_use_rvv=true</code>-equivalent intent; low effort, immediate payoff if RVV hardware is the deployment target.</li>
 </ol>
-<h3 id="133-cicd-infrastructure">
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>Adding riscv64 to WebRTC’s LUCI CI requires Google cooperation since LUCI is Google-operated infrastructure. An alternative path is a GitHub Actions workflow in a fork or downstream distribution targeting riscv64 QEMU, as a proof-of-concept to demonstrate stability and build confidence before upstreaming a request to Google.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>The primary ecosystem gap is the missing <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_RISCV_FAMILY</code> macro, which serves as the gating mechanism for all future arch-specific dispatch. Adding this macro is a prerequisite for any downstream optimization work and is a one-line change that should be trivially upstreamable.</p>
-<h3 id="135-summary-table">
+<p>Adding riscv64 to WebRTC’s LUCI CI requires Google’s cooperation, since LUCI is Google-operated infrastructure. A lower-friction path is standing up an out-of-tree riscv64 QEMU build+test workflow (fork or downstream distribution) as a proof-of-concept to demonstrate stability before requesting Google add an official LUCI builder - re-opening a CL similar to the abandoned CL 222481, this time with a working CI signal attached, addresses the exact objection (“no response from submitter,” compounded by no CI evidence) that killed the last attempt.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>The <code class="language-plaintext highlighter-rouge">WEBRTC_ARCH_RISCV_FAMILY</code> macro is the single gating mechanism for every future SIMD dispatch site; adding it is a one-line, trivially upstreamable prerequisite for any of the performance work in 14.2.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1325,21 +1249,28 @@ autoninja -C out/x64-v8-riscv64
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Add RVV detection to cpu_info.cc (mirrors libyuv’s RiscvCpuCaps())</td>
+      <td>Add RVV detection to cpu_info.cc (mirrors libyuv’s <code class="language-plaintext highlighter-rouge">RiscvCpuCaps()</code>)</td>
       <td>1</td>
       <td>Google Gerrit contributor</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Document protobuf riscv64 workaround (build from source or use distro package)</td>
+      <td>Re-open a riscv64 porting CL with CI evidence attached (addressing the reason CL 222481 was abandoned)</td>
+      <td>1-2</td>
+      <td>External contributor + Google reviewer</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Document the Protocol Buffers riscv64 workaround (build protoc from source or use a distro package)</td>
       <td>0.5</td>
       <td>Any</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix libyuv RVV build flag in WebRTC’s GN build (<code class="language-plaintext highlighter-rouge">riscv_use_rvv=true</code> path)</td>
+      <td>Fix the libyuv RVV build-flag gap in WebRTC’s GN build</td>
       <td>1</td>
       <td>WebRTC build team</td>
       <td>High</td>
@@ -1367,14 +1298,14 @@ autoninja -C out/x64-v8-riscv64
     </tr>
     <tr>
       <td>Performance</td>
-      <td>WebRTC signal processing (spl: cross-corr, downsample, min/max) RVV</td>
+      <td>WebRTC signal processing (spl: cross-correlation, downsample, min/max) RVV</td>
       <td>4-6</td>
       <td>Audio DSP engineer</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>BoringSSL riscv64 crypto assembly (AES-GCM, ChaCha20, at minimum)</td>
+      <td>BoringSSL riscv64 crypto assembly (AES-GCM, ChaCha20 at minimum)</td>
       <td>8-12</td>
       <td>BoringSSL/crypto engineer</td>
       <td>Medium</td>
@@ -1388,23 +1319,13 @@ autoninja -C out/x64-v8-riscv64
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Upstream riscv64 LUCI builder to Google (requires Google buy-in)</td>
+      <td>Upstream a riscv64 LUCI builder to Google (requires Google buy-in)</td>
       <td>2-4 + negotiation</td>
       <td>Google + external sponsor</td>
       <td>Low</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1415,33 +1336,48 @@ autoninja -C out/x64-v8-riscv64
     
 
 <ul>
-  <li><a href="https://github.com/webrtc-mirror/webrtc/commit/6215ba804eb500f3e28b39088c73af3c4f4cd10a">webrtc-mirror/webrtc commit 6215ba8 – Add preprocessor support for additional architectures</a></li>
+  <li><a href="https://webrtc.googlesource.com/src">WebRTC source repository (webrtc.googlesource.com)</a></li>
+  <li><a href="https://webrtc.googlesource.com/src/+/main/infra/config/generated/luci/cr-buildbucket.cfg">WebRTC LUCI buildbucket config, confirming zero riscv64 builders</a></li>
+  <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/g3doc/supported-platforms-and-compilers.md">WebRTC officially documented supported platforms</a></li>
+  <li><a href="https://ci.chromium.org/p/webrtc/g/ci/console">WebRTC CI console (ci.chromium.org)</a></li>
   <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/rtc_base/system/arch.h">WebRTC arch.h (webrtc.googlesource.com)</a></li>
   <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/rtc_base/cpu_info.cc">WebRTC cpu_info.cc (webrtc.googlesource.com)</a></li>
-  <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/common_audio/BUILD.gn">WebRTC common_audio BUILD.gn (webrtc.googlesource.com)</a></li>
+  <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/common_audio/signal_processing/include/spl_inl.h">WebRTC spl_inl.h (webrtc.googlesource.com)</a></li>
+  <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/common_audio/resampler/sinc_resampler.cc">WebRTC sinc_resampler.cc (webrtc.googlesource.com)</a></li>
+  <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/DEPS">WebRTC DEPS file (webrtc.googlesource.com)</a></li>
   <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/webrtc.gni">WebRTC webrtc.gni (webrtc.googlesource.com)</a></li>
   <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/infra/config/builders.star">WebRTC infra/config/builders.star (webrtc.googlesource.com)</a></li>
   <li><a href="https://webrtc.googlesource.com/src/+/refs/heads/main/tools_webrtc/mb/mb_config.pyl">WebRTC tools_webrtc/mb/mb_config.pyl (webrtc.googlesource.com)</a></li>
-  <li><a href="https://ci.chromium.org/p/webrtc/g/ci/console">WebRTC CI console (ci.chromium.org)</a></li>
-  <li><a href="https://chromium.googlesource.com/libyuv/libyuv/+/d23308a2a7442be8e559b1b471862fd7588d6a57/source/row_rvv.cc">libyuv row_rvv.cc (chromium.googlesource.com, commit d23308a2)</a></li>
-  <li><a href="https://chromium.googlesource.com/libyuv/libyuv/+/d23308a2a7442be8e559b1b471862fd7588d6a57/source/scale_rvv.cc">libyuv scale_rvv.cc (chromium.googlesource.com, commit d23308a2)</a></li>
-  <li><a href="https://chromium.googlesource.com/libyuv/libyuv/+/d23308a2a7442be8e559b1b471862fd7588d6a57/include/libyuv/cpu_id.h">libyuv cpu_id.h (chromium.googlesource.com)</a></li>
+  <li><a href="https://webrtc-review.googlesource.com/c/src/+/198241">Gerrit CL 198241 - Add preprocessor support for additional architectures</a></li>
+  <li><a href="https://bugs.chromium.org/p/webrtc/issues/detail?id=12312">webrtc:12312 bug reference</a></li>
+  <li><a href="https://webrtc-review.googlesource.com/c/src/+/222481">Gerrit CL 222481 - arch.h: Add RISC-V support (abandoned)</a></li>
+  <li><a href="https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing/-/merge_requests/19">webrtc-audio-processing MR !19 (original RISC-V patch submission)</a></li>
+  <li><a href="https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing/-/commit/f89958d82420cc02c7d80cf8f365e6ed57546c92">webrtc-audio-processing commit f89958d8 - Bring arch.h in line with upstream webrtc</a></li>
+  <li><a href="https://chromium.googlesource.com/chromium/src/build/+/0cd0da38e2c2014565c29d8fcbe0f9d893b41ce6/toolchain/linux/BUILD.gn">Chromium build toolchain definitions, build/toolchain/linux/BUILD.gn</a></li>
+  <li><a href="https://chromium.googlesource.com/libyuv/libyuv/+/d23308a2a7442be8e559b1b471862fd7588d6a57/source/row_rvv.cc">libyuv row_rvv.cc (chromium.googlesource.com)</a></li>
+  <li><a href="https://chromium.googlesource.com/libyuv/libyuv/+/d23308a2a7442be8e559b1b471862fd7588d6a57/source/scale_rvv.cc">libyuv scale_rvv.cc (chromium.googlesource.com)</a></li>
   <li><a href="https://chromium.googlesource.com/libyuv/libyuv/+/d23308a2a7442be8e559b1b471862fd7588d6a57/source/cpu_id.cc">libyuv cpu_id.cc (chromium.googlesource.com)</a></li>
-  <li><a href="https://chromium.googlesource.com/chromium/src/build/+/0cd0da38e2c2014565c29d8fcbe0f9d893b41ce6/toolchain/linux/BUILD.gn">Chromium build toolchain definitions, build/toolchain/linux/BUILD.gn, commit 0cd0da38</a></li>
-  <li><a href="https://packages.ubuntu.com/search?keywords=libwebrtc&amp;suite=noble&amp;searchon=names&amp;section=all">Ubuntu packages – libwebrtc-audio-processing riscv64</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=webrtc-audio-processing">Debian buildd – webrtc-audio-processing riscv64</a></li>
-  <li><a href="https://github.com/sipeed/NanoKVM/issues/537">sipeed/NanoKVM Issue #537 – H264 streaming regression</a></li>
-  <li><a href="https://github.com/sipeed/NanoKVM/issues/804">sipeed/NanoKVM Issue #804 – WebRTC mode-switch wedges server</a></li>
-  <li><a href="https://riseproject.dev/blog">RISE Project blog (riseproject.dev)</a></li>
-  <li><a href="https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/8585217/2024+End-of-Year+Ecosystem+Update">RISE December 2024 Ecosystem Update PDF</a></li>
-  <li><a href="https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/8588516/RISCV64+new+vector+instructions+requirements+for+video+multimedia">RISE multimedia instruction requirements for video/multimedia (x264 analysis)</a></li>
-  <li><a href="https://github.com/cisco/libsrtp/pull/754">libsrtp PR #754 – riscv64 QEMU test timeout</a></li>
-  <li><a href="https://github.com/abseil/abseil-cpp/issues/1702">Abseil-cpp Issue #1702 – linker error with riscv64 toolchain</a></li>
-  <li><a href="https://github.com/abseil/abseil-cpp/issues/2002">Abseil-cpp Issue #2002 – test failures on riscv64-linux-gnu</a></li>
-  <li><a href="https://github.com/protocolbuffers/protobuf/issues/17798">protobuf Issue #17798 – no riscv64 Maven/PyPI binaries</a></li>
-  <li><a href="https://github.com/google/crc32c/pull/75">crc32c PR #75 – cmake riscv64 detection</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/397">cpuinfo PR #397 – complete riscv64 ISA extension support</a></li>
-  <li><a href="https://github.com/cisco/openh264/pull/3773">OpenH264 PR #3773 – meson riscv64 CPU family fix</a></li>
+  <li><a href="https://chromium.googlesource.com/libyuv/libyuv/+/d23308a2a7442be8e559b1b471862fd7588d6a57/include/libyuv/cpu_id.h">libyuv cpu_id.h (chromium.googlesource.com)</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/libwebrtc-audio-coding-1-3">Ubuntu packages - libwebrtc-audio-coding-1-3 (resolute, riscv64 confirmed)</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=libwebrtc&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu packages search - libwebrtc (resolute)</a></li>
+  <li><a href="https://pypi.org/pypi/libwebrtc/json">PyPI libwebrtc package lookup (404, package does not exist)</a></li>
+  <li><a href="https://pypi.org/pypi/webrtcvad/json">PyPI webrtcvad package</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/issues/1136">riseproject-dev/python-wheels issue #1136 - webrtcvad-wheels riscv64 support</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/pull/1109">riseproject-dev/python-wheels PR #1109 - build-webrtcvad-wheels.yml for riscv64</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/issues/1079">riseproject-dev/python-wheels issue #1079 - pylibsrtp riscv64 support</a></li>
+  <li><a href="https://github.com/daanzu/py-webrtcvad-wheels">daanzu/py-webrtcvad-wheels (upstream of webrtcvad-wheels)</a></li>
+  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
+  <li><a href="https://riseproject.dev/wp-sitemap-posts-post-1.xml">RISE Project blog post sitemap (full post list)</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Project Python wheel builder package list</a></li>
+  <li><a href="https://github.com/sipeed/NanoKVM/issues/537">sipeed/NanoKVM Issue #537 - H264 streaming regression</a></li>
+  <li><a href="https://github.com/sipeed/NanoKVM/issues/804">sipeed/NanoKVM Issue #804 - WebRTC mode-switch wedges server</a></li>
+  <li><a href="https://github.com/cisco/libsrtp/pull/754">libsrtp PR #754 - riscv64 QEMU test timeout</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/1702">Abseil-cpp Issue #1702 - linker error with riscv64 toolchain</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/2002">Abseil-cpp Issue #2002 - test failures on riscv64-linux-gnu</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/pull/1986">Abseil-cpp PR #1986 - hardware CRC32C for riscv64</a></li>
+  <li><a href="https://github.com/protocolbuffers/protobuf/issues/17798">protobuf Issue #17798 - no riscv64 Maven/PyPI binaries</a></li>
+  <li><a href="https://github.com/google/crc32c/pull/75">crc32c PR #75 - cmake riscv64 detection</a></li>
+  <li><a href="https://github.com/cisco/openh264/pull/3773">OpenH264 PR #3773 - meson riscv64 CPU family fix</a></li>
 </ul>
 
           
