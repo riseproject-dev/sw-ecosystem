@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for libnuma<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +280,13 @@
 </h2>
     
 
-<p>libnuma is the C library component of the <a href="https://github.com/numactl/numactl">numactl</a> project. It provides a programmatic interface to the Linux kernel NUMA policy syscalls: <code class="language-plaintext highlighter-rouge">mbind</code>, <code class="language-plaintext highlighter-rouge">get_mempolicy</code>, <code class="language-plaintext highlighter-rouge">set_mempolicy</code>, <code class="language-plaintext highlighter-rouge">migrate_pages</code>, and <code class="language-plaintext highlighter-rouge">move_pages</code>. The companion <code class="language-plaintext highlighter-rouge">numactl</code> binary is a process launcher that applies NUMA policy to arbitrary executables. The library is licensed LGPL-2.1; the tool and demo programs are GPL-2.0.</p>
+<p>libnuma is the C library component of the <a href="https://github.com/numactl/numactl">numactl</a> project. It provides a programmatic interface to the Linux kernel NUMA policy syscalls: <code class="language-plaintext highlighter-rouge">mbind</code>, <code class="language-plaintext highlighter-rouge">get_mempolicy</code>, <code class="language-plaintext highlighter-rouge">set_mempolicy</code>, <code class="language-plaintext highlighter-rouge">migrate_pages</code>, and <code class="language-plaintext highlighter-rouge">move_pages</code>. The companion <code class="language-plaintext highlighter-rouge">numactl</code> binary is a process launcher that applies NUMA policy to arbitrary executables. <code class="language-plaintext highlighter-rouge">libnuma</code> itself is licensed LGPL-2.1; the <code class="language-plaintext highlighter-rouge">numactl</code> tool and demo programs are GPL-2.0. Manpages carry the Linux manpages license.</p>
 
-<p>The repository is hosted under the <code class="language-plaintext highlighter-rouge">numactl</code> GitHub organization. There is no formal governance document, no MAINTAINERS file, no CODEOWNERS file, and no foundation membership. The project is not a RISE Project member. Andi Kleen (SUSE Labs) is the original primary author and has functioned as sole gatekeeper since the project’s inception. Historical co-authors include Cliff Wickman and Christoph Lameter (SGI, credited through the 2.0.10-rc2 copyright) and Lee Schermerhorn (HP). Recent contributors (hygoni, luochenglcs, Pingfan Liu) have no stated corporate affiliations in the repository.</p>
+<p>The repository is hosted under the <code class="language-plaintext highlighter-rouge">numactl</code> GitHub organization. There is no MAINTAINERS, OWNERS, or CODEOWNERS file, and no PLATFORMS.md, SUPPORT.md, or documented architecture-tier policy of any kind. The only governance-adjacent document is <code class="language-plaintext highlighter-rouge">SECURITY.md</code>, which states plainly: “This project is maintained by a team of volunteers on a reasonable-effort basis.” Security reports go through GitHub security advisories with a roughly 90-day disclosure window, and patches are applied only to the latest release. The project has no foundation membership and is not a RISE Project member.</p>
 
-<p>The project has no documented policy on new architecture ports. Andi Kleen merges community contributions without stated resistance; the community stance is permissive but entirely passive with respect to RISC-V completeness.</p><hr />
+<p>The README credits current maintainers as Andi Kleen and Chunsheng Luo (“Luo Chunsheng”), “as well as various contributors.” Andi Kleen has been the sole merge gatekeeper since the project’s inception; his email history shows Intel (<code class="language-plaintext highlighter-rouge">ak@linux.intel.com</code>) and SUSE Labs (<code class="language-plaintext highlighter-rouge">ak@suse.de</code>) affiliations, with commits now made from a personal domain (<code class="language-plaintext highlighter-rouge">github@halobates.de</code>). Chunsheng Luo (co-maintainer) is affiliated with Huawei (<code class="language-plaintext highlighter-rouge">luochunsheng@huawei.com</code>). Original v2.0.0 authors were Cliff Wickman and Christoph Lameter (SGI) and Lee Schermerhorn (HP). Other notable contributors by commit history include Filipe Brandenburger (Google), Petr Holasek, Pingfan Liu, and Sanskriti Sharma (Red Hat), Ben Widawsky (Intel), Harish and Tim Pepper (IBM), Hyeonggon Yoo (SK hynix), and Danial Klimkin (Google, author of the most recent RISC-V fix). No single company controls the project; contributions are spread across SGI (historical), Intel, SUSE, HP, Red Hat, IBM, Huawei, Google, and SK hynix, merged by an informally recognized volunteer maintainer.</p>
+
+<p>The project has no documented policy on new architecture ports and no RFC or platform-tier gate for accepting one. In practice, new-architecture patches (small <code class="language-plaintext highlighter-rouge">#ifdef __ARCH__</code> additions to <code class="language-plaintext highlighter-rouge">syscall.c</code>) are reviewed and merged directly by Andi Kleen with no formal process, contributed by both individuals (Eric Long, Marvin Schmidt) and corporate engineers (Danial Klimkin, Google) with equally low friction.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -304,45 +307,57 @@
   <tbody>
     <tr>
       <td>2021-05-07</td>
-      <td>Commit <code class="language-plaintext highlighter-rouge">e0de0d9</code> by ffontaine: adds portable <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS([__atomic_fetch_and_1], [atomic])</code> to configure.ac. Fixes sparc and implicitly covers riscv64.</td>
+      <td>Commit <code class="language-plaintext highlighter-rouge">e0de0d9</code> by ffontaine: adds portable <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS([__atomic_fetch_and_1], [atomic])</code> to <code class="language-plaintext highlighter-rouge">configure.ac</code>. Fixes sparc and implicitly covers riscv64 for libatomic detection.</td>
       <td><a href="https://github.com/numactl/numactl/commits/master">numactl commits</a></td>
     </tr>
     <tr>
-      <td>2022-08-22</td>
-      <td><a href="https://github.com/numactl/numactl/pull/131">PR #131</a> merged by andikleen: adds riscv64-specific <code class="language-plaintext highlighter-rouge">-latomic</code> to Makefile.am via <code class="language-plaintext highlighter-rouge">AM_CONDITIONAL([RISCV64], ...)</code>. Simultaneously and silently removes the <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code> line added by <code class="language-plaintext highlighter-rouge">e0de0d9</code>. First explicitly riscv64-specific change in the repo. Author: hack3ric (no stated corporate affiliation).</td>
+      <td>2022-08-21/22</td>
+      <td><a href="https://github.com/numactl/numactl/pull/131">PR #131</a> merged by andikleen: adds riscv64-specific <code class="language-plaintext highlighter-rouge">-latomic</code> linking to <code class="language-plaintext highlighter-rouge">Makefile.am</code> via <code class="language-plaintext highlighter-rouge">AM_CONDITIONAL([RISCV64], ...)</code>, fixing a Debian riscv64 buildd failure (<code class="language-plaintext highlighter-rouge">undefined reference to __atomic_fetch_and_1</code>). Silently removes the <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code> line added by <code class="language-plaintext highlighter-rouge">e0de0d9</code>. Author: Eric Long (hack3ric, no stated corporate affiliation).</td>
       <td><a href="https://github.com/numactl/numactl/pull/131">PR #131</a></td>
     </tr>
     <tr>
       <td>2022-09-07</td>
-      <td>v2.0.15 released. Carries the riscv64-specific <code class="language-plaintext highlighter-rouge">-latomic</code> conditional and is missing the portable <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code>.</td>
+      <td>v2.0.15 released. Carries the riscv64-specific <code class="language-plaintext highlighter-rouge">-latomic</code> conditional; <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code> is absent.</td>
       <td><a href="https://github.com/numactl/numactl/releases">GitHub releases</a></td>
     </tr>
     <tr>
       <td>2022-11-02</td>
-      <td>Commit <code class="language-plaintext highlighter-rouge">18ec3b9</code> by ffontaine: re-adds <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS([__atomic_fetch_and_1], [atomic])</code>. Motivated by build failures on sparc and microblaze caused by PR #131 removing the portable path. At this point both mechanisms coexist redundantly.</td>
-      <td><a href="https://github.com/numactl/numactl/commits/master">numactl commits</a></td>
+      <td>Reviewer ffontaine comments on PR #131 (post-merge) that the architecture-based <code class="language-plaintext highlighter-rouge">-latomic</code> hack broke other architectures needing the same fix, explicitly naming sparc, microblaze, and some ARM flavors. This is the regression that directly triggers the later revert.</td>
+      <td><a href="https://github.com/numactl/numactl/pull/131">PR #131 discussion</a></td>
+    </tr>
+    <tr>
+      <td>2023-10-20</td>
+      <td><a href="https://github.com/numactl/numactl/pull/197">PR #197</a> opened by Marvin Schmidt (marv, exherbo.org): proposes reverting PR #131. Rationale: whether <code class="language-plaintext highlighter-rouge">-latomic</code> is needed depends on the toolchain (GCC vs LLVM/Clang), not the architecture; an LLVM-toolchain riscv64 build has no <code class="language-plaintext highlighter-rouge">-latomic</code> to link, so the unconditional flag broke LLVM riscv64 builds. <a href="https://github.com/numactl/numactl/pull/198">PR #198</a>, opened the same day by the same author, fixes a separate riscv64/musl build warning by switching <code class="language-plaintext highlighter-rouge">sysfs.c</code> from <code class="language-plaintext highlighter-rouge">&lt;sys/fcntl.h&gt;</code> to <code class="language-plaintext highlighter-rouge">&lt;fcntl.h&gt;</code>.</td>
+      <td><a href="https://github.com/numactl/numactl/pull/197">PR #197</a>, <a href="https://github.com/numactl/numactl/pull/198">PR #198</a></td>
     </tr>
     <tr>
       <td>2024-01-06</td>
-      <td><a href="https://github.com/numactl/numactl/pull/197">PR #197</a> merged by andikleen: reverts PR #131. Removes the <code class="language-plaintext highlighter-rouge">RISCV64</code> autoconf conditional and the <code class="language-plaintext highlighter-rouge">if RISCV64 ... -latomic</code> block. Rationale: LLVM on riscv64 has no <code class="language-plaintext highlighter-rouge">-latomic</code>; the correct fix is <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code>, which was already present. Author: Marvin Schmidt (marv, exherbo.org).</td>
-      <td><a href="https://github.com/numactl/numactl/pull/197">PR #197</a></td>
-    </tr>
-    <tr>
-      <td>2024-01-06</td>
-      <td><a href="https://github.com/numactl/numactl/pull/198">PR #198</a> merged: replaces <code class="language-plaintext highlighter-rouge">&lt;sys/fcntl.h&gt;</code> with <code class="language-plaintext highlighter-rouge">&lt;fcntl.h&gt;</code>. Motivated by riscv64/musl build failures.</td>
-      <td><a href="https://github.com/numactl/numactl/pull/198">PR #198</a></td>
+      <td>Both PR #197 and PR #198 merged by andikleen (reviewed by luochenglcs), roughly 2.5 months after opening. <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS([__atomic_fetch_and_1], [atomic])</code> is restored as the sole, toolchain-driven detection mechanism, replacing the architecture-based hack.</td>
+      <td><a href="https://github.com/numactl/numactl/pull/197">PR #197</a>, <a href="https://github.com/numactl/numactl/pull/198">PR #198</a></td>
     </tr>
     <tr>
       <td>2024-01-17</td>
-      <td>v2.0.17 released. Contains both PR #197 and PR #198. riscv64 builds correctly with GCC and LLVM via <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code>. No riscv64-specific code remains in the tree.</td>
+      <td>v2.0.17 released, containing PR #197 and PR #198. riscv64 builds correctly with both GCC and LLVM toolchains via <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code>.</td>
       <td><a href="https://github.com/numactl/numactl/releases">GitHub releases</a></td>
+    </tr>
+    <tr>
+      <td>2024-10-24</td>
+      <td>v2.0.19 released (current latest tag). No riscv64-specific changes in this release beyond the state reached in v2.0.17.</td>
+      <td><a href="https://github.com/numactl/numactl/releases">GitHub releases</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-23</td>
+      <td><a href="https://github.com/numactl/numactl/pull/260">PR #260</a> merged by andikleen, same day it was opened, author dklimkin (Danial Klimkin, Google). Adds <code class="language-plaintext highlighter-rouge">defined(__riscv)</code> to the <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> fallback-syscall-number <code class="language-plaintext highlighter-rouge">#if</code> chain in <code class="language-plaintext highlighter-rouge">syscall.c</code>, so riscv64 shares syscall number 450 with x86_64/aarch64/i386/powerpc/mips/s390x instead of falling through to a build-time <code class="language-plaintext highlighter-rouge">#warning</code>. Commit <code class="language-plaintext highlighter-rouge">ab036a3</code>.</td>
+      <td><a href="https://github.com/numactl/numactl/pull/260">PR #260</a>, <a href="https://github.com/numactl/numactl/commit/ab036a3f74453ff34ede915fb4cbc7c7b0d7f6de">commit ab036a3</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No tracking issue for a riscv64 port was ever filed. There is no <code class="language-plaintext highlighter-rouge">syscall.c</code> patch adding an explicit <code class="language-plaintext highlighter-rouge">__riscv</code> ifdef block. No riscv64-specific code exists in the current tree. The port is effectively complete via the generic Linux kernel header path (see Section 4).</p>
+<p>No tracking issue for a riscv64 port was ever filed (<code class="language-plaintext highlighter-rouge">search_issues</code> for “riscv” and “riscv64” scoped to <code class="language-plaintext highlighter-rouge">numactl/numactl</code> both return 0 results). All riscv64-related work is a small set of four standalone PRs (#131, #197, #198, #260); no fifth PR or abandoned attempt exists in the full commit history.</p>
 
-<p>The RISC-V port is fully upstream in the sense that no downstream patches are required for the core functionality on riscv64. Whether Debian applies additional patches to <code class="language-plaintext highlighter-rouge">syscall.c</code> to add an explicit <code class="language-plaintext highlighter-rouge">__riscv</code> block could not be confirmed from available data [NEEDS VERIFICATION].</p><hr />
+<p>PR #260 is merged to <code class="language-plaintext highlighter-rouge">master</code> (commit <code class="language-plaintext highlighter-rouge">ab036a3</code>, HEAD as of this report is <code class="language-plaintext highlighter-rouge">09fc1874</code> with 491 commits and 45 tags) but is not yet in any tagged release: the latest tag, v2.0.19, was cut 2024-10-24, nearly two years before PR #260 merged. Until the next release, distro packages built from v2.0.19 (see Section 8) still carry the pre-#260 <code class="language-plaintext highlighter-rouge">syscall.c</code>, which emits a spurious build-time <code class="language-plaintext highlighter-rouge">#warning</code> on riscv64 for <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> but is otherwise functionally correct (the syscall falls through to ENOSYS on kernels that lack it).</p>
+
+<p>The port is otherwise fully upstream: no downstream patches are required for core NUMA functionality on riscv64, because riscv64 uses the Linux generic syscall ABI and the five core syscall numbers (<code class="language-plaintext highlighter-rouge">mbind</code>, <code class="language-plaintext highlighter-rouge">get_mempolicy</code>, <code class="language-plaintext highlighter-rouge">set_mempolicy</code>, <code class="language-plaintext highlighter-rouge">migrate_pages</code>, <code class="language-plaintext highlighter-rouge">move_pages</code>) are already supplied by kernel/libc headers without any numactl-side <code class="language-plaintext highlighter-rouge">#ifdef</code>. Whether Debian or Ubuntu apply any additional patches on top of vanilla upstream source when building their riscv64 packages could not be confirmed from available data [NEEDS VERIFICATION] – this is the single open question affecting the readiness grade (see Section 13).</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -352,9 +367,9 @@
 </h2>
     
 
-<p>numactl has no documented architecture support tiers. The project makes no distinction between Tier 1, Tier 2, or experimental architectures.</p>
+<p>numactl has no documented architecture support tiers of any kind; no PLATFORMS.md, SUPPORT.md, or docs/platforms/ directory exists, and no formal Tier 1/Tier 2/experimental distinction is made anywhere in the repository.</p>
 
-<p>In practice, support can be inferred from CI coverage and official binary production:</p>
+<p>In practice, support can be inferred from CI coverage and release/packaging evidence:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -368,44 +383,44 @@
   <tbody>
     <tr>
       <td>Tested in upstream CI</td>
-      <td>Yes</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">makefile.yml</code>, <code class="language-plaintext highlighter-rouge">codeql.yml</code>, <code class="language-plaintext highlighter-rouge">cut-release.yml</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, all x86-only)</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>Official binary releases</td>
-      <td>No (source only)</td>
-      <td>No (source only)</td>
-      <td>No (source only)</td>
+      <td>Official GitHub Release binaries</td>
+      <td>No (source tarball only)</td>
+      <td>No (source tarball only)</td>
+      <td>No (source tarball only)</td>
     </tr>
     <tr>
       <td>Distro packaging</td>
       <td>Yes (all distros)</td>
       <td>Yes (all distros)</td>
-      <td>Yes (Debian sid, Ubuntu 24.04)</td>
-    </tr>
-    <tr>
-      <td>Test suite run against hardware</td>
-      <td>Yes (CI)</td>
-      <td>Unknown</td>
-      <td>No (single-node NUMA, tests skipped)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">syscall.c</code> explicit ifdef</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>No</td>
+      <td>Yes (Debian sid main pool, Ubuntu 22.04/24.04/26.04)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> ifdef</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No</td>
+      <td>Yes as of PR #260 (merged 2026-09-23, unreleased)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">clearcache</code> implementation</td>
+      <td>Yes (hand-tuned x86 asm)</td>
+      <td>No (generic scalar fallback)</td>
+      <td>No (generic scalar fallback)</td>
+    </tr>
+    <tr>
+      <td>Test suite run against hardware</td>
+      <td>Yes (CI)</td>
+      <td>Unknown</td>
+      <td>No (single-node NUMA hardware only; NUMA-dependent tests skipped)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>All architectures are source-only releases from upstream. riscv64 is at the same tier as arm64 with respect to upstream CI: neither has a CI job. riscv64 lags arm64 only in <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> ifdef coverage.</p><hr />
+<p>riscv64 and arm64 are at the same CI tier: neither has any upstream build or test job. Source-level completeness is also comparable between the two (see Section 4); riscv64 closed its one remaining gap relative to arm64 with PR #260, though that fix has not yet shipped in a tagged release.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -415,29 +430,26 @@
 </h2>
     
 
-<p>libnuma is a thin system call wrapper. It has no JIT, no SIMD, no cryptography, no compression, no garbage collection, and no assembly. The architecture-specific surface area is narrow.</p>
+<p>libnuma is a thin system call wrapper. It has no JIT, no SIMD, no cryptography, no compression, no garbage collection, and (outside two small files) no architecture-conditional code at all. A full-repository grep for <code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">__riscv</code>, <code class="language-plaintext highlighter-rouge">rvv</code>, and <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code> returns matches only in <code class="language-plaintext highlighter-rouge">syscall.c</code>; there is no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory and no <code class="language-plaintext highlighter-rouge">.S</code> assembly files anywhere in the repository.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">syscall.c</code> – NUMA syscall number table</strong></p>
+<p><strong><code class="language-plaintext highlighter-rouge">syscall.c</code> (305 lines) – core NUMA syscall number table.</strong> Defines fallback <code class="language-plaintext highlighter-rouge">#define __NR_mbind ...</code>-style values, gated by <code class="language-plaintext highlighter-rouge">#if !defined(__NR_mbind) || ...</code>, for architectures whose kernel/libc headers do not already supply them: x86_64, ia64, i386, powerpc, loongarch, MIPS (three ABIs), hppa, arm, and s390x. riscv64 is absent from this block, and that is not a gap: riscv64 uses the Linux generic syscall table (<code class="language-plaintext highlighter-rouge">asm-generic/unistd.h</code>), where <code class="language-plaintext highlighter-rouge">mbind</code>=235, <code class="language-plaintext highlighter-rouge">get_mempolicy</code>=236, <code class="language-plaintext highlighter-rouge">set_mempolicy</code>=237, <code class="language-plaintext highlighter-rouge">migrate_pages</code>=238, and <code class="language-plaintext highlighter-rouge">move_pages</code>=239 are already defined before this file compiles, so the outer guard evaluates false and the per-arch block is skipped entirely. x86_64/i386 additionally carry roughly 50 lines of hand-written inline-asm 6-argument syscall wrappers (<code class="language-plaintext highlighter-rouge">syscall6</code>) that riscv64 does not need or have.</p>
 
-<p>This file defines fallback <code class="language-plaintext highlighter-rouge">#define __NR_mbind ...</code> values for architectures where kernel headers do not supply the numbers. It lists explicit <code class="language-plaintext highlighter-rouge">#ifdef</code> blocks for: x86_64, ia64, i386, powerpc, loongarch, MIPS (three ABIs), hppa, arm, and s390x. riscv64 (<code class="language-plaintext highlighter-rouge">__riscv</code>) is absent.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">syscall.c</code> – <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> (syscall 450).</strong> As of PR #260 (merged 2026-09-23, commit <code class="language-plaintext highlighter-rouge">ab036a3</code>, unreleased), the fallback-constant <code class="language-plaintext highlighter-rouge">#if</code> chain reads:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#if !defined(__NR_set_mempolicy_home_node)
+#if defined(__x86_64__) || defined(__aarch64__) || defined(__i386__) || defined(__powerpc__) || defined(__mips__) || defined(__s390x__) || defined(__riscv)
+#define __NR_set_mempolicy_home_node 450
+#else
+#warning "Add syscalls for your architecture or update kernel headers"
+</span></code></pre></div></div>
+<p>Before this fix, riscv64 fell into the <code class="language-plaintext highlighter-rouge">#else</code> branch and emitted a spurious build-time warning; the runtime behavior was unaffected either way, since the API returns ENOSYS gracefully when unsupported. Every distro package currently shipping (all built from v2.0.19, tagged before PR #260) still carries the pre-fix warning.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">#error "Add syscalls for your architecture or update kernel headers"</code> at the end of the fallback chain does not fire on riscv64 because the Linux generic syscall table (<code class="language-plaintext highlighter-rouge">include/uapi/asm-generic/unistd.h</code>) defines all five NUMA syscalls for MMU-capable architectures: mbind=235, get_mempolicy=236, set_mempolicy=237, migrate_pages=238, move_pages=239. These are present on riscv64 before <code class="language-plaintext highlighter-rouge">syscall.c</code> is compiled, so the outer <code class="language-plaintext highlighter-rouge">#if !defined(...)</code> guards evaluate false and the entire per-arch block is skipped. The Debian buildd result (2.0.19-1+b2, “Installed” on <code class="language-plaintext highlighter-rouge">rv-osuosl-03</code>) confirms this.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">clearcache.c</code> (77 lines).</strong> Emits <code class="language-plaintext highlighter-rouge">#warning 'Consider adding a clearcache implementation for your architecture'</code> and falls back to a generic, portable scalar routine on riscv64. aarch64 has the identical gap; x86_64/i386 have a hand-tuned <code class="language-plaintext highlighter-rouge">cpuid</code>/<code class="language-plaintext highlighter-rouge">clflush</code> implementation. This is tracked by upstream <a href="https://github.com/numactl/numactl/issues/205">issue #205</a>, open since January 2024, labeled “help wanted,” with no fix merged. It is a benchmark-tool (<code class="language-plaintext highlighter-rouge">numademo</code>) concern only, with no effect on the core library API.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">syscall.c</code> – <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> (syscall 450)</strong></p>
+<p><strong><code class="language-plaintext highlighter-rouge">libnuma.c</code> (2,392 lines) and <code class="language-plaintext highlighter-rouge">affinity.c</code> (347 lines).</strong> Zero architecture <code class="language-plaintext highlighter-rouge">#ifdef</code>s of any kind – this is the bulk of libnuma’s actual logic (NUMA topology discovery, bitmask/policy handling, sysfs parsing, CPU affinity) and it is pure portable C for every architecture, riscv64 included. The only arch-aware logic anywhere is a runtime (not compile-time) 64-bit width check.</p>
 
-<p>The newer tiered-memory API is explicitly defined in <code class="language-plaintext highlighter-rouge">syscall.c</code> for x86_64, aarch64, i386, powerpc, MIPS, and s390x. riscv64 and LoongArch are absent. A <code class="language-plaintext highlighter-rouge">#warning</code> is emitted at compile time on riscv64. The API degrades gracefully at runtime (ENOSYS if the running kernel supports the syscall, which modern kernels do), but the build warning is spurious. A one-line <code class="language-plaintext highlighter-rouge">#elif defined(__riscv)</code> addition to the existing ifdef chain would resolve it.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">stream_lib.c</code>, <code class="language-plaintext highlighter-rouge">numademo.c</code>.</strong> Zero architecture ifdefs. <code class="language-plaintext highlighter-rouge">stream_lib.c</code> relies entirely on compiler auto-vectorization (<code class="language-plaintext highlighter-rouge">-ftree-vectorize -ffast-math -funroll-loops</code>), with no SIMD intrinsics for any architecture – no RVV, no SSE, no NEON.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">clearcache.c</code></strong></p>
-
-<p>The file emits <code class="language-plaintext highlighter-rouge">#warning 'Consider adding a clearcache implementation for your architecture'</code> on riscv64. aarch64 has the same gap (upstream <a href="https://github.com/numactl/numactl/issues/205">issue #205</a>, open January 2024, labeled “help wanted”, no fix merged). This is a warning, not a build failure.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">libnuma.c</code></strong></p>
-
-<p>No architecture ifdefs. The only arch-aware logic is a runtime 64-bit width check (<code class="language-plaintext highlighter-rouge">sizeof(unsigned long) == 8</code>), not compile-time.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">stream_lib.c</code>, <code class="language-plaintext highlighter-rouge">affinity.c</code>, <code class="language-plaintext highlighter-rouge">numademo.c</code></strong></p>
-
-<p>Zero architecture ifdefs. <code class="language-plaintext highlighter-rouge">stream_lib.c</code> relies on compiler auto-vectorization (<code class="language-plaintext highlighter-rouge">-ftree-vectorize -ffast-math -funroll-loops</code>). No SIMD intrinsics for any architecture. No RVV, no SSE, no NEON.</p>
+<p><strong>TODO/FIXME/stub search</strong> across the repo returns exactly two hits, neither riscv-related: a generic nodemask_t TODO in <code class="language-plaintext highlighter-rouge">libnuma.c</code> and a powerpc-specific <code class="language-plaintext highlighter-rouge">move_pages</code> FIXME in <code class="language-plaintext highlighter-rouge">syscall.c</code>.</p>
 
 <p><strong>Component summary:</strong></p>
 
@@ -452,8 +464,8 @@
   </thead>
   <tbody>
     <tr>
-      <td>NUMA syscall numbers</td>
-      <td>Explicit ifdef</td>
+      <td>Core NUMA syscall numbers</td>
+      <td>Explicit ifdef + hand-asm <code class="language-plaintext highlighter-rouge">syscall6</code></td>
       <td>No explicit ifdef (kernel headers)</td>
       <td>No explicit ifdef (kernel headers)</td>
     </tr>
@@ -461,23 +473,29 @@
       <td><code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code></td>
       <td>Explicit ifdef</td>
       <td>Explicit ifdef</td>
-      <td>Missing (warning)</td>
+      <td>Explicit ifdef as of PR #260 (unreleased)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">clearcache</code></td>
-      <td>Implemented</td>
-      <td>Missing (warning)</td>
-      <td>Missing (warning)</td>
+      <td>Hand-tuned <code class="language-plaintext highlighter-rouge">cpuid</code>/<code class="language-plaintext highlighter-rouge">clflush</code> asm</td>
+      <td>Generic scalar fallback (warning)</td>
+      <td>Generic scalar fallback (warning)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">libnuma.c</code> / <code class="language-plaintext highlighter-rouge">affinity.c</code> topology logic</td>
+      <td>Portable C</td>
+      <td>Portable C</td>
+      <td>Portable C</td>
     </tr>
     <tr>
       <td>SIMD / vectorized code</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
+      <td>None (auto-vectorize only)</td>
+      <td>None (auto-vectorize only)</td>
+      <td>None (auto-vectorize only)</td>
     </tr>
     <tr>
       <td>Assembly</td>
-      <td>None</td>
+      <td>x86/i386 syscall6 + clearcache only</td>
       <td>None</td>
       <td>None</td>
     </tr>
@@ -487,16 +505,10 @@
       <td>None</td>
       <td>None</td>
     </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">syscall6</code> / <code class="language-plaintext highlighter-rouge">migrate_pages</code></td>
-      <td>glibc <code class="language-plaintext highlighter-rouge">syscall()</code></td>
-      <td>glibc <code class="language-plaintext highlighter-rouge">syscall()</code></td>
-      <td>glibc <code class="language-plaintext highlighter-rouge">syscall()</code></td>
-    </tr>
   </tbody>
 </table></div>
 
-<p>riscv64 is functionally equivalent to arm64 for all practical purposes. Both rely on kernel header-provided syscall numbers. Both are missing the <code class="language-plaintext highlighter-rouge">clearcache</code> implementation. riscv64 additionally lacks the <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> ifdef that arm64 has.</p><hr />
+<p>riscv64 is functionally equivalent to arm64 across the board, at the same completeness tier as numactl’s most widely deployed non-x86 architecture. The architecture-specific surface is inherently tiny (2 files, on the order of 120 arch-conditional lines out of roughly 3,650 total), because libnuma’s actual functionality is portable C over generic Linux syscalls.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -506,33 +518,27 @@
 </h2>
     
 
-<p>Build system: GNU Autotools (autoconf &gt;= 2.64, automake, libtool). No CMake, no Meson, no Cargo, no Dockerfiles in the repository.</p>
+<p>Build system: GNU Autotools (<code class="language-plaintext highlighter-rouge">autoconf</code> &gt;= 2.64, <code class="language-plaintext highlighter-rouge">automake</code>, <code class="language-plaintext highlighter-rouge">libtool</code>). There is no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> on any branch (<code class="language-plaintext highlighter-rouge">master</code>, <code class="language-plaintext highlighter-rouge">action-1</code>, <code class="language-plaintext highlighter-rouge">imports</code>), no <code class="language-plaintext highlighter-rouge">cmake/</code> directory, no Meson, no Cargo, and no Dockerfiles anywhere in the repository. No <code class="language-plaintext highlighter-rouge">docs/BUILDING.md</code> or <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> exists; the only build documentation is <code class="language-plaintext highlighter-rouge">INSTALL.md</code>.</p>
 
 <p>Standard build from a git checkout:</p>
-
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./autogen.sh
 ./configure <span class="nt">--prefix</span><span class="o">=</span>/usr <span class="nt">--libdir</span><span class="o">=</span>/usr/lib
 make
 make check
 </code></pre></div></div>
 
-<p>Cross-compilation for riscv64:</p>
-
+<p>Cross-compilation for riscv64 (a plain, undocumented autotools invocation – <code class="language-plaintext highlighter-rouge">./configure --help</code> exposes no riscv64-specific or architecture-specific <code class="language-plaintext highlighter-rouge">--enable-*</code>/<code class="language-plaintext highlighter-rouge">--disable-*</code> flags):</p>
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./autogen.sh
-./configure <span class="nt">--host</span><span class="o">=</span>riscv64-linux-gnu <span class="se">\</span>
-            <span class="nt">--prefix</span><span class="o">=</span>/usr <span class="se">\</span>
-            <span class="nt">--libdir</span><span class="o">=</span>/usr/lib <span class="se">\</span>
-            <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc
+./configure <span class="nt">--host</span><span class="o">=</span>riscv64-linux-gnu <span class="nt">--prefix</span><span class="o">=</span>/usr <span class="nt">--libdir</span><span class="o">=</span>/usr/lib <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc
 make
+make check
 </code></pre></div></div>
 
-<p>No minimum GCC or Clang version is documented in <code class="language-plaintext highlighter-rouge">configure.ac</code> or any build file. The Travis CI matrix (historical, pre-GitHub Actions) tested GCC 4.9 through GCC 10. The <code class="language-plaintext highlighter-rouge">AC_PREREQ([2.64])</code> is the only stated minimum.</p>
+<p>No minimum GCC or Clang version is stated anywhere in <code class="language-plaintext highlighter-rouge">configure.ac</code>, <code class="language-plaintext highlighter-rouge">Makefile.am</code>, <code class="language-plaintext highlighter-rouge">README.md</code>, or <code class="language-plaintext highlighter-rouge">INSTALL.md</code>; <code class="language-plaintext highlighter-rouge">AC_PREREQ([2.64])</code> is the only stated version floor, and it applies to autoconf, not the C compiler. The build depends on GCC <code class="language-plaintext highlighter-rouge">__atomic</code> builtin support (detected via <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS([__atomic_fetch_and_1], [atomic])</code>, GCC &gt;= 4.7 generically has this); on riscv64 specifically, any working GCC (riscv64 backend upstream since GCC 7, 2017, matured by GCC 8/9) or Clang/LLVM toolchain with working atomic codegen is sufficient. No <code class="language-plaintext highlighter-rouge">-march=</code>/<code class="language-plaintext highlighter-rouge">-mabi=</code> flags are hardcoded; the build uses whatever <code class="language-plaintext highlighter-rouge">CC</code>/<code class="language-plaintext highlighter-rouge">CFLAGS</code> are supplied by the caller. The historical Travis CI matrix (<code class="language-plaintext highlighter-rouge">.travis.yml</code>, x86-only) tested GCC 4.9 through GCC 10.</p>
 
-<p>The RPM spec contains <code class="language-plaintext highlighter-rouge">ExcludeArch: s390 %{arm}</code> (excluding 32-bit ARM and 31-bit s390). riscv64 is not excluded.</p>
+<p>The only riscv64-specific build issue ever resolved is the libatomic linking saga (Section 2): PR #131 (Aug 2022) added an unconditional, architecture-gated <code class="language-plaintext highlighter-rouge">-latomic</code> link for riscv64 that broke LLVM-toolchain riscv64 builds (LLVM ships no separate <code class="language-plaintext highlighter-rouge">-latomic</code>) and regressed sparc/microblaze/some ARM flavors; PR #197 (Jan 2024) reverted it in favor of the toolchain-driven <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code> probe, which correctly handles GCC and LLVM on riscv64 alike. A companion fix, PR #198 (same date), switched <code class="language-plaintext highlighter-rouge">sysfs.c</code> from <code class="language-plaintext highlighter-rouge">&lt;sys/fcntl.h&gt;</code> to <code class="language-plaintext highlighter-rouge">&lt;fcntl.h&gt;</code> to fix a build warning specific to riscv64/musl toolchains.</p>
 
-<p>The only known build issue resolved for riscv64 is the libatomic detection (PR #197, January 2024): LLVM on riscv64 does not ship a separate <code class="language-plaintext highlighter-rouge">-latomic</code> library, so the prior unconditional link flag broke LLVM builds. Current <code class="language-plaintext highlighter-rouge">configure.ac</code> uses <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS([__atomic_fetch_and_1], [atomic])</code>, which correctly handles both GCC and LLVM on riscv64.</p>
-
-<p>No QEMU usage in upstream CI. No cross-compilation jobs in upstream CI.</p><hr />
+<p>No QEMU usage exists anywhere in the repository or in any CI workflow. No cross-compilation job exists in upstream CI (see Section 7).</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -592,8 +598,8 @@ make
       <td><code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code></td>
       <td>Full</td>
       <td>Full</td>
-      <td>Warning at build, runtime functional if kernel supports</td>
-      <td>Cosmetic build warning</td>
+      <td>Full as of PR #260 (unreleased); build warning only in all shipped v2.0.19 packages</td>
+      <td>Cosmetic build warning until next tagged release</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">numa_alloc_*</code> / <code class="language-plaintext highlighter-rouge">numa_free</code></td>
@@ -618,33 +624,31 @@ make
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">clearcache</code></td>
-      <td>Implemented</td>
-      <td>Not implemented</td>
-      <td>Not implemented</td>
-      <td>Functional gap (shared with arm64)</td>
+      <td>Implemented (hand-asm)</td>
+      <td>Not implemented (scalar fallback + warning)</td>
+      <td>Not implemented (scalar fallback + warning)</td>
+      <td>Functional gap, shared with arm64, tracked by issue #205</td>
     </tr>
     <tr>
       <td>SIMD-accelerated <code class="language-plaintext highlighter-rouge">stream_lib</code></td>
-      <td>None (scalar)</td>
-      <td>None (scalar)</td>
-      <td>None (scalar)</td>
-      <td>None (not implemented for any arch)</td>
+      <td>None (scalar, auto-vectorized)</td>
+      <td>None (scalar, auto-vectorized)</td>
+      <td>None (scalar, auto-vectorized)</td>
+      <td>Not implemented for any architecture, not riscv64-specific</td>
     </tr>
     <tr>
-      <td>NUMA multi-node topology</td>
+      <td>NUMA multi-node topology exercised</td>
       <td>Yes (hardware exists)</td>
       <td>Yes (hardware exists)</td>
-      <td>No (no multi-node riscv64 hardware in wide use)</td>
-      <td>Hardware gap, not software gap</td>
+      <td>No (no multi-node riscv64 hardware in wide deployment)</td>
+      <td>Hardware gap, not a software gap</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The clearcache gap (shared between arm64 and riscv64) affects cache coherency hints in the <code class="language-plaintext highlighter-rouge">numademo</code> benchmark binary, not the core <code class="language-plaintext highlighter-rouge">libnuma</code> library API.</p>
+<p><code class="language-plaintext highlighter-rouge">numa_available()</code> returns -1 on current riscv64 boards (SiFive HiFive Unmatched, StarFive VisionFive 2) because none expose multi-node NUMA topology; this means the full NUMA-policy code paths are not exercised on any riscv64 hardware generally available today. This is a hardware constraint, not a software gap.</p>
 
-<p>The absence of multi-node NUMA riscv64 hardware means the full NUMA policy paths are not exercised on any available platform. <code class="language-plaintext highlighter-rouge">numa_available()</code> returns -1 on all current riscv64 boards (SiFive HiFive Unmatched, StarFive VisionFive 2). This is a hardware constraint, not a software gap.</p>
-
-<p>No floating-point, cryptographic, or security hardening gaps identified. libnuma does not perform floating-point arithmetic or cryptographic operations.</p><hr />
+<p>No floating-point, cryptographic, or security-hardening gaps exist for riscv64: libnuma performs no floating-point arithmetic and no cryptographic operations anywhere in its codebase.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -654,15 +658,17 @@ make
 </h2>
     
 
-<p>All three upstream CI workflow files were read directly.</p>
+<p>All four CI/legacy-CI configuration files present in the repository were read directly (local clone, HEAD <code class="language-plaintext highlighter-rouge">09fc1874</code>); no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exist.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">.github/workflows/makefile.yml</code>:</strong> Triggers on push to <code class="language-plaintext highlighter-rouge">master</code> and <code class="language-plaintext highlighter-rouge">action-1</code> branches, and on pull requests. Runs on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64 GitHub-hosted runner). Steps: <code class="language-plaintext highlighter-rouge">./autogen.sh &amp;&amp; ./configure</code>, <code class="language-plaintext highlighter-rouge">make</code>, <code class="language-plaintext highlighter-rouge">make check</code>, <code class="language-plaintext highlighter-rouge">make distcheck</code>. No matrix, no QEMU, no cross-compilation. The word “riscv” appears 0 times.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">.github/workflows/makefile.yml</code>.</strong> Triggers on push/pull_request to <code class="language-plaintext highlighter-rouge">master</code> and <code class="language-plaintext highlighter-rouge">action-1</code>. Runs on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64, GitHub-hosted). Steps: <code class="language-plaintext highlighter-rouge">./autogen.sh &amp;&amp; ./configure</code>, <code class="language-plaintext highlighter-rouge">make</code> with GCC (<code class="language-plaintext highlighter-rouge">-Wall -Werror</code>), the same with <code class="language-plaintext highlighter-rouge">CC=clang</code>, <code class="language-plaintext highlighter-rouge">make check</code>, <code class="language-plaintext highlighter-rouge">make distcheck</code>. No matrix axis, no QEMU, no cross-compilation.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">.github/workflows/codeql.yml</code>:</strong> Triggers on push to <code class="language-plaintext highlighter-rouge">master</code>, pull requests to <code class="language-plaintext highlighter-rouge">master</code>, and a weekly schedule. Runs on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64). Matrix: <code class="language-plaintext highlighter-rouge">language: [ 'cpp' ]</code> only, no architecture axis. The word “riscv” appears 0 times.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">.github/workflows/codeql.yml</code>.</strong> Triggers on push/pull_request to <code class="language-plaintext highlighter-rouge">master</code> and a weekly cron (<code class="language-plaintext highlighter-rouge">25 18 * * 6</code>). Runs on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64). CodeQL static analysis, <code class="language-plaintext highlighter-rouge">language: [ 'cpp' ]</code> only – no build/test execution of any kind, no architecture axis.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">.github/workflows/cut-release.yml</code>:</strong> Triggers on tag pushes matching <code class="language-plaintext highlighter-rouge">v*</code>. Runs on <code class="language-plaintext highlighter-rouge">ubuntu-22.04</code> (x86_64). Steps: <code class="language-plaintext highlighter-rouge">fakeroot make distcheck</code>. Single architecture. The word “riscv” appears 0 times.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">.github/workflows/cut-release.yml</code>.</strong> Triggers on tag pushes matching <code class="language-plaintext highlighter-rouge">v*</code>. Runs on <code class="language-plaintext highlighter-rouge">ubuntu-22.04</code> (x86_64). Installs <code class="language-plaintext highlighter-rouge">build-essential fakeroot</code>, runs <code class="language-plaintext highlighter-rouge">autogen.sh</code>/<code class="language-plaintext highlighter-rouge">configure</code>/<code class="language-plaintext highlighter-rouge">fakeroot make distcheck</code>, then publishes a GitHub release built from the resulting source tarball – no cross-compilation step and no per-architecture binary artifacts.</p>
 
-<p>No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, no <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, no <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exist in the repository.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">.travis.yml</code></strong> (legacy, present at repo root). <code class="language-plaintext highlighter-rouge">dist: bionic</code>/<code class="language-plaintext highlighter-rouge">xenial</code>, 7-job matrix varying only GCC 4.9 through GCC 10/g++ via the <code class="language-plaintext highlighter-rouge">ubuntu-toolchain-r-test</code> PPA, all on x86. Runs <code class="language-plaintext highlighter-rouge">make -k</code>, <code class="language-plaintext highlighter-rouge">./numactl --show</code>, <code class="language-plaintext highlighter-rouge">make -k check</code>, <code class="language-plaintext highlighter-rouge">make distcheck</code>.</p>
+
+<p><code class="language-plaintext highlighter-rouge">grep -rni "riscv"</code> across all four files, and across <code class="language-plaintext highlighter-rouge">.github/</code> as a whole, returns zero matches. Every job in every file runs exclusively on GitHub-hosted <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>/<code class="language-plaintext highlighter-rouge">ubuntu-22.04</code> (x86) or Travis <code class="language-plaintext highlighter-rouge">bionic</code>/<code class="language-plaintext highlighter-rouge">xenial</code> (x86); there is no arm runner, no riscv64 runner (self-hosted or otherwise), and no QEMU emulation setup anywhere in upstream CI.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -700,7 +706,7 @@ make
     </tr>
     <tr>
       <td>Native hardware runner</td>
-      <td>No (GitHub-hosted)</td>
+      <td>No (GitHub/Travis-hosted)</td>
       <td>No</td>
       <td>No</td>
     </tr>
@@ -719,9 +725,7 @@ make
   </tbody>
 </table></div>
 
-<p>No RISE CI infrastructure is used by numactl. The RISE Project has no involvement with this project.</p>
-
-<p>The Debian riscv64 buildd (<code class="language-plaintext highlighter-rouge">rv-osuosl-03</code>) provides the only known riscv64 build validation, and it is downstream, not upstream CI. Tests were skipped on the Debian buildd with the message “Skipping as can not run on non-NUMA” – this is expected on single-node hardware.</p><hr />
+<p>No RISE CI infrastructure is used by numactl, consistent with the absence of any RISE involvement with the project (see Sections 1 and 13). The Debian and Ubuntu riscv64 buildds that produce the packages in Section 8 provide the only known riscv64 build validation of this codebase, and they are entirely downstream, not upstream CI.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -731,11 +735,11 @@ make
 </h2>
     
 
-<p>Upstream numactl ships source-only tarballs. All GitHub release assets across v2.0.17, v2.0.18, and v2.0.19 are source archives (e.g., <code class="language-plaintext highlighter-rouge">numactl-2.0.19.tar.gz</code>). No binary assets. No riscv64 binaries in any GitHub release.</p>
+<p>Upstream GitHub Releases are source-only tarballs (e.g. <code class="language-plaintext highlighter-rouge">numactl-2.0.19.tar.gz</code>); <code class="language-plaintext highlighter-rouge">cut-release.yml</code> performs no cross-compilation and attaches no per-architecture binary assets, consistent with the release job description in Section 7. No riscv64 binary has ever been attached to a GitHub Release.</p>
 
-<p>libnuma does not exist on PyPI (HTTP 404). The RISE wheel builder has no libnuma package.</p>
+<p>libnuma does not exist on PyPI under the name <code class="language-plaintext highlighter-rouge">libnuma</code> (<code class="language-plaintext highlighter-rouge">/pypi/libnuma/json</code> and <code class="language-plaintext highlighter-rouge">/simple/libnuma/</code> both return HTTP 404, confirmed directly and via the RISE wheel-builder’s PyPI passthrough, which redirects to the same 404) or under the alternate name <code class="language-plaintext highlighter-rouge">py-numa</code> (also 404). This is expected: libnuma is a native C library, not a Python package, and is not in scope for the RISE wheel_builder’s riscv64 Python wheel set.</p>
 
-<p><strong>Distro package availability:</strong></p>
+<p><strong>Distro package availability (directly verified this session unless noted):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -751,36 +755,48 @@ make
       <td>Debian sid</td>
       <td><code class="language-plaintext highlighter-rouge">libnuma1</code>, <code class="language-plaintext highlighter-rouge">libnuma-dev</code></td>
       <td>2.0.19-1+b2</td>
-      <td>Installed, built on <code class="language-plaintext highlighter-rouge">rv-osuosl-03</code> (physical RISC-V hardware)</td>
+      <td>Confirmed: <code class="language-plaintext highlighter-rouge">libnuma1_2.0.19-1+b2_riscv64.deb</code> downloaded directly from the main pool (<code class="language-plaintext highlighter-rouge">ftp.debian.org</code>, not <code class="language-plaintext highlighter-rouge">debian-ports</code>), HTTP 200, 22,804 bytes – riscv64 is a full release architecture in Debian’s primary archive for this package</td>
     </tr>
     <tr>
-      <td>Ubuntu 24.04 LTS</td>
+      <td>Ubuntu 26.04 (resolute)</td>
       <td><code class="language-plaintext highlighter-rouge">libnuma1</code>, <code class="language-plaintext highlighter-rouge">libnuma-dev</code></td>
-      <td>2.0.18-1build1</td>
-      <td>Available; riscv64 listed as supported architecture</td>
+      <td>2.0.19-1build1</td>
+      <td>Confirmed: <code class="language-plaintext highlighter-rouge">libnuma1_2.0.19-1build1_riscv64.deb</code> downloaded directly from <code class="language-plaintext highlighter-rouge">ports.ubuntu.com</code>, HTTP 200, 25,822 bytes – riscv64 is in Ubuntu’s <strong>ports</strong> archive tier (alongside armel/powerpc), a looser support guarantee than amd64/arm64</td>
     </tr>
     <tr>
-      <td>Arch Linux RISC-V</td>
-      <td><code class="language-plaintext highlighter-rouge">numactl</code> (libnuma as subpackage)</td>
-      <td>2.0.19-1</td>
-      <td>Present with <code class="language-plaintext highlighter-rouge">[nochecked]</code> status (built, check() tests skipped) [NEEDS VERIFICATION]</td>
+      <td>Ubuntu 24.04 (noble)</td>
+      <td><code class="language-plaintext highlighter-rouge">libnuma-dev</code></td>
+      <td>2.0.16-1</td>
+      <td>Present, per direct package search; note the existing baseline for this report separately recorded 2.0.18-1build1 for the same release – the discrepancy was not resolved in this pass [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>Debian bookworm/bullseye</td>
+      <td>Ubuntu 22.04 (jammy)</td>
+      <td><code class="language-plaintext highlighter-rouge">libnuma1</code></td>
+      <td>2.0.14-3ubuntu2</td>
+      <td>Present, per Launchpad package listing</td>
+    </tr>
+    <tr>
+      <td>openSUSE Tumbleweed</td>
+      <td><code class="language-plaintext highlighter-rouge">libnuma</code></td>
       <td>n/a</td>
+      <td>Reported present in one general web search; not independently re-verified by direct package-archive fetch in this session [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>Arch Linux RISC-V (archriscv.felixc.at)</td>
+      <td><code class="language-plaintext highlighter-rouge">numactl</code></td>
       <td>n/a</td>
-      <td>riscv64 absent from older Debian suites</td>
+      <td>Not present – the repository index was fetched directly and neither <code class="language-plaintext highlighter-rouge">libnuma</code> nor <code class="language-plaintext highlighter-rouge">numactl</code> appears anywhere on it. This contradicts an earlier, unverified “present with <code class="language-plaintext highlighter-rouge">[nochecked]</code> status” claim; the direct index check in this session found no listing at all</td>
     </tr>
     <tr>
       <td>Fedora</td>
-      <td>Not confirmed</td>
       <td>n/a</td>
-      <td>Data not available: Fedora riscv64 package status was not searched.</td>
+      <td>n/a</td>
+      <td>Data not available: Fedora riscv64 package status was not searched</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>To obtain a working binary on riscv64, a user installs the distro package. No manual build steps are required on any of the three confirmed distros above.</p><hr />
+<p>To obtain a working riscv64 binary today, a user installs the Debian sid or Ubuntu package directly; no manual build is required on either confirmed distro. Debian’s main-pool placement is the stronger signal of the two, since Ubuntu riscv64 remains a ports-tier architecture. Whether either distro’s packaging carries riscv64-specific patches on top of vanilla upstream source (for example, an early hand-added <code class="language-plaintext highlighter-rouge">__riscv</code> branch in <code class="language-plaintext highlighter-rouge">syscall.c</code> predating PR #260) could not be confirmed from available data [NEEDS VERIFICATION]; this uncertainty directly affects the readiness grade (Section 13).</p>
 <h2 id="9-dependencies">
   
   
@@ -795,65 +811,64 @@ make
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>riscv64 Build</th>
-      <th>riscv64 Test</th>
-      <th>riscv64 Release</th>
-      <th>Blocking Issues</th>
+      <th>riscv64 Status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Linux kernel NUMA syscalls (mbind=235, get_mempolicy=236, set_mempolicy=237, migrate_pages=238, move_pages=239)</td>
-      <td>Core API – all libnuma functionality wraps these five syscalls</td>
-      <td>Fully supported. Defined by <code class="language-plaintext highlighter-rouge">asm-generic/unistd.h</code> for all MMU-capable arches including riscv64. Available since Linux 3.8+.</td>
-      <td>Functional on riscv64. <code class="language-plaintext highlighter-rouge">numa_available()</code> returns -1 on single-node boards; syscalls are defined but NUMA topology is absent on current hardware.</td>
-      <td>Shipped in Debian 2.0.19-1+b2, Ubuntu 2.0.18-1build1.</td>
-      <td>None.</td>
+      <td>Linux kernel</td>
+      <td>runtime-dependency, critical – supplies the five core NUMA syscall numbers via the generic syscall ABI (<code class="language-plaintext highlighter-rouge">asm-generic/unistd.h</code>), and syscall 450 for <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> (Linux 5.17+)</td>
+      <td>Fully supported since Linux 3.8+ for the core syscalls; no riscv64-specific kernel gap identified</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> (syscall 450, Linux 5.17+)</td>
-      <td>Optional tiered-memory API</td>
-      <td>Builds with a <code class="language-plaintext highlighter-rouge">#warning</code> on riscv64. The <code class="language-plaintext highlighter-rouge">syscall.c</code> ifdef list excludes <code class="language-plaintext highlighter-rouge">__riscv</code>. Runtime dispatch via glibc <code class="language-plaintext highlighter-rouge">syscall()</code> is correct if the kernel defines it.</td>
-      <td>Warning does not affect tests. API returns ENOSYS gracefully on unsupported kernels.</td>
-      <td>Shipped (warning is compile-time only, not visible to library consumers).</td>
-      <td>Open gap: one-line <code class="language-plaintext highlighter-rouge">#elif defined(__riscv)</code> addition to <code class="language-plaintext highlighter-rouge">syscall.c</code> line 145 needed to suppress the warning. No issue filed upstream. Not blocking.</td>
+      <td>glibc</td>
+      <td>runtime-dependency, critical – <code class="language-plaintext highlighter-rouge">syscall()</code>, <code class="language-plaintext highlighter-rouge">sched_setaffinity</code>/<code class="language-plaintext highlighter-rouge">sched_getaffinity</code>; numactl uses a <code class="language-plaintext highlighter-rouge">__GLIBC_PREREQ(2, 11)</code> guard to select <code class="language-plaintext highlighter-rouge">syscall</code> vs <code class="language-plaintext highlighter-rouge">syscall6</code>, a threshold riscv64 glibc always meets</td>
+      <td>Full riscv64 support since glibc 2.33+; full test suite passes on glibc/Debian riscv64</td>
     </tr>
     <tr>
-      <td>libatomic (<code class="language-plaintext highlighter-rouge">__atomic_fetch_and_1</code>)</td>
-      <td>Atomic sub-word memory operations in <code class="language-plaintext highlighter-rouge">libnuma.c</code></td>
-      <td>Resolved. <code class="language-plaintext highlighter-rouge">configure.ac</code> uses <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS([__atomic_fetch_and_1], [atomic])</code> since v2.0.17. Detects correctly for both GCC and LLVM on riscv64.</td>
-      <td>Passes.</td>
-      <td>Shipped in all distro packages at v2.0.19.</td>
-      <td>None. History: PR #131 introduced unconditional <code class="language-plaintext highlighter-rouge">-latomic</code> for riscv64 in v2.0.15, breaking LLVM builds. PR #197 reverted it in v2.0.17.</td>
+      <td>musl</td>
+      <td>runtime-dependency, optional – alternate C runtime, notably used on some riscv64 embedded/distro toolchains</td>
+      <td>Full riscv64 support in musl 1.2.x; PR #198 fixed a musl-specific <code class="language-plaintext highlighter-rouge">&lt;sys/fcntl.h&gt;</code> build warning on riscv64. musl riscv64 test-suite results: data not available</td>
     </tr>
     <tr>
-      <td>glibc / musl</td>
-      <td>C runtime: <code class="language-plaintext highlighter-rouge">syscall()</code>, <code class="language-plaintext highlighter-rouge">sched_setaffinity</code>, <code class="language-plaintext highlighter-rouge">sched_getaffinity</code></td>
-      <td>glibc 2.33+ and musl 1.2.x fully support riscv64. numactl uses a <code class="language-plaintext highlighter-rouge">__GLIBC_PREREQ(2, 11)</code> guard to select between <code class="language-plaintext highlighter-rouge">syscall</code> and <code class="language-plaintext highlighter-rouge">syscall6</code>; riscv64 always meets this threshold.</td>
-      <td>Full test suite passes on glibc riscv64 (Debian). musl test results on riscv64: data not available.</td>
-      <td>glibc riscv64 shipped since Debian Buster.</td>
-      <td>None.</td>
+      <td>GCC</td>
+      <td>build-dependency, critical – primary compiler; build relies on <code class="language-plaintext highlighter-rouge">__atomic</code> builtins for sub-word atomics, detected via <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS([__atomic_fetch_and_1], [atomic])</code></td>
+      <td>riscv64 GCC backend upstream since GCC 7 (2017), matured by GCC 8/9; no minimum version is pinned in <code class="language-plaintext highlighter-rouge">configure.ac</code>. Confirmed working via Debian/Ubuntu riscv64 buildds</td>
     </tr>
     <tr>
-      <td>Autotools (autoconf &gt;= 2.64, automake, libtool)</td>
-      <td>Build system (build-time only)</td>
-      <td>riscv64 is a fully supported host and cross-target for autotools. No arch-specific macros required.</td>
-      <td>N/A (build-time only)</td>
-      <td>N/A</td>
-      <td>None.</td>
+      <td>GCC</td>
+      <td>runtime-dependency, critical – provides <code class="language-plaintext highlighter-rouge">libatomic</code> when the toolchain requires it for <code class="language-plaintext highlighter-rouge">__atomic_fetch_and_1</code></td>
+      <td>Resolved via the same <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code> probe since v2.0.17; correctly detects when <code class="language-plaintext highlighter-rouge">-latomic</code> is/isn’t needed on riscv64 GCC builds</td>
     </tr>
     <tr>
-      <td>libm (<code class="language-plaintext highlighter-rouge">-lm</code>, numademo only)</td>
-      <td>Math functions for <code class="language-plaintext highlighter-rouge">numademo</code> benchmark. Auto-vectorized by compiler.</td>
-      <td>Fully supported on riscv64. <code class="language-plaintext highlighter-rouge">-ftree-vectorize</code> degrades to scalar when no SIMD backend is available. No intrinsics in source.</td>
-      <td><code class="language-plaintext highlighter-rouge">numademo</code> included in <code class="language-plaintext highlighter-rouge">make check</code>. Runs scalar on non-RVV hardware.</td>
-      <td>N/A (test binary only, not a shipped library)</td>
-      <td>None.</td>
+      <td>LLVM</td>
+      <td>build-dependency, optional – alternate compiler (Clang); CI runs an explicit <code class="language-plaintext highlighter-rouge">CC=clang</code> build step (x86 only, not riscv64)</td>
+      <td>LLVM riscv64 builds do not ship a separate <code class="language-plaintext highlighter-rouge">-latomic</code>; the unconditional link added by PR #131 broke this and was reverted by PR #197. Current <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code> detection correctly handles LLVM on riscv64</td>
+    </tr>
+    <tr>
+      <td>autoconf</td>
+      <td>build-dependency, critical – generates <code class="language-plaintext highlighter-rouge">configure</code> from <code class="language-plaintext highlighter-rouge">configure.ac</code> (<code class="language-plaintext highlighter-rouge">AC_PREREQ([2.64])</code>)</td>
+      <td>riscv64 is a fully supported autotools host/target; no arch-specific macros required</td>
+    </tr>
+    <tr>
+      <td>automake</td>
+      <td>build-dependency, critical – generates <code class="language-plaintext highlighter-rouge">Makefile.in</code> from <code class="language-plaintext highlighter-rouge">Makefile.am</code></td>
+      <td>Same as autoconf; no riscv64-specific handling needed</td>
+    </tr>
+    <tr>
+      <td>libtool</td>
+      <td>build-dependency, critical – builds <code class="language-plaintext highlighter-rouge">libnuma.so</code>/<code class="language-plaintext highlighter-rouge">.a</code></td>
+      <td>Same as autoconf/automake; no riscv64-specific handling needed</td>
+    </tr>
+    <tr>
+      <td>libm (<code class="language-plaintext highlighter-rouge">-lm</code>)</td>
+      <td>runtime-dependency, used only by the <code class="language-plaintext highlighter-rouge">numademo</code> benchmark binary, auto-vectorized by the compiler (no intrinsics)</td>
+      <td>Fully supported on riscv64; <code class="language-plaintext highlighter-rouge">-ftree-vectorize</code> degrades to scalar codegen in the absence of RVV, with no functional impact</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No JIT, SIMD, crypto, or compression dependencies exist. Recursive dependency analysis beyond the Linux kernel and glibc is not needed.</p><hr />
+<p>No JIT, SIMD, crypto, or compression dependencies exist in libnuma’s dependency graph, so no deeper recursive dependency analysis is applicable beyond the Linux kernel and the C runtime/toolchain layer covered above.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -876,24 +891,24 @@ make
   <tbody>
     <tr>
       <td><a href="https://github.com/numactl/numactl/issues/248">#248</a></td>
-      <td><code class="language-plaintext highlighter-rouge">numa_init</code> call ordering regression</td>
+      <td><code class="language-plaintext highlighter-rouge">numa_init</code> call-ordering regression via malloc hooks</td>
       <td>Open (Jul 2025)</td>
       <td>High</td>
-      <td>Calling <code class="language-plaintext highlighter-rouge">numa_set_bind_policy()</code> from a malloc hook during <code class="language-plaintext highlighter-rouge">numa_init</code> produces “request to allocate mask for invalid number: Invalid argument”. Introduced by commit <code class="language-plaintext highlighter-rouge">fd4ec69</code>. Affects software stacks using libnuma with malloc hooks. Not riscv64-specific.</td>
+      <td>Calling <code class="language-plaintext highlighter-rouge">numa_set_bind_policy()</code> from a malloc hook during <code class="language-plaintext highlighter-rouge">numa_init</code> produces “request to allocate mask for invalid number: Invalid argument,” introduced by commit <code class="language-plaintext highlighter-rouge">fd4ec69</code>. Not riscv64-specific.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/numactl/numactl/issues/227">#227</a></td>
       <td>Memory leak in <code class="language-plaintext highlighter-rouge">numa_distance</code> via <code class="language-plaintext highlighter-rouge">dlopen</code>/<code class="language-plaintext highlighter-rouge">dlclose</code></td>
       <td>Open (Jul 2024)</td>
       <td>Medium</td>
-      <td>ASAN-confirmed 64-byte leak per load/unload cycle. Reported on AArch64. Not riscv64-specific.</td>
+      <td>ASAN-confirmed 64-byte leak per load/unload cycle, reported on AArch64. Not riscv64-specific.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/numactl/numactl/issues/243">#243</a></td>
       <td>Static analysis findings (Ericsson, CodeChecker, v2.0.18)</td>
       <td>Open (Feb 2025)</td>
       <td>Unknown</td>
-      <td>Findings stored in attached CSV only; specific bugs not visible in issue body. Not riscv64-specific.</td>
+      <td>Findings stored in an attached CSV only. Not riscv64-specific.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/numactl/numactl/issues/240">#240</a></td>
@@ -907,19 +922,19 @@ make
       <td>Memory policy functions return 0 instead of -1 on error</td>
       <td>Open (Mar 2022)</td>
       <td>Medium</td>
-      <td>API contract violation: some error paths return 0 where the documented contract requires -1. Not riscv64-specific.</td>
+      <td>API contract violation on some error paths. Not riscv64-specific.</td>
     </tr>
     <tr>
       <td><a href="https://github.com/numactl/numactl/issues/205">#205</a></td>
-      <td>Missing <code class="language-plaintext highlighter-rouge">clearcache</code> implementation for aarch64 (and riscv64)</td>
+      <td>Missing <code class="language-plaintext highlighter-rouge">clearcache</code> implementation for aarch64 and riscv64</td>
       <td>Open (Jan 2024)</td>
       <td>Low</td>
-      <td>Labeled “help wanted”. riscv64 is in the same state as aarch64: build warning only, no functional impact on core library.</td>
+      <td>Labeled “help wanted.” riscv64 is in the same state as aarch64: build warning only, no functional impact on the core library. No fix merged as of this report.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No correctness bugs specific to riscv64 are open or known.</p><hr />
+<p>No open GitHub issue is riscv64-specific (<code class="language-plaintext highlighter-rouge">search_issues</code> for “riscv”/”riscv64”/”riscv64 performance”/”riscv64 bug” scoped to <code class="language-plaintext highlighter-rouge">numactl/numactl</code> each return zero matches). The only riscv64-specific defects ever filed were fixed via the merged PRs in Section 2 (#131 introduced a regression later fixed by #197/#198; #260 closed the <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> build-warning gap). No correctness or performance bug specific to riscv64 is currently open, and libnuma performs no floating-point arithmetic, so no NaN/floating-point semantics issue exists for any architecture.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -929,95 +944,100 @@ make
 </h2>
     
 
-<p><strong>No stated objections</strong> to riscv64 support exist. The only riscv64-specific PRs (#131 and #197) were merged and reverted on technical grounds (toolchain portability), not architecture rejection.</p>
+<p>No stated objections to riscv64 support exist anywhere in the project’s history. The only riscv64-specific PR that was reverted (#131, reverted by #197) was reverted on technical grounds – toolchain-based detection is more correct than architecture-based detection – not because riscv64 support itself was rejected.</p>
 
 <p><strong>Technical blockers:</strong></p>
 
 <ol>
-  <li>
-    <p><code class="language-plaintext highlighter-rouge">syscall.c</code> lacks an explicit <code class="language-plaintext highlighter-rouge">__riscv</code> ifdef block for <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code>. This is a cosmetic warning, not a runtime blocker. The fix is a one-line patch. No upstream issue has been filed requesting this change.</p>
-  </li>
-  <li>
-    <p><code class="language-plaintext highlighter-rouge">clearcache.c</code> emits a build warning on riscv64. This is shared with aarch64 and has been open since January 2024 with no fix merged.</p>
-  </li>
-  <li>
-    <p>No upstream CI runs on riscv64. There is no mechanism for the upstream project to catch riscv64 regressions automatically.</p>
-  </li>
+  <li>PR #260’s <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> fix is merged to <code class="language-plaintext highlighter-rouge">master</code> but not yet in a tagged release; the next <code class="language-plaintext highlighter-rouge">v2.0.20</code>-or-later release is required for distro packages to pick it up. This is a release-cadence gap, not a code gap.</li>
+  <li><code class="language-plaintext highlighter-rouge">clearcache.c</code> has no riscv64 implementation (issue #205, open since January 2024, “help wanted,” no fix merged). A Zicbom-based <code class="language-plaintext highlighter-rouge">cbo.flush</code> implementation, or a documented no-op fallback for hardware lacking Zicbom, would close this; it is a benchmark-tool warning, not a functional blocker.</li>
+  <li>No upstream CI runs on riscv64 in any form (QEMU or native), across all four CI configuration files present in the repository (Section 7). There is no mechanism for upstream to catch riscv64 regressions automatically.</li>
 </ol>
 
-<p><strong>Organizational blockers:</strong></p>
+<p><strong>Organizational blockers:</strong> None identified. Andi Kleen merged PR #131 in one day and PR #260 the same day it was opened; PR #197/#198 took about 2.5 months from open to merge with no recorded pushback. The project accepts community and corporate contributions (Google’s dklimkin, in the most recent case) without resistance.</p>
 
-<p>None. Andi Kleen merged PR #131 in one day and PR #197 in 77 days. The project accepts community contributions without resistance. A well-formed patch for the <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> ifdef and a CI job addition would be accepted based on prior merge history.</p>
-
-<p><strong>Acceptance probability:</strong> High for small targeted patches. The project has no stated opposition to riscv64 and has already shipped riscv64-compatible code through the portable <code class="language-plaintext highlighter-rouge">AC_SEARCH_LIBS</code> path.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability:</strong> High for small, targeted patches. The project has demonstrated repeated, low-friction acceptance of riscv64-specific fixes from both individual and corporate contributors; a well-formed patch adding riscv64 CI or a <code class="language-plaintext highlighter-rouge">clearcache</code> implementation would likely be accepted based on this merge history, though no one has yet submitted either.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no involvement with libnuma. No RISE-funded work was identified in any source. All items below represent work not yet covered.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li>Optimization level: not applicable – libnuma is not an optimization-purpose project. It is a thin syscall wrapper around <code class="language-plaintext highlighter-rouge">mbind</code>/<code class="language-plaintext highlighter-rouge">get_mempolicy</code>/<code class="language-plaintext highlighter-rouge">set_mempolicy</code>/<code class="language-plaintext highlighter-rouge">migrate_pages</code>/<code class="language-plaintext highlighter-rouge">move_pages</code> with no SIMD, crypto, JIT, or numerics differentiator, so no optimization-gap analysis applies.</li>
+</ul>
+
+<p><strong>Justification:</strong> libnuma/numactl has no upstream riscv64 CI at all. <a href="https://github.com/numactl/numactl/blob/master/.github/workflows/codeql.yml"><code class="language-plaintext highlighter-rouge">codeql.yml</code></a>, <a href="https://github.com/numactl/numactl/blob/master/.github/workflows/makefile.yml"><code class="language-plaintext highlighter-rouge">makefile.yml</code></a>, <a href="https://github.com/numactl/numactl/blob/master/.github/workflows/cut-release.yml"><code class="language-plaintext highlighter-rouge">cut-release.yml</code></a>, and the legacy <code class="language-plaintext highlighter-rouge">.travis.yml</code> all run only on x86_64 (<code class="language-plaintext highlighter-rouge">ubuntu-latest</code>/<code class="language-plaintext highlighter-rouge">bionic</code>); a grep for “riscv” across all four files returns zero matches, and there is no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>. Upstream GitHub Releases are source-only tarballs with no riscv64 binary asset, so the release provider is not upstream. This maps to the “no upstream CI” base case, orange. The distribution floor applies because Debian sid (main pool, not ports) and Ubuntu 26.04 (ports) both build and ship real riscv64 <code class="language-plaintext highlighter-rouge">.deb</code> binaries at v2.0.19, verified in this report by direct download of <code class="language-plaintext highlighter-rouge">libnuma1_2.0.19-1+b2_riscv64.deb</code> and <code class="language-plaintext highlighter-rouge">libnuma1_2.0.19-1build1_riscv64.deb</code> – so the project is not entirely unsupported on riscv64 in practice. Whether those distro packages are built from unmodified upstream source or carry riscv64-specific patches could not be confirmed [NEEDS VERIFICATION] regarding Debian’s <code class="language-plaintext highlighter-rouge">syscall.c</code> handling, so per the grading rule the floor upgrade is capped at orange (downstream-only) rather than yellow (clean-distro-build).</p>
+
+<p><strong>Pending work that could change the grade:</strong> PR #260 (merged 2026-09-23, “Fix fallback for <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> syscall for RISC-V”) is only on <code class="language-plaintext highlighter-rouge">master</code> and not yet in a tagged release (latest tag v2.0.19 is from 2024-10-24) – once released, it closes the last known riscv64-specific code gap. Issue #205 (missing <code class="language-plaintext highlighter-rouge">clearcache</code> implementation, shared with aarch64) remains open since January 2024, labeled “help wanted,” with no fix merged. No RISE Project involvement or funded work was found for libnuma/numactl in any source checked (blog posts, wheel_builder listing, GitHub org <code class="language-plaintext highlighter-rouge">riseproject-dev</code>, targeted web searches). No upstream riscv64 CI job (QEMU or native runner) has been proposed or added; adding one would be the single highest-leverage change to raise the grade. Debian/Ubuntu packaging patch status (vanilla vs riscv-patched) was not independently verified and, if confirmed unpatched, would justify reclassifying to yellow (clean-distro-build).</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has no involvement with libnuma: no RISE blog post, GitHub repository, working group, or funded project references it anywhere checked, including all identified RISE blog posts individually, the RISE wheel_builder package list (84 riscv64 Python wheels, none named libnuma), and the <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub org (26 repos, none libnuma-related). All items below represent work not covered by any existing funded effort.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>Two functional gaps exist:</p>
+<p>One functional gap remains open:</p>
 
 <ol>
-  <li>
-    <p>Add <code class="language-plaintext highlighter-rouge">#elif defined(__riscv)</code> to the <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> ifdef in <code class="language-plaintext highlighter-rouge">syscall.c</code> to suppress the build warning. This requires knowing the correct syscall number for riscv64 (likely 450, matching the generic asm table, but verification against the kernel source is required before submitting). Effort: trivial.</p>
-  </li>
-  <li>
-    <p>Implement <code class="language-plaintext highlighter-rouge">clearcache</code> for riscv64 in <code class="language-plaintext highlighter-rouge">clearcache.c</code>. This is shared work with the aarch64 gap (issue #205). The correct riscv64 implementation would use <code class="language-plaintext highlighter-rouge">cbo.flush</code> (Zicbom extension) or fall back to a no-op on hardware lacking Zicbom. Effort: low.</p>
-  </li>
+  <li>Implement <code class="language-plaintext highlighter-rouge">clearcache</code> for riscv64 in <code class="language-plaintext highlighter-rouge">clearcache.c</code> (issue #205). This is shared work with the identical aarch64 gap. A correct riscv64 implementation would use <code class="language-plaintext highlighter-rouge">cbo.flush</code> (Zicbom extension) with a documented no-op fallback on hardware lacking Zicbom. Effort: low. The <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> gap (Section 4) is already fixed upstream via PR #260; the only remaining action there is waiting for, or requesting, the next tagged release.</li>
 </ol>
-<h3 id="132-performance-optimization">
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>Data not available: no public benchmark comparison data exists for libnuma on riscv64. Performance optimization of libnuma itself is not a meaningful investment target: the library is a thin syscall wrapper with no compute-intensive paths. <code class="language-plaintext highlighter-rouge">stream_lib.c</code> auto-vectorizes with <code class="language-plaintext highlighter-rouge">-ftree-vectorize</code>; adding RVV intrinsics would benefit only the <code class="language-plaintext highlighter-rouge">numademo</code> benchmark, which is not a production workload.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The highest-value investment is adding a riscv64 CI job. Options:</p>
+<p>Data not available: no public benchmark comparison data exists for libnuma on riscv64, whether against arm64, amd64, or in absolute terms. No RISE publication, blog post, or third-party source found in this research contains numeric libnuma-on-riscv64 performance results. Performance optimization of libnuma itself is not a meaningful investment target: the library is a thin syscall wrapper with no compute-intensive paths, and <code class="language-plaintext highlighter-rouge">numa_available()</code> returns -1 on all current riscv64 boards (no multi-node riscv64 hardware in wide deployment), so the NUMA policy paths that would be worth benchmarking are not exercisable on available hardware today. <code class="language-plaintext highlighter-rouge">stream_lib.c</code> auto-vectorizes via <code class="language-plaintext highlighter-rouge">-ftree-vectorize</code>; adding RVV intrinsics would benefit only the <code class="language-plaintext highlighter-rouge">numademo</code> benchmark binary, not a production workload.</p>
+<h3 id="143-cicd-infrastructure">
+  
+  
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+
+<p>This is the highest-value investment area, since it is the primary driver of the orange grade. Options:</p>
 
 <ul>
-  <li>QEMU-based cross-compilation and test in the upstream GitHub Actions workflow. Cost: requires adding a matrix entry and QEMU setup to <code class="language-plaintext highlighter-rouge">makefile.yml</code>. NUMA tests will be skipped (single-node QEMU guest), but build verification is achieved.</li>
-  <li>Native riscv64 runner via a RISE-hosted runner or self-hosted GitHub Actions runner on SiFive/StarFive hardware. Provides actual test execution.</li>
+  <li>QEMU-based riscv64 cross-compilation and build/test job added to <code class="language-plaintext highlighter-rouge">makefile.yml</code>. NUMA-policy tests will be skipped under a single-node QEMU guest, but build verification is achieved and regressions on riscv64-relevant code paths (syscall number tables, atomic detection) would be caught automatically.</li>
+  <li>Native riscv64 runner (RISE-hosted or self-hosted on SiFive/StarFive hardware) for full test execution, including exercising the non-NUMA-dependent parts of the test suite.</li>
 </ul>
-<h3 id="134-ecosystem-enablement">
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
 
-<p>Not applicable. libnuma is a system library with no dependent package ecosystem requiring separate riscv64 enablement.</p>
-<h3 id="135-summary-table">
+<p>Not applicable. libnuma is a system library with no dependent package ecosystem (it has no PyPI, npm, or Maven presence) requiring separate riscv64 enablement; its only consumers are downstream C/C++ binaries linking against <code class="language-plaintext highlighter-rouge">libnuma.so</code>, which distro packaging already covers.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1036,14 +1056,14 @@ make
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Add <code class="language-plaintext highlighter-rouge">__riscv</code> to <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> ifdef in <code class="language-plaintext highlighter-rouge">syscall.c</code></td>
+      <td>Get PR #260 into a tagged release (request/cut a new numactl release)</td>
       <td>0.1</td>
-      <td>Community contributor</td>
-      <td>Medium</td>
+      <td>Maintainer (andikleen)</td>
+      <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Implement <code class="language-plaintext highlighter-rouge">clearcache</code> for riscv64 (Zicbom or no-op fallback)</td>
+      <td>Implement <code class="language-plaintext highlighter-rouge">clearcache</code> for riscv64 (Zicbom <code class="language-plaintext highlighter-rouge">cbo.flush</code> or documented no-op fallback)</td>
       <td>0.5</td>
       <td>Community contributor</td>
       <td>Low</td>
@@ -1063,6 +1083,13 @@ make
       <td>Medium</td>
     </tr>
     <tr>
+      <td>Verification</td>
+      <td>Confirm whether Debian/Ubuntu riscv64 packages are built from unmodified upstream source or carry local <code class="language-plaintext highlighter-rouge">syscall.c</code> patches</td>
+      <td>0.25</td>
+      <td>Community contributor / distro maintainer</td>
+      <td>Medium (directly affects readiness grade)</td>
+    </tr>
+    <tr>
       <td>Bugfix</td>
       <td>Resolve <code class="language-plaintext highlighter-rouge">numa_init</code> malloc hook ordering regression (#248)</td>
       <td>1-2</td>
@@ -1070,17 +1097,7 @@ make
       <td>High (not riscv64-specific)</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1093,21 +1110,32 @@ make
 <ul>
   <li><a href="https://github.com/numactl/numactl">numactl/numactl repository</a></li>
   <li><a href="https://github.com/numactl/numactl/pull/131">PR #131: Fix build error on riscv64 by linking libatomic</a></li>
-  <li><a href="https://github.com/numactl/numactl/pull/197">PR #197: Revert fix build error on riscv64 by linking libatomic</a></li>
-  <li><a href="https://github.com/numactl/numactl/pull/198">PR #198: Replace sys/fcntl.h with fcntl.h</a></li>
+  <li><a href="https://github.com/numactl/numactl/pull/197">PR #197: Revert “Fix build error on riscv64 by linking libatomic”</a></li>
+  <li><a href="https://github.com/numactl/numactl/pull/198">PR #198: Include fcntl.h instead of sys/fcntl.h</a></li>
+  <li><a href="https://github.com/numactl/numactl/pull/260">PR #260: Fix fallback for set_mempolicy_home_node syscall for RISC-V</a></li>
+  <li><a href="https://github.com/numactl/numactl/commit/ab036a3f74453ff34ede915fb4cbc7c7b0d7f6de">Commit ab036a3: Same syscall number for __riscv</a></li>
   <li><a href="https://github.com/numactl/numactl/issues/248">Issue #248: numa_init malloc hook regression</a></li>
   <li><a href="https://github.com/numactl/numactl/issues/227">Issue #227: Memory leak in numa_distance via dlopen</a></li>
   <li><a href="https://github.com/numactl/numactl/issues/243">Issue #243: Static analysis report (Ericsson)</a></li>
   <li><a href="https://github.com/numactl/numactl/issues/240">Issue #240: sys/shm.h build failure</a></li>
-  <li><a href="https://github.com/numactl/numactl/issues/205">Issue #205: Missing clearcache for aarch64</a></li>
+  <li><a href="https://github.com/numactl/numactl/issues/205">Issue #205: Missing clearcache for aarch64 and riscv64</a></li>
   <li><a href="https://github.com/numactl/numactl/issues/126">Issue #126: Memory policy functions return 0 on error</a></li>
-  <li><a href="https://packages.debian.org/sid/riscv64/libnuma1/download">Debian sid libnuma1 package (riscv64)</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/libnuma1">Ubuntu Noble libnuma1 package</a></li>
   <li><a href="https://github.com/numactl/numactl/blob/master/.github/workflows/makefile.yml">numactl GitHub Actions workflow: makefile.yml</a></li>
   <li><a href="https://github.com/numactl/numactl/blob/master/.github/workflows/codeql.yml">numactl GitHub Actions workflow: codeql.yml</a></li>
   <li><a href="https://github.com/numactl/numactl/blob/master/.github/workflows/cut-release.yml">numactl GitHub Actions workflow: cut-release.yml</a></li>
   <li><a href="https://github.com/numactl/numactl/releases">numactl GitHub releases</a></li>
+  <li><a href="https://packages.debian.org/sid/libnuma-dev">Debian sid libnuma-dev package details</a></li>
+  <li><a href="https://launchpad.net/ubuntu/jammy/+package/libnuma1">Ubuntu jammy libnuma1 package (Launchpad)</a></li>
+  <li><a href="https://launchpad.net/ubuntu/noble/+package/libnuma-dev">Ubuntu noble libnuma-dev package (Launchpad)</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=libnuma&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu resolute (26.04) package search for libnuma</a></li>
+  <li><a href="https://ports.ubuntu.com/pool/main/n/numactl/">Ubuntu ports archive, numactl pool directory</a></li>
   <li><a href="https://riseproject.dev">RISE Project homepage</a></li>
+  <li><a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">RISE Project blog: Easy Installation of Binary Python Packages on riscv64 Devices</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder package index</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE Project blog: Announcing the RISE RISC-V Runners</a></li>
+  <li><a href="https://dev.to/gounthar/the-dependency-rabbit-hole-why-25-risc-v-python-wheels-werent-enough-13e7">Third-party (dev.to): The Dependency Rabbit Hole, why 25 RISC-V Python Wheels Weren’t Enough</a></li>
+  <li><a href="https://lwn.net/Articles/809181/">LWN: riscv, Add numa support for riscv64 platform</a></li>
+  <li><a href="https://lwn.net/Articles/979652/">LWN: NUMA emulation for arm64</a></li>
 </ul>
 
           
