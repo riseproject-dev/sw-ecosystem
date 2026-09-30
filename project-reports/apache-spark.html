@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange (no-upstream-ci)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for Apache Spark<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,14 +280,16 @@
 </h2>
     
 
-<p>Apache Spark is a distributed data analytics engine, a top-level project of the Apache Software Foundation (ASF) since February 2014. It is licensed under Apache License 2.0. The governance model follows the standard ASF Project Management Committee (PMC) structure with lazy consensus on the dev@spark.apache.org mailing list. Significant new functionality requires a Spark Improvement Proposal (SPIP). The project uses Apache JIRA for issue tracking and GitHub for pull requests.</p>
+<p>Apache Spark is a distributed data analytics engine and a top-level project of the Apache Software Foundation (ASF) since February 2014, licensed under Apache License 2.0. Governance follows the standard ASF Project Management Committee (PMC) model with lazy consensus on the dev@spark.apache.org mailing list; significant new functionality requires a Spark Improvement Proposal (SPIP). Issue tracking runs on Apache JIRA, not GitHub (GitHub Issues are disabled on <a href="https://github.com/apache/spark">apache/spark</a>); code review and merge happen on GitHub pull requests.</p>
 
-<p>The dominant corporate sponsor is Databricks, which employs the founders (Matei Zaharia, Reynold Xin, Patrick Wendell) and the majority of active committers. Secondary sponsoring organizations include Apple, NVIDIA, IBM, Intel, Meta, Cloudera, Microsoft, NetEase, Huawei, Baidu, and Alibaba. The top contributor by commit count is Dongjoon Hyun (Apple, 2,396 commits); the top Databricks contributor is Hyukjin Kwon (1,969 commits).</p>
+<p>The dominant corporate sponsor is Databricks, employing the project’s founders (Matei Zaharia, Reynold Xin, Patrick Wendell) and 47 of the committers listed on <a href="https://spark.apache.org/">spark.apache.org/committers.html</a>, by far the largest single-company bloc. Other organizations with multiple committers: Apple (4, including the current most-active committer Dongjoon Hyun), NVIDIA (4), IBM (3), NetEase (3), Cloudera (3), Intel (2), Meta (2), Alibaba (2), Baidu (2). Single-committer affiliations include AWS, Facebook, Google, Huawei, LinkedIn (2), Microsoft, NTT, OpenAI, Oracle, Palantir, Red Hat, Stripe, eBay, and several universities (UC Berkeley, Michigan, Wisconsin, Virginia, UMass Amherst, Stanford). A sample of the most recent 100 commits on master confirms Dongjoon Hyun (Apple) and several Databricks-affiliated engineers (including Wenchen Fan) as the currently most active committers, consistent with the roster above.</p>
 
-<p>The current release at the time of writing is 4.1.2. The master branch targets 5.0.0-SNAPSHOT. The minimum supported JVM is Java 17 (minimum 17.0.11). The primary language is Scala 2.13 (Scala 2.12 support was dropped in Spark 4.0.0).</p>
+<p>The latest stable release, per the authoritative Apache distribution mirror (<a href="https://dlcdn.apache.org/spark/spark-4.2.0/">dlcdn.apache.org/spark/spark-4.2.0/</a>), is <strong>4.2.0</strong>. The minimum supported JVM is Java 17. The primary implementation language is Scala 2.13 (Scala 2.12 support was dropped in Spark 4.0.0).</p>
 
 <p>Repository: <a href="https://github.com/apache/spark">https://github.com/apache/spark</a>
-Homepage: <a href="https://spark.apache.org/">https://spark.apache.org/</a></p><hr />
+Homepage: <a href="https://spark.apache.org/">https://spark.apache.org/</a></p>
+
+<p>On community culture toward new platforms: the contributing guide states that “large and independent new functionality is often rejected for inclusion in Spark itself” in favor of hosting externally on spark-packages.org, and lists “adds complexity that only helps a niche use case” as a negative code-review signal. Major changes require SPIP/mailing-list consensus. This culture directly shapes how RISC-V has been treated to date (Section 12).</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -296,9 +299,9 @@ Homepage: <a href="https://spark.apache.org/">https://spark.apache.org/</a></p><
 </h2>
     
 
-<p>Apache Spark has no RISC-V port history. There are zero commits in <code class="language-plaintext highlighter-rouge">apache/spark</code> referencing RISC-V in any form. No JIRA ticket has ever been filed with RISC-V as its primary subject (confirmed via JIRA REST API: <code class="language-plaintext highlighter-rouge">total=0</code> for both <code class="language-plaintext highlighter-rouge">riscv</code> and <code class="language-plaintext highlighter-rouge">riscv64</code>). No GitHub issue or PR in <code class="language-plaintext highlighter-rouge">apache/spark</code> exists with RISC-V as a primary topic.</p>
+<p>Apache Spark has no dedicated RISC-V port. There is no commit on the master branch whose message references RISC-V (<code class="language-plaintext highlighter-rouge">git log --grep=riscv</code> returns zero hits), no JIRA ticket filed with RISC-V as its primary subject prior to SPARK-53065, and no GitHub issue exists with RISC-V as a topic (GitHub Issues are disabled; JIRA is authoritative). RISC-V support is inherited passively, as a side effect of Netty and other dependencies shipping riscv64 native artifacts.</p>
 
-<p>The only RISC-V-adjacent activity consists of six pull requests where <code class="language-plaintext highlighter-rouge">riscv64</code> appears incidentally in build logs or Maven dependency listings as a side-effect of Netty shipping riscv64 platform artifacts:</p>
+<p>Six pull requests touch riscv64, none as their actual purpose, all confirmed merged via independent <code class="language-plaintext highlighter-rouge">git fetch</code> of the merge-commit objects and cross-checked against JIRA <code class="language-plaintext highlighter-rouge">fixVersions</code>:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -306,8 +309,8 @@ Homepage: <a href="https://spark.apache.org/">https://spark.apache.org/</a></p><
       <th>PR</th>
       <th>Title</th>
       <th>Merged</th>
-      <th>Release</th>
-      <th>riscv64 Role</th>
+      <th>First release</th>
+      <th>riscv64 role</th>
     </tr>
   </thead>
   <tbody>
@@ -315,51 +318,50 @@ Homepage: <a href="https://spark.apache.org/">https://spark.apache.org/</a></p><
       <td><a href="https://github.com/apache/spark/pull/44384">#44384</a></td>
       <td>Upgrade Netty to 4.1.106.Final</td>
       <td>2024-01-26</td>
-      <td>Spark 4.0.0</td>
-      <td>First riscv64 Netty artifact included; active committer debate about inclusion (see Section 12)</td>
+      <td>4.0.0 (2025-05-23)</td>
+      <td>First riscv64 Netty artifact enters the dependency tree; triggers the only on-record committer debate about riscv64 (Section 12)</td>
     </tr>
     <tr>
       <td><a href="https://github.com/apache/spark/pull/48666">#48666</a></td>
       <td>Upgrade ZooKeeper to 3.9.3</td>
-      <td>2024-10-27 (reverted 2024-11-06)</td>
-      <td>N/A (reverted)</td>
-      <td>Incidental artifact listing; PR reverted due to unrelated Netty version conflict</td>
+      <td>2024-10-27, reverted 2024-11-06</td>
+      <td>N/A (reverted; refixed by #48771)</td>
+      <td>Incidental artifact listing only; revert was caused by an unrelated Netty version conflict</td>
     </tr>
     <tr>
       <td><a href="https://github.com/apache/spark/pull/48771">#48771</a></td>
       <td>ZooKeeper 3.9.3 / Netty 4.1.114 follow-up</td>
       <td>2024-11-07</td>
-      <td>Spark 4.0.0</td>
-      <td>Incidental artifact listing; fixes #48666</td>
+      <td>4.0.0 (2025-05-23)</td>
+      <td>Incidental artifact listing; re-applies #48666 after fixing its Netty conflict. Merge commit <code class="language-plaintext highlighter-rouge">07301ddb889bdf361499f65e1708b5fdcab7e539</code> confirmed via git fetch</td>
     </tr>
     <tr>
       <td><a href="https://github.com/apache/spark/pull/48810">#48810</a></td>
       <td>Upgrade netty-tcnative to 2.0.69.Final</td>
       <td>2024-11-11</td>
-      <td>Spark 4.0.0</td>
-      <td>Incidental artifact listing; no riscv64 tcnative artifact included</td>
+      <td>4.0.0 (2025-05-23)</td>
+      <td>Incidental artifact listing; no riscv64 tcnative binary exists or was added. Merge commit <code class="language-plaintext highlighter-rouge">cf9ca4261e4573db128679419316ff083c1aa4cb</code> confirmed</td>
     </tr>
     <tr>
       <td><a href="https://github.com/apache/spark/pull/51868">#51868</a></td>
-      <td>Split common-utils Java code into new module</td>
+      <td>[SPARK-53138] Split common-utils Java code into new module</td>
       <td>2025-08-12</td>
-      <td>Spark 4.1.0</td>
-      <td>riscv64 Netty epoll jar shaded into YARN shuffle JAR</td>
+      <td>4.1.0 (2025-12-16)</td>
+      <td>Build-log excerpt in the PR description shows the riscv64 Netty epoll native jar being shaded during the YARN shuffle-service build; incidental exposure, not a code change</td>
     </tr>
     <tr>
       <td><a href="https://github.com/apache/spark/pull/53382">#53382</a></td>
-      <td>Correctly relocate Netty native libs for YARN ESS</td>
+      <td>[SPARK-54636] Correctly relocate Netty native libs for YARN ESS</td>
       <td>2025-12-09</td>
-      <td>Spark 4.1.0</td>
-      <td>riscv64 explicitly named; fixes relocation of <code class="language-plaintext highlighter-rouge">io_uring42</code> and <code class="language-plaintext highlighter-rouge">epoll</code> native libs in YARN ESS JAR</td>
+      <td>4.1.0 (2025-12-16), landed 7 days before release</td>
+      <td>Most architecturally significant riscv64-touching PR: explicitly names and fixes relocation of <code class="language-plaintext highlighter-rouge">liborg_sparkproject_netty_transport_native_io_uring42_riscv64.so</code> and <code class="language-plaintext highlighter-rouge">liborg_sparkproject_netty_transport_native_epoll_riscv64.so</code> in the shaded YARN External Shuffle Service jar</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The most architecturally significant of these is <a href="https://github.com/apache/spark/pull/53382">PR #53382</a>: it explicitly names <code class="language-plaintext highlighter-rouge">liborg_sparkproject_netty_transport_native_io_uring42_riscv64.so</code> and <code class="language-plaintext highlighter-rouge">liborg_sparkproject_netty_transport_native_epoll_riscv64.so</code> in the YARN External Shuffle Service relocation fix, ensuring these libs get the correct <code class="language-plaintext highlighter-rouge">liborg_sparkproject_</code> prefix in the shaded JAR. This is correctness work for YARN deployment, not a RISC-V enablement initiative.</p>
+<p>PR #44384 (January 2024) is the origin point of every subsequent riscv64 mention in Spark’s history: committer LuciferYang (Databricks) questioned whether the newly appearing <code class="language-plaintext highlighter-rouge">linux-riscv64</code> Netty artifacts should be excluded for lack of CI (“we do not yet have the corresponding CI to verify the usability of Apache Spark on RISC-V”); committer dongjoon-hyun (Apple) overruled him (“It’s fine with new entry. It doesn’t mean Apache Spark claims any new additional architecture support.”). LuciferYang accepted the decision. Every later riscv64-touching PR follows this same de facto policy: accept upstream riscv64 artifacts incidentally, without claiming or testing riscv64 platform support.</p>
 
-<p>First RISC-V commit: <strong>none</strong>.
-Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPARK-53065</a> – “Comprehensive Tracking of RISC-V Architecture Support” – filed 2025-08-01 by Gong Xiaofei. Status: Open / To Do. Zero sub-tasks, zero comments, no assignee. A placeholder with no follow-up activity.</p><hr />
+<p>First RISC-V commit: none exists. Master tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPARK-53065</a>, “Comprehensive Tracking of RISC-V Architecture Support,” filed 2025-08-01 by Gong Xiaofei. Status: Open, category “To Do.” As of 2026-09-30 (14 months after filing) it has zero sub-tasks, zero comments, and no assignee; its <code class="language-plaintext highlighter-rouge">updated</code> timestamp is identical to its <code class="language-plaintext highlighter-rouge">created</code> timestamp, confirming it has never been touched since filing. It is a placeholder with no follow-up activity of any kind. Spark is not upstream-ported for riscv64; it functions there only because it is a JVM application and the JVM itself runs on riscv64.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -369,13 +371,46 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 </h2>
     
 
-<p>Apache Spark has no formal platform tier policy. There is no PLATFORMS.md, SUPPORT.md, CODEOWNERS, MAINTAINERS, or OWNERS file in the repository. Platform support is implicit: if a JVM runs on a given architecture, Spark’s JVM layer runs there.</p>
+<p>Apache Spark has no formal platform-tier policy. No <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, <code class="language-plaintext highlighter-rouge">CODEOWNERS</code>, <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, or <code class="language-plaintext highlighter-rouge">OWNERS</code> file exists in the repository, and there is no <code class="language-plaintext highlighter-rouge">docs/platforms/</code> directory. Platform support is implicit: whatever architecture a JVM runs on, Spark’s JVM layer runs on.</p>
 
-<p>The contributing guide warns that “significant, independent functionality” is often redirected to spark-packages.org rather than accepted into the core. Large changes require SPIP discussion before implementation. The project leans against complex features for niche use cases.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CI coverage</td>
+      <td>Full (majority of 47 workflows)</td>
+      <td>Partial (2 workflows: <code class="language-plaintext highlighter-rouge">build_maven_java21_arm.yml</code>, <code class="language-plaintext highlighter-rouge">build_python_3.12_arm.yml</code>)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Release-blocking status</td>
+      <td>Yes</td>
+      <td>No (best-effort)</td>
+      <td>Not applicable, not tested</td>
+    </tr>
+    <tr>
+      <td>Official binaries</td>
+      <td>Yes (JVM archives, arch-neutral)</td>
+      <td>Yes (JVM archives, arch-neutral)</td>
+      <td>Yes in the sense the arch-neutral tarball runs there if a riscv64 JDK is present; no riscv64-specific artifact exists or is needed</td>
+    </tr>
+    <tr>
+      <td>Documented support</td>
+      <td>Implicit</td>
+      <td>Implicit</td>
+      <td>Not documented anywhere</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>For RISC-V specifically: because Spark is a JVM application, RISC-V support flows automatically from JVM availability. No formal Spark-side porting work has been initiated, tracked, or approved. RISC-V is not listed as a supported or experimental platform anywhere in official documentation.</p>
-
-<p><strong>Effective tier: unsupported / untested.</strong> RISC-V is not a documented platform, has no CI coverage, and has no assigned maintainer.</p><hr />
+<p>Because Spark distributes architecture-neutral JVM bytecode, the “support” question is really about the JVM and native dependency layer, not about Spark’s own build. No formal Spark-side porting effort has been initiated, tracked, or approved for RISC-V. <strong>Effective tier: unsupported / untested.</strong> RISC-V is not a documented platform, has zero CI coverage, and has no assigned maintainer or tracking beyond the empty SPARK-53065 umbrella.</p><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -385,22 +420,13 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 </h2>
     
 
-<p>Apache Spark contains no architecture-specific native code. The codebase is pure Java/Scala. There are no C, C++, or assembly source files in the repository. There is no <code class="language-plaintext highlighter-rouge">src/main/native/</code> or <code class="language-plaintext highlighter-rouge">jni/</code> directory. All native acceleration comes from upstream dependency JARs that bundle prebuilt <code class="language-plaintext highlighter-rouge">.so</code> files.</p>
+<p>Apache Spark contains no architecture-specific native code of its own. Independently re-verified today via a fresh clone of <code class="language-plaintext highlighter-rouge">apache/spark</code> at HEAD plus GitHub’s global code-search index (used as a cross-check independent of the clone): the only native (C/C++/asm) file in the entire repository is <code class="language-plaintext highlighter-rouge">R/pkg/src-native/string_hash_code.c</code> (49 lines, a portable R-extension implementing Java’s <code class="language-plaintext highlighter-rouge">String.hashCode()</code>, with no <code class="language-plaintext highlighter-rouge">#ifdef</code>, no architecture guard, and no arch-specific logic). There is no <code class="language-plaintext highlighter-rouge">src/main/native/</code> or <code class="language-plaintext highlighter-rouge">jni/</code> directory belonging to Spark itself, no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory, no <code class="language-plaintext highlighter-rouge">.S</code> assembly files of any ISA, and no RISC-V JIT backend or RVV/SIMD dispatch anywhere in the codebase.</p>
 
-<p><strong>Platform.java – unaligned memory access detection (silent pessimization on riscv64):</strong></p>
+<p>GitHub code-search queries executed against <code class="language-plaintext highlighter-rouge">apache/spark</code> HEAD (this session, 2026-09-30): <code class="language-plaintext highlighter-rouge">riscv</code> (3 hits), <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code> (0), <code class="language-plaintext highlighter-rouge">rvv</code> (2, both false-positive substring matches inside unrelated npm package names, not RVV intrinsics), <code class="language-plaintext highlighter-rouge">riscv64</code> (3), <code class="language-plaintext highlighter-rouge">arch/riscv</code> (0), <code class="language-plaintext highlighter-rouge">extension:S</code> (0, no assembly files of any architecture exist), <code class="language-plaintext highlighter-rouge">zba</code> (9, all false positives in test fixtures/base64/hashes), <code class="language-plaintext highlighter-rouge">zbb</code> (8, same false-positive pattern). The three genuine <code class="language-plaintext highlighter-rouge">riscv</code>/<code class="language-plaintext highlighter-rouge">riscv64</code> matches are all non-code: <code class="language-plaintext highlighter-rouge">dev/deps/spark-deps-hadoop-3-hive-2.3</code> (a generated Maven dependency manifest listing the <code class="language-plaintext highlighter-rouge">netty-transport-native-epoll</code> riscv64 artifact), <code class="language-plaintext highlighter-rouge">common/network-yarn/pom.xml</code> (an Ant <code class="language-plaintext highlighter-rouge">&lt;move&gt;</code> task shading a prebuilt <code class="language-plaintext highlighter-rouge">libnetty_transport_native_epoll_riscv64.so</code>), and <code class="language-plaintext highlighter-rouge">ui-test/package-lock.json</code> (an npm lockfile entry for a frontend lint-tool dependency, unrelated to Spark’s runtime). All native acceleration Spark uses comes from third-party dependency JARs bundling prebuilt <code class="language-plaintext highlighter-rouge">.so</code> files, not from code Spark authors itself.</p>
 
-<p><code class="language-plaintext highlighter-rouge">Platform.java</code> at <code class="language-plaintext highlighter-rouge">common/unsafe/src/main/java/org/apache/spark/unsafe/Platform.java</code> determines whether the JVM is running on a CPU that supports unaligned memory access. It uses two mechanisms:</p>
+<p><strong>Platform.java unaligned-memory detection (silent pessimization on riscv64):</strong> <code class="language-plaintext highlighter-rouge">common/unsafe/src/main/java/org/apache/spark/unsafe/Platform.java</code> determines whether the JVM’s CPU supports unaligned memory access, via explicit overrides for <code class="language-plaintext highlighter-rouge">ppc64le</code>, <code class="language-plaintext highlighter-rouge">ppc64</code>, <code class="language-plaintext highlighter-rouge">s390x</code> (forced true, working around known JDK bugs) and a regex fallback <code class="language-plaintext highlighter-rouge">^(i[3-6]86|x86(_64)?|x64|amd64|aarch64)$</code> assumed true. <strong><code class="language-plaintext highlighter-rouge">riscv64</code> appears in neither list.</strong> If the JVM’s own <code class="language-plaintext highlighter-rouge">java.nio.Bits.unaligned()</code> check does not correctly detect unaligned support for the specific riscv64 JVM/kernel combination, Spark’s Tungsten off-heap memory engine falls back to 8-byte aligned record offsets via <code class="language-plaintext highlighter-rouge">UnsafeAlignedOffset.java</code> instead of the optimal 4-byte offsets, wasting roughly half of the record-header space in off-heap hash maps and sort buffers. This is correctness-safe but performance-degrading. No JIRA ticket, PR, or tracking issue exists for this gap.</p>
 
-<ul>
-  <li>Explicit overrides for <code class="language-plaintext highlighter-rouge">ppc64le</code>, <code class="language-plaintext highlighter-rouge">ppc64</code>, <code class="language-plaintext highlighter-rouge">s390x</code> (forced true due to known JDK bugs).</li>
-  <li>A fallback regex matching <code class="language-plaintext highlighter-rouge">^(i[3-6]86|x86(_64)?|x64|amd64|aarch64)$</code> assumed true.</li>
-</ul>
-
-<p><strong><code class="language-plaintext highlighter-rouge">riscv64</code> appears in neither list.</strong> If the JVM’s <code class="language-plaintext highlighter-rouge">java.nio.Bits.unaligned()</code> does not correctly detect unaligned support on the specific JVM/kernel combination, Spark’s Tungsten off-heap memory engine falls back to 8-byte aligned offsets via <code class="language-plaintext highlighter-rouge">UnsafeAlignedOffset.java</code> instead of the optimal 4-byte offsets. This wastes approximately 50% of record header space in Tungsten’s off-heap hash maps and sort buffers. The fallback is correctness-safe but represents a measurable memory-efficiency regression. There is no JIRA ticket, no PR, and no tracking issue for this gap.</p>
-
-<p><strong>Netty native transport (the main riscv64 native surface):</strong></p>
-
-<p>Spark’s networking layer (RPC, shuffle) delegates to Netty. As of Netty 4.2.x (the version in Spark 5.0.0-SNAPSHOT), three Netty native transports exist for Linux: <code class="language-plaintext highlighter-rouge">epoll</code>, <code class="language-plaintext highlighter-rouge">io_uring42</code>, and <code class="language-plaintext highlighter-rouge">quiche42</code>. The riscv64 coverage is:</p>
+<p><strong>Netty native transport (the primary riscv64 native surface Spark relies on):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -412,35 +438,33 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">epoll</code></td>
-      <td>Present (since Netty 4.1.106, 2024)</td>
+      <td>epoll</td>
+      <td>Present since Netty 4.1.106 (2024)</td>
       <td>Correctly relocated</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">io_uring42</code></td>
-      <td>Present (since Netty 4.2)</td>
+      <td>io_uring42</td>
+      <td>Present since Netty 4.2</td>
       <td>Correctly relocated</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">quiche42</code> (QUIC)</td>
-      <td>Absent (no upstream artifact)</td>
+      <td>quiche42 (QUIC)</td>
+      <td>Absent, no upstream artifact</td>
       <td>Absent</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">tcnative</code> (TLS/BoringSSL)</td>
-      <td>Absent (BoringSSL not built for riscv64)</td>
+      <td>tcnative (TLS/BoringSSL)</td>
+      <td>Absent, BoringSSL not built for riscv64</td>
       <td>Absent</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>If <code class="language-plaintext highlighter-rouge">epoll</code> and <code class="language-plaintext highlighter-rouge">io_uring42</code> native JARs load successfully on riscv64, Spark gets full async network I/O performance. TLS offload via <code class="language-plaintext highlighter-rouge">tcnative</code> is not available; the JVM JSSE fallback is used for encrypted shuffle.</p>
+<p>If <code class="language-plaintext highlighter-rouge">epoll</code> and <code class="language-plaintext highlighter-rouge">io_uring42</code> load successfully on riscv64, Spark gets full async network I/O for RPC and shuffle. TLS offload via <code class="language-plaintext highlighter-rouge">tcnative</code> is unavailable; encrypted shuffle falls back to the JVM’s own JSSE implementation, which is correctness-safe but not offloaded.</p>
 
-<p><strong>Shuffle codec (lz4-java – critical gap):</strong></p>
+<p><strong>Shuffle codec (lz4-java, critical gap):</strong> LZ4 is Spark’s default shuffle compression codec. <code class="language-plaintext highlighter-rouge">lz4-java</code> 1.8.0 (last released 2021-06-19) ships no riscv64 native binary; <a href="https://github.com/lz4/lz4-java/pull/212">PR #212</a> adding riscv64 JNI support has been open and unmerged since filing. Every Spark shuffle on riscv64 today uses the pure-Java LZ4 fallback path. This affects all shuffle-heavy workloads (joins, aggregations, sorts), and the upstream project shows no release activity in over four years.</p>
 
-<p>LZ4 is Spark’s default shuffle compression codec. The Java binding <code class="language-plaintext highlighter-rouge">lz4-java</code> version 1.8.0 (last released 2021-06-19) does not include a riscv64 native binary. <a href="https://github.com/lz4/lz4-java/pull/212">PR #212</a> adding riscv64 JNI support is open and unmerged. Every Spark shuffle on riscv64 uses the pure-Java LZ4 implementation. The performance impact is significant and affects all shuffle-heavy workloads (joins, aggregations, sorts). The project appears poorly maintained; no release has occurred in over four years.</p>
-
-<p><strong>No SIMD / RVV code paths exist</strong> in Spark itself. There is no vectorized SQL execution via RVV intrinsics. Vectorized execution in Spark SQL operates at the JVM level via the Java Vector API (<code class="language-plaintext highlighter-rouge">jdk.incubator.vector</code>), which is platform-agnostic and depends on the JIT compiler for SIMD code generation.</p><hr />
+<p>No SIMD or RVV code path exists in Spark itself. Vectorized SQL execution runs through the JVM’s <code class="language-plaintext highlighter-rouge">jdk.incubator.vector</code> Java Vector API, which is platform-agnostic and depends entirely on the JIT compiler’s own SIMD code generation, not on anything Spark authors.</p><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -450,25 +474,22 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 </h2>
     
 
-<p>Apache Spark uses Maven as its primary build system (minimum version 3.9.16) and SBT as a secondary option. There is no CMake, no toolchain files, no cross-compilation configuration, and no Dockerfile using <code class="language-plaintext highlighter-rouge">--platform=linux/riscv64</code> or <code class="language-plaintext highlighter-rouge">ARG TARGETARCH</code>. No QEMU usage exists in any CI workflow.</p>
+<p>Apache Spark builds with Maven (minimum 3.9.16) as the primary system and SBT as a secondary option. Independently re-verified today by inspecting the live repository: no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> exists anywhere in the tree, no <code class="language-plaintext highlighter-rouge">cmake/</code> directory exists at all, <code class="language-plaintext highlighter-rouge">BUILDING.md</code> and <code class="language-plaintext highlighter-rouge">INSTALL</code> are absent at the repo root, and <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> does not exist. The real build document is <code class="language-plaintext highlighter-rouge">docs/building-spark.md</code> (present, read in full): it covers Maven/SBT usage, Java 17/21/25, Scala 2.13, memory settings, and YARN/Hadoop/Hive/JDBC profiles, with no architecture-specific section, no RISC-V mention, and no CMake reference of any kind.</p>
 
-<p>Because Spark has no native code to compile, cross-compilation is not applicable. All build artifacts are JVM bytecode JARs. Architecture-specific <code class="language-plaintext highlighter-rouge">.so</code> files are downloaded as Maven classifier dependencies from upstream projects (Netty, snappy-java, etc.), not compiled during the Spark build.</p>
+<p>Because Spark compiles no native code of its own, cross-compilation does not apply. All build artifacts are architecture-neutral JVM bytecode JARs. Architecture-specific <code class="language-plaintext highlighter-rouge">.so</code> files are pulled in as Maven classifier dependencies from upstream projects (Netty, snappy-java, zstd-jni), not compiled by Spark’s own build.</p>
 
-<p><strong>To build Spark on riscv64 hardware:</strong></p>
+<p><strong>To build and run Spark on riscv64 hardware:</strong></p>
 
 <ol>
-  <li>Install Java 17+ for riscv64 (available from Debian/Ubuntu ports or Adoptium Temurin – see <a href="https://riseproject.dev/">RISE blog post, May 2024</a>).</li>
+  <li>Install a riscv64 JDK 17+ (Adoptium Temurin publishes riscv64 builds).</li>
   <li>Install Maven 3.9.x.</li>
-  <li>Run <code class="language-plaintext highlighter-rouge">./build/mvn -DskipTests clean package</code>.</li>
-  <li>No architecture flags are needed. Maven downloads JVM bytecode artifacts.</li>
-  <li>The Netty native transport JARs (<code class="language-plaintext highlighter-rouge">epoll</code>, <code class="language-plaintext highlighter-rouge">io_uring42</code>) for <code class="language-plaintext highlighter-rouge">linux-riscv64</code> will be pulled automatically.</li>
-  <li><code class="language-plaintext highlighter-rouge">netty-tcnative</code> (BoringSSL/TLS) and <code class="language-plaintext highlighter-rouge">netty-quiche42</code> (QUIC) have no riscv64 artifacts; these are silently skipped at runtime.</li>
-  <li><code class="language-plaintext highlighter-rouge">lz4-java</code> has no riscv64 native binary; Spark falls back to pure-Java LZ4.</li>
+  <li>Run <code class="language-plaintext highlighter-rouge">./build/mvn -DskipTests clean package</code>. No architecture flags are required.</li>
+  <li>Maven pulls the <code class="language-plaintext highlighter-rouge">linux-riscv64</code> Netty <code class="language-plaintext highlighter-rouge">epoll</code> and <code class="language-plaintext highlighter-rouge">io_uring42</code> native transport JARs automatically.</li>
+  <li><code class="language-plaintext highlighter-rouge">netty-tcnative</code> (BoringSSL/TLS) and <code class="language-plaintext highlighter-rouge">netty-quiche42</code> (QUIC) have no riscv64 artifacts and are silently skipped at runtime.</li>
+  <li><code class="language-plaintext highlighter-rouge">lz4-java</code> has no riscv64 native binary; Spark falls back to pure-Java LZ4 for shuffle compression.</li>
 </ol>
 
-<p>No riscv64-specific build documentation exists in the Apache Spark repository or on spark.apache.org.</p>
-
-<p>The Kubernetes Dockerfile at <code class="language-plaintext highlighter-rouge">resource-managers/kubernetes/docker/src/main/dockerfiles/spark/Dockerfile</code> uses <code class="language-plaintext highlighter-rouge">eclipse-temurin:25-jre</code> as the base image with no <code class="language-plaintext highlighter-rouge">--platform</code> flag and no multi-arch build logic. Temurin does not publish a stable riscv64 manifest for JRE images as of 2025 [NEEDS VERIFICATION]; multi-arch Docker builds for riscv64 would require a custom base image.</p><hr />
+<p>No riscv64-specific build documentation exists in the repository or on spark.apache.org. The only Dockerfiles in the repository are <code class="language-plaintext highlighter-rouge">resource-managers/kubernetes/docker/src/main/dockerfiles/spark/Dockerfile</code> (Kubernetes resource-manager image, base <code class="language-plaintext highlighter-rouge">eclipse-temurin:25-jre</code>, no <code class="language-plaintext highlighter-rouge">--platform</code> flag, no multi-arch logic) and <code class="language-plaintext highlighter-rouge">dev/create-release/spark-rm/Dockerfile</code> (release tooling); neither takes a riscv64 build arg or invokes QEMU. There is no <code class="language-plaintext highlighter-rouge">.ci/</code> or top-level <code class="language-plaintext highlighter-rouge">docker/</code> directory. No QEMU usage exists anywhere in the build system (matching the CI finding in Section 7).</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -489,82 +510,82 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
   </thead>
   <tbody>
     <tr>
-      <td>JVM execution (HotSpot JIT)</td>
+      <td>JVM execution (HotSpot C2 JIT)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (OpenJDK 17/21 with C2 JIT, available since ~2022)</td>
+      <td>Full: OpenJDK 17/21 with C2 JIT, believed functional per Gomez-Sanchez et al. 2023 (arXiv:2306.15562), though on interpreter-only Zero VM at the time, not verified with a current HotSpot-JIT-on-riscv64 Spark benchmark [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>Netty epoll native transport</td>
+      <td>Netty epoll transport</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (Netty 4.1.106+, passively bundled since Spark 4.0)</td>
+      <td>Full, bundled since Spark 4.0, correctly shaded since PR #53382</td>
     </tr>
     <tr>
       <td>Netty io_uring42 transport</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (Netty 4.2, correctly shaded in Spark 4.1 via PR #53382)</td>
+      <td>Full, shading fixed in Spark 4.1 via PR #53382; not validated on real riscv64 hardware</td>
     </tr>
     <tr>
       <td>Netty quiche42 (QUIC)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing (no upstream riscv64 artifact from Netty)</td>
+      <td>Missing, no upstream riscv64 artifact from Netty</td>
     </tr>
     <tr>
       <td>TLS offload (netty-tcnative)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing (BoringSSL not built for riscv64)</td>
+      <td>Missing, BoringSSL not built for riscv64</td>
     </tr>
     <tr>
       <td>LZ4 shuffle codec (native)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing (lz4-java PR #212 open/unmerged; pure-Java fallback used)</td>
+      <td>Missing, <a href="https://github.com/lz4/lz4-java/pull/212">lz4-java PR #212</a> open/unmerged; pure-Java fallback used</td>
     </tr>
     <tr>
       <td>Snappy codec (native)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (snappy-java riscv64 binary since 2023, PR #396)</td>
+      <td>Full, riscv64 binary since 2023</td>
     </tr>
     <tr>
       <td>Zstandard codec (native)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (zstd-jni riscv64 binary since 2023, PR #282)</td>
+      <td>Full, riscv64 binary since 2023, but no riscv64 CI upstream</td>
     </tr>
     <tr>
-      <td>Tungsten off-heap (4-byte UAO)</td>
+      <td>Tungsten off-heap 4-byte record offsets</td>
       <td>Full (regex match)</td>
       <td>Full (regex match)</td>
-      <td>Conservative 8-byte fallback if JVM unaligned() misreports; Platform.java regex excludes riscv64</td>
+      <td>Conservative 8-byte fallback if the JVM misreports unaligned support; <code class="language-plaintext highlighter-rouge">riscv64</code> is absent from Platform.java’s detection regex</td>
     </tr>
     <tr>
       <td>Arrow columnar execution (JNI)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing (Arrow Java JNI binary not published for riscv64; build from source required)</td>
+      <td>Missing, Arrow Java JNI binary not published for riscv64</td>
     </tr>
     <tr>
       <td>ORC native read/write</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing (ORC C++ native lib not published for riscv64; two open PRs: #2639, #2644)</td>
+      <td>Missing, ORC C++ native lib not published for riscv64</td>
     </tr>
     <tr>
       <td>Hadoop native CRC32C</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Degraded (CRC32C riscv64 support in Hadoop 4.x trunk only; Spark 5.0 uses Hadoop 3.5.0 which has no riscv64 native CRC binary)</td>
+      <td>Degraded, riscv64 CRC32C support exists only in Hadoop 4.x trunk, not in the 3.5.0 Spark currently depends on</td>
     </tr>
     <tr>
       <td>protoc (Spark Connect codegen)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing (protoc not published for riscv64 in any Protobuf release; two PRs closed without merge)</td>
+      <td>Missing, protoc not published for riscv64 in any Protobuf release</td>
     </tr>
     <tr>
       <td>CI coverage</td>
@@ -574,14 +595,14 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
     </tr>
     <tr>
       <td>Docker multi-arch image</td>
-      <td>Full (linux/amd64)</td>
-      <td>Full (linux/arm64)</td>
+      <td>linux/amd64</td>
+      <td>linux/arm64</td>
       <td>None</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The three highest-impact gaps relative to arm64 are: (1) lz4-java native shuffle codec, (2) Arrow JNI binary for columnar operations, (3) Platform.java unaligned detection pessimization in Tungsten.</p><hr />
+<p>The three highest-impact gaps relative to arm64 are: (1) the <code class="language-plaintext highlighter-rouge">lz4-java</code> native shuffle codec, affecting every shuffle operation, (2) the Arrow JNI binary blocking accelerated PySpark DataFrame operations, and (3) the <code class="language-plaintext highlighter-rouge">Platform.java</code> unaligned-detection pessimization degrading Tungsten off-heap memory efficiency. No security-hardening-specific or NaN/floating-point-semantics gap specific to riscv64 was found; the one open NaN-handling bug in Spark (SPARK-54579, Section 11) is architecture-independent.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -591,20 +612,46 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 </h2>
     
 
-<p>Apache Spark has no riscv64 CI of any kind. This was confirmed by reading all 49 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> plus checking for <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, and <code class="language-plaintext highlighter-rouge">appveyor.yml</code> (none of the latter five exist in the repository).</p>
+<p>Apache Spark has zero riscv64 CI of any kind. Confirmed today (2026-09-30) by a fresh clone of <code class="language-plaintext highlighter-rouge">apache/spark</code> at HEAD and by reading all 47 files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> (benchmark.yml, branch35_scheduler.yml, branch40_scheduler.yml, branch41_scheduler.yml, branch42_scheduler.yml, branch43_scheduler.yml, branch4x_scheduler.yml, build_and_test.yml, build_codegen_jdk.yml, build_coverage.yml, build_infra_images_cache.yml, build_java17.yml, build_java21.yml, build_java25.yml, build_main.yml, build_maven.yml, build_maven_java21.yml, build_maven_java21_arm.yml, build_maven_java21_macos26.yml, build_maven_java25.yml, build_non_ansi.yml, build_python_3.11.yml, build_python_3.12_arm.yml, build_python_3.12_classic_only.yml, build_python_3.12_macos26.yml, build_python_3.12_pandas_3.yml, build_python_3.13.yml, build_python_3.14.yml, build_python_3.14_nogil.yml, build_python_3.9.yml, build_python_connect.yml, build_python_connect40.yml, build_python_minimum.yml, build_python_pypy3.10.yml, build_rockdb_as_ui_backend.yml, build_scala213.yml, build_sparkr_window.yml, build_uds.yml, maven_test.yml, notify_test_workflow.yml, pages.yml, publish_snapshot.yml, python_hosted_runner_test.yml, release.yml, stale.yml, test_report.yml, update_build_status.yml). No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository. This was independently corroborated by a GitHub global code-search cross-check restricted to <code class="language-plaintext highlighter-rouge">path:.github/workflows</code> and <code class="language-plaintext highlighter-rouge">filename:Jenkinsfile</code>, both returning zero riscv64 hits. The workflow count is 47 today versus 49 in a prior check; this is normal upstream churn, not a riscv64-related change.</p>
 
-<p>Current CI matrix:</p>
-<ul>
-  <li>x86_64: <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>, the majority of all CI jobs.</li>
-  <li>ARM64: <code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code> in two workflows (<code class="language-plaintext highlighter-rouge">build_maven_java21_arm.yml</code>, <code class="language-plaintext highlighter-rouge">build_python_3.12_arm.yml</code>).</li>
-  <li>macOS: Intel and arm64 macOS runners in several workflows.</li>
-</ul>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Runner</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (majority of jobs)</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code> (2 workflows)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>QEMU emulation step</td>
+      <td>Not applicable</td>
+      <td>Not used (native ARM runner)</td>
+      <td>None exists</td>
+    </tr>
+    <tr>
+      <td>Trigger conditions referencing this arch</td>
+      <td>Push, PR, dispatch, schedule (all standard workflows)</td>
+      <td>Push, PR (2 workflows)</td>
+      <td>None; no riscv64 matrix entry exists for a trigger to attach to</td>
+    </tr>
+    <tr>
+      <td>RISE runner infrastructure used</td>
+      <td>No</td>
+      <td>No</td>
+      <td>No; RISE’s own <code class="language-plaintext highlighter-rouge">riscv-runner</code>/<code class="language-plaintext highlighter-rouge">riscv-runner-app</code>/<code class="language-plaintext highlighter-rouge">riscv-runner-images</code> GitHub Actions runner projects are not referenced anywhere in <code class="language-plaintext highlighter-rouge">apache/spark</code>’s CI</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>None of the 49 workflow files contain the strings <code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">riscv64</code>, or <code class="language-plaintext highlighter-rouge">RISCV</code>.</p>
-
-<p>The PR #44384 review (January 2024) explicitly noted the absence of riscv64 CI. Committer LuciferYang stated: “we do not yet have the corresponding CI to verify the usability of Apache Spark on RISC-V.” The riscv64 Netty artifact was included anyway, with committer dongjoon-hyun noting: “It doesn’t mean Apache Spark claims any new additional architecture support.”</p>
-
-<p>No QEMU-based riscv64 emulation step exists in any workflow.</p><hr />
+<p>No workflow file contains the string <code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">riscv64</code>, or <code class="language-plaintext highlighter-rouge">RISCV</code> in any case, and no riscv64 runner label, matrix entry, or QEMU emulation step exists anywhere. This was noted explicitly during the PR #44384 review (January 2024), where committer LuciferYang stated “we do not yet have the corresponding CI to verify the usability of Apache Spark on RISC-V,” and the riscv64 artifact was accepted anyway without that gap being closed.</p><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -614,29 +661,19 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 </h2>
     
 
-<p>Apache Spark publishes releases through the Apache Software Foundation distribution infrastructure, not GitHub Releases. GitHub Releases for <code class="language-plaintext highlighter-rouge">apache/spark</code> contain no binary assets.</p>
+<p>Apache Spark distributes releases through the ASF mirror network, not GitHub Releases. The <a href="https://github.com/apache/spark/releases">apache/spark GitHub Releases page</a> states “There aren’t any releases here” – Spark does not publish GitHub Release binary assets for any architecture, so no release-asset filename analysis for riscv64 is possible or meaningful.</p>
 
-<p>The latest stable release is 4.1.2. The Apache archive at <a href="https://downloads.apache.org/spark/spark-4.1.2/">downloads.apache.org/spark/spark-4.1.2/</a> contains:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">spark-4.1.2-bin-hadoop3.tgz</code> and variants – JVM fat binary, architecture-neutral JAR bundles.</li>
-  <li><code class="language-plaintext highlighter-rouge">pyspark-4.1.2.tar.gz</code>, <code class="language-plaintext highlighter-rouge">pyspark_client-4.1.2.tar.gz</code>, <code class="language-plaintext highlighter-rouge">pyspark_connect-4.1.2.tar.gz</code> – source distributions.</li>
-  <li><code class="language-plaintext highlighter-rouge">SparkR_4.1.2.tar.gz</code> – source distribution.</li>
-</ul>
+<p>The latest stable release, <strong>4.2.0</strong>, is published at <a href="https://dlcdn.apache.org/spark/spark-4.2.0/">dlcdn.apache.org/spark/spark-4.2.0/</a> and includes: <code class="language-plaintext highlighter-rouge">spark-4.2.0.tgz</code>, <code class="language-plaintext highlighter-rouge">spark-4.2.0-bin-hadoop3.tgz</code>, <code class="language-plaintext highlighter-rouge">spark-4.2.0-bin-hadoop3-connect.tgz</code>, <code class="language-plaintext highlighter-rouge">spark-4.2.0-bin-without-hadoop.tgz</code>, <code class="language-plaintext highlighter-rouge">pyspark-4.2.0.tar.gz</code>, <code class="language-plaintext highlighter-rouge">pyspark_connect-4.2.0.tar.gz</code>, <code class="language-plaintext highlighter-rouge">pyspark_client-4.2.0.tar.gz</code>, <code class="language-plaintext highlighter-rouge">SparkR_4.2.0.tar.gz</code> (plus signatures and checksums). All are architecture-neutral JVM/Java distributions – Spark ships no arch-specific binaries for any platform, riscv64 included. No filename anywhere contains “riscv64.”</p>
 
-<p>No architecture-split binaries exist. No filename contains <code class="language-plaintext highlighter-rouge">riscv64</code>.</p>
+<p><strong>PyPI:</strong> There is no PyPI project literally named <code class="language-plaintext highlighter-rouge">apache-spark</code> (<code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/apache-spark/json</code> returns HTTP 404); the real distribution is <code class="language-plaintext highlighter-rouge">pyspark</code>. Its latest release (4.2.0, confirmed live) ships exactly one file, <code class="language-plaintext highlighter-rouge">pyspark-4.2.0.tar.gz</code>, a source sdist with zero wheels for any platform. riscv64-specific wheels are therefore not applicable; PySpark’s JVM dependency ships inside the tarball regardless of architecture.</p>
 
-<p><strong>PyPI:</strong> The <code class="language-plaintext highlighter-rouge">pyspark</code> package on PyPI (latest version 4.1.2) ships only as <code class="language-plaintext highlighter-rouge">pyspark-4.1.2.tar.gz</code> (sdist). There are zero wheel files for any platform or architecture. riscv64 is not applicable at the PyPI level; PySpark’s JVM dependency is bundled in the tarball.</p>
+<p><strong>RISE wheel builder (GitLab project 56254198):</strong> No <code class="language-plaintext highlighter-rouge">apache-spark</code> package is registered (<code class="language-plaintext highlighter-rouge">packages/pypi/simple/apache-spark/</code> 302-redirects to the same 404 PyPI page). There is nothing to build wheels from, since the underlying PyPI project does not exist under that name.</p>
 
-<p><strong>Docker Hub:</strong> The <code class="language-plaintext highlighter-rouge">apache/spark</code> image on Docker Hub (current tag 4.0.3) publishes exactly two platform manifests: <code class="language-plaintext highlighter-rouge">linux/amd64</code> and <code class="language-plaintext highlighter-rouge">linux/arm64</code>. <code class="language-plaintext highlighter-rouge">riscv64</code> does not appear in any tag manifest. No riscv64 Docker image is published.</p>
+<p><strong>Docker Hub:</strong> The <code class="language-plaintext highlighter-rouge">apache/spark</code> image (tag 4.0.3 as last checked) publishes exactly two platform manifests, <code class="language-plaintext highlighter-rouge">linux/amd64</code> and <code class="language-plaintext highlighter-rouge">linux/arm64</code>. No <code class="language-plaintext highlighter-rouge">riscv64</code> manifest is published [NEEDS VERIFICATION – not re-checked this pass against the current 4.2.0-era tag].</p>
 
-<p><strong>Linux distributions:</strong></p>
-<ul>
-  <li>Ubuntu: Apache Spark is not packaged in Ubuntu Noble (24.04) or any current Ubuntu release.</li>
-  <li>Debian: The <code class="language-plaintext highlighter-rouge">apache-spark</code> package was removed from Debian in December 2019 and has not been re-introduced.</li>
-  <li>Arch Linux RISC-V: Apache Spark is not in the Arch Linux RISC-V port database.</li>
-</ul>
+<p><strong>Linux distributions:</strong> Not packaged in Ubuntu under any plausible name (<code class="language-plaintext highlighter-rouge">apache spark</code>, <code class="language-plaintext highlighter-rouge">python3-apache-spark</code>, <code class="language-plaintext highlighter-rouge">libapache-spark</code>) – a live search of Ubuntu 26.04 “resolute” across all sections and architectures found zero matching packages; the only “spark”-substring hits were unrelated packages (<code class="language-plaintext highlighter-rouge">laniakea-spark</code>, <code class="language-plaintext highlighter-rouge">libjs-jquery.sparkline</code>, <code class="language-plaintext highlighter-rouge">node-sparkles</code>, <code class="language-plaintext highlighter-rouge">nspark</code>, <code class="language-plaintext highlighter-rouge">pcp-export-pcp2spark</code>, <code class="language-plaintext highlighter-rouge">php-sparkline</code>, <code class="language-plaintext highlighter-rouge">python3-sparkpost</code>). Removed from Debian in December 2019 and never reintroduced. Not present in the Arch Linux RISC-V port database (a live search of archriscv.felixc.at for “apache spark” returned no matches).</p>
 
-<p><strong>Summary:</strong> Apache Spark ships exclusively as architecture-neutral JVM archives. No riscv64-specific binary artifact is published through any official or community channel.</p><hr />
+<p><strong>Summary:</strong> Apache Spark ships exclusively as architecture-neutral JVM archives through Apache mirrors, with a Python sdist on PyPI. No riscv64-specific binary, wheel, or distro package is published through any official or community channel checked. To get Spark running on riscv64, a user installs a riscv64 JDK 17+ and either downloads the same architecture-neutral <code class="language-plaintext highlighter-rouge">spark-4.2.0-bin-hadoop3.tgz</code> or builds from source with Maven (Section 5) – there is no separate riscv64 acquisition path because none is needed for the JVM layer, though the native dependency gaps (Section 6) still apply.</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -646,112 +683,144 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 </h2>
     
 
-<p>The table below covers dependencies with riscv64-specific relevance. Version numbers are from <code class="language-plaintext highlighter-rouge">apache/spark</code> master (<code class="language-plaintext highlighter-rouge">pom.xml</code>, version 5.0.0-SNAPSHOT) unless otherwise noted.</p>
+<p>Version numbers are from <code class="language-plaintext highlighter-rouge">apache/spark</code> master (<code class="language-plaintext highlighter-rouge">pom.xml</code>, 5.0.0-SNAPSHOT) unless otherwise noted. All rows below were cross-checked live against upstream dependency trackers.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
-      <th>Version</th>
       <th>Role</th>
-      <th>riscv64 Status</th>
-      <th>Blocking Issues</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
+      <th>Blocking issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>OpenJDK</td>
-      <td>17 (min 17.0.11)</td>
-      <td>JVM runtime; all Spark execution</td>
-      <td>Full: C2 JIT upstreamed since JDK 11; Temurin 17 and 21 riscv64 binaries available</td>
+      <td>JVM runtime, all Spark execution</td>
+      <td>Full: C2 JIT upstreamed since JDK 11</td>
+      <td>No dedicated CI; community-tested</td>
+      <td>Adoptium Temurin 17/21/25 riscv64 binaries published</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Maven</td>
+      <td>Build system</td>
+      <td>Arch-neutral (build-time tool, not deployed)</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>SBT</td>
+      <td>Alternate build system</td>
+      <td>Arch-neutral (build-time tool, not deployed)</td>
+      <td>N/A</td>
+      <td>N/A</td>
       <td>None</td>
     </tr>
     <tr>
       <td>Apache Hadoop</td>
-      <td>3.5.0</td>
       <td>HDFS, YARN</td>
-      <td>Degraded: riscv64 native CRC32C (via Zbc extension) merged to Hadoop 4.x trunk only; not in 3.5.0; all checksumming falls back to Java CRC</td>
-      <td><a href="https://issues.apache.org/jira/browse/HADOOP-19849">HADOOP-19849</a> open; no 3.5.x backport</td>
+      <td>Builds; native CRC32C (Zbc extension) only in 4.x trunk, not the 3.5.0 Spark uses</td>
+      <td>Untested on riscv64</td>
+      <td>No riscv64-specific release artifact</td>
+      <td><a href="https://issues.apache.org/jira/browse/HADOOP-19849">HADOOP-19849</a> open, no 3.5.x backport</td>
     </tr>
     <tr>
       <td>Apache Arrow</td>
-      <td>19.0.0</td>
-      <td>Columnar in-memory format; DataFrame vectorization; PySpark Arrow acceleration</td>
-      <td>Missing: Arrow Java JNI binary not published for riscv64; Python wheels absent (<a href="https://github.com/apache/arrow/issues/49555">GH-49555</a> open, <a href="https://github.com/apache/arrow/pull/49556">PR#49556</a> open); must build from source</td>
-      <td><a href="https://github.com/apache/arrow/issues/49555">GH-49555</a> open</td>
+      <td>Columnar in-memory format, DataFrame vectorization, PySpark Arrow acceleration</td>
+      <td>JNI native lib not published for riscv64</td>
+      <td>N/A pending build-from-source</td>
+      <td>No riscv64 Python wheels</td>
+      <td><a href="https://github.com/apache/arrow/issues/49555">GH-49555</a> open, <a href="https://github.com/apache/arrow/pull/49556">PR #49556</a> open</td>
     </tr>
     <tr>
       <td>Apache ORC</td>
-      <td>2.3.0</td>
-      <td>Columnar storage; C++ native lib via JNI</td>
-      <td>Missing native lib: active riscv64 porting in progress (<a href="https://github.com/apache/orc/pull/2639">PR#2639</a>, <a href="https://github.com/apache/orc/pull/2644">PR#2644</a> open); Spark falls back to Java ORC path</td>
-      <td><a href="https://github.com/apache/orc/pull/2639">PR#2639</a>, <a href="https://github.com/apache/orc/pull/2644">PR#2644</a> open</td>
+      <td>Columnar storage, C++ native lib via JNI</td>
+      <td>Native lib missing; riscv64 porting in progress</td>
+      <td>N/A pending merge</td>
+      <td>Not released for riscv64</td>
+      <td><a href="https://github.com/apache/orc/pull/2639">PR #2639</a>, <a href="https://github.com/apache/orc/pull/2644">PR #2644</a> open</td>
     </tr>
     <tr>
-      <td>Apache Parquet (parquet-mr)</td>
-      <td>1.17.1</td>
-      <td>Columnar storage; default table format</td>
+      <td>Apache Parquet</td>
+      <td>Columnar storage, default table format</td>
       <td>Full: pure Java, arch-neutral</td>
-      <td>None in parquet-mr; indirectly affected by lz4-java gap</td>
+      <td>Arch-neutral</td>
+      <td>Arch-neutral</td>
+      <td>None directly; indirectly affected by the lz4-java gap</td>
     </tr>
     <tr>
       <td>Apache Avro</td>
-      <td>1.12.1</td>
       <td>Binary serialization (Kafka, schema registry)</td>
-      <td>Full: Java core arch-neutral</td>
+      <td>Full: pure Java, arch-neutral</td>
+      <td>Arch-neutral</td>
+      <td>Arch-neutral</td>
       <td>None identified</td>
     </tr>
     <tr>
       <td>Netty</td>
-      <td>4.2.15.Final</td>
       <td>Async network I/O, RPC, shuffle</td>
-      <td>Full for epoll and io_uring42: riscv64 native libs shipped; quiche42 absent (no upstream riscv64 artifact)</td>
-      <td>None blocking for core transport</td>
+      <td>Full for epoll and io_uring42 (riscv64 native libs shipped); quiche42 (QUIC) absent</td>
+      <td>Passively exercised via Spark PR #53382’s shading fix; not independently CI-tested</td>
+      <td>riscv64 artifacts published since Netty 4.1.106 (epoll) and 4.2 (io_uring42)</td>
+      <td>None blocking core transport</td>
     </tr>
     <tr>
       <td>Protocol Buffers</td>
-      <td>4.33.5</td>
-      <td>Serialization; Spark Connect RPC</td>
-      <td>Java runtime arch-neutral; protoc binary not published for riscv64 (<a href="https://github.com/protocolbuffers/protobuf/pull/12244">PR#12244</a>, <a href="https://github.com/protocolbuffers/protobuf/pull/23206">PR#23206</a> both closed without merge)</td>
-      <td>protoc absent for riscv64: blocks on-device Maven builds that code-generate protobuf stubs</td>
+      <td>Serialization, Spark Connect RPC</td>
+      <td>Java runtime arch-neutral; <code class="language-plaintext highlighter-rouge">protoc</code> compiler binary not published for riscv64</td>
+      <td>N/A</td>
+      <td>No riscv64 <code class="language-plaintext highlighter-rouge">protoc</code> release</td>
+      <td><a href="https://github.com/protocolbuffers/protobuf/pull/12244">PR #12244</a>, <a href="https://github.com/protocolbuffers/protobuf/pull/23206">PR #23206</a>, both closed without merge</td>
     </tr>
     <tr>
-      <td>gRPC (grpc-java)</td>
-      <td>1.76.0</td>
+      <td>gRPC</td>
       <td>Spark Connect client-server RPC</td>
       <td>Full: pure Netty-based Java, arch-neutral</td>
+      <td>Arch-neutral</td>
+      <td>Arch-neutral</td>
       <td>None for Java use</td>
     </tr>
     <tr>
       <td>snappy-java</td>
-      <td>1.1.10.8</td>
-      <td>JNI wrapper for Snappy compression</td>
-      <td>Full: riscv64 native binary bundled since <a href="https://github.com/xerial/snappy-java/pull/396">PR#396</a> (merged 2023-02-15)</td>
+      <td>JNI Snappy compression</td>
+      <td>Full: riscv64 native binary bundled since <a href="https://github.com/xerial/snappy-java/pull/396">PR #396</a> (merged 2023-02-15)</td>
+      <td>No riscv64 CI upstream [NEEDS VERIFICATION]</td>
+      <td>Released</td>
       <td>None</td>
     </tr>
     <tr>
       <td>zstd-jni</td>
-      <td>1.5.7-9</td>
-      <td>JNI wrapper for Zstandard</td>
-      <td>Full: riscv64 native binary present since <a href="https://github.com/luben/zstd-jni/pull/282">PR#282</a> (merged 2023-10-18); no riscv64 CI in upstream</td>
-      <td>No hard blocker; silent regressions possible without CI</td>
+      <td>JNI Zstandard compression</td>
+      <td>Full: riscv64 native binary present since <a href="https://github.com/luben/zstd-jni/pull/282">PR #282</a> (merged 2023-10-18)</td>
+      <td>No riscv64 CI upstream</td>
+      <td>Released</td>
+      <td>None hard; silent-regression risk given the absence of CI</td>
     </tr>
     <tr>
       <td>lz4-java</td>
-      <td>1.8.0</td>
-      <td>JNI wrapper for LZ4; default Spark shuffle codec</td>
-      <td>Missing native binary: <a href="https://github.com/lz4/lz4-java/pull/212">PR#212</a> open/unmerged; issues <a href="https://github.com/lz4/lz4-java/issues/209">#209</a>, <a href="https://github.com/lz4/lz4-java/issues/215">#215</a> open; project stale (last release 2021)</td>
-      <td><strong>Critical for performance</strong>: every shuffle on riscv64 uses pure-Java fallback</td>
+      <td>JNI LZ4, default Spark shuffle codec</td>
+      <td><strong>Missing native binary</strong>, pure-Java fallback used</td>
+      <td>N/A</td>
+      <td>Stale project, no release since 2021</td>
+      <td><a href="https://github.com/lz4/lz4-java/pull/212">PR #212</a> open/unmerged, issues <a href="https://github.com/lz4/lz4-java/issues/209">#209</a> and <a href="https://github.com/lz4/lz4-java/issues/215">#215</a> open</td>
     </tr>
     <tr>
       <td>OpenSSL</td>
-      <td>system lib</td>
-      <td>TLS for encrypted shuffle/HDFS</td>
-      <td>Full: OpenSSL 3.x supports riscv64; available on riscv64 Linux distros</td>
+      <td>TLS for encrypted shuffle and HDFS</td>
+      <td>Full: OpenSSL 3.x supports riscv64</td>
+      <td>Distro-level, not Spark-specific</td>
+      <td>Available on riscv64 Linux distros</td>
       <td>None</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p><strong>Highest-impact gap:</strong> lz4-java, the default shuffle codec, has no riscv64 native binary and the upstream project is effectively unmaintained. This is the single dependency gap with the broadest performance impact, since it affects every shuffle-heavy Spark workload (joins, aggregations, sorts) on riscv64.</p><hr />
 <h2 id="10-ecosystem-status">
   
   
@@ -761,29 +830,20 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 </h2>
     
 
-<p><strong>RISE Project:</strong> Apache Spark is not a RISE Project member and is not mentioned in any RISE project materials. An exhaustive search of riseproject.dev (all 27 blog posts from May 2024 through June 2026, the 2024 end-of-year update, all project pages, the RISE Taipei Day 2024 presentation, and all 30 repos at github.com/orgs/riseproject-dev) returned zero results for “Spark,” “big data,” “Hadoop,” or “data analytics.” RISE is focused on AI/ML (PyTorch, llama.cpp), compilers (GCC, LLVM), Python packaging, and CI infrastructure.</p>
+<p><strong>RISE Project:</strong> Apache Spark is not a RISE Project member and does not appear in any RISE project material. An exhaustive crawl of riseproject.dev’s full blog history (35 posts, May 2024 through 2026-09-28, including 8 posts published since a prior June 2026 check: “RISE RISC-V Runners: Six Weeks In,” “Improving RISC-V Support in the Yocto Project,” “Industry Cooperation Takes Center Stage at RISC-V Summit Europe 2026,” “Optimizing IREE Compilation and End-to-End Object Detection Pipeline for RISC-V,” “Advancing OpenSBI Interrupt Handling,” “SaltyRN: Turning Neon Kernels into Fast Verified RVV Code with LLMs,” “RISE Working Groups Move Their Project Tracking to GitHub,” “PyTorch Is Available on riscv64,” “Python Now Officially Supports RISC-V,” “How Kairos Is Charting the Stepping Stones of RISC-V Productization”) returned zero posts referencing Spark, big data, or data analytics, confirmed both by title/content review and via the site’s own native search index (query “spark” returns “Sorry, no results were found”). RISE’s GitHub org (<code class="language-plaintext highlighter-rouge">riseproject-dev</code>, 26 repositories confirmed live via the GitHub API) contains only working-group trackers, RISC-V runner infrastructure (<code class="language-plaintext highlighter-rouge">riscv-runner</code>, <code class="language-plaintext highlighter-rouge">riscv-runner-app</code>, <code class="language-plaintext highlighter-rouge">riscv-runner-images</code>, <code class="language-plaintext highlighter-rouge">riscv-runner-device-plugin</code>), Python packaging tooling (<code class="language-plaintext highlighter-rouge">python-wheels</code>, <code class="language-plaintext highlighter-rouge">python-versions</code>, <code class="language-plaintext highlighter-rouge">pypi-proxy</code>), and CI tooling (<code class="language-plaintext highlighter-rouge">gcc-precommit-ci</code>, <code class="language-plaintext highlighter-rouge">pytorch-ci</code>) – no repository named <code class="language-plaintext highlighter-rouge">spark</code> or otherwise data-analytics-related exists in the org.</p>
 
-<p>RISE does fund OpenJDK work that benefits Spark indirectly:</p>
+<p><strong>RISE membership (verified live 2026-09-30 via riseproject.dev/members):</strong> 20 organizations across two tiers. Premier Members (8): Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm Technologies, Red Hat, SiFive, Tenstorrent. General Members (12): Akeana, Andes Technology, Beijing ESWIN Computing Technology, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, Institute of Software Chinese Academy of Sciences, Microchip Technology, NextSilicon, Quintauris, SpacemiT, ZTE. Databricks and the Apache Software Foundation are not members. The membership is exclusively silicon vendors, hyperscalers, and RISC-V tooling organizations, with no data-analytics/big-data project represented.</p>
+
+<p>RISE does fund OpenJDK work that benefits Spark indirectly, since Spark runs entirely on the JVM:</p>
 <ul>
-  <li>“OpenJDK: Supercharging Vectorized Math with SLEEF” (2025-09-24): approximately 2.38x average speedup on RISC-V for vectorized math in OpenJDK JIT. Methodology: SLEEF bridge wrapping OpenJDK JIT math calls; JDK PRs #20781 and #21083, SLEEF PRs #536 and #537. [NEEDS VERIFICATION – no cross-architecture comparison data published]</li>
-  <li>“OpenJDK: CMoveX and Vectorization” (2025-07-23): greater than 2.1x average JIT performance improvement with <code class="language-plaintext highlighter-rouge">-XX:+UseVectorCmov -XX:+UseCMoveUnconditionally</code> flags; some cases up to 4x. Uses Zicond extension (PR #24153). [NEEDS VERIFICATION – no x86_64 or arm64 comparison data published]</li>
-  <li>“Java on RISC-V: RISE and Eclipse Adoptium Partnership” (2024-05-29): Java 17, 21, 22 available for riscv64 via Adoptium Temurin. Distribution/availability only, no benchmark data.</li>
+  <li>“OpenJDK: Supercharging Vectorized Math with SLEEF” (2025-09-24): approximately 2.38x average speedup on RISC-V for vectorized math in the OpenJDK JIT (SLEEF bridge, JDK PRs #20781/#21083, SLEEF PRs #536/#537) [NEEDS VERIFICATION – no cross-architecture comparison data published, and the post makes no mention of Spark or JVM application-level workloads].</li>
+  <li>“OpenJDK: CMoveX and Vectorization” (2025-07-23): greater than 2.1x average JIT performance improvement, up to 4x in some cases, using <code class="language-plaintext highlighter-rouge">-XX:+UseVectorCmov -XX:+UseCMoveUnconditionally</code> (Zicond extension) [NEEDS VERIFICATION – JVM-level only, no Spark-specific data].</li>
+  <li>“Java on RISC-V: RISE and Eclipse Adoptium Partnership” (2024-05-29): Java 17/21/22 availability for riscv64 via Adoptium Temurin; distribution only, no benchmark data.</li>
 </ul>
 
-<p>These JVM improvements benefit Spark on RISC-V but no Spark-specific enablement work has been initiated within or outside RISE.</p>
+<p>These JVM-level improvements benefit any Spark deployment on riscv64, but no Spark-specific enablement effort has been initiated within or outside RISE.</p>
 
-<p><strong>Published benchmarks:</strong> One published benchmark dataset exists.</p>
-
-<p>Gomez-Sanchez et al. (2023), “Challenges and Opportunities for RISC-V Architectures towards Genomics-based Workloads,” arXiv:2306.15562, ISC High-Performance Computing 2023. Funded by EU Vitamin-V (GA 101093062).</p>
-
-<p>Testbed:</p>
-<ul>
-  <li>RISC-V: 4x HiFive Unmatched boards, SiFive U740, 4-core at 1.2 GHz, 16 GB DDR4, 1 Gbps Ethernet. Extensions: IMAFDC (no vector/SIMD).</li>
-  <li>x86_64: 4x VMs on OpenStack, SandyBridge-EP E5-2670, 8-core at 2.6 GHz, 16 GB DDR3, 40 Gbps FDR10 InfiniBand.</li>
-  <li>JVM on RISC-V: Java Zero VM 11 (interpreter-only, no JIT) – no JIT-capable JVM was available for RISC-V at the time.</li>
-</ul>
-
-<p>Key results:</p>
+<p><strong>Published benchmarks:</strong> The only quantitative Spark-on-RISC-V benchmark located, across this and prior research passes including a live arXiv API query (<code class="language-plaintext highlighter-rouge">all:Spark AND all:RISC-V</code>, no new paper found) and a GitHub repository search for “spark riscv64 benchmark” (zero results), is Gomez-Sanchez et al. 2023, “Challenges and Opportunities for RISC-V Architectures towards Genomics-based Workloads,” <a href="https://arxiv.org/abs/2306.15562">arXiv:2306.15562</a> (ISC-HPC 2023, EU Vitamin-V project GA 101093062):</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -794,37 +854,37 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
   </thead>
   <tbody>
     <tr>
-      <td>Spark cluster startup, RISC-V (Zero VM)</td>
-      <td>~535 seconds (~2.6e10 cycles)</td>
+      <td>Spark cluster startup, RISC-V (Zero VM, interpreter-only)</td>
+      <td>Approximately 535 seconds</td>
     </tr>
     <tr>
       <td>Spark cluster startup, x86_64 (HotSpot)</td>
-      <td>Less than 10 seconds (~6.4e9 cycles)</td>
+      <td>Under 10 seconds</td>
     </tr>
     <tr>
-      <td>Startup overhead (cycles)</td>
+      <td>Startup overhead</td>
       <td>25x slower on RISC-V</td>
     </tr>
     <tr>
       <td>Workload throughput vs vectorized x86_64</td>
-      <td>5x or more slower across all 12 test configurations</td>
+      <td>5x or more slower, across all 12 test configurations</td>
     </tr>
     <tr>
       <td>Workload throughput vs non-vectorized x86_64</td>
-      <td>3x or more slower across all 12 test configurations</td>
+      <td>3x or more slower, across all 12 test configurations</td>
     </tr>
     <tr>
       <td>Node scalability on RISC-V</td>
-      <td>Adding nodes from 2 to 3 caused performance degradation (no improvement)</td>
+      <td>Adding a 3rd node degraded performance rather than improving it</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Root causes identified by the authors: (1) Zero VM interpreter overhead vs HotSpot JIT, (2) no RVV extension on HiFive Unmatched (all SIMD paths bypass to scalar), (3) 1 Gbps Ethernet vs 40 Gbps InfiniBand, (4) data distribution bottleneck on master node when scaling workers.</p>
+<p>Testbed: 4x HiFive Unmatched (SiFive U740, 4-core at 1.2 GHz, 16GB DDR4, 1Gbps Ethernet, no vector/RVV extension), Java Zero VM 11 (interpreter-only, no JIT was available for RISC-V at the time), versus 4x x86_64 VMs (SandyBridge-EP E5-2670, 8-core at 2.6 GHz, 16GB DDR3, 40Gbps InfiniBand). Root causes per the authors: Zero VM interpreter overhead vs HotSpot JIT, absence of vector extensions on the test boards, a 1Gbps-vs-40Gbps network disparity, and a data-distribution bottleneck when scaling workers. This data is from 2023-era hardware and an interpreter-only JVM; with C2 JIT now available on riscv64 and the RISE-funded JVM vectorization work above, the JVM-level gap has likely narrowed, but <strong>no updated published Spark benchmark on current riscv64 hardware with HotSpot JIT exists</strong>. Two tangential papers found via the arXiv query do not constitute updated Spark-on-RISC-V data: one (Arshad &amp; Brown 2026) does not involve Spark at all, and the other (Wen, Gao, Wang, Zhan 2024) uses Spark only as a baseline for a different framework’s own speedup claims, not as a measurement of Spark itself.</p>
 
-<p>These numbers are from 2023 hardware and an interpreter-only JVM. With OpenJDK C2 JIT now available on RISC-V, the JVM overhead gap has narrowed significantly. No updated published Spark benchmark on modern RISC-V hardware with HotSpot JIT has been located.</p>
+<p>The EU Vitamin-V project designated TPC-DS as its primary Spark RISC-V benchmark; Deliverable D3.4 (“RISC-V ported Google TensorFlow and Apache Spark platforms,” filed approximately August 2025) remains unpublished on both CORDIS and Zenodo as of this check. No numeric TPC-DS result for Spark on RISC-V has been located anywhere.</p>
 
-<p>The EU Vitamin-V project (GA 101093062) designated TPC-DS as the primary Spark benchmark for RISC-V. Deliverable D3.4 (“RISC-V ported Google TensorFlow and Apache Spark platforms”) was filed at M32 (approximately August 2025). The deliverable PDF is not publicly accessible. No published TPC-DS numeric results for Spark on RISC-V have been located.</p><hr />
+<p>Data not available: Spark TPC-H or TPC-DS results on modern riscv64 hardware with a HotSpot JIT.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -834,19 +894,63 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 </h2>
     
 
-<p><strong>SPARK-53065:</strong> “Comprehensive Tracking of RISC-V Architecture Support” – filed 2025-08-01. Status: Open / To Do. No sub-tasks, no assignee, no comments, no activity. Placeholder only.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://issues.apache.org/jira/browse/SPARK-53065">SPARK-53065</a></td>
+      <td>Comprehensive Tracking of RISC-V Architecture Support</td>
+      <td>Open / To Do</td>
+      <td>Informational (umbrella)</td>
+      <td>Filed 2025-08-01, still 0 comments, 0 sub-tasks, no assignee, <code class="language-plaintext highlighter-rouge">updated</code> == <code class="language-plaintext highlighter-rouge">created</code>, confirmed stale as of 2026-09-30. Placeholder only.</td>
+    </tr>
+    <tr>
+      <td>N/A (no ticket filed)</td>
+      <td><code class="language-plaintext highlighter-rouge">Platform.java</code> unaligned-memory detection excludes riscv64</td>
+      <td>Untracked</td>
+      <td>Performance</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv64</code> is absent from the arch-detection regex and explicit override list; falls back to conservative 8-byte Tungsten offsets if the JVM’s own detection is insufficient. No JIRA ticket, no PR.</td>
+    </tr>
+    <tr>
+      <td><a href="https://issues.apache.org/jira/browse/SPARK-54579">SPARK-54579</a></td>
+      <td><code class="language-plaintext highlighter-rouge">createDataFrame</code> incorrectly handles NaN in a pandas DataFrame when Arrow optimization is on</td>
+      <td>Open / Unresolved</td>
+      <td>Correctness (general, not riscv64-specific)</td>
+      <td>Filed 2025-12-03, last updated 2025-12-04. <code class="language-plaintext highlighter-rouge">np.nan</code> and <code class="language-plaintext highlighter-rouge">None</code> both convert to NULL, erasing the distinction, when <code class="language-plaintext highlighter-rouge">spark.sql.execution.arrow.pyspark.enabled=true</code>. Linked PR apache/spark#53310 is active. No architecture is named in the ticket.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/lz4/lz4-java/pull/212">lz4-java #212</a></td>
+      <td>Add riscv64 JNI binding</td>
+      <td>Open, unmerged</td>
+      <td>Blocks native shuffle codec</td>
+      <td>Not a Spark bug; a downstream blocker for the default shuffle codec’s performance on riscv64.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/apache/arrow/issues/49555">Apache Arrow GH-49555</a></td>
+      <td>riscv64 Python wheel pipeline</td>
+      <td>Open</td>
+      <td>Blocks PySpark Arrow acceleration</td>
+      <td>Downstream blocker, not a Spark bug.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/apache/orc/pull/2639">Apache ORC PR#2639</a>, <a href="https://github.com/apache/orc/pull/2644">PR#2644</a></td>
+      <td>riscv64 native build/CI</td>
+      <td>Open</td>
+      <td>Blocks native ORC read/write</td>
+      <td>Downstream blockers, not Spark bugs; Spark falls back to the Java ORC path until merged.</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>Platform.java unaligned detection gap:</strong> No JIRA ticket, no PR, no tracking. riscv64 is absent from the <code class="language-plaintext highlighter-rouge">^(i[3-6]86|x86(_64)?|x64|amd64|aarch64)$</code> regex and the explicit override list in <code class="language-plaintext highlighter-rouge">Platform.java</code>. If the JVM does not independently detect unaligned support, Spark Tungsten uses 8-byte instead of 4-byte record offsets in off-heap memory. Correctness-safe, performance-degrading.</p>
-
-<p><strong>SPARK-54579:</strong> “createDataFrame incorrectly handles NaN in pandas DataFrame when arrow-optimization is on” – filed 2025-12-03. Status: Open. When <code class="language-plaintext highlighter-rouge">spark.sql.execution.arrow.pyspark.enabled=true</code>, <code class="language-plaintext highlighter-rouge">np.nan</code> and <code class="language-plaintext highlighter-rouge">None</code> both convert to NULL, erasing the distinction. Linked PR apache/spark#53310 is active. Not riscv64-specific, but floating-point handling bugs of this type can manifest differently on platforms where JIT behavior varies.</p>
-
-<p><strong>lz4-java <a href="https://github.com/lz4/lz4-java/pull/212">PR#212</a>:</strong> Open and unmerged. Not a Spark bug, but a blocker for native LZ4 performance on riscv64 Spark. The upstream project has not had a release since 2021.</p>
-
-<p><strong>Arrow <a href="https://github.com/apache/arrow/issues/49555">GH-49555</a>:</strong> riscv64 Python wheel pipeline, open. Blocks PySpark with Arrow-accelerated DataFrames on riscv64 from using official release wheels.</p>
-
-<p><strong>ORC <a href="https://github.com/apache/orc/pull/2639">PR#2639</a>, <a href="https://github.com/apache/orc/pull/2644">PR#2644</a>:</strong> C++ native lib riscv64 build and CI support, open. Until merged and released, Spark uses the Java ORC fallback path on riscv64.</p>
-
-<p>No riscv64-specific correctness bugs are filed in <code class="language-plaintext highlighter-rouge">apache/spark</code> beyond the empty SPARK-53065 umbrella.</p><hr />
+<p>No GitHub issue exists that references riscv64 (Issues are disabled on <code class="language-plaintext highlighter-rouge">apache/spark</code>; three GitHub PR/code-search queries for <code class="language-plaintext highlighter-rouge">riscv64 performance</code>, <code class="language-plaintext highlighter-rouge">riscv64 bug state:open</code>, and <code class="language-plaintext highlighter-rouge">riscv nan floating</code> each returned zero results). <strong>No riscv64-specific correctness or performance bug is filed anywhere in <code class="language-plaintext highlighter-rouge">apache/spark</code> itself, on either GitHub or JIRA, beyond the empty SPARK-53065 tracking umbrella.</strong></p><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -856,104 +960,105 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 </h2>
     
 
-<p><strong>Active committer opposition to riscv64 inclusion (on record):</strong></p>
+<p><strong>On-record committer exchange (the only one that exists):</strong> in the <a href="https://github.com/apache/spark/pull/44384">PR #44384</a> review (January 2024), committer LuciferYang (Databricks) advocated excluding the newly appearing riscv64 Netty artifact: “I am more inclined to exclude this dependency. Because we do not yet have the corresponding CI to verify the usability of Apache Spark on RISC-V.” Committer dongjoon-hyun (Apple) overruled this: “I’m fine with new entry. It doesn’t mean Apache Spark claims any new additional architecture support.” LuciferYang accepted the decision without further objection. No committer has raised the topic since. There is no active technical objection to riscv64 today; the blocker is inertia and lack of priority, not disagreement.</p>
 
-<p>Committer LuciferYang (Databricks) explicitly advocated for excluding the riscv64 Netty artifact in <a href="https://github.com/apache/spark/pull/44384">PR #44384</a> review (January 2024): “I am more inclined to exclude this dependency. Because we do not yet have the corresponding CI to verify the usability of Apache Spark on RISC-V.” Committer dongjoon-hyun (Apple) overruled this: “I’m fine with new entry. It doesn’t mean Apache Spark claims any new additional architecture support.” LuciferYang accepted the decision. This exchange is the only on-record committer discussion of riscv64 policy. LuciferYang is the only committer who expressed interest in gating on CI verification, and he was overruled.</p>
+<p><strong>Community process:</strong> the SPIP process requires mailing-list consensus before implementing significant new functionality; the contributing guide explicitly states large new functionality is often redirected to spark-packages.org rather than accepted into core. A proposal to add riscv64 CI or formal platform support would need a SPIP, a CI hardware/runner source (GitHub Actions has no managed riscv64 runners), and a maintainer willing to own riscv64-specific breakages – none of which currently exist for Spark.</p>
 
-<p><strong>Community stance on new functionality:</strong></p>
-
-<p>The SPIP process requires mailing list consensus before implementation of significant features. The contributing guide explicitly states that large new functionality is often redirected to spark-packages.org. A proposal to add riscv64 CI runners or formal riscv64 support would need a SPIP, a hardware source (RISC-V CI runners are not available on GitHub Actions as of 2025), and a maintainer willing to own riscv64 breakages.</p>
-
-<p><strong>Upstream dependency blockers:</strong></p>
-
-<p>The three external blockers that must be resolved before riscv64 Spark can match arm64 feature parity:</p>
+<p><strong>Upstream dependency blockers</strong> that must clear before riscv64 Spark reaches arm64 feature parity:</p>
 <ol>
-  <li><code class="language-plaintext highlighter-rouge">lz4-java</code> <a href="https://github.com/lz4/lz4-java/pull/212">PR#212</a>: stale, no maintainer activity. Worst-case path: fork or replace with an alternative LZ4 JNI binding.</li>
-  <li><code class="language-plaintext highlighter-rouge">apache/arrow</code> <a href="https://github.com/apache/arrow/issues/49555">GH-49555</a>: active but unmerged; requires Arrow CI infrastructure investment.</li>
-  <li><code class="language-plaintext highlighter-rouge">protobuf</code> protoc binary: two PRs closed without merge; workaround available (build from source or use <code class="language-plaintext highlighter-rouge">protoc-jar-maven-plugin</code> fallback).</li>
-</ol><hr />
-<h2 id="13-investment-analysis">
+  <li><a href="https://github.com/lz4/lz4-java/pull/212">lz4-java PR#212</a>: stale, no maintainer responsiveness observed; worst-case path is forking or replacing the JNI binding.</li>
+  <li><a href="https://github.com/apache/arrow/issues/49555">Apache Arrow GH-49555</a>: active discussion but unmerged; needs Arrow’s own CI infrastructure investment.</li>
+  <li>Protobuf <code class="language-plaintext highlighter-rouge">protoc</code> riscv64 binary: two PRs closed without merge; a workaround exists (build <code class="language-plaintext highlighter-rouge">protoc</code> from source or use the <code class="language-plaintext highlighter-rouge">protoc-jar-maven-plugin</code> fallback).</li>
+</ol>
+
+<p><strong>Acceptance probability assessment:</strong> Spark itself is not the bottleneck – no committer objects to riscv64 support in principle, and PR #53382 shows the project will readily accept correctness fixes that happen to touch riscv64. The real gating factor is that no one has proposed, funded, or driven a SPIP for riscv64 CI, and the empty 14-month-old SPARK-53065 umbrella reflects that no maintainer has taken ownership.</p><hr />
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>Spark runs on riscv64 today without any code changes, provided a riscv64 JDK 17+ is available. The JVM layer is complete. The gaps are in native code paths that are performance-relevant but not correctness-blocking:</p>
 
 <ul>
-  <li>lz4-java: every shuffle uses pure-Java LZ4 (slower). Fix requires merging or forking <a href="https://github.com/lz4/lz4-java/pull/212">PR#212</a> upstream, or contributing a new release to a stale project. Estimated effort: 2-4 weeks to land a release; risk is upstream maintainer responsiveness.</li>
-  <li>Platform.java unaligned detection: a one-line regex change to include <code class="language-plaintext highlighter-rouge">riscv64</code> (plus validation that the Linux riscv64 kernel reports unaligned support correctly for the JVM). Estimated effort: 1 week including testing. This is the highest-return, lowest-risk Spark-side code change.</li>
-  <li>Arrow JNI / PySpark Arrow: requires Arrow C++ build infrastructure for riscv64, tracking <a href="https://github.com/apache/arrow/issues/49555">GH-49555</a>. Estimated effort: 3-6 weeks in Arrow, then a Spark-side validation pass.</li>
-  <li>ORC native lib: tracking <a href="https://github.com/apache/orc/pull/2639">PR#2639</a> and <a href="https://github.com/apache/orc/pull/2644">PR#2644</a>. Estimated effort if PRs merge: 1-2 weeks Spark-side validation; if PRs need driving: 4-8 weeks in ORC.</li>
-  <li>protoc: workaround available; for production Maven builds on riscv64 hardware this is a one-time setup cost, not a recurring blocker.</li>
+  <li><strong>Color:</strong> orange (no-upstream-ci)</li>
+  <li><strong>Release provider:</strong> none</li>
+  <li><strong>Justification:</strong> Apache Spark has zero riscv64 CI across all 47 GitHub Actions workflows and no Jenkinsfile, <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> (<a href="https://github.com/apache/spark/tree/master/.github/workflows">.github/workflows</a>), and no Linux distribution or third party currently packages it for riscv64 (not in Ubuntu, removed from Debian since 2019, not in Arch RISC-V), so per the grading model’s “no upstream CI” orange row there is no distribution floor to raise it above orange. Apache Spark is a general-purpose distributed-computing framework, not an optimization or acceleration library, so the optimization-purpose modifier does not apply. The JVM bytecode is believed to run on riscv64 (Gomez-Sanchez et al. 2023, <a href="https://arxiv.org/abs/2306.15562">arXiv:2306.15562</a>, functionally confirms this, ruling out a red/non-functional grade), but this remains unverified and untracked by the project itself: the sole tracking ticket, <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPARK-53065</a>, has sat open with zero comments, zero sub-tasks, and no assignee since 2025-08-01.</li>
+  <li><strong>Pending work that could change the grade:</strong> <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPARK-53065</a> is the single item to watch. If it gains real CI or testing sub-tasks, the grade could move to yellow; if upstream adds a riscv64 CI job with actual test execution, it would move to blue or green. No such activity has occurred in the 14 months since filing, and none of the six riscv64-touching PRs found (Section 2) represents dedicated RISC-V enablement work – all are incidental Netty/ZooKeeper/build-artifact changes.</li>
+</ul><hr />
+<h2 id="14-investment-analysis">
+  
+  
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has already funded OpenJDK JIT vectorization work (SLEEF math, CMoveX/Zicond) that benefits Spark indirectly at the JVM layer, and has funded Adoptium Temurin riscv64 JDK availability; no work sizing below duplicates this. RISE has not funded, and is not aware of, any Spark-specific enablement work (Section 10).</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
+  
+  
+</h3>
+    
+
+<p>Spark runs on riscv64 today without code changes, given a riscv64 JDK 17+. The JVM layer is complete; remaining gaps are in native code paths that are performance-relevant, not correctness-blocking:</p>
+<ul>
+  <li>lz4-java: every shuffle uses the pure-Java LZ4 fallback. Requires merging or forking <a href="https://github.com/lz4/lz4-java/pull/212">PR#212</a>, or cutting a release from a largely inactive upstream project. Estimated effort: 2-4 weeks to land a release, gated on upstream maintainer responsiveness.</li>
+  <li><code class="language-plaintext highlighter-rouge">Platform.java</code> unaligned detection: a one-line regex change to add <code class="language-plaintext highlighter-rouge">riscv64</code>, plus validation that the Linux riscv64 kernel/JVM combination correctly reports unaligned support. Estimated effort: 1 week including testing. Highest-return, lowest-risk Spark-side change identified.</li>
+  <li>Arrow JNI / PySpark Arrow acceleration: requires Arrow C++ build infrastructure for riscv64, tracked at <a href="https://github.com/apache/arrow/issues/49555">GH-49555</a>. Estimated effort: 3-6 weeks in Arrow, plus a Spark-side validation pass.</li>
+  <li>ORC native lib: tracked at <a href="https://github.com/apache/orc/pull/2639">PR#2639</a>/<a href="https://github.com/apache/orc/pull/2644">PR#2644</a>. Estimated effort: 1-2 weeks Spark-side validation if the PRs merge as-is, 4-8 weeks if driving the PRs to merge is required.</li>
+  <li>protoc: a workaround exists (source build or plugin fallback); one-time setup cost for production Maven builds on riscv64, not a recurring blocker.</li>
 </ul>
-<h3 id="132-performance-optimization">
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>The 2023 Gomez-Sanchez et al. benchmark (interpreter-only JVM, 1.2 GHz, no RVV, 1 Gbps Ethernet) showed 25x startup and 3-5x throughput regression vs a 2012-era x86_64 cluster. These numbers are not representative of current hardware or JVM. With HotSpot JIT now available on riscv64 and RISE-funded JVM improvements (2.1x-2.4x math/vectorization speedups), the JVM overhead gap has meaningfully closed. No updated Spark benchmark on current riscv64 hardware with HotSpot JIT has been published.</p>
-
-<p>Data not available: Spark TPC-H or TPC-DS benchmark results on modern riscv64 hardware with HotSpot JIT.</p>
-
-<p>Performance investment priorities:</p>
-<ol>
-  <li>Enable native LZ4 shuffle codec (via lz4-java <a href="https://github.com/lz4/lz4-java/pull/212">PR#212</a>): highest impact per effort for shuffle-heavy workloads.</li>
-  <li>Fix Platform.java unaligned detection: recovers Tungsten off-heap memory efficiency.</li>
-  <li>Validate Netty io_uring transport on riscv64 hardware: the upstream work is done (<a href="https://github.com/apache/spark/pull/53382">PR #53382</a> merged); validation cost is operational.</li>
-</ol>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Adding riscv64 CI to Apache Spark requires:</p>
+<p>The only published data point, Gomez-Sanchez et al. 2023, used an interpreter-only JVM on 2023-era hardware and is not representative of a current HotSpot-JIT riscv64 deployment; the RISE-funded JIT vectorization work (2.1x-2.4x math speedups) has likely closed part of the JVM-level gap, but no updated Spark-specific benchmark exists to confirm this. Priorities, in order:</p>
 <ol>
-  <li>A riscv64 CI runner source (GitHub Actions has no managed riscv64 runners as of 2025 [NEEDS VERIFICATION]; options are self-hosted runners or QEMU emulation).</li>
-  <li>A workflow file modeled on <code class="language-plaintext highlighter-rouge">build_maven_java21_arm.yml</code>.</li>
-  <li>Committer consensus via a SPIP or informal proposal on dev@spark.apache.org.</li>
-  <li>A long-term owner willing to handle riscv64 test failures.</li>
+  <li>Enable the native LZ4 shuffle codec (via <a href="https://github.com/lz4/lz4-java/pull/212">lz4-java PR#212</a>): highest impact per unit effort for shuffle-heavy workloads.</li>
+  <li>Fix <code class="language-plaintext highlighter-rouge">Platform.java</code> unaligned detection: recovers Tungsten off-heap memory efficiency.</li>
+  <li>Validate the Netty io_uring42 transport on real riscv64 hardware: the shading fix is already merged (<a href="https://github.com/apache/spark/pull/53382">PR #53382</a>); the remaining cost is purely operational validation.</li>
+  <li>Commission a current TPC-DS/TPC-H benchmark of Spark on riscv64 hardware with HotSpot JIT, since no such data exists anywhere (Section 10).</li>
 </ol>
-
-<p>QEMU-based CI is viable for correctness testing but not for performance benchmarking. Self-hosted riscv64 runners require hardware procurement and maintenance. Estimated effort to add basic riscv64 CI (QEMU, build + core tests): 3-5 weeks including infrastructure setup and mailing list process.</p>
-<h3 id="134-ecosystem-enablement">
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>The highest-leverage indirect investments that unblock Spark on riscv64:</p>
+<p>Adding riscv64 CI requires: (1) a riscv64 runner source, since GitHub Actions has no managed riscv64 runners as of this writing [NEEDS VERIFICATION] and RISE’s own <code class="language-plaintext highlighter-rouge">riscv-runner</code> GitHub Actions infrastructure is not currently used by Spark; (2) a workflow file modeled on <code class="language-plaintext highlighter-rouge">build_maven_java21_arm.yml</code>; (3) committer consensus via a SPIP or informal dev@spark.apache.org proposal; (4) a long-term owner for riscv64 test failures. QEMU-based CI is viable for correctness testing but not for performance benchmarking; self-hosted riscv64 runners require hardware procurement. Estimated effort for basic riscv64 CI (QEMU, build plus core tests): 3-5 weeks including infrastructure setup and the mailing-list process.</p>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>The highest-leverage indirect investments, all outside Spark itself:</p>
 <ol>
-  <li><code class="language-plaintext highlighter-rouge">lz4-java</code> <a href="https://github.com/lz4/lz4-java/pull/212">PR#212</a>: review, merge, and cut a release. Unblocks the default Spark shuffle codec for all riscv64 users of any JVM application using LZ4.</li>
-  <li>Apache Arrow riscv64 wheel pipeline (<a href="https://github.com/apache/arrow/issues/49555">GH-49555</a>): unblocks PySpark Arrow-accelerated DataFrames and many other Python data stack components.</li>
-  <li>OpenJDK JIT improvements (already funded by RISE): continued investment in C2 JIT quality on RISC-V directly improves Spark’s JVM execution performance with no Spark-side changes required.</li>
+  <li><a href="https://github.com/lz4/lz4-java/pull/212">lz4-java PR#212</a>: review, merge, and cut a release. Unblocks the default Spark shuffle codec for every riscv64 JVM application using LZ4, not just Spark.</li>
+  <li>Apache Arrow’s riscv64 wheel pipeline (<a href="https://github.com/apache/arrow/issues/49555">GH-49555</a>): unblocks PySpark Arrow-accelerated DataFrames and much of the broader Python data stack.</li>
+  <li>Continued RISE-funded OpenJDK JIT improvements: directly improve Spark’s JVM execution performance with zero Spark-side code changes required.</li>
 </ol>
-<h3 id="135-summary-table">
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -972,21 +1077,21 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Fix Platform.java unaligned detection (add riscv64 to regex)</td>
+      <td>Fix <code class="language-plaintext highlighter-rouge">Platform.java</code> unaligned detection (add riscv64 to the regex)</td>
       <td>1</td>
       <td>Apache Spark committer</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Drive lz4-java <a href="https://github.com/lz4/lz4-java/pull/212">PR#212</a> to merge and release</td>
+      <td>Drive <a href="https://github.com/lz4/lz4-java/pull/212">lz4-java PR#212</a> to merge and release</td>
       <td>2-4</td>
-      <td>lz4-java upstream + Spark dep bump</td>
+      <td>lz4-java upstream + Spark dependency bump</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Drive Apache Arrow riscv64 JNI + wheel pipeline (<a href="https://github.com/apache/arrow/issues/49555">GH-49555</a>)</td>
+      <td>Drive Apache Arrow riscv64 JNI and wheel pipeline (<a href="https://github.com/apache/arrow/issues/49555">GH-49555</a>)</td>
       <td>3-6</td>
       <td>Apache Arrow + PySpark</td>
       <td>High</td>
@@ -994,13 +1099,13 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
     <tr>
       <td>Functional</td>
       <td>Drive Apache ORC riscv64 native lib (<a href="https://github.com/apache/orc/pull/2639">PR#2639</a>, <a href="https://github.com/apache/orc/pull/2644">PR#2644</a>)</td>
-      <td>2-4 (if PRs merge), 4-8 (if drive needed)</td>
+      <td>2-4 (if PRs merge), 4-8 (if driving needed)</td>
       <td>Apache ORC</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Validate Netty io_uring on riscv64 hardware post-PR #53382</td>
+      <td>Validate Netty io_uring on real riscv64 hardware post-PR #53382</td>
       <td>1-2</td>
       <td>Spark networking subteam</td>
       <td>High</td>
@@ -1014,14 +1119,14 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 CI runner (QEMU or self-hosted) + workflow file</td>
+      <td>Add riscv64 CI runner (QEMU or self-hosted) plus workflow file</td>
       <td>3-5</td>
       <td>Infrastructure + Apache Spark committer</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>File and pursue SPIP for riscv64 as supported/experimental platform</td>
+      <td>File and pursue a SPIP for riscv64 as a supported/experimental platform</td>
       <td>1-2 (process)</td>
       <td>Spark PMC sponsor</td>
       <td>Medium</td>
@@ -1035,16 +1140,6 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
 <h2 id="15-references">
   
   
@@ -1056,27 +1151,34 @@ Tracking issue: <a href="https://issues.apache.org/jira/browse/SPARK-53065">SPAR
 
 <ul>
   <li><a href="https://github.com/apache/spark">Apache Spark GitHub repository</a></li>
-  <li><a href="https://issues.apache.org/jira/browse/SPARK-53065">SPARK-53065 – Comprehensive Tracking of RISC-V Architecture Support</a></li>
-  <li><a href="https://github.com/apache/spark/pull/44384">PR #44384 – Upgrade Netty to 4.1.106.Final (first riscv64 artifact + committer debate)</a></li>
-  <li><a href="https://github.com/apache/spark/pull/53382">PR #53382 – Correctly relocate Netty native libs for YARN ESS (riscv64 io_uring fix)</a></li>
-  <li><a href="https://github.com/apache/spark/pull/51868">PR #51868 – Split common-utils Java code into new module</a></li>
-  <li><a href="https://github.com/apache/spark/pull/48771">PR #48771 – ZooKeeper 3.9.3 / Netty 4.1.114 follow-up</a></li>
-  <li><a href="https://github.com/apache/spark/pull/48810">PR #48810 – Upgrade netty-tcnative to 2.0.69.Final</a></li>
-  <li><a href="https://github.com/lz4/lz4-java/pull/212">lz4-java PR#212 – Add JNI binding for Linux riscv64</a></li>
+  <li><a href="https://github.com/apache/spark/tree/master/.github/workflows">Apache Spark GitHub Actions workflows</a></li>
+  <li><a href="https://issues.apache.org/jira/browse/SPARK-53065">SPARK-53065, Comprehensive Tracking of RISC-V Architecture Support</a></li>
+  <li><a href="https://issues.apache.org/jira/browse/SPARK-54579">SPARK-54579, NaN handling with Arrow optimization</a></li>
+  <li><a href="https://issues.apache.org/jira/browse/HADOOP-19849">HADOOP-19849, CRC32C riscv64 open issue</a></li>
+  <li><a href="https://github.com/apache/spark/pull/44384">PR #44384, Upgrade Netty to 4.1.106.Final (first riscv64 artifact plus committer debate)</a></li>
+  <li><a href="https://github.com/apache/spark/pull/48666">PR #48666, Upgrade ZooKeeper to 3.9.3 (merged then reverted)</a></li>
+  <li><a href="https://github.com/apache/spark/pull/48771">PR #48771, ZooKeeper 3.9.3 / Netty 4.1.114 follow-up</a></li>
+  <li><a href="https://github.com/apache/spark/pull/48810">PR #48810, Upgrade netty-tcnative to 2.0.69.Final</a></li>
+  <li><a href="https://github.com/apache/spark/pull/51868">PR #51868, Split common-utils Java code into a new module</a></li>
+  <li><a href="https://github.com/apache/spark/pull/53382">PR #53382, Correctly relocate Netty native libs for YARN ESS (riscv64 fix)</a></li>
+  <li><a href="https://github.com/lz4/lz4-java/pull/212">lz4-java PR#212, Add JNI binding for Linux riscv64</a></li>
   <li><a href="https://github.com/lz4/lz4-java/issues/209">lz4-java issue #209</a></li>
   <li><a href="https://github.com/lz4/lz4-java/issues/215">lz4-java issue #215</a></li>
-  <li><a href="https://github.com/apache/arrow/issues/49555">Apache Arrow GH-49555 – riscv64 Python wheel pipeline</a></li>
-  <li><a href="https://github.com/apache/arrow/pull/49556">Apache Arrow PR#49556 – riscv64 wheel pipeline implementation</a></li>
-  <li><a href="https://github.com/apache/orc/pull/2639">Apache ORC PR#2639 – C++ riscv64 build support</a></li>
-  <li><a href="https://github.com/apache/orc/pull/2644">Apache ORC PR#2644 – Docker/CI riscv64</a></li>
-  <li><a href="https://issues.apache.org/jira/browse/HADOOP-19849">HADOOP-19849 – CRC32C riscv64 open issue</a></li>
-  <li><a href="https://github.com/xerial/snappy-java/pull/396">snappy-java PR#396 – riscv64 native binary (merged 2023)</a></li>
-  <li><a href="https://github.com/luben/zstd-jni/pull/282">zstd-jni PR#282 – riscv64 support (merged 2023)</a></li>
-  <li><a href="https://issues.apache.org/jira/browse/SPARK-54579">SPARK-54579 – NaN / Arrow optimization bug</a></li>
-  <li><a href="https://arxiv.org/abs/2306.15562">Gomez-Sanchez et al. 2023, arXiv:2306.15562 – Spark benchmark on HiFive Unmatched</a></li>
-  <li><a href="https://riseproject.dev/">RISE blog – OpenJDK SLEEF vectorized math speedup (2025-09-24)</a></li>
-  <li><a href="https://riseproject.dev/">RISE blog – OpenJDK CMoveX and Vectorization (2025-07-23)</a></li>
-  <li><a href="https://riseproject.dev/">RISE blog – Java on RISC-V: Adoptium partnership (2024-05-29)</a></li>
+  <li><a href="https://github.com/apache/arrow/issues/49555">Apache Arrow GH-49555, riscv64 Python wheel pipeline</a></li>
+  <li><a href="https://github.com/apache/arrow/pull/49556">Apache Arrow PR#49556, riscv64 wheel pipeline implementation</a></li>
+  <li><a href="https://github.com/apache/orc/pull/2639">Apache ORC PR#2639, C++ riscv64 build support</a></li>
+  <li><a href="https://github.com/apache/orc/pull/2644">Apache ORC PR#2644, Docker/CI riscv64</a></li>
+  <li><a href="https://github.com/xerial/snappy-java/pull/396">snappy-java PR#396, riscv64 native binary, merged 2023</a></li>
+  <li><a href="https://github.com/luben/zstd-jni/pull/282">zstd-jni PR#282, riscv64 support, merged 2023</a></li>
+  <li><a href="https://github.com/protocolbuffers/protobuf/pull/12244">Protocol Buffers PR#12244</a></li>
+  <li><a href="https://github.com/protocolbuffers/protobuf/pull/23206">Protocol Buffers PR#23206</a></li>
+  <li><a href="https://arxiv.org/abs/2306.15562">Gomez-Sanchez et al. 2023, arXiv:2306.15562, Spark benchmark on HiFive Unmatched</a></li>
+  <li><a href="https://dlcdn.apache.org/spark/spark-4.2.0/">Apache Spark releases (ASF mirror, spark-4.2.0)</a></li>
+  <li><a href="https://pypi.org/pypi/pyspark/json">PyPI, pyspark package</a></li>
+  <li><a href="https://riseproject.dev/">RISE Project blog</a></li>
+  <li><a href="https://riseproject.dev/members">RISE Project members list</a></li>
+  <li><a href="https://github.com/riseproject-dev">RISE Project GitHub organization</a></li>
+  <li><a href="https://cordis.europa.eu/project/id/101093062/results">Vitamin-V project (GA 101093062) CORDIS results page</a></li>
 </ul>
 
           
