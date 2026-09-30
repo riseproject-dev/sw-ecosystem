@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a>
-<strong>Date:</strong> 2026-07-20
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for cpuinfo
-<strong>Audience:</strong> Technical leadership, resource allocation strategy
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].</p><hr />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for cpuinfo<br />
+<strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,15 +280,15 @@
 </h2>
     
 
-<p>cpuinfo is a C library for runtime CPU feature detection, originally authored by Marat Dukhan at Meta. It is hosted under the <a href="https://github.com/pytorch/cpuinfo">pytorch GitHub organization</a> and licensed under BSD-2-Clause. The library provides structured detection of ISA extensions, vendor identity, microarchitecture, cache topology, and processor/core/package layout. Its primary consumers are XNNPACK and PyTorch, which use it to select optimized dispatch paths at runtime.</p>
+<p>cpuinfo is a C library for runtime CPU feature detection, originally authored by Marat Dukhan. It is hosted under the <a href="https://github.com/pytorch/cpuinfo">pytorch GitHub organization</a> and licensed under Simplified BSD (BSD-2-Clause); copyright holders listed in LICENSE are Google LLC (2019), Facebook Inc. (2017-2018), Georgia Institute of Technology (2012-2017), and Marat Dukhan (2010-2012). The library provides structured detection of ISA extensions, vendor identity, microarchitecture, cache topology, and processor/core/package layout. Its primary consumers are XNNPACK and PyTorch, which use it to select optimized dispatch paths at runtime. cpuinfo is a CPU-feature/topology detection library, not itself a SIMD or other performance-critical hot path: it runs once at startup and its own code contains no vectorized or JIT-compiled logic.</p>
 
-<p>There is no formal governance body, steering committee, or foundation membership. Merge authority rests entirely with Meta/PyTorch organization maintainers. A Facebook-managed CLA (code.facebook.com/cla) is required for all contributions. There is no MAINTAINERS, OWNERS, or CODEOWNERS file in the repository.</p>
+<p>Governance is informal. No <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, <code class="language-plaintext highlighter-rouge">CODEOWNERS</code>, <code class="language-plaintext highlighter-rouge">GOVERNANCE.md</code>, or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> file exists anywhere in the repository. <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> describes a standard fork/PR workflow and requires signing Facebook’s CLA (code.facebook.com/cla); security issues route through Facebook’s bug bounty program. PyTorch itself sits under the PyTorch Foundation, hosted by the Linux Foundation, but the Foundation’s named project portfolio (core PyTorch, vLLM, DeepSpeed, Ray, Helion, Safetensors) does not explicitly list cpuinfo as a chartered sub-project; it is a dependency library hosted in the org, not a formally governed one.</p>
 
-<p>The founding engineer, Marat Dukhan (GitHub: Maratyszcza), stated explicitly during the review of PR #190 (November 2023) that he “no longer works on cpuinfo.” Effective merge authority has passed to <code class="language-plaintext highlighter-rouge">malfet</code> (Meta/PyTorch), who is the sole active merger. Active contributors from Google (fbarchard, gonnet, enh-google) and Arm Ltd (LDong-Arm) have had patches merged. Linaro (gaborkertesz-linaro) has also contributed.</p>
+<p>Merge authority in practice rests with a small set of PyTorch-affiliated engineers. Full-history commit analysis (863 commits back to 2017) shows Marat Dukhan (471 + 35 commits, Facebook then Google) as the dominant historical author, followed by Frank Barchard (~37, Google, also the most active recent committer), Pedro Gonnet (25, Google), Digant Desai (16, Meta), Prashanth Swaminathan (10, authored the initial RISC-V port), and Nikita Shulga / “malfet” (9 commits, Meta/PyTorch core maintainer, but dominant in recent merge activity). Recent (since Jan 2024) committer email-domain tally: google.com (65), meta.com (20), gmail/personal (48), intel.com (4), rivosinc.com (2, Rivos Inc., a RISC-V chip startup), fujitsu.com (2), oss.qualcomm.com (1), linaro.org (1). Day-to-day stewardship is effectively Google and Meta/PyTorch engineers, with occasional RISC-V-vendor contributions.</p>
 
-<p>The project accepts incomplete ports. PR #190 was merged in November 2023 with explicitly noted gaps (uarch returns “unknown,” cache info empty), establishing the precedent that skeleton-level RISC-V support is acceptable. The community stance toward new architecture ports is permissive but passive: contributions are accepted when submitted; proactive work by maintainers does not happen.</p>
+<p>The project accepts incomplete architecture ports. PR <a href="https://github.com/pytorch/cpuinfo/pull/190">#190</a> was merged in November 2023 with explicitly noted gaps (uarch returns “unknown,” cache info empty), establishing that skeleton-level RISC-V support is an acceptable starting point. New-architecture acceptance (RISC-V, and similarly <code class="language-plaintext highlighter-rouge">linux_ppc64le</code> added separately) runs through ordinary community PRs reviewed by the same handful of Google/Meta-affiliated maintainers, driven by downstream need (XNNPACK/PyTorch wanting RVV/fp16 detection) rather than a written roadmap or tiering policy.</p>
 
-<p>cpuinfo is not a RISE Project member. No RISE blog posts, funded work, or dedicated riseproject-dev repositories cover cpuinfo directly. cpuinfo appears only as an incidental dependency in RISE work on PyTorch and XNNPACK.</p><hr />
+<p>cpuinfo is not a RISE Project member (neither <code class="language-plaintext highlighter-rouge">cpuinfo</code>, <code class="language-plaintext highlighter-rouge">pytorch</code>, nor <code class="language-plaintext highlighter-rouge">XNNPACK</code> appear on RISE’s <a href="https://riseproject.dev/members/">members page</a>). There is no dedicated RISE blog post, repository, or wheel-builder listing for cpuinfo; it surfaces only as an incidental upstream dependency inside RISE’s PyTorch-on-riscv64 bring-up work. Several RISE Premier/General members (SiFive, SpacemiT, and Alibaba/T-Head-adjacent organizations) are exactly the silicon vendors whose microarchitectures are being added to cpuinfo’s RISC-V detection code in open PR #397, even though no formal RISE affiliation exists.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -308,109 +309,105 @@
   <tbody>
     <tr>
       <td>2022-12-23</td>
-      <td>Issue #124 opened by <code class="language-plaintext highlighter-rouge">kassane</code> requesting riscv64 support</td>
+      <td>Issue #124 opened by kassane requesting riscv64 support</td>
       <td><a href="https://github.com/pytorch/cpuinfo/issues/124">Issue #124</a></td>
     </tr>
     <tr>
       <td>2023-05-12</td>
-      <td>PR #148 opened by <code class="language-plaintext highlighter-rouge">GlassOfWhiskey</code>: cache detection, uarch, /proc/cpuinfo fallback, kernel version gating</td>
+      <td>PR #148 opened by GlassOfWhiskey: cache detection, uarch, /proc/cpuinfo fallback, kernel-version gating; competed with #190</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/148">PR #148</a></td>
     </tr>
     <tr>
       <td>2023-08-24</td>
-      <td>PR #190 opened by <code class="language-plaintext highlighter-rouge">prashanthswami</code>: foundational RISC-V support</td>
+      <td>PR #190 opened by prashanthswami: foundational RISC-V support</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/190">PR #190</a></td>
     </tr>
     <tr>
       <td>2023-11-12</td>
-      <td>Maratyszcza states “I no longer work on cpuinfo” in PR #190 review</td>
+      <td>Maratyszcza states “I no longer work on cpuinfo” during PR #190 review, handing review to malfet</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/190">PR #190</a></td>
     </tr>
     <tr>
       <td>2023-11-14</td>
-      <td>PR #190 merged by <code class="language-plaintext highlighter-rouge">malfet</code>: RISCV32/RISCV64 headers, Bazel support, Linux init for topology, hwcap ISA detection (I/M/A/F/D/C/V), uarch stub</td>
+      <td>PR #190 merged by malfet: RISCV32/RISCV64 headers, Bazel support, Linux init for topology, hwcap ISA detection (I/M/A/F/D/C/V), uarch stub</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/190">PR #190</a></td>
     </tr>
     <tr>
       <td>2023-11-17</td>
-      <td>PR #200 opened by <code class="language-plaintext highlighter-rouge">prashanthswami</code>: StarFive VisionFive V2 as test fixture</td>
+      <td>PR #200 opened: add StarFive VisionFive V2 as an example rv64 test fixture (still open)</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/200">PR #200</a></td>
     </tr>
     <tr>
       <td>2023-11-20</td>
-      <td>PR #201 merged by <code class="language-plaintext highlighter-rouge">malfet</code>: missing android_riscv64 Bazel config_setting</td>
+      <td>PR #201 merged: missing android_riscv64 Bazel config_setting</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/201">PR #201</a></td>
     </tr>
     <tr>
-      <td>2024-01-05</td>
-      <td>PR #212 merged: fix missing sys/hwprobe.h on glibc-based Linux</td>
-      <td><a href="https://github.com/pytorch/cpuinfo/pull/212">PR #212</a></td>
-    </tr>
-    <tr>
       <td>2024-01-22</td>
-      <td>PR #215 merged by <code class="language-plaintext highlighter-rouge">markdryan</code>: fix double-inclusion of sys/hwprobe.h breaking Ubuntu 23.10</td>
+      <td>PR #215 merged by markdryan: fix duplicate <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> include breaking the RISC-V Linux build</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/215">PR #215</a></td>
     </tr>
     <tr>
       <td>2024-01-23</td>
-      <td>PR #219 merged: Ubuntu 22.04 QEMU riscv64 CI</td>
+      <td>PR #219 merged: Ubuntu 22.04 QEMU riscv64 CI builder, explicitly gated on #215 landing first (“Once #215 is merged I’ll rebase this patch”)</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/219">PR #219</a></td>
     </tr>
     <tr>
       <td>2024-08-30</td>
-      <td>PR #256 merged: Android NDK riscv64 cross-compile CI</td>
+      <td>PR #256 merged: Android NDK riscv64 cross-compile CI matrix entry, fixes issue #206</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/256">PR #256</a></td>
     </tr>
     <tr>
       <td>2025-05-22</td>
-      <td>PR #295 merged: fix QEMU CI (add –platform linux/riscv64)</td>
+      <td>PR #295 merged by malfet: fix QEMU CI by adding <code class="language-plaintext highlighter-rouge">--platform linux/riscv64</code> to <code class="language-plaintext highlighter-rouge">docker run</code></td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/295">PR #295</a></td>
     </tr>
     <tr>
       <td>2025-05-23</td>
-      <td>PR #292 merged by <code class="language-plaintext highlighter-rouge">enh-google</code>: fix syscall type mismatch in riscv-hw.c</td>
+      <td>PR #292 merged by enh-google: fix syscall type mismatch (cpu_set_t) in riscv-hw.c</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/292">PR #292</a></td>
     </tr>
     <tr>
-      <td>2026-03-03</td>
-      <td>PR #375 opened by <code class="language-plaintext highlighter-rouge">ken-unger</code>: add zfh/zvfh fp16 detection</td>
-      <td><a href="https://github.com/pytorch/cpuinfo/pull/375">PR #375</a></td>
-    </tr>
-    <tr>
-      <td>2026-04-15</td>
-      <td>PR #375 merged by <code class="language-plaintext highlighter-rouge">malfet</code>: cpuinfo_has_riscv_zfh() and cpuinfo_has_riscv_zvfh()</td>
-      <td><a href="https://github.com/pytorch/cpuinfo/pull/375">PR #375</a></td>
+      <td>2026-04-14/15</td>
+      <td>Commit d05fbcd5 (PR #375) merged by malfet: <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zfh()</code>/<code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> fp16 detection, for XNNPACK’s RVV fp16 kernels</td>
+      <td><a href="https://github.com/pytorch/cpuinfo/commit/d05fbcd57dc096718c4979e7c054e628f1f3520b">commit d05fbcd5</a></td>
     </tr>
     <tr>
       <td>2026-05-07</td>
-      <td>PR #388 opened: sysfs L1/L2 cache detection</td>
+      <td>PR #388 opened: sysfs L1/L2 cache detection (still open, overlaps #397)</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/388">PR #388</a></td>
     </tr>
     <tr>
       <td>2026-06-20</td>
-      <td>PR #302 opened: refactor ISA to compiled (FFI support for Rust/Python)</td>
+      <td>PR #302 opened: refactor ISA detection to compiled (FFI support for Rust/Python), still open</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/302">PR #302</a></td>
     </tr>
     <tr>
       <td>2026-06-22</td>
-      <td>PR #397 opened by <code class="language-plaintext highlighter-rouge">rajeshgangam</code>: comprehensive completion (28 ISA extensions, T-Head/SpacemiT vendor+uarch, sysfs cache)</td>
+      <td>PR #397 opened by rajeshgangam: complete ISA extension, vendor/uarch, and cache support; closes tracking issue #124</td>
+      <td><a href="https://github.com/pytorch/cpuinfo/pull/397">PR #397</a></td>
+    </tr>
+    <tr>
+      <td>2026-07-15</td>
+      <td>PR #421 opened by CodersAcademy006: fix spurious ERROR-level log spam from a <code class="language-plaintext highlighter-rouge">-1</code> topology-id sentinel on real riscv64 hardware</td>
+      <td><a href="https://github.com/pytorch/cpuinfo/pull/421">PR #421</a></td>
+    </tr>
+    <tr>
+      <td>2026-08-18</td>
+      <td>luhenry approves PR #397, stating a preference for it over the competing PR #388 (“so we get all features in one go”)</td>
+      <td><a href="https://github.com/pytorch/cpuinfo/pull/397">PR #397</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-17</td>
+      <td>XYenChi comments “lgtm” on PR #397; still open, unmerged</td>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/397">PR #397</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>All RISC-V code is in the upstream repository at github.com/pytorch/cpuinfo. There is no downstream fork carrying out-of-tree patches. The port is fully upstream, though functionally incomplete.</p>
+<p>All RISC-V code lives in the upstream repository; there is no downstream fork carrying out-of-tree patches. The port is fully upstream, though functionally incomplete: as of HEAD <code class="language-plaintext highlighter-rouge">66ee79c</code> (2026-07-30), main does not yet contain PR #397’s T-Head/SpacemiT vendor decode, 28 new ISA flags, or sysfs cache detection, and does not contain PR #421’s topology-id log fix.</p>
 
-<p>Key contributors and affiliations:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">prashanthswami</code> (affiliation not stated in findings) – authored PR #190, the foundational port</li>
-  <li><code class="language-plaintext highlighter-rouge">markdryan</code> (affiliation not stated) – authored PRs #212, #215, build fix work</li>
-  <li><code class="language-plaintext highlighter-rouge">enh-google</code> (Google) – authored PR #292</li>
-  <li><code class="language-plaintext highlighter-rouge">ken-unger</code> (affiliation not stated) – authored PR #375, tested on SiFive X280 and SpaceMit X60</li>
-  <li><code class="language-plaintext highlighter-rouge">fbarchard</code> (affiliation not stated in findings, active reviewer) – approved multiple PRs</li>
-  <li><code class="language-plaintext highlighter-rouge">malfet</code> (Meta/PyTorch) – sole active merger</li>
-  <li><code class="language-plaintext highlighter-rouge">rajeshgangam</code> (affiliation not stated) – authored PR #397</li>
-</ul><hr />
+<p>Key contributors and affiliations: prashanthswami (authored the foundational PR #190); markdryan / Mark Ryan, markdryan@rivosinc.com (Rivos Inc., a RISC-V chip startup) fixed the RISC-V Linux build and added the QEMU CI builder; enh-google (Google) fixed a syscall type issue; ken-unger authored the fp16 detection PR #375, crediting RVV microkernel work in both XNNPACK and cpuinfo; fbarchard (Google) is an active reviewer; malfet (Meta/PyTorch) is the effective sole active merger; rajeshgangam authored the large, still-open PR #397; CodersAcademy006 authored the still-open PR #421.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -420,9 +417,7 @@
 </h2>
     
 
-<p>cpuinfo has no published tier policy. Architecture support is informal: a port is “supported” when CI builds it and the maintainers do not revert it.</p>
-
-<p>Evidence-based tier assessment:</p>
+<p>cpuinfo has no published tier policy. Architecture support is informal: a port is “supported” when CI builds it and maintainers do not revert it.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -438,60 +433,60 @@
       <td>CI build</td>
       <td>Yes, multiple jobs</td>
       <td>Yes, multiple jobs</td>
-      <td>Yes, QEMU and Android NDK cross-compile</td>
+      <td>Yes, QEMU-emulated Linux job and Android NDK cross-compile job</td>
     </tr>
     <tr>
-      <td>CI tests run</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No – build only</td>
+      <td>CI tests executed</td>
+      <td>Compiled under CI, no <code class="language-plaintext highlighter-rouge">ctest</code> invocation anywhere in <code class="language-plaintext highlighter-rouge">build.yml</code> for any platform</td>
+      <td>Same</td>
+      <td>Same – build only, confirmed by a direct read of <code class="language-plaintext highlighter-rouge">.github/workflows/build.yml</code></td>
     </tr>
     <tr>
       <td>Official binary releases</td>
-      <td>No (source-only project)</td>
+      <td>No (project has zero tagged GitHub releases, any architecture)</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
       <td>Distro packages</td>
-      <td>Arch, Debian, Ubuntu</td>
-      <td>Arch, Debian, Ubuntu</td>
-      <td>Debian sid only (limited baseline)</td>
+      <td>Ubuntu, Debian, Arch (official)</td>
+      <td>Ubuntu, Debian, Arch (official)</td>
+      <td>Ubuntu 26.04 “resolute” (universe/ports), Debian sid, unofficial Arch RISC-V port – all built from unmodified git snapshots, not tagged releases</td>
     </tr>
     <tr>
       <td>Uarch decoded</td>
-      <td>Yes (~30+ models)</td>
-      <td>Yes (~30+ models)</td>
-      <td>No (always “unknown”)</td>
+      <td>Yes (Intel P5-Raptor Cove, AMD K5-Zen family, ~445-line table)</td>
+      <td>Yes (~30+ microarchitectures, large chipset DB)</td>
+      <td>No on main (always <code class="language-plaintext highlighter-rouge">cpuinfo_uarch_unknown</code>); SiFive, T-Head, SpacemiT decode added only in open PR #397</td>
     </tr>
     <tr>
       <td>Cache info populated</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No (empty)</td>
+      <td>Yes (2,171 lines across 3 files)</td>
+      <td>Yes (1,786-line cache.c)</td>
+      <td>No on main (no <code class="language-plaintext highlighter-rouge">src/riscv/cache.c</code> exists); sysfs-based detection added only in open PR #397</td>
     </tr>
     <tr>
       <td>ISA extensions detected</td>
       <td>Hundreds</td>
-      <td>~30+</td>
-      <td>9 (7 base + zfh + zvfh)</td>
+      <td>~51 <code class="language-plaintext highlighter-rouge">has_arm_*</code> functions</td>
+      <td>11 <code class="language-plaintext highlighter-rouge">has_riscv_*</code> functions (I, E, M, A, F, D, C, V, G, Zfh, Zvfh); ~25 additional hwprobe extension constants (Zba/Zbb/Zbs/Zbc, scalar+vector crypto, Zicboz, Zihintntl) are defined but never read out on main</td>
     </tr>
     <tr>
       <td>Mock test fixtures</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No</td>
+      <td>None – zero riscv entries in <code class="language-plaintext highlighter-rouge">test/mock/</code> (164 fixtures exist for other architectures)</td>
     </tr>
     <tr>
       <td>Vendor recognition</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>SiFive only</td>
+      <td>SiFive only on main (<code class="language-plaintext highlighter-rouge">mvendorid 0x489</code>)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>riscv64 is a second-class port by all measurable criteria. It builds and runs topology detection correctly, but the three most important features for dispatch consumers – uarch, cache topology, and full ISA extension coverage – are absent or incomplete.</p><hr />
+<p>riscv64 is a second-class port by every measurable criterion. Processor/core/package topology enumeration is solid and comparable in structure to the ARM Linux init path, but the three features consumers most rely on for dispatch decisions – microarchitecture, cache topology, and full ISA-extension coverage – are absent or stubbed on main and exist only in unmerged PRs.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -501,11 +496,11 @@
 </h2>
     
 
-<p>cpuinfo is a pure-C library with no JIT, no SIMD compute, no cryptographic primitives, and no garbage collector. Its architecture-specific work is entirely detection code: identifying what ISA extensions the CPU supports, which vendor and microarchitecture it is, and what cache sizes it has. There are no assembly files and no intrinsics anywhere in the RISC-V implementation.</p>
+<p>cpuinfo is a pure-C library: no JIT, no SIMD compute, no cryptographic primitives, no garbage collector, no <code class="language-plaintext highlighter-rouge">.S</code>/<code class="language-plaintext highlighter-rouge">.s</code> assembly files anywhere in the repository (confirmed by a repo-wide search), and no RVV intrinsics. The RISC-V implementation totals <strong>998 lines across 6 files</strong>, all under <code class="language-plaintext highlighter-rouge">src/riscv/</code>: <code class="language-plaintext highlighter-rouge">api.h</code> (42), <code class="language-plaintext highlighter-rouge">uarch.c</code> (27), <code class="language-plaintext highlighter-rouge">linux/api.h</code> (73), <code class="language-plaintext highlighter-rouge">linux/riscv-isa.c</code> (43), <code class="language-plaintext highlighter-rouge">linux/riscv-hw.c</code> (193), <code class="language-plaintext highlighter-rouge">linux/init.c</code> (620). For comparison, <code class="language-plaintext highlighter-rouge">src/arm/**</code> is 18 files / 14,346 lines and <code class="language-plaintext highlighter-rouge">src/x86/**</code> is 19 files / 7,376 lines – riscv64 is roughly 7x smaller than x86 and 14x smaller than arm in code volume.</p>
 <h3 id="isa-extension-detection">
   
   
-    <a href="#isa-extension-detection" class="anchor-heading" aria-labelledby="isa-extension-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ISA Extension Detection
+    <a href="#isa-extension-detection" class="anchor-heading" aria-labelledby="isa-extension-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ISA extension detection
   
   
 </h3>
@@ -524,79 +519,69 @@
     <tr>
       <td>Mechanism</td>
       <td>CPUID</td>
-      <td>HWCAP / HWCAP2 / MRS</td>
-      <td>AT_HWCAP + hwprobe syscall</td>
+      <td>HWCAP/HWCAP2/MRS</td>
+      <td><code class="language-plaintext highlighter-rouge">AT_HWCAP</code> (base I/M/A/F/D/C/V) plus the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall (vendor, marchid, mimpid, IMA_EXT_0 bitmap, Zfh/Zvfh)</td>
     </tr>
     <tr>
-      <td>Number of extensions detected</td>
+      <td>Extensions exposed</td>
       <td>Hundreds</td>
-      <td>~30+ fields in ISA struct</td>
-      <td>9 (I, M, A, F, D, C, V, Zfh, Zvfh)</td>
+      <td>~51 functions</td>
+      <td>11 <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_*</code> accessors covering i, e (RV32 only), m, a, f, d, c, v, g (synthetic), zfh, zvfh</td>
     </tr>
     <tr>
-      <td>Quality</td>
-      <td>Complete</td>
-      <td>Complete</td>
-      <td>Partial – 28+ extensions in hwprobe ABI not yet wired to public API</td>
-    </tr>
-    <tr>
-      <td>Multi-letter Z-extensions</td>
+      <td>Extensions defined but unused</td>
       <td>N/A</td>
       <td>N/A</td>
-      <td>Zba/Zbb/Zbs/Zbc, vector crypto absent from public struct until PR #397 merges</td>
+      <td>~25 hwprobe constants for Zba, Zbb, Zbs, Zicboz, Zbc, Zbkb, Zbkc, Zbkx, Zknd, Zkne, Zknh, Zksed, Zksh, Zkt, Zvbb, Zvbc, Zvkb, Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed, Zvksh, Zvkt, Zfhmin, Zihintntl are declared in <code class="language-plaintext highlighter-rouge">riscv-hw.c</code> but never parsed into the public <code class="language-plaintext highlighter-rouge">isa</code> struct – dead code on main</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><code class="language-plaintext highlighter-rouge">src/riscv/linux/riscv-isa.c</code> decodes AT_HWCAP single-letter extensions (I/M/A/F/D/C/V). <code class="language-plaintext highlighter-rouge">src/riscv/linux/riscv-hw.c</code> calls the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall (NR_arch_specific_syscall + 14) and decodes vendor, marchid, mimplid, and ISA extension bits including Zfh and Zvfh. The code defines constants for ~30 ISA extensions in the hwprobe ABI, but as of the main branch, the parsing logic actively checks only two of them (Zfh at bit 27, Zvfh at bit 30). The remaining constants are dead code. PR #397 wires all of them to new public API fields.</p>
+<p><code class="language-plaintext highlighter-rouge">src/riscv/linux/riscv-isa.c</code> decodes single-letter base extensions from <code class="language-plaintext highlighter-rouge">AT_HWCAP</code>. <code class="language-plaintext highlighter-rouge">src/riscv/linux/riscv-hw.c</code> implements the RISC-V <code class="language-plaintext highlighter-rouge">hwprobe</code> syscall directly (a raw <code class="language-plaintext highlighter-rouge">syscall()</code> on glibc, or the libc <code class="language-plaintext highlighter-rouge">__riscv_hwprobe()</code> wrapper on Android) and is the only place the fp16 bits (Zfh, Zvfh, merged via commit <code class="language-plaintext highlighter-rouge">d05fbcd5</code>/PR #375, motivated by XNNPACK’s RVV fp16 kernels) are actually wired up. Open PR <a href="https://github.com/pytorch/cpuinfo/pull/397">#397</a> exposes the remaining ~25 already-defined constants via 28 new public ISA fields (half-precision Zfhmin; bit-manipulation Zba/Zbb/Zbs/Zbc; scalar crypto Zbkb/Zbkc/Zbkx/Zknd/Zkne/Zknh/Zksed/Zksh/Zkt; vector crypto Zvbb/Zvbc/Zvkb/Zvkg/Zvkned/Zvknha/Zvknhb/Zvksed/Zvksh/Zvkt; memory hints Zicboz/Zihintntl) and separately fixes a <code class="language-plaintext highlighter-rouge">uint32_t</code> truncation bug that corrupts 64-bit <code class="language-plaintext highlighter-rouge">marchid</code> values.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">cpuinfo_riscv_isa</code> struct on main exposes: i, e (RV32 only), m, a, f, d, c, v, zfh, zvfh. That is 10 fields total, 9 applicable to rv64.</p>
-
-<p>An important note on the Android vs. glibc path: <code class="language-plaintext highlighter-rouge">riscv-hw.c</code> has an explicit comment that glibc patches adding <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> exist but were not merged at time of writing. The Android <code class="language-plaintext highlighter-rouge">__riscv_hwprobe()</code> libc function is used on Android; Linux uses a raw <code class="language-plaintext highlighter-rouge">syscall()</code>. This is a documented workaround, not a permanent solution. The comment in the source notes glibc patches as available but unmerged; the current glibc status as of June 2026 is not confirmed in the research findings.</p>
+<p><code class="language-plaintext highlighter-rouge">riscv-hw.c</code> carries an explicit comment that a glibc-native <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> wrapper existed as an unmerged patch “at the time of writing,” which is why the code falls back to a raw <code class="language-plaintext highlighter-rouge">syscall()</code> on glibc/Linux; on Android the NDK’s own <code class="language-plaintext highlighter-rouge">__riscv_hwprobe()</code> is used directly. The kernel header this mirrors, <code class="language-plaintext highlighter-rouge">asm/hwprobe.h</code>, is only present starting Linux 6.4; on older kernels the syscall fails and detection degrades gracefully to “unknown” rather than crashing.</p>
 <h3 id="vendor-and-microarchitecture-detection">
   
   
-    <a href="#vendor-and-microarchitecture-detection" class="anchor-heading" aria-labelledby="vendor-and-microarchitecture-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Vendor and Microarchitecture Detection
+    <a href="#vendor-and-microarchitecture-detection" class="anchor-heading" aria-labelledby="vendor-and-microarchitecture-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Vendor and microarchitecture detection
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">src/riscv/uarch.c</code> is a ~30-line stub. It recognizes one vendor: SiFive (mvendorid 0x489). All microarchitectures return <code class="language-plaintext highlighter-rouge">cpuinfo_uarch_unknown</code>. There is a literal TODO comment: “Add support for parsing chipset architecture and implementation IDs here, when a chipset of interest comes along.”</p>
+<p><code class="language-plaintext highlighter-rouge">src/riscv/uarch.c</code> is a 27-line stub. On main it recognizes exactly one vendor (SiFive, <code class="language-plaintext highlighter-rouge">mvendorid 0x489</code>); <code class="language-plaintext highlighter-rouge">cpuinfo_riscv_chipset_arch</code>/<code class="language-plaintext highlighter-rouge">_impl</code> enums contain only <code class="language-plaintext highlighter-rouge">unknown</code>/<code class="language-plaintext highlighter-rouge">max</code> values, and there is a literal TODO at line 23: “Add support for parsing chipset architecture and implementation IDs here, when a chipset of interest comes along.” Every real chip currently resolves to <code class="language-plaintext highlighter-rouge">cpuinfo_uarch_unknown</code>. For comparison, x86’s <code class="language-plaintext highlighter-rouge">uarch.c</code> is 445 lines covering the full Intel/AMD family history, and arm’s uarch + chipset tables run into the thousands of lines.</p>
 
-<p>For comparison, the x86 <code class="language-plaintext highlighter-rouge">uarch.c</code> is 445 lines covering Intel (P5 through Raptor Cove) and AMD (K5 through Zen 6). ARM uarch coverage includes ~30+ microarchitectures.</p>
-
-<p>PR #397 adds marchid-based decoding for: SiFive U74 (7-series), T-Head C906, C908, C910, C920, and SpacemiT X60. It also adds vendor IDs for T-Head (0x5b7) and SpacemiT (0x61f). This PR is open as of June 22, 2026 with no reviewer assigned.</p>
+<p>Open PR #397, verified directly against its diff, adds three new vendor enums (<code class="language-plaintext highlighter-rouge">cpuinfo_vendor_sifive = 17</code>, <code class="language-plaintext highlighter-rouge">cpuinfo_vendor_thead = 18</code>, <code class="language-plaintext highlighter-rouge">cpuinfo_vendor_spacemit = 19</code>) and four new uarch enums (<code class="language-plaintext highlighter-rouge">cpuinfo_uarch_sifive_7_series</code>, <code class="language-plaintext highlighter-rouge">cpuinfo_uarch_thead_c9xx</code>, <code class="language-plaintext highlighter-rouge">cpuinfo_uarch_thead_c908</code>, <code class="language-plaintext highlighter-rouge">cpuinfo_uarch_spacemit_x60</code>), decoded via <code class="language-plaintext highlighter-rouge">marchid</code>. This is a narrower vendor/uarch table than sometimes assumed; the PR’s own changed files show these four specific uarch identifiers, not a broader T-Head C906/C910/C920 family – readers should treat the exact final uarch list as subject to change until the PR merges and should re-check the merged diff.</p>
 <h3 id="cache-detection">
   
   
-    <a href="#cache-detection" class="anchor-heading" aria-labelledby="cache-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Cache Detection
+    <a href="#cache-detection" class="anchor-heading" aria-labelledby="cache-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Cache detection
   
   
 </h3>
     
 
-<p>No RISC-V cache detection code exists. There is no equivalent of <code class="language-plaintext highlighter-rouge">src/x86/cache/</code> for RISC-V. All cache fields return zero. PRs #388 and #397 both propose sysfs-based L1i/L1d/L2/L3 detection; neither is merged. PR #397 is the more complete implementation, adding shared-cache deduplication and graceful degradation when sysfs is absent.</p>
+<p>No RISC-V cache detection code exists on main – there is no <code class="language-plaintext highlighter-rouge">src/riscv/cache.c</code> or equivalent, and nothing in <code class="language-plaintext highlighter-rouge">init.c</code> populates <code class="language-plaintext highlighter-rouge">cpuinfo_cache</code>/L1i/L1d/L2/L3 structures. Two competing open PRs address this: #388 (sysfs L1/L2 only) and #397 (a new <code class="language-plaintext highlighter-rouge">src/riscv/linux/cache.c</code> implementing sysfs-based L1i/L1d/L2/L3 detection with shared-cache deduplication and graceful degradation when sysfs is absent, plus new functions <code class="language-plaintext highlighter-rouge">cpuinfo_riscv_linux_parse_cache_from_sysfs()</code> and <code class="language-plaintext highlighter-rouge">cpuinfo_riscv_linux_get_cache_sharing()</code>). Reviewer luhenry has explicitly said #397 is preferred over #388 “so that we get all features in one go.”</p>
 <h3 id="topology-initialization">
   
   
-    <a href="#topology-initialization" class="anchor-heading" aria-labelledby="topology-initialization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Topology Initialization
+    <a href="#topology-initialization" class="anchor-heading" aria-labelledby="topology-initialization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Topology initialization
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">src/riscv/linux/init.c</code> implements full Linux processor/core/cluster/package topology via sysfs CPU maps (core_cpus_parser, cluster_cpus_parser, package_cpus_parser). This is comparable in structure to the ARM Linux init. A <code class="language-plaintext highlighter-rouge">__sync_synchronize()</code> barrier is used before publishing pointers. Goto-based cleanup on error. This component is functional and complete relative to what it attempts.</p>
+<p><code class="language-plaintext highlighter-rouge">src/riscv/linux/init.c</code> (620 lines) implements full Linux processor/core/cluster/package topology via sysfs CPU maps (<code class="language-plaintext highlighter-rouge">core_cpus_list</code>, <code class="language-plaintext highlighter-rouge">cluster_cpus_list</code>, <code class="language-plaintext highlighter-rouge">package_cpus_list</code> parsers), structurally comparable to the ARM Linux init path. One known gap remains: line 290 carries a TODO, “Determine if an ‘smt_id’ is available.” This component is otherwise functional and mature.</p>
 <h3 id="no-assembly-or-simd">
   
   
-    <a href="#no-assembly-or-simd" class="anchor-heading" aria-labelledby="no-assembly-or-simd"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> No Assembly or SIMD
+    <a href="#no-assembly-or-simd" class="anchor-heading" aria-labelledby="no-assembly-or-simd"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> No assembly or SIMD
   
   
 </h3>
     
 
-<p>There are no <code class="language-plaintext highlighter-rouge">.S</code> files for RISC-V. There are no RVV intrinsics. There is no vector dispatch in cpuinfo itself. The library detects RVV (V extension) and Zvfh but does not use them. This is expected for a detection library.</p><hr />
+<p>There are no <code class="language-plaintext highlighter-rouge">.S</code> files for RISC-V and no RVV intrinsics anywhere in cpuinfo. The library detects the V extension and Zvfh but does not itself use vector instructions – this is expected and correct for a pure detection library.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -605,55 +590,37 @@
   
 </h2>
     
-<h3 id="cmake-configuration">
+
+<p>CMake is the primary build system (<code class="language-plaintext highlighter-rouge">cmake_minimum_required(VERSION 3.18)</code>; CMake Presets require <code class="language-plaintext highlighter-rouge">&gt;= 3.21.0</code>). The target-processor allow-list regex is <code class="language-plaintext highlighter-rouge">^(i[3-6]86|AMD64|x86(_64)?|armv[5-8].*|aarch64|arm64.*|ARM64.*|riscv(32|64))$</code>, explicitly matching both riscv32 and riscv64. RISC-V is wired for Linux and Android only; there are no Windows or macOS RISC-V code paths.</p>
+
+<div class="language-cmake highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">ELSEIF</span><span class="p">(</span>CPUINFO_TARGET_PROCESSOR MATCHES <span class="s2">"^(riscv(32|64))$"</span><span class="p">)</span>
+  <span class="nf">LIST</span><span class="p">(</span>APPEND CPUINFO_SRCS src/riscv/uarch.c<span class="p">)</span>
+  <span class="nf">IF</span><span class="p">(</span>CMAKE_SYSTEM_NAME STREQUAL <span class="s2">"Linux"</span> OR CMAKE_SYSTEM_NAME STREQUAL <span class="s2">"Android"</span><span class="p">)</span>
+    <span class="nf">LIST</span><span class="p">(</span>APPEND CPUINFO_SRCS
+      src/riscv/linux/init.c
+      src/riscv/linux/riscv-hw.c
+      src/riscv/linux/riscv-isa.c<span class="p">)</span>
+  <span class="nf">ENDIF</span><span class="p">()</span>
+</code></pre></div></div>
+<h3 id="linux-riscv64-native-in-qemu-container-not-cross-compiled">
   
   
-    <a href="#cmake-configuration" class="anchor-heading" aria-labelledby="cmake-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CMake configuration
+    <a href="#linux-riscv64-native-in-qemu-container-not-cross-compiled" class="anchor-heading" aria-labelledby="linux-riscv64-native-in-qemu-container-not-cross-compiled"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Linux riscv64 (native-in-QEMU-container, not cross-compiled)
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">cmake_minimum_required(VERSION 3.18)</code>. CMake presets require <code class="language-plaintext highlighter-rouge">&gt;= 3.21.0</code>.</p>
+<p>There is no dedicated riscv64 CMake toolchain file anywhere in the repository (<code class="language-plaintext highlighter-rouge">cmake/</code> contains only <code class="language-plaintext highlighter-rouge">DownloadGoogleBenchmark.cmake</code>, <code class="language-plaintext highlighter-rouge">DownloadGoogleTest.cmake</code>, and <code class="language-plaintext highlighter-rouge">cpuinfo-config.cmake.in</code>), and no <code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code>. The CI approach instead runs the public <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:24.04</code> image natively under QEMU user-mode emulation:</p>
 
-<p>Supported processor regex in CMakeLists.txt: <code class="language-plaintext highlighter-rouge">^(i[3-6]86|AMD64|x86(_64)?|armv[5-8].*|aarch64|arm64.*|ARM64.*|riscv(32|64))$</code></p>
-
-<p>Both riscv32 and riscv64 are explicitly matched. RISC-V is supported on Linux and Android only. No Windows or macOS RISC-V paths exist.</p>
-
-<p>Source files compiled for riscv targets:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">src/riscv/uarch.c</code> (all RISC-V)</li>
-  <li><code class="language-plaintext highlighter-rouge">src/riscv/linux/init.c</code> (Linux and Android)</li>
-  <li><code class="language-plaintext highlighter-rouge">src/riscv/linux/riscv-hw.c</code> (Linux and Android)</li>
-  <li><code class="language-plaintext highlighter-rouge">src/riscv/linux/riscv-isa.c</code> (Linux and Android)</li>
-</ul>
-
-<p>No special compiler flags for RISC-V are set in the build system.</p>
-<h3 id="native-linux-riscv64-build-qemu-or-native-hardware">
-  
-  
-    <a href="#native-linux-riscv64-build-qemu-or-native-hardware" class="anchor-heading" aria-labelledby="native-linux-riscv64-build-qemu-or-native-hardware"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Native Linux riscv64 build (QEMU or native hardware)
-  
-  
-</h3>
-    
-
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># From CI: riscv64/ubuntu:24.04 container via QEMU</span>
-apt update <span class="o">&amp;&amp;</span> apt <span class="nb">install</span> <span class="nt">-y</span> cmake git gcc g++
-<span class="nb">cd</span> /cpuinfo <span class="o">&amp;&amp;</span> scripts/local-build.sh
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">--platform</span> linux/riscv64 <span class="nt">-i</span> <span class="nt">-v</span> <span class="si">$(</span><span class="nb">pwd</span><span class="si">)</span>:/cpuinfo riscv64/ubuntu:24.04 /bin/bash <span class="nt">-c</span> <span class="s2">"
+apt update &amp;&amp;
+apt install -y cmake git gcc g++ &amp;&amp;
+cd /cpuinfo &amp;&amp;
+scripts/local-build.sh"</span>
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">local-build.sh</code> runs:</p>
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir</span> <span class="nt">-p</span> build/local <span class="o">&amp;&amp;</span> <span class="nb">cd </span>build/local
-cmake ../.. <span class="nt">-DCMAKE_BUILD_TYPE</span><span class="o">=</span>Release <span class="nt">-DCMAKE_POSITION_INDEPENDENT_CODE</span><span class="o">=</span>ON
-cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt">--</span> <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
-</code></pre></div></div>
-
-<p>QEMU invocation from CI:</p>
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">--platform</span> linux/riscv64 <span class="nt">-i</span> <span class="nt">-v</span> <span class="si">$(</span><span class="nb">pwd</span><span class="si">)</span>:/cpuinfo riscv64/ubuntu:24.04 /bin/bash <span class="nt">-c</span> <span class="s2">"..."</span>
-</code></pre></div></div>
-
-<p>The CI uses <code class="language-plaintext highlighter-rouge">docker/setup-qemu-action@v3.0.0</code> on an <code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> host runner. No minimum GCC version is specified in the build files. The CI image provides GCC 13.x from Ubuntu 24.04 packages.</p>
+<p><code class="language-plaintext highlighter-rouge">scripts/local-build.sh</code> runs plain <code class="language-plaintext highlighter-rouge">cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON</code> followed by <code class="language-plaintext highlighter-rouge">cmake --build . -- -j$(nproc)</code>, falling back to <code class="language-plaintext highlighter-rouge">make</code> since <code class="language-plaintext highlighter-rouge">ninja</code> is not installed in this CI step. No minimum GCC/Clang version is declared anywhere in-repo for riscv64; CI simply takes whatever <code class="language-plaintext highlighter-rouge">gcc</code>/<code class="language-plaintext highlighter-rouge">g++</code> Ubuntu 24.04’s riscv64 archive ships (GCC 13.x as of that release). The QEMU setup itself (<code class="language-plaintext highlighter-rouge">docker/setup-qemu-action@v3.0.0</code> plus binfmt_misc) was only made to work reliably by commit <code class="language-plaintext highlighter-rouge">957b852</code>/PR #295 (“Tried a few things, but looks like all one needs to do is add <code class="language-plaintext highlighter-rouge">--platform linux/riscv64</code> flag to <code class="language-plaintext highlighter-rouge">docker run</code> command”).</p>
 <h3 id="android-riscv64-cross-compile">
   
   
@@ -663,7 +630,7 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
 </h3>
     
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake ../.. <span class="se">\</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake ../../.. <span class="se">\</span>
   <span class="nt">-DCMAKE_TOOLCHAIN_FILE</span><span class="o">=</span><span class="nv">$ANDROID_NDK</span>/build/cmake/android.toolchain.cmake <span class="se">\</span>
   <span class="nt">-DANDROID_ABI</span><span class="o">=</span>riscv64 <span class="se">\</span>
   <span class="nt">-DANDROID_PLATFORM</span><span class="o">=</span>android-35 <span class="se">\</span>
@@ -671,30 +638,32 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
   <span class="nt">-GNinja</span>
 </code></pre></div></div>
 
-<p>NDK r27 is required (the first NDK with stable riscv64 support). Android API level 35 (Android 15) is used. <code class="language-plaintext highlighter-rouge">CPUINFO_BUILD_BENCHMARKS=OFF</code> is explicitly required for Android because the Google Benchmark CMakeLists is broken on Android.</p>
-<h3 id="toolchain-file">
+<p>CI uses NDK r27 (<code class="language-plaintext highlighter-rouge">nttld/setup-ndk@v1.0.6</code>), the first NDK with stable riscv64 support, targeting Android API level 35. <code class="language-plaintext highlighter-rouge">CPUINFO_BUILD_BENCHMARKS=OFF</code> is explicitly required for Android, with an in-script comment: “CMakeLists for Google Benchmark is broken on Android.”</p>
+<h3 id="build-system-gap">
   
   
-    <a href="#toolchain-file" class="anchor-heading" aria-labelledby="toolchain-file"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Toolchain file
+    <a href="#build-system-gap" class="anchor-heading" aria-labelledby="build-system-gap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Build-system gap
   
   
 </h3>
     
 
-<p>No dedicated Linux riscv64 cross-toolchain file exists (no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code> or equivalent). Linux cross-compilation requires either QEMU-in-container or a manually specified toolchain. There is no Dockerfile.riscv64. The CI uses the public <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:24.04</code> Docker Hub image.</p>
-<h3 id="known-build-failures">
+<p>The Python-based build config, <code class="language-plaintext highlighter-rouge">configure.py</code>, adds <code class="language-plaintext highlighter-rouge">riscv/linux/init.c</code> and <code class="language-plaintext highlighter-rouge">riscv/linux/riscv-isa.c</code> for riscv targets but <strong>omits <code class="language-plaintext highlighter-rouge">riscv/linux/riscv-hw.c</code></strong>, unlike <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> and <code class="language-plaintext highlighter-rouge">BUILD.bazel</code>, both of which include all three files. Since <code class="language-plaintext highlighter-rouge">init.c</code> calls functions defined only in <code class="language-plaintext highlighter-rouge">riscv-hw.c</code>, this is a likely build-configuration gap in the <code class="language-plaintext highlighter-rouge">configure.py</code> path specifically [NEEDS VERIFICATION – not confirmed against an actual failed build, only against a source-level diff of the three build files].</p>
+<h3 id="known-build-failures-history">
   
   
-    <a href="#known-build-failures" class="anchor-heading" aria-labelledby="known-build-failures"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Known build failures
+    <a href="#known-build-failures-history" class="anchor-heading" aria-labelledby="known-build-failures-history"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Known build failures (history)
   
   
 </h3>
     
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> does not exist in glibc, causing build failures on RISC-V Linux before PRs #212 and #215 (January 2024). Fixed on main.</li>
-  <li>XNNPACK issue #4650 (open since April 2023): <code class="language-plaintext highlighter-rouge">syscall</code> undeclared in <code class="language-plaintext highlighter-rouge">cpuinfo/src/api.c</code> at lines 319 and 338 under ISO C99 strict mode (<code class="language-plaintext highlighter-rouge">syscall(__NR_getcpu, ...)</code>). Root cause: missing <code class="language-plaintext highlighter-rouge">#include &lt;unistd.h&gt;</code> or equivalent. Zero maintainer engagement in 3 years. Affects cross-compilation workflows using Clang with strict C99 standards.</li>
-</ul><hr />
+  <li><code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> did not exist in glibc and caused duplicate-include build breaks on RISC-V Linux; fixed by PR #215 (2024-01-22), after an earlier related fix attempt.</li>
+  <li><a href="https://github.com/google/XNNPACK/issues/4650">google/XNNPACK#4650</a> (“RISC-V cpuinfo Build Error,” open, no maintainer engagement): cross-compiling XNNPACK for riscv64 fails inside cpuinfo’s <code class="language-plaintext highlighter-rouge">src/api.c</code> at lines 319 and 338 with an implicit-declaration error on <code class="language-plaintext highlighter-rouge">syscall(__NR_getcpu, ...)</code> under ISO C99 strict mode. The IREE project hit the identical issue and worked around it by disabling cpuinfo entirely rather than fixing the root cause.</li>
+</ul>
+
+<p>No documentation file (<code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, <code class="language-plaintext highlighter-rouge">docs/building.md</code>, <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code>) exists in the repository at all; the CI YAML and the two build scripts above are the only riscv64 build documentation that exists.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -719,28 +688,21 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
       <td>Vendor identification</td>
       <td>Complete</td>
       <td>Complete</td>
-      <td>SiFive only; T-Head/SpacemiT missing</td>
+      <td>SiFive only on main; T-Head/SpacemiT pending in open PR #397</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Microarchitecture decode</td>
-      <td>~30+ models</td>
-      <td>~30+ models</td>
-      <td>Always “unknown”</td>
+      <td>~445-line table</td>
+      <td>Large chipset DB</td>
+      <td>Always “unknown” on main</td>
       <td>High</td>
     </tr>
     <tr>
-      <td>Cache topology L1i/L1d</td>
+      <td>Cache topology (L1/L2/L3)</td>
       <td>Complete</td>
       <td>Complete</td>
-      <td>Empty (zero)</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Cache topology L2/L3</td>
-      <td>Complete</td>
-      <td>Complete</td>
-      <td>Empty (zero)</td>
+      <td>Empty/zero on main; sysfs-based detection pending in open PR #397</td>
       <td>High</td>
     </tr>
     <tr>
@@ -752,38 +714,38 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
     </tr>
     <tr>
       <td>ISA vector extensions</td>
-      <td>Complete (AVX/AVX2/AVX-512)</td>
-      <td>Complete (NEON/SVE/SVE2)</td>
-      <td>V detected; Zvfh detected; Zvl/Zvkn etc. absent</td>
+      <td>Complete</td>
+      <td>Complete</td>
+      <td>V and Zvfh detected; Zvbb/Zvbc/Zvkb/Zvkg/Zvkned/etc. defined but unexposed on main</td>
       <td>High</td>
     </tr>
     <tr>
       <td>ISA bit-manipulation</td>
       <td>Complete</td>
       <td>Complete</td>
-      <td>Zba/Zbb/Zbs/Zbc absent</td>
+      <td>Zba/Zbb/Zbs/Zbc defined but unexposed on main</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>ISA crypto extensions</td>
+      <td>ISA scalar/vector crypto</td>
       <td>Complete</td>
       <td>Complete</td>
-      <td>All vector crypto absent from public API</td>
+      <td>All crypto extensions defined but unexposed on main</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>fp16 scalar/vector detect</td>
       <td>Complete</td>
       <td>Complete</td>
-      <td>Zfh/Zvfh present (merged April 2026)</td>
+      <td>Zfh/Zvfh present (merged April 2026, commit d05fbcd5)</td>
       <td>None</td>
     </tr>
     <tr>
       <td>Processor topology</td>
       <td>Complete</td>
       <td>Complete</td>
-      <td>Complete</td>
-      <td>None</td>
+      <td>Complete except an open <code class="language-plaintext highlighter-rouge">smt_id</code> TODO</td>
+      <td>Low</td>
     </tr>
     <tr>
       <td>Mock test fixtures</td>
@@ -792,17 +754,10 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
       <td>None</td>
       <td>Medium</td>
     </tr>
-    <tr>
-      <td>cpuinfo_uarch enum values</td>
-      <td>~30+</td>
-      <td>~30+</td>
-      <td>None (all return unknown)</td>
-      <td>High</td>
-    </tr>
   </tbody>
 </table></div>
 
-<p>The three high-severity gaps (vendor/uarch, cache topology, extended ISA) directly block XNNPACK and PyTorch from selecting hardware-optimized code paths on T-Head, SpacemiT, and any future non-SiFive RISC-V CPU. Without cache topology, frameworks cannot optimize tiling and blocking parameters. Without uarch detection, any per-microarchitecture tuning is impossible.</p><hr />
+<p>The two high-severity gaps that matter most to downstream consumers – vendor/uarch decode and cache topology – directly block dispatch consumers from selecting hardware-optimized code paths and block cache-aware algorithms. The concrete, measured impact is documented by RISE Project: cpuinfo’s failure to fill in cache topology on RISC-V causes <code class="language-plaintext highlighter-rouge">Expect L1_cache_size &gt; 0 but got 0</code> assertion failures in PyTorch’s Inductor CPU autotuner, accounting for <strong>69 of 191 (36%) of all PyTorch RISC-V CI test failures</strong> as of a 2026-08-14 run (<a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE Project blog, 2026-08-18</a>). This is the single largest correctness gap attributable to cpuinfo today.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -811,16 +766,8 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
   
 </h2>
     
-<h3 id="current-ci-jobs-for-riscv64">
-  
-  
-    <a href="#current-ci-jobs-for-riscv64" class="anchor-heading" aria-labelledby="current-ci-jobs-for-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Current CI jobs for riscv64
-  
-  
-</h3>
-    
 
-<p>Both jobs are in <code class="language-plaintext highlighter-rouge">.github/workflows/build.yml</code>, triggered on every push to <code class="language-plaintext highlighter-rouge">main</code> and every pull request.</p>
+<p>Only one of the repository’s three GitHub Actions workflow files (<code class="language-plaintext highlighter-rouge">build.yml</code>, <code class="language-plaintext highlighter-rouge">build_bazel.yml</code>, <code class="language-plaintext highlighter-rouge">clang-format-check.yml</code>) contains any RISC-V content; <code class="language-plaintext highlighter-rouge">build_bazel.yml</code> and <code class="language-plaintext highlighter-rouge">clang-format-check.yml</code> have zero RISC-V references. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, or <code class="language-plaintext highlighter-rouge">.travis.yml</code> exists anywhere in the repository.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -834,31 +781,23 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">cmake-linux-riscv64</code></td>
-      <td>ubuntu-24.04 (x86)</td>
-      <td>QEMU via docker/setup-qemu-action@v3.0.0, riscv64/ubuntu:24.04</td>
-      <td>No – build only</td>
-      <td><code class="language-plaintext highlighter-rouge">scripts/local-build.sh</code> only; no ctest</td>
+      <td><code class="language-plaintext highlighter-rouge">cmake-linux-qemu</code> (<code class="language-plaintext highlighter-rouge">cmake-linux-riscv64</code> matrix leg)</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> (x86 host)</td>
+      <td><code class="language-plaintext highlighter-rouge">docker/setup-qemu-action@v3.0.0</code> + <code class="language-plaintext highlighter-rouge">docker run --platform linux/riscv64</code> against <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:24.04</code>, native build inside the emulated container via <code class="language-plaintext highlighter-rouge">scripts/local-build.sh</code></td>
+      <td>No – <code class="language-plaintext highlighter-rouge">ctest</code> does not appear anywhere in <code class="language-plaintext highlighter-rouge">build.yml</code>, for any platform</td>
+      <td>Build-only confirmed by a direct read of the live YAML</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">cmake-android</code> (riscv64 matrix entry)</td>
-      <td>ubuntu-latest (x86)</td>
-      <td>Android NDK r27 cross-compile</td>
-      <td>No – build only</td>
-      <td><code class="language-plaintext highlighter-rouge">scripts/android-riscv64-build.sh</code></td>
+      <td><code class="language-plaintext highlighter-rouge">cmake-android</code> (<code class="language-plaintext highlighter-rouge">android-riscv64-build.sh</code> matrix leg)</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86 host)</td>
+      <td>Android NDK r27 cross-compile, <code class="language-plaintext highlighter-rouge">ANDROID_ABI=riscv64</code>, <code class="language-plaintext highlighter-rouge">ANDROID_PLATFORM=android-35</code></td>
+      <td>No – pure cross-compile, binaries are never executed</td>
+      <td>Build-only</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Neither CI job runs the test suite on riscv64. Both jobs verify only that the code compiles.</p>
-<h3 id="comparison-with-other-architectures">
-  
-  
-    <a href="#comparison-with-other-architectures" class="anchor-heading" aria-labelledby="comparison-with-other-architectures"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Comparison with other architectures
-  
-  
-</h3>
-    
+<p>Both jobs run on every <code class="language-plaintext highlighter-rouge">pull_request</code> and every <code class="language-plaintext highlighter-rouge">push</code> to <code class="language-plaintext highlighter-rouge">main</code> (the file’s shared top-level <code class="language-plaintext highlighter-rouge">on:</code> block has no path filter, label gate, or <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>-only restriction). Neither job runs on native riscv64 hardware or a dedicated riscv64 runner; both use standard x86 GitHub-hosted runners, one via QEMU user-mode emulation and one via cross-compilation.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -878,18 +817,18 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
     </tr>
     <tr>
       <td>Test execution in CI</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
+      <td>Compiled but not <code class="language-plaintext highlighter-rouge">ctest</code>-run, same as all platforms</td>
+      <td>Same</td>
+      <td>Same</td>
     </tr>
     <tr>
       <td>Native hardware runners</td>
       <td>Yes</td>
-      <td>Yes (RISE runners available)</td>
-      <td>No</td>
+      <td>RISE runners exist and are used by other projects (e.g. PyTorch CI)</td>
+      <td>No – cpuinfo’s own CI uses only x86 hosts</td>
     </tr>
     <tr>
-      <td>QEMU-emulated execution</td>
+      <td>QEMU-emulated build</td>
       <td>N/A</td>
       <td>N/A</td>
       <td>Yes (build only)</td>
@@ -898,16 +837,12 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
       <td>Mock device tests</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No (no fixtures exist)</td>
+      <td>No – zero fixtures exist</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 QEMU CI job was added by PR #219 (January 2024) and fixed by PR #295 (May 2025). The Android riscv64 CI job was added by PR #256 (August 2024).</p>
-
-<p>RISE runners are available (RISE blog “Six Weeks In,” May 2026, notes PyTorch CI running 870 jobs on RISE riscv64 runners), but cpuinfo does not use them. cpuinfo CI uses only x86 runners with QEMU emulation.</p>
-
-<p>No native hardware CI exists. PR #200 (open since November 2023) proposed adding a StarFive VisionFive V2 as a test fixture but remains blocked on toolchain support.</p><hr />
+<p>RISE Project maintains dedicated free riscv64 CI runners (“<a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">Announcing the RISE RISC-V Runners</a>”), and PyTorch’s own riscv64 CI uses RISE’s <code class="language-plaintext highlighter-rouge">riscv-runner</code> infrastructure to build cpuinfo transitively as part of the larger PyTorch/executorch build – but cpuinfo’s own repository CI does not use RISE runners at all. PR #200 (open since November 2023) proposed adding a StarFive VisionFive V2 as a native test fixture but remains unmerged/blocked.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -917,7 +852,7 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
 </h2>
     
 
-<p>cpuinfo does not publish versioned releases on GitHub. The releases page states “There aren’t any releases here.” The project is consumed as a source dependency (submodule in PyTorch’s <code class="language-plaintext highlighter-rouge">third_party/cpuinfo</code>). There are no binary release artifacts of any kind.</p>
+<p>cpuinfo has <strong>zero tagged GitHub releases for any architecture</strong>; the public releases page reads “There aren’t any releases here,” and the full git history contains zero tags. The project is consumed as a source dependency (pinned-commit git submodule, e.g. PyTorch’s <code class="language-plaintext highlighter-rouge">third_party/cpuinfo</code>), never via a versioned release artifact.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -931,44 +866,47 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
     <tr>
       <td>GitHub Releases</td>
       <td>No</td>
-      <td>No releases published at all</td>
+      <td>Zero releases exist, any architecture</td>
     </tr>
     <tr>
-      <td>PyPI (py-cpuinfo)</td>
-      <td>Not applicable</td>
-      <td>py-cpuinfo (PyPI) is an unrelated pure-Python package; <code class="language-plaintext highlighter-rouge">py_cpuinfo-9.0.0-py3-none-any.whl</code> works everywhere but is not the pytorch/cpuinfo C library</td>
-    </tr>
-    <tr>
-      <td>Ubuntu 24.04 Noble (<code class="language-plaintext highlighter-rouge">libcpuinfo0</code>)</td>
-      <td>Yes</td>
-      <td>riscv64 package present</td>
-    </tr>
-    <tr>
-      <td>Ubuntu 24.04 Noble (<code class="language-plaintext highlighter-rouge">cpuinfo</code> binary utilities)</td>
+      <td>PyPI (<code class="language-plaintext highlighter-rouge">cpuinfo</code>)</td>
       <td>No</td>
-      <td>amd64, arm64, armhf only</td>
+      <td>404 – no project literally named <code class="language-plaintext highlighter-rouge">cpuinfo</code> exists on PyPI</td>
+    </tr>
+    <tr>
+      <td>PyPI (<code class="language-plaintext highlighter-rouge">py-cpuinfo</code>, unrelated project)</td>
+      <td>Not applicable</td>
+      <td>Pure-Python, architecture-independent wheel (<code class="language-plaintext highlighter-rouge">py_cpuinfo-9.0.0-py3-none-any.whl</code>); works on any arch but is a different project with the same purpose, not pytorch/cpuinfo</td>
+    </tr>
+    <tr>
+      <td>RISE GitLab wheel index</td>
+      <td>No</td>
+      <td>Proxies straight through to (nonexistent) PyPI <code class="language-plaintext highlighter-rouge">cpuinfo</code>; not listed on the RISE wheel_builder page either</td>
+    </tr>
+    <tr>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td>Yes</td>
+      <td><code class="language-plaintext highlighter-rouge">cpuinfo</code>, <code class="language-plaintext highlighter-rouge">libcpuinfo0</code>, <code class="language-plaintext highlighter-rouge">libcpuinfo-dev</code>, all version <code class="language-plaintext highlighter-rouge">0.0~git20250905.877328f-1</code>, in <code class="language-plaintext highlighter-rouge">universe</code>/ports section; confirmed download <code class="language-plaintext highlighter-rouge">cpuinfo_0.0~git20250905.877328f-1_riscv64.deb</code> (10.3 kB)</td>
     </tr>
     <tr>
       <td>Debian sid</td>
       <td>Yes</td>
-      <td><code class="language-plaintext highlighter-rouge">cpuinfo_0.0~git20250905.877328f-1+b1_riscv64.deb</code>, built on <code class="language-plaintext highlighter-rouge">rv-manda-02</code>, 49 kB installed</td>
+      <td><code class="language-plaintext highlighter-rouge">cpuinfo_0.0~git20250905.877328f</code>, matching the Ubuntu snapshot</td>
     </tr>
     <tr>
       <td>Arch Linux (official)</td>
       <td>No</td>
-      <td>x86_64 only</td>
+      <td>x86_64 only; Arch has no official riscv64 port</td>
     </tr>
     <tr>
-      <td>Arch RISC-V (archriscv.felixc.at)</td>
-      <td>Unverified</td>
-      <td>Endpoints returned 404</td>
+      <td>Arch Linux RISC-V port (unofficial, archriscv.felixc.at)</td>
+      <td>Yes</td>
+      <td><code class="language-plaintext highlighter-rouge">cpuinfo-r843.ea6b9f1-1-riscv64.pkg.tar.zst</code> present in the <code class="language-plaintext highlighter-rouge">extra</code> repo, community-run (<code class="language-plaintext highlighter-rouge">felixonmars/archriscv-packages</code>), not an official Arch channel</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The Debian sid package deserves scrutiny. It was built from a September 2025 git snapshot (commit 877328f). At that date, PR #397 (cache topology, extended ISA, T-Head/SpacemiT) was not yet filed, PR #375 (zfh/zvfh) had not yet merged, and PR #148 (comprehensive improvements, open since May 2023) was still stalled. The package installs successfully but delivers uarch=”unknown,” cache sizes all zero, and 7 ISA extensions detected. It is a functional package with a non-functional riscv64 feature set.</p>
-
-<p>To get a working riscv64 build today, a user must build from source using the main branch. QEMU-based build requires Docker with binfmt_misc support and the <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:24.04</code> image. NDK cross-compile requires NDK r27.</p><hr />
+<p>Every riscv64 binary that exists anywhere is built by a downstream distro packager from a raw git snapshot; none derives from a tagged upstream release (because none exists), and all are built on Ubuntu’s <code class="language-plaintext highlighter-rouge">riscv64</code> ports architecture or an unofficial Arch port – both lower-support-guarantee channels than a primary architecture. The snapshot date (2025-09-05, commit <code class="language-plaintext highlighter-rouge">877328f</code>) predates PR #397, so every packaged riscv64 binary available today installs successfully but reports vendor “unknown,” zero cache sizes, and only the base 9 ISA extensions plus Zfh/Zvfh. To get a build with any of PR #397’s or #421’s fixes, a user must build from the <code class="language-plaintext highlighter-rouge">main</code> branch directly, either via the QEMU-container method or the Android NDK cross-build described in Section 5.</p>
 <h2 id="9-dependencies">
   
   
@@ -977,92 +915,83 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
   
 </h2>
     
-<h3 id="runtime-dependencies">
-  
-  
-    <a href="#runtime-dependencies" class="anchor-heading" aria-labelledby="runtime-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Runtime dependencies
-  
-  
-</h3>
-    
+
+<p>cpuinfo is architecturally almost dependency-free. <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> shows exactly two external libraries, both gated to test/benchmark builds only, plus system pthreads and the build tooling below. There is no JIT backend, no SIMD/vector math library, no numerics library, no crypto library, no compression library, and no custom memory allocator anywhere in the dependency graph.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Name</th>
-      <th>Role</th>
-      <th>riscv64 build</th>
-      <th>riscv64 test</th>
-      <th>riscv64 release</th>
-      <th>Blocking issues</th>
+      <th>Relation</th>
+      <th>Criticality</th>
+      <th>riscv64 status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Linux kernel (&gt;= 6.4)</td>
-      <td><code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall for ISA/vendor/uarch detection</td>
-      <td>N/A (kernel ABI)</td>
-      <td>Functional on &gt;= 6.4; graceful degradation on older via raw syscall</td>
-      <td>Ships in mainstream distros</td>
-      <td>hwprobe bit for Zvfbfwma requires kernel 6.15+; cpuinfo falls back to hwcap for unsupported bits</td>
+      <td>googletest</td>
+      <td>test-dependency</td>
+      <td>optional</td>
+      <td>Build: green. Test: mostly green – <a href="https://github.com/google/googletest/issues/3756">google/googletest#3756</a> (<code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code> fails on riscv64, open since 2022-02-05; maintainer reply: “We don’t officially support risc-v64,” no action in 4 years). No official riscv64 binaries; source build only, and googletest itself has no architecture-tier policy.</td>
     </tr>
     <tr>
-      <td>glibc / Android Bionic</td>
-      <td><code class="language-plaintext highlighter-rouge">getauxval()</code>, pthreads, <code class="language-plaintext highlighter-rouge">syscall()</code></td>
-      <td>Green</td>
-      <td>Green (QEMU CI for glibc; Android NDK CI for Bionic)</td>
-      <td>Ships in all distros</td>
-      <td>glibc <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> not yet merged (comment in riscv-hw.c); raw syscall() used as workaround</td>
+      <td>benchmark</td>
+      <td>test-dependency</td>
+      <td>optional</td>
+      <td>Build and test: green. riscv64 support is fully upstream via <code class="language-plaintext highlighter-rouge">src/cycleclock.h</code> (5 merged PRs, 2019-2024: #833, #955, #1549, #1727, #1802). No open riscv64 issues; latest release v1.9.5 (2026-01-21) includes all riscv64 fixes.</td>
     </tr>
     <tr>
-      <td>Android log library (<code class="language-plaintext highlighter-rouge">-llog</code>)</td>
-      <td>Logging on Android</td>
-      <td>Green</td>
-      <td>Green (NDK r27 CI)</td>
-      <td>Ships in NDK r27+</td>
-      <td>None</td>
+      <td>CMake</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Drives the entire build, including the <code class="language-plaintext highlighter-rouge">riscv(32\|64)</code> target-processor branch. No riscv64-specific issues found; CMake itself is architecture-portable.</td>
+    </tr>
+    <tr>
+      <td>Ninja</td>
+      <td>build-dependency</td>
+      <td>optional</td>
+      <td>Used opportunistically when present (<code class="language-plaintext highlighter-rouge">if command -v ninja</code>); the Linux QEMU CI job does not install it and falls back to <code class="language-plaintext highlighter-rouge">make</code>, the Android CI job installs it explicitly. No riscv64-specific issues.</td>
+    </tr>
+    <tr>
+      <td>Android NDK</td>
+      <td>build-dependency</td>
+      <td>critical (Android path)</td>
+      <td>NDK r27 required – the first NDK release with stable riscv64 support (<code class="language-plaintext highlighter-rouge">ANDROID_ABI=riscv64</code>, <code class="language-plaintext highlighter-rouge">ANDROID_PLATFORM=android-35</code>).</td>
+    </tr>
+    <tr>
+      <td>Bazel</td>
+      <td>build-dependency</td>
+      <td>optional</td>
+      <td><code class="language-plaintext highlighter-rouge">BUILD.bazel</code>/<code class="language-plaintext highlighter-rouge">MODULE.bazel</code> define <code class="language-plaintext highlighter-rouge">RISCV_SRCS</code>/<code class="language-plaintext highlighter-rouge">LINUX_RISCV_SRCS</code> and an <code class="language-plaintext highlighter-rouge">android_riscv64</code> config_setting (added by PR #201). <code class="language-plaintext highlighter-rouge">MODULE.bazel</code> deps (<code class="language-plaintext highlighter-rouge">platforms</code>, <code class="language-plaintext highlighter-rouge">rules_cc</code>, <code class="language-plaintext highlighter-rouge">rules_license</code>) are build-system plumbing, not functional dependencies.</td>
+    </tr>
+    <tr>
+      <td>QEMU</td>
+      <td>test-dependency</td>
+      <td>critical</td>
+      <td>Used via <code class="language-plaintext highlighter-rouge">docker/setup-qemu-action@v3.0.0</code> + binfmt_misc for the <code class="language-plaintext highlighter-rouge">cmake-linux-qemu</code> CI job’s native-in-emulation build. Required the explicit <code class="language-plaintext highlighter-rouge">--platform linux/riscv64</code> fix in PR #295 to function at all; without it the job failed outright.</td>
+    </tr>
+    <tr>
+      <td>Linux kernel</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall needs kernel &gt;= 6.4 for full ISA/vendor/uarch detection (the kernel header <code class="language-plaintext highlighter-rouge">asm/hwprobe.h</code> this mirrors is only present from 6.4 onward); on older kernels the syscall simply fails and detection degrades gracefully to “unknown” rather than crashing.</td>
+    </tr>
+    <tr>
+      <td>glibc</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>Provides <code class="language-plaintext highlighter-rouge">getauxval()</code>, pthreads, and the raw <code class="language-plaintext highlighter-rouge">syscall()</code> path used because glibc’s own <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> wrapper was, per an in-source comment, an unmerged patch “at the time of writing” – current glibc merge status is not confirmed in this research [NEEDS VERIFICATION].</td>
+    </tr>
+    <tr>
+      <td>Bionic</td>
+      <td>runtime-dependency</td>
+      <td>optional (Android path)</td>
+      <td>Android’s libc provides <code class="language-plaintext highlighter-rouge">__riscv_hwprobe()</code> directly, used instead of the raw-syscall fallback on Android builds; exercised by the <code class="language-plaintext highlighter-rouge">cmake-android</code> riscv64 CI leg.</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="testbenchmark-dependencies">
-  
-  
-    <a href="#testbenchmark-dependencies" class="anchor-heading" aria-labelledby="testbenchmark-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Test/benchmark dependencies
-  
-  
-</h3>
-    
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Role</th>
-      <th>riscv64 build</th>
-      <th>riscv64 test</th>
-      <th>riscv64 release</th>
-      <th>Blocking issues</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>GoogleTest (google/googletest)</td>
-      <td>Unit tests and mock device tests</td>
-      <td>Green</td>
-      <td>Mostly green; issue #3756 (<code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code> fails on riscv64), low severity</td>
-      <td>Source build only</td>
-      <td>Issue #3756 (open): one flaky thread-count test on riscv64</td>
-    </tr>
-    <tr>
-      <td>Google Benchmark (google/benchmark)</td>
-      <td>Microbenchmarks</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Source build only</td>
-      <td>Issue #1802 (closed, fixed): cycleclock type mismatch on riscv64. Issue #1549 (closed, fixed): CPU frequency estimation on RISC-V. No open riscv64 issues.</td>
-    </tr>
-  </tbody>
-</table></div>
+<p>Two additional, non-external items appear in the dependency tree but require no separate riscv64 assessment: <code class="language-plaintext highlighter-rouge">deps/clog/</code> is a vendored copy of Google’s tiny logging library shipped inside the cpuinfo repository itself (no <code class="language-plaintext highlighter-rouge">.gitmodules</code>, not a separate GitHub project, architecture-independent); and POSIX threads (<code class="language-plaintext highlighter-rouge">Threads::Threads</code>, required via <code class="language-plaintext highlighter-rouge">FIND_PACKAGE(Threads REQUIRED)</code>) are part of glibc/Bionic and universally available on riscv64 Linux.</p>
 <h3 id="critical-downstream-consumers">
   
   
@@ -1072,48 +1001,29 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
 </h3>
     
 
-<p>The following projects depend on cpuinfo for riscv64 dispatch. cpuinfo’s gaps cascade into them.</p>
+<p>cpuinfo’s own gaps cascade into its consumers:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Name</th>
       <th>Role</th>
-      <th>riscv64 build</th>
-      <th>riscv64 test</th>
-      <th>riscv64 release</th>
-      <th>Impact of cpuinfo gaps</th>
+      <th>riscv64 impact</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>XNNPACK (google/XNNPACK)</td>
-      <td>ISA dispatch for neural network kernels</td>
-      <td>Green (cross-compile)</td>
-      <td>Broken – 100+ RVV FP16 test failures (issue #9886, open April 2026)</td>
-      <td>No riscv64 binary</td>
-      <td>Root cause: PR #9516 unconditionally enables <code class="language-plaintext highlighter-rouge">xnn_arch_riscv_vector_fp16_arith</code> when V is present without checking Zvfh. cpuinfo fix (PR #375, merged April 2026) is prerequisite; XNNPACK also needs update. Also: XNNPACK issue #4650 (syscall undeclared in cpuinfo under strict C99, open 3 years).</td>
+      <td>XNNPACK (<a href="https://github.com/google/XNNPACK">google/XNNPACK</a>)</td>
+      <td>ISA dispatch for neural-network kernels</td>
+      <td><a href="https://github.com/google/XNNPACK/issues/4650">XNNPACK#4650</a>: <code class="language-plaintext highlighter-rouge">syscall</code> undeclared in cpuinfo’s <code class="language-plaintext highlighter-rouge">src/api.c</code> under strict ISO C99, breaking some cross-compilation workflows (confirmed, open, no maintainer engagement in 3+ years; IREE hit the same issue and disabled cpuinfo as a workaround). [NEEDS VERIFICATION] XNNPACK#9886 (100+ RVV FP16 test failures tied to an unconditional Zvfh dispatch enable in XNNPACK PR #9516) was documented in prior research but was not re-confirmed against a live source in this round.</td>
     </tr>
     <tr>
-      <td>PyTorch (pytorch/pytorch)</td>
-      <td>Bundles cpuinfo as third_party/cpuinfo submodule</td>
-      <td>Green</td>
-      <td>Broken for RVV FP16 (inherits XNNPACK issue #9886)</td>
-      <td>No riscv64 PyPI wheel</td>
-      <td>Inherits all cpuinfo riscv64 gaps; cpuinfo zvfh fix is prerequisite to PyTorch FP16 correctness on Zvfh targets</td>
-    </tr>
-    <tr>
-      <td>oneDNN (oneapi-src/oneDNN)</td>
-      <td>Runtime RISC-V ISA detection</td>
-      <td>Green (with workaround)</td>
-      <td>Green via SIGILL probe</td>
-      <td>Available in Debian sid</td>
-      <td>Low coupling: oneDNN uses its own SIGILL-probe fallback for Zvfbfwma because HWPROBE bit requires kernel 6.15+; does not rely on cpuinfo for riscv64</td>
+      <td>PyTorch (<a href="https://github.com/pytorch/pytorch">pytorch/pytorch</a>)</td>
+      <td>Bundles cpuinfo as a <code class="language-plaintext highlighter-rouge">third_party/cpuinfo</code> submodule</td>
+      <td>Inherits all cpuinfo riscv64 gaps; the cache-topology gap specifically causes 69/191 (36%) of RISC-V CI test failures, per the RISE Project blog cited in Section 6.</td>
     </tr>
   </tbody>
 </table></div>
-
-<p>The critical dependency chain is: cpuinfo riscv64 gaps -&gt; XNNPACK dispatch errors -&gt; PyTorch compute correctness failures. Merging PR #397 resolves the uarch/vendor/cache/ISA gaps. The XNNPACK unconditional Zvfh enable (issue #9886) also requires a fix on the XNNPACK side after cpuinfo merges PR #397.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1139,63 +1049,63 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
       <td>Add: RISC-V support</td>
       <td>Open since 2022-12-23</td>
       <td>Tracking</td>
-      <td>Master tracking issue; linked to PR #397 as closure target</td>
+      <td>Master tracking issue; explicitly closed by PR #397 once merged</td>
     </tr>
     <tr>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/397">PR #397</a></td>
       <td>riscv/linux: complete ISA extension, vendor/uarch, and cache support</td>
-      <td>Open, no reviewer, CLA signed</td>
+      <td>Open, approved by luhenry (2026-08-18) and “lgtm” from XYenChi (2026-09-17), awaiting merge by malfet</td>
       <td>Critical</td>
-      <td>28 ISA extensions, T-Head/SpacemiT vendor+uarch, sysfs cache; filed 2026-06-22; blocks XNNPACK/PyTorch FP16 completeness</td>
+      <td>28 new ISA extension flags, T-Head/SpacemiT vendor+uarch decode, sysfs cache topology, fixes a <code class="language-plaintext highlighter-rouge">uint32_t</code> marchid-truncation bug; preferred by reviewers over competing PR #388</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/pytorch/cpuinfo/pull/421">PR #421</a></td>
+      <td>linux: treat a negative topology id as unavailable, not a parse error</td>
+      <td>Open since 2026-07-15, stalled awaiting reviewer as of 2026-09-24 despite two author pings</td>
+      <td>Medium</td>
+      <td>Fixes reproducible ERROR-level log spam on real riscv64 hardware (SiFive U74-class board, kernel 5.10.113, all 4 cores affected): <code class="language-plaintext highlighter-rouge">core_id</code>/<code class="language-plaintext highlighter-rouge">physical_package_id</code> sysfs values of <code class="language-plaintext highlighter-rouge">-1</code> (the kernel’s “not populated” sentinel) are misreported as parse errors; fix logs at debug level with no behavior change</td>
     </tr>
     <tr>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/148">PR #148</a></td>
       <td>Improve support for RISC-V architecture on Linux</td>
       <td>Open since 2023-05-12</td>
-      <td>Medium</td>
-      <td>Stalled 2.5 years; subsumes into PR #397; one APPROVED review (fbarchard), still awaiting malfet/topperc</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/XNNPACK/issues/4650">XNNPACK #4650</a></td>
-      <td>syscall undeclared in cpuinfo/src/api.c under ISO C99 strict mode</td>
-      <td>Open since 2023-04-13</td>
-      <td>High</td>
-      <td><code class="language-plaintext highlighter-rouge">syscall(__NR_getcpu, ...)</code> without <code class="language-plaintext highlighter-rouge">&lt;unistd.h&gt;</code> breaks cross-compilation under Clang strict C99; zero maintainer engagement in 3 years</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/XNNPACK/issues/9886">XNNPACK #9886</a></td>
-      <td>100+ RVV FP16 test failures</td>
-      <td>Open since April 2026</td>
-      <td>High</td>
-      <td>Root: XNNPACK PR #9516 unconditionally enables Zvfh dispatch when V present; needs cpuinfo zvfh API (now merged in PR #375) plus XNNPACK-side fix</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/google/googletest/issues/3756">GoogleTest #3756</a></td>
-      <td>GetThreadCountTest.ReturnsCorrectValue fails on riscv64</td>
-      <td>Open</td>
       <td>Low</td>
-      <td>Flaky test in cpuinfo’s test dependency; not a correctness issue</td>
+      <td>Predates and was effectively superseded by the #190 to #397 lineage; approved by fbarchard (2024-06-02) but never merged</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/XNNPACK/issues/4650">google/XNNPACK#4650</a></td>
+      <td>syscall undeclared in cpuinfo/src/api.c under ISO C99 strict mode</td>
+      <td>Open, reported by rednoah91, no comments</td>
+      <td>High</td>
+      <td>Breaks some cross-compile workflows; IREE worked around it by disabling cpuinfo entirely rather than fixing the root cause</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/googletest/issues/3756">google/googletest#3756</a></td>
+      <td>GetThreadCountTest.ReturnsCorrectValue fails on riscv64</td>
+      <td>Open since 2022-02-05</td>
+      <td>Low</td>
+      <td>Flaky test in cpuinfo’s test dependency, not a cpuinfo correctness issue; googletest maintainers state riscv64 is unsupported</td>
     </tr>
     <tr>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/200">PR #200</a></td>
       <td>Add starfive-visionfive-v2 as example rv64 board</td>
       <td>Open since 2023-11-17</td>
       <td>Low</td>
-      <td>Blocked on toolchain support; no fixture means regressions not caught</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/pytorch/cpuinfo/pull/302">PR #302</a></td>
-      <td>Refactor CPU ISA to be compiled instead of static</td>
-      <td>Open since 2025-06-20</td>
-      <td>Low</td>
-      <td>Blocked on CLA and missing CMakeLists/Bazel/Android.mk updates</td>
+      <td>No native hardware fixture means hardware-specific regressions in vendor/uarch/cache code are not caught by CI</td>
     </tr>
     <tr>
       <td><a href="https://github.com/pytorch/cpuinfo/pull/388">PR #388</a></td>
       <td>Add support for retrieving RISC-V L1 and L2 cache sizes</td>
       <td>Open since 2026-05-07</td>
       <td>Medium</td>
-      <td>Overlaps with and will be superseded by PR #397</td>
+      <td>Narrower competing implementation of cache detection; reviewers have indicated a preference for #397 instead</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/pytorch/cpuinfo/pull/302">PR #302</a></td>
+      <td>Refactor CPU ISA to be compiled instead of static</td>
+      <td>Open since 2026-06-20</td>
+      <td>Low</td>
+      <td>Not RISC-V-specific but touches the same ISA-struct code paths #397 modifies</td>
     </tr>
   </tbody>
 </table></div>
@@ -1209,13 +1119,10 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
     
 
 <ol>
-  <li>
-    <p><code class="language-plaintext highlighter-rouge">uint32_t</code> truncation of 64-bit marchid values: present on main until PR #397 merges. The bug truncates the high 32 bits of marchid, causing vendor/uarch misidentification on hardware with marchid values exceeding UINT32_MAX. PR #397 fixes this.</p>
-  </li>
-  <li>
-    <p>XNNPACK #9886: 100+ test failures in RVV FP16 kernels due to incorrect dispatch. Functionally incorrect results on hardware that has V but not Zvfh, because XNNPACK enables Zvfh dispatch unconditionally when V is detected. This is a compute-correctness bug in XNNPACK triggered by inadequate cpuinfo ISA discrimination.</p>
-  </li>
-</ol><hr />
+  <li><strong>Cache topology unfilled on RISC-V</strong> (no tracking issue in this repository; documented externally by the <a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE Project blog</a>, 2026-08-18): causes <code class="language-plaintext highlighter-rouge">Expect L1_cache_size &gt; 0 but got 0</code> assertions in PyTorch’s Inductor CPU autotuner, responsible for 69 of 191 (36%) of PyTorch’s RISC-V CI test failures as of the 2026-08-14 run. Resolved once PR #397 merges.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">uint32_t</code> truncation of 64-bit marchid values</strong>: present on main until PR #397 merges; the bug truncates the high 32 bits of <code class="language-plaintext highlighter-rouge">marchid</code>, causing vendor/uarch misidentification on hardware with <code class="language-plaintext highlighter-rouge">marchid</code> values exceeding <code class="language-plaintext highlighter-rouge">UINT32_MAX</code>. Fixed in PR #397’s diff.</li>
+  <li><strong>Spurious ERROR-level log spam on real hardware</strong> (PR #421): a <code class="language-plaintext highlighter-rouge">-1</code> topology-id sentinel from the kernel is parsed as malformed input rather than “not populated,” producing four ERROR-level log lines per boot on real SiFive U74-class hardware even though the machine is healthy. No change in return-value behavior once fixed, purely a log-noise/observability issue.</li>
+</ol>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1233,9 +1140,7 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">malfet</code> (Meta/PyTorch) is the sole active merger. PR #375 (zfh/zvfh detection) was approved by <code class="language-plaintext highlighter-rouge">fbarchard</code> on 2026-03-04 and not merged until 2026-04-15 – 42 days. PR #148 has been open 2.5 years with one APPROVED review and no merge action. The founding engineer (Maratyszcza) explicitly withdrew. There is no succession plan and no CODEOWNERS file.</p>
-
-<p>PR #397 (filed 2026-06-22) has no reviewer assigned and no response as of the research date (2026-06-23, one day after filing). Based on the pattern of PR #375, a realistic merge timeline is 6-12 weeks if the PR is technically sound, or indefinite if it requires significant iteration.</p>
+<p>malfet (Meta/PyTorch) is the effective sole active merger for RISC-V work. Historically, PR #375 (Zfh/Zvfh detection) took roughly six weeks from approval to merge. PR #148 has been open for over two years with one approved review and no merge action. The founding engineer (Maratyszcza) explicitly withdrew from the project during PR #190’s review in November 2023. There is no succession plan and no CODEOWNERS file. PR #397, the largest pending RISC-V PR, has been approved and “lgtm”‘d by two reviewers (luhenry, XYenChi) but remains unmerged as of 2026-09-30, over three months after it was opened (2026-06-22) and over five weeks after its first approval (2026-08-18). PR #421 has received zero reviewer engagement despite two explicit pings from its author (2026-08-07, 2026-09-24) since it was opened on 2026-07-15.</p>
 <h3 id="no-stated-objections-to-risc-v">
   
   
@@ -1245,7 +1150,7 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
 </h3>
     
 
-<p>No maintainer has objected to RISC-V support. PR #190 was merged without controversy. The gap is not resistance but inattention: the single merger is a bottleneck who processes PRs when pinged.</p>
+<p>No maintainer has objected to RISC-V support on technical or policy grounds. PR #190 merged without controversy. The gap is inattention and review bandwidth, not resistance – the single effective merger processes PRs when pinged rather than proactively.</p>
 <h3 id="technical-blockers">
   
   
@@ -1256,15 +1161,9 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
     
 
 <ol>
-  <li>
-    <p>glibc <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> integration: <code class="language-plaintext highlighter-rouge">riscv-hw.c</code> uses a raw <code class="language-plaintext highlighter-rouge">syscall()</code> workaround pending glibc merge of hwprobe API. This is not blocking current functionality but is technical debt.</p>
-  </li>
-  <li>
-    <p>No native hardware CI: QEMU does not expose real vendor/marchid CSR values or real cache sysfs topology. PR #397 notes that real hardware validation (VisionFive 2, BananaPi BPI-F3) was not completed. Any hardware-specific bugs in vendor/uarch decode or cache parsing will not be caught by CI.</p>
-  </li>
-  <li>
-    <p>PR #148 and PR #397 overlap: two open PRs both address cache detection. PR #388 also overlaps with PR #397 on cache. Maintainer will need to choose which to merge; duplicated review effort is likely.</p>
-  </li>
+  <li>glibc <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> integration is not confirmed merged upstream in glibc as of this research; cpuinfo’s raw-<code class="language-plaintext highlighter-rouge">syscall()</code> workaround remains necessary, adding a small amount of ongoing maintenance surface [NEEDS VERIFICATION on current glibc status].</li>
+  <li>No native hardware CI exists. QEMU does not expose real vendor/marchid CSR values or real cache sysfs topology, so hardware-specific bugs in the vendor/uarch decode and cache-parsing logic PR #397 adds will not be caught by cpuinfo’s own CI; PR #421 is itself evidence that such bugs only surface on real hardware (a SiFive U74 board, not QEMU).</li>
+  <li>PR #148, PR #388, and PR #397 all overlap on cache-detection scope. Maintainers have signaled a preference for #397 over #388, but #148 (2023) has never been formally closed, leaving review effort duplicated across three open PRs touching related code.</li>
 </ol>
 <h3 id="acceptance-probability">
   
@@ -1275,69 +1174,78 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
 </h3>
     
 
-<p>High for PR #397 given: CLA signed, no open objections, builds cleanly on QEMU and cross-compile, closes the master tracking issue. The only risk is the 42-day+ merge latency from the sole maintainer.</p><hr />
-<h2 id="13-investment-analysis">
+<p>High for PR #397: CLA signed, two approving reviews, no open technical objections, builds cleanly on QEMU and cross-compile, and it closes the master tracking issue. The residual risk is purely merge-queue latency from a single, bandwidth-constrained maintainer – based on the PR #375 precedent, a plausible range is weeks to a few months from last review activity, absent an explicit ping or escalation.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has not funded or contributed any work to cpuinfo. The following sizing reflects only unfinished work.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> yellow (build-only-ci)</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p><strong>Justification:</strong> Upstream CI in <a href="https://github.com/pytorch/cpuinfo/blob/main/.github/workflows/build.yml">.github/workflows/build.yml</a> builds riscv64 on every PR/push via two jobs (QEMU-emulated <code class="language-plaintext highlighter-rouge">cmake-linux-qemu</code> and Android NDK <code class="language-plaintext highlighter-rouge">cmake-android</code> riscv64 matrix entry) but neither job executes the test suite (“build only,” confirmed by the fetched CI YAML and corroborated by PR <a href="https://github.com/pytorch/cpuinfo/pull/219">#219</a>/<a href="https://github.com/pytorch/cpuinfo/pull/295">#295</a>), which caps the grade at yellow regardless of build success. cpuinfo is not an optimization-purpose project – it is a CPU-feature/topology detection library consumed by others (e.g. XNNPACK) for dispatch decisions, not itself a SIMD/perf-critical hot path – so no optimization-level modifier applies. There are no upstream GitHub releases at all (“There aren’t any releases here”); the only consumable riscv64 binaries come from distro packagers – Debian sid (<code class="language-plaintext highlighter-rouge">cpuinfo_0.0~git20250905.877328f</code>) and Ubuntu 26.04 resolute (<code class="language-plaintext highlighter-rouge">cpuinfo</code>, <code class="language-plaintext highlighter-rouge">libcpuinfo0</code>, <code class="language-plaintext highlighter-rouge">libcpuinfo-dev</code>) – built from unmodified upstream git snapshots, which independently satisfies the clean-distro-build floor at the same yellow level.</p>
+
+<p><strong>Pending work that could change the grade:</strong> Two substantive RISC-V PRs are open and unmerged: #397 (completes ISA-extension/vendor-uarch/cache-topology detection, approved/”lgtm” as of 2026-09-17 but still awaiting merge by sole active maintainer malfet) and #421 (fixes spurious ERROR-level log spam from a <code class="language-plaintext highlighter-rouge">-1</code> topology-id sentinel on real riscv64 hardware, stalled awaiting reviewer since 2026-07-15). Tracking issue #124 (opened 2022-12-23) remains open and would be closed by #397. Known correctness gap: cpuinfo leaves cache topology unfilled on RISC-V, causing 69/191 (36%) of PyTorch’s RISC-V CI test failures per RISE Project’s blog post (2026-08-18) – this would be resolved once PR #397 merges. No RISE funding or dedicated RISE repo/blog coverage exists for cpuinfo itself; it appears only as an incidental dependency of RISE’s PyTorch-on-riscv64 work.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has not funded or contributed any work to cpuinfo directly. The sizing below reflects only unfinished upstream work; nothing here is already covered by RISE.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>PR #397 (filed 2026-06-22) covers the three highest-priority gaps: 28 ISA extensions, T-Head/SpacemiT vendor+uarch, and sysfs cache topology. The code exists. The gap is review and merge velocity, not missing implementation. However, real hardware testing was not completed by the PR author. A small investment in hardware validation would derisk the PR and likely accelerate merge.</p>
-
-<p>Separately, XNNPACK issue #9886 (100+ FP16 test failures) requires a coordinated fix between cpuinfo (PR #375 already merged) and XNNPACK (unconditional Zvfh dispatch in PR #9516 needs correction). This is the highest-impact correctness issue downstream of cpuinfo.</p>
-
-<p>The <code class="language-plaintext highlighter-rouge">syscall</code> undeclared bug (XNNPACK #4650, open 3 years) is a one-line fix adding <code class="language-plaintext highlighter-rouge">#include &lt;unistd.h&gt;</code> to cpuinfo’s <code class="language-plaintext highlighter-rouge">src/api.c</code>. Zero maintainer engagement suggests a submitted PR would be required to get it merged.</p>
-<h3 id="132-performance-optimization">
+<p>PR #397 covers the three highest-priority gaps (ISA extensions, vendor/uarch, cache topology) with code that already exists and has two approving reviews; the constraint is maintainer merge bandwidth, not missing implementation. Real-hardware validation was not completed by the PR author (QEMU cannot exercise real vendor/marchid/cache-sysfs paths), so a small hardware-validation effort would derisk the PR and could accelerate merge. PR #421’s log-noise fix is trivial (17 additions / 3 deletions) but has zero reviewer engagement; a direct ping to a maintainer is likely sufficient. The <code class="language-plaintext highlighter-rouge">syscall</code> undeclared bug (<a href="https://github.com/google/XNNPACK/issues/4650">XNNPACK#4650</a>) is a small, well-scoped fix (adding <code class="language-plaintext highlighter-rouge">#include &lt;unistd.h&gt;</code> or equivalent to <code class="language-plaintext highlighter-rouge">src/api.c</code>) that has seen zero maintainer engagement in over three years; a submitted PR is likely required to get any movement.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Not applicable. cpuinfo is a detection library with no compute paths. It executes once at program startup. There is no runtime hotpath to optimize.</p>
-<h3 id="133-cicd-infrastructure">
+<p>Not applicable. cpuinfo is a detection library with no compute paths; it executes once at program startup and has no runtime hot path to optimize.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>Current CI is build-only and QEMU-based. Adding test execution to the QEMU CI job (running <code class="language-plaintext highlighter-rouge">ctest</code> inside the container) requires modifying the single YAML step to append <code class="language-plaintext highlighter-rouge">ctest --output-on-failure</code>. Estimated effort: 1-2 hours. Maintainer resistance: none.</p>
-
-<p>Adding native hardware CI (e.g., RISE riscv64 runners) would enable testing vendor/uarch decode and cache sysfs paths that QEMU cannot exercise. This is the only way to catch hardware-specific bugs in the code being added by PR #397.</p>
-
-<p>Adding riscv64 mock test fixtures (analogous to the existing arm64 and x86 fixtures) would allow CI to validate ISA detection logic without hardware. This requires creating fixture files and extending the test framework. No fixtures exist today.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>cpuinfo has no package ecosystem of its own. Its impact is entirely through XNNPACK and PyTorch. The downstream correctness fix (XNNPACK #9886) is the most impactful single action reachable from cpuinfo work.</p>
-<h3 id="135-summary-table">
+<p>Current CI is build-only for every platform, not just riscv64 – adding <code class="language-plaintext highlighter-rouge">ctest --output-on-failure</code> to the existing <code class="language-plaintext highlighter-rouge">cmake-linux-qemu</code> step is a small, low-risk YAML change. Adding native riscv64 hardware CI (e.g. via RISE’s free riscv64 runners, which cpuinfo’s own CI does not currently use) would be the only way to catch hardware-specific bugs in the vendor/uarch/cache code PR #397 is adding – PR #421 is direct evidence such bugs exist and are invisible to QEMU. Adding riscv64 mock test fixtures (matching the existing arm64/x86 pattern) would allow CI to validate ISA-decode logic without hardware access; none exist today.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>cpuinfo has no package ecosystem of its own; its impact flows entirely through XNNPACK and PyTorch. The highest-leverage action reachable from cpuinfo work is accelerating the merge of PR #397, which directly removes the largest single category of PyTorch RISC-V CI failures (the 36% cache-topology-assertion failures documented by RISE).</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1356,65 +1264,62 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Hardware validation for PR #397 (VisionFive 2 / BananaPi BPI-F3) to accelerate merge</td>
+      <td>Real-hardware validation for PR #397 (SiFive/T-Head/SpacemiT boards) to derisk and accelerate merge</td>
       <td>1</td>
       <td>Contributor with hardware access</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix XNNPACK #9886: coordinate cpuinfo PR #375 (merged) with XNNPACK unconditional Zvfh dispatch fix</td>
-      <td>1</td>
-      <td>XNNPACK contributor</td>
-      <td>Critical</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>Fix XNNPACK #4650: add <code class="language-plaintext highlighter-rouge">#include &lt;unistd.h&gt;</code> to cpuinfo src/api.c, submit PR</td>
+      <td>Ping/escalate PR #421 for reviewer assignment (17-line, low-risk fix, stalled 2.5 months)</td>
       <td>0.1</td>
       <td>Any contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>riscv64 mock test fixtures for ISA detection (analogous to arm64 fixtures)</td>
+      <td>Submit a one-line fix for XNNPACK#4650 (<code class="language-plaintext highlighter-rouge">#include &lt;unistd.h&gt;</code> in cpuinfo’s <code class="language-plaintext highlighter-rouge">src/api.c</code>)</td>
+      <td>0.1</td>
+      <td>Any contributor</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>riscv64 mock test fixtures for ISA/vendor/cache detection (matching existing arm64/x86 fixtures)</td>
       <td>2</td>
       <td>Any contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Enable ctest execution inside QEMU CI job (one-line YAML change)</td>
+      <td>Enable <code class="language-plaintext highlighter-rouge">ctest</code> execution inside the existing <code class="language-plaintext highlighter-rouge">cmake-linux-qemu</code> CI job</td>
       <td>0.1</td>
       <td>Any contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add native riscv64 CI runner (RISE runners) for vendor/uarch/cache testing</td>
+      <td>Add native riscv64 CI (e.g. RISE runners) to catch vendor/uarch/cache bugs QEMU cannot exercise</td>
       <td>1</td>
       <td>Contributor with RISE runner access</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>glibc hwprobe API integration (remove Android-only #ifdef, use glibc <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> when available)</td>
-      <td>1</td>
-      <td>Contributor</td>
+      <td>Fix the <code class="language-plaintext highlighter-rouge">configure.py</code> gap that omits <code class="language-plaintext highlighter-rouge">riscv/linux/riscv-hw.c</code> from the Python build path</td>
+      <td>0.2</td>
+      <td>Any contributor</td>
       <td>Medium</td>
     </tr>
+    <tr>
+      <td>Functional</td>
+      <td>glibc <code class="language-plaintext highlighter-rouge">&lt;sys/hwprobe.h&gt;</code> integration once/if upstream glibc support lands, removing the raw-syscall workaround</td>
+      <td>1</td>
+      <td>Contributor</td>
+      <td>Low</td>
+    </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1426,31 +1331,33 @@ cmake <span class="nt">--build</span> <span class="nb">.</span> <span class="nt"
 
 <ul>
   <li><a href="https://github.com/pytorch/cpuinfo">pytorch/cpuinfo repository</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/issues/124">Issue #124 – Add: RISC-V support</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/148">PR #148 – Improve support for RISC-V architecture on Linux</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/190">PR #190 – Add limited support for RISC-V initialization</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/200">PR #200 – Add starfive-visionfive-v2 as example rv64 board</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/201">PR #201 – Add android_riscv64 to BUILD.bazel</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/212">PR #212 – Fix RISC-V Linux build</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/215">PR #215 – Fix RISC-V Linux build again</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/219">PR #219 – ci: Add an Ubuntu:22.04 builder for RISC-V</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/256">PR #256 – Add android-riscv64 build to workflows</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/292">PR #292 – riscv-hw.c: match kernel type in syscall()</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/295">PR #295 – CI: Fix riscv64-in-qemu build</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/302">PR #302 – Refactor CPU ISA to be compiled instead of static</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/375">PR #375 – Add riscv half-precision floating point detection</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/388">PR #388 – Add support for retrieving RISC-V L1 and L2 cache sizes</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/pull/397">PR #397 – riscv/linux: complete ISA extension, vendor/uarch, and cache support</a></li>
-  <li><a href="https://github.com/google/XNNPACK/issues/4650">XNNPACK issue #4650 – syscall undeclared in cpuinfo src/api.c under ISO C99 strict mode</a></li>
-  <li><a href="https://github.com/google/XNNPACK/issues/9886">XNNPACK issue #9886 – 100+ RVV FP16 test failures</a></li>
-  <li><a href="https://github.com/google/XNNPACK/pull/9516">XNNPACK PR #9516 – unconditional Zvfh dispatch enable</a></li>
-  <li><a href="https://github.com/google/googletest/issues/3756">GoogleTest issue #3756 – GetThreadCountTest fails on riscv64</a></li>
-  <li><a href="https://packages.ubuntu.com/search?keywords=cpuinfo&amp;suite=noble&amp;searchon=names&amp;section=all">Ubuntu Noble packages – libcpuinfo0</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=cpuinfo">Debian buildd – cpuinfo riscv64 status</a></li>
-  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
-  <li><a href="https://raw.githubusercontent.com/pytorch/cpuinfo/main/src/riscv/linux/riscv-hw.c">riscv-hw.c – main branch</a></li>
-  <li><a href="https://raw.githubusercontent.com/pytorch/cpuinfo/main/.github/workflows/build.yml">build.yml – main branch</a></li>
-  <li><a href="https://raw.githubusercontent.com/pytorch/cpuinfo/main/scripts/android-riscv64-build.sh">android-riscv64-build.sh – main branch</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/blob/main/.github/workflows/build.yml">pytorch/cpuinfo CI workflow, build.yml</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/issues/124">Issue #124, Add: RISC-V support</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/148">PR #148, Improve support for RISC-V architecture on Linux</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/190">PR #190, Add limited support for RISC-V initialization</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/200">PR #200, Add starfive-visionfive-v2 as example rv64 board</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/201">PR #201, Add android_riscv64 to BUILD.bazel</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/215">PR #215, Fix RISC-V Linux build again</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/219">PR #219, ci: Add an Ubuntu:22.04 builder for RISC-V</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/256">PR #256, Add android-riscv64 build to workflows</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/292">PR #292, riscv-hw.c: match kernel type in syscall()</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/295">PR #295, CI: Fix riscv64-in-qemu build</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/302">PR #302, Refactor CPU ISA to be compiled instead of static</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/commit/d05fbcd57dc096718c4979e7c054e628f1f3520b">Commit d05fbcd5, Add riscv half-precision floating point detection (PR #375)</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/388">PR #388, Add support for retrieving RISC-V L1 and L2 cache sizes</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/397">PR #397, riscv/linux: complete ISA extension, vendor/uarch, and cache support</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/pull/421">PR #421, linux: treat a negative topology id as unavailable, not a parse error</a></li>
+  <li><a href="https://github.com/google/XNNPACK/issues/4650">google/XNNPACK issue #4650, RISC-V cpuinfo Build Error</a></li>
+  <li><a href="https://github.com/google/googletest/issues/3756">google/googletest issue #3756, GetThreadCountTest fails on riscv64</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=cpuinfo&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu packages, cpuinfo search, resolute suite</a></li>
+  <li><a href="https://archriscv.felixc.at/repo/extra/">Arch Linux RISC-V port, extra repository listing</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/releases">pytorch/cpuinfo releases page</a></li>
+  <li><a href="https://pypi.org/project/py-cpuinfo/">PyPI, py-cpuinfo project</a></li>
+  <li><a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE Project blog, PyTorch is available on riscv64!</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE Project, Announcing the RISE RISC-V Runners</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members page</a></li>
+  <li><a href="https://raw.githubusercontent.com/pytorch/cpuinfo/main/src/riscv/linux/riscv-hw.c">riscv-hw.c, main branch</a></li>
+  <li><a href="https://raw.githubusercontent.com/pytorch/cpuinfo/main/scripts/android-riscv64-build.sh">android-riscv64-build.sh, main branch</a></li>
 </ul>
 
           
