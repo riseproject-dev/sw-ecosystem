@@ -1,12 +1,12 @@
 
 export const meta = {
   name: 'project-report',
-  description: 'Deep research RISC-V ecosystem status report -- sequential, GitHub MCP for GitHub projects',
+  description: 'Deep research RISC-V ecosystem status report -- new report from live findings, or (with existingReportPath) a full rewrite merging live findings with prior report content',
   phases: [
     { title: 'Search', detail: 'Sequential: GitHub MCP searches + web searches for non-GitHub sources' },
     { title: 'Fetch', detail: 'Sequential: deep reads of issues, PR status, build docs, RISE details' },
     { title: 'Verify', detail: 'Sequential: adversarial CI, package, and arch-code checks' },
-    { title: 'Synthesize', detail: 'Write full report grounded in live findings only' },
+    { title: 'Synthesize', detail: 'Write full report grounded in live findings + prior report' },
   ],
 }
 
@@ -15,35 +15,30 @@ const ABORT_THRESHOLD = 1000
 // Workflow scripts must be deterministic/resumable -- new Date()/Date.now() are disallowed at
 // the top level. The orchestrator computes today's date and passes it in via args instead.
 const reportDate = proj.reportDate
+// Projects with no public repo (e.g. Geekbench) fall back to the homepage for every
+// proj.repo reference below (search/fetch/verify agents and the non-GitHub WebSearch branches).
+if (!proj.repo) proj.repo = proj.home
+// proj.existingReportPath (optional): absolute path to the current project-reports/<slug>.md
+// on disk. Passed as a path rather than inline text -- this script itself has no filesystem
+// access, but the agents it spawns do (standard Read tool), and a path keeps this script's
+// own per-call args payload small regardless of report size. When present, the Synthesize
+// phase agents are told to Read it and merge it with live findings into one standalone
+// rewrite instead of writing from live findings alone.
+const existingReportPath = proj.existingReportPath || null
 
 const slug = proj.slug || proj.name.toLowerCase().replace(/[\s.\/]+/g, '-')
 
-// ── Project registry (projects.yml) lookup ──────────────────────────────────────────────────
-// proj.registry (optional): the parsed projects.yml (repo root) -- an array of
-//   { name, repo?, home?, report?, synonyms? } entries. The operator loads it and passes it in
-//   (this script is sandboxed with no filesystem access). Index every entry by its canonical name
-//   AND each synonym
-//   (normalized, case-insensitive), so a dependency named by any known spelling resolves to the
-//   single canonical entry -- used below to write Section 9's direct dependencies into
-//   frontmatter using projects.yml's own `name:` spelling, never an ad-hoc one.
-const registry = proj.registry || []
-const registryByName = new Map()
-for (const e of registry) {
-  if (!e || !e.name) continue
-  const add = (k) => {
-    const nk = String(k || '').toLowerCase().trim()
-    if (nk && !registryByName.has(nk)) registryByName.set(nk, e)
-  }
-  add(e.name)
-  for (const s of e.synonyms || []) add(s)
-}
-function lookupRegistry(name) {
-  return registryByName.get(String(name || '').toLowerCase().trim()) || null
-}
+// proj.registryPath (optional): absolute path to projects.yml (repo root), the single source
+// of truth for canonical project names -- passed as a path for the same reason as
+// existingReportPath above. The deps-extraction agent below greps it directly to resolve each
+// dependency to its exact projects.yml `name:` spelling (or report it as not-yet-registered);
+// this script's own JS trusts that agent's resolution rather than re-matching in code, so no
+// registry array needs to cross the args boundary.
+const registryPath = proj.registryPath || null
 
 // Structured direct-dependency record -- forces uniform output from the deps-extraction agent
-// (see start of Synthesize phase below) so it can be resolved against the registry in code
-// rather than parsed back out of free text.
+// (see start of Synthesize phase below), including its own registry resolution, so this
+// script's JS can splice it into frontmatter deterministically without re-parsing free text.
 const DEPENDENCY_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -54,13 +49,14 @@ const DEPENDENCY_SCHEMA = {
         type: 'object',
         additionalProperties: false,
         properties: {
-          name: { type: 'string', description: 'commonly-known project/library name' },
+          name: { type: 'string', description: 'the EXACT projects.yml name: spelling if found there (by name or synonym); otherwise the commonly-known project/library name' },
           relation: { type: 'string', enum: ['build-dependency', 'test-dependency', 'runtime-dependency'] },
           criticality: { type: 'string', enum: ['critical', 'optional'] },
-          repo: { type: 'string', description: 'source repo URL, best effort; only used if this dependency has no projects.yml entry yet' },
-          home: { type: 'string', description: 'homepage URL, best effort; only used if this dependency has no projects.yml entry yet' },
+          foundInRegistry: { type: 'boolean', description: 'true iff this dependency (by name or a known synonym) was found in the registry file' },
+          repo: { type: 'string', description: 'source repo URL, best effort; only used when foundInRegistry is false' },
+          home: { type: 'string', description: 'homepage URL, best effort; only used when foundInRegistry is false' },
         },
-        required: ['name', 'relation', 'criticality'],
+        required: ['name', 'relation', 'criticality', 'foundInRegistry'],
       },
     },
   },
@@ -467,26 +463,41 @@ const fullContext = allFindings + '\n\n══════ VERIFICATIONS ══�
 // ── Phase 4: Synthesize ───────────────────────────────────────────────────
 phase('Synthesize')
 
+// Read the existing report from disk via an agent (this script itself has no filesystem
+// access). A dedicated agent for this -- rather than folding a Read instruction into the
+// deps-extraction or synthesize prompts below -- keeps those prompts' own tool-use rules
+// (deps-extraction greps the registry; synthesize is text-only, see rule 5 below) unambiguous.
+let existingReport = null
+if (existingReportPath) {
+  log(`Reading existing report for ${proj.name} from ${existingReportPath} ...`)
+  existingReport = await agent(`Read the file at ${existingReportPath} using the Read tool and return its COMPLETE, VERBATIM content as your final text output. Do not summarize, truncate, paraphrase, or modify it in any way -- your entire response must be the file's exact content.
+
+Do NOT use the Edit, Write, or NotebookEdit tools, or any Bash command that modifies a file, on ${existingReportPath} or any other file. This is a read-only task: read the file and return its text. The report will be regenerated and written back to this same path later by the calling process, not by you -- editing it now would be immediately overwritten and would only corrupt intermediate state.`, {label: `${proj.name}:read-existing`, phase: 'Synthesize'})
+}
+const existingReportBlock = existingReport
+  ? '\n\n══════ EXISTING REPORT (prior content -- much of this is still accurate; cross-check each claim against the live findings above: keep what still holds, correct or update what the live findings contradict or supersede, drop what is now stale) ══════\n\n' + existingReport
+  : ''
+
 log(`Extracting structured dependency list for ${proj.name} ...`)
-const registryNames = registry.map(e => e && e.name).filter(Boolean).join(', ')
 const depsExtracted = await agent(`From the research findings below, list ONLY "${proj.name}"'s DIRECT dependencies (not transitive/indirect ones -- do not recurse) that matter for riscv64 readiness: build tools, libraries, or runtimes it links against, requires to build, or requires to run its test suite. Omit purely-documentation tooling (e.g. Doxygen) and platform-neutral dependencies with no bearing on riscv64 readiness.
 
 For each dependency:
-- "name": its commonly-known project name. If it matches (by name or common alias) one of these known projects.yml registry entries, use EXACTLY that entry's spelling: ${registryNames}
+- "name": its commonly-known project name, UNLESS it is found in the registry (see below), in which case use EXACTLY that registry entry's name: spelling.
 - "relation": exactly one of build-dependency, test-dependency, runtime-dependency. A dependency that is linked (statically or dynamically, or dlopen'd) at build time so that its code executes when the software actually runs is a runtime-dependency -- linking happening at build time does NOT make it a build-dependency (e.g. FFmpeg+libx264, PyTorch+OpenBLAS are both runtime-dependency, not build-dependency). Reserve build-dependency for tooling that contributes no code to the runtime artifact: compilers/toolchains, build-system generators (CMake, Meson, Autoconf, Ninja, Bazel), code/parser generators (Bison, Flex, protoc codegen, SWIG), doc generators (Doxygen, Sphinx). Reserve test-dependency for dependencies used only to build/run the test suite (GoogleTest, Catch2, pytest) that are never linked into the production runtime artifact.
 - "criticality": critical or optional.
-- "repo"/"home": only if this dependency does NOT match a registry entry above and you know its source repository or homepage URL from the findings below.
+- "foundInRegistry": ${registryPath ? `for EACH candidate dependency, use the Grep tool on ${registryPath} to search for "name: <candidate>" (and any common alias/spelling) case-insensitively, and also check for it under a "synonyms:" list on a nearby entry. Set true and use that entry's exact "name:" spelling if found; set false otherwise.` : 'no registry file was provided -- set false for every dependency.'}
+- "repo"/"home": only when foundInRegistry is false and you know its source repository or homepage URL from the findings below.
+
+${existingReport ? 'The existing report (included in the findings below, in the EXISTING REPORT block) may already name some of these dependencies -- treat that as a starting point to cross-check, not a ceiling; add any the live findings reveal that it missed, and drop any it named that no longer apply.' : ''}
+
+Do NOT use the Edit, Write, or NotebookEdit tools, or any Bash command that modifies a file, on ${registryPath || 'projects.yml'} or any other file -- Grep/Read it only, never write to it. Registry entries for any dependency not yet listed there are added later by the calling process, not by you.
 
 Findings:
-${fullContext.substring(0, 20000)}`, { schema: DEPENDENCY_SCHEMA, label: `${proj.name}:deps-structured`, phase: 'Synthesize' })
+${fullContext.substring(0, 30000)}${existingReportBlock}`, { schema: DEPENDENCY_SCHEMA, label: `${proj.name}:deps-structured`, phase: 'Synthesize' })
 
 const directDeps = (depsExtracted && depsExtracted.dependencies) || []
-const newRegistryEntries = []
-const dependencies = directDeps.map(d => {
-  const match = lookupRegistry(d.name)
-  if (!match) newRegistryEntries.push({ name: d.name, repo: d.repo || null, home: d.home || null })
-  return { name: match ? match.name : d.name, relation: d.relation, criticality: d.criticality }
-})
+const newRegistryEntries = directDeps.filter(d => !d.foundInRegistry).map(d => ({ name: d.name, repo: d.repo || null, home: d.home || null }))
+const dependencies = directDeps.map(d => ({ name: d.name, relation: d.relation, criticality: d.criticality }))
 const dependencyList = dependencies.map(d => `${d.name} (${d.relation}, ${d.criticality})`).join('; ') || 'none identified'
 
 log(`Synthesizing report for ${proj.name} (${fullContext.length} chars of findings) ...`)
@@ -494,7 +505,7 @@ log(`Synthesizing report for ${proj.name} (${fullContext.length} chars of findin
 const report = await agent(`You are a highly technical, principal software engineer writing a fact-based assessment for engineering leadership at a chip company evaluating RISC-V investment. Write with precision. No hedging, no marketing language, no filler.
 
 CRITICAL RULES:
-1. Base EVERY factual claim on the research findings below. If findings do not contain data for something, write: "Data not available: [describe what was searched]."
+1. Base EVERY factual claim on the research findings below (the LIVE RESEARCH FINDINGS, and, if present, the EXISTING REPORT). If findings do not contain data for something, write: "Data not available: [describe what was searched]."
 2. Do NOT use training knowledge to fill gaps. Do NOT invent PR numbers, dates, or benchmark figures.
 3. Where findings are contradictory, cite both and note the discrepancy.
 4. Mark any claim from only one source as [NEEDS VERIFICATION].
@@ -502,6 +513,7 @@ CRITICAL RULES:
 6. Section 10 (Ecosystem Status) -- include only if the project has a significant ecosystem of packages, plugins, or extensions that must also be enabled on riscv64 (e.g., Python packages, npm packages, Kubernetes operators, Maven JARs). Skip it for system libraries, runtimes, and standalone tools that have no dependent package ecosystem.
 7. Section 13 (Readiness Assessment) -- invoke the /project-color-coding skill on this project to determine the color. That skill is the authoritative source for the color model and decision rules. Pass this project (name + repo + the research findings already gathered) to the skill. Take the skill's output fields directly: color, color_case, release_provider, optimization_gap. Write those values into the YAML frontmatter color: field, the **Readiness:** header field, and (for optimization-purpose projects only) the **Optimization level:** header field. Then write Section 13 using the skill's justification and pending-work notes.
 8. Section 9 (Dependencies) -- its table MUST include every dependency listed below under "Direct dependencies", using that EXACT name (do not rename or omit one), plus any additional indirect/recursed dependencies found via research. The direct/indirect distinction and the frontmatter dependencies: block are handled outside this prompt; just make sure Section 9's prose table is consistent with the direct list.
+${existingReport ? `9. This is a full rewrite of an existing report, reproduced below in the EXISTING REPORT block. Merge it with the LIVE RESEARCH FINDINGS into ONE standalone, cohesive report: keep whatever information from the existing report the live findings do not contradict, correct or replace anything the live findings show has changed, and add whatever new information the live findings reveal that the existing report lacked. Write it exactly as you would a brand-new report written today -- do NOT mention "the previous version", "previously reported", "this report has been updated", "no longer the case", a change log, or any other language that references the fact that an earlier version exists. Section 15 (Updates) must read as a normal fresh initial report (i.e. "No updates yet -- initial report dated ${reportDate}."), not as an update log against the prior version.` : ''}
 
 READINESS COLOR MODEL (condensed reference -- the /project-color-coding skill is authoritative):
 
@@ -523,8 +535,9 @@ Repository: ${proj.repo}
 Homepage: ${proj.home}
 Direct dependencies (must all appear in Section 9, using these exact names -- see rule 8): ${dependencyList}
 
-LIVE RESEARCH FINDINGS (${fullContext.length} chars -- use ONLY these as your source of facts):
+LIVE RESEARCH FINDINGS (${fullContext.length} chars -- use these, plus the EXISTING REPORT block below if present, as your only sources of facts):
 ${fullContext.substring(0, 90000)}
+${existingReportBlock}
 
 Write the COMPLETE report. Formatting rules:
 - Latin-1 characters only, no em-dashes (use hyphen or comma)

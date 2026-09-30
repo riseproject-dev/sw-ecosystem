@@ -33,7 +33,7 @@ The output report path is derived from the name: `project-reports/<slug>.md`, wh
 
 ## Execution model
 
-Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `prompts/project-report/project-report-workflow.js`. Pass one `projects.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`), plus the full parsed `projects.yml` as `registry` -- the script has no filesystem access, so it can only resolve dependency names against the registry if the caller loads and passes it:
+Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `prompts/project-report/project-report-workflow.js`. Pass one `projects.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`), plus `registryPath`, the absolute path to `projects.yml` itself -- the script has no filesystem access, but the agents it spawns do, and the deps-extraction agent greps that path directly to resolve each dependency to its exact `projects.yml` `name:` spelling (or flag it as not yet registered), so no parsed registry array needs to cross the `args` boundary. Also pass `reportDate` (today's date, `YYYY-MM-DD`) -- the script cannot call `new Date()` itself (workflow scripts must stay deterministic/resumable), so the caller computes it:
 
 ```js
 Workflow({
@@ -41,7 +41,8 @@ Workflow({
     "name": "<project-name>",                        // projects.yml: name
     "repo": "https://<project-repository>/",         // projects.yml: repo
     "home": "https://<project-homepage>/",           // projects.yml: home
-    "registry": [ /* the full parsed projects.yml array */ ]
+    "reportDate": "<YYYY-MM-DD>",                     // today's date, computed by the caller
+    "registryPath": "/abs/path/to/projects.yml"
   }],
   scriptPath: "/abs/path/to/prompts/project-report/project-report-workflow.js"
 })
@@ -49,7 +50,26 @@ Workflow({
 
 The script derives the output path as `project-reports/<slug>.md`. To override it, add an absolute `"slug"` field to the args object. The script runs four phases sequentially (8 search agents, 4 fetch agents, 3 verify agents, 1 dependency-structuring agent, 1 synthesize agent = 17 total). On completion the workflow returns a JSON object with `{name, file, report, totalChars, new_registry_entries}`. Write `report` to `file` and verify before committing.
 
-`new_registry_entries` lists any direct dependency (found for Section 9 / the report's own `dependencies:` frontmatter) whose name did not resolve against `registry` -- i.e. it has no `projects.yml` entry yet. **Before committing the report**, add one new alphabetically-positioned entry (`name`/`repo`/`home`, best effort) to `projects.yml` for each item in this array -- see `AGENTS.md`'s "After the workflow completes" section. This keeps the hard constraint enforced by `_plugins/dependency_graph_generator.rb` (every `dependencies: name:` in every report must match a `projects.yml` entry, or the site fails to build) from ever actually tripping in normal use.
+`new_registry_entries` lists any direct dependency (found for Section 9 / the report's own `dependencies:` frontmatter) that the deps-extraction agent did not find in the registry file -- i.e. it has no `projects.yml` entry yet. **Before committing the report**, add one new alphabetically-positioned entry (`name`/`repo`/`home`, best effort) to `projects.yml` for each item in this array -- see `AGENTS.md`'s "After the workflow completes" section. This keeps the hard constraint enforced by `_plugins/dependency_graph_generator.rb` (every `dependencies: name:` in every report must match a `projects.yml` entry, or the site fails to build) from ever actually tripping in normal use.
+
+### Refreshing an existing report (full rewrite)
+
+To fully rewrite an existing report from scratch -- fresh live research merged with whatever
+still-valid content the current report already has -- rather than write a brand-new one, add
+`"existingReportPath"` (absolute path to the current `project-reports/<slug>.md`) to `args`.
+When present, a Synthesize-phase agent reads that file and the final report is written as one
+standalone, cohesive document combining it with the live findings: content the live findings
+don't contradict is kept, anything they show has changed is corrected, and whatever new
+information they reveal is added. The result never references "the previous version" or reads
+as a change log against it (that framing is reserved for `## 15. Updates`, which for a full
+rewrite reads as a normal fresh initial report, not an update entry). Omit
+`existingReportPath` for a project that has no report yet -- the script then behaves exactly as
+in the base case above, writing a report grounded in live findings only.
+
+This is a different mode from the **Update cadence** described below (a lightweight
+`## 15. Updates` subsection appended roughly every 6 months): use `existingReportPath` only
+when a full ground-up rewrite is actually wanted, since it costs the same 17-agent research
+pass as a brand-new report.
 
 For a non-GitHub project (sourceware.org, kernel.org, googlesource.com), the `repo` URL is not a github.com URL and the script automatically switches to WebSearch + WebFetch instead of GitHub MCP tools. For a project with no `repo` at all, the script falls back to the `home` URL for web searches.
 
