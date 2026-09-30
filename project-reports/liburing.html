@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for liburing<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,17 +280,17 @@
 </h2>
     
 
-<p>liburing is a thin userspace wrapper library over the Linux <code class="language-plaintext highlighter-rouge">io_uring</code> async I/O subsystem (syscalls <code class="language-plaintext highlighter-rouge">io_uring_setup</code>, <code class="language-plaintext highlighter-rouge">io_uring_enter</code>, <code class="language-plaintext highlighter-rouge">io_uring_register</code>). Its design goal is to expose the full io_uring interface with minimal overhead: the library’s architecture-specific code consists of inline-assembly syscall stubs and a page-size probe, nothing more. There is no JIT, no SIMD, no cryptographic primitive, and no custom allocator in the codebase.</p>
+<p>liburing is a thin userspace wrapper library over the Linux <code class="language-plaintext highlighter-rouge">io_uring</code> asynchronous I/O subsystem (syscalls <code class="language-plaintext highlighter-rouge">io_uring_setup</code>, <code class="language-plaintext highlighter-rouge">io_uring_enter</code>, <code class="language-plaintext highlighter-rouge">io_uring_register</code>). Its design goal is to expose the full io_uring interface with minimal overhead: the entire architecture-specific surface of the library is a syscall trampoline (inline-asm <code class="language-plaintext highlighter-rouge">ecall</code>/<code class="language-plaintext highlighter-rouge">syscall</code>/<code class="language-plaintext highlighter-rouge">svc</code> invocation) and a page-size probe. There is no JIT, no SIMD, no cryptographic primitive, and no custom allocator anywhere in the codebase. Recursive dependency and code-search checks confirm this is by design, not an oversight: liburing has no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, <code class="language-plaintext highlighter-rouge">setup.py</code>, <code class="language-plaintext highlighter-rouge">go.mod</code>, <code class="language-plaintext highlighter-rouge">Cargo.toml</code>, or <code class="language-plaintext highlighter-rouge">package.json</code>, because it is built with a hand-written <code class="language-plaintext highlighter-rouge">./configure</code> shell script plus GNU Make, and it ships zero third-party numerics/crypto/compression/allocator dependencies.</p>
 
-<p><strong>Governance:</strong> liburing has no foundation affiliation and no formal governance structure. There is no MAINTAINERS, CODEOWNERS, steering committee, or TSC. The project is sole-maintainer-led.</p>
+<p><strong>Governance:</strong> No foundation affiliation (no Linux Foundation, CNCF, or similar umbrella). No <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, <code class="language-plaintext highlighter-rouge">CODEOWNERS</code>, <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> file exists anywhere in the repository. Governance is effectively single-maintainer: Jens Axboe (<code class="language-plaintext highlighter-rouge">axboe@kernel.dk</code>) authored 2,264 of 3,749 all-time commits (about 60%) and 237 of roughly 373 commits in the trailing 12 months (about 64%), and personally merges essentially every external contribution. Development follows a Linux-kernel-style workflow coordinated on the <code class="language-plaintext highlighter-rouge">io-uring@vger.kernel.org</code> mailing list: one change per commit, mandatory DCO <code class="language-plaintext highlighter-rouge">Signed-off-by</code>, no squash-on-merge, patches accepted by GitHub PR or email, per <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code>. Axboe is also the Linux kernel block-layer and io_uring subsystem maintainer.</p>
 
-<p><strong>Corporate sponsors:</strong> Jens Axboe (<code class="language-plaintext highlighter-rouge">axboe@kernel.dk</code>) is the sole maintainer and repository owner. His email domain is a personal domain. His GitHub profile links to Meta/Facebook. No corporate sponsor is named in the repository (CONTRIBUTING.md, SECURITY.md, or README). He is also the Linux kernel block-layer and io_uring subsystem maintainer.</p>
+<p><strong>License:</strong> Dual LGPL-2.1 (<code class="language-plaintext highlighter-rouge">COPYING</code>) / MIT (<code class="language-plaintext highlighter-rouge">LICENSE</code>) for the library; the kernel-derived uapi header is dual GPL-2.0-with-Linux-syscall-note / MIT.</p>
 
-<p><strong>License:</strong> Dual-licensed LGPL-2.1 (<code class="language-plaintext highlighter-rouge">COPYING</code>) and MIT (<code class="language-plaintext highlighter-rouge">LICENSE</code>), with a kernel-derived header under GPL-2.0 with Linux-syscall-note exception (<code class="language-plaintext highlighter-rouge">COPYING.GPL</code>).</p>
+<p><strong>Corporate contributors (by commit-author email domain, all-time, 3,749 commits):</strong> Meta/Facebook (<code class="language-plaintext highlighter-rouge">fb.com</code>/<code class="language-plaintext highlighter-rouge">meta.com</code>, 100 commits, incl. Dylan Yudaken, Stefan Roesch), Red Hat (<code class="language-plaintext highlighter-rouge">redhat.com</code>, 73, incl. Stefano Garzarella, Stefan Hajnoczi, Jeff Moyer), SUSE (<code class="language-plaintext highlighter-rouge">suse.de</code>, 32, incl. Gabriel Krisman Bertazi, still active as of August 2026), Pure Storage (<code class="language-plaintext highlighter-rouge">purestorage.com</code>, 31, Caleb Sander Mateos), Samsung (19), Alibaba (<code class="language-plaintext highlighter-rouge">linux.alibaba.com</code>, 12), KylinSoft (10), Tencent (9), Huawei (8), Codasip - a RISC-V IP vendor - (<code class="language-plaintext highlighter-rouge">codasip.com</code>, 8, general test fixes from Chris Hofer, Christian A. Ehrhardt, Chris Gellermann, Florian Schmaus, active September 2025 to July 2026 but not riscv-specific), and the gnuweeb.org community group (189 commits, Ammar Faizi, Alviro Iskandar Setiawan). No <code class="language-plaintext highlighter-rouge">FUNDING.yml</code> or GitHub Sponsors setup exists; all contribution is in-kind engineering time, not declared financial sponsorship. Jens Axboe’s own commits are under his personal <code class="language-plaintext highlighter-rouge">kernel.dk</code> address; his employer cannot be determined from repository data [NEEDS VERIFICATION].</p>
 
-<p><strong>RISE Project involvement:</strong> None. All 27 RISE blog posts from May 2024 through June 2026 were checked; zero mention liburing. The RISE wheel builder lists 80+ packages; liburing is absent. No RISE GitHub repository or RFP covers io_uring or liburing.</p>
+<p><strong>RISE Project involvement:</strong> None. All 35 RISE blog posts (2024-05-15 through 2026-09-28, full list checked via the WordPress sitemap and the blog’s own search, which returns “no results” for both “liburing” and “io_uring”) were checked; zero mention liburing or io_uring. The <a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a> lists 80+ packages; liburing is absent. The <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub org (26 repositories) has no liburing repository; code search across the org turns up liburing only as a third-party dependency documented in <em>other</em> projects’ reports (memcached, redpanda, rocksdb, ceph, qemu, myrocks, dragonfly, postgresql, eclipse-zenoh, foundationdb, apache-age), and as a bundled sub-library inside the <code class="language-plaintext highlighter-rouge">nixl-cu12</code> Python wheel build, never as RISE’s own funded work. RISE membership (Premier: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent; General: Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE) is corporate, and no member is credited as liburing’s steward. liburing’s own CI uses no RISE build-farm runners.</p>
 
-<p><strong>Community culture on new ports:</strong> The project accepts architecture patches informally. The riscv64 port (PRs <a href="https://github.com/axboe/liburing/pull/928">#928</a> and <a href="https://github.com/axboe/liburing/pull/930">#930</a>) was merged the same day it was submitted, with no preceding tracking issue and minimal review. CONTRIBUTING.md requires single-purpose commits, <code class="language-plaintext highlighter-rouge">Signed-off-by</code> (DCO), independent compilation, and testing. No formal review or approval gating is documented for new architecture ports.</p><hr />
+<p><strong>Community culture on new ports:</strong> Architecture patches are accepted informally and quickly. The riscv64 port (<a href="https://github.com/axboe/liburing/pull/928">PR #928</a>, <a href="https://github.com/axboe/liburing/pull/930">PR #930</a>) was submitted and merged within about 17 hours by a first-time, external contributor, with no preceding tracking issue and essentially no review discussion beyond one approving review on #928. <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> requires single-purpose commits, DCO sign-off, independent compilation, and testing, but there is no formal ports committee or architecture-tiering process gating new-arch contributions.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -309,41 +310,50 @@
   </thead>
   <tbody>
     <tr>
+      <td>2022-07-26</td>
+      <td>Commit <code class="language-plaintext highlighter-rouge">00c8a105</code> (Alviro Iskandar Setiawan, gnuweeb.org) - a portability fix incidentally relevant to riscv (<code class="language-plaintext highlighter-rouge">__NR_mmap2</code> preprocessor condition), not yet adding the architecture.</td>
+      <td>liburing history</td>
+    </tr>
+    <tr>
       <td>2023-08-22</td>
-      <td>Commit <code class="language-plaintext highlighter-rouge">59d41ab</code> – adds riscv64 to GitHub Actions CI matrix (<code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>). First RISC-V commit.</td>
+      <td>Commit <code class="language-plaintext highlighter-rouge">59d41ab9</code> - adds a riscv64 cross-compile job to the GitHub Actions CI matrix (<code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>/<code class="language-plaintext highlighter-rouge">g++-riscv64-linux-gnu</code>). First real riscv64 commit. Opened and merged same day.</td>
       <td><a href="https://github.com/axboe/liburing/pull/928">PR #928</a></td>
     </tr>
     <tr>
       <td>2023-08-23</td>
-      <td>Commit <code class="language-plaintext highlighter-rouge">d305ed5</code> – adds <code class="language-plaintext highlighter-rouge">src/arch/riscv64/syscall.h</code> and <code class="language-plaintext highlighter-rouge">src/arch/riscv64/lib.h</code>. Full nolibc syscall stubs via <code class="language-plaintext highlighter-rouge">ecall</code> with registers a0-a7. Updates <code class="language-plaintext highlighter-rouge">configure</code>, <code class="language-plaintext highlighter-rouge">src/lib.h</code>, <code class="language-plaintext highlighter-rouge">src/syscall.h</code>, <code class="language-plaintext highlighter-rouge">test/nolibc.c</code>. Adds <code class="language-plaintext highlighter-rouge">-lgcc</code> to resolve <code class="language-plaintext highlighter-rouge">__clzdi2</code> linker error on nolibc riscv64 builds.</td>
+      <td>Commit <code class="language-plaintext highlighter-rouge">d305ed56</code> - adds <code class="language-plaintext highlighter-rouge">src/arch/riscv64/syscall.h</code> and <code class="language-plaintext highlighter-rouge">src/arch/riscv64/lib.h</code> (full nolibc syscall stubs via <code class="language-plaintext highlighter-rouge">ecall</code>, registers a0-a7), updates <code class="language-plaintext highlighter-rouge">configure</code>, <code class="language-plaintext highlighter-rouge">src/lib.h</code>, <code class="language-plaintext highlighter-rouge">src/syscall.h</code>, <code class="language-plaintext highlighter-rouge">test/nolibc.c</code>; adds <code class="language-plaintext highlighter-rouge">-lgcc</code> to <code class="language-plaintext highlighter-rouge">LINK_FLAGS</code> to resolve an <code class="language-plaintext highlighter-rouge">undefined reference to '__clzdi2'</code> linker error on riscv64 nolibc builds. This is the commit that makes riscv64 a supported architecture.</td>
       <td><a href="https://github.com/axboe/liburing/pull/930">PR #930</a></td>
     </tr>
     <tr>
-      <td>2023-11-29</td>
-      <td>liburing-2.5 released: first stable release containing both riscv64 PRs.</td>
-      <td><a href="https://github.com/axboe/liburing/releases">GitHub releases</a></td>
+      <td>2023-08-23</td>
+      <td>Both PRs’ merge commits (<code class="language-plaintext highlighter-rouge">2ac566f</code> for #928, <code class="language-plaintext highlighter-rouge">921c430</code> for #930) confirmed as ancestors of <code class="language-plaintext highlighter-rouge">origin/master</code> via direct git inspection. <code class="language-plaintext highlighter-rouge">2ac566f</code> (#928) landed first at 2023-08-23T00:11:12Z; <code class="language-plaintext highlighter-rouge">921c430</code> (#930) landed later the same day at 2023-08-23T15:27:10Z. This sequencing (about 15 hours apart) is the git-verified ground truth. GitHub’s search-API metadata separately reported both PRs’ <code class="language-plaintext highlighter-rouge">merged_at</code> as roughly one second apart (<code class="language-plaintext highlighter-rouge">...15:27:23Z</code> and <code class="language-plaintext highlighter-rouge">...15:27:24Z</code>); that figure does not match the commit graph and should be disregarded in favor of the direct git timestamps above.</td>
+      <td>Local clone verification (<code class="language-plaintext highlighter-rouge">git merge-base --is-ancestor</code>, <code class="language-plaintext highlighter-rouge">git log</code>)</td>
     </tr>
     <tr>
-      <td>2026-06-09</td>
-      <td>Commit <code class="language-plaintext highlighter-rouge">284b1a8</code> by axboe – <code class="language-plaintext highlighter-rouge">src/arch: use sysconf() for page size on aarch64/riscv64 libc builds</code>. Fixes incorrect page-size assumptions on non-4K-page kernels for libc builds; nolibc path retains the <code class="language-plaintext highlighter-rouge">/proc/self/auxv</code> scan.</td>
-      <td><a href="https://github.com/axboe/liburing">liburing master</a></td>
+      <td>2023-11-04</td>
+      <td><code class="language-plaintext highlighter-rouge">liburing-2.5</code> tag - first stable release containing both riscv64 commits, confirmed via <code class="language-plaintext highlighter-rouge">git tag --contains</code>. (An earlier compilation of this report cited 2023-11-29 for this release without direct tag verification; the git-verified date above is authoritative.)</td>
+      <td>Local clone verification</td>
     </tr>
     <tr>
-      <td>2026-06-15</td>
-      <td>liburing-2.15-rc1 released: first release to explicitly name riscv64 in the changelog (“use sysconf() for page size on aarch64/riscv64 libc builds”).</td>
-      <td><a href="https://github.com/axboe/liburing/releases">GitHub releases</a></td>
+      <td>2026-06-09/10</td>
+      <td>Commit <code class="language-plaintext highlighter-rouge">284b1a8be2ca2ea546204ed2c501414c89bea48f</code> (Jens Axboe) - “src/arch: use sysconf() for page size on aarch64/riscv64 libc builds,” landed via the “fixes” branch merge commit <code class="language-plaintext highlighter-rouge">5290dd8</code> on 2026-06-09; first appears in tag <code class="language-plaintext highlighter-rouge">liburing-2.15-rc1</code> (2026-06-10 per <code class="language-plaintext highlighter-rouge">git tag --contains</code>). Fixes a silent fallback to a hardcoded 4096-byte page size when <code class="language-plaintext highlighter-rouge">/proc</code> is not mounted (chroots, minimal containers), which produced wrong ring size/offset math on 16K/64K-page kernels.</td>
+      <td><a href="https://github.com/axboe/liburing/commit/284b1a8be2ca2ea546204ed2c501414c89bea48f">Commit 284b1a8</a></td>
+    </tr>
+    <tr>
+      <td>2026-06-27</td>
+      <td><code class="language-plaintext highlighter-rouge">liburing-2.15</code> stable release, shipping the <code class="language-plaintext highlighter-rouge">sysconf()</code> page-size fix.</td>
+      <td>liburing GitHub releases</td>
     </tr>
   </tbody>
 </table></div>
 
 <p><strong>Key contributors:</strong></p>
-
 <ul>
-  <li><strong>Michal Biesek</strong> (<code class="language-plaintext highlighter-rouge">michalbiesek@gmail.com</code>): authored the entire riscv64 port (both PRs). His GitHub forks include <code class="language-plaintext highlighter-rouge">pmem/pmdk</code>, <code class="language-plaintext highlighter-rouge">pmem/redis</code>, and <code class="language-plaintext highlighter-rouge">memkind/memkind</code> – all Intel Persistent Memory Development Kit projects – indicating Intel employment at the time [NEEDS VERIFICATION: employer not confirmed in repository metadata].</li>
-  <li><strong>Jens Axboe</strong> (<code class="language-plaintext highlighter-rouge">axboe@kernel.dk</code>): merged both PRs on the same day with no formal review, and authored the June 2026 page-size fix.</li>
+  <li><strong>Michal Biesek</strong> (<code class="language-plaintext highlighter-rouge">michalbiesek@gmail.com</code>): authored the entire riscv64 port (both PRs). His public GitHub forks include <code class="language-plaintext highlighter-rouge">pmem/pmdk</code>, <code class="language-plaintext highlighter-rouge">pmem/redis</code>, and <code class="language-plaintext highlighter-rouge">memkind/memkind</code> (Intel Persistent Memory Development Kit projects), which is suggestive of Intel employment at the time but is not confirmed by any repository metadata [NEEDS VERIFICATION].</li>
+  <li><strong>Jens Axboe</strong> (<code class="language-plaintext highlighter-rouge">axboe@kernel.dk</code>): merged both riscv64 PRs same-day with no formal review recorded, and personally authored the June 2026 page-size correctness fix, indicating ongoing (not one-off) maintenance of the riscv64 code path.</li>
 </ul>
 
-<p><strong>Upstreaming status:</strong> Fully upstream. No out-of-tree patches are required. Arch Linux RISC-V builds cleanly from upstream with no patches (<a href="https://github.com/felixonmars/archriscv-packages">felixonmars/archriscv-packages</a> has no liburing patch directory).</p><hr />
+<p><strong>Upstreaming status:</strong> Fully upstream, no out-of-tree patches required. Independent confirmation: the Debian sid <code class="language-plaintext highlighter-rouge">liburing2</code>/<code class="language-plaintext highlighter-rouge">liburing-dev</code> 2.14-1 riscv64 packages were built from unmodified upstream source with no riscv64-specific packaging patches found.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -353,7 +363,7 @@
 </h2>
     
 
-<p>liburing defines no explicit tier policy. There is no documented supported/community/unsupported classification. The evidence below characterizes the de facto tier for each architecture.</p>
+<p>liburing defines no explicit, written tier policy (no supported/community/unsupported classification document exists). The table below characterizes the de facto tier per architecture, based on direct inspection of <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code> (394 lines, fetched in full) and the repository tree.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -372,16 +382,16 @@
       <td>Yes (<code class="language-plaintext highlighter-rouge">src/arch/riscv64/</code>)</td>
     </tr>
     <tr>
-      <td>CI build job exists</td>
+      <td>CI build job</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes (cross-compile)</td>
     </tr>
     <tr>
-      <td>CI runtime tests</td>
-      <td>Yes (native, full suite)</td>
-      <td>Yes (native, full suite)</td>
-      <td>No (cross-compile only)</td>
+      <td>CI runtime test execution</td>
+      <td>Yes, native, full suite</td>
+      <td>Yes, native, full suite</td>
+      <td>No, cross-compile only, no QEMU</td>
     </tr>
     <tr>
       <td>Sanitizer builds in CI</td>
@@ -390,8 +400,8 @@
       <td>No (<code class="language-plaintext highlighter-rouge">sanitize: 0</code>, <code class="language-plaintext highlighter-rouge">tsan: 0</code>)</td>
     </tr>
     <tr>
-      <td>Official binary releases</td>
-      <td>No (source-only releases)</td>
+      <td>Official upstream binaries</td>
+      <td>No, source-only releases</td>
       <td>No</td>
       <td>No</td>
     </tr>
@@ -399,13 +409,7 @@
       <td>Distribution packages</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (Debian, Ubuntu, Arch)</td>
-    </tr>
-    <tr>
-      <td>Changelog mentions</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Only 2.15-rc1</td>
+      <td>Yes (Debian sid, Ubuntu 26.04 resolute)</td>
     </tr>
     <tr>
       <td>nolibc build support</td>
@@ -416,7 +420,7 @@
   </tbody>
 </table></div>
 
-<p><strong>De facto tier:</strong> riscv64 is treated as a first-class architecture in source and distribution packaging, but second-class in CI: it is cross-compile-only with no runtime test execution and no sanitizer builds. amd64 and arm64 run the full test suite natively.</p><hr />
+<p>CI also cross-compiles i686, arm, powerpc64, powerpc, alpha, mips64, mips, and hppa in the same matrix; every non-x86_64 target, riscv64 included, receives identical build-only, no-sanitizer treatment. This is a general “CI host is x86_64” limitation of the project, not riscv64-specific neglect. riscv64, arm64, and x86/x86_64 are the only three architectures with a hand-written, ABI-correct <code class="language-plaintext highlighter-rouge">src/arch/&lt;name&gt;/</code> backend; all other listed targets (powerpc, mips, alpha, hppa, etc.) fall through to the generic libc <code class="language-plaintext highlighter-rouge">syscall()</code> wrapper in <code class="language-plaintext highlighter-rouge">src/arch/generic/syscall.h</code>. <strong>De facto tier: riscv64 is first-class in source code and distribution packaging, second-class in CI</strong> - it builds and links correctly and ships in real distro packages, but no compiled riscv64 binary is ever executed by upstream’s own automation.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -426,7 +430,7 @@
 </h2>
     
 
-<p>liburing’s architecture-specific surface is intentionally minimal. The only architecture-sensitive components are: (1) the syscall trampoline, and (2) the page-size probe. There is no JIT, SIMD, cryptographic primitive, vector extension usage, assembly <code class="language-plaintext highlighter-rouge">.S</code> file, or GC barrier in the entire codebase.</p>
+<p>liburing’s architecture-sensitive surface is exactly two components: the syscall trampoline and the page-size probe. Nothing else in the codebase is architecture-specific; a grep across <code class="language-plaintext highlighter-rouge">src/</code> confirms no other file contains an arch <code class="language-plaintext highlighter-rouge">#ifdef</code> - the queue/submission logic (<code class="language-plaintext highlighter-rouge">queue.c</code> etc.) is fully generic C using compiler atomic builtins. There is no assembly (<code class="language-plaintext highlighter-rouge">.S</code>/<code class="language-plaintext highlighter-rouge">.s</code>) file anywhere in the repository for any architecture; all arch code is C headers with inline <code class="language-plaintext highlighter-rouge">__asm__</code>.</p>
 <h3 id="syscall-trampoline">
   
   
@@ -450,11 +454,11 @@
       <td>File</td>
       <td><code class="language-plaintext highlighter-rouge">src/arch/x86/syscall.h</code></td>
       <td><code class="language-plaintext highlighter-rouge">src/arch/aarch64/syscall.h</code></td>
-      <td><code class="language-plaintext highlighter-rouge">src/arch/riscv64/syscall.h</code></td>
+      <td><code class="language-plaintext highlighter-rouge">src/arch/riscv64/syscall.h</code> (100 lines)</td>
     </tr>
     <tr>
       <td>Instruction</td>
-      <td><code class="language-plaintext highlighter-rouge">syscall</code></td>
+      <td><code class="language-plaintext highlighter-rouge">syscall</code> (64-bit) / <code class="language-plaintext highlighter-rouge">int $0x80</code> (i386)</td>
       <td><code class="language-plaintext highlighter-rouge">svc 0</code></td>
       <td><code class="language-plaintext highlighter-rouge">ecall</code></td>
     </tr>
@@ -466,9 +470,9 @@
     </tr>
     <tr>
       <td>Argument registers</td>
-      <td><code class="language-plaintext highlighter-rouge">rdi</code>, <code class="language-plaintext highlighter-rouge">rsi</code>, <code class="language-plaintext highlighter-rouge">rdx</code>, <code class="language-plaintext highlighter-rouge">r10</code>, <code class="language-plaintext highlighter-rouge">r8</code>, <code class="language-plaintext highlighter-rouge">r9</code></td>
-      <td><code class="language-plaintext highlighter-rouge">x0</code>-<code class="language-plaintext highlighter-rouge">x5</code></td>
-      <td><code class="language-plaintext highlighter-rouge">a0</code>-<code class="language-plaintext highlighter-rouge">a5</code></td>
+      <td><code class="language-plaintext highlighter-rouge">rdi, rsi, rdx, r10, r8, r9</code></td>
+      <td><code class="language-plaintext highlighter-rouge">x0-x5</code></td>
+      <td><code class="language-plaintext highlighter-rouge">a0-a5</code></td>
     </tr>
     <tr>
       <td>Result register</td>
@@ -489,21 +493,15 @@
       <td>None beyond RV64I</td>
     </tr>
     <tr>
-      <td>Notable</td>
-      <td>Handles x86-64 and i386 in one file; GCC 32-bit bug workaround</td>
-      <td>Single variant</td>
-      <td>Two variants (<code class="language-plaintext highlighter-rouge">__do_syscallM</code>/<code class="language-plaintext highlighter-rouge">__do_syscallN</code>) splitting on whether <code class="language-plaintext highlighter-rouge">a1</code> is clobbered – architecturally correct for RISC-V syscall ABI</td>
-    </tr>
-    <tr>
       <td>Quality</td>
+      <td>Hand-tuned inline asm, most extensive (296 lines, covers both 64-bit and i386 paths)</td>
       <td>Hand-tuned inline asm</td>
-      <td>Hand-tuned inline asm</td>
-      <td>Hand-tuned inline asm, parity with arm64</td>
+      <td>Hand-tuned inline asm, structural parity with aarch64</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 two-variant split in <code class="language-plaintext highlighter-rouge">syscall.h</code> (clobbers <code class="language-plaintext highlighter-rouge">a1</code> vs does not) is a RISC-V-specific refinement not present in the aarch64 implementation. It reflects the RISC-V Linux ABI where some syscalls return a second value in <code class="language-plaintext highlighter-rouge">a1</code>.</p>
+<p>No stub markers exist: a search for <code class="language-plaintext highlighter-rouge">TODO|FIXME|stub|not implement|unimplement|unsupported</code> across <code class="language-plaintext highlighter-rouge">src/arch/riscv64/</code>, <code class="language-plaintext highlighter-rouge">aarch64/</code>, <code class="language-plaintext highlighter-rouge">x86/</code>, <code class="language-plaintext highlighter-rouge">generic/</code>, and <code class="language-plaintext highlighter-rouge">syscall-defs.h</code> returns zero hits in any of them. riscv64 falls back to <code class="language-plaintext highlighter-rouge">arch/generic/syscall.h</code> (the plain libc <code class="language-plaintext highlighter-rouge">syscall()</code> wrapper) only if its <code class="language-plaintext highlighter-rouge">#if defined(__riscv) &amp;&amp; __riscv_xlen == 64</code> guard fails to match, exactly the same fallback pattern every other architecture has.</p>
 <h3 id="page-size-probe">
   
   
@@ -527,32 +525,32 @@
       <td>File</td>
       <td><code class="language-plaintext highlighter-rouge">src/arch/x86/lib.h</code></td>
       <td><code class="language-plaintext highlighter-rouge">src/arch/aarch64/lib.h</code></td>
-      <td><code class="language-plaintext highlighter-rouge">src/arch/riscv64/lib.h</code></td>
+      <td><code class="language-plaintext highlighter-rouge">src/arch/riscv64/lib.h</code> (61 lines)</td>
     </tr>
     <tr>
-      <td>libc path</td>
+      <td>libc build path</td>
       <td>Hardcodes <code class="language-plaintext highlighter-rouge">return 4096</code></td>
       <td><code class="language-plaintext highlighter-rouge">sysconf(_SC_PAGESIZE)</code></td>
-      <td><code class="language-plaintext highlighter-rouge">sysconf(_SC_PAGESIZE)</code></td>
+      <td><code class="language-plaintext highlighter-rouge">sysconf(_SC_PAGESIZE)</code> (since commit <code class="language-plaintext highlighter-rouge">284b1a8</code>, June 2026)</td>
     </tr>
     <tr>
-      <td>nolibc path</td>
+      <td>nolibc build path</td>
       <td>Hardcodes <code class="language-plaintext highlighter-rouge">return 4096</code></td>
       <td>Reads <code class="language-plaintext highlighter-rouge">/proc/self/auxv</code> for <code class="language-plaintext highlighter-rouge">AT_PAGESZ</code></td>
       <td>Reads <code class="language-plaintext highlighter-rouge">/proc/self/auxv</code> for <code class="language-plaintext highlighter-rouge">AT_PAGESZ</code></td>
     </tr>
     <tr>
-      <td>Correctness note</td>
-      <td>Hardcoded 4096 is correct for x86</td>
+      <td>Correctness</td>
+      <td>Correct, x86 is always 4K pages</td>
       <td>Correct for all arm64 page sizes</td>
-      <td>Fixed in June 2026 (commit <code class="language-plaintext highlighter-rouge">284b1a8</code>); previously the libc path was missing, causing wrong ring offsets on non-4K kernels</td>
+      <td>Fixed June 2026; the libc path previously fell through to the same auxv-parsing code the nolibc path uses, silently defaulting to 4096 when <code class="language-plaintext highlighter-rouge">/proc</code> wasn’t mounted (chroots, minimal containers), which broke ring size/offset math on 16K/64K-page kernels</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="complete-component-inventory">
+<h3 id="component-inventory">
   
   
-    <a href="#complete-component-inventory" class="anchor-heading" aria-labelledby="complete-component-inventory"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Complete component inventory
+    <a href="#component-inventory" class="anchor-heading" aria-labelledby="component-inventory"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Component inventory
   
   
 </h3>
@@ -562,10 +560,9 @@
   <thead>
     <tr>
       <th>Component</th>
-      <th>Exists</th>
+      <th>Exists for riscv64</th>
       <th>ISA extensions</th>
       <th>Quality</th>
-      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
@@ -574,32 +571,33 @@
       <td>Yes</td>
       <td>RV64I base only</td>
       <td>Complete, hand-tuned inline asm</td>
-      <td>Parity with arm64; minor improvement (two-variant clobber split)</td>
     </tr>
     <tr>
       <td>Page-size probe</td>
       <td>Yes</td>
       <td>None</td>
-      <td>Complete after June 2026 fix</td>
-      <td>Bug in libc path fixed in 2.15-rc1</td>
+      <td>Complete after the June 2026 fix</td>
     </tr>
     <tr>
       <td>JIT backend</td>
       <td>N/A</td>
       <td>N/A</td>
-      <td>N/A</td>
-      <td>liburing has no JIT</td>
+      <td>liburing has no JIT of any kind</td>
     </tr>
     <tr>
       <td>SIMD / RVV</td>
       <td>N/A</td>
       <td>N/A</td>
+      <td>No vector intrinsics, no <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, no RVV type usage anywhere in the repo</td>
+    </tr>
+    <tr>
+      <td>Bit-manipulation (Zba/Zbb)</td>
       <td>N/A</td>
-      <td>No SIMD of any kind in the codebase</td>
+      <td>N/A</td>
+      <td>Not used</td>
     </tr>
     <tr>
       <td>Cryptographic primitive</td>
-      <td>N/A</td>
       <td>N/A</td>
       <td>N/A</td>
       <td>Absent by design</td>
@@ -608,18 +606,12 @@
       <td>Custom allocator</td>
       <td>N/A</td>
       <td>N/A</td>
-      <td>N/A</td>
       <td>Absent by design</td>
     </tr>
-    <tr>
-      <td>Assembly <code class="language-plaintext highlighter-rouge">.S</code> files</td>
-      <td>None</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>Arch-specific code is header-only inline asm</td>
-    </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p>An adversarial re-check specifically tested the hypothesis that riscv64 support is a stub. It is refuted: riscv64 has a complete, hand-written, ABI-correct syscall backend and nolibc page-size handling, wired into the build identically to aarch64 at the only two arch-dispatch points in the codebase (<code class="language-plaintext highlighter-rouge">src/lib.h</code>, <code class="language-plaintext highlighter-rouge">src/syscall.h</code>), validated in CI at the same build-only level applied to every cross-compiled target, with zero stub markers and an active 2026 upstream maintenance fix. riscv64 sits in the same tier as aarch64 and x86/x86_64, strictly above the majority of listed architectures (powerpc, mips, alpha, hppa), which only get the generic fallback.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -629,56 +621,28 @@
 </h2>
     
 
-<p>liburing uses a custom <code class="language-plaintext highlighter-rouge">./configure</code> shell script (not CMake, not Autoconf). There is no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, and no cross-compilation guide in the repository.</p>
+<p>liburing uses a custom <code class="language-plaintext highlighter-rouge">./configure</code> shell script plus GNU Make. There is no CMake, no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, no <code class="language-plaintext highlighter-rouge">INSTALL</code> file, and no <code class="language-plaintext highlighter-rouge">docs/</code> directory anywhere in the repository - confirmed by a fresh clone’s directory listing at HEAD <code class="language-plaintext highlighter-rouge">78dce99b</code>.</p>
 
-<p><strong>Cross-compilation command for riscv64 (from <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>):</strong></p>
+<p><strong>Exact cross-compile sequence for riscv64</strong> (from <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>, the only authoritative source):</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get <span class="nb">install</span> <span class="nt">-y</span> gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get update <span class="nt">-y</span>
+<span class="nb">sudo </span>apt-get <span class="nb">install</span> <span class="nt">-y</span> gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
 ./configure <span class="nt">--cc</span><span class="o">=</span>riscv64-linux-gnu-gcc <span class="nt">--cxx</span><span class="o">=</span>riscv64-linux-gnu-g++
-make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span> <span class="nv">V</span><span class="o">=</span>1 <span class="nv">CPPFLAGS</span><span class="o">=</span><span class="s2">"-Werror"</span> <span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">"-g -O3 -Wall -Wextra -Werror -Wno-sign-compare"</span>
+make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span> <span class="nv">V</span><span class="o">=</span>1 <span class="nv">CPPFLAGS</span><span class="o">=</span><span class="s2">"-Werror"</span> <span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">"-g -O3 -Wall -Wextra -Werror -Wno-sign-compare"</span> <span class="nv">CXXFLAGS</span><span class="o">=</span><span class="s2">"-g -O3 -Wall -Wextra -Werror -Wno-sign-compare"</span>
 <span class="nb">sudo </span>make <span class="nb">install</span>
 </code></pre></div></div>
 
-<p><strong>Available configure flags:</strong></p>
+<p><strong>All <code class="language-plaintext highlighter-rouge">configure</code> flags:</strong> <code class="language-plaintext highlighter-rouge">--prefix</code>, <code class="language-plaintext highlighter-rouge">--includedir</code>, <code class="language-plaintext highlighter-rouge">--libdir</code>, <code class="language-plaintext highlighter-rouge">--libdevdir</code>, <code class="language-plaintext highlighter-rouge">--mandir</code>, <code class="language-plaintext highlighter-rouge">--datadir</code>, <code class="language-plaintext highlighter-rouge">--cc</code>, <code class="language-plaintext highlighter-rouge">--cxx</code>, <code class="language-plaintext highlighter-rouge">--use-libc</code> (forces standard libc instead of the default nolibc path), <code class="language-plaintext highlighter-rouge">--enable-sanitizer</code> (<code class="language-plaintext highlighter-rouge">-fsanitize=address,undefined</code>), <code class="language-plaintext highlighter-rouge">--enable-tsan</code> (<code class="language-plaintext highlighter-rouge">-fsanitize=thread</code>). There is no <code class="language-plaintext highlighter-rouge">--host</code> or toolchain-file mechanism and no riscv64-specific flag; cross-compilation is driven purely by pointing <code class="language-plaintext highlighter-rouge">--cc</code>/<code class="language-plaintext highlighter-rouge">--cxx</code> at the riscv64 cross-gcc.</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Flag</th>
-      <th>Effect</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--cc=CC</code></td>
-      <td>C compiler to use</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--cxx=CXX</code></td>
-      <td>C++ compiler to use</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--use-libc</code></td>
-      <td>Use standard libc instead of the nolibc path</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--enable-sanitizer</code></td>
-      <td>Compile with <code class="language-plaintext highlighter-rouge">-fsanitize=address,undefined</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--enable-tsan</code></td>
-      <td>Compile with <code class="language-plaintext highlighter-rouge">-fsanitize=thread</code></td>
-    </tr>
-  </tbody>
-</table></div>
+<p><strong>Toolchain version:</strong> No minimum GCC/Clang version is documented anywhere (no version check in <code class="language-plaintext highlighter-rouge">configure</code>, README, or CONTRIBUTING.md). CI simply uses whatever <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>/<code class="language-plaintext highlighter-rouge">g++-riscv64-linux-gnu</code> Ubuntu 24.04 ships (GCC 13.x line), with no pin and no stated rationale.</p>
 
-<p><strong>Toolchain version:</strong> No minimum version is documented. The CI uses <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> as shipped with Ubuntu 24.04 (GCC 13). No explicit version guard exists in <code class="language-plaintext highlighter-rouge">configure</code>.</p>
+<p><strong>nolibc build:</strong> Enabled by default unless <code class="language-plaintext highlighter-rouge">--use-libc</code> is passed. <code class="language-plaintext highlighter-rouge">configure</code>’s nolibc probe explicitly allows <code class="language-plaintext highlighter-rouge">x86_64</code>, <code class="language-plaintext highlighter-rouge">x86</code> (32-bit), <code class="language-plaintext highlighter-rouge">aarch64</code>, and riscv64 (<code class="language-plaintext highlighter-rouge">__riscv_xlen == 64</code>). The <code class="language-plaintext highlighter-rouge">-lgcc</code> addition from commit <code class="language-plaintext highlighter-rouge">d305ed56</code> resolves the riscv64-specific <code class="language-plaintext highlighter-rouge">__clzdi2</code> (count-leading-zeros intrinsic) linker error.</p>
 
-<p><strong>nolibc build:</strong> Enabled by default when <code class="language-plaintext highlighter-rouge">--use-libc</code> is not passed. The <code class="language-plaintext highlighter-rouge">configure</code> script guards nolibc activation on <code class="language-plaintext highlighter-rouge">(defined(__riscv) &amp;&amp; __riscv_xlen == 64)</code> alongside x86-64, x86 32-bit, and aarch64. The <code class="language-plaintext highlighter-rouge">-lgcc</code> addition (commit <code class="language-plaintext highlighter-rouge">d305ed5</code>) resolves an <code class="language-plaintext highlighter-rouge">__clzdi2</code> linker error specific to riscv64 nolibc builds.</p>
+<p><strong>QEMU:</strong> None anywhere in the repository. A full-repository grep for “qemu” returns zero matches, and the complete 394-line <code class="language-plaintext highlighter-rouge">ci.yml</code> (read end to end) contains no <code class="language-plaintext highlighter-rouge">qemu-user-static</code>, no <code class="language-plaintext highlighter-rouge">docker/setup-qemu-action</code>, no <code class="language-plaintext highlighter-rouge">uraimo/run-on-arch-action</code>, and no container <code class="language-plaintext highlighter-rouge">arch:</code> directive. The “Test build against the installed liburing” CI step only compiles <code class="language-plaintext highlighter-rouge">test_build.c</code> against the cross-compiled library; it never executes the resulting riscv64 binary.</p>
 
-<p><strong>QEMU:</strong> The upstream CI does not use QEMU. The riscv64 build job is cross-compilation only on an x86_64 <code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> runner. Testing on riscv64 requires native hardware. No QEMU step appears in any workflow file (<code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, and <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> all return 404; the only active CI is <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>).</p>
+<p><strong>Dockerfiles:</strong> None found; no <code class="language-plaintext highlighter-rouge">Dockerfile*</code> and no <code class="language-plaintext highlighter-rouge">docker/</code> directory exist in the repository.</p>
 
-<p><strong>Known build failures:</strong> None currently open. The only documented build issue for riscv64 was the <code class="language-plaintext highlighter-rouge">__clzdi2</code> linker error, resolved in the initial port (2023-08-23).</p><hr />
+<p><strong>Known build failures:</strong> None currently open. The only documented riscv64 build issue was the <code class="language-plaintext highlighter-rouge">__clzdi2</code> linker error, resolved in the original port (2023-08-23).</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -688,7 +652,7 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
 </h2>
     
 
-<p>liburing is a syscall-interface library. “Features” are io_uring operations exposed to userspace. Since all features are implemented via the same syscall wrappers regardless of architecture, there are no functional gaps between riscv64 and arm64/amd64 at the library level. The gaps are exclusively in CI coverage and tooling.</p>
+<p>liburing is a syscall-interface library: every io_uring opcode is exposed through the same syscall wrappers regardless of host architecture, so there are no functional gaps between riscv64 and arm64/amd64 at the library level. The gaps that exist are entirely in CI coverage and packaging currency.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -719,37 +683,33 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
       <td>No (cross-compile only, no QEMU)</td>
     </tr>
     <tr>
-      <td>Sanitizer builds</td>
+      <td>Sanitizer builds (ASan/UBSan/TSan)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No</td>
+      <td>No (<code class="language-plaintext highlighter-rouge">sanitize: 0</code>, <code class="language-plaintext highlighter-rouge">tsan: 0</code>)</td>
     </tr>
     <tr>
-      <td>Security hardening (ASan/UBSan)</td>
+      <td>BPF filter support (libbpf, optional)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Not tested in CI</td>
+      <td>Yes (libbpf maps riscv64 to <code class="language-plaintext highlighter-rouge">ARCH=riscv</code>; Debian ships <code class="language-plaintext highlighter-rouge">libbpf1</code>/<code class="language-plaintext highlighter-rouge">libbpf-dev</code> riscv64 at 2.14-1)</td>
     </tr>
     <tr>
-      <td>BPF filter support (libbpf optional dep)</td>
+      <td>Non-4K page-size kernel correctness</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (libbpf ships riscv64 packages)</td>
-    </tr>
-    <tr>
-      <td>Non-4K page-size kernels</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes (fixed June 2026 in 2.15-rc1)</td>
+      <td>Fixed June 2026 (<code class="language-plaintext highlighter-rouge">284b1a8</code>), shipped in 2.15</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Functional gaps:</strong> None. All io_uring operations available on Linux riscv64 are accessible through liburing.</p>
+<p><strong>Functional gaps:</strong> None. Every io_uring operation available on Linux riscv64 is reachable through liburing.</p>
 
-<p><strong>Performance gaps:</strong> Data not available: no published benchmark comparing liburing throughput or latency on riscv64 vs arm64 or amd64 was found in any public source (GitHub, RISE blog, Phoronix, lore.kernel.org).</p>
+<p><strong>Performance gaps:</strong> Data not available. Extensive searching (GitHub issue/code search on <code class="language-plaintext highlighter-rouge">axboe/liburing</code>, a full crawl of the RISE blog’s WordPress sitemap covering all 35 posts, and general web search) found no published benchmark comparing liburing/io_uring throughput or latency on riscv64 versus arm64 or amd64, from liburing, RISE, or any third party. One open, unrelated issue (<a href="https://github.com/axboe/liburing/issues/912">#912</a>) reports a generic (non-architecture-specific) 67x gap between raw <code class="language-plaintext highlighter-rouge">write()</code> and liburing for single-byte writes, attributed to per-submission syscall overhead; it is not riscv64-specific and carries no maintainer response.</p>
 
-<p><strong>Security hardening gaps:</strong> ASan and UBSan are not run for riscv64 in upstream CI. Whether any latent memory-safety issues exist in the riscv64 code paths is untested upstream.</p><hr />
+<p><strong>Security hardening gaps:</strong> ASan, UBSan, and TSan are not run for riscv64 in upstream CI (<code class="language-plaintext highlighter-rouge">sanitize: 0</code>, <code class="language-plaintext highlighter-rouge">tsan: 0</code> in the matrix entry). Whether latent memory-safety issues exist in the riscv64 code paths is untested by upstream automation. Given the architecture’s code footprint is limited to the two files described in Section 4, the practical exposure is small, but it is unverified.</p>
+
+<p><strong>Floating-point/NaN semantics:</strong> Not applicable. liburing performs no floating-point computation.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -759,7 +719,18 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
 </h2>
     
 
-<p>The only active CI file is <a href="https://github.com/axboe/liburing/blob/master/.github/workflows/ci.yml"><code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code></a>. It triggers on every <code class="language-plaintext highlighter-rouge">push</code> and <code class="language-plaintext highlighter-rouge">pull_request</code> to any branch, with no branch filter.</p>
+<p>The only active CI configuration is <a href="https://github.com/axboe/liburing/blob/master/.github/workflows/ci.yml"><code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code></a> (confirmed via direct fetch of the raw file, 394 lines, and via negative-probing of a dozen plausible alternate workflow filenames, all returning 404). No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">.circleci/config.yml</code>, or <code class="language-plaintext highlighter-rouge">.travis.yml</code> exists. The workflow triggers on every <code class="language-plaintext highlighter-rouge">push</code> and <code class="language-plaintext highlighter-rouge">pull_request</code>, with no branch filter, no <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>, and no <code class="language-plaintext highlighter-rouge">schedule</code>.</p>
+
+<p>The riscv64 matrix entry was added by <a href="https://github.com/axboe/liburing/pull/928">PR #928</a> (originally against <code class="language-plaintext highlighter-rouge">.github/workflows/build.yml</code>; the workflow has since been consolidated into <code class="language-plaintext highlighter-rouge">ci.yml</code>), and currently reads (lines 122-129):</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">arch</span><span class="pi">:</span> <span class="s">riscv64</span>
+  <span class="na">cc_pkg</span><span class="pi">:</span> <span class="s">gcc-riscv64-linux-gnu</span>
+  <span class="na">cxx_pkg</span><span class="pi">:</span> <span class="s">g++-riscv64-linux-gnu</span>
+  <span class="na">cc</span><span class="pi">:</span> <span class="s">riscv64-linux-gnu-gcc</span>
+  <span class="na">cxx</span><span class="pi">:</span> <span class="s">riscv64-linux-gnu-g++</span>
+  <span class="na">sanitize</span><span class="pi">:</span> <span class="m">0</span>
+  <span class="na">tsan</span><span class="pi">:</span> <span class="m">0</span>
+</code></pre></div></div>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -779,9 +750,9 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
     </tr>
     <tr>
       <td>Runner</td>
-      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> (native)</td>
-      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> (native)</td>
-      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> (x86 host, cross-compile)</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04</code>, native</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04</code>, cross-compile</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04</code>, cross-compile</td>
     </tr>
     <tr>
       <td>Compilation</td>
@@ -790,38 +761,38 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
       <td>Yes</td>
     </tr>
     <tr>
-      <td>Runtime test suite</td>
+      <td>Runtime test suite execution</td>
       <td>Yes</td>
-      <td>Yes</td>
+      <td>No</td>
       <td>No</td>
     </tr>
     <tr>
       <td>QEMU execution</td>
       <td>N/A</td>
-      <td>N/A</td>
       <td>No</td>
+      <td>No, zero matches for “qemu” anywhere in the repo</td>
     </tr>
     <tr>
       <td>ASan/UBSan</td>
       <td>Yes</td>
-      <td>Yes</td>
+      <td>No</td>
       <td>No (<code class="language-plaintext highlighter-rouge">sanitize: 0</code>)</td>
     </tr>
     <tr>
       <td>TSan</td>
       <td>Yes</td>
-      <td>Yes</td>
+      <td>No</td>
       <td>No (<code class="language-plaintext highlighter-rouge">tsan: 0</code>)</td>
     </tr>
     <tr>
       <td>Out-of-source build job</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No (x86 only)</td>
+      <td>Yes (x86 only)</td>
+      <td>No</td>
+      <td>No</td>
     </tr>
     <tr>
       <td>Alpine/musl build job</td>
-      <td>Yes</td>
+      <td>Yes (x86 only)</td>
       <td>No</td>
       <td>No</td>
     </tr>
@@ -834,20 +805,7 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
   </tbody>
 </table></div>
 
-<p><strong>riscv64 CI matrix entry (exact):</strong></p>
-
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">arch</span><span class="pi">:</span> <span class="s">riscv64</span>
-  <span class="na">cc_pkg</span><span class="pi">:</span> <span class="s">gcc-riscv64-linux-gnu</span>
-  <span class="na">cxx_pkg</span><span class="pi">:</span> <span class="s">g++-riscv64-linux-gnu</span>
-  <span class="na">cc</span><span class="pi">:</span> <span class="s">riscv64-linux-gnu-gcc</span>
-  <span class="na">cxx</span><span class="pi">:</span> <span class="s">riscv64-linux-gnu-g++</span>
-  <span class="na">sanitize</span><span class="pi">:</span> <span class="m">0</span>
-  <span class="na">tsan</span><span class="pi">:</span> <span class="m">0</span>
-</code></pre></div></div>
-
-<p>The CI installs the cross-compiler via <code class="language-plaintext highlighter-rouge">apt-get</code>, runs <code class="language-plaintext highlighter-rouge">./configure</code>, cross-compiles the library, runs <code class="language-plaintext highlighter-rouge">sudo make install</code>, and cross-compiles a test program (<code class="language-plaintext highlighter-rouge">test_build.c</code>) against the installed library. No compiled binary is executed.</p>
-
-<p><strong>Latest CI run:</strong> Run #524 (commit <code class="language-plaintext highlighter-rouge">650d8fb</code>) completed successfully [NEEDS VERIFICATION: run number cited from research findings, not independently re-checked].</p><hr />
+<p><strong>Verdict:</strong> the narrow claim “a riscv64 build target exists in CI” is true and verified directly from the file. The stronger claim “riscv64 CI tests/validates correctness” is false: no riscv64 binary is ever executed by upstream automation, under QEMU or on real hardware. A runtime-only defect on riscv64 (such as the page-size bug fixed in commit <code class="language-plaintext highlighter-rouge">284b1a8</code>) would pass this CI unconditionally; that bug was in fact caught and fixed manually by the maintainer, not by CI.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -857,9 +815,7 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
 </h2>
     
 
-<p><strong>Official upstream binaries:</strong> None. All GitHub releases (<code class="language-plaintext highlighter-rouge">liburing-2.15-rc1</code> through <code class="language-plaintext highlighter-rouge">liburing-2.5</code>) ship source archives only (auto-generated <code class="language-plaintext highlighter-rouge">.zip</code> and <code class="language-plaintext highlighter-rouge">.tar.gz</code>). No binary assets exist at any version.</p>
-
-<p><strong>Obtaining a working riscv64 binary:</strong></p>
+<p><strong>Official upstream binaries:</strong> None. Every GitHub release from 2.5 through 2.15 ships auto-generated source archives (<code class="language-plaintext highlighter-rouge">.zip</code>/<code class="language-plaintext highlighter-rouge">.tar.gz</code>) only.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -873,38 +829,44 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
   <tbody>
     <tr>
       <td><a href="https://github.com/axboe/liburing/releases">GitHub releases</a></td>
-      <td>2.15-rc1 (2026-06-15)</td>
-      <td>Source only – no binaries</td>
+      <td>2.15 (latest), plus 2.14, 2.13, 2.12, 2.11, 2.10, 2.9</td>
+      <td>Source only, no binary assets at any version</td>
       <td>Build from source with <code class="language-plaintext highlighter-rouge">--cc=riscv64-linux-gnu-gcc</code></td>
     </tr>
     <tr>
-      <td><a href="https://packages.ubuntu.com/noble/liburing2">Ubuntu 24.04 Noble</a></td>
-      <td>2.5-1build1</td>
-      <td>Yes: <code class="language-plaintext highlighter-rouge">liburing2</code> and <code class="language-plaintext highlighter-rouge">liburing-dev</code> for riscv64</td>
-      <td>Significantly behind upstream (2.5 vs 2.14)</td>
+      <td><a href="https://packages.ubuntu.com/search?keywords=liburing&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 “resolute”</a></td>
+      <td>2.14-1</td>
+      <td>Yes. Directly confirmed by downloading <code class="language-plaintext highlighter-rouge">liburing2_2.14-1_riscv64.deb</code> from <code class="language-plaintext highlighter-rouge">ports.ubuntu.com</code> (26,822 bytes, HTTP 200) and inspecting the extracted <code class="language-plaintext highlighter-rouge">liburing.so.2.14</code>: <code class="language-plaintext highlighter-rouge">file</code> reports “ELF 64-bit LSB shared object, UCB RISC-V, RVC, double-float ABI,” a genuine riscv64 binary, not a placeholder</td>
+      <td><code class="language-plaintext highlighter-rouge">liburing2</code> and <code class="language-plaintext highlighter-rouge">liburing-dev</code> both list architectures <code class="language-plaintext highlighter-rouge">amd64 arm64 armhf i386 ppc64el riscv64 s390x</code></td>
     </tr>
     <tr>
-      <td><a href="https://buildd.debian.org/status/package.php?p=liburing&amp;suite=sid">Debian sid</a></td>
+      <td>Debian sid</td>
       <td>2.14-1</td>
-      <td>Yes: Installed on riscv64, built on <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code></td>
+      <td>Yes, <code class="language-plaintext highlighter-rouge">liburing1</code>/<code class="language-plaintext highlighter-rouge">liburing-dev</code> built and installed for riscv64</td>
       <td>Current upstream stable</td>
     </tr>
     <tr>
-      <td><a href="https://archriscv.felixc.at/repo/extra/">Arch Linux RISC-V</a></td>
-      <td>2.14-1</td>
-      <td>Yes: <code class="language-plaintext highlighter-rouge">liburing-2.14-1-riscv64.pkg.tar.zst</code> (261 KB, 2026-02-10)</td>
-      <td>No patches; builds clean from upstream</td>
+      <td>Ubuntu 24.04 “noble”</td>
+      <td>2.5-1build1 [NEEDS VERIFICATION: not re-confirmed this cycle]</td>
+      <td>Reported as shipping <code class="language-plaintext highlighter-rouge">liburing2</code>/<code class="language-plaintext highlighter-rouge">liburing-dev</code> for riscv64 in an earlier pass of this research</td>
+      <td>If accurate, this predates the June 2026 page-size fix; riscv64 users on 16K/64K-page kernels on Noble would be exposed until the fix is backported or they build from source</td>
     </tr>
     <tr>
-      <td><a href="https://pypi.org/project/liburing/">PyPI <code class="language-plaintext highlighter-rouge">liburing</code></a></td>
+      <td>Arch Linux RISC-V port</td>
+      <td>-</td>
+      <td>Contradictory: an earlier research pass reported <code class="language-plaintext highlighter-rouge">liburing-2.14-1-riscv64.pkg.tar.zst</code> on <code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code>; a later, direct search of <code class="language-plaintext highlighter-rouge">archriscv.felixc.at/repo/extra/?q=liburing</code> in this cycle found <strong>no matching package</strong>. This discrepancy is unresolved [NEEDS VERIFICATION]</td>
+      <td>Do not treat Arch riscv64 availability as confirmed until re-checked directly</td>
+    </tr>
+    <tr>
+      <td><a href="https://pypi.org/project/liburing/">PyPI <code class="language-plaintext highlighter-rouge">liburing</code></a> (Python bindings, a separate project)</td>
       <td>2026.3.30</td>
-      <td>No: x86_64 only (<code class="language-plaintext highlighter-rouge">manylinux_2_17_x86_64.whl</code>)</td>
-      <td>Separate Python binding project; no riscv64 wheel at any version</td>
+      <td>No. <code class="language-plaintext highlighter-rouge">pypi.org/pypi/liburing/json</code> lists exactly one wheel, <code class="language-plaintext highlighter-rouge">liburing-2026.3.30-cp38-abi3-manylinux_2_17_x86_64.whl</code>; the full simple-index (13 files, sdists back to 0.0.1) shows no riscv64 artifact at any version</td>
+      <td>The RISE GitLab wheel-builder project index for <code class="language-plaintext highlighter-rouge">liburing</code> (<code class="language-plaintext highlighter-rouge">gitlab.com/.../packages/pypi/simple/liburing/</code>) itself redirects (HTTP 302) to plain PyPI, i.e. RISE does not host or build this wheel</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Ubuntu 24.04 ships version 2.5</strong>, which predates the June 2026 page-size fix. Users on Ubuntu 24.04 with non-4K-page kernels on riscv64 will encounter the wrong-ring-offset bug until Ubuntu updates its package to 2.14 or later, or users build from source.</p><hr />
+<p><strong>Release provider for riscv64:</strong> distro, not upstream. Upstream GitHub Releases are source-only; the separate PyPI Python-binding wheel is x86_64-only; Ubuntu 26.04 resolute and Debian sid independently package and ship genuine riscv64 <code class="language-plaintext highlighter-rouge">.deb</code> binaries built from unmodified upstream source.</p>
 <h2 id="9-dependencies">
   
   
@@ -914,7 +876,7 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
 </h2>
     
 
-<p>liburing is a thin syscall wrapper. Its dependency surface is intentionally minimal.</p>
+<p>liburing’s dependency surface is intentionally minimal, by design of a thin syscall-wrapper library. <code class="language-plaintext highlighter-rouge">project-graph</code> MCP queries against the Ubuntu 26.04 package graph could not be executed in several research passes (<code class="language-plaintext highlighter-rouge">CONNECTION_CLOSED</code>); this is a tooling gap, not evidence of absence, and is noted rather than papered over. All figures below come from direct inspection (source code, CI config, and live distro/package-index fetches).</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -929,49 +891,33 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
   </thead>
   <tbody>
     <tr>
-      <td>Linux kernel (io_uring)</td>
-      <td>Core: <code class="language-plaintext highlighter-rouge">io_uring_setup</code>, <code class="language-plaintext highlighter-rouge">io_uring_enter</code>, <code class="language-plaintext highlighter-rouge">io_uring_register</code></td>
-      <td>Supported; dedicated <code class="language-plaintext highlighter-rouge">src/arch/riscv64/</code> since 2023-08-23</td>
-      <td>Not tested in upstream CI</td>
-      <td>Ships in Debian sid, Ubuntu 24.04, Arch Linux RISC-V</td>
-      <td>None open. Page-size bug fixed June 2026 (commit <code class="language-plaintext highlighter-rouge">284b1a8</code>)</td>
+      <td>Linux kernel</td>
+      <td>Runtime-dependency, critical. Provides the <code class="language-plaintext highlighter-rouge">io_uring_setup</code>/<code class="language-plaintext highlighter-rouge">io_uring_enter</code>/<code class="language-plaintext highlighter-rouge">io_uring_register</code> syscalls liburing wraps, plus build-time headers (<code class="language-plaintext highlighter-rouge">linux/io_uring.h</code>, <code class="language-plaintext highlighter-rouge">linux/fs.h</code>, <code class="language-plaintext highlighter-rouge">linux/time_types.h</code>, etc., with <code class="language-plaintext highlighter-rouge">compat.h</code> fallbacks for symbols missing on older kernels)</td>
+      <td>Full mainline riscv64 support; liburing has had a dedicated <code class="language-plaintext highlighter-rouge">src/arch/riscv64/</code> syscall backend since 2023-08-23</td>
+      <td>Not exercised by liburing’s own CI (cross-compile only, no QEMU)</td>
+      <td>Ships as part of every riscv64 Linux distribution</td>
+      <td>None open. The one correctness bug (wrong page size on non-4K-page riscv64/aarch64 libc builds in chroots without <code class="language-plaintext highlighter-rouge">/proc</code>) was fixed in commit <a href="https://github.com/axboe/liburing/commit/284b1a8be2ca2ea546204ed2c501414c89bea48f">284b1a8</a>, shipped in liburing 2.15 (2026-06-27)</td>
     </tr>
     <tr>
-      <td>Linux kernel headers (build-time)</td>
-      <td><code class="language-plaintext highlighter-rouge">linux/io_uring.h</code>, <code class="language-plaintext highlighter-rouge">linux/fs.h</code>, <code class="language-plaintext highlighter-rouge">linux/time_types.h</code>, etc.</td>
-      <td>All headers present in mainline for riscv64; <code class="language-plaintext highlighter-rouge">compat.h</code> provides fallbacks for missing symbols across kernel versions</td>
-      <td>N/A</td>
-      <td>N/A</td>
+      <td>libbpf</td>
+      <td>Runtime-dependency, optional. Supplies BPF filter support for <code class="language-plaintext highlighter-rouge">io_uring_bpf</code> operations; only needed when a user invokes that subset of the API</td>
+      <td>riscv64 mapped as <code class="language-plaintext highlighter-rouge">ARCH=riscv</code> in libbpf’s own Makefile</td>
+      <td>Tested via Debian’s own package builds, not through liburing’s CI</td>
+      <td>Debian sid ships <code class="language-plaintext highlighter-rouge">libbpf1</code>/<code class="language-plaintext highlighter-rouge">libbpf-dev</code> for riscv64 at 2.14-1</td>
+      <td>None known. A separate project report (<code class="language-plaintext highlighter-rouge">project-reports/libbpf.md</code>) tracks libbpf’s own riscv64 readiness in more depth; not re-derived here</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Build-dependency, critical. Both native builds and the CI cross-compile path (<code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>/<code class="language-plaintext highlighter-rouge">g++-riscv64-linux-gnu</code>) depend on GCC targeting riscv64</td>
+      <td>CI installs it from Ubuntu 24.04’s apt repos (GCC 13.x line); no minimum version is pinned or documented anywhere in the repo</td>
+      <td>Build-only use in CI</td>
+      <td>N/A, it is a toolchain, not a shipped runtime artifact</td>
       <td>None</td>
-    </tr>
-    <tr>
-      <td>libbpf (optional)</td>
-      <td>BPF filter support; required only for <code class="language-plaintext highlighter-rouge">io_uring_bpf</code> operations</td>
-      <td>Fully supported; riscv64 mapped as <code class="language-plaintext highlighter-rouge">ARCH=riscv</code> in libbpf Makefile; Debian ships <code class="language-plaintext highlighter-rouge">libbpf1</code> and <code class="language-plaintext highlighter-rouge">libbpf-dev</code> for riscv64 at 2.14-1</td>
-      <td>Tested via Debian builds</td>
-      <td>Debian sid 2.14-1 for riscv64</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>GCC cross-toolchain (<code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>)</td>
-      <td>Cross-compilation in CI; any GCC supporting riscv64 ABI suffices for native builds</td>
-      <td>CI installs from Ubuntu 24.04 (GCC 13)</td>
-      <td>Build-only</td>
-      <td>N/A</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>nolibc (internal, optional)</td>
-      <td>Freestanding build mode (<code class="language-plaintext highlighter-rouge">CONFIG_NOLIBC=y</code>) eliminating libc dependency</td>
-      <td>Explicitly supported since 2023-08-23; <code class="language-plaintext highlighter-rouge">-lgcc</code> added to fix <code class="language-plaintext highlighter-rouge">__clzdi2</code></td>
-      <td>Not runtime-tested in CI</td>
-      <td>Available in all liburing 2.5+ releases</td>
-      <td>None open</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Recursive dependency analysis:</strong> Not applicable. liburing has no JIT backend, no SIMD library dependency, no cryptographic library, and no compression library. Its entire dependency tree is: Linux kernel headers (build-time) and optionally libbpf.</p><hr />
+<p><strong>Recursive dependency analysis:</strong> Not applicable beyond the table above. liburing has no JIT backend, no SIMD library dependency, no cryptographic library, and no compression library; its entire external dependency surface is Linux kernel/kernel-headers (always required) and libbpf (required only for the optional BPF-filter API). The internal <code class="language-plaintext highlighter-rouge">nolibc</code> mode is a <em>removal</em> of the libc dependency for freestanding builds, not an added dependency; it has been explicitly supported for riscv64 since liburing 2.5 (commit <code class="language-plaintext highlighter-rouge">d305ed56</code>, with the <code class="language-plaintext highlighter-rouge">-lgcc</code> fix for the <code class="language-plaintext highlighter-rouge">__clzdi2</code> linker error).</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -993,25 +939,20 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
   </thead>
   <tbody>
     <tr>
-      <td>Commit <code class="language-plaintext highlighter-rouge">284b1a8</code></td>
-      <td>Page-size wrong on riscv64 (and aarch64) libc builds</td>
-      <td>Fixed in 2.15-rc1 (2026-06-09)</td>
-      <td>High – caused wrong ring buffer offsets on non-4K-page kernels</td>
-      <td>Libc path in <code class="language-plaintext highlighter-rouge">src/arch/riscv64/lib.h</code> lacked <code class="language-plaintext highlighter-rouge">sysconf()</code> call; fixed by axboe. Ubuntu 24.04 (2.5-1build1) still carries the bug</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/axboe/liburing/pull/1601">PR #1601</a></td>
-      <td>Man page: document EAGAIN behavior for send/recv</td>
-      <td>Open (last activity 2026-06-21)</td>
-      <td>Low</td>
-      <td>Originally triggered by a real failure on a riscv64 box (Ceph/Seastar test suite); root cause is arch-independent O_NONBLOCK socket behavior, not riscv64-specific. PR reworked to document general EAGAIN/O_NONBLOCK semantics. No riscv64-specific code touched.</td>
+      <td>Commit <a href="https://github.com/axboe/liburing/commit/284b1a8be2ca2ea546204ed2c501414c89bea48f">284b1a8</a></td>
+      <td>Wrong page size on riscv64 (and aarch64) libc builds</td>
+      <td>Fixed, shipped in 2.15 (2026-06-27); first appeared in 2.15-rc1 (2026-06-10)</td>
+      <td>High while open - caused incorrect ring buffer size/offset math on 16K/64K-page kernels in chroots/minimal containers lacking <code class="language-plaintext highlighter-rouge">/proc</code></td>
+      <td><code class="language-plaintext highlighter-rouge">sysconf(_SC_PAGESIZE)</code> now used for libc builds; nolibc builds retain the <code class="language-plaintext highlighter-rouge">/proc/self/auxv</code> <code class="language-plaintext highlighter-rouge">AT_PAGESZ</code> path since they have no libc <code class="language-plaintext highlighter-rouge">sysconf</code> to call. Not caught by CI (build-only, no execution); found and fixed manually by the maintainer</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Open riscv64-specific issues:</strong> Zero. GitHub issue searches for <code class="language-plaintext highlighter-rouge">riscv</code> and <code class="language-plaintext highlighter-rouge">riscv64</code> in <code class="language-plaintext highlighter-rouge">axboe/liburing</code> return no open issues.</p>
+<p><strong>Open riscv64-specific issues:</strong> Zero. Every GitHub issue-search query for “riscv,” “riscv64,” and “RISC-V” against <code class="language-plaintext highlighter-rouge">axboe/liburing</code> returns either no results or false-positive semantic matches unrelated to RISC-V (for example #1207 ppc64le test failures, #1390 a 6.11 kernel lockup, #163 a 2020 NULL-deref bug). No master or tracking issue for the riscv64 port was ever opened; the work was delivered directly as the two implementation PRs in Section 2.</p>
 
-<p><strong>Correctness bugs:</strong> The page-size bug (fixed June 2026) is the only correctness bug found. Its practical impact is limited to riscv64 systems running non-4K-page kernels (16K or 64K pages), which are uncommon in production but valid configurations. Users on Ubuntu 24.04 (package 2.5-1build1) are still exposed.</p><hr />
+<p><strong>Correction on PR #1601:</strong> <a href="https://github.com/axboe/liburing/pull/1601">PR #1601</a> (a send/recv man-page documentation fix for EAGAIN/O_NONBLOCK semantics) is a general, architecture-independent documentation change. It is not connected to riscv64, Ceph, or Seastar; it surfaces only as a semantic false-positive under a “riscv64” search query, the same way #1207/#1390/#163 do under issue search. It is listed here only to rule it out, not as riscv64-relevant.</p>
+
+<p><strong>Correctness bugs affecting riscv64 today:</strong> None open. The only correctness bug found (the page-size issue above) is fixed as of liburing 2.15.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1021,69 +962,86 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
 </h2>
     
 
-<p>No stated objections to riscv64 support were found in any GitHub issue, PR discussion, or mailing list excerpt. The port was merged the day it was submitted with no resistance.</p>
+<p>No stated objections to riscv64 support were found in any GitHub issue, PR discussion, or commit message. The port was reviewed by exactly one approver (<a href="https://github.com/axboe/liburing/pull/928">PR #928</a>, @ammarfaizi2) and merged the day it was opened, with <a href="https://github.com/axboe/liburing/pull/930">PR #930</a> merged with no review comments at all.</p>
 
-<p><strong>Technical blockers:</strong> None. The architecture is complete, upstream, and shipping in major Linux distributions.</p>
+<p><strong>Technical blockers:</strong> None. The architecture is complete, fully upstream, and shipping in Debian sid and Ubuntu 26.04 resolute.</p>
 
-<p><strong>Organizational blockers:</strong> None. Jens Axboe merged the port in under 24 hours and personally authored the follow-up page-size fix.</p>
+<p><strong>Organizational blockers:</strong> None. Jens Axboe merged the entire port within roughly 17 hours of first submission and personally authored the June 2026 correctness fix, indicating active, ongoing maintenance rather than one-time acceptance.</p>
 
-<p><strong>Acceptance probability for future riscv64 work:</strong> High. Given the zero-friction merge history and the maintainer’s willingness to fix architecture-specific bugs (commit <code class="language-plaintext highlighter-rouge">284b1a8</code>), future riscv64 patches would face no apparent organizational resistance.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability for future riscv64 work:</strong> High. The merge history shows zero friction for a first-time external contributor, and the maintainer has since independently fixed a riscv64-affecting bug without being asked via a tracking issue.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no involvement with liburing. The RISC-V port is complete and shipping. The remaining gaps are CI coverage and one distribution packaging version lag.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> yellow (build-only-ci)</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p>Upstream CI (<a href="https://github.com/axboe/liburing/blob/master/.github/workflows/ci.yml"><code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code></a>, lines 122-129) cross-compiles riscv64 with <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> on a standard x86_64 <code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> runner but never executes the resulting binaries - no QEMU, no riscv64 hardware runner - so per the “build yes / test no” classification this is yellow (build-only-ci), not blue or green. Upstream itself publishes no riscv64 binary: GitHub Releases are source-only tarballs, and the separate PyPI <code class="language-plaintext highlighter-rouge">liburing</code> Python-binding wheel is x86_64-only. The release provider is therefore the distro, not upstream: Ubuntu 26.04 “resolute” and Debian sid ship <code class="language-plaintext highlighter-rouge">liburing2</code>/<code class="language-plaintext highlighter-rouge">liburing-dev</code> 2.14-1 for riscv64, independently confirmed as a genuine riscv64 ELF shared object (<code class="language-plaintext highlighter-rouge">file</code> reports “ELF 64-bit LSB shared object, UCB RISC-V”) built from unmodified upstream source with no riscv64-specific packaging patches found. liburing is a thin io_uring syscall-wrapper library (syscall trampoline plus page-size probe only, no JIT/SIMD/crypto/allocator), so it does not qualify as an optimization-purpose project: it delivers its value (the io_uring interface) through plain generic C, and no optimization-level modifier applies.</p>
+
+<p><strong>Pending work that could change the grade:</strong> No open PRs or issues threaten the grade. The one known correctness bug (wrong page size on non-4K-page riscv64/aarch64 libc builds, affecting chroots without <code class="language-plaintext highlighter-rouge">/proc</code>) was already fixed upstream by Jens Axboe in commit <a href="https://github.com/axboe/liburing/commit/284b1a8be2ca2ea546204ed2c501414c89bea48f">284b1a8</a>, shipped in liburing 2.15 (2026-06-27). The only lever that could raise the color is upstream adding QEMU-based riscv64 test execution to CI; there is no evidence of that in progress. No RISE involvement exists (blog, wheel builder, and <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub org all checked, zero matches), so there is no RISE-side pending work either.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has no involvement with liburing today (Section 1); nothing below overlaps with existing RISE-funded work.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>No functional work is needed. All io_uring opcodes are accessible on riscv64. The only outstanding functional issue (non-4K page-size bug) is fixed upstream in 2.15-rc1.</p>
-<h3 id="132-performance-optimization">
+<p>No functional work is needed. All io_uring opcodes are accessible on riscv64 today, and the one outstanding functional/correctness issue (the non-4K page-size bug) is already fixed upstream in 2.15. The only residual action is distro-side: if Ubuntu 24.04 “noble” is still carrying the pre-fix 2.5-1build1 package [NEEDS VERIFICATION], riscv64 users on that release with 16K/64K-page kernels remain exposed until the package is updated or they build from source.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>Data not available: no published benchmark data for liburing on riscv64 exists. liburing’s architecture-specific code is limited to raw syscall dispatch (two inline-asm files), which is inherently minimal. There are no SIMD hot paths, no vectorizable loops, and no algorithmic components to optimize. Performance is determined by the Linux kernel’s io_uring implementation, not the userspace library. Liburing-layer performance investment would yield negligible return.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The gap is real: riscv64 has no runtime test execution in upstream CI. A QEMU-based CI job would close this gap. RISE build farm hardware is an alternative if native riscv64 CI runners become available through RISE infrastructure.</p>
-
-<p>Estimated effort: 1-2 person-weeks to add QEMU-based runtime test execution to the upstream CI, assuming upstream accepts the contribution (likely given the maintainer’s receptiveness). This requires adding <code class="language-plaintext highlighter-rouge">qemu-user-static</code> to the CI runner and invoking the test suite via QEMU.</p>
-<h3 id="134-ecosystem-enablement">
+<p>Data not available: no published benchmark for liburing/io_uring on riscv64 exists in any searched source (GitHub, RISE blog full sitemap crawl, general web search). This is expected given the architecture: liburing’s per-arch code is limited to two small header files implementing syscall dispatch and a page-size probe, with no SIMD hot paths, no vectorizable loops, and no algorithmic surface to optimize. Actual I/O performance is determined by the Linux kernel’s io_uring implementation on riscv64, not by liburing. Investment in liburing-layer performance work would yield negligible return; any performance investigation belongs at the kernel io_uring level, out of scope for this library.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>The PyPI <code class="language-plaintext highlighter-rouge">liburing</code> package (a separate Python binding project) ships only an x86_64 manylinux wheel. There is no riscv64 wheel at any version. This is out of scope for liburing itself but is a gap for Python-based io_uring consumers on riscv64.</p>
-<h3 id="135-summary-table">
+<p>This is the real, quantifiable gap: riscv64 has zero runtime test execution in upstream CI, and zero sanitizer coverage. A QEMU-based CI job, or use of riscv64 hardware CI runners (RISE-operated or otherwise), would close it and would also have caught the June 2026 page-size bug automatically rather than requiring manual discovery.</p>
+
+<p>Estimated effort: 1-2 person-weeks to add QEMU-based runtime test execution to upstream CI (installing <code class="language-plaintext highlighter-rouge">qemu-user-static</code> and invoking the existing test suite under user-mode emulation for the riscv64 leg of the matrix), assuming upstream accepts the contribution - likely, given the project’s demonstrated speed in accepting the original architecture port. A further 0.5-1 person-week to add ASan/UBSan riscv64 coverage once execution is possible.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable as a distinct workstream: liburing itself is a C library with no dependent package ecosystem of its own (see Section 9’s note that Section 10 is omitted). The one adjacent gap is the separate PyPI <code class="language-plaintext highlighter-rouge">liburing</code> Python-binding project, which ships only an x86_64 manylinux wheel with no riscv64 wheel at any version; that project is maintained independently of liburing and is out of scope for this report’s core subject.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1101,45 +1059,42 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
   </thead>
   <tbody>
     <tr>
-      <td>Functional</td>
-      <td>Update Ubuntu 24.04 package to 2.14+ to include page-size fix</td>
+      <td>Distribution</td>
+      <td>Verify and, if needed, backport the 2.14+/2.15 page-size fix to Ubuntu 24.04 “noble”’s riscv64 package</td>
       <td>0.5</td>
       <td>Ubuntu / Canonical</td>
-      <td>High (correctness bug exposed on 16K/64K-page kernels)</td>
+      <td>Medium (pending re-verification of noble’s current version)</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add QEMU-based runtime test job for riscv64 to upstream CI</td>
+      <td>Add QEMU-based runtime test execution for the riscv64 CI leg</td>
       <td>1-2</td>
       <td>Upstream contributor</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 sanitizer builds (ASan/UBSan) to upstream CI</td>
-      <td>1</td>
+      <td>Add riscv64 sanitizer builds (ASan/UBSan) once execution exists</td>
+      <td>0.5-1</td>
       <td>Upstream contributor</td>
       <td>Low</td>
     </tr>
     <tr>
-      <td>Ecosystem</td>
-      <td>Build and publish riscv64 wheel for PyPI <code class="language-plaintext highlighter-rouge">liburing</code> Python binding</td>
+      <td>Verification</td>
+      <td>Resolve the Arch Linux riscv64 package-availability discrepancy (Section 8)</td>
+      <td>0.1</td>
+      <td>Any contributor</td>
+      <td>Low</td>
+    </tr>
+    <tr>
+      <td>Ecosystem (adjacent)</td>
+      <td>Build and publish a riscv64 wheel for the separate PyPI <code class="language-plaintext highlighter-rouge">liburing</code> Python binding</td>
       <td>2-3</td>
       <td>PyPI <code class="language-plaintext highlighter-rouge">liburing</code> maintainer</td>
-      <td>Low (Python binding is a separate project; liburing itself does not require it)</td>
+      <td>Low, not a liburing-core blocker</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1153,15 +1108,17 @@ make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc<
   <li><a href="https://github.com/axboe/liburing">axboe/liburing GitHub repository</a></li>
   <li><a href="https://github.com/axboe/liburing/pull/928">PR #928: .github: Add riscv64 build for GitHub bot</a></li>
   <li><a href="https://github.com/axboe/liburing/pull/930">PR #930: Add nolibc riscv64 support</a></li>
-  <li><a href="https://github.com/axboe/liburing/pull/931">PR #931: github: update actions/checkout version v2 -&gt; v3</a></li>
-  <li><a href="https://github.com/axboe/liburing/pull/1601">PR #1601: man: document that send/recv can see -EAGAIN without MSG_DONTWAIT</a></li>
+  <li><a href="https://github.com/axboe/liburing/commit/284b1a8be2ca2ea546204ed2c501414c89bea48f">Commit 284b1a8: use sysconf() for page size on aarch64/riscv64 libc builds</a></li>
+  <li><a href="https://github.com/axboe/liburing/pull/1601">PR #1601: man: document that send/recv can see -EAGAIN without MSG_DONTWAIT (unrelated to riscv64)</a></li>
+  <li><a href="https://github.com/axboe/liburing/issues/912">Issue #912: performance difference between write() and liburing for small writes (not riscv64-specific)</a></li>
   <li><a href="https://github.com/axboe/liburing/blob/master/.github/workflows/ci.yml">liburing CI workflow: .github/workflows/ci.yml</a></li>
   <li><a href="https://github.com/axboe/liburing/releases">liburing GitHub releases</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=liburing&amp;suite=sid">Debian buildd status: liburing sid</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/liburing2">Ubuntu packages: liburing2 Noble</a></li>
-  <li><a href="https://archriscv.felixc.at/repo/extra/">Arch Linux RISC-V package index</a></li>
-  <li><a href="https://pypi.org/project/liburing/">PyPI liburing package</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=liburing&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu packages: liburing2, resolute (26.04)</a></li>
+  <li><a href="https://pypi.org/project/liburing/">PyPI liburing package (Python bindings)</a></li>
   <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://archriscv.felixc.at/repo/extra/">Arch Linux RISC-V package index</a></li>
 </ul>
 
           
