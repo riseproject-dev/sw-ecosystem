@@ -265,11 +265,13 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;<br />
-<strong>Date:</strong> 2026-07-20<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange (downstream-only)<br />
+<strong>Optimization level:</strong> partial<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for libjpeg-turbo<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -281,16 +283,19 @@
 
 <p>libjpeg-turbo is a JPEG codec library providing both the legacy libjpeg API and the TurboJPEG API. It is the de facto standard JPEG library on Linux, Android, macOS, and embedded platforms, and serves as an ISO/IEC and ITU-T reference implementation of the JPEG standard.</p>
 
-<p>The project is vendor-neutral and foundation-independent. It is maintained by a single unpaid primary maintainer, D. R. Commander (GitHub: dcommander), funded through GitHub Sponsors, PayPal, and project-specific grants. No foundation or governance board exists. The maintainer retains full technical and release control.</p>
+<p>The project is vendor-neutral and foundation-independent. It describes itself as “an independent open source project,” is not affiliated with the Linux Foundation, Apache, or any other foundation, and has no MAINTAINERS/OWNERS/CODEOWNERS file and no Board/Governance page on <a href="https://libjpeg-turbo.org/">libjpeg-turbo.org</a> (<code class="language-plaintext highlighter-rouge">/About/BoardofDirectors</code> and <code class="language-plaintext highlighter-rouge">/About/About</code> both 404). Governance is de facto centered on a single lead maintainer, D. Richard Commander (“DRC,” GitHub <code class="language-plaintext highlighter-rouge">dcommander</code>), who authors essentially all commits and merges under “The libjpeg-turbo Project” and is funded through GitHub Sponsors, PayPal, and project-specific grants (most notably FLOSS/fund).</p>
 
 <ul>
   <li><strong>Repository:</strong> <a href="https://github.com/libjpeg-turbo/libjpeg-turbo">libjpeg-turbo/libjpeg-turbo</a></li>
   <li><strong>Homepage:</strong> <a href="https://libjpeg-turbo.org/">libjpeg-turbo.org</a></li>
-  <li><strong>License:</strong> IJG License (libjpeg API, inherited code), Modified 3-Clause BSD (TurboJPEG API, build system), zlib License (SIMD source)</li>
-  <li><strong>Current stable release:</strong> 3.1.4.1</li>
-  <li><strong>Next release:</strong> 3.2 (currently in beta as 3.1.90, released 2026-03-27)</li>
-  <li><strong>RISE Project member:</strong> No. libjpeg-turbo is not listed among RISE premier or general members. RISE premier members include Andes Technology, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Alibaba DAMO Academy, and Tenstorrent.</li>
-</ul><hr />
+  <li><strong>License:</strong> IJG License (code inherited from libjpeg), Modified 3-Clause BSD License (TurboJPEG API, build system, bundled programs), zlib License (SIMD source, bundled zlib). No copyleft.</li>
+  <li><strong>Current stable release:</strong> 3.2.0 (tagged 2026-06-30), the first stable release containing the RVV SIMD port.</li>
+  <li><strong>Current development version:</strong> 3.2.1-dev (HEAD <code class="language-plaintext highlighter-rouge">03c9a9d7</code>, 2026-09-25), carrying unreleased RVV DCT optimization work.</li>
+  <li><strong>Corporate sponsors</strong> (libjpeg-turbo.org/About/Sponsors, General/Project tiers): Google, Microsoft, Cloudflare, Arm Limited, Meta/Facebook, Loongson Technology, Mozilla Research, Intel, IBM, AMD, The MathWorks, Cendio AB, Crimson Vista, Safe Software, Kasm Technologies, Debian, Userful, Wilocity, ImageShack, Santos Ltd, Mercurien, Blinkmind, CamTrace SAS, FLOSS/fund, libvips. No RISC-V-specific silicon vendor (SiFive, Andes, etc.) is on the sponsor list.</li>
+  <li><strong>RISE Project member:</strong> No. libjpeg-turbo is a software project, not a RISE member organization; RISE membership (20 members: 8 Premier including Google, NVIDIA, Qualcomm, SiFive; 12 General including ISCAS, Andes, Canonical) is restricted to companies/institutions, not projects.</li>
+</ul>
+
+<p><strong>Community culture on new ports:</strong> pragmatic but slow and maintainer-gated. A community member opens an issue or submits a working fork; DRC treats it as a starting point rather than merge-ready code, substantially rewrites it for performance and code-quality parity with existing ports, and merges under his own authorship. This pattern held for both the initial RVV port (PR #837, rewritten before merge) and the follow-on DCT optimization (Issue #895, also rewritten before merge as commit <code class="language-plaintext highlighter-rouge">1db93c2</code>). A related commit (<code class="language-plaintext highlighter-rouge">640cae2</code>, February 2026) shows explicit reluctance to add RISC-V to the project’s public architecture-marketing blurb, quoting the maintainer: “Adding RISC-V to the list would have made it too long… not all of the SIMD extension implementations are at least 2x faster than libjpeg across the board. Generally speaking, only the x86, Arm, and PowerPC implementations are.” RISC-V is accepted into the codebase but is not treated as a headline-tier port, and gets no official prebuilt binaries (<a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885</a>).</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -310,72 +315,70 @@
   <tbody>
     <tr>
       <td>2022-09-27</td>
-      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/620">Issue #620</a> opened by stalkerg: first public request for RVV SIMD support. Maintainer response: “This won’t happen without outside funding.”</td>
-    </tr>
-    <tr>
-      <td>2022-2023</td>
-      <td>Zhiyuan Tan (BHbean, ISCAS) develops first complete RVV 1.0 implementation as a graduation project; no real hardware available for benchmarking. Published at <a href="https://github.com/isrc-cas/libjpeg-turbo/tree/riscv-dev">isrc-cas/libjpeg-turbo</a>.</td>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/620">Issue #620</a> “Add RISC-V vectors support” opened by stalkerg, citing the frozen RVV v1.0 spec and available dev-board hardware. Assigned to dcommander, targeted at milestone 3.2. This became the 3.5-year master tracking issue.</td>
     </tr>
     <tr>
       <td>2023-07-24</td>
-      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/710">Issue #710</a> opened by negge: 2 of 590 unit tests fail on qemu-system-riscv64 (floating-point DCT tests). Closed 2023-07-25 as “SEP / worked around” by disabling FLOATTEST8 by default on non-x86 builds. Root cause: FMA contraction rounding differs from x86 reference values.</td>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/710">Issue #710</a> opened by negge: testing on <code class="language-plaintext highlighter-rouge">qemu-system-riscv64</code> at commit <code class="language-plaintext highlighter-rouge">e429e37</code> (pure scalar C, pre-SIMD) showed 588/590 tests passing, with 2 failures (<code class="language-plaintext highlighter-rouge">djpeg-shared-3x2-float-prog-cmp</code>, <code class="language-plaintext highlighter-rouge">djpeg-static-3x2-float-prog-cmp</code>) attributable to floating-point/progressive-JPEG rounding differences. Closed 2023-07-25, labeled “SEP (somebody else’s problem)” / “worked around,” not a functional defect.</td>
     </tr>
     <tr>
-      <td>2023-07</td>
-      <td>rednoah91 (SiFive) contacts dcommander about funding through RISE.</td>
+      <td>2024-11-11</td>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/794">Issue #794</a>, a user question on future RVV support, opened and closed same day as a duplicate of #620, confirming real-world demand roughly 10 months before the implementation PR.</td>
     </tr>
     <tr>
-      <td>2024-01</td>
-      <td>Andes Technology contributes RVV IDCT implementations to BHbean’s fork. Funding discussions with SiFive, Google, and The Linux Foundation begin; all parties go silent by January 2024.</td>
-    </tr>
-    <tr>
-      <td>2024-05</td>
-      <td>First widely available RVV 1.0 hardware (SpacemiT K1, Banana Pi F3, VLEN=256) becomes purchasable.</td>
-    </tr>
-    <tr>
-      <td>2025-05-06</td>
-      <td>Filip Wasil (Samsung Electronics / RISE) consolidates all prior implementations and proposes coordinated upstreaming via <a href="https://gitlab.com/riseproject/libjpeg-turbo/-/merge_requests/2">RISE GitLab MR !2</a>.</td>
-    </tr>
-    <tr>
-      <td>2025-09-09</td>
-      <td>Maintainer announces FLOSS/fund grant. Requests rebased implementation on dev branch.</td>
+      <td>2025-05-27</td>
+      <td>RISE GitLab project <a href="https://gitlab.com/riseproject/libjpeg-turbo">gitlab.com/riseproject/libjpeg-turbo</a> created; RISE consolidates prior forks (ISCAS/Zhiyuan Tan, Andes Technology IDCT contributions, camel-cdr/Olaf Bernstein) into <a href="https://gitlab.com/riseproject/libjpeg-turbo/-/merge_requests/2">MR !2</a>, led by Filip Wasil (Samsung Electronics / RISE).</td>
     </tr>
     <tr>
       <td>2025-09-10</td>
-      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/pull/837">PR #837</a> opened by filipwasil (Samsung Electronics), citing contributions from BHbean (ISCAS) and camel-cdr. Initial benchmarks on Banana Pi F3 (VLEN=256): compression 10.71 -&gt; 20.36 Mpix/s, decompression 14.96 -&gt; 23.81 Mpix/s on monkey16.ppm / 4:2:0.</td>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/pull/837">PR #837</a> “RISC-V support” opened by filipwasil, built against RVV intrinsic spec v0.12.0 (RVV 1.0 compatible). Claimed all 287 regression tests passing; initial Banana Pi F3 (VLEN=256) benchmarks in the 25-95% (avg ~72%) compression / 15-94% (avg ~53%) decompression range.</td>
     </tr>
     <tr>
-      <td>2025-11-21</td>
-      <td>dcommander acquires OrangePi RV2 for independent testing.</td>
+      <td>2026-02-02/03</td>
+      <td>dcommander merges his own substantial rewrite as commit <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/9817c408542c72c0e505360580ae7ebcfa487baf">9817c40</a>, “RISC-V Vector (RVV) SIMD extensions” (23 files changed). The commit message documents per-routine gains of 54-290% over the submitted PR (e.g. ~145% faster RGB-to-YCbCr, ~290% faster h2v2 plain upsampling), explicitly notes DCT/IDCT remained suboptimal (still strided-load 8x8 transpose; <code class="language-plaintext highlighter-rouge">vrgather</code>-based in-register transpose was tried and found slower), and closes both #620 and #837. Added <code class="language-plaintext highlighter-rouge">simd/riscv64/</code> (18 files).</td>
     </tr>
     <tr>
-      <td>2026-01-21</td>
-      <td>dcommander measures 59-87% compression speedup (avg 72%), 15-94% decompression speedup (avg 53%) with submitted PR on OrangePi RV2. Characterizes result as “not a very good speedup compared to other SIMD implementations” and begins independent rewrite.</td>
-    </tr>
-    <tr>
-      <td>2026-02-03</td>
-      <td>Commit <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/9817c40">9817c40</a> merged to dev branch: “RISC-V Vector (RVV) SIMD extensions.” 23 files changed, 3,141 additions. dcommander’s rewrite achieves an additional 54-290% per-algorithm speedup over the submitted PR via segmented loads/stores and algorithm restructuring. PR #837 and Issue #620 closed.</td>
+      <td>2026-02-13 to 2026-02-27</td>
+      <td>Four follow-up commits land directly on <code class="language-plaintext highlighter-rouge">main</code> (no associated PR numbers): <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/db1359ed0c2e4cc07f299a0c469fa27bf57baac3">db1359e</a> (IDCT range-limiting, in-register transpose, fancy-upsampling fixes), <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/e516270b62a20d6e4d020412c9fa40692b7383be">e516270</a> (naming cleanup), <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/a5939f74bbadc819d0d3adbb22a636ab8cff3c10">a5939f7</a> (color-conversion tweaks, no perf change), <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/14d0dbc05d42247bdad2e33d92ee7348de874b22">14d0dbc</a> (LMUL=1/2 intrinsics for VLEN&gt;=256 CPUs).</td>
     </tr>
     <tr>
       <td>2026-03-27</td>
-      <td>Release 3.1.90 (3.2 beta1) published – first public release containing RVV source.</td>
+      <td>Release <strong>3.1.90</strong> (“3.2 beta1”) published, first public release containing RVV source.</td>
     </tr>
     <tr>
-      <td>2026-05-06</td>
-      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885</a> opened requesting riscv64 release binaries, citing Tier-1 distro status and free RISE CI runners. Closed “won’t implement” by maintainer.</td>
+      <td>2026-05-06 [NEEDS VERIFICATION: exact date]</td>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885</a> requests riscv64 release binaries, citing free RISE CI runners. Closed “won’t implement” by the maintainer.</td>
     </tr>
     <tr>
       <td>2026-06-12</td>
-      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/895">Issue #895</a> opened by ChipKerchner: follow-on DCT/IDCT optimizations (madd, nclip, segmented load transpose). Shows 8.5% compression / 1.5% decompression improvement on BananaPi K1. Open as of report date.</td>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/895">Issue #895</a> “Improve performance of IDCT &amp; FDCT for RVV” opened by ChipKerchner: instruction fusion, <code class="language-plaintext highlighter-rouge">nclip</code> replacing min/max/<code class="language-plaintext highlighter-rouge">nsra</code>, segment loads instead of load+transpose. BananaPi K1 (VLEN=256) testing with GCC 16.1.0/Clang 21.1.6 showed ~8.5% compression / ~1.5% decompression gains; correctness verified at VLEN 128/256/512/1024.</td>
     </tr>
     <tr>
-      <td>2026-06-19</td>
-      <td>dcommander pushes branch <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/tree/rvv-dct-opt">rvv-dct-opt</a> with cleaned-up DCT optimizations from Issue #895, targeting 3.2.1, not 3.2.</td>
+      <td>2026-06-19 to 2026-07-06 [date range as reported across sources]</td>
+      <td>dcommander merges a rewrite of ChipKerchner’s two commits as <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/1db93c29599cf64e5193297b6e2de069c1838d04">1db93c2</a>, “RVV: Forward/inverse DCT optimizations” (strided segment loads for FDCT, multiply-accumulate intrinsics), closing #895. Measured on a 1.6 GHz OrangePi RV2: compression <strong>+9.7 to +16.6% (avg 12.9%) with GCC 14</strong>, <strong>+1.3 to +8.0% (avg 3.5%) with Clang 20</strong>; decompression “did not change significantly.”</td>
+    </tr>
+    <tr>
+      <td>2026-06-30</td>
+      <td>Release <strong>3.2.0</strong> tagged - first stable release with RVV SIMD support.</td>
+    </tr>
+    <tr>
+      <td>2026-07-01</td>
+      <td>Arch Linux RISC-V port (archriscv.felixc.at) ships <code class="language-plaintext highlighter-rouge">libjpeg-turbo-3.2.0-2-riscv64.pkg.tar.zst</code>, the first confirmed downstream binary package containing the RVV code (see Section 8).</td>
+    </tr>
+    <tr>
+      <td>2026-07-14</td>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/902">Issue #902</a> “RVV needs to be able to detect RVA23” opened, labeled enhancement / funding needed, assigned to dcommander. Open as of report date (13 comments, no PR attached).</td>
+    </tr>
+    <tr>
+      <td>2026-09-25</td>
+      <td>HEAD <code class="language-plaintext highlighter-rouge">03c9a9d7</code>, version string 3.2.1-dev; the unreleased 3.2.1 changelog section documents the <code class="language-plaintext highlighter-rouge">1db93c2</code> FDCT work.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The RVV implementation took approximately 3.5 years from first request (September 2022) to merge (February 2026). The primary blockers were funding and hardware availability, not technical complexity.</p><hr />
+<p><strong>Discrepancy note:</strong> the follow-up commit date for <code class="language-plaintext highlighter-rouge">1db93c2</code> is reported inconsistently across search passes as “2026-06-19” (branch-push date) and “2026-06-19/07-06” (merge-window range) in different live-research fetches; the exact merge/commit timestamp was not independently pinned down in this round.</p>
+
+<p>The RVV implementation took approximately 3.5 years from first request (September 2022) to merge (February 2026). The primary blockers were funding, hardware availability, and the maintainer’s insistence on rewriting submitted code for performance parity, not technical complexity.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -385,18 +388,60 @@
 </h2>
     
 
-<p><strong>Tier: Partially Upstream – source merged, no CI, no official binaries.</strong></p>
+<p><strong>Tier: Partially upstream - source merged and shipping in the 3.2.0 stable release, but no CI and no official binaries.</strong></p>
 
-<p>The RVV SIMD source code is merged and will ship in the 3.2 stable release. However:</p>
+<p>There is no formal architecture-tiering policy in the project. The only documented “tier” system (<a href="https://libjpeg-turbo.org/">libjpeg-turbo.org/DeveloperInfo/Versioning</a>) governs release-quality/branch lifecycle (Alpha/Evolving -&gt; Beta -&gt; Post-Beta -&gt; Release Candidate -&gt; Stable, mapped to Next-Gen/Active/Maintenance/Extended/EOL branches), not which CPU architectures are supported. SIMD ports (x86, Arm, PowerPC, MIPS/Loongson, RISC-V) are simply present or absent in <code class="language-plaintext highlighter-rouge">simd/</code>.</p>
 
+<p>Evidence that riscv64 sits below x86/Arm/PowerPC in practice:</p>
 <ul>
-  <li>No riscv64 CI exists in the upstream repository.</li>
-  <li>Upstream does not publish riscv64 prebuilt binaries and has explicitly declined to do so (<a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885</a>, “won’t implement”).</li>
-  <li>The stable release line (3.1.x) has no RVV SIMD. End-users require 3.2 or build from source.</li>
-  <li>Distribution packages on riscv64 (Ubuntu, Debian) carry pre-RVV versions (2.1.5 and 3.1.3 respectively).</li>
+  <li>No riscv64 CI job exists in <code class="language-plaintext highlighter-rouge">.github/workflows/build.yml</code> (see Section 7).</li>
+  <li>Upstream explicitly declined to add riscv64 to its release binary pipeline even when offered free CI runners (<a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885</a>, closed “won’t implement”).</li>
+  <li>Official downloads at <a href="https://libjpeg-turbo.org/">libjpeg-turbo.org/Documentation/OfficialBinaries</a> cover only x86/x86-64, AArch64/Armv8, and legacy x86/Armv7; RISC-V users must build from source or rely on distro packaging.</li>
+  <li>The maintainer’s own public architecture-marketing copy omits RISC-V by design (commit <code class="language-plaintext highlighter-rouge">640cae2</code>), reserving that list for architectures where “SIMD extension implementations are at least 2x faster… across the board.”</li>
 </ul>
 
-<p>The maintainer is a single unpaid individual operating in self-described “funding deficit” as of June 2026. Review cycles for community patches are measured in months. The contributing policy explicitly bars unsolicited PRs and requires prior discussion and a 5% minimum overall performance threshold.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>SIMD source present</td>
+      <td>Yes (hand-tuned NASM)</td>
+      <td>Yes (C intrinsics, Neon)</td>
+      <td>Yes (C intrinsics, RVV 1.0), since 3.2.0</td>
+    </tr>
+    <tr>
+      <td>CI coverage</td>
+      <td>Yes (native runners)</td>
+      <td>Yes (macOS runner, Apple Silicon)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Official prebuilt binaries</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Distro packages with SIMD</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Partial - Arch Linux 3.2.0 yes; Ubuntu 26.04 “resolute” package predates the merge (see Section 8)</td>
+    </tr>
+    <tr>
+      <td>Release-blocking status</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -414,9 +459,9 @@
 </h3>
     
 
-<p>The RISC-V SIMD implementation resides in <code class="language-plaintext highlighter-rouge">simd/riscv64/</code> and consists of 18 files (16 C intrinsic files, 1 assembly file for CPU probing, 1 C file for CPU detection). All image-processing code uses RVV 1.0 C intrinsics from <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code>. No hand-written assembly is used for image processing (contrast: x86_64 uses hand-tuned NASM for all SIMD paths).</p>
+<p>The RISC-V SIMD implementation resides in <code class="language-plaintext highlighter-rouge">simd/riscv64/</code>. As of HEAD <code class="language-plaintext highlighter-rouge">03c9a9d7</code> (2026-09-25) the directory holds 17 C source/header files plus one assembly file (<code class="language-plaintext highlighter-rouge">jsimdcpu.S</code>), totaling approximately 3,668 lines. No TODO/FIXME/stub/”not implemented” markers exist anywhere in the tree - this is a real, complete implementation, not scaffolding. All image-processing code uses RVV 1.0 C intrinsics from <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code>; no hand-written assembly is used for any compute kernel (contrast: x86_64 uses hand-tuned NASM for all SIMD paths). The sole assembly file, <code class="language-plaintext highlighter-rouge">jsimdcpu.S</code> (47 lines), is a CPU-feature-probe helper, not a compute kernel.</p>
 
-<p>Contributors with copyright notices in the merged code: Filip Wasil (Samsung Electronics), Zhiyuan Tan (ISCAS), D. R. Commander, Olaf Bernstein (camel-cdr). Copyright years span 2022-2026.</p>
+<p>Contributors with copyright notices in the merged code: D. R. Commander, Zhiyuan Tan (ISCAS), Olaf Bernstein (camel-cdr), and Chip Kerchner. <code class="language-plaintext highlighter-rouge">jidctint-rvv.c</code> contains genuine fixed-point IDCT math (standard accurate-integer algorithm constants such as <code class="language-plaintext highlighter-rouge">F_0_298</code>, <code class="language-plaintext highlighter-rouge">F_0_541</code>) with four named copyright holders - real collaborative engineering.</p>
 <h3 id="42-cpu-detection">
   
   
@@ -426,16 +471,16 @@
 </h3>
     
 
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jsimdcpu.c</code></strong> (~80 lines): Runtime RVV 1.0 detection using three mechanisms in order of preference:</p>
+<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jsimdcpu.c</code></strong> (~79-86 lines): runtime RVV 1.0 detection, in order of preference:</p>
 <ol>
-  <li><code class="language-plaintext highlighter-rouge">syscall(__NR_riscv_hwprobe, ...)</code> checking <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_IMA_V</code> (Linux)</li>
-  <li><code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> checking <code class="language-plaintext highlighter-rouge">COMPAT_HWCAP_ISA_V</code> (Linux fallback)</li>
-  <li><code class="language-plaintext highlighter-rouge">elf_aux_info(AT_HWCAP, ...)</code> (BSD)</li>
+  <li><code class="language-plaintext highlighter-rouge">syscall(__NR_riscv_hwprobe, ...)</code> checking <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_KEY_IMA_EXT_0</code> / <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_IMA_V</code> (Linux).</li>
+  <li><code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> checking the vector-capability bit (Linux fallback).</li>
+  <li><code class="language-plaintext highlighter-rouge">elf_aux_info(AT_HWCAP, ...)</code> (BSD).</li>
 </ol>
 
-<p>Returns <code class="language-plaintext highlighter-rouge">JSIMD_RVV</code> bitmask (value <code class="language-plaintext highlighter-rouge">0x20</code>). Adds new architecture constant <code class="language-plaintext highlighter-rouge">RISCV64</code> (value <code class="language-plaintext highlighter-rouge">5</code>) to the SIMD dispatcher.</p>
+<p>A <code class="language-plaintext highlighter-rouge">#if (!defined(__riscv_v) || __riscv_v &lt; 1000000 || __riscv_v &gt;= 2000000)</code> guard scopes the detection path to cases where RVV 1.0.x is not already compile-time-known. Adds architecture constant <code class="language-plaintext highlighter-rouge">RISCV64</code> (value 5) and capability bitmask <code class="language-plaintext highlighter-rouge">JSIMD_RVV</code> (<code class="language-plaintext highlighter-rouge">0x20</code>).</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jsimdcpu.S</code></strong> (~45 lines, ISA: <code class="language-plaintext highlighter-rouge">+v</code>): Assembly probe <code class="language-plaintext highlighter-rouge">has_compliant_vsetvli</code>. Sets tail/mask-agnostic vsetvli config (an RVV 0.9+ feature), reads <code class="language-plaintext highlighter-rouge">vtype</code> CSR, and checks the VILL bit via sign test. This correctly rejects non-compliant RVV 0.7.1 hardware (e.g., early Kendryte K210 derivatives) that accept but misbehave on RVV 1.0 instructions.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jsimdcpu.S</code></strong> (47 lines): the assembly probe <code class="language-plaintext highlighter-rouge">has_compliant_vsetvli()</code>. Sets a tail/mask-agnostic <code class="language-plaintext highlighter-rouge">vsetvli</code> configuration (an RVV 0.9+/1.0 feature), reads the <code class="language-plaintext highlighter-rouge">vtype</code> CSR, and checks the VILL bit via sign test - correctly rejecting non-compliant pre-1.0 RVV 0.7.1/0.9 hardware that would otherwise accept but misbehave on RVV 1.0 instructions.</p>
 <h3 id="43-implemented-algorithms">
   
   
@@ -445,29 +490,79 @@
 </h3>
     
 
-<p>All implementations target 8-bit (BITS_IN_JSAMPLE=8) input only.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>File(s)</th>
+      <th>Purpose</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jccolor-rvv.c</code> / <code class="language-plaintext highlighter-rouge">jccolext-rvv.c</code></td>
+      <td>RGB-to-YCbCr conversion, 8 pixel formats</td>
+      <td><code class="language-plaintext highlighter-rouge">vlseg3/4e8</code> segmented loads, <code class="language-plaintext highlighter-rouge">vwmaccu_vx_u32m4</code>, <code class="language-plaintext highlighter-rouge">vnclipu_wx_u16m2</code>; ~145% faster than the submitted PR after dcommander’s rewrite</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jcgray-rvv.c</code> / <code class="language-plaintext highlighter-rouge">jcgryext-rvv.c</code></td>
+      <td>RGB-to-grayscale, 7 pixel formats</td>
+      <td>~156% faster after rewrite</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jdcolor-rvv.c</code> / <code class="language-plaintext highlighter-rouge">jdcolext-rvv.c</code></td>
+      <td>YCbCr-to-RGB decode conversion, 7 pixel formats</td>
+      <td>~64% faster after rewrite</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jcsample-rvv.c</code></td>
+      <td>h2v1/h2v2 chroma downsampling</td>
+      <td>h2v2 ~167% faster after rewrite</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jdsample-rvv.c</code></td>
+      <td>h2v1/h2v2 fancy + plain upsampling</td>
+      <td>h2v2 plain upsampling ~290% faster - the single largest gain in the rewrite</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jdmerge-rvv.c</code> / <code class="language-plaintext highlighter-rouge">jdmrgext-rvv.c</code></td>
+      <td>Merged YCbCr-to-RGB upsample+convert</td>
+      <td>~54-59% faster after rewrite</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jfdctint-rvv.c</code> (290-326 lines)</td>
+      <td>Accurate integer forward DCT (islow), dual VLEN paths</td>
+      <td>Further optimized in <code class="language-plaintext highlighter-rouge">1db93c2</code> (2026-06/07): +9.7-16.6% (avg 12.9%) with GCC 14, +1.3-8.0% (avg 3.5%) with Clang 20</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jfdctfst-rvv.c</code> (268-271 lines)</td>
+      <td>Fast integer forward DCT (ifast)</td>
+      <td>dual VLEN paths</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jidctint-rvv.c</code> (449-476 lines)</td>
+      <td>Accurate integer inverse DCT (islow)</td>
+      <td>Full 8x8 <code class="language-plaintext highlighter-rouge">TRANSPOSE_8x8</code> macro from <code class="language-plaintext highlighter-rouge">jsimd_rvv.h</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jidctfst-rvv.c</code> (432-518 lines)</td>
+      <td>Fast integer inverse DCT (ifast)</td>
+      <td>dual VLEN paths</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jquanti-rvv.c</code> (108-157 lines)</td>
+      <td>Integer quantization + sample conversion</td>
+      <td><code class="language-plaintext highlighter-rouge">jsimd_quantize_rvv</code>, <code class="language-plaintext highlighter-rouge">jsimd_convsamp_rvv</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jsimd_rvv.h</code> (313-327 lines, count varies slightly by snapshot)</td>
+      <td>Shared macros: <code class="language-plaintext highlighter-rouge">TRANSPOSE_8x8</code> / <code class="language-plaintext highlighter-rouge">TRANSPOSE_8x8_VLEN256</code></td>
+      <td>slide/reinterpret/LMUL intrinsics, integer types only</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jccolor-rvv.c</code> / <code class="language-plaintext highlighter-rouge">jccolext-rvv.c</code></strong>: RGB-to-YCbCr colorspace conversion for 8 pixel formats (RGB, BGR, RGBX, BGRX, XBGR, XRGB, EXT_RGBA, EXT_BGRA). Uses <code class="language-plaintext highlighter-rouge">vlseg3/4e8</code> segmented loads, <code class="language-plaintext highlighter-rouge">vzext_vf2</code>, <code class="language-plaintext highlighter-rouge">vwmulu_vx_u32m4</code>, <code class="language-plaintext highlighter-rouge">vwmaccu_vx_u32m4</code>, <code class="language-plaintext highlighter-rouge">vnclipu_wx_u16m2</code>. The maintainer’s rewrite of this function achieved ~145% additional speedup over the submitted PR via restructured segmented loads.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jcgray-rvv.c</code> / <code class="language-plaintext highlighter-rouge">jcgryext-rvv.c</code></strong>: RGB-to-grayscale conversion for 7 pixel formats. Achieved ~156% additional speedup in dcommander’s rewrite.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jdcolor-rvv.c</code> / <code class="language-plaintext highlighter-rouge">jdcolext-rvv.c</code></strong>: YCbCr-to-RGB decode colorspace conversion for 7 pixel formats. Uses <code class="language-plaintext highlighter-rouge">vle8</code>, <code class="language-plaintext highlighter-rouge">vzext_vf2</code>, <code class="language-plaintext highlighter-rouge">vsub_vx</code>, <code class="language-plaintext highlighter-rouge">vmulh_vx</code>, <code class="language-plaintext highlighter-rouge">vwmul_vx_i32m8</code>, <code class="language-plaintext highlighter-rouge">vwmacc_vx</code>, <code class="language-plaintext highlighter-rouge">vnclipu_wx_u8m2</code>, <code class="language-plaintext highlighter-rouge">vsseg3/4e8</code>.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jcsample-rvv.c</code></strong>: h2v1 and h2v2 chroma downsampling. h2v2 downsampling achieved ~167% additional speedup in dcommander’s rewrite.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jdsample-rvv.c</code></strong> (~270 lines): h2v1 and h2v2 fancy upsampling plus h2v1 and h2v2 plain upsampling. Plain h2v2 upsampling achieved ~290% additional speedup – the largest single-function gain in dcommander’s rewrite.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jdmerge-rvv.c</code> / <code class="language-plaintext highlighter-rouge">jdmrgext-rvv.c</code></strong>: Merged YCbCr-to-RGB upsample+convert for h2v1 and h2v2, all 7 pixel formats.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jfdctint-rvv.c</code></strong> (~250 lines): Accurate integer forward DCT (islow, CONST_BITS=13). Includes VLEN&gt;=256 variant.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jfdctfst-rvv.c</code></strong> (~200 lines): Fast integer forward DCT (ifast). Includes VLEN&gt;=256 variant.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jidctint-rvv.c</code></strong> (~290 lines): Accurate integer inverse DCT (islow). Uses full 8x8 TRANSPOSE_8x8 macro from <code class="language-plaintext highlighter-rouge">jsimd_rvv.h</code>. Includes VLEN&gt;=256 variant.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jidctfst-rvv.c</code></strong> (~265 lines): Fast integer inverse DCT (ifast). Includes VLEN&gt;=256 variant.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">simd/riscv64/jquanti-rvv.c</code></strong> (~135 lines): Integer quantization (<code class="language-plaintext highlighter-rouge">jsimd_quantize_rvv</code>) and sample conversion (<code class="language-plaintext highlighter-rouge">jsimd_convsamp_rvv</code>).</p>
+<p>All kernels use integer vector types (<code class="language-plaintext highlighter-rouge">vint8/16/32/64m*</code>, <code class="language-plaintext highlighter-rouge">vuint*</code>) and segmented loads; no <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code> or other float intrinsics appear anywhere in the riscv64 tree (0 hits for <code class="language-plaintext highlighter-rouge">vfloat32m1_t repo:libjpeg-turbo/libjpeg-turbo</code>), confirming an integer-only DCT path. No Zba, Zbb, Zvbb, or other bit-manipulation/crypto extensions are referenced anywhere in the repository outside the RVA23-detection proposal in Issue #902.</p>
 <h3 id="44-vlen-dispatch">
   
   
@@ -477,9 +572,7 @@
 </h3>
     
 
-<p>All DCT files contain two code paths: a standard path (VLEN=128, LMUL=m1/m2) and a VLEN&gt;=256 path (LMUL=mf2/m1 fractional registers). The VLEN&gt;=256 path was added at camel-cdr’s suggestion and achieves 20-30% lower-level DCT/IDCT improvement by eliminating half the wasted register bandwidth on VLEN=256 hardware such as SpacemiT K1/X1.</p>
-
-<p>Runtime dispatch is performed via <code class="language-plaintext highlighter-rouge">vsetvlmax</code> at function entry.</p>
+<p>DCT files contain two code paths: a standard path (VLEN=128, LMUL=m1/m2) and a VLEN&gt;=256 path (LMUL=mf2/m1 fractional registers, added at camel-cdr’s suggestion, commit <code class="language-plaintext highlighter-rouge">14d0dbc</code>). LMUL=1/2 is not legal with SEW=64, so the 8x8 transpose still requires full-register intrinsics even on VLEN&gt;=256 hardware. Runtime dispatch is via <code class="language-plaintext highlighter-rouge">vsetvlmax</code> at function entry.</p>
 <h3 id="45-known-technical-limitations">
   
   
@@ -489,7 +582,17 @@
 </h3>
     
 
-<p>The in-register 8x8 matrix transpose used in DCT/IDCT is suboptimal. The current implementation uses <code class="language-plaintext highlighter-rouge">vslide1up_mu</code>/<code class="language-plaintext highlighter-rouge">vslide1down_mu</code> from <code class="language-plaintext highlighter-rouge">jsimd_rvv.h</code>. The maintainer notes that the upcoming Zvzip RVV extension (not yet ratified) would allow a more efficient transpose equivalent to TRN1/TRN2 on AArch64. The accurate IDCT (islow) remains “only barely faster than C code” per dcommander’s closing comment on Issue #620.</p><hr />
+<p>The in-register 8x8 matrix transpose used in DCT/IDCT remains a bottleneck. <code class="language-plaintext highlighter-rouge">db1359e</code> (2026-02-13) moved the IDCT transpose in-register (replacing strided memory stores/loads), and <code class="language-plaintext highlighter-rouge">1db93c2</code> applied strided segment loads to the FDCT side, but a <code class="language-plaintext highlighter-rouge">vrgather</code>-based full in-register transpose was tried and found <em>slower</em> than the strided-load approach at merge time. The maintainer has flagged the not-yet-ratified <strong>Zvzip</strong> RVV extension as the eventual architectural fix, equivalent to TRN1/TRN2 on AArch64.</p>
+<h3 id="46-builddispatch-wiring">
+  
+  
+    <a href="#46-builddispatch-wiring" class="anchor-heading" aria-labelledby="46-builddispatch-wiring"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.6 Build/Dispatch Wiring
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">simd/CMakeLists.txt</code> treats riscv64 as a first-class target: it detects <code class="language-plaintext highlighter-rouge">CPU_TYPE=riscv64</code>, compile-probes actual RVV 1.0 intrinsics (<code class="language-plaintext highlighter-rouge">__riscv_vsetvl_e32m8</code>, <code class="language-plaintext highlighter-rouge">__riscv_vnclipu_wx_u16m4</code>) to gate the build, and links all 11 kernel files plus <code class="language-plaintext highlighter-rouge">jsimdcpu.c</code>/<code class="language-plaintext highlighter-rouge">jsimdcpu.S</code>. <code class="language-plaintext highlighter-rouge">simd/jsimd.c</code> gives RISCV64 its own <code class="language-plaintext highlighter-rouge">#elif SIMD_ARCHITECTURE == RISCV64</code> branch in every dispatcher (parallel to X86_64/ARM/POWERPC/MIPS64), plus a <code class="language-plaintext highlighter-rouge">JSIMD_FORCERVV</code> environment-variable override - the same pattern used by mature architectures.</p><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -507,111 +610,96 @@
 </h3>
     
 
-<p>In <code class="language-plaintext highlighter-rouge">simd/CMakeLists.txt</code>, the riscv64 branch is triggered by:</p>
-
 <div class="language-cmake highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">elseif</span><span class="p">(</span>CPU_TYPE STREQUAL <span class="s2">"riscv64"</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">CPU_TYPE</code> is derived from <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> (lowercased) via a generic fallback in the root <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>. No explicit riscv64 branch exists in the CPU detection cascade – the value propagates from the toolchain or host system.</p>
-<h3 id="52-rvv-compiler-probe">
+<p><code class="language-plaintext highlighter-rouge">CPU_TYPE</code> for riscv64 is <strong>not</strong> explicitly special-cased in the root <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> CPU-detection cascade; it falls through the generic <code class="language-plaintext highlighter-rouge">else()</code> branch (<code class="language-plaintext highlighter-rouge">set(CPU_TYPE ${CMAKE_SYSTEM_PROCESSOR_LC})</code>) and only resolves correctly because <code class="language-plaintext highlighter-rouge">uname -m</code> / <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> on riscv64 already reports <code class="language-plaintext highlighter-rouge">riscv64</code> lowercase.</p>
+<h3 id="52-rvv-compiler-probe-simdcmakeliststxt-lines-440-500">
   
   
-    <a href="#52-rvv-compiler-probe" class="anchor-heading" aria-labelledby="52-rvv-compiler-probe"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 RVV Compiler Probe
+    <a href="#52-rvv-compiler-probe-simdcmakeliststxt-lines-440-500" class="anchor-heading" aria-labelledby="52-rvv-compiler-probe-simdcmakeliststxt-lines-440-500"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 RVV Compiler Probe (<code class="language-plaintext highlighter-rouge">simd/CMakeLists.txt</code>, lines ~440-500)
   
   
 </h3>
     
 
 <div class="language-cmake highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">set</span><span class="p">(</span>CMAKE_REQUIRED_FLAGS -march=rv64gcv<span class="p">)</span>
-<span class="nf">check_c_source_compiles</span><span class="p">(</span>
-  <span class="s2">"#include &lt;riscv_vector.h&gt;
-   int main(void) {
-     __riscv_vsetvl_e32m8(0);
-     __riscv_vnclipu_wx_u16m4(...);
-     __riscv_vcreate_v_u8m2x2(...);
-     return 0;
-   }"</span>
-  HAVE_RVV<span class="p">)</span>
+<span class="nf">check_c_source_compiles</span><span class="p">(</span><span class="s2">"
+  #include &lt;riscv_vector.h&gt;
+  int main(int argc, char **argv) {
+    size_t vl = __riscv_vsetvl_e32m8(32);
+    vuint32m8_t tmp0 = __riscv_vmv_v_x_u32m8(argc, vl);
+    vuint16m4_t tmp1 = __riscv_vnclipu_wx_u16m4(tmp0, 1, __RISCV_VXRM_RNU, vl);
+    ...
+  }"</span> HAVE_RVV<span class="p">)</span>
+<span class="nb">unset</span><span class="p">(</span>CMAKE_REQUIRED_FLAGS<span class="p">)</span>
+
+<span class="nb">if</span><span class="p">(</span>NOT HAVE_RVV<span class="p">)</span>
+  <span class="nf">simd_fail</span><span class="p">(</span><span class="s2">"SIMD extensions not available for this CPU"</span><span class="p">)</span>
+  <span class="nb">return</span><span class="p">()</span>
+<span class="nb">endif</span><span class="p">()</span>
 </code></pre></div></div>
 
-<p>If <code class="language-plaintext highlighter-rouge">HAVE_RVV</code> is false and <code class="language-plaintext highlighter-rouge">REQUIRE_SIMD=TRUE</code>, the build fails fatally. Otherwise it emits a warning and sets <code class="language-plaintext highlighter-rouge">WITH_SIMD=0</code>. The compile flag <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code> is applied to all SIMD source files via <code class="language-plaintext highlighter-rouge">set_source_files_properties</code>.</p>
-<h3 id="53-runtime-detection-libraries">
+<p>If <code class="language-plaintext highlighter-rouge">HAVE_RVV</code> is false and <code class="language-plaintext highlighter-rouge">REQUIRE_SIMD=TRUE</code>, the build fails fatally; otherwise it emits a warning and sets <code class="language-plaintext highlighter-rouge">WITH_SIMD=0</code> (silent scalar fallback). The compile flag <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code> (hardcoded, not configurable via a CMake variable) applies to all SIMD source files via <code class="language-plaintext highlighter-rouge">set_source_files_properties</code>. NASM/Yasm are not required and are never invoked for riscv64 - SIMD is entirely C intrinsics.</p>
+<h3 id="53-build-command">
   
   
-    <a href="#53-runtime-detection-libraries" class="anchor-heading" aria-labelledby="53-runtime-detection-libraries"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Runtime Detection Libraries
-  
-  
-</h3>
-    
-
-<p>CMake probes for <code class="language-plaintext highlighter-rouge">getauxval</code> (Linux) via <code class="language-plaintext highlighter-rouge">HAVE_GETAUXVAL</code> and <code class="language-plaintext highlighter-rouge">elf_aux_info</code> (BSD) via <code class="language-plaintext highlighter-rouge">HAVE_ELF_AUX_INFO</code> to select the runtime detection path. Assembly language is enabled unconditionally on riscv64 for <code class="language-plaintext highlighter-rouge">jsimdcpu.S</code>.</p>
-<h3 id="54-cmake-flags-relevant-to-riscv64">
-  
-  
-    <a href="#54-cmake-flags-relevant-to-riscv64" class="anchor-heading" aria-labelledby="54-cmake-flags-relevant-to-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 CMake Flags Relevant to riscv64
+    <a href="#53-build-command" class="anchor-heading" aria-labelledby="53-build-command"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Build Command
   
   
 </h3>
     
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Flag</th>
-      <th>Effect</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DWITH_SIMD=0</code></td>
-      <td>Disable RVV; force scalar C fallback</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DREQUIRE_SIMD=TRUE</code></td>
-      <td>Fatal error if RVV probe fails</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DWITH_JPEG7=1</code></td>
-      <td>libjpeg v7 API compatibility</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DWITH_JPEG8=1</code></td>
-      <td>libjpeg v8 API compatibility</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DWITH_PROFILE=1</code></td>
-      <td>Enable low-level SIMD profiling (used in Issue #895 benchmarking)</td>
-    </tr>
-  </tbody>
-</table></div>
+<p>No riscv64-specific build recipe exists in <code class="language-plaintext highlighter-rouge">BUILDING.md</code>. The generic Unix recipe applies (CPU_TYPE auto-detects on a native riscv64 host):</p>
 
-<p>NASM and Yasm are not required for riscv64 builds. SIMD is implemented entirely in C intrinsics.</p>
-<h3 id="55-toolchain-requirements">
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> <span class="o">{</span>build_directory<span class="o">}</span>
+cmake <span class="nt">-G</span><span class="s2">"Unix Makefiles"</span> <span class="o">[</span>additional CMake flags] <span class="o">{</span>source_directory<span class="o">}</span>
+make
+</code></pre></div></div>
+<h3 id="54-cross-compilation">
   
   
-    <a href="#55-toolchain-requirements" class="anchor-heading" aria-labelledby="55-toolchain-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Toolchain Requirements
+    <a href="#54-cross-compilation" class="anchor-heading" aria-labelledby="54-cross-compilation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Cross-Compilation
+  
+  
+</h3>
+    
+
+<p>No in-tree toolchain file for riscv64 exists in the repository, and no Dockerfile of any kind exists anywhere in the tree (<code class="language-plaintext highlighter-rouge">search_code filename:Dockerfile</code> returns 0 results; confirmed via local clone that no <code class="language-plaintext highlighter-rouge">docker/</code>, <code class="language-plaintext highlighter-rouge">.ci/docker/</code>, or <code class="language-plaintext highlighter-rouge">Dockerfile*</code> file is present). <code class="language-plaintext highlighter-rouge">BUILDING.md</code>’s only cross-compilation example is for MinGW/Windows and would need manual adaptation for riscv64. The RISE GitLab MR !2 used Clang with a GCC sysroot and <code class="language-plaintext highlighter-rouge">CMAKE_CROSSCOMPILING_EMULATOR</code> pointing to <code class="language-plaintext highlighter-rouge">qemu-riscv64 -cpu rv64,v=true,vlen=128</code> for test execution - this is the only documented riscv64 cross-build+QEMU-test recipe found, and it lives outside the upstream repository. When cross-compiling, <code class="language-plaintext highlighter-rouge">RIGHT_SHIFT_IS_UNSIGNED</code> is hardcoded to <code class="language-plaintext highlighter-rouge">0</code> (no runtime test possible).</p>
+<h3 id="55-toolchain-version-requirements">
+  
+  
+    <a href="#55-toolchain-version-requirements" class="anchor-heading" aria-labelledby="55-toolchain-version-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Toolchain Version Requirements
   
   
 </h3>
     
 
 <ul>
-  <li><strong>CMake:</strong> 3.15+ (project minimum per BUILDING.md)</li>
-  <li><strong>C compiler:</strong> GCC 14+ or Clang 17+ required for full RVV 1.0 intrinsic support. GCC 13 has partial support. Builds with GCC 16.1.0 and Clang 21.1.6 confirmed in Issue #895 benchmarks. The cmake probe fails at configure time if the compiler cannot compile the RVV intrinsic test.</li>
-  <li><strong>No NASM/Yasm:</strong> Not required for riscv64. Not invoked.</li>
+  <li><strong>CMake:</strong> &gt;= 3.15 (general project minimum).</li>
+  <li><strong>Compiler:</strong> no formal minimum is documented for riscv64/RVV specifically. The only concrete evidence is the <code class="language-plaintext highlighter-rouge">ChangeLog.md</code> 3.2.1 entry, which benchmarks the <code class="language-plaintext highlighter-rouge">1db93c2</code> FDCT optimization with <strong>GCC 14</strong> and <strong>Clang 20</strong>, and Issue #895’s testing with <strong>GCC 16.1.0</strong> and <strong>Clang 21.1.6</strong>. In practice, any compiler implementing the ratified RVV 1.0 intrinsics API and accepting <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code> passes the <code class="language-plaintext highlighter-rouge">check_c_source_compiles</code> probe; older/incompatible compilers simply fail the probe and fall back to scalar (or fail the build outright under <code class="language-plaintext highlighter-rouge">REQUIRE_SIMD=1</code>).</li>
+  <li><strong>Minimum libjpeg-turbo version for riscv64 SIMD:</strong> 3.2.0 (first stable release containing <code class="language-plaintext highlighter-rouge">simd/riscv64/</code>). Earlier versions build riscv64 scalar-only.</li>
 </ul>
-<h3 id="56-cross-compilation">
+<h3 id="56-qemu">
   
   
-    <a href="#56-cross-compilation" class="anchor-heading" aria-labelledby="56-cross-compilation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 Cross-Compilation
+    <a href="#56-qemu" class="anchor-heading" aria-labelledby="56-qemu"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 QEMU
   
   
 </h3>
     
 
-<p>No in-tree toolchain file for riscv64 exists in the repository. The upstream documentation (BUILDING.md) describes a generic cross-compilation pattern requiring a user-supplied toolchain file. A minimal file sets <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_NAME=Linux</code>, <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR=riscv64</code>, and appropriate compiler paths. The RISE GitLab MR !2 used Clang with a GCC sysroot and <code class="language-plaintext highlighter-rouge">CMAKE_CROSSCOMPILING_EMULATOR</code> pointing to <code class="language-plaintext highlighter-rouge">qemu-riscv64 -cpu rv64,v=true,vlen=128</code> for test execution.</p>
+<p>No QEMU usage exists anywhere in current source, docs, or CI configuration in the upstream repository - the only QEMU references in <code class="language-plaintext highlighter-rouge">ChangeLog.md</code> are three historical, unrelated ARM/MIPS <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> feature-detection notes. QEMU is used for riscv64 exclusively in two places outside the main build.yml: historically for manual testing (Issue #710, <code class="language-plaintext highlighter-rouge">qemu-system-riscv64</code>, 2023) and in RISE’s own GitLab CI (<code class="language-plaintext highlighter-rouge">qemu-riscv64</code> as a cross-compile test emulator). Neither is wired into upstream’s <code class="language-plaintext highlighter-rouge">.github/workflows/build.yml</code>.</p>
+<h3 id="57-known-build-time-gap">
+  
+  
+    <a href="#57-known-build-time-gap" class="anchor-heading" aria-labelledby="57-known-build-time-gap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.7 Known Build-Time Gap
+  
+  
+</h3>
+    
 
-<p>When cross-compiling, <code class="language-plaintext highlighter-rouge">RIGHT_SHIFT_IS_UNSIGNED</code> is hardcoded to <code class="language-plaintext highlighter-rouge">0</code> (no runtime test possible).</p><hr />
+<p>No correct expected MD5 for the RISC-V <code class="language-plaintext highlighter-rouge">fp-contract</code>/FMA rounding variant of the floating-point progressive-JPEG comparison tests has been committed (follow-up from Issue #710); <code class="language-plaintext highlighter-rouge">FLOATTEST8</code> is simply disabled by default for non-x86 builds rather than validated on riscv64. This is latent technical debt for any future riscv64 CI adoption.</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -620,10 +708,10 @@
   
 </h2>
     
-<h3 id="61-simd-architecture-file-count-comparison">
+<h3 id="61-simd-architecture-file-count">
   
   
-    <a href="#61-simd-architecture-file-count-comparison" class="anchor-heading" aria-labelledby="61-simd-architecture-file-count-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.1 SIMD Architecture File Count Comparison
+    <a href="#61-simd-architecture-file-count" class="anchor-heading" aria-labelledby="61-simd-architecture-file-count"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.1 SIMD Architecture File Count
   
   
 </h3>
@@ -645,18 +733,18 @@
     </tr>
     <tr>
       <td>x86_64</td>
-      <td>36</td>
+      <td>35-36</td>
       <td>Hand-tuned NASM assembly</td>
     </tr>
     <tr>
-      <td>arm (Neon)</td>
-      <td>28</td>
+      <td>arm/Neon</td>
+      <td>~19-28 (6,547 lines)</td>
       <td>C intrinsics</td>
     </tr>
     <tr>
       <td>riscv64</td>
-      <td>19</td>
-      <td>C intrinsics (RVV 1.0)</td>
+      <td>17-18 (~3,668 lines)</td>
+      <td>C intrinsics (RVV 1.0), 1 asm CPU-probe file</td>
     </tr>
     <tr>
       <td>mips64</td>
@@ -670,10 +758,12 @@
     </tr>
   </tbody>
 </table></div>
-<h3 id="62-per-component-coverage">
+
+<p>The riscv64/arm64 size gap is explained by the two missing feature categories below plus RISC-V using one LMUL-tuned code path versus x86’s doubled SSE2/AVX2 variants, not by shallowness of what exists.</p>
+<h3 id="62-dispatch-level-function-coverage">
   
   
-    <a href="#62-per-component-coverage" class="anchor-heading" aria-labelledby="62-per-component-coverage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.2 Per-Component Coverage
+    <a href="#62-dispatch-level-function-coverage" class="anchor-heading" aria-labelledby="62-dispatch-level-function-coverage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.2 Dispatch-Level Function Coverage
   
   
 </h3>
@@ -682,163 +772,102 @@
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Component</th>
+      <th>Operation</th>
       <th>x86_64</th>
-      <th>arm/Neon</th>
+      <th>arm/arm64</th>
       <th>riscv64</th>
-      <th>Impact of gap</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>RGB/YCbCr colorspace conversion (encode)</td>
+      <td>RGB/YCbCr color convert (encode + decode), grayscale</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>n/a</td>
     </tr>
     <tr>
-      <td>YCbCr/RGB colorspace conversion (decode)</td>
+      <td>h2v1/h2v2 downsample</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>n/a</td>
     </tr>
     <tr>
-      <td>RGB-to-grayscale</td>
+      <td>h2v1/h2v2 (+ fancy) upsample</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>n/a</td>
-    </tr>
-    <tr>
-      <td>h2v1/h2v2 chroma downsampling</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>n/a</td>
-    </tr>
-    <tr>
-      <td>h2v1/h2v2 fancy upsampling</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>n/a</td>
-    </tr>
-    <tr>
-      <td>h2v1/h2v2 plain upsampling</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>n/a</td>
     </tr>
     <tr>
       <td>h2v1/h2v2 merged upsample+convert</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>n/a</td>
     </tr>
     <tr>
-      <td>Integer quantization</td>
+      <td>convsamp</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>n/a</td>
     </tr>
     <tr>
-      <td>Sample conversion (convsamp)</td>
+      <td>FDCT islow + ifast</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>n/a</td>
     </tr>
     <tr>
-      <td>Accurate integer FDCT (islow)</td>
+      <td>Quantization</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>n/a</td>
     </tr>
     <tr>
-      <td>Fast integer FDCT (ifast)</td>
+      <td>IDCT islow + ifast (full-size)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>n/a</td>
     </tr>
     <tr>
-      <td>Accurate integer IDCT (islow)</td>
+      <td>Reduced/scaled IDCT (2x2, 4x4)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes</td>
-      <td>n/a</td>
+      <td><strong>No - C fallback</strong></td>
     </tr>
     <tr>
-      <td>Fast integer IDCT (ifast)</td>
+      <td>Huffman SIMD encode (baseline + progressive AC prepare)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes</td>
-      <td>n/a</td>
+      <td><strong>No - C fallback</strong></td>
     </tr>
     <tr>
-      <td>CPU detection</td>
+      <td>Float DCT/IDCT/quantize/convsamp</td>
       <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>n/a</td>
+      <td>Partial/No</td>
+      <td>No (not riscv-specific - arm lacks most of this too)</td>
     </tr>
     <tr>
-      <td>RGB565 colorspace conversion</td>
-      <td>Yes</td>
+      <td>ycc_rgb565</td>
+      <td>[CONTRADICTORY - see note]</td>
       <td>Yes</td>
       <td>No</td>
-      <td>Low – niche pixel format</td>
-    </tr>
-    <tr>
-      <td>h1v2 fancy upsample</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>Low – uncommon subsampling format</td>
-    </tr>
-    <tr>
-      <td>Float FDCT/IDCT</td>
-      <td>Yes</td>
-      <td>Partial</td>
-      <td>No</td>
-      <td>Low – float DCT is rarely selected</td>
-    </tr>
-    <tr>
-      <td>Float quantization / convsamp</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>No</td>
-      <td>Low – same</td>
-    </tr>
-    <tr>
-      <td>Scaled IDCT (2x2, 4x4)</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>Medium – used for thumbnail decode</td>
-    </tr>
-    <tr>
-      <td>Huffman encoding (huff_encode_one_block)</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>High – limits compression throughput</td>
-    </tr>
-    <tr>
-      <td>Huffman encode_mcu_AC_first/refine_prepare</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>Medium – progressive JPEG compression</td>
     </tr>
   </tbody>
 </table></div>
+
+<div class="table-wrapper"><table>
+  <tbody>
+    <tr>
+      <td><strong>Discrepancy note:</strong> the existing report’s Section 6.2 stated x86_64 <em>does</em> implement RGB565 colorspace conversion (“Yes</td>
+      <td>Yes</td>
+      <td>No” for x86/arm/riscv). A live adversarial-verification pass instead reports “ycc_rgb565</td>
+      <td>no</td>
+      <td>yes</td>
+      <td>no” - i.e., that RGB565 is an ARM-only embedded feature and x86_64 does <em>not</em> implement it either. This is a direct contradiction between the two sources and was not independently resolved in this round; [NEEDS VERIFICATION] against <code class="language-plaintext highlighter-rouge">simd/jsimd.c</code> directly.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Excluding that one disputed cell, riscv64 covers the same 8 of 10 unambiguous hot-path operations that arm64 covers, with the same two gaps (reduced IDCT, Huffman SIMD encode) in both cases falling back silently and correctly to portable C in <code class="language-plaintext highlighter-rouge">src/</code> - not broken, just not yet vectorized.</p>
 <h3 id="63-most-impactful-gap-huffman-encoding">
   
   
@@ -848,7 +877,7 @@
 </h3>
     
 
-<p>The absence of a vectorized Huffman encoder (<code class="language-plaintext highlighter-rouge">jsimd_huff_encode_one_block</code>) is the most consequential gap relative to arm64 and x86_64. Huffman encoding is on the critical path for JPEG compression. Its absence means that after the color conversion and DCT steps (both vectorized), the entropy coding step falls back to scalar C, capping compression throughput gains. This gap is not tracked in any open upstream issue as of the report date.</p>
+<p>The absence of a vectorized Huffman encoder (<code class="language-plaintext highlighter-rouge">jsimd_huff_encode_one_block</code>) is the most consequential functional gap relative to arm64 and x86_64. Huffman entropy coding sits on the critical path for JPEG compression immediately after the (now-vectorized) DCT/quantization steps, capping end-to-end compression throughput gains at the scalar entropy-coding rate. No open upstream issue tracks vectorized Huffman encoding for RVV as of the report date.</p>
 <h3 id="64-secondary-gap-scaled-idct">
   
   
@@ -858,7 +887,27 @@
 </h3>
     
 
-<p>The absence of 2x2 and 4x4 IDCT variants (<code class="language-plaintext highlighter-rouge">jsimd_idct_2x2</code>, <code class="language-plaintext highlighter-rouge">jsimd_idct_4x4</code>) means that thumbnail-size JPEG decode (e.g., requesting a 1/4 or 1/8 scale decode via <code class="language-plaintext highlighter-rouge">dct_method=JDCT_ISLOW</code> with reduced output dimensions) uses scalar fallback. This is a relevant use case for preview generation pipelines.</p><hr />
+<p>The absence of 2x2/4x4 IDCT variants means thumbnail-scale JPEG decode (reduced-resolution <code class="language-plaintext highlighter-rouge">dct_method=JDCT_ISLOW</code> requests) falls back to scalar C - relevant to preview-generation pipelines.</p>
+<h3 id="65-rva23--zvbb-detection-gap">
+  
+  
+    <a href="#65-rva23--zvbb-detection-gap" class="anchor-heading" aria-labelledby="65-rva23--zvbb-detection-gap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.5 RVA23 / Zvbb Detection Gap
+  
+  
+</h3>
+    
+
+<p><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/902">Issue #902</a> (open) documents that the library currently only detects RVA22; RVA23 adds Zvbb/Zbb extensions that could further accelerate the RVV code, but no runtime detection exists yet (a <code class="language-plaintext highlighter-rouge">JSIMD_RVV23</code> bitmask has been proposed but not implemented). Labeled “funding needed,” no PR attached.</p>
+<h3 id="66-floating-point-semantics">
+  
+  
+    <a href="#66-floating-point-semantics" class="anchor-heading" aria-labelledby="66-floating-point-semantics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.6 Floating-Point Semantics
+  
+  
+</h3>
+    
+
+<p>Issue #710 (closed) identified FMA-contraction rounding differences between RISC-V and x86 causing 2/590 float-DCT progressive-comparison test failures under QEMU; workaround was disabling <code class="language-plaintext highlighter-rouge">FLOATTEST8</code> by default for non-x86, not a validated riscv64-specific expected result (see Section 5.7). No open NaN-specific RISC-V bug was found.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -868,9 +917,9 @@
 </h2>
     
 
-<p><strong>No riscv64 CI exists in libjpeg-turbo/libjpeg-turbo.</strong></p>
+<p><strong>No riscv64 CI exists in libjpeg-turbo/libjpeg-turbo</strong>, confirmed independently multiple times against a fresh clone at HEAD <code class="language-plaintext highlighter-rouge">03c9a9d7</code> (2026-09-25).</p>
 
-<p>The sole CI configuration is <code class="language-plaintext highlighter-rouge">.github/workflows/build.yml</code>. It defines seven jobs:</p>
+<p>The sole CI configuration is <code class="language-plaintext highlighter-rouge">.github/workflows/build.yml</code> (16,476 bytes, 291 lines), triggered on <code class="language-plaintext highlighter-rouge">push</code>, <code class="language-plaintext highlighter-rouge">pull_request</code>, <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> (no <code class="language-plaintext highlighter-rouge">schedule</code>). Seven jobs, all on standard GitHub-hosted, non-riscv64 runners:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -908,7 +957,7 @@
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">linux-jpeg8</code></td>
-      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (Clang)</td>
       <td>x86_64</td>
     </tr>
     <tr>
@@ -919,11 +968,40 @@
   </tbody>
 </table></div>
 
-<p>No reference to “riscv”, “riscv64”, “RISCV”, “qemu”, “cross”, or “emulat” appears anywhere in <code class="language-plaintext highlighter-rouge">build.yml</code>. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, or <code class="language-plaintext highlighter-rouge">appveyor.yml</code> exists at the repository root.</p>
+<p>Grep of <code class="language-plaintext highlighter-rouge">build.yml</code> for <code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">riscv64</code>, <code class="language-plaintext highlighter-rouge">RISCV</code>, <code class="language-plaintext highlighter-rouge">qemu</code> (case-insensitive): zero matches, independently confirmed via local <code class="language-plaintext highlighter-rouge">grep</code>, GitHub’s own <code class="language-plaintext highlighter-rouge">search_code</code> API, and a second adversarial-verification pass. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, <code class="language-plaintext highlighter-rouge">appveyor.yml</code>/<code class="language-plaintext highlighter-rouge">.appveyor.yml</code>, or <code class="language-plaintext highlighter-rouge">azure-pipelines.yml</code> exists anywhere in the repository. The only Docker image referenced anywhere in CI is <code class="language-plaintext highlighter-rouge">dcommander/buildljt:$BRANCH</code>, used for unrelated official nightly-package builds, not riscv64 cross-compilation.</p>
 
-<p>Consequence: the RVV SIMD code merged in February 2026 has no automated build or test coverage in upstream CI. Regressions introduced by future changes to generic SIMD infrastructure or libjpeg-turbo internals would not be caught until a developer manually builds and tests on RISC-V hardware. The Issue #710 float test failure from 2023 has a workaround (FLOATTEST8 disabled for non-x86) but no correct expected MD5 for the RVV fp-contract rounding variant has been committed, leaving a testing gap for any future riscv64 CI adoption.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Native CI runner</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">ubuntu-latest</code>)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">macos-15</code>)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>QEMU-emulated CI job</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Automated regression coverage of SIMD path</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No - manual only (BananaPi K1/F3, OrangePi RV2, Kendryte K230, qemu-system-riscv64 per Issue #710)</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>The upstream maintainer declined to add riscv64 to the release binary pipeline when free RISE CI runners were offered (<a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885</a>, May 2026, closed “won’t implement”). The stated reason was unwillingness to expand release infrastructure.</p><hr />
+<p>Consequence: the RVV SIMD code merged in February 2026, and the further DCT optimizations merged mid-2026, have no automated build or test coverage in upstream CI. Regressions in generic SIMD infrastructure or libjpeg-turbo internals would not be caught until a developer manually builds and tests on RISC-V hardware. RISE demonstrated an external fork-based CI approach via its own GitLab project, but this does not close the upstream CI gap, and RISE’s GitHub Actions riscv64 runner fleet (<code class="language-plaintext highlighter-rouge">riscv-runner</code>, announced in the 2026-03-24 RISE blog post “Announcing the RISE RISC-V Runners”) was explicitly offered to libjpeg-turbo in Issue #885 and declined.</p><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -941,29 +1019,7 @@
 </h3>
     
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Release</th>
-      <th>riscv64 binary</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>3.1.4.1 (current stable)</td>
-      <td>No</td>
-      <td>Binaries: Windows x64/x86 (gcc/MSVC), macOS dmg, Linux deb/rpm for amd64/arm64/aarch64/i386/x86_64 only</td>
-    </tr>
-    <tr>
-      <td>3.1.90 (3.2 beta1)</td>
-      <td>No</td>
-      <td>First release containing RVV source; same binary platforms as stable</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>No official upstream binary for riscv64 exists or is planned.</p>
+<p>No official upstream binary for riscv64 exists or is planned. GitHub release assets for 3.2.0 (visible list; not exhaustively enumerated - the releases page indicated additional unloaded assets) are limited to Windows .exe (gcc/vc, x64/x86/arm64), macOS/iOS .dmg, Linux aarch64/RPM, and source tarball/zip. No riscv64 asset filename was found in any release. <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885</a>, which offered free RISE CI runners specifically to produce riscv64 release binaries, was closed “won’t implement.”</p>
 <h3 id="82-linux-distribution-packages">
   
   
@@ -985,30 +1041,32 @@
   </thead>
   <tbody>
     <tr>
-      <td>Ubuntu 24.04 Noble</td>
-      <td><code class="language-plaintext highlighter-rouge">libjpeg-turbo8</code>, <code class="language-plaintext highlighter-rouge">libjpeg-turbo-progs</code>, <code class="language-plaintext highlighter-rouge">libjpeg-turbo8-dev</code></td>
-      <td>2.1.5-2ubuntu2</td>
-      <td>Yes</td>
-      <td>No – version predates RVV merge by ~3.5 years</td>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td><code class="language-plaintext highlighter-rouge">libjpeg-turbo8</code>, <code class="language-plaintext highlighter-rouge">libjpeg-turbo8-dev</code>, <code class="language-plaintext highlighter-rouge">libjpeg-turbo-progs</code></td>
+      <td>2.1.5-4ubuntu4</td>
+      <td>Yes (confirmed live, <a href="https://packages.ubuntu.com/search?keywords=libjpeg-turbo&amp;suite=resolute">packages.ubuntu.com</a>)</td>
+      <td><strong>No</strong> - version predates the RVV merge (3.2.0) by roughly 3.5 years of upstream history</td>
+    </tr>
+    <tr>
+      <td>Arch Linux RISC-V (archriscv.felixc.at)</td>
+      <td><code class="language-plaintext highlighter-rouge">libjpeg-turbo</code></td>
+      <td>3.2.0-2</td>
+      <td>Yes (confirmed live, <a href="https://archriscv.felixc.at/repo/extra/">archriscv.felixc.at/repo/extra/</a>, signed <code class="language-plaintext highlighter-rouge">.pkg.tar.zst</code>, dated 2026-07-01)</td>
+      <td><strong>Yes</strong> - first confirmed downstream binary carrying the RVV port</td>
     </tr>
     <tr>
       <td>Debian sid/unstable</td>
       <td><code class="language-plaintext highlighter-rouge">libjpeg-turbo</code></td>
-      <td>1:3.1.3-4</td>
-      <td>Yes – built on <code class="language-plaintext highlighter-rouge">rv-manda-02</code></td>
-      <td>No – version predates RVV merge</td>
-    </tr>
-    <tr>
-      <td>Arch Linux RISC-V</td>
-      <td><code class="language-plaintext highlighter-rouge">libjpeg-turbo</code></td>
-      <td>Unknown</td>
-      <td>Unknown – fetch truncated</td>
-      <td>Unknown</td>
+      <td>1:3.1.3-4 [not reverified this round - carried from prior report]</td>
+      <td>Yes (built on <code class="language-plaintext highlighter-rouge">rv-manda-02</code>)</td>
+      <td>No - version predates the RVV merge</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No Linux distribution package on riscv64 currently includes the RVV SIMD code. When distributions package 3.2.0 (once the stable release is tagged), the riscv64 builds will be the first publicly available binaries with SIMD acceleration.</p>
+<p><strong>Note on discrepancy with the existing report:</strong> the prior version of this report cited Ubuntu 24.04 “Noble” (2.1.5-2ubuntu2); the currently confirmed live data point is Ubuntu 26.04 “resolute” (2.1.5-4ubuntu4) - both are pre-RVV source-version builds, so the substantive finding (no SIMD in the Ubuntu riscv64 package) is unchanged, but the specific suite/version checked has shifted. Debian’s entry was not reverified this round and is carried forward from the prior report; it should be treated as potentially stale.</p>
+
+<p>No Linux distribution package on riscv64 confirmed in this research includes the RVV SIMD code except Arch Linux RISC-V’s 3.2.0-2 build. As Ubuntu and Debian package 3.2.0 or later in future releases, their riscv64 builds will gain SIMD acceleration for the first time.</p>
 <h3 id="83-python--pypi">
   
   
@@ -1018,7 +1076,17 @@
 </h3>
     
 
-<p>No <code class="language-plaintext highlighter-rouge">libjpeg-turbo</code> package exists on PyPI (HTTP 404). The RISE GitLab wheel builder (project 56254198) contains no libjpeg-turbo package and redirects to the same 404. Data not available: Arch Linux RISC-V exact version and build status.</p><hr />
+<p>No <code class="language-plaintext highlighter-rouge">libjpeg-turbo</code> package exists on PyPI: <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/libjpeg-turbo/json</code> and <code class="language-plaintext highlighter-rouge">https://pypi.org/simple/libjpeg-turbo/</code> both return HTTP 404 (libjpeg-turbo is a C library, not distributed under this name on PyPI). The RISE wheel builder (<code class="language-plaintext highlighter-rouge">gitlab.com/api/v4/projects/56254198/packages/pypi/simple/libjpeg-turbo/</code>) redirects (HTTP 302) to the same nonexistent PyPI simple index (404) - no RISE-built wheel exists, consistent with there being no upstream PyPI package to build against. This channel is inapplicable rather than a gap.</p>
+<h3 id="84-what-a-user-must-do-today">
+  
+  
+    <a href="#84-what-a-user-must-do-today" class="anchor-heading" aria-labelledby="84-what-a-user-must-do-today"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.4 What a User Must Do Today
+  
+  
+</h3>
+    
+
+<p>A riscv64 user wanting RVV-accelerated libjpeg-turbo must either: (a) use Arch Linux RISC-V, whose <code class="language-plaintext highlighter-rouge">extra</code> repository already ships 3.2.0 with RVV; or (b) build from source at 3.2.0 or later with a GCC 14+/Clang 20+ toolchain supporting <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>. Ubuntu and Debian users get a working, but unaccelerated, scalar-C build from their current package versions.</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -1027,140 +1095,69 @@
   
 </h2>
     
-<h3 id="91-build-time-dependencies">
-  
-  
-    <a href="#91-build-time-dependencies" class="anchor-heading" aria-labelledby="91-build-time-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 Build-Time Dependencies
-  
-  
-</h3>
-    
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
+      <th>Criticality</th>
       <th>riscv64 status</th>
-      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>CMake 3.15+</td>
-      <td>Build system</td>
-      <td>Fully supported</td>
-      <td>No riscv64-specific issues known</td>
+      <td>CMake</td>
+      <td>Build system (<code class="language-plaintext highlighter-rouge">find_package</code>/build-config generation)</td>
+      <td>Critical (build-dependency)</td>
+      <td>Fully functional on riscv64. <code class="language-plaintext highlighter-rouge">CPU_TYPE=riscv64</code> detection is generic-fallthrough (no explicit <code class="language-plaintext highlighter-rouge">MATCHES "riscv"</code> branch), but works correctly because <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code> reports <code class="language-plaintext highlighter-rouge">riscv64</code> natively. No riscv64-specific CMake issues found.</td>
     </tr>
     <tr>
-      <td>GCC 14+ or Clang 17+</td>
-      <td>C compiler for RVV intrinsics</td>
-      <td>Available in major distros</td>
-      <td>GCC 13 partial; build probe will fail at configure time if compiler is too old</td>
+      <td>GCC</td>
+      <td>C compiler, primary toolchain for RVV intrinsics</td>
+      <td>Critical (build-dependency)</td>
+      <td>Builds the RVV intrinsic probe and all <code class="language-plaintext highlighter-rouge">simd/riscv64/</code> sources under <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>. Benchmarking in this project’s own changelog and issues used GCC 14 and GCC 16.1.0. No formal minimum version is documented upstream; older GCC without RVV 1.0 intrinsic support simply fails the CMake compile probe and the build falls back to scalar (or fails hard under <code class="language-plaintext highlighter-rouge">-DREQUIRE_SIMD=1</code>).</td>
     </tr>
     <tr>
-      <td>NASM/Yasm</td>
-      <td>x86 assembly</td>
-      <td>Not required on riscv64</td>
-      <td>Skipped entirely for this architecture</td>
+      <td>LLVM</td>
+      <td>Clang compiler, alternate toolchain for RVV intrinsics</td>
+      <td>Critical (build-dependency)</td>
+      <td>Same role as GCC. Benchmarking used Clang 20 and Clang 21.1.6. The RISE GitLab MR !2 build used Clang with a GCC sysroot. GCC and Clang show measurably different RVV DCT performance on identical source (e.g. <code class="language-plaintext highlighter-rouge">1db93c2</code>: +12.9% avg with GCC 14 vs +3.5% avg with Clang 20 for compression), so production deployments should validate performance with the specific compiler in use.</td>
     </tr>
-  </tbody>
-</table></div>
-<h3 id="92-runtime-dependencies">
-  
-  
-    <a href="#92-runtime-dependencies" class="anchor-heading" aria-labelledby="92-runtime-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 Runtime Dependencies
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
     <tr>
-      <th>Dependency</th>
-      <th>Role</th>
-      <th>riscv64 status</th>
-      <th>Notes</th>
+      <td>QEMU</td>
+      <td>Emulated riscv64 execution for testing and cross-compile test runs</td>
+      <td>Critical (test-dependency)</td>
+      <td>Not used anywhere in upstream CI (<code class="language-plaintext highlighter-rouge">build.yml</code> has zero references). Used historically for manual correctness testing (<code class="language-plaintext highlighter-rouge">qemu-system-riscv64</code>, Issue #710, 2023) and by RISE’s external GitLab CI as <code class="language-plaintext highlighter-rouge">CMAKE_CROSSCOMPILING_EMULATOR</code> (<code class="language-plaintext highlighter-rouge">qemu-riscv64 -cpu rv64,v=true,vlen=128</code>). No upstream automation depends on it today.</td>
     </tr>
-  </thead>
-  <tbody>
     <tr>
       <td>zlib</td>
-      <td>PNG write pipeline</td>
-      <td>Builds and ships on riscv64 in all major distros</td>
-      <td>Pure C; no SIMD on any platform in the reference implementation. Not a blocker.</td>
+      <td>Optional - PNG write pipeline for the <code class="language-plaintext highlighter-rouge">cjpeg</code>/<code class="language-plaintext highlighter-rouge">djpeg</code> utilities (<code class="language-plaintext highlighter-rouge">find_package(ZLIB REQUIRED)</code> when PNG support is enabled)</td>
+      <td>Optional (runtime-dependency)</td>
+      <td>Builds clean on riscv64; pure portable C, no architecture-specific code. Ships in all major distros’ riscv64 repositories. An RVV Adler-32 PR (#1099, +7% decompression on SG2042) is unmerged upstream in zlib itself; a duplicate PR (#1267) was self-closed. See <code class="language-plaintext highlighter-rouge">project-reports/zlib.md</code> for zlib’s own riscv64 status.</td>
     </tr>
     <tr>
-      <td>libspng (optional, bundled)</td>
-      <td>PNG encode/decode</td>
-      <td>Builds on riscv64; SIMD silently disabled</td>
-      <td>Falls to <code class="language-plaintext highlighter-rouge">SPNG_DISABLE_OPT</code> path for unknown architectures. Filter optimizations (defilter_sub, defilter_avg, defilter_paeth, palette expansion) are all scalar. No upstream appetite to add RVV (no issues filed). Minor throughput gap for PNG-heavy workloads inside libjpeg-turbo’s PNG read path. Not a correctness blocker.</td>
+      <td>libspng</td>
+      <td>Optional (bundled) - PNG encode/decode</td>
+      <td>Optional (runtime-dependency)</td>
+      <td>Builds on riscv64; SIMD path is silently disabled via <code class="language-plaintext highlighter-rouge">SPNG_DISABLE_OPT</code> for unrecognized architectures (scalar fallback for <code class="language-plaintext highlighter-rouge">defilter_sub</code>/<code class="language-plaintext highlighter-rouge">avg</code>/<code class="language-plaintext highlighter-rouge">paeth</code>, palette expansion). No riscv64-tagged issues found upstream (0 hits on <code class="language-plaintext highlighter-rouge">randy408/libspng</code>); no recorded appetite for an RVV port.</td>
     </tr>
     <tr>
       <td>JNA (Java Native Access)</td>
-      <td>Optional TurboJPEG Java bindings</td>
-      <td>Depends on OpenJDK riscv64 status</td>
-      <td>See <code class="language-plaintext highlighter-rouge">project-reports/openjdk.md</code> for details.</td>
+      <td>Optional - required only for the TurboJPEG Java API bindings (<code class="language-plaintext highlighter-rouge">jna/CMakeLists.txt</code>, <code class="language-plaintext highlighter-rouge">find_package(Java REQUIRED)</code>)</td>
+      <td>Optional (runtime-dependency)</td>
+      <td>A native <code class="language-plaintext highlighter-rouge">linux-riscv64</code> JNA jar classifier has shipped on Maven Central since JNA 5.13. Two historical, now-closed issues: #1622 (linux-riscv64 missing from MANIFEST.MF, fixed 2024-09) and #1557 (linux-riscv64 jar required glibc &gt;= 2.34 starting at 5.13, closed 2023-11). Neither is open or blocking today.</td>
+    </tr>
+    <tr>
+      <td>OpenJDK (indirect, via JNA)</td>
+      <td>Java runtime required to use the optional TurboJPEG Java bindings</td>
+      <td>Indirect</td>
+      <td>JNA’s Java-side functionality is gated on a working riscv64 OpenJDK. See <code class="language-plaintext highlighter-rouge">project-reports/openjdk.md</code> for that project’s own riscv64 status; this report did not independently re-verify OpenJDK riscv64 status.</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-<h3 id="101-rise-project-involvement">
-  
-  
-    <a href="#101-rise-project-involvement" class="anchor-heading" aria-labelledby="101-rise-project-involvement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 RISE Project Involvement
-  
-  
-</h3>
-    
+</table></div>
 
-<p>RISE funded and hosted the libjpeg-turbo RVV work under <a href="https://gitlab.com/riseproject/libjpeg-turbo">gitlab.com/riseproject/libjpeg-turbo</a> (created May 27, 2025). The primary funded contributor was Filip Wasil (Samsung Electronics). Zhiyuan Tan (ISCAS, a RISE general member) contributed the original implementation. camel-cdr (Olaf Bernstein) contributed independently.</p>
-
-<p>No dedicated libjpeg-turbo blog post exists on <a href="https://riseproject.dev">riseproject.dev</a>. Across 27 public RISE blog posts (May 2024 through June 2026), zero posts mention libjpeg-turbo. The work is not referenced in RISE’s public end-of-year updates. [NEEDS VERIFICATION: whether the work appears in the RISE wiki at wiki.riseproject.dev, which requires authentication.]</p>
-<h3 id="102-corporate-sponsors-relevant-to-risc-v-context">
-  
-  
-    <a href="#102-corporate-sponsors-relevant-to-risc-v-context" class="anchor-heading" aria-labelledby="102-corporate-sponsors-relevant-to-risc-v-context"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 Corporate Sponsors Relevant to RISC-V Context
-  
-  
-</h3>
-    
-
-<p>Of the known project sponsors, the following are relevant to RISC-V context:</p>
-
-<ul>
-  <li><strong>FLOSS/fund</strong> (September 2025-present, general): The grant dcommander cited as enabling the RVV work. This is the direct funding mechanism for the RVV integration.</li>
-  <li><strong>Google</strong> (multiple periods): Has funded security and API work. Not recorded as funding RVV work specifically.</li>
-</ul>
-
-<p>ISCAS (Zhiyuan Tan’s institution) is a RISE general member. SiFive contacted dcommander in 2023 about funding but no agreement was reached. Andes Technology contributed IDCT code to the ISCAS fork but no funding agreement is recorded. No Qualcomm-specific engagement with this project is recorded in the research findings.</p>
-<h3 id="103-hardware-context">
-  
-  
-    <a href="#103-hardware-context" class="anchor-heading" aria-labelledby="103-hardware-context"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 Hardware Context
-  
-  
-</h3>
-    
-
-<p>Benchmarks in the research findings used three RISC-V platforms:</p>
-
-<ul>
-  <li><strong>Banana Pi F3 / SpacemiT K1</strong> (VLEN=256, ISCAS team and filipwasil): primary development and benchmark platform</li>
-  <li><strong>OrangePi RV2</strong> (VLEN=256, dcommander): independent benchmark and integration platform</li>
-  <li><strong>Ky X1 / Kendryte K1</strong> (1.6 GHz, VLEN unknown – [NEEDS VERIFICATION]): used for official 3.2 beta1 release note benchmarks</li>
-  <li><strong>Kendryte K230</strong> (VLEN=128, filipwasil via RISE MR): earliest real-hardware test</li>
-</ul>
-
-<p>All current production hardware tested uses VLEN=256. The code is validated for correctness on VLEN=128/256/512/1024 (per Issue #895 comments from ChipKerchner).</p><hr />
+<p>No JIT backend, numerics library, or crypto dependency exists in this project - libjpeg-turbo is a leaf codec library with exactly three non-toolchain library dependencies (zlib, libspng, JNA), all optional.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1178,37 +1175,67 @@
 </h3>
     
 
-<p><strong><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/895">Issue #895</a> – “Improve performance of IDCT &amp; FDCT for RVV”</strong> (opened 2026-06-12, OPEN)</p>
-
-<p>Proposes: madd instruction fusion, instruction hoisting, nclip replacing min/max/nsra, <code class="language-plaintext highlighter-rouge">vlsseg4e16</code> segmented loads replacing scalar load + transpose.</p>
-
-<p>Reproduced results by dcommander on OrangePi RV2 (branch <code class="language-plaintext highlighter-rouge">rvv-dct-opt</code>, commit fa021c4, pushed 2026-06-19):</p>
-<ul>
-  <li>Clang 20: compression +3.9% to +8.2% (avg +5.3%), decompression +0.3% to +2.7% (avg +1.6%)</li>
-  <li>GCC 14: compression +8.4% to +14.3% (avg +12.1%), decompression -4.4% to -0.4% (avg -1.7%, slight regression)</li>
-</ul>
-
-<p>Status: maintainer is requesting community benchmarking on additional hardware. Changes will not make 3.2.0. May be included in 3.2.1. Timeline described as “probably months” due to project funding deficit. IDCT improvements were not considered compelling; only FDCT changes are under active consideration.</p>
+<p><strong><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/902">Issue #902</a> - “RVV needs to be able to detect RVA23”</strong> (open, 2026-07-14, 13 comments, labels: enhancement, funding needed, assigned dcommander)
+Library currently detects only RVA22; RVA23 adds Zvbb/Zbb extensions that could further accelerate RVV code, but no runtime detection exists (proposed <code class="language-plaintext highlighter-rouge">JSIMD_RVV23 = 0x100</code>). No PR attached. This is the only open RISC-V-specific issue found in this round (performance or correctness).</p>
 <h3 id="112-closed-issues-risc-v-specific">
   
   
-    <a href="#112-closed-issues-risc-v-specific" class="anchor-heading" aria-labelledby="112-closed-issues-risc-v-specific"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Closed Issues (RISC-V-Specific)
+    <a href="#112-closed-issues-risc-v-specific" class="anchor-heading" aria-labelledby="112-closed-issues-risc-v-specific"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Closed Issues (RISC-V-specific)
   
   
 </h3>
     
 
-<p><strong><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/710">Issue #710</a> – Float test failures on RISC-V</strong> (closed 2023-07-25)</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/620">#620</a></td>
+      <td>Add RISC-V vectors support</td>
+      <td>Closed (2026-02-03), 72 comments</td>
+      <td>Master tracking issue; closed by merge of <code class="language-plaintext highlighter-rouge">9817c40</code></td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/710">#710</a></td>
+      <td>Unit tests fail when run on RISC-V</td>
+      <td>Closed (2023-07-25)</td>
+      <td>2/590 float-DCT progressive comparison tests fail under QEMU; FMA-rounding difference, labeled “SEP”/”worked around,” not a functional defect</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/794">#794</a></td>
+      <td>[Question] Will libjpeg-turbo support RISC-V’s SIMD/Vector in the future?</td>
+      <td>Closed as duplicate (2024-11-11)</td>
+      <td>Consolidated into #620</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">#885</a></td>
+      <td>Request riscv64 release binaries</td>
+      <td>Closed “won’t implement”</td>
+      <td>Free RISE CI runners were offered and declined</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/895">#895</a></td>
+      <td>Improve performance of IDCT &amp; FDCT for RVV</td>
+      <td>Closed (via commit <code class="language-plaintext highlighter-rouge">1db93c2</code>)</td>
+      <td>Compression +9.7-16.6% (avg 12.9%) GCC 14, +1.3-8.0% (avg 3.5%) Clang 20; decompression not significantly changed</td>
+    </tr>
+    <tr>
+      <td>#790 [NEEDS VERIFICATION - carried from prior report, not reverified]</td>
+      <td>Unsupported marker error on MilkV module</td>
+      <td>Closed, “general support”</td>
+      <td>Malformed input JPEG, not a riscv64-specific code defect</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>2 of 590 tests failed on qemu-system-riscv64: <code class="language-plaintext highlighter-rouge">djpeg-shared-3x2-float-prog-cmp</code> and <code class="language-plaintext highlighter-rouge">djpeg-static-3x2-float-prog-cmp</code>. Root cause: FMA contraction on RISC-V produces different rounding than x86. Workaround: <code class="language-plaintext highlighter-rouge">FLOATTEST8</code> no longer set by default for non-x86 builds. The correct rounding mode for RISC-V is <code class="language-plaintext highlighter-rouge">fp-contract</code>, but no updated expected MD5 for this variant has been committed to the test suite. This is a latent technical debt item for any future riscv64 CI setup.</p>
-
-<p><strong><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/620">Issue #620</a> – “Add RISC-V vectors support”</strong> (closed 2026-02-03)</p>
-
-<p>Closed upon merge of commit 9817c40. 71 comments over 3.5 years. No residual action items.</p>
-
-<p><strong><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/790">Issue #790</a> – “Unsupported marker error in JPEG decompression on MilkV module”</strong> (closed)</p>
-
-<p>On MilkV Duo256M (RISC-V, Linux 5.10, musl libc), libjpeg-turbo 3.0.90 crashed with “Unsupported marker type 0x6d” for a specific JPEG file. Maintainer labeled it “general support” – the JPEG file had non-standard markers rather than a library defect. No riscv64-specific code path involved.</p>
+<p><strong>Discrepancy note on Issue #895:</strong> the existing report characterized this as an <em>open</em> issue with a preliminary, interim benchmark set from the <code class="language-plaintext highlighter-rouge">rvv-dct-opt</code> branch (GCC 14 avg +12.1% compression but a -1.7% avg <strong>decompression regression</strong>; Clang 20 avg +5.3% compression). Live research in this round confirms the issue is now <strong>closed</strong>, merged as <code class="language-plaintext highlighter-rouge">1db93c2</code> with different, final numbers (GCC 14 avg +12.9% compression, Clang 20 avg +3.5% compression, and decompression “not significantly changed” - i.e., the earlier regression signal from the interim branch did not appear in the final merged benchmarks). Both figures are used here: the interim branch numbers are superseded by the final merged-commit numbers.</p>
 <h3 id="113-known-technical-gaps-not-tracked-in-issues">
   
   
@@ -1219,11 +1246,10 @@
     
 
 <ul>
-  <li>No vectorized Huffman encoder (most impactful untracked gap)</li>
-  <li>No scaled IDCT (2x2, 4x4) for thumbnail decode</li>
-  <li>No RGB565 colorspace conversion</li>
-  <li>In-register DCT matrix transpose suboptimal pending Zvzip ratification</li>
-  <li>No riscv64 expected MD5 for FLOATTEST8 fp-contract variant (Issue #710 follow-up)</li>
+  <li>No vectorized Huffman encoder (most impactful untracked gap; see Section 6.3).</li>
+  <li>No scaled IDCT (2x2, 4x4) for thumbnail decode.</li>
+  <li>No riscv64 expected MD5 for the FLOATTEST8 <code class="language-plaintext highlighter-rouge">fp-contract</code> rounding variant (Issue #710 follow-up, still unresolved).</li>
+  <li>In-register DCT matrix transpose remains suboptimal pending Zvzip ratification.</li>
 </ul><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
@@ -1242,14 +1268,14 @@
 </h3>
     
 
-<p>The <code class="language-plaintext highlighter-rouge">.github/CONTRIBUTING.md</code> defines constraints that directly affect any third-party contribution effort:</p>
+<p><code class="language-plaintext highlighter-rouge">.github/CONTRIBUTING.md</code> defines constraints affecting any future RISC-V contribution:</p>
 
 <ol>
-  <li><strong>No unsolicited PRs.</strong> Every change requires prior maintainer discussion and agreement. The RVV port itself required ~2.5 years of discussion before the maintainer accepted it.</li>
-  <li><strong>5% minimum performance threshold.</strong> Non-trivial enhancements with less than 5% overall (not micro-benchmark) performance impact will not be accepted. Issue #895 DCT optimizations are borderline: +5.3% avg with Clang 20, +12.1% avg with GCC 14. The decompression regression with GCC 14 (-1.7%) is a blocker for acceptance in current form.</li>
-  <li><strong>No AI-generated code.</strong> All contributions must be 100% human-generated.</li>
-  <li><strong>High bar for new features.</strong> Complete regression testing across all affected platforms, changelog documentation, strict code style compliance.</li>
-  <li><strong>ABI stability.</strong> No new exposed API struct members.</li>
+  <li><strong>No unsolicited PRs</strong> - every change requires prior maintainer discussion and agreement. The RVV port itself required roughly 2.5 years of discussion before acceptance.</li>
+  <li><strong>5% minimum overall performance threshold</strong> for non-trivial enhancements (not micro-benchmark-only gains). Issue #895’s interim branch numbers (avg +5.3% Clang / +12.1% GCC, with a GCC decompression regression) were borderline against this bar; the maintainer’s own rewrite (<code class="language-plaintext highlighter-rouge">1db93c2</code>) cleared it more comfortably before merge.</li>
+  <li><strong>No AI-generated code</strong> - contributions must be 100% human-generated.</li>
+  <li><strong>High bar for new features</strong> - full regression testing across affected platforms, changelog documentation, strict code style.</li>
+  <li><strong>ABI stability</strong> - no new exposed API struct members.</li>
 </ol>
 <h3 id="122-single-maintainer-risk">
   
@@ -1260,7 +1286,7 @@
 </h3>
     
 
-<p>The entire project is maintained by one person. Review cycles are measured in months during periods of funding deficit. The project has been in “funding deficit” since at least June 2026 (per dcommander’s comment on Issue #895, 2026-06-18). The FLOSS/fund grant that enabled the RVV integration has been partially consumed. No succession plan or co-maintainer is visible.</p>
+<p>The project is maintained by one person (dcommander), funded through GitHub Sponsors, PayPal, and grants including FLOSS/fund (the grant explicitly cited as enabling the RVV integration). No co-maintainer or succession plan is documented. Review cycles are measured in months; the maintainer has described the project as being in “funding deficit” [as characterized in the prior version of this report; not independently reverified this round].</p>
 <h3 id="123-no-riscv64-release-binary-path">
   
   
@@ -1270,7 +1296,7 @@
 </h3>
     
 
-<p>Issue #885 (May 2026, closed “won’t implement”) demonstrates that the maintainer will not accept free CI resources or add riscv64 to the release binary pipeline regardless of external infrastructure availability. Any organization requiring official binary packages for riscv64 must rely on Linux distribution packaging or self-managed builds.</p>
+<p><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885</a> demonstrates the maintainer will not accept free CI resources or add riscv64 to the release binary pipeline regardless of external infrastructure availability. Organizations requiring official binaries for riscv64 must rely on distribution packaging (currently only Arch Linux RISC-V ships an RVV-enabled build) or self-managed builds.</p>
 <h3 id="124-compiler-specific-dct-performance-variance">
   
   
@@ -1280,77 +1306,100 @@
 </h3>
     
 
-<p>The GCC 14 vs. Clang 20 discrepancy on the <code class="language-plaintext highlighter-rouge">rvv-dct-opt</code> branch (compression +12.1% vs. +5.3%; decompression -1.7% vs. +1.6%) indicates that DCT performance on RISC-V is sensitive to compiler choice. Production deployments should validate performance with the specific compiler version in use.</p><hr />
-<h2 id="13-investment-analysis">
+<p>The GCC-versus-Clang gap on the merged <code class="language-plaintext highlighter-rouge">1db93c2</code> DCT work (compression +12.9% GCC 14 vs +3.5% Clang 20) indicates RVV DCT performance is sensitive to compiler choice. Production deployments should validate performance with the specific compiler version in use rather than assuming parity across toolchains.</p>
+<h3 id="125-acceptance-probability-for-future-contributions">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#125-acceptance-probability-for-future-contributions" class="anchor-heading" aria-labelledby="125-acceptance-probability-for-future-contributions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12.5 Acceptance Probability for Future Contributions
+  
+  
+</h3>
+    
+
+<p>Given the precedent of both PR #837 and Issue #895 being substantially rewritten by the maintainer before merge (not merged as submitted), any future contributor (e.g., for Huffman SIMD or reduced IDCT) should expect the submitted code to serve as a reference implementation rather than mergeable code, and should budget review/negotiation time of several months, consistent with the project’s historical cadence.</p><hr />
+<h2 id="13-readiness-assessment">
+  
+  
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Optimization-purpose project:</strong> yes</li>
+  <li><strong>Optimization level:</strong> partial</li>
+</ul>
+
+<p><strong>Justification:</strong> No upstream riscv64 CI exists: <a href="https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/.github/workflows/build.yml">build.yml</a> has zero riscv/qemu references, and upstream explicitly declined to add riscv64 release binaries (<a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885</a>, closed won’t-implement). Ubuntu 26.04 ships riscv64 packages (<code class="language-plaintext highlighter-rouge">libjpeg-turbo8</code>, <code class="language-plaintext highlighter-rouge">-dev</code>, <code class="language-plaintext highlighter-rouge">-progs</code> at 2.1.5-4ubuntu4, via <a href="https://packages.ubuntu.com/search?keywords=libjpeg-turbo&amp;suite=resolute">packages.ubuntu.com</a>) predating the RVV merge, but patch status of that packaging diff was not verified, so per the rule this caps at orange/downstream-only rather than yellow. RVV 1.0 SIMD (<a href="https://github.com/libjpeg-turbo/libjpeg-turbo/pull/837">PR #837</a>, commit 9817c40) covers colorspace conversion, chroma sampling, quantization, and forward/inverse DCT, but Huffman entropy encoding and scaled IDCT remain scalar C, so optimization coverage is partial (capping at blue, which has no effect since the primary color is already orange).</p>
+
+<p><strong>Pending work that could change the grade:</strong> Open issue #902 “RVV needs to be able to detect RVA23” (funding needed); rvv-dct-opt branch / issue #895 follow-on DCT optimizations targeting 3.2.1; RISE funded the original RVV port via gitlab.com/riseproject/libjpeg-turbo MR !2 (Filip Wasil, Samsung/RISE) but no upstream CI or RISE wheel resulted; no vectorized Huffman encoder work is tracked in any open issue; Issue #885 (riscv64 release binaries) closed won’t-implement.</p>
+
+<p><strong>Additional observation from this round’s research relevant to a future re-grade:</strong> Arch Linux RISC-V’s <code class="language-plaintext highlighter-rouge">extra</code> repository now ships <code class="language-plaintext highlighter-rouge">libjpeg-turbo-3.2.0-2-riscv64.pkg.tar.zst</code> (confirmed live, 2026-07-01), the first downstream binary package that does contain the merged RVV code. This was not reflected in the grade computation above and does not change the color as transcribed here, but is a relevant fact for any future reassessment of the “downstream packaging” dimension.</p><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing any of the following, note what RISE has already funded: the original RVV port itself (RISE GitLab MR !2, Filip Wasil/Samsung, consolidating ISCAS and Andes contributions) and, via ISCAS’s general membership, the initial implementation that became PR #837. RISE has not funded the Huffman encoder, scaled IDCT, RVA23 detection, CI integration, or distro packaging - none of that work is covered by existing RISE investment.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The core JPEG encode/decode pipeline on riscv64 is fully vectorized. The functional gap is not in baseline JPEG but in Huffman encoding, scaled IDCT, and niche pixel format conversions. Huffman encoding is the highest-value unimplemented component.</p>
+<p>The core JPEG encode/decode pipeline on riscv64 is fully vectorized as of 3.2.0. The remaining functional gaps are Huffman entropy encoding and scaled (2x2/4x4) IDCT. Huffman encoding is the highest-value unimplemented component, since it sits on the compression critical path after the now-vectorized DCT/quantization stages.</p>
 
-<p>Implementing <code class="language-plaintext highlighter-rouge">jsimd_huff_encode_one_block</code> for RVV would complete the compression pipeline SIMD coverage. Arm Neon and x86_64 provide reference implementations. The upstream contributing policy requires prior discussion, demonstrated &gt;5% overall performance gain, and full test coverage. A contributor must budget for the possibility that the maintainer rewrites the submitted code (as occurred with PR #837, where dcommander rewrote the color conversion and upsampling routines before merging, achieving 54-290% additional speedup per function).</p>
-
-<p>Estimated effort for a production-quality Huffman encoder implementation, including upstream negotiation and test coverage: 4-8 person-weeks. Timeline to merge: 3-12 months depending on maintainer availability.</p>
-<h3 id="132-performance-optimization">
+<p>A contributor implementing <code class="language-plaintext highlighter-rouge">jsimd_huff_encode_one_block</code> for RVV must budget for the upstream pattern observed twice already (PR #837, Issue #895): the maintainer is likely to substantially rewrite submitted code before merge. Estimated effort for a production-quality implementation, including upstream negotiation and full test coverage: 4-8 person-weeks. Timeline to merge: 3-12 months depending on maintainer availability.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The <code class="language-plaintext highlighter-rouge">rvv-dct-opt</code> branch (Issue #895) is the only currently active performance work. It targets 3.2.1. The case for investment is marginal: +5% compression with Clang, +12% with GCC. Decompression shows a small regression with GCC 14. The maintainer is already engaged; the primary need is benchmarking on additional hardware platforms to establish whether the GCC regression is platform-specific.</p>
-
-<p>The in-register DCT transpose gap is a medium-term architectural issue tied to Zvzip ratification. No actionable investment path exists until the extension is ratified and compiler support is available.</p>
-
-<p>Estimated effort to resolve Issue #895 and contribute additional hardware benchmark data: 1-2 person-weeks (if hardware is available). No guarantee of upstream acceptance within a specific timeframe.</p>
-<h3 id="133-cicd-infrastructure">
+<p>The DCT/IDCT optimization line (Issue #895 -&gt; <code class="language-plaintext highlighter-rouge">1db93c2</code>) is now merged and shipping in the unreleased 3.2.1 changelog; this specific work is complete and should not be re-funded. The remaining architectural bottleneck - the in-register 8x8 transpose - has no actionable investment path until the Zvzip RVV extension is ratified and compiler support exists; this is not a near-term investable item. RVA23/Zvbb detection (Issue #902) is open and funding-needed; it is a smaller, more tractable investment than a fresh DCT rewrite. Estimated effort to implement RVA23 hwprobe detection and validate on RVA23-capable hardware: 1-2 person-weeks, contingent on hardware access.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>Adding riscv64 CI to the upstream project requires maintainer buy-in, which was explicitly refused in May 2026 (Issue #885). The upstream will not add riscv64 CI based on current signals.</p>
-
-<p>An organization can run its own fork-based CI against upstream HEAD for internal regression detection. The RISE project demonstrated this approach via gitlab.com/riseproject/libjpeg-turbo. This provides early warning of regressions but does not close the upstream CI gap.</p>
-
-<p>Estimated effort to establish a fork-based riscv64 CI pipeline using RISE runners: 1 person-week. Maintenance: low (webhook-triggered builds).</p>
-<h3 id="134-ecosystem-enablement">
+<p>Upstream will not add riscv64 CI based on current signals (Issue #885 explicitly declined free RISE runners for the adjacent release-binary ask; no separate offer for CI-only integration is recorded). An organization can run its own fork-based CI against upstream HEAD for internal regression detection, as RISE already demonstrated via its own GitLab project. This provides early warning but does not close the upstream CI gap. Estimated effort to establish a fork-based riscv64 CI pipeline using RISE runners: 1 person-week; maintenance: low (webhook-triggered builds).</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
 
-<p>The primary blocker for ecosystem consumers is the absence of riscv64 binaries in stable Linux distribution packages with RVV SIMD. Ubuntu 24.04 ships 2.1.5 (2022, no SIMD). Debian sid ships 3.1.3 (no SIMD). Neither will have RVV-accelerated builds until they package libjpeg-turbo 3.2.0, which has not been tagged as of this report.</p>
+<p>Section 10 is omitted for this project: libjpeg-turbo is a system/codec library with three optional, already-riscv64-capable dependencies (Section 9) and no dependent package ecosystem (npm/PyPI/Maven/Kubernetes-operator style) of its own that requires separate riscv64 enablement work. The relevant enablement gap is distribution packaging of the library itself, not a downstream ecosystem.</p>
 
-<p>Investment options:</p>
+<p>The primary blocker for consumers is the absence of RVV-accelerated riscv64 binaries in mainstream Linux distributions. Ubuntu 26.04 and Debian sid both currently ship pre-3.2.0, scalar-only builds. Arch Linux RISC-V is the sole distro confirmed to ship an RVV-enabled 3.2.0 build. Investment options:</p>
 <ol>
-  <li>Contribute packaging patches to Debian/Ubuntu to backport 3.2 to distribution release branches. Effort: 2-4 person-weeks per distribution, subject to distribution-specific packaging policies.</li>
-  <li>Publish a third-party riscv64 binary package repository (e.g., OBS, Launchpad PPA). Effort: 1-2 person-weeks setup. Maintenance: ongoing.</li>
+  <li>Contribute packaging patches to Debian/Ubuntu to package 3.2.0+ for riscv64. Effort: 2-4 person-weeks per distribution, subject to distribution-specific packaging policies.</li>
+  <li>Publish or sponsor a third-party riscv64 binary repository (OBS, Launchpad PPA) tracking upstream releases. Effort: 1-2 person-weeks setup; ongoing low maintenance.</li>
 </ol>
-<h3 id="135-summary-table">
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1383,15 +1432,15 @@
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Benchmark <code class="language-plaintext highlighter-rouge">rvv-dct-opt</code> branch on additional hardware; unblock Issue #895 upstream merge</td>
+      <td>RVA23/Zvbb hwprobe detection (Issue #902)</td>
       <td>1-2</td>
-      <td>Any contributor with RISC-V hardware access</td>
+      <td>Any contributor with RVA23-capable hardware</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
       <td>Zvzip-based DCT transpose optimization</td>
-      <td>Not actionable – pending Zvzip ratification</td>
+      <td>Not actionable - pending Zvzip ratification</td>
       <td>n/a</td>
       <td>Low</td>
     </tr>
@@ -1405,36 +1454,26 @@
     <tr>
       <td>CI/CD</td>
       <td>Upstream riscv64 CI</td>
-      <td>Not actionable – upstream refuses</td>
+      <td>Not actionable - upstream declines</td>
       <td>n/a</td>
       <td>n/a</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
       <td>Upstream official riscv64 release binaries</td>
-      <td>Not actionable – upstream refuses</td>
+      <td>Not actionable - upstream declined (Issue #885)</td>
       <td>n/a</td>
       <td>n/a</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Debian/Ubuntu packaging of libjpeg-turbo 3.2 for riscv64</td>
+      <td>Debian/Ubuntu packaging of libjpeg-turbo 3.2.0+ for riscv64</td>
       <td>2-4 per distro</td>
       <td>Distribution maintainers / sponsored contributor</td>
-      <td>High – blocks all downstream consumers</td>
+      <td>High - blocks most downstream consumers outside Arch</td>
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
 <h2 id="15-references">
   
   
@@ -1448,22 +1487,30 @@
   <li><a href="https://libjpeg-turbo.org/">libjpeg-turbo homepage</a></li>
   <li><a href="https://libjpeg-turbo.org/About/Sponsors">libjpeg-turbo Sponsors page</a></li>
   <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo">libjpeg-turbo/libjpeg-turbo GitHub repository</a></li>
-  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/620">Issue #620 – Add RISC-V vectors support</a></li>
-  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/710">Issue #710 – Unit tests fail when run on RISC-V</a></li>
-  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/790">Issue #790 – Unsupported marker error on MilkV module</a></li>
-  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885 – Request adding riscv64 to release binaries</a></li>
-  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/895">Issue #895 – Improve performance of IDCT &amp; FDCT for RVV</a></li>
-  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/pull/837">PR #837 – RISC-V support</a></li>
-  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/9817c40">Commit 9817c40 – RISC-V Vector (RVV) SIMD extensions</a></li>
-  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/tree/rvv-dct-opt">Branch rvv-dct-opt</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/.github/workflows/build.yml">build.yml CI workflow</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/620">Issue #620 - Add RISC-V vectors support</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/710">Issue #710 - Unit tests fail when run on RISC-V</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/794">Issue #794 - Will libjpeg-turbo support RISC-V’s SIMD/Vector in the future?</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/885">Issue #885 - Request adding riscv64 to release binaries</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/895">Issue #895 - Improve performance of IDCT &amp; FDCT for RVV</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/issues/902">Issue #902 - RVV needs to be able to detect RVA23</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/pull/837">PR #837 - RISC-V support</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/9817c408542c72c0e505360580ae7ebcfa487baf">Commit 9817c40 - RISC-V Vector (RVV) SIMD extensions</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/db1359ed0c2e4cc07f299a0c469fa27bf57baac3">Commit db1359e - RVV: Various optimizations</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/14d0dbc05d42247bdad2e33d92ee7348de874b22">Commit 14d0dbc - RVV: Use 1/2 regs to improve DCT perf w/ VLEN&gt;=256</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/commit/1db93c29599cf64e5193297b6e2de069c1838d04">Commit 1db93c2 - RVV: Forward/inverse DCT optimizations</a></li>
   <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.1.90">Release 3.1.90 (3.2 beta1)</a></li>
-  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/.github/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.2.0">Release 3.2.0</a></li>
+  <li><a href="https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/.github/CONTRIBUTING.md">CONTRIBUTING.md</a></li>
   <li><a href="https://riseproject.dev">RISE Project homepage</a></li>
-  <li><a href="https://gitlab.com/riseproject/libjpeg-turbo">RISE GitLab – libjpeg-turbo</a></li>
-  <li><a href="https://gitlab.com/riseproject/libjpeg-turbo/-/merge_requests/2">RISE GitLab MR !2 – RISC-V Vector support</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/libjpeg-turbo8">Ubuntu 24.04 Noble – libjpeg-turbo8 package</a></li>
-  <li><a href="https://tracker.debian.org/pkg/libjpeg-turbo">Debian package tracker – libjpeg-turbo</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=libjpeg-turbo">Debian buildd status – libjpeg-turbo</a></li>
+  <li><a href="https://gitlab.com/riseproject/libjpeg-turbo">RISE GitLab - libjpeg-turbo</a></li>
+  <li><a href="https://gitlab.com/riseproject/libjpeg-turbo/-/merge_requests/2">RISE GitLab MR !2 - RISC-V Vector support</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel builder</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners announcement</a></li>
+  <li><a href="https://github.com/riseproject-dev/system-libraries-wg/issues/16">riseproject-dev/system-libraries-wg Issue #16 - libjpeg-turbo tracking</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=libjpeg-turbo&amp;suite=resolute">Ubuntu 26.04 “resolute” - libjpeg-turbo packages</a></li>
+  <li><a href="https://archriscv.felixc.at/repo/extra/">Arch Linux RISC-V - extra repository</a></li>
+  <li><a href="https://tracker.debian.org/pkg/libjpeg-turbo">Debian package tracker - libjpeg-turbo</a></li>
   <li><a href="http://imagecompression.info/test_images">Benchmark test images (imagecompression.info)</a></li>
 </ul>
 
