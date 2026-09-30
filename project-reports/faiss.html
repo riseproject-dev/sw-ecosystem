@@ -266,10 +266,12 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow (build-only-ci)<br />
+<strong>Optimization level:</strong> partial<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for FAISS<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,13 +281,15 @@
 </h2>
     
 
-<p><a href="https://faiss.ai/">FAISS</a> (Facebook AI Similarity Search) is a library for efficient similarity search and dense vector clustering. The repository is <a href="https://github.com/facebookresearch/faiss">facebookresearch/faiss</a>. It is MIT-licensed and copyright Meta Platforms, Inc.</p>
+<p><a href="https://faiss.ai/">FAISS</a> (Facebook AI Similarity Search) is a library for efficient similarity search and dense vector clustering. The repository is <a href="https://github.com/facebookresearch/faiss">facebookresearch/faiss</a>. It is MIT-licensed, copyright “Facebook, Inc. and its affiliates.”</p>
 
-<p>FAISS is a corporate-led project with no independent foundation or community governance. Development is driven by Meta’s Fundamental AI Research (FAIR) group. Commits are synced from Meta’s internal monorepo via <code class="language-plaintext highlighter-rouge">meta-codesync[bot]</code>, confirming that internal development drives the project rather than external community contributions. There is no PLATFORMS.md, SUPPORT.md, or CODEOWNERS file in the repository; platform support is determined ad hoc by Meta maintainers.</p>
+<p>FAISS is a corporate-led project with no independent foundation or community governance. faiss.ai states the project is “developed primarily at FAIR, the fundamental AI research team of Meta.” There is no MAINTAINERS, CODEOWNERS, PLATFORMS.md, SUPPORT.md, or docs/platforms/ file anywhere in the repository (all confirmed absent). Every merged commit carries Meta-internal Phabricator metadata (<code class="language-plaintext highlighter-rouge">Differential Revision: D######</code>, <code class="language-plaintext highlighter-rouge">Reviewed By:</code>, <code class="language-plaintext highlighter-rouge">Pulled By:</code>, <code class="language-plaintext highlighter-rouge">fbshipit-source-id:</code>) and is synced to GitHub by the <code class="language-plaintext highlighter-rouge">meta-codesync[bot]</code> app, meaning canonical review happens inside Meta’s internal tooling and GitHub is effectively a mirror. <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> tells contributors to “contact us first before putting too much effort into it” for major work, and all contributions require Meta’s CLA.</p>
 
-<p>The project is not a member of or funded by the RISE Project (RISC-V Software Ecosystem). A full scrape of all 27 RISE Project blog posts (May 2024 through June 2026) found no mention of FAISS. The RISE Python wheel builder lists 76 packages; FAISS is not among them. The riseproject-dev GitHub organization contains no FAISS repository.</p>
+<p>FAISS itself is not a RISE Project (RISC-V Software Ecosystem, a Linux Foundation initiative) member project, and Meta does not appear at either the Premier or General tier of <a href="https://riseproject.dev/members">riseproject.dev/members</a> (Premier: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent; General: Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, Institute of Software Chinese Academy of Sciences (ISCAS), Microchip, NextSilicon, Quintauris, SpacemiT, ZTE). Notably, several of FAISS’s external RISC-V contributors’ employers, ZTE and ISCAS, <em>are</em> RISE members, even though FAISS as a project is not. No RISE blog post (checked the full index plus targeted fetches of the most plausible candidates, 2024-05 through 2026-07-30) mentions FAISS.</p>
 
-<p>Active maintainers with RISC-V-relevant commits include: alexanderguzhva (Meta FAIR, drove RVV scaffolding), mnorris11 (Meta, merged RISC-V fast_scan work, active reviewer), and mdouze (Meta FAIR, authored CI cross-compile job).</p><hr />
+<p><strong>RISE now builds FAISS</strong>, however, through the <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> repository, which compiles and publishes <code class="language-plaintext highlighter-rouge">faiss-cpu</code> riscv64 wheels natively on RISE’s own bare-metal RISC-V CI runners and serves them from <code class="language-plaintext highlighter-rouge">pypi.riseproject.dev</code>. This is an automated, generic part of RISE’s Python-wheels pipeline (driven by <code class="language-plaintext highlighter-rouge">github-actions[bot]</code>), not a named or funded FAISS-specific engagement, and it began 2026-09-02, well after Meta’s own RVV kernel work had started landing upstream. See Section 8 for details.</p>
+
+<p>Active contributors with RISC-V-relevant commits: <strong>mnorris11</strong> (Michael Norris, Meta/FAIR) is the recurring reviewer/gatekeeper across nearly all RVV PRs and the de facto RISC-V subsystem owner; <strong>mdouze</strong> (Matthijs Douze, Meta/FAIR, FAISS’s original architect) authored the CI cross-compile job and reviewed the first real kernel PR; <strong>alexanderguzhva</strong> authored the foundational “Introduce RVV” scaffolding PR [NEEDS VERIFICATION on employer]. External contributors doing the bulk of the actual vectorized-kernel work are <strong>ihb2032</strong> (independent, tests on SpacemiT/SG2044 hardware) and <strong>lyd1992</strong> (Yuansheng, ISCAS, <code class="language-plaintext highlighter-rouge">liuyudong@iscas.ac.cn</code>), plus <strong>anthony-zy</strong> (ZTE Corporation, <code class="language-plaintext highlighter-rouge">zheng.ziyang@zte.com.cn</code>), who authored the one significant unmerged correctness fix (Section 11). Other recurring Meta-side reviewers: alibeklfc, trang-nm-nguyen, limqiying, juancarpio27. The community stance toward new RISC-V contributions is pragmatic but centrally gated: external PRs are accepted and merged at a steady cadence, but every one is funneled through a Meta engineer’s review and Differential Revision sync before landing; there is no independent community maintainer with sign-off authority on the RISC-V port.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -295,79 +299,118 @@
 </h2>
     
 
-<p>All RISC-V activity in facebookresearch/faiss is recent and concentrated in two bursts: an external community contribution in August 2025 (stalled) and a Meta-internal scaffolding push in April-May 2026 (fully merged).</p>
+<p>RISC-V work in facebookresearch/faiss has no dedicated tracking issue; it has been driven entirely through a long, incremental series of pull requests (24-26 found matching “riscv”/”rvv”, depending on query angle), running from April 2026 scaffolding through late-September 2026 kernel work, with several PRs still open.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Date</th>
-      <th>PR</th>
-      <th>Author</th>
-      <th>Description</th>
-      <th>Status</th>
+      <th>Event</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>2025-08-04</td>
-      <td><a href="https://github.com/facebookresearch/faiss/pull/4503">#4503</a></td>
-      <td>vsvnakers / lyd1992 (ISCAS, external)</td>
-      <td>RVV intrinsics for ScalarQuantizer decode_8_components; 1.56x speedup on physical RISC-V hardware</td>
-      <td>Open / backlog</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/4503">#4503</a> opened: RVV optimizations for ScalarQuantizer.cpp</td>
+      <td>Still open as of 2026-09-30, stale/backlog, predates the main 2026 push</td>
     </tr>
     <tr>
-      <td>2026-04-20</td>
-      <td><a href="https://github.com/facebookresearch/faiss/pull/5128">#5128</a></td>
-      <td>alexanderguzhva (Meta)</td>
-      <td>RVV platform + sq-rvv.cpp with real RVV intrinsics (QT_4bit_uniform + L2)</td>
-      <td>Closed without merge (superseded by #5156)</td>
+      <td>2026-05-05</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5156">#5156</a> “Introduce RVV” merged (commit <code class="language-plaintext highlighter-rouge">0320279</code>)</td>
+      <td>Foundational dispatch scaffolding: adds <code class="language-plaintext highlighter-rouge">SIMDLevel::RISCV_RVV</code>, stub overrides that call the scalar (NONE) path. mnorris11 and mdouze debated dispatch-mask scoping in review; mdouze asked whether real RVV code would follow soon</td>
     </tr>
     <tr>
-      <td>2026-04-29</td>
-      <td><a href="https://github.com/facebookresearch/faiss/pull/5156">#5156</a></td>
-      <td>alexanderguzhva (Meta)</td>
-      <td>Full RVV scaffolding: RISCV_RVV in SIMDLevel enum, dispatch integration, stub overrides</td>
-      <td>Merged 2026-05-05 (commit 0320279), v1.14.2</td>
+      <td>2026-05-07</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5184">#5184</a> “CI: cross-compile for riscv64 with RVV dynamic dispatch” merged (commit <code class="language-plaintext highlighter-rouge">7a8e4dd</code>, author mdouze)</td>
+      <td>Adds <code class="language-plaintext highlighter-rouge">cmake/toolchains/riscv64-linux-gnu.cmake</code> and the <code class="language-plaintext highlighter-rouge">linux-riscv64-DD-cmake</code> CI job</td>
     </tr>
     <tr>
-      <td>2026-05-06</td>
-      <td><a href="https://github.com/facebookresearch/faiss/pull/5184">#5184</a></td>
-      <td>mdouze (Meta)</td>
-      <td>CI cross-compile job for riscv64 with RVV dynamic dispatch</td>
-      <td>Merged 2026-05-07 (commit 7a8e4dd), v1.14.2</td>
+      <td>2026-05-18</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5216">#5216</a> “Move RISC-V fast_scan forwarders to dedicated impl-riscv.cpp” merged (commit <code class="language-plaintext highlighter-rouge">a9f5baa</code>)</td>
+      <td>Refactor only, matches the AVX2/AVX512/NEON per-arch-TU pattern; no new vectorized code</td>
     </tr>
     <tr>
-      <td>2026-05-16</td>
-      <td><a href="https://github.com/facebookresearch/faiss/pull/5216">#5216</a></td>
-      <td>mnorris11 (Meta)</td>
-      <td>Move fast_scan RVV forwarders to impl-riscv.cpp; fix 27-44x FastScan QPS regression in DD mode</td>
-      <td>Merged 2026-05-18 (commit a9f5baa), v1.14.2</td>
+      <td>2026-05-28</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5057">#5057</a> merged (commit <code class="language-plaintext highlighter-rouge">a4e417f</code>)</td>
+      <td>Tangential x86/ARM dispatch fix that also encodes <code class="language-plaintext highlighter-rouge">RISCV_RVV -&gt; NONE</code> in the fallback chain</td>
     </tr>
     <tr>
-      <td>2026-05-26</td>
-      <td><a href="https://github.com/facebookresearch/faiss/pull/5233">#5233</a></td>
-      <td>mnorris11 (Meta)</td>
-      <td>Per-SIMD TU for PQ scan (AVX2 gather inlining); includes rvv.cpp in the pattern</td>
-      <td>Merged 2026-05-26, v1.14.2</td>
+      <td>2026-06-30</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5354">#5354</a> “feat(riscv): Add RISC-V RVV vector distance kernels” merged (commit <code class="language-plaintext highlighter-rouge">df51012</code>, author ihb2032, co-author lyd1992/ISCAS)</td>
+      <td>First real (non-stub) RVV kernel PR: 14 core float distance specializations. Tested on SG2044 hardware, GCC 15.1, openEuler</td>
     </tr>
     <tr>
-      <td>2026-04-07</td>
-      <td><a href="https://github.com/facebookresearch/faiss/pull/5057">#5057</a></td>
-      <td>mulugetam (external)</td>
-      <td>Fix static SIMD dispatch falling to scalar for avx512/arm_sve; encodes RISCV_RVV -&gt; NONE fallback</td>
-      <td>Merged 2026-05-28 (commit a4e417f), v1.14.3</td>
+      <td>2026-07-13</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5369">#5369</a> “feat(riscv): Add RISC-V RVV rabitq kernels” merged (commit <code class="language-plaintext highlighter-rouge">d22107b</code>)</td>
+      <td>Same SG2044/openEuler test rig</td>
+    </tr>
+    <tr>
+      <td>2026-08-25</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5534">#5534</a> “Fix HNSW concurrent race segfault on RISC-V” <strong>closed without merging</strong></td>
+      <td>Authored by anthony-zy (ZTE); deliberately deferred by mnorris11 pending removal of the legacy lock-based HNSW path (Section 11)</td>
+    </tr>
+    <tr>
+      <td>2026-09-10</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5600">#5600</a> merged</td>
+      <td>Renames SIMD dispatch masks; no behavior change</td>
+    </tr>
+    <tr>
+      <td>2026-09-15</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5601">#5601</a> self-closed without merging</td>
+      <td>fvec_add/fvec_sub + PQ dsub=2 kernels; superseded by #5655</td>
+    </tr>
+    <tr>
+      <td>2026-09-17</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5539">#5539</a> merged</td>
+      <td>RVV specialization for scalar-quantizer distance compute; reports 50-80% latency reduction vs scalar SQ baseline in its own included benchmarks</td>
+    </tr>
+    <tr>
+      <td>2026-09-21</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5653">#5653</a> “fix(ci): use GCC 14 riscv64 cross-compiler” merged (commit <code class="language-plaintext highlighter-rouge">bf8be4a</code>)</td>
+      <td>CI fix: GCC 13’s <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> lacks RVV tuple types and zvfhmin f16 intrinsics needed by the SQ kernels</td>
+    </tr>
+    <tr>
+      <td>2026-09-23</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5535">#5535</a> “RVV optimized scalar quantizer codecs and distance computation” merged</td>
+      <td>Runtime-vector-length-aware (m8) RVV kernels for SQ codecs (4/8-bit, fp16, bf16, LloydMax); benchmarked on a SpacemiT K3 board (Section 6)</td>
+    </tr>
+    <tr>
+      <td>2026-09-24/25</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pulls?q=rvv">#5602, #5603, #5604, #5628, #5638, #5639, #5640, #5641</a></td>
+      <td>Cluster of focused PRs adding per-variant SQ encode/decode/distance kernels, most merged within days</td>
+    </tr>
+    <tr>
+      <td>2026-09-25</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5543">#5543</a> merged (commit <code class="language-plaintext highlighter-rouge">1768a5a</code>)</td>
+      <td>RVV PQ distance-table computation; changelog notes “AI reviewers found 6 valid defects, fixed”</td>
+    </tr>
+    <tr>
+      <td>2026-09-25</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5655">#5655</a> merged</td>
+      <td>Re-submission/successor of #5601: fvec_add/fvec_sub and PQ dsub=2 distance-table kernels, fixes a dispatch-mask gap silently routing RVV hosts to scalar</td>
+    </tr>
+    <tr>
+      <td>2026-09-30 (still open)</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5510">#5510</a></td>
+      <td>Detect RVV support from target compiler flags rather than assume it; blocked since 2026-09-23 on an unresolved compilation error</td>
+    </tr>
+    <tr>
+      <td>2026-09-30 (still open)</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5666">#5666</a></td>
+      <td>HNSW <code class="language-plaintext highlighter-rouge">MinimaxHeap::pop_min</code> RVV kernel; validated only via Clang syntax-check, no runtime tests yet</td>
+    </tr>
+    <tr>
+      <td>2026-09-30 (still open)</td>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5688">#5688</a></td>
+      <td>Bit-exact RVV <code class="language-plaintext highlighter-rouge">decode_vector</code> for codec-template quantizers (most recent PR found)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Key observations:</strong></p>
+<p>Git tags confirm <code class="language-plaintext highlighter-rouge">v1.15.0</code> (2026-08-03) and <code class="language-plaintext highlighter-rouge">v1.15.1</code> (2026-09-16) exist in history. Per <code class="language-plaintext highlighter-rouge">CHANGELOG.md</code>, RVV scaffolding is attributed to <strong>v1.14.2</strong> (2026-05-21: #5156, #5184), and the same changelog separately states the RVV distance and rabitq kernels “landed in v1.15.1 (2026-09-15: #5354, #5369).” This is internally inconsistent: #5354 and #5369 merged on 2026-06-30 and 2026-07-13 respectively, both well before the v1.15.0 tag date (2026-08-03), so those kernels should already have been present in v1.15.0, not first appearing in v1.15.1. Flagging this as an unresolved discrepancy in the changelog’s version attribution rather than resolving it silently.</p>
 
-<ul>
-  <li>The first merged RISC-V commit landed May 5, 2026. No RISC-V code existed in any prior release.</li>
-  <li>PR #5128 was closed without merging because PR #5156 took a different architectural approach and superseded it the following day.</li>
-  <li>The external contributor’s RVV work (PR #4503, August 2025) predates the Meta-internal merge by nine months but remains unmerged due to API changes.</li>
-  <li>No master tracking issue for the riscv64 port exists.</li>
-</ul><hr />
+<p>The port is fully upstream for the components that exist (no out-of-tree fork or vendor patch set is required to get the merged kernels), but it is incomplete: several subsystems remain explicit scalar stubs (Section 4), and three kernel/detection PRs (#5510, #5666, #5688) remain open and unmerged as of 2026-09-30.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -377,17 +420,59 @@
 </h2>
     
 
-<p>FAISS has no published platform tier policy. Based on observed maintainer behavior and CI configuration, riscv64 status can be characterized as follows:</p>
+<p>FAISS publishes no formal platform-tier policy anywhere in the repository (confirmed absent: PLATFORMS.md, SUPPORT.md, docs/platforms/). Tier status must be inferred from CI and release behavior:</p>
 
 <ul>
-  <li><strong>Build support:</strong> Explicit, first-class. The CMakeLists.txt detects <code class="language-plaintext highlighter-rouge">riscv64|riscv</code> and selects <code class="language-plaintext highlighter-rouge">FAISS_SIMD_RVV_SRC</code>. A dedicated toolchain file exists at <code class="language-plaintext highlighter-rouge">cmake/toolchains/riscv64-linux-gnu.cmake</code>.</li>
-  <li><strong>CI status:</strong> Cross-compile with SIMD smoke test only. No native runner. No full test suite execution.</li>
-  <li><strong>Performance status:</strong> Scaffolding. One real RVV kernel exists (ScalarQuantizer QT_4bit_uniform + L2). All other hot paths fall back to scalar.</li>
-  <li><strong>Release binary status:</strong> No riscv64 binary available via PyPI or GitHub Releases. Debian sid has a native build of version 1.13.2 (pre-RVV).</li>
-  <li><strong>Stated maintainer intent:</strong> Meta engineers have expressed that they “hope RISC-V guys will populate various SIMD things for RaBitQ etc.” This signals an expectation of community contribution rather than Meta-driven performance work.</li>
+  <li><strong>Build support:</strong> explicit and first-class at the CMake level. <code class="language-plaintext highlighter-rouge">faiss/CMakeLists.txt</code> detects <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR MATCHES "(riscv64|riscv)"</code> and selects <code class="language-plaintext highlighter-rouge">FAISS_SIMD_RVV_SRC</code>; a dedicated toolchain file exists.</li>
+  <li><strong>CI status:</strong> cross-compile plus a narrow QEMU-emulated gtest subset (SIMD dispatch + scalar-quantizer parity only), not the full correctness/recall test suite. See Section 7.</li>
+  <li><strong>Release status:</strong> Meta publishes no riscv64 binary on GitHub Releases or PyPI for either <code class="language-plaintext highlighter-rouge">faiss</code> or <code class="language-plaintext highlighter-rouge">faiss-cpu</code>. The only functioning riscv64 binary channel with RVV kernels is RISE’s independently-built and independently-hosted wheel (Section 8).</li>
+  <li><strong>Stated maintainer intent:</strong> in the PR #5156 review, mdouze explicitly asked whether real RVV-optimized code would follow the scaffolding “soon” – signalling the scaffolding was merged expecting later contributions rather than committed internal performance work, which is consistent with the subsequent pattern of external (ZTE/ISCAS/independent) authors doing most of the actual kernel implementation.</li>
 </ul>
 
-<p>Effective tier: <strong>community-maintained with Meta scaffolding</strong>. Upstream will accept correct RVV contributions but has not committed internal resources to performance optimization.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Axis</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CI execution</td>
+      <td>Native runner, full test suite</td>
+      <td>Native runner, full test suite</td>
+      <td>Cross-compiled on x86_64 <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>, QEMU-emulated, narrow gtest filter only</td>
+    </tr>
+    <tr>
+      <td>Official binary (PyPI faiss-cpu)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Official binary (GitHub Releases)</td>
+      <td>No (source archives only, for any arch)</td>
+      <td>No</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Distro packages</td>
+      <td>Yes, broadly</td>
+      <td>Yes, broadly</td>
+      <td>Yes (Ubuntu 26.04 “resolute” <code class="language-plaintext highlighter-rouge">libfaiss-dev</code>/<code class="language-plaintext highlighter-rouge">python3-faiss</code>, but at 1.13.2, predating all RVV work)</td>
+    </tr>
+    <tr>
+      <td>SIMD kernel coverage</td>
+      <td>Full (AVX2/AVX512, all subsystems)</td>
+      <td>Full/partial (NEON full, SVE partial)</td>
+      <td>Partial (core distance, SQ, RaBitQ real; FastScan/PQ-distance/Hamming still scalar)</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Effective tier: <strong>community-contributed with Meta scaffolding and gatekeeping, no committed internal performance-optimization resourcing, and no upstream-published release artifact.</strong></p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -405,99 +490,151 @@
 </h3>
     
 
-<p>FAISS uses a per-SIMD translation unit (TU) design. Each SIMD level (AVX2, AVX512, NEON, RISCV_RVV, etc.) has dedicated <code class="language-plaintext highlighter-rouge">.cpp</code> files that are compiled with architecture-specific flags. A central dispatch mechanism (<code class="language-plaintext highlighter-rouge">simd_dispatch.h</code>) routes function calls to the appropriate TU at runtime (dynamic dispatch, <code class="language-plaintext highlighter-rouge">FAISS_OPT_LEVEL=dd</code>) or compile time (static, <code class="language-plaintext highlighter-rouge">FAISS_OPT_LEVEL=generic/avx2/etc.</code>).</p>
+<p>FAISS uses a per-SIMD-level translation-unit (TU) design (<code class="language-plaintext highlighter-rouge">*-neon.*</code>, <code class="language-plaintext highlighter-rouge">*-sve.*</code>, <code class="language-plaintext highlighter-rouge">*-rvv.*</code>/<code class="language-plaintext highlighter-rouge">*-riscv.*</code>), the same pattern used for AVX2/AVX512/NEON/SVE, rather than a separate JIT backend or hand-written assembly. <code class="language-plaintext highlighter-rouge">SIMDLevel::RISCV_RVV</code> is a registered level in <code class="language-plaintext highlighter-rouge">faiss/utils/simd_levels.h</code>; its fallback chain is <code class="language-plaintext highlighter-rouge">RISCV_RVV -&gt; NONE</code> (terminal, no sub-levels). The minimum ISA for this level is <code class="language-plaintext highlighter-rouge">rv64gcv</code> plus <strong>Zvfhmin/Zvfh</strong> (required for fp16 vector conversion in the scalar-quantizer kernels), compiled with <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zvfhmin -mabi=lp64d</code>. <code class="language-plaintext highlighter-rouge">faiss/impl/scalar_quantizer/sq-rvv.cpp</code> enforces this with a hard <code class="language-plaintext highlighter-rouge">#error</code> if Zvfhmin/Zvfh is not present at compile time – there is no silent fallback for a missing FP16 extension; the build fails outright. Detection today is purely compile-time (<code class="language-plaintext highlighter-rouge">#if defined(__riscv) &amp;&amp; defined(COMPILE_SIMD_RISCV_RVV)</code>); there is no runtime <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code>-style probe. Open PR <a href="https://github.com/facebookresearch/faiss/pull/5510">#5510</a> is working to detect RVV support from target compiler flags instead of assuming it on every riscv64 target, but remains blocked on a compile error as of 2026-09-23.</p>
 
-<p><code class="language-plaintext highlighter-rouge">SIMDLevel::RISCV_RVV</code> is registered in the <code class="language-plaintext highlighter-rouge">SIMDLevel</code> enum in <code class="language-plaintext highlighter-rouge">faiss/utils/simd_levels.h</code>. The fallback chain is <code class="language-plaintext highlighter-rouge">RISCV_RVV -&gt; NONE</code> (terminal leaf; no sub-level of RVV exists). Detection is purely compile-time via <code class="language-plaintext highlighter-rouge">#if defined(__riscv) &amp;&amp; defined(COMPILE_SIMD_RISCV_RVV)</code>; there is no runtime HWCAP probe.</p>
-
-<p>The <code class="language-plaintext highlighter-rouge">simd_width&lt;RISCV_RVV&gt;()</code> function is statically asserted to block because RVV uses variable-length vector registers incompatible with the fixed-256-bit <code class="language-plaintext highlighter-rouge">simdlib</code> abstraction. No <code class="language-plaintext highlighter-rouge">simdlib_rvv.h</code> exists; unlike AVX2 and NEON, RVV bypasses the simdlib abstraction layer entirely.</p>
-<h3 id="42-rvv-source-file-inventory">
+<p>No <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory and no <code class="language-plaintext highlighter-rouge">.S</code> assembly files exist anywhere in the repository (confirmed by targeted code search returning zero hits for both).</p>
+<h3 id="42-rvv-source-file-inventory-verified-by-direct-intrinsic-call-counting-against-the-cloned-repo-at-commit-88a28bc">
   
   
-    <a href="#42-rvv-source-file-inventory" class="anchor-heading" aria-labelledby="42-rvv-source-file-inventory"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 RVV Source File Inventory
+    <a href="#42-rvv-source-file-inventory-verified-by-direct-intrinsic-call-counting-against-the-cloned-repo-at-commit-88a28bc" class="anchor-heading" aria-labelledby="42-rvv-source-file-inventory-verified-by-direct-intrinsic-call-counting-against-the-cloned-repo-at-commit-88a28bc"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 RVV Source File Inventory (verified by direct intrinsic-call counting against the cloned repo at commit <code class="language-plaintext highlighter-rouge">88a28bc</code>)
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">FAISS_SIMD_RVV_SRC</code> in <code class="language-plaintext highlighter-rouge">faiss/CMakeLists.txt</code> lists 7 source files. All are compiled with <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zvfhmin -mabi=lp64d</code> and the preprocessor define <code class="language-plaintext highlighter-rouge">COMPILE_SIMD_RISCV_RVV</code>.</p>
+<p><code class="language-plaintext highlighter-rouge">FAISS_SIMD_RVV_SRC</code> in <code class="language-plaintext highlighter-rouge">faiss/CMakeLists.txt</code> lists the RVV translation units, each compiled with <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zvfhmin -mabi=lp64d</code> and <code class="language-plaintext highlighter-rouge">COMPILE_SIMD_RISCV_RVV</code>.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>File</th>
-      <th>Functional Area</th>
-      <th>RVV Intrinsics Present</th>
+      <th>Lines</th>
+      <th>RVV intrinsic calls</th>
       <th>Status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">faiss/impl/scalar_quantizer/sq-rvv.cpp</code></td>
-      <td>ScalarQuantizer decode</td>
-      <td>Yes (12 intrinsics)</td>
-      <td>Partial – QT_4bit_uniform + L2 only</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">faiss/impl/fast_scan/impl-riscv.cpp</code></td>
-      <td>FastScan scanner factory</td>
-      <td>None</td>
-      <td>Stub – all 6 forwarders delegate to NONE</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">faiss/impl/pq_code_distance/rvv.cpp</code></td>
-      <td>PQ code distance</td>
-      <td>None</td>
-      <td>Stub – explicit comment “no RVV-optimized PQ code distance exists yet”</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">faiss/impl/binary_hamming/rvv.cpp</code></td>
-      <td>Binary Hamming indices</td>
-      <td>None</td>
-      <td>Stub</td>
+      <td>3396</td>
+      <td>693 (68 distinct)</td>
+      <td><strong>Full, hand-tuned.</strong> SQ codecs (4/6/8-bit, fp16, bf16, LloydMax), quantizers, similarity/distance computers, encode/decode. Uses <code class="language-plaintext highlighter-rouge">vfloat32m1/m4/m8_t</code>, <code class="language-plaintext highlighter-rouge">vuint8m1x3_t</code> tuples, <code class="language-plaintext highlighter-rouge">vfredusum</code>, variable-length <code class="language-plaintext highlighter-rouge">vsetvl</code></td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">faiss/utils/simd_impl/distances_rvv.cpp</code></td>
-      <td>fvec_L2sqr, fvec_inner_product, fvec_L1, etc.</td>
-      <td>None</td>
-      <td>Stub – ~160 lines, zero RVV intrinsics</td>
+      <td>620</td>
+      <td>164 (43 distinct)</td>
+      <td><strong>Full, hand-tuned.</strong> Core distance kernels: L1, L2, inner product, <code class="language-plaintext highlighter-rouge">fvec_L2sqr</code>, batch-4 variants, <code class="language-plaintext highlighter-rouge">rvv_argmin</code>, PQ dsub=2 table rows</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">faiss/utils/simd_impl/rabitq_rvv.cpp</code></td>
-      <td>RaBitQ bitwise ops</td>
-      <td>None</td>
-      <td>Stub – 4 functions, all call NONE</td>
+      <td>192</td>
+      <td>63 (26 distinct)</td>
+      <td><strong>Partial.</strong> RaBitQ binary-quantization kernels: SWAR popcount over <code class="language-plaintext highlighter-rouge">vuint8m4_t</code>, AND/XOR bitwise dot product, reconstruction distance; narrower than the AVX2/AVX512 equivalents</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">faiss/impl/fast_scan/impl-riscv.cpp</code></td>
+      <td>104</td>
+      <td>0</td>
+      <td><strong>Scalar stub.</strong> All IVFPQ/RaBitQ FastScan scanner specializations forward to <code class="language-plaintext highlighter-rouge">SIMDLevel::NONE</code>; source comment: “forward all fast_scan specializations to NONE until dedicated RVV implementations are written”</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">faiss/impl/pq_code_distance/rvv.cpp</code></td>
+      <td>70</td>
+      <td>0</td>
+      <td><strong>Scalar stub.</strong> Source comment: “no RVV-optimized PQ code distance exists yet. Use scalar.”</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">faiss/utils/hamming_distance/hamming_computer-rvv.h</code></td>
+      <td>39</td>
+      <td>0</td>
+      <td><strong>Scalar stub.</strong> All <code class="language-plaintext highlighter-rouge">HammingComputer{16,20,32,64,Default}</code>/<code class="language-plaintext highlighter-rouge">GenHammingComputer{8,16,32,M8}</code> specializations inherit the scalar NONE implementation; comment: “There is no RVV-optimized HammingComputer implementation yet”</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">faiss/impl/binary_hamming/rvv.cpp</code></td>
+      <td>26</td>
+      <td>0</td>
+      <td>Include-only shim wiring binary-index templates to the (stub) RVV hamming computer above</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">faiss/utils/hamming_distance/hamming_rvv.cpp</code></td>
-      <td>Hamming distance</td>
-      <td>None</td>
-      <td>Stub</td>
+      <td>15</td>
+      <td>0</td>
+      <td>Include-only shim</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Two headers also exist:</p>
+<p><code class="language-plaintext highlighter-rouge">faiss/utils/distances_fused/distances_fused.cpp</code>’s <code class="language-plaintext highlighter-rouge">exhaustive_L2sqr_fused_cmax&lt;SIMDLevel::RISCV_RVV&gt;</code> unconditionally <code class="language-plaintext highlighter-rouge">return false;</code> – the fused blocked BLAS-style top-1 kernel, present on NEON, does not exist for RVV. Open PR <a href="https://github.com/facebookresearch/faiss/pull/5666">#5666</a> would add an RVV <code class="language-plaintext highlighter-rouge">pop_min</code> kernel for HNSW’s <code class="language-plaintext highlighter-rouge">MinimaxHeap</code>, validated so far only via Clang syntax-check, not merged.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">faiss/utils/hamming_distance/hamming_computer-rvv.h</code>: 9 HammingComputer structs, all inheriting from NONE via <code class="language-plaintext highlighter-rouge">FAISS_INHERIT_HAMMING_RVV</code> macro. Comment: “There is no RVV-optimized HammingComputer implementation yet.”</li>
-  <li><code class="language-plaintext highlighter-rouge">cmake/toolchains/riscv64-linux-gnu.cmake</code>: Cross-compilation toolchain (complete and functional).</li>
-</ul>
-<h3 id="43-the-one-working-rvv-kernel">
-  
-  
-    <a href="#43-the-one-working-rvv-kernel" class="anchor-heading" aria-labelledby="43-the-one-working-rvv-kernel"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 The One Working RVV Kernel
-  
-  
-</h3>
-    
+<p><strong>Specialization density</strong> (repo-wide <code class="language-plaintext highlighter-rouge">SIMDLevel::X</code> occurrences): AVX2 304, AVX512 230, ARM_NEON 207, RISCV_RVV 191. <strong>File counts</strong> by architecture family: amd64 (avx2/avx512) 75 files, arm64 (neon/sve) 32 files, riscv64 (rvv) 19 files (10 real kernel/header files plus CI/toolchain/test/shared-dispatch files). No TODO/FIXME/”not implemented” markers were found in the RVV files themselves beyond the source comments quoted above; the stub files are honest scalar wrappers, not disguised placeholders.</p>
 
-<p><code class="language-plaintext highlighter-rouge">sq-rvv.cpp</code> contains the only file with actual <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> intrinsics. It implements a fast path for <code class="language-plaintext highlighter-rouge">DCTemplate&lt;Codec4bit_Uniform, SimilarityL2&gt;</code>. The 12 intrinsics used are:</p>
-
-<p><code class="language-plaintext highlighter-rouge">__riscv_vsetvl_e8m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vle8_v_u8m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vand_vx_u8m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vsrl_vx_u8m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vmaxu_vv_u8m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vminu_vv_u8m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vsub_vv_u8m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vwmulu_vv_u16m2</code>, <code class="language-plaintext highlighter-rouge">__riscv_vadd_vv_u16m2</code>, <code class="language-plaintext highlighter-rouge">__riscv_vmv_v_x_u32m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vwredsumu_vs_u16m2_u32m1</code>, <code class="language-plaintext highlighter-rouge">__riscv_vmv_x_s_u32m1_u32</code>.</p>
-
-<p>The approach uses integer RVV (u8/u16/u32) with widening multiply for squared L2 computation. No floating-point RVV types (<code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>) are used. The <code class="language-plaintext highlighter-rouge">zvfhmin</code> extension is enabled via the march flag but its use within this specific kernel is not confirmed by the research findings [NEEDS VERIFICATION].</p>
-
-<p>Meta reviewer mdouze noted this approach “could be a model on how to implement SVE that is also variable-width” and “That’s a cool optimization that I never came to implement. We should implement it as well for AVX and friends.”</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>amd64 (AVX2/AVX512)</th>
+      <th>arm64 (NEON/SVE)</th>
+      <th>riscv64 (RVV)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Core float distance (fvec_L2sqr, inner_product, etc.)</td>
+      <td>Full, hand-tuned</td>
+      <td>Full/partial (NEON full, SVE partial)</td>
+      <td><strong>Full, hand-tuned</strong></td>
+    </tr>
+    <tr>
+      <td>Scalar quantizer distance compute</td>
+      <td>Full</td>
+      <td>Full (~854-line sq-neon.cpp)</td>
+      <td><strong>Full, hand-tuned</strong> (largest RVV file, 3396 lines)</td>
+    </tr>
+    <tr>
+      <td>RaBitQ</td>
+      <td>Full</td>
+      <td>Scalar (delegates to NONE)</td>
+      <td><strong>Partial</strong> (real but narrower kernels)</td>
+    </tr>
+    <tr>
+      <td>FastScan / IVFPQ scanning</td>
+      <td>Full</td>
+      <td>Partial</td>
+      <td><strong>Scalar stub</strong></td>
+    </tr>
+    <tr>
+      <td>PQ code distance</td>
+      <td>Full (AVX2 gather inlining)</td>
+      <td>Partial</td>
+      <td><strong>Scalar stub</strong></td>
+    </tr>
+    <tr>
+      <td>Hamming / binary-index computers</td>
+      <td>Full</td>
+      <td>Full (~245-line NEON header)</td>
+      <td><strong>Scalar stub</strong></td>
+    </tr>
+    <tr>
+      <td>Fused exhaustive L2 (blocked top-1)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td><strong>Missing</strong> (returns false)</td>
+    </tr>
+    <tr>
+      <td>HNSW pop_min kernel</td>
+      <td>Full</td>
+      <td>N/A</td>
+      <td><strong>Open PR, unmerged</strong> (#5666)</td>
+    </tr>
+    <tr>
+      <td>simdlib abstraction (simdlib_avx2.h / simdlib_neon.h)</td>
+      <td>Present</td>
+      <td>Present</td>
+      <td><strong>No simdlib_rvv.h</strong> – RVV bypasses the simdlib layer entirely with direct intrinsics instead [carried forward, not independently reverified this round]</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -506,116 +643,12 @@
   
 </h2>
     
-<h3 id="51-architecture-detection">
-  
-  
-    <a href="#51-architecture-detection" class="anchor-heading" aria-labelledby="51-architecture-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Architecture Detection
-  
-  
-</h3>
-    
 
-<p><code class="language-plaintext highlighter-rouge">faiss/CMakeLists.txt</code> detects riscv64 via:</p>
-
-<div class="language-cmake highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">elseif</span><span class="p">(</span>CMAKE_SYSTEM_PROCESSOR MATCHES <span class="s2">"(riscv64|riscv)"</span><span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span>FAISS_SIMD_SRC <span class="si">${</span><span class="nv">FAISS_SIMD_RVV_SRC</span><span class="si">}</span><span class="p">)</span>
-</code></pre></div></div>
-
-<p>The toolchain file sets <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR=riscv64</code>, triggering this branch during cross-compilation.</p>
-<h3 id="52-cross-compile-setup-official-ci-method">
+<p>No <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">docs/building.md</code>, or <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> exists; only the generic <code class="language-plaintext highlighter-rouge">README.md</code>/<code class="language-plaintext highlighter-rouge">INSTALL.md</code>, neither of which mentions riscv64 – <code class="language-plaintext highlighter-rouge">INSTALL.md</code>’s “supported on x86-64” line does not even list RISC-V. All riscv64 build knowledge lives undocumented in CI config and CMake. No riscv64 Dockerfile or <code class="language-plaintext highlighter-rouge">.ci/docker/</code> directory exists anywhere; the CI job cross-compiles directly on a standard <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> runner via multiarch apt, not a container.</p>
+<h3 id="51-toolchain-file-cmaketoolchainsriscv64-linux-gnucmake">
   
   
-    <a href="#52-cross-compile-setup-official-ci-method" class="anchor-heading" aria-labelledby="52-cross-compile-setup-official-ci-method"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Cross-Compile Setup (Official CI Method)
-  
-  
-</h3>
-    
-
-<p>Required host packages on Ubuntu 24.04:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>, <code class="language-plaintext highlighter-rouge">g++-riscv64-linux-gnu</code></li>
-  <li><code class="language-plaintext highlighter-rouge">libopenblas-dev:riscv64</code> (from Ubuntu Ports via <code class="language-plaintext highlighter-rouge">dpkg --add-architecture riscv64</code>)</li>
-  <li><code class="language-plaintext highlighter-rouge">libgomp1:riscv64</code></li>
-  <li><code class="language-plaintext highlighter-rouge">qemu-user-static</code> (for binary verification)</li>
-</ul>
-
-<p>The CI script creates a sysroot symlink required by CMake’s library discovery:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/usr/riscv64-linux-gnu/usr/lib/riscv64-linux-gnu -&gt; /usr/lib/riscv64-linux-gnu
-</code></pre></div></div>
-<h3 id="53-cmake-configure-command">
-  
-  
-    <a href="#53-cmake-configure-command" class="anchor-heading" aria-labelledby="53-cmake-configure-command"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 CMake Configure Command
-  
-  
-</h3>
-    
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake <span class="nt">-B</span> build <span class="se">\</span>
-  <span class="nt">-DCMAKE_TOOLCHAIN_FILE</span><span class="o">=</span>cmake/toolchains/riscv64-linux-gnu.cmake <span class="se">\</span>
-  <span class="nt">-DFAISS_OPT_LEVEL</span><span class="o">=</span><span class="nb">dd</span> <span class="se">\</span>
-  <span class="nt">-DFAISS_ENABLE_GPU</span><span class="o">=</span>OFF <span class="se">\</span>
-  <span class="nt">-DFAISS_ENABLE_PYTHON</span><span class="o">=</span>OFF <span class="se">\</span>
-  <span class="nt">-DFAISS_ENABLE_C_API</span><span class="o">=</span>OFF <span class="se">\</span>
-  <span class="nt">-DBUILD_TESTING</span><span class="o">=</span>ON <span class="se">\</span>
-  <span class="nt">-DBUILD_SHARED_LIBS</span><span class="o">=</span>ON <span class="se">\</span>
-  <span class="nt">-DBLA_VENDOR</span><span class="o">=</span>OpenBLAS <span class="se">\</span>
-  <span class="nt">-DCMAKE_BUILD_TYPE</span><span class="o">=</span>Release <span class="se">\</span>
-  <span class="nt">-DCMAKE_BUILD_RPATH</span><span class="o">=</span>/usr/lib/riscv64-linux-gnu
-</code></pre></div></div>
-<h3 id="54-required-disabled-flags">
-  
-  
-    <a href="#54-required-disabled-flags" class="anchor-heading" aria-labelledby="54-required-disabled-flags"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Required Disabled Flags
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Flag</th>
-      <th>Value for riscv64</th>
-      <th>Reason</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DFAISS_ENABLE_GPU</code></td>
-      <td>Must be OFF</td>
-      <td>No CUDA or ROCm on riscv64</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DFAISS_ENABLE_PYTHON</code></td>
-      <td>OFF recommended for cross-builds</td>
-      <td>SWIG/Python discovery unreliable when cross-compiling</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DFAISS_ENABLE_CUVS</code></td>
-      <td>Default OFF</td>
-      <td>cuVS requires CUDA</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DFAISS_ENABLE_SVS</code></td>
-      <td>Default OFF</td>
-      <td>SVS is Intel-only</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DFAISS_ENABLE_MKL</code></td>
-      <td>Default ON (no-op on riscv64)</td>
-      <td>CMake silently falls through to OpenBLAS; not a blocker</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p><code class="language-plaintext highlighter-rouge">FAISS_OPT_LEVEL=dd</code> is the correct value for riscv64. The <code class="language-plaintext highlighter-rouge">avx2</code>, <code class="language-plaintext highlighter-rouge">avx512</code>, and <code class="language-plaintext highlighter-rouge">sve</code> levels do not apply. In <code class="language-plaintext highlighter-rouge">dd</code> mode, RVV is treated as always present if compiled with <code class="language-plaintext highlighter-rouge">rv64gcv</code> – no runtime HWCAP detection occurs.</p>
-<h3 id="55-toolchain-file-cmaketoolchainsriscv64-linux-gnucmake">
-  
-  
-    <a href="#55-toolchain-file-cmaketoolchainsriscv64-linux-gnucmake" class="anchor-heading" aria-labelledby="55-toolchain-file-cmaketoolchainsriscv64-linux-gnucmake"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Toolchain File: <code class="language-plaintext highlighter-rouge">cmake/toolchains/riscv64-linux-gnu.cmake</code>
+    <a href="#51-toolchain-file-cmaketoolchainsriscv64-linux-gnucmake" class="anchor-heading" aria-labelledby="51-toolchain-file-cmaketoolchainsriscv64-linux-gnucmake"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Toolchain file: <code class="language-plaintext highlighter-rouge">cmake/toolchains/riscv64-linux-gnu.cmake</code>
   
   
 </h3>
@@ -623,24 +656,89 @@
 
 <div class="language-cmake highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">set</span><span class="p">(</span>CMAKE_SYSTEM_NAME Linux<span class="p">)</span>
 <span class="nb">set</span><span class="p">(</span>CMAKE_SYSTEM_PROCESSOR riscv64<span class="p">)</span>
-<span class="nb">set</span><span class="p">(</span>CMAKE_C_COMPILER   riscv64-linux-gnu-gcc<span class="p">)</span>
-<span class="nb">set</span><span class="p">(</span>CMAKE_CXX_COMPILER riscv64-linux-gnu-g++<span class="p">)</span>
+
+<span class="c1"># GCC 14+: the RVV SQ kernels rely on tuple types (vuint8m1x3_t) and</span>
+<span class="c1"># zvfhmin f16 intrinsics that GCC 13's &lt;riscv_vector.h&gt; does not export.</span>
+<span class="nb">set</span><span class="p">(</span>CMAKE_C_COMPILER   riscv64-linux-gnu-gcc-14<span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span>CMAKE_CXX_COMPILER riscv64-linux-gnu-g++-14<span class="p">)</span>
+
 <span class="nb">set</span><span class="p">(</span>CMAKE_FIND_ROOT_PATH /usr/riscv64-linux-gnu<span class="p">)</span>
 <span class="nb">set</span><span class="p">(</span>CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER<span class="p">)</span>
 <span class="nb">set</span><span class="p">(</span>CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY<span class="p">)</span>
 <span class="nb">set</span><span class="p">(</span>CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY<span class="p">)</span>
 <span class="nb">set</span><span class="p">(</span>CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY<span class="p">)</span>
 </code></pre></div></div>
-<h3 id="56-no-dockerfile">
+
+<p><strong>Required toolchain version is GCC 14+, exactly</strong> – not GCC 13. Both the toolchain file’s own comment and <a href="https://github.com/facebookresearch/faiss/pull/5653">PR #5653</a> (merged 2026-09-21) state the reason: GCC 13’s <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> lacks the RVV tuple types (e.g. <code class="language-plaintext highlighter-rouge">vuint8m1x3_t</code>) and the <code class="language-plaintext highlighter-rouge">zvfhmin</code> f16 intrinsics the scalar-quantizer kernels need. This was a real, previously-failing CI configuration, fixed by pinning the cross-compiler package explicitly to <code class="language-plaintext highlighter-rouge">gcc-14-riscv64-linux-gnu</code>/<code class="language-plaintext highlighter-rouge">g++-14-riscv64-linux-gnu</code>.</p>
+<h3 id="52-exact-ci-cross-compile-commands-job-linux-riscv64-dd-cmake-githubworkflowsbuild-pull-requestyml">
   
   
-    <a href="#56-no-dockerfile" class="anchor-heading" aria-labelledby="56-no-dockerfile"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 No Dockerfile
+    <a href="#52-exact-ci-cross-compile-commands-job-linux-riscv64-dd-cmake-githubworkflowsbuild-pull-requestyml" class="anchor-heading" aria-labelledby="52-exact-ci-cross-compile-commands-job-linux-riscv64-dd-cmake-githubworkflowsbuild-pull-requestyml"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Exact CI cross-compile commands (job <code class="language-plaintext highlighter-rouge">linux-riscv64-DD-cmake</code>, <code class="language-plaintext highlighter-rouge">.github/workflows/build-pull-request.yml</code>)
   
   
 </h3>
     
 
-<p>No riscv64-specific Dockerfile exists in the repository. The CI uses multiarch apt on a standard Ubuntu runner. No <code class="language-plaintext highlighter-rouge">.ci/docker/Dockerfile.riscv64</code> or equivalent is present.</p><hr />
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>dpkg <span class="nt">--add-architecture</span> riscv64
+<span class="c"># add Ubuntu Ports (ports.ubuntu.com) as the riscv64 package source, then:</span>
+<span class="nb">sudo </span>apt-get <span class="nb">install</span> <span class="nt">-y</span> <span class="nt">-qq</span> <span class="se">\</span>
+  cmake gcc-14-riscv64-linux-gnu g++-14-riscv64-linux-gnu <span class="se">\</span>
+  libopenblas-dev:riscv64 libgomp1:riscv64 qemu-user-static
+
+<span class="c"># bridge multiarch lib path into the sysroot (needed for CMake find_library in ONLY mode)</span>
+<span class="nb">sudo mkdir</span> <span class="nt">-p</span> /usr/riscv64-linux-gnu/usr/lib
+<span class="nb">sudo ln</span> <span class="nt">-sfn</span> /usr/lib/riscv64-linux-gnu /usr/riscv64-linux-gnu/usr/lib/riscv64-linux-gnu
+
+cmake <span class="nt">-B</span> build <span class="se">\</span>
+  <span class="nt">-DCMAKE_TOOLCHAIN_FILE</span><span class="o">=</span>cmake/toolchains/riscv64-linux-gnu.cmake <span class="se">\</span>
+  <span class="nt">-DBUILD_TESTING</span><span class="o">=</span>ON <span class="nt">-DBUILD_SHARED_LIBS</span><span class="o">=</span>ON <span class="se">\</span>
+  <span class="nt">-DFAISS_ENABLE_GPU</span><span class="o">=</span>OFF <span class="nt">-DFAISS_OPT_LEVEL</span><span class="o">=</span><span class="nb">dd</span> <span class="se">\</span>
+  <span class="nt">-DFAISS_ENABLE_PYTHON</span><span class="o">=</span>OFF <span class="nt">-DFAISS_ENABLE_C_API</span><span class="o">=</span>OFF <span class="se">\</span>
+  <span class="nt">-DBLA_VENDOR</span><span class="o">=</span>OpenBLAS <span class="nt">-DCMAKE_BUILD_TYPE</span><span class="o">=</span>Release <span class="se">\</span>
+  <span class="nt">-DCMAKE_C_COMPILER_LAUNCHER</span><span class="o">=</span>ccache <span class="nt">-DCMAKE_CXX_COMPILER_LAUNCHER</span><span class="o">=</span>ccache <span class="se">\</span>
+  <span class="nt">-DCMAKE_BUILD_RPATH</span><span class="o">=</span>/usr/lib/riscv64-linux-gnu <span class="nb">.</span>
+
+cmake <span class="nt">--build</span> build <span class="nt">--target</span> faiss_test <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">-DFAISS_OPT_LEVEL=dd</code> (Dynamic Dispatch) compiles all SIMD variants including RVV into one binary with runtime feature selection, rather than picking a single <code class="language-plaintext highlighter-rouge">-march</code> at compile time. <code class="language-plaintext highlighter-rouge">ccache</code> (key <code class="language-plaintext highlighter-rouge">linux-riscv64-dd</code>) is used to speed rebuilds.</p>
+<h3 id="53-qemu-usage">
+  
+  
+    <a href="#53-qemu-usage" class="anchor-heading" aria-labelledby="53-qemu-usage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 QEMU usage
+  
+  
+</h3>
+    
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>file build/tests/faiss_test | <span class="nb">grep</span> <span class="nt">-q</span> <span class="s2">"RISC-V"</span> <span class="o">||</span> <span class="o">{</span> <span class="nb">echo</span> <span class="s2">"ERROR: not a RISC-V binary"</span><span class="p">;</span> <span class="nb">exit </span>1<span class="p">;</span> <span class="o">}</span>
+
+<span class="nv">RISCV64_LD</span><span class="o">=</span><span class="si">$(</span>find /usr/riscv64-linux-gnu/lib <span class="nt">-name</span> <span class="s2">"ld-linux-riscv64-*.so.1"</span> | <span class="nb">head</span> <span class="nt">-1</span><span class="si">)</span>
+qemu-riscv64-static <span class="nt">-L</span> /usr/riscv64-linux-gnu <span class="s2">"</span><span class="nv">$RISCV64_LD</span><span class="s2">"</span> <span class="nt">--list</span> build/tests/faiss_test
+
+qemu-riscv64-static <span class="nt">-L</span> /usr/riscv64-linux-gnu build/tests/faiss_test <span class="se">\</span>
+  <span class="nt">--gtest_filter</span><span class="o">=</span><span class="s2">"SIMDConfig.*:SIMDLevel.*:CompileOptions.*"</span>
+
+qemu-riscv64-static <span class="nt">-L</span> /usr/riscv64-linux-gnu build/tests/faiss_test <span class="se">\</span>
+  <span class="nt">--gtest_filter</span><span class="o">=</span><span class="s2">"*SQRVV*:*D5Overflow*:*D5bLargeDim*:*D10FloatQuery*"</span>
+
+<span class="c"># RVV-specific parity tests, explicitly enabling V and Zvfhmin (QEMU's default</span>
+<span class="c"># rv64 CPU model does not enable them), run once at default VLEN and once at 1024:</span>
+qemu-riscv64-static <span class="nt">-cpu</span> rv64,v<span class="o">=</span><span class="nb">true</span>,x-zvfhmin<span class="o">=</span><span class="nb">true</span> <span class="nt">-L</span> /usr/riscv64-linux-gnu <span class="se">\</span>
+  build/tests/faiss_test <span class="nt">--gtest_filter</span><span class="o">=</span><span class="s2">"ScalarQuantizer.*DistancePathParity*"</span>
+qemu-riscv64-static <span class="nt">-cpu</span> rv64,v<span class="o">=</span><span class="nb">true</span>,vlen<span class="o">=</span>1024,x-zvfhmin<span class="o">=</span><span class="nb">true</span> <span class="nt">-L</span> /usr/riscv64-linux-gnu <span class="se">\</span>
+  build/tests/faiss_test <span class="nt">--gtest_filter</span><span class="o">=</span><span class="s2">"ScalarQuantizer.*DistancePathParity*"</span>
+</code></pre></div></div>
+<h3 id="54-disabled-flags-on-riscv64">
+  
+  
+    <a href="#54-disabled-flags-on-riscv64" class="anchor-heading" aria-labelledby="54-disabled-flags-on-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Disabled flags on riscv64
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">-DFAISS_ENABLE_GPU=OFF</code> (no CUDA/ROCm on riscv64), <code class="language-plaintext highlighter-rouge">-DFAISS_ENABLE_PYTHON=OFF</code> and <code class="language-plaintext highlighter-rouge">-DFAISS_ENABLE_C_API=OFF</code> in the CI job (cross-build only; RISE’s separate native wheel pipeline does enable Python bindings, see Section 8), <code class="language-plaintext highlighter-rouge">-DBLA_VENDOR=OpenBLAS</code> (MKL silently falls through, x86-only). <code class="language-plaintext highlighter-rouge">perf_tests</code> are skipped under <code class="language-plaintext highlighter-rouge">CMAKE_CROSSCOMPILING</code> because they require gflags/Google Benchmark, unavailable cross-compiled.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -654,87 +752,74 @@
   <thead>
     <tr>
       <th>Component</th>
-      <th>amd64 (AVX2/AVX512)</th>
-      <th>arm64 (NEON/SVE)</th>
-      <th>riscv64 (RVV)</th>
-      <th>riscv64 Gap</th>
+      <th>Rating</th>
+      <th>Basis</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>ScalarQuantizer distance</td>
-      <td>Full – hand-tuned intrinsics for all codecs</td>
-      <td>Full – NEON intrinsics (~530 lines in sq-neon.cpp)</td>
-      <td>Partial – one codec/metric pair (QT_4bit_uniform + L2) uses real RVV; all others scalar</td>
-      <td>All codec/metric combos except QT_4bit_uniform + L2</td>
+      <td>Core vector distance (fvec_L2sqr, inner_product, norm_L2sqr, L1, Linf, madd, add/sub, batch-4, _ny variants)</td>
+      <td>Full, hand-tuned</td>
+      <td>Real RVV intrinsics, VLEN-runtime-aware, broad coverage close to AVX2/NEON; missing only micro-optimized D2/D4/D8 paths and the fused cmax kernel</td>
     </tr>
     <tr>
-      <td>Vector distances (fvec_L2sqr, fvec_inner_product, etc.)</td>
-      <td>Full – AVX2/AVX512 intrinsics</td>
-      <td>Partial – 2 of 7 functions use NEON; rest delegate</td>
-      <td>Scalar – all 15 functions call NONE</td>
-      <td>All distance functions</td>
+      <td>Scalar quantizer distance compute (SQ4/SQ8/fp16/bf16/LloydMax)</td>
+      <td>Full, hand-tuned</td>
+      <td>693 intrinsic calls across 68 distinct RVV intrinsics, VLEN-generic (m8) design</td>
     </tr>
     <tr>
-      <td>FastScan scanner</td>
-      <td>Full</td>
-      <td>Partial (SVE forwards to NEON)</td>
-      <td>Scalar – all 6 forwarders in impl-riscv.cpp call NONE</td>
-      <td>All FastScan kernels</td>
+      <td>Scalar quantizer codec encode/decode</td>
+      <td>Full (as of the Sept 2026 kernel cluster, #5602-5641)</td>
+      <td>Per-variant encode/decode/distance kernels for 8-bit direct, 8-bit direct-signed, fp16, bf16 decode, bit-exact decode_vector</td>
     </tr>
     <tr>
-      <td>PQ code distance</td>
-      <td>Full – AVX2 gather inlining in per-SIMD TU</td>
-      <td>Partial – NEON dispatch wrapper</td>
-      <td>Scalar – explicit comment “no RVV-optimized PQ code distance exists yet”</td>
-      <td>All PQ scan kernels</td>
-    </tr>
-    <tr>
-      <td>RaBitQ (bitwise ops)</td>
-      <td>Full – AVX2/AVX512 hand-tuned</td>
-      <td>Scalar (rabitq_neon.cpp delegates to NONE)</td>
-      <td>Scalar – all 4 functions call NONE</td>
-      <td>All RaBitQ kernels</td>
-    </tr>
-    <tr>
-      <td>Binary Hamming indices</td>
-      <td>Full (AVX2/AVX512)</td>
+      <td>RaBitQ kernels</td>
       <td>Partial</td>
+      <td>Real RVV popcount/bit-packing kernels, narrower than AVX2/AVX512</td>
+    </tr>
+    <tr>
+      <td>PQ code distance (non-fast-scan IVFPQ scanning)</td>
       <td>Scalar</td>
-      <td>All Hamming ops</td>
+      <td>Explicit source comment: “no RVV-optimized PQ code distance exists yet”</td>
     </tr>
     <tr>
-      <td>Hamming computers</td>
-      <td>Full – AVX2/AVX512 popcount</td>
-      <td>Full – NEON XOR+vcnt+vaddv (~245-line header)</td>
-      <td>Scalar – 9 structs all inherit from NONE, no RVV intrinsics</td>
-      <td>All HammingComputer variants</td>
+      <td>Fast-scan (IndexPQFastScan, IndexIVFPQFastScan, RaBitQ fast-scan)</td>
+      <td>Scalar stub</td>
+      <td>Forwarder-only file, zero RVV kernel calls</td>
     </tr>
     <tr>
-      <td>simdlib abstraction layer</td>
-      <td>Full (simdlib_avx2.h, simdlib_avx512.h)</td>
-      <td>Full (simdlib_neon.h)</td>
-      <td>Missing – no simdlib_rvv.h</td>
-      <td>simdlib prevents broader SIMD-templated paths from using RVV</td>
+      <td>Hamming / binary distance (HammingComputer*, binary HNSW/IVF/hash)</td>
+      <td>Scalar</td>
+      <td>Explicit scalar-fallback inheritance macro</td>
     </tr>
     <tr>
-      <td>SIMD dispatch / build plumbing</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Full – RISCV_RVV registered in enum, dispatch table, fallback chain</td>
-      <td>None</td>
+      <td>Fused exhaustive L2 (blocked BLAS-style top-1)</td>
+      <td>Missing</td>
+      <td>Returns false, identical to generic/NONE</td>
     </tr>
     <tr>
-      <td>GPU indexes (IVF-Flat GPU, RAFT)</td>
-      <td>Full (CUDA)</td>
-      <td>Partial (no CUDA on ARM typically)</td>
-      <td>None</td>
-      <td>CUDA/ROCm unavailable on riscv64; all GPU indexes absent</td>
+      <td>HNSW MinimaxHeap pop_min</td>
+      <td>Missing / in-flight</td>
+      <td>PR #5666 open, unmerged as of 2026-09-30</td>
+    </tr>
+    <tr>
+      <td>bf16 conversion</td>
+      <td>Partial</td>
+      <td>Vector path with scalar carve-out for n==1</td>
+    </tr>
+    <tr>
+      <td>GPU indexes (CUDA-based)</td>
+      <td>Not applicable</td>
+      <td>CUDA has no riscv64 port; all GPU indexes absent</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Summary of functional gaps:</strong> 6 of 7 RISC-V TUs contain zero intrinsics and deliver scalar performance. The simdlib abstraction layer has no RVV variant, blocking the simdlib-templated code paths from benefiting from RVV regardless of future kernel work. All GPU indexes are absent with no path to availability.</p><hr />
+<p><strong>Functional gaps:</strong> IVFPQ/FastScan query-time scanning, PQ code distance, and Hamming/binary-index distance all run at scalar speed on riscv64 today – these are the exact operations used at query time for IVFPQ and binary indexes, which are common production configurations for large-scale deployments.</p>
+
+<p><strong>Performance gaps:</strong> the missing kernels above mean IVFPQ and binary-index query throughput on riscv64 has no SIMD acceleration at all, versus full AVX2/AVX512 on x86 and full/partial NEON on arm64. Measured in-repo benchmarks (Section 8/13) also show two quantizer variants (QT_4bit_uniform, QT_6bit) <em>regressing</em> below scalar performance in the RVV path due to slow micro-coded <code class="language-plaintext highlighter-rouge">vluxei32</code> gather loads, a correctness-adjacent performance defect documented in PR #5535’s own review thread.</p>
+
+<p><strong>Security hardening / NaN semantics:</strong> GitHub search across “riscv nan”, “riscv floating”, and “riscv correctness” in the repository returned zero issues. The one substantive correctness defect found is architecture-specific but not a NaN/float-semantics bug; it is a data race (Section 11).</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -743,72 +828,55 @@
   
 </h2>
     
-<h3 id="71-ci-job-details">
-  
-  
-    <a href="#71-ci-job-details" class="anchor-heading" aria-labelledby="71-ci-job-details"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.1 CI Job Details
-  
-  
-</h3>
-    
 
-<p>File: <code class="language-plaintext highlighter-rouge">.github/workflows/build-pull-request.yml</code><br />
-Trigger: Called from <code class="language-plaintext highlighter-rouge">build.yml</code>, which fires on push to main, PRs to main, version tags (<code class="language-plaintext highlighter-rouge">v*</code>), and <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>.</p>
-
-<p>Job name: <code class="language-plaintext highlighter-rouge">linux-riscv64-DD-cmake</code> (“Linux riscv64 Dynamic Dispatch cross-compile (cmake)”)<br />
-Runner: <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64 host; no native riscv64 runner)<br />
-Dependency: Requires <code class="language-plaintext highlighter-rouge">linux-x86_64-cmake</code> to pass first.</p>
-
-<p>CMake flags used: <code class="language-plaintext highlighter-rouge">-DFAISS_OPT_LEVEL=dd -DFAISS_ENABLE_GPU=OFF -DBUILD_TESTING=ON -DBUILD_SHARED_LIBS=ON -DFAISS_ENABLE_PYTHON=OFF -DFAISS_ENABLE_C_API=OFF -DBLA_VENDOR=OpenBLAS -DCMAKE_BUILD_TYPE=Release</code></p>
-
-<p>Build target: <code class="language-plaintext highlighter-rouge">faiss_test</code> (includes <code class="language-plaintext highlighter-rouge">test_factory_tools</code>, prevents linker from pruning FAISS internals).</p>
-<h3 id="72-test-execution">
-  
-  
-    <a href="#72-test-execution" class="anchor-heading" aria-labelledby="72-test-execution"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.2 Test Execution
-  
-  
-</h3>
-    
-
-<p>The CI job does run tests under QEMU, but with a narrow filter:</p>
-
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>qemu-riscv64-static <span class="nt">-L</span> /usr/riscv64-linux-gnu <span class="se">\</span>
-  build/tests/faiss_test <span class="se">\</span>
-  <span class="nt">--gtest_filter</span><span class="o">=</span><span class="s2">"SIMDConfig.*:SIMDLevel.*:CompileOptions.*"</span>
-</code></pre></div></div>
-
-<p>This tests SIMD dispatch infrastructure (compile options, level detection), not FAISS algorithmic correctness. No index build, search, recall, or correctness tests are executed on riscv64.</p>
-
-<p>The CI also verifies that the output binary is a RISC-V ELF and that shared library resolution succeeds under QEMU ldd. <code class="language-plaintext highlighter-rouge">perf_tests</code> are explicitly skipped when <code class="language-plaintext highlighter-rouge">CMAKE_CROSSCOMPILING</code> is set.</p>
-<h3 id="73-what-ci-does-not-cover">
-  
-  
-    <a href="#73-what-ci-does-not-cover" class="anchor-heading" aria-labelledby="73-what-ci-does-not-cover"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.3 What CI Does Not Cover
-  
-  
-</h3>
-    
+<p><strong>riscv64 CI exists and is functional, verified directly from the CI YAML at commit <code class="language-plaintext highlighter-rouge">88a28bc</code>.</strong> Of all 11 GitHub Actions workflow files plus <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>/<code class="language-plaintext highlighter-rouge">Jenkinsfile</code>/<code class="language-plaintext highlighter-rouge">.cirrus.yml</code> (none of which exist for FAISS), only <code class="language-plaintext highlighter-rouge">.github/workflows/build-pull-request.yml</code> references riscv, in job <code class="language-plaintext highlighter-rouge">linux-riscv64-DD-cmake</code> (lines 357-486).</p>
 
 <ul>
-  <li>Full GTest suite (index correctness, approximate recall, codec roundtrip)</li>
-  <li>Python bindings (<code class="language-plaintext highlighter-rouge">FAISS_ENABLE_PYTHON=OFF</code>)</li>
-  <li>C API (<code class="language-plaintext highlighter-rouge">FAISS_ENABLE_C_API=OFF</code>)</li>
-  <li>Native hardware execution (QEMU only)</li>
-  <li>GPU indexes (not applicable)</li>
+  <li><strong>Trigger:</strong> <code class="language-plaintext highlighter-rouge">build-pull-request.yml</code> declares <code class="language-plaintext highlighter-rouge">on: workflow_call</code> and is invoked by <code class="language-plaintext highlighter-rouge">build.yml</code>, which fires on <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>, every PR into <code class="language-plaintext highlighter-rouge">main</code>, every push to <code class="language-plaintext highlighter-rouge">main</code>, and every <code class="language-plaintext highlighter-rouge">v*</code> tag push. The riscv64 job itself is gated only by <code class="language-plaintext highlighter-rouge">needs.changes.outputs.has_cpu_changes == 'true' || github.event_name != 'pull_request'</code> (skipped only on GPU-only PRs).</li>
+  <li><strong>Runner:</strong> <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>, a standard x86_64 GitHub-hosted runner. There is no native riscv64 runner in FAISS’s own CI; it cross-compiles and runs everything under <code class="language-plaintext highlighter-rouge">qemu-user-static</code>/<code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code>.</li>
+  <li><strong>Test execution:</strong> real, not just a build/link smoke test. Three gtest batches run under QEMU: <code class="language-plaintext highlighter-rouge">SIMDConfig.*:SIMDLevel.*:CompileOptions.*</code>; <code class="language-plaintext highlighter-rouge">*SQRVV*:*D5Overflow*:*D5bLargeDim*:*D10FloatQuery*</code>; and <code class="language-plaintext highlighter-rouge">ScalarQuantizer.*DistancePathParity*</code> run twice (default VLEN and forced VLEN=1024 with <code class="language-plaintext highlighter-rouge">x-zvfhmin=true</code>). This is genuine RVV-emulated correctness/parity checking, not a bare compile check.</li>
+  <li><strong>What it does not cover:</strong> the full gtest suite (index build/search/recall correctness across IVF, HNSW, PQ, binary indexes), Python bindings (<code class="language-plaintext highlighter-rouge">FAISS_ENABLE_PYTHON=OFF</code>), the C API (<code class="language-plaintext highlighter-rouge">FAISS_ENABLE_C_API=OFF</code>), and any GPU path. This scoping is the direct basis for the yellow CI grade: the job is build-verified plus a narrow parity-test slice, not full-suite verified.</li>
+  <li><strong>Not present</strong> in <code class="language-plaintext highlighter-rouge">nightly.yml</code>, <code class="language-plaintext highlighter-rouge">build-release.yml</code>, <code class="language-plaintext highlighter-rouge">build-pip.yml</code>, <code class="language-plaintext highlighter-rouge">build-pip-gpu.yml</code>, <code class="language-plaintext highlighter-rouge">autoclose.yml</code>, <code class="language-plaintext highlighter-rouge">retry_build.yml</code>, <code class="language-plaintext highlighter-rouge">index-io-backward-compatibility.yml</code>, <code class="language-plaintext highlighter-rouge">update-doxygen.yml</code>, or <code class="language-plaintext highlighter-rouge">publish-docs.yml</code>.</li>
 </ul>
-<h3 id="74-coverage-in-other-ci-workflows">
-  
-  
-    <a href="#74-coverage-in-other-ci-workflows" class="anchor-heading" aria-labelledby="74-coverage-in-other-ci-workflows"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.4 Coverage in Other CI Workflows
-  
-  
-</h3>
-    
 
-<p>riscv64 is absent from: <code class="language-plaintext highlighter-rouge">nightly.yml</code>, <code class="language-plaintext highlighter-rouge">build-release.yml</code>, <code class="language-plaintext highlighter-rouge">build-pip.yml</code>, <code class="language-plaintext highlighter-rouge">build-pip-gpu.yml</code>, <code class="language-plaintext highlighter-rouge">autoclose.yml</code>, <code class="language-plaintext highlighter-rouge">retry_build.yml</code>, <code class="language-plaintext highlighter-rouge">index-io-backward-compatibility.yml</code>, <code class="language-plaintext highlighter-rouge">update-doxygen.yml</code>, <code class="language-plaintext highlighter-rouge">publish-docs.yml</code>. No Jenkinsfile, <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Axis</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Runner</td>
+      <td>Native x86_64 GitHub-hosted</td>
+      <td>Native arm64 GitHub-hosted [NEEDS VERIFICATION, not directly checked this round]</td>
+      <td>Cross-compiled on x86_64 <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>, QEMU-emulated</td>
+    </tr>
+    <tr>
+      <td>Test scope</td>
+      <td>Full gtest suite</td>
+      <td>Full gtest suite [NEEDS VERIFICATION]</td>
+      <td>SIMD dispatch + SQ parity only, narrow <code class="language-plaintext highlighter-rouge">--gtest_filter</code></td>
+    </tr>
+    <tr>
+      <td>Python bindings tested</td>
+      <td>Yes</td>
+      <td>Yes [NEEDS VERIFICATION]</td>
+      <td>No (<code class="language-plaintext highlighter-rouge">FAISS_ENABLE_PYTHON=OFF</code>)</td>
+    </tr>
+    <tr>
+      <td>Included in nightly/release workflows</td>
+      <td>Yes</td>
+      <td>Yes [NEEDS VERIFICATION]</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>Self-hosted native RISC-V runners were discussed in <a href="https://github.com/facebookresearch/faiss/pull/5128">PR #5128</a>. Maintainer mnorris11 stated: “We would need a self-hosted runner as the Github Actions runners don’t seem to support it.” No self-hosted RISC-V runner has been added.</p><hr />
+<p>Separately from FAISS’s own CI, RISE’s <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> repository builds the <code class="language-plaintext highlighter-rouge">faiss-cpu</code> wheel using <strong>native</strong> RISE bare-metal RISC-V runners (<code class="language-plaintext highlighter-rouge">runs-on: ubuntu-24.04-riscv</code>, the free RISE RISC-V Runner service announced 2026-03-24), inside a <code class="language-plaintext highlighter-rouge">quay.io/pypa/manylinux_2_39_riscv64</code> container – real hardware compilation, not QEMU. This is a separate pipeline from FAISS’s own repository CI and does not feed back into facebookresearch/faiss’s own test results.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -817,109 +885,69 @@ Dependency: Requires <code class="language-plaintext highlighter-rouge">linux-x8
   
 </h2>
     
-<h3 id="81-release-versions-with-riscv64-support">
-  
-  
-    <a href="#81-release-versions-with-riscv64-support" class="anchor-heading" aria-labelledby="81-release-versions-with-riscv64-support"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.1 Release Versions with riscv64 Support
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Release</th>
-      <th>Date</th>
-      <th>riscv64 Source Support</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>v1.14.2</td>
-      <td>2026-05-21</td>
-      <td>First release with RVV scaffolding (PRs #5156, #5184, #5216)</td>
-      <td>Source-only; no binary artifacts</td>
-    </tr>
-    <tr>
-      <td>v1.14.3</td>
-      <td>After 2026-05-22</td>
-      <td>Adds static dispatch SIMD fallback fix (PR #5057)</td>
-      <td>Source-only; no binary artifacts</td>
-    </tr>
-    <tr>
-      <td>v1.14.1 and earlier</td>
-      <td>–</td>
-      <td>No riscv64 support</td>
-      <td>–</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="82-binary-package-availability">
-  
-  
-    <a href="#82-binary-package-availability" class="anchor-heading" aria-labelledby="82-binary-package-availability"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.2 Binary Package Availability
-  
-  
-</h3>
-    
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Channel</th>
       <th>Version</th>
-      <th>riscv64 Available</th>
+      <th>riscv64 available</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>GitHub Releases (binary assets)</td>
-      <td>v1.14.3</td>
-      <td>No – every release ships only auto-generated source archives (.zip, .tar.gz)</td>
+      <td>GitHub Releases (facebookresearch/faiss)</td>
+      <td>up to v1.15.1</td>
+      <td>No</td>
+      <td>Confirmed via the rendered release page: only auto-generated <code class="language-plaintext highlighter-rouge">v1.15.1.zip</code>/<code class="language-plaintext highlighter-rouge">v1.15.1.tar.gz</code> source archives, no built binaries of any architecture</td>
     </tr>
     <tr>
       <td>PyPI <code class="language-plaintext highlighter-rouge">faiss</code></td>
       <td>1.5.3 (abandoned ~2019)</td>
-      <td>No – only manylinux1_x86_64 and macosx_10_13_x86_64 wheels</td>
+      <td>No</td>
+      <td>Only <code class="language-plaintext highlighter-rouge">macosx_10_13_x86_64</code> and <code class="language-plaintext highlighter-rouge">manylinux1_x86_64</code> wheels, Python 2.7/3.5/3.6/3.7</td>
     </tr>
     <tr>
       <td>PyPI <code class="language-plaintext highlighter-rouge">faiss-cpu</code></td>
-      <td>Up to 1.9.0.post1 [NEEDS VERIFICATION for exact latest]</td>
-      <td>No – wheels for x86_64, aarch64/arm64 (Linux and macOS), win_amd64 only</td>
+      <td>1.15.1 (current)</td>
+      <td>No</td>
+      <td>Confirmed across the full release history: macOS/Windows/Linux x86_64, arm64/aarch64, musllinux variants; zero filenames contain “riscv” anywhere in the JSON metadata</td>
     </tr>
     <tr>
-      <td>RISE Python wheel builder</td>
-      <td>–</td>
-      <td>No – FAISS absent from the 76-package list</td>
+      <td>RISE wheel builder (<code class="language-plaintext highlighter-rouge">pypi.riseproject.dev</code>, <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code>)</td>
+      <td>v1.15.0, v1.15.1</td>
+      <td><strong>Yes</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">faiss_cpu-1.15.0-cp310-abi3-manylinux_2_39_riscv64.whl</code> and <code class="language-plaintext highlighter-rouge">faiss_cpu-1.15.1-cp310-abi3-manylinux_2_39_riscv64.whl</code>, tracked in <code class="language-plaintext highlighter-rouge">docs/packages/faiss-cpu.yaml</code>, status “Patched.” Built natively (not QEMU) on RISE’s own hardware. <a href="https://github.com/riseproject-dev/python-wheels/pull/1968">PR #1968</a> rebases a “runtime-detection patch” (RVV detection) and a toolchain patch against upstream’s 1.15.1 cpuid-helper namespace change</td>
     </tr>
     <tr>
-      <td>Ubuntu 24.04 noble</td>
+      <td>RISE GitLab wheel-status page (<code class="language-plaintext highlighter-rouge">riseproject.gitlab.io/python/wheel_builder/</code>)</td>
       <td>–</td>
-      <td>No – package not present in noble at all</td>
+      <td>No (stale)</td>
+      <td>Does not list FAISS among its ~76 packages; out of sync with the newer, actually-functioning GitHub-based <code class="language-plaintext highlighter-rouge">python-wheels</code> pipeline (created 2026-06-16). The GitHub repo is the current source of truth</td>
     </tr>
     <tr>
-      <td>Ubuntu jammy / later dev suites</td>
-      <td>–</td>
-      <td>Yes – libfaiss-dev, python3-faiss list riscv64 as a supported arch</td>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td>1.13.2-1build1</td>
+      <td>Yes</td>
+      <td><code class="language-plaintext highlighter-rouge">libfaiss-dev</code> and <code class="language-plaintext highlighter-rouge">python3-faiss</code>, universe section, architectures amd64/arm64/armhf/ppc64el/<strong>riscv64</strong>/s390x. Confirmed via a live fetch with a working <code class="language-plaintext highlighter-rouge">.deb</code> download link (<code class="language-plaintext highlighter-rouge">python3-faiss_1.13.2-1build1_riscv64.deb</code>, 2,571.5 kB). Predates all upstream RVV work (v1.14.2+), so it carries no RVV acceleration</td>
     </tr>
     <tr>
       <td>Debian sid</td>
-      <td>1.13.2-1+b1</td>
-      <td>Yes – native build on rv-manda-02 (2026-05-22, build time 11h42m); status “Maybe-Successful”</td>
+      <td>1.13.2-1+b1 [carried forward, not reconfirmed this round]</td>
+      <td>Yes, reported</td>
+      <td>Native riscv64 build, status “Maybe-Successful” per prior Debian buildd data; also predates RVV work</td>
     </tr>
     <tr>
-      <td>Arch Linux RISC-V (archriscv)</td>
+      <td>Arch Linux RISC-V (archriscv.felixc.at)</td>
       <td>–</td>
-      <td>No – package absent</td>
+      <td>No</td>
+      <td>Package absent entirely</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Notes on Debian sid entry:</strong> The version 1.13.2-1+b1 predates all RVV work (RVV landed in upstream v1.14.2). This binary delivers no RVV acceleration. The “Maybe-Successful” status reflects riscv64’s Tier-2 ports architecture classification in Debian rather than a confirmed clean build. The <code class="language-plaintext highlighter-rouge">/filelist</code> endpoint returned “No such package in this suite on this architecture,” which may indicate this package is in <code class="language-plaintext highlighter-rouge">debian-ports</code> rather than the main Debian archive, requiring additional <code class="language-plaintext highlighter-rouge">sources.list</code> configuration [NEEDS VERIFICATION].</p>
-
-<p><strong>Conclusion:</strong> riscv64 users cannot <code class="language-plaintext highlighter-rouge">pip install faiss-cpu</code>. No prebuilt binary with RVV support exists in any distribution channel as of June 2026. Source builds are possible but require correctly configured SWIG include paths (issue #4321).</p><hr />
+<p><strong>Bottom line for a riscv64 user today:</strong> <code class="language-plaintext highlighter-rouge">pip install faiss-cpu</code> from the default PyPI index installs nothing usable on riscv64. The only path to a prebuilt binary with RVV acceleration is RISE’s own index (<code class="language-plaintext highlighter-rouge">pip install --index-url https://pypi.riseproject.dev/simple faiss-cpu</code> or equivalent), which is natively built and current (1.15.1). Distro packages (Ubuntu 26.04, Debian sid) provide a working but RVV-free 1.13.2 build. Building from source against <code class="language-plaintext highlighter-rouge">main</code> gets the current RVV kernel set but requires GCC 14+ and is undocumented in FAISS’s own README/INSTALL.</p>
 <h2 id="9-dependencies">
   
   
@@ -928,196 +956,111 @@ Dependency: Requires <code class="language-plaintext highlighter-rouge">linux-x8
   
 </h2>
     
-<h3 id="91-mandatory-dependencies-on-riscv64">
-  
-  
-    <a href="#91-mandatory-dependencies-on-riscv64" class="anchor-heading" aria-labelledby="91-mandatory-dependencies-on-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 Mandatory Dependencies on riscv64
-  
-  
-</h3>
-    
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>riscv64 Build Status</th>
-      <th>riscv64 Binary Availability</th>
-      <th>Notes</th>
+      <th>Criticality</th>
+      <th>riscv64 status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>OpenBLAS</td>
       <td>BLAS/LAPACK backend for training (GEMM, k-means, PQ training)</td>
-      <td>Green – RVV 1.0 support since v0.3.28; ZVL128B/ZVL256B targets</td>
-      <td>Debian sid v0.3.33; Ubuntu 24.04 v0.3.26</td>
-      <td>Ubuntu 24.04 version is old, missing DYNAMIC_ARCH and ZVL targets. LAPACK tests explicitly disabled in upstream CI. TRSM has a correctness bug blocking ZVL256B enabling.</td>
+      <td>Critical, runtime-dependency</td>
+      <td>Present in Ubuntu 26.04 riscv64 (<code class="language-plaintext highlighter-rouge">libopenblas-dev</code> 0.3.32+ds-5). RVV 1.0 support since v0.3.28 (ZVL128B/ZVL256B/x280/C910V targets, 221 RVV kernel files), but tested only under QEMU (no native CI) and LAPACK tests are explicitly disabled upstream. See 9.1</td>
+    </tr>
+    <tr>
+      <td>OpenMP</td>
+      <td>Threading/parallelism for index search and training (<code class="language-plaintext highlighter-rouge">find_package(OpenMP REQUIRED)</code>)</td>
+      <td>Critical, runtime-dependency</td>
+      <td>Green. <code class="language-plaintext highlighter-rouge">libgomp1</code> (GCC’s OpenMP runtime) ships with every standard riscv64 GCC toolchain; no riscv64-specific issues identified in FAISS or OpenBLAS research</td>
     </tr>
     <tr>
       <td>Intel MKL</td>
-      <td>Preferred BLAS/LAPACK (FAISS_ENABLE_MKL=ON default)</td>
-      <td>Not available – x86 only</td>
-      <td>Not available</td>
-      <td>CMake falls through silently to OpenBLAS on riscv64; no user-visible error.</td>
+      <td>Preferred BLAS/LAPACK when available (<code class="language-plaintext highlighter-rouge">FAISS_ENABLE_MKL=ON</code> by default)</td>
+      <td>Optional, runtime-dependency</td>
+      <td>Not available – x86-only. CMake silently falls through to OpenBLAS on riscv64, no user-visible error</td>
     </tr>
     <tr>
-      <td>OpenMP (libgomp / libomp)</td>
-      <td>Parallelism for index search and training</td>
-      <td>Green – libgomp ships with all standard riscv64 GCC toolchains</td>
-      <td>Available in standard riscv64 Linux packages</td>
-      <td>No riscv64-specific OpenMP issues identified.</td>
-    </tr>
-    <tr>
-      <td>GCC RVV toolchain</td>
-      <td>Compile-time for -march=rv64gcv_zvfhmin</td>
-      <td>Partial – GCC 13 may silently produce scalar code for RVV paths; GCC 14+ recommended</td>
-      <td>gcc-riscv64-linux-gnu available via Ubuntu multiarch</td>
-      <td>No minimum GCC version is documented by FAISS upstream [NEEDS VERIFICATION on GCC 13 vs 14 behavior for these specific intrinsics].</td>
-    </tr>
-    <tr>
-      <td>CMake &gt;= 3.24.0</td>
-      <td>Build system</td>
-      <td>Green</td>
-      <td>Available on all standard Linux distributions</td>
-      <td>No riscv64-specific CMake issues.</td>
-    </tr>
-    <tr>
-      <td>glibc</td>
-      <td>C runtime, pthreads, libm</td>
-      <td>Green – riscv64 support since glibc 2.27</td>
-      <td>Available on all standard riscv64 Linux distributions</td>
-      <td>No known issues.</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="92-optional-dependencies-unavailable-on-riscv64">
-  
-  
-    <a href="#92-optional-dependencies-unavailable-on-riscv64" class="anchor-heading" aria-labelledby="92-optional-dependencies-unavailable-on-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 Optional Dependencies (Unavailable on riscv64)
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Dependency</th>
-      <th>Role</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>CUDA / cuBLAS</td>
+      <td>CUDA</td>
       <td>GPU-accelerated index search and training</td>
-      <td>Not available – CUDA has no riscv64 port. FAISS GPU indexes entirely absent.</td>
+      <td>Optional, runtime-dependency</td>
+      <td>Not available – no riscv64 CUDA port. All FAISS GPU indexes are entirely absent on riscv64</td>
     </tr>
     <tr>
-      <td>ROCm / hipBLAS</td>
-      <td>AMD GPU backend</td>
-      <td>Not available – no riscv64 ROCm port.</td>
+      <td>GCC</td>
+      <td>Compiler for <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zvfhmin</code> codegen</td>
+      <td>Critical, build-dependency</td>
+      <td><strong>GCC 14+ is required, not 13</strong> – GCC 13’s <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> lacks the RVV tuple types and Zvfhmin intrinsics the SQ kernels use; confirmed by the toolchain file and PR #5653. <code class="language-plaintext highlighter-rouge">gcc-14-riscv64-linux-gnu</code> is available via Ubuntu’s multiarch/Ports archive</td>
     </tr>
     <tr>
-      <td>cuVS</td>
-      <td>NVIDIA approximate nearest neighbor GPU algorithms</td>
-      <td>Not available – CUDA dependency.</td>
+      <td>CMake</td>
+      <td>Build system (architecture detection, toolchain file consumption)</td>
+      <td>Critical, build-dependency</td>
+      <td>Green, no riscv64-specific issues found; CMake &gt;= 3.24 required by FAISS generally [carried forward]</td>
     </tr>
-    <tr>
-      <td>SVS</td>
-      <td>Intel Scalable Vector Search</td>
-      <td>Not available – Intel-only.</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="93-python-binding-dependencies">
-  
-  
-    <a href="#93-python-binding-dependencies" class="anchor-heading" aria-labelledby="93-python-binding-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 Python Binding Dependencies
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Dependency</th>
-      <th>Role</th>
-      <th>riscv64 Status</th>
-    </tr>
-  </thead>
-  <tbody>
     <tr>
       <td>SWIG</td>
-      <td>Python wrapper code generator (build-time only, runs on host)</td>
-      <td>Green for native builds; issue #4321 (closed) traced a riscv64 pip install failure to misconfigured SWIG include paths in the PyPI source distribution</td>
+      <td>Python-binding code generator (build-time host tool, not linked at runtime)</td>
+      <td>Optional, build-dependency</td>
+      <td>Present in Ubuntu 26.04 riscv64 (<code class="language-plaintext highlighter-rouge">swig</code> 4.4.0-1); SWIG 4.5.0 itself ships riscv64 wheels. Issue #4321 traced a riscv64 <code class="language-plaintext highlighter-rouge">pip install faiss-cpu</code> failure to misconfigured SWIG include paths in FAISS’s own PyPI sdist, not a SWIG defect. Disabled in FAISS’s own CI job (<code class="language-plaintext highlighter-rouge">FAISS_ENABLE_PYTHON=OFF</code>); exercised for real by RISE’s native wheel build</td>
     </tr>
     <tr>
-      <td>CPython &gt;= 3.11</td>
-      <td>Python extension target</td>
-      <td>Green – official riscv64 support since Python 3.11</td>
+      <td>QEMU</td>
+      <td>Emulates the riscv64 target binary for CI test execution</td>
+      <td>Critical, test-dependency</td>
+      <td>Required by FAISS’s own CI (<code class="language-plaintext highlighter-rouge">qemu-user-static</code>, <code class="language-plaintext highlighter-rouge">qemu-riscv64-static -cpu rv64,v=true[,vlen=1024],x-zvfhmin=true</code>) since there is no native riscv64 runner in that pipeline. Not needed by RISE’s separate native-hardware wheel build</td>
     </tr>
     <tr>
-      <td>faiss-cpu wheel (PyPI)</td>
-      <td>Prebuilt binary distribution</td>
-      <td>Not available – no riscv64 wheel in any faiss-cpu release</td>
+      <td>googletest</td>
+      <td>FAISS’s test suite (<code class="language-plaintext highlighter-rouge">faiss_test</code> target)</td>
+      <td>Critical, test-dependency</td>
+      <td>Used for all riscv64 gtest filtering in CI (<code class="language-plaintext highlighter-rouge">SIMDConfig.*</code>, <code class="language-plaintext highlighter-rouge">*SQRVV*</code>, <code class="language-plaintext highlighter-rouge">ScalarQuantizer.*DistancePathParity*</code>, etc.); no riscv64-specific googletest issues found</td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td>Runtime for the <code class="language-plaintext highlighter-rouge">faiss-cpu</code> Python bindings</td>
+      <td>Optional, runtime-dependency</td>
+      <td>Disabled in FAISS’s own CI cross-compile job. Used and exercised for real by RISE’s native wheel build, which produces <code class="language-plaintext highlighter-rouge">cp310-abi3</code>/<code class="language-plaintext highlighter-rouge">cp312</code> manylinux_riscv64 wheels</td>
+    </tr>
+    <tr>
+      <td>LAPACK (indirect, bundled inside OpenBLAS)</td>
+      <td>Linear algebra (LU/Cholesky) underlying k-means and PQ training</td>
+      <td>Critical (via OpenBLAS)</td>
+      <td>Reference <code class="language-plaintext highlighter-rouge">liblapack-dev</code> 3.12.1-7ubuntu1 present in Ubuntu 26.04 riscv64, but FAISS in practice links OpenBLAS’s <em>bundled</em> LAPACK, not this package directly. Not exercised on riscv64 in OpenBLAS’s own CI (disabled, “take too long”)</td>
+    </tr>
+    <tr>
+      <td>NumPy (indirect, Python runtime dep of faiss-cpu bindings; also used at build time via <code class="language-plaintext highlighter-rouge">Python::NumPy</code> for the SWIG extension)</td>
+      <td>Array/numerics backend for Python bindings</td>
+      <td>Required for the Python package</td>
+      <td><code class="language-plaintext highlighter-rouge">python3-numpy</code> present in Ubuntu 26.04 riscv64 (1:2.3.5+ds-3ubuntu1); NEP 57 Tier 3; no official PyPI riscv64 wheel yet (tracking issue #30216 open); NPYV has zero riscv64 SIMD backend, all NumPy arithmetic/math falls to scalar C on riscv64</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="10-ecosystem-status">
+</table></div>
+<h3 id="91-openblas-deep-dive-critical-numerics-dependency">
   
   
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-<h3 id="101-rise-project-involvement">
-  
-  
-    <a href="#101-rise-project-involvement" class="anchor-heading" aria-labelledby="101-rise-project-involvement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 RISE Project Involvement
+    <a href="#91-openblas-deep-dive-critical-numerics-dependency" class="anchor-heading" aria-labelledby="91-openblas-deep-dive-critical-numerics-dependency"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 OpenBLAS deep-dive (critical numerics dependency)
   
   
 </h3>
     
 
-<p>None. FAISS is not a funded or tracked project within the RISE Project. Meta is not a RISE member at any tier. The RISE AI/ML Working Group and the 2025 Gemini credit recipients program do not name FAISS as a workload. The RISE Python wheel builder does not include FAISS.</p>
-<h3 id="102-community-activity">
+<p>OpenBLAS is the single highest-risk dependency in this chain. RVV 1.0 kernel support exists (since v0.3.28, targeting ZVL128B/ZVL256B/x280/C910V, 221 RVV kernel files) and it is present and buildable on Ubuntu 26.04 riscv64. However, TRSM has no RVV kernel for the ZVL256B target and a correctness bug, blocking the LU/Cholesky/triangular-solve paths FAISS’s training code depends on; there is a known DGEMM correctness regression (OpenBLAS issue #5811) fixed by PR #5815 but unreleased at the time of research; and a GEMM kernel rewrite (PR #5561) has stalled since March 2026. LAPACK’s own test suite is disabled in OpenBLAS’s CI on riscv64 rather than fixed, so correctness there is effectively unvalidated upstream. This is the same root blocker independently identified in this repository’s OpenBLAS and NumPy status reports, both of which FAISS’s k-means and PQ training code paths transitively depend on.</p>
+<h3 id="92-numpy-deep-dive-python-binding-dependency">
   
   
-    <a href="#102-community-activity" class="anchor-heading" aria-labelledby="102-community-activity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 Community Activity
-  
-  
-</h3>
-    
-
-<p>All RISC-V FAISS work originates from two sources:</p>
-
-<ol>
-  <li>
-    <p>External contributors from ISCAS (Institute of Computing Technology, Chinese Academy of Sciences): vsvnakers and lyd1992 authored PR #4503. ISCAS is a RISE General Member. Their PR has been blocked since September 2025.</p>
-  </li>
-  <li>
-    <p>Meta FAIR employees (alexanderguzhva, mnorris11, mdouze): drove all merged RISC-V scaffolding in April-May 2026.</p>
-  </li>
-</ol>
-
-<p>No RISC-V hardware vendor (SiFive, SpacemiT, Andes Technology) has contributed to FAISS RISC-V work. No blog posts, conference papers, or benchmarking reports comparing FAISS on riscv64 vs arm64 or vs x86_64 have been published anywhere findable via web search or the RISE Project blog.</p>
-<h3 id="103-downstream-users-and-integrations">
-  
-  
-    <a href="#103-downstream-users-and-integrations" class="anchor-heading" aria-labelledby="103-downstream-users-and-integrations"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 Downstream Users and Integrations
+    <a href="#92-numpy-deep-dive-python-binding-dependency" class="anchor-heading" aria-labelledby="92-numpy-deep-dive-python-binding-dependency"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 NumPy deep-dive (Python binding dependency)
   
   
 </h3>
     
 
-<p><a href="https://github.com/facebookresearch/faiss/pull/5128">PR #5128</a> and <a href="https://github.com/facebookresearch/faiss/pull/5156">PR #5156</a> reference Knowhere PRs #1594 and #1605 (Knowhere is a vector index library used by Milvus). This indicates at least one downstream project is actively tracking FAISS RISC-V work.</p>
-
-<p>Data not available: Full scope of downstream projects that have picked up or plan to pick up FAISS riscv64 support.</p><hr />
+<p>NumPy has no hand-written RVV SIMD kernels on riscv64 (Highway/NPYV has zero riscv64 backend; all vectorized math falls back to plain scalar C). Its own riscv64 wheel-availability gap (no official PyPI wheel, tracking issue #30216 open) mirrors FAISS’s own: distro and RISE-built packages exist, but the default PyPI experience is broken on riscv64 for both projects.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1126,38 +1069,59 @@ Dependency: Requires <code class="language-plaintext highlighter-rouge">linux-x8
   
 </h2>
     
-<h3 id="111-open-issues">
-  
-  
-    <a href="#111-open-issues" class="anchor-heading" aria-labelledby="111-open-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.1 Open Issues
-  
-  
-</h3>
-    
 
-<p><strong><a href="https://github.com/facebookresearch/faiss/issues/4321">Issue #4321</a> – “riscv64 device build failed” (Closed 2025-04-29)</strong></p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/facebookresearch/faiss/issues/4321">#4321</a></td>
+      <td>riscv64 device build failed</td>
+      <td>Closed (completed), opened and closed same day, 2025-04-29</td>
+      <td>Low</td>
+      <td><code class="language-plaintext highlighter-rouge">pip install faiss-cpu</code> on riscv64 hit dozens of SWIG “Unable to find” header errors. Traced to misconfigured SWIG include paths in FAISS’s own PyPI sdist, not a SWIG or general riscv64 defect. No riscv64-specific fix applied</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5534">#5534</a></td>
+      <td>Fix HNSW concurrent race segfault on RISC-V</td>
+      <td><strong>Closed without merging</strong>, 2026-08-25</td>
+      <td><strong>High – live correctness bug</strong></td>
+      <td>See below</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5601">#5601</a></td>
+      <td>fvec_add/fvec_sub + PQ dsub=2 kernels</td>
+      <td>Closed without merging, 2026-09-15</td>
+      <td>N/A</td>
+      <td>Not a bug; self-closed by the author, superseded by the functionally equivalent #5655, which merged</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/facebookresearch/faiss/pull/5510">#5510</a></td>
+      <td>Detect RVV support from target flags</td>
+      <td>Open, blocked</td>
+      <td>Medium</td>
+      <td>Blocked on an unresolved compilation error flagged in review 2026-09-23</td>
+    </tr>
+    <tr>
+      <td>PR #5535 in-review findings (QT_4bit_uniform, QT_6bit)</td>
+      <td>RVV performance regressions vs scalar baseline</td>
+      <td>Fixed before merge / documented</td>
+      <td>Low-Medium (performance, not correctness)</td>
+      <td>0.22x (QT_4bit_uniform L2) and 0.78-0.88x (QT_6bit) throughput vs scalar, caused by slow micro-coded <code class="language-plaintext highlighter-rouge">vluxei32</code> gather loads; these quantizer variants remain on the scalar path in practice despite RVV being “available”</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>A user attempted <code class="language-plaintext highlighter-rouge">pip install faiss-cpu</code> on a riscv64 machine (as a dependency of browser-use). Build failed during SWIG code generation due to header path resolution errors (<code class="language-plaintext highlighter-rouge">platform_macros.h</code> not found). This is a build system / include path issue in the PyPI source distribution, not a riscv64 code incompatibility. No riscv64-specific fix was applied; the issue was closed.</p>
+<p><strong>Correctness bug detail – PR #5534 (HNSW concurrent race segfault):</strong> author anthony-zy (ZTE) diagnosed that on RISC-V, GCC <code class="language-plaintext highlighter-rouge">-O2</code> optimizes the <code class="language-plaintext highlighter-rouge">while (i &lt; end) neighbors[i++] = -1</code> loop in <code class="language-plaintext highlighter-rouge">add_link_tpl</code> into a byte-wise <code class="language-plaintext highlighter-rouge">memset(0xFF)</code> (<code class="language-plaintext highlighter-rouge">sb</code> instructions). A concurrent lock-free reader doing <code class="language-plaintext highlighter-rouge">lw</code> on the same neighbor slot, while the writer holds a different lock, can observe a torn read (e.g. <code class="language-plaintext highlighter-rouge">0x00FFFFFF</code>), which passes the <code class="language-plaintext highlighter-rouge">nodeId &lt; 0</code> check and is used as a valid id, eventually causing an out-of-bounds vector access and a segfault. The proposed fix (a relaxed atomic store plus a defensive bounds check, scoped to <code class="language-plaintext highlighter-rouge">__riscv</code> only) was reviewed and its root cause validated by maintainer mnorris11, who then explicitly declined to merge it: “We’re aiming to delete the lock-based path in a few weeks and make deterministic path the only path, so we can hold off on the patch.” The deterministic HNSW build mode (<code class="language-plaintext highlighter-rouge">hnsw_deterministic_build</code>, from PR #5486) does not exhibit the race, but it is <strong>not the default</strong> (<code class="language-plaintext highlighter-rouge">hnsw_deterministic_build</code> defaults to false). As of 2026-09-30, the legacy lock-based default path has not been removed, so this is a known, understood, reproducible crash that remains live in FAISS’s default (non-deterministic) HNSW build configuration on RISC-V, deliberately left unpatched pending a deletion that has not yet landed.</p>
 
-<p><strong><a href="https://github.com/facebookresearch/faiss/pull/4503">PR #4503</a> – ScalarQuantizer RVV optimization (Open, backlog since 2025-12-08)</strong></p>
-
-<p>Authored by vsvnakers (ISCAS). Adds RVV intrinsics to <code class="language-plaintext highlighter-rouge">decode_8_components</code> in ScalarQuantizer.cpp. Code was reviewed positively by alexanderguzhva (“the code looks good”) and formatting issues were addressed. Blocked because the PR targets the old <code class="language-plaintext highlighter-rouge">#ifdef</code>-based SIMD API; maintainers directed the author to rebase against the new per-SIMD TU framework (PR #4557). No activity since September 2025. The new framework (impl-riscv.cpp, sq-rvv.cpp) is now merged and ready to receive this work, but no rebase has been initiated.</p>
-
-<p><strong>No NaN / floating-point correctness bugs:</strong> GitHub search for “riscv nan”, “riscv floating”, and “riscv correctness” in the repository returned zero results.</p>
-<h3 id="112-structural-risks">
-  
-  
-    <a href="#112-structural-risks" class="anchor-heading" aria-labelledby="112-structural-risks"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Structural Risks
-  
-  
-</h3>
-    
-
-<p><strong>Static dispatch silent fallback (PR #5057 context):</strong> PR #5057 fixed a bug where static SIMD dispatch silently fell to <code class="language-plaintext highlighter-rouge">SIMDLevel::NONE</code> for avx512_spr, avx512, and arm_sve builds. The fix explicitly encodes <code class="language-plaintext highlighter-rouge">RISCV_RVV -&gt; NONE</code> in the fallback chain. A reviewer (mnorris11) proposed a refactor as <code class="language-plaintext highlighter-rouge">get_simd_fallback(SIMDLevel)</code>. The RISCV_RVV case is now handled, but the original bug class (dispatch masks that inadvertently exclude a platform level) remains a risk pattern.</p>
-
-<p><strong>No runtime RVV detection:</strong> RVV is assumed always available on riscv64 builds. There is no <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> or equivalent HWCAP probe. If a riscv64 system lacks the V extension, a build compiled with <code class="language-plaintext highlighter-rouge">rv64gcv</code> will generate illegal instructions. This is not a bug in FAISS per se (the toolchain flag controls this), but users building for heterogeneous riscv64 hardware need awareness.</p>
-
-<p><strong>FastScan QPS regression (PR #5216 context):</strong> PR #5216 bundled a fix for a 27-44x FastScan QPS regression in DD mode caused by kernels using scalar types instead of real SIMD intrinsics. The regression was present prior to the May 2026 merge burst. This class of bug (stub delegating to NONE but incurring overhead) is latent in all current riscv64 stubs.</p><hr />
+<p>No open issue specifically targets RISC-V correctness (NaN mishandling, floating-point semantics divergence) as of 2026-09-30; a targeted search across “riscv nan”, “riscv floating”, and “riscv correctness” returned zero matches.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1167,221 +1131,85 @@ Dependency: Requires <code class="language-plaintext highlighter-rouge">linux-x8
 </h2>
     
 
-<p><strong>Objection 1: PR #4503 is blocked on a SIMD refactor.</strong></p>
+<p><strong>Objection 1 – mnorris11 is actively blocking the HNSW race-condition fix (#5534).</strong> Not because the fix is wrong (the root-cause analysis was accepted), but because the plan is to delete the entire legacy lock-based HNSW path rather than patch it. That removal had not landed as of 2026-09-30, so the race condition remains live in the default build path today. This is an organizational/roadmap blocker, not a technical one, and it is the single most consequential open item in this report.</p>
 
-<p>The refactor (PR #4557 -&gt; the new per-SIMD TU architecture in #5156/#5216) is now complete and merged. The blocker is gone. What remains is the mechanical work of rebasing PR #4503 against sq-rvv.cpp. Maintainers have not done this; the external author has not resumed activity. This is a coordination gap, not a technical blocker.</p>
+<p><strong>Objection 2 – #5510 (RVV auto-detection) is technically blocked.</strong> Reviewer flagged a compile error on 2026-09-23; unresolved as of 2026-09-30. Until it lands, riscv64 targets assume RVV is present rather than probing for it, which is a correctness risk on riscv64 hardware without the V extension (illegal-instruction faults, not silent fallback).</p>
 
-<p><strong>Objection 2: Maintainers said “we’d rather have a PR against that new API.”</strong></p>
+<p><strong>Objection 3 – no native CI runner in FAISS’s own pipeline.</strong> The CI is cross-compile plus QEMU-emulated narrow-filter tests only; no self-hosted RISC-V runner has been added to <code class="language-plaintext highlighter-rouge">facebookresearch/faiss</code> itself, even though RISE’s free native-runner service (used by the separate <code class="language-plaintext highlighter-rouge">python-wheels</code> pipeline) exists and is announced publicly.</p>
 
-<p>This was stated in September 2025. The new API has been merged. The objection no longer applies.</p>
+<p><strong>Objection 4 – no simdlib_rvv.h.</strong> The simdlib abstraction used by some SIMD-templated code paths has no RVV variant; the pattern used instead (direct intrinsics in sq-rvv.cpp, bypassing simdlib) was called out favorably by mdouze as “a model on how to implement SVE that is also variable-width,” but each kernel still has to be hand-implemented rather than templated through simdlib. [Carried forward from prior analysis, not independently reverified this round.]</p>
 
-<p><strong>Objection 3: No native CI runner.</strong></p>
-
-<p>Confirmed. mnorris11 stated: “We would need a self-hosted runner as the Github Actions runners don’t seem to support it.” The current CI is cross-compile + QEMU only. A self-hosted RISC-V runner or a QEMU-based full test execution would be required to close this gap.</p>
-
-<p><strong>Objection 4: No simdlib_rvv.h.</strong></p>
-
-<p>The simdlib abstraction is used by some SIMD-templated code paths. Without it, those paths cannot benefit from RVV intrinsics. The approach taken in sq-rvv.cpp (bypassing simdlib entirely with direct intrinsics) is a valid pattern but requires hand-implementing each kernel. Mdouze noted this approach is architecturally sound and suggested it as a model for ARM SVE as well.</p>
-
-<p><strong>Objection 5: mdouze questioned “will the code be optimized with RVV anytime soon?”</strong></p>
-
-<p>This concern was recorded during the PR #5156 review. No Meta engineer answered definitively. The project merged the scaffolding expecting community contributors to implement the kernels. This is an accurate characterization of the current situation.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Objection 5 – Meta retains central gatekeeping.</strong> External RISC-V contributions from ZTE and ISCAS engineers are being accepted and merged at a steady cadence, but every PR is funneled through a Meta engineer’s review and internal Differential Revision sync before landing. There is no independent community maintainer with sign-off authority specific to the RISC-V port; acceptance probability for a well-formed, correctly-scoped PR against the current per-SIMD-TU architecture is high (demonstrated by the Sept 2026 kernel cluster merging within days of submission), but nothing merges without a Meta reviewer’s approval.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> yellow (build-only-ci)</li>
+  <li><strong>Release provider:</strong> RISE</li>
+  <li><strong>Optimization level:</strong> partial. Core float distance kernels (<code class="language-plaintext highlighter-rouge">distances_rvv.cpp</code>), the scalar quantizer (<code class="language-plaintext highlighter-rouge">sq-rvv.cpp</code>), and RaBitQ (<code class="language-plaintext highlighter-rouge">rabitq_rvv.cpp</code>) now have real, hand-written RVV intrinsics. FastScan/IVFPQ scanning (<code class="language-plaintext highlighter-rouge">impl-riscv.cpp</code>), PQ code-distance tables (<code class="language-plaintext highlighter-rouge">pq_code_distance/rvv.cpp</code>), and the Hamming computers remain explicit scalar (<code class="language-plaintext highlighter-rouge">SIMDLevel::NONE</code>) fallback stubs, documented as such in the source itself. Closing this gap requires implementing real RVV kernels for those three subsystems; no new ISA extension beyond the already-required <code class="language-plaintext highlighter-rouge">rv64gcv_zvfhmin</code> baseline is needed to do so.</li>
+  <li><strong>Justification:</strong> FAISS’s only riscv64 CI job (<code class="language-plaintext highlighter-rouge">linux-riscv64-DD-cmake</code> in <a href="https://github.com/facebookresearch/faiss/blob/main/.github/workflows/build-pull-request.yml">.github/workflows/build-pull-request.yml</a>) cross-compiles for riscv64 on an x86_64 runner and, under QEMU, runs only a narrow gtest filter (<code class="language-plaintext highlighter-rouge">SIMDConfig.*:SIMDLevel.*:CompileOptions.*</code> plus SQ-RVV tail/parity tests) rather than the full index build/search/recall test suite, and no riscv64 wheel or release asset is published by upstream on GitHub Releases or PyPI (<code class="language-plaintext highlighter-rouge">faiss</code>/<code class="language-plaintext highlighter-rouge">faiss-cpu</code>) – so the CI/release axis lands at yellow (build-verified, not full-test/no upstream release). This is an optimization-purpose numerics library where SIMD-accelerated distance/quantization kernels are central to its value; RVV now covers the main float distance ops, scalar quantizer, and RaBitQ (partial coverage per <code class="language-plaintext highlighter-rouge">faiss/CMakeLists.txt</code>’s <code class="language-plaintext highlighter-rouge">FAISS_SIMD_RVV_SRC</code>), which would cap at blue on its own but does not change the CI-set yellow grade.</li>
+  <li><strong>Pending work that could change the grade:</strong> RISE’s <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> repo natively builds and publishes riscv64 <code class="language-plaintext highlighter-rouge">faiss-cpu</code> wheels (v1.15.0/1.15.1, tracked in <code class="language-plaintext highlighter-rouge">docs/packages/faiss-cpu.yaml</code>) on RISE’s own bare-metal RISC-V runners, served from <code class="language-plaintext highlighter-rouge">pypi.riseproject.dev</code> – this is currently the only functioning riscv64 binary channel with RVV support, and is the basis for the RISE release-provider designation. Open upstream work: PR #5510 (detect RVV from target flags, blocked on a compile error), PR #5666 (HNSW <code class="language-plaintext highlighter-rouge">pop_min</code> RVV kernel), PR #5688 (bit-exact RVV <code class="language-plaintext highlighter-rouge">decode_vector</code>). PR #5534 (fix for a reproducible HNSW concurrent-race segfault on RISC-V) was closed without merging, deliberately deferred by maintainer mnorris11 pending removal of the legacy lock-based HNSW path – so a known crash remains live on the default (non-deterministic) HNSW build path as of 2026-09-30. Ubuntu 26.04 “resolute” ships <code class="language-plaintext highlighter-rouge">libfaiss-dev</code>/<code class="language-plaintext highlighter-rouge">python3-faiss</code> for riscv64 but at 1.13.2, predating all RVV work.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has already solved riscv64 wheel distribution for <code class="language-plaintext highlighter-rouge">faiss-cpu</code> (native builds on RISE runners, published to <code class="language-plaintext highlighter-rouge">pypi.riseproject.dev</code>); investment sizing below does not re-price that work. It also has not touched FAISS’s own upstream CI scope, kernel completeness, or the open HNSW correctness bug, all of which remain unaddressed by any RISE-side activity found in this research.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p><strong>Goal:</strong> Enable riscv64 users to build and use FAISS correctly (scalar performance acceptable; correctness required).</p>
-
-<p>The current state is functionally complete for CPU-only workloads. The library builds, links, and runs correctly on riscv64 (verified via QEMU in CI). All SIMD paths fall back to scalar; no correctness regressions are expected from the stub implementations. The remaining functional gap is the PyPI wheel absence.</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Work Item</th>
-      <th>Description</th>
-      <th>Effort</th>
-      <th>Priority</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Fix PyPI faiss-cpu riscv64 wheel</td>
-      <td>Investigate and fix SWIG include path issue (issue #4321); add riscv64 wheel to faiss-cpu release pipeline</td>
-      <td>2-4 weeks</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Add full FAISS test suite to riscv64 CI</td>
-      <td>Run complete GTest suite under QEMU in <code class="language-plaintext highlighter-rouge">linux-riscv64-DD-cmake</code> job; enable Python tests</td>
-      <td>1-2 weeks</td>
-      <td>High</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="132-performance-optimization">
+<p>The library builds, links, and passes its (narrow) riscv64 CI test slice correctly; there is no evidence of a broad functional blocker for CPU-only scalar-fallback workloads. The one functional-correctness item is the HNSW race condition (Section 11), which is a data-integrity risk (segfault / potential silent corruption under concurrency), not a build-time gap. Getting FAISS’s own CI to exercise the full gtest suite (not just the SIMD/SQ-parity subset) would surface any further functional gaps in IVFPQ/HNSW/binary-index code paths that the current narrow filter does not test.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p><strong>Goal:</strong> Achieve meaningful SIMD acceleration on riscv64 relative to scalar.</p>
-
-<p>The only measured data point is the 1.56x speedup in PR #4503 (ScalarQuantizer decode_8_components on physical RISC-V hardware, EulixOS). No published data exists for distance functions, PQ scan, RaBitQ, or FastScan on riscv64.</p>
-
-<p>The highest-impact functions for a vector similarity search workload are distance computations (fvec_L2sqr, fvec_inner_product) and FastScan / PQ scan (used in IVF indexes at query time). Neither has any RVV implementation.</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Work Item</th>
-      <th>Description</th>
-      <th>Effort</th>
-      <th>Priority</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Rebase and merge PR #4503</td>
-      <td>Update ScalarQuantizer RVV optimization against new sq-rvv.cpp API</td>
-      <td>1-2 weeks</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Implement RVV distance kernels</td>
-      <td>fvec_L2sqr, fvec_inner_product, fvec_norm_L2sqr, fvec_L1, batch-4/NY variants in distances_rvv.cpp</td>
-      <td>3-6 weeks</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Implement RVV FastScan forwarders</td>
-      <td>Replace impl-riscv.cpp NONE delegates with real RVV kernel calls; implement accumulate_to_mem and scanner factory</td>
-      <td>4-8 weeks</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Implement RVV PQ code distance</td>
-      <td>pq_code_distance_8bit_single_impl, _four_impl in rvv.cpp; requires understanding the gather pattern from avx2</td>
-      <td>3-5 weeks</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Implement RVV RaBitQ kernels</td>
-      <td>bitwise_and/xor_dot_product, popcount, compute_inner_product using RVV bit manipulation</td>
-      <td>3-5 weeks</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Implement RVV Hamming computers</td>
-      <td>HammingComputer16/32/64 and GenHammingComputer variants using RVV XOR + popcount</td>
-      <td>2-4 weeks</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>Implement simdlib_rvv.h</td>
-      <td>RVV variant of the simdlib abstraction layer to unblock simdlib-templated code paths</td>
-      <td>4-8 weeks</td>
-      <td>Low</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="133-cicd-infrastructure">
+<p>The highest-value unimplemented kernels for a vector-similarity workload are FastScan/IVFPQ scanning and PQ code distance, both used at query time for IVF-based indexes, and Hamming/binary-index distance for binary indexes. All three are explicit scalar stubs today. RaBitQ has partial coverage that could be extended. Two SQ quantizer variants (QT_4bit_uniform, QT_6bit) currently regress below scalar performance in the RVV path due to inefficient gather-load codegen and need a rework, not just new coverage.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Work Item</th>
-      <th>Description</th>
-      <th>Effort</th>
-      <th>Priority</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Native riscv64 runner or full QEMU test execution</td>
-      <td>Run complete GTest suite on riscv64; requires either self-hosted native runner or QEMU full-test job</td>
-      <td>1-3 weeks setup</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>riscv64 Python wheel in faiss-cpu release</td>
-      <td>Add riscv64 target to the faiss-cpu PyPI build pipeline (likely manylinux riscv64 or equivalent)</td>
-      <td>2-4 weeks</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Benchmark job for riscv64</td>
-      <td>Cross-platform perf job to track distance/FastScan/RaBitQ throughput on riscv64 vs arm64 baseline</td>
-      <td>2-3 weeks</td>
-      <td>Medium</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="134-ecosystem-enablement">
+<p>FAISS’s own CI remains cross-compile-plus-narrow-QEMU-filter. Extending the gtest filter to the full suite under QEMU, or adding a native riscv64 runner (RISE’s free runner service is a plausible fit, though it is not currently wired into <code class="language-plaintext highlighter-rouge">facebookresearch/faiss</code>’s own workflows), would move the CI axis toward a stronger grade. Re-enabling <code class="language-plaintext highlighter-rouge">FAISS_ENABLE_PYTHON</code>/<code class="language-plaintext highlighter-rouge">FAISS_ENABLE_C_API</code> in the cross-compile job (currently both OFF) would also close a testing gap that RISE’s separate native build does exercise but FAISS’s own CI does not.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Work Item</th>
-      <th>Description</th>
-      <th>Effort</th>
-      <th>Priority</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Publish riscv64 vs arm64 benchmark data</td>
-      <td>Run benchs/bench_rabitq.py and equivalent on riscv64 hardware; publish results</td>
-      <td>1-2 weeks</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Engage RISE AI/ML WG</td>
-      <td>Propose FAISS as a tracked workload for RISE optimization efforts</td>
-      <td>1 week</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>Coordinate with Knowhere / Milvus</td>
-      <td>Knowhere PRs #1594/#1605 track FAISS RISC-V; coordinate testing on Milvus riscv64 stack</td>
-      <td>Ongoing</td>
-      <td>Low</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="135-summary-table">
+<p>No dedicated ecosystem-enablement work is identified as outstanding beyond what RISE’s automated wheel-builder pipeline already does. Closest related items: getting the RISE-built <code class="language-plaintext highlighter-rouge">faiss-cpu</code> wheel to track upstream releases more tightly (it currently applies out-of-tree patches, per PR #1968’s “runtime-detection patch” and “toolchain patch”), and syncing RISE’s own GitLab Pages wheel-status page (currently stale, does not list FAISS) with the GitHub-based <code class="language-plaintext highlighter-rouge">python-wheels</code> pipeline that actually builds it.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1400,114 +1228,90 @@ Dependency: Requires <code class="language-plaintext highlighter-rouge">linux-x8
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Fix riscv64 faiss-cpu PyPI wheel (SWIG include path)</td>
+      <td>Land removal of the legacy lock-based HNSW path (or merge #5534’s targeted riscv64 fix directly) to close the live race/segfault</td>
       <td>2-4</td>
-      <td>Distribution / Meta</td>
+      <td>Meta (mnorris11’s team)</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Full test suite in riscv64 CI</td>
-      <td>1-2</td>
+      <td>Extend riscv64 CI to the full gtest suite (not just SIMD/SQ-parity filter)</td>
+      <td>1-3</td>
       <td>Meta or contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Rebase and land PR #4503 (ScalarQuantizer RVV)</td>
-      <td>1-2</td>
-      <td>External (ISCAS) or internal</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Performance</td>
-      <td>RVV distance kernels (fvec_L2sqr, fvec_inner_product, etc.)</td>
-      <td>3-6</td>
-      <td>Internal</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Performance</td>
-      <td>RVV FastScan forwarders</td>
+      <td>Implement RVV FastScan/IVFPQ scanner kernels (impl-riscv.cpp)</td>
       <td>4-8</td>
-      <td>Internal</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Performance</td>
-      <td>RVV PQ code distance</td>
-      <td>3-5</td>
-      <td>Internal</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Performance</td>
-      <td>RVV RaBitQ kernels</td>
-      <td>3-5</td>
-      <td>Internal</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Performance</td>
-      <td>RVV Hamming computers</td>
-      <td>2-4</td>
-      <td>Internal</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>Performance</td>
-      <td>simdlib_rvv.h abstraction layer</td>
-      <td>4-8</td>
-      <td>Internal</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Native runner or full QEMU test execution</td>
-      <td>1-3</td>
-      <td>Meta or self-hosted</td>
+      <td>Internal or external (ZTE/ISCAS precedent)</td>
       <td>High</td>
     </tr>
     <tr>
-      <td>CI/CD</td>
-      <td>riscv64 wheel in faiss-cpu release pipeline</td>
-      <td>2-4</td>
-      <td>Meta</td>
+      <td>Performance</td>
+      <td>Implement RVV PQ code-distance kernels (pq_code_distance/rvv.cpp)</td>
+      <td>3-5</td>
+      <td>Internal or external</td>
       <td>High</td>
     </tr>
     <tr>
-      <td>CI/CD</td>
-      <td>Cross-platform benchmark job</td>
-      <td>2-3</td>
-      <td>Internal</td>
+      <td>Performance</td>
+      <td>Implement RVV Hamming/binary-index computers</td>
+      <td>2-4</td>
+      <td>Internal or external</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>Ecosystem</td>
-      <td>riscv64 vs arm64 published benchmarks</td>
+      <td>Performance</td>
+      <td>Fix QT_4bit_uniform / QT_6bit RVV regressions (gather-load rework)</td>
       <td>1-2</td>
       <td>Internal</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>Ecosystem</td>
-      <td>RISE AI/ML WG engagement</td>
+      <td>Performance</td>
+      <td>Land open kernel PRs already in flight (#5666 pop_min, #5688 decode_vector)</td>
+      <td>0.5-1 each (review/merge)</td>
+      <td>Meta reviewers</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
+      <td>Land #5510 (RVV auto-detection from target flags)</td>
+      <td>1-2 (unblock compile error)</td>
+      <td>Author + Meta reviewer</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Wire a native RISC-V runner (e.g. RISE’s free runner service) into facebookresearch/faiss’s own CI</td>
+      <td>1-2</td>
+      <td>Meta + RISE coordination</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Enable FAISS_ENABLE_PYTHON/C_API in the riscv64 CI job</td>
       <td>1</td>
-      <td>BD</td>
+      <td>Meta</td>
+      <td>Low</td>
+    </tr>
+    <tr>
+      <td>Ecosystem</td>
+      <td>Sync RISE’s GitLab Pages wheel-status page with the actual GitHub python-wheels pipeline</td>
+      <td>&lt;1</td>
+      <td>RISE</td>
+      <td>Low</td>
+    </tr>
+    <tr>
+      <td>Ecosystem</td>
+      <td>Track faiss-cpu wheel releases against upstream tags more tightly (reduce RISE’s out-of-tree patch set)</td>
+      <td>Ongoing</td>
+      <td>RISE</td>
       <td>Low</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1519,22 +1323,42 @@ Dependency: Requires <code class="language-plaintext highlighter-rouge">linux-x8
 
 <ul>
   <li><a href="https://github.com/facebookresearch/faiss">facebookresearch/faiss repository</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/blob/main/faiss/CMakeLists.txt">faiss/CMakeLists.txt – SIMD/RVV/OpenMP/BLAS arch detection</a></li>
+  <li><a href="https://faiss.ai/">FAISS homepage</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/blob/main/faiss/CMakeLists.txt">faiss/CMakeLists.txt</a></li>
   <li><a href="https://github.com/facebookresearch/faiss/blob/main/cmake/toolchains/riscv64-linux-gnu.cmake">cmake/toolchains/riscv64-linux-gnu.cmake</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/blob/main/faiss/utils/simd_levels.h">faiss/utils/simd_levels.h – SIMDLevel::RISCV_RVV enum</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/blob/main/faiss/utils/simd_levels.cpp">faiss/utils/simd_levels.cpp – compile-time detection</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/pull/4503">PR #4503 – Add RVV optimizations for ScalarQuantizer (open, backlog)</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/pull/5057">PR #5057 – Fix static SIMD dispatch to scalar for avx512/arm_sve (merged 2026-05-28)</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/pull/5128">PR #5128 – Introduce RVV platform and ScalarQuantizer (closed without merge)</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/pull/5156">PR #5156 – Introduce RVV (merged 2026-05-05, v1.14.2)</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/pull/5184">PR #5184 – CI: cross-compile for riscv64 with RVV dynamic dispatch (merged 2026-05-07, v1.14.2)</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/pull/5216">PR #5216 – Move RISC-V fast_scan forwarders to impl-riscv.cpp (merged 2026-05-18, v1.14.2)</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/pull/5233">PR #5233 – Per-SIMD TU for PQ scan including rvv.cpp (merged 2026-05-26, v1.14.2)</a></li>
-  <li><a href="https://github.com/facebookresearch/faiss/issues/4321">Issue #4321 – riscv64 device build failed (closed 2025-04-29)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/blob/main/.github/workflows/build-pull-request.yml">.github/workflows/build-pull-request.yml</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/blob/main/CHANGELOG.md">CHANGELOG.md</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/4503">PR #4503 - RVV optimizations for ScalarQuantizer (open)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5057">PR #5057 - Fix static SIMD dispatch to scalar for avx512/arm_sve (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5156">PR #5156 - Introduce RVV (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5184">PR #5184 - CI: cross-compile for riscv64 with RVV dynamic dispatch (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5216">PR #5216 - Move RISC-V fast_scan forwarders to impl-riscv.cpp (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5354">PR #5354 - Add RISC-V RVV vector distance kernels (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5369">PR #5369 - Add RISC-V RVV rabitq kernels (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5510">PR #5510 - Detect RISC-V RVV support from target flags (open, blocked)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5534">PR #5534 - Fix HNSW concurrent race segfault on RISC-V (closed, not merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5535">PR #5535 - RVV optimized scalar quantizer codecs and distance computation (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5539">PR #5539 - RVV SIMD specialization for scalar quantizer distance compute (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5543">PR #5543 - RVV SIMD specialization for PQ distance-table computation (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5600">PR #5600 - Name the SIMD level masks after what they hold (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5601">PR #5601 - RVV fvec_add/fvec_sub and PQ dsub=2 kernels (closed, not merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5653">PR #5653 - Use GCC 14 riscv64 cross-compiler for RVV tuple/zvfhmin intrinsics (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5655">PR #5655 - RVV vector arithmetic and PQ distance table kernels (merged)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5666">PR #5666 - HNSW MinimaxHeap pop_min RVV kernel (open)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/pull/5688">PR #5688 - Bit-exact RVV decode_vector for codec-template quantizers (open)</a></li>
+  <li><a href="https://github.com/facebookresearch/faiss/issues/4321">Issue #4321 - riscv64 device build failed (closed)</a></li>
   <li><a href="https://pypi.org/project/faiss-cpu/">faiss-cpu on PyPI</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=faiss">Debian buildd status for faiss</a></li>
+  <li><a href="https://pypi.org/project/faiss/">faiss on PyPI</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/riscv64/python3-faiss">Ubuntu packages.ubuntu.com riscv64 python3-faiss</a></li>
+  <li><a href="https://packages.ubuntu.com/jammy/riscv64/python3-faiss/filelist">Ubuntu packages.ubuntu.com riscv64 python3-faiss filelist (jammy)</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels">riseproject-dev/python-wheels repository</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/pull/1968">riseproject-dev/python-wheels PR #1968 - faiss-cpu: Add version 1.15.1</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/releases/tag/faiss-cpu-v1.15.1-20260919012534">riseproject-dev/python-wheels release faiss-cpu v1.15.1</a></li>
+  <li><a href="https://riseproject.dev/members">RISE Project members</a></li>
   <li><a href="https://riseproject.dev/blog/">RISE Project blog</a></li>
-  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder status page (GitLab Pages, stale)</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">Announcing the RISE RISC-V Runners</a></li>
+  <li><a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">Easy installation of binary Python packages on riscv64 devices</a></li>
 </ul>
 
           
