@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> blue<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for k0s<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +280,13 @@
 </h2>
     
 
-<p><a href="https://k0sproject.io/">k0s</a> (<a href="https://github.com/k0sproject/k0s">github.com/k0sproject/k0s</a>) is a single-binary Kubernetes distribution designed for minimal resource consumption and simple deployment. It statically embeds the full Kubernetes control plane (kubelet, kube-apiserver, kube-controller-manager, kube-scheduler, kubectl), containerd, runc, etcd, kine, konnectivity, CoreDNS, kube-router, and supporting binaries into one self-contained executable.</p>
+<p><a href="https://k0sproject.io/">k0s</a> (<a href="https://github.com/k0sproject/k0s">github.com/k0sproject/k0s</a>) is a single-binary Kubernetes distribution built for minimal resource consumption and simple deployment. It statically embeds the full Kubernetes control plane (kubelet, kube-apiserver, kube-controller-manager, kube-scheduler, kubectl) together with containerd, runc, etcd, kine, konnectivity, CoreDNS, kube-router, and supporting binaries into one self-contained executable.</p>
 
-<p>k0s holds CNCF Sandbox status under “a Series of LF Projects, LLC.” It is governed informally via GitHub pull requests with no written GOVERNANCE.md. The project is Mirantis-dominated: 5 of 6 active maintainers are Mirantis employees (Jussi Nummelin @jnummelin, Tom Wieczorek @twz123, Natanael Copa @ncopa, Aleksey Makhov @makhov, Kimmo Lehto @kke). One seat is held by Ethan Mosbaugh of Replicated (@emosbaugh). Mirantis originated k0s and provides paid enterprise support tiers. k0s is not a RISE member organization.</p>
+<p>k0s is a CNCF Sandbox project (accepted 2025-01-19) under “a Series of LF Projects, LLC,” and has since formally applied for CNCF Incubation, per CNCF’s <a href="https://www.cncf.io/blog/2026/01/26/k0s-in-2025-a-year-of-community-growth-governance-and-kubernetes-innovation/">“k0s in 2025” blog post</a>. License is Apache 2.0 for code, CC-BY-SA 4.0 for documentation. Governance is informal (GitHub pull requests, no written GOVERNANCE.md); governance and technical-review documents live under <code class="language-plaintext highlighter-rouge">docs/governance/cncf/</code>, tied to <a href="https://github.com/cncf/sandbox/issues/125">cncf/sandbox#125</a>.</p>
 
-<p>The license is Apache 2.0 (code) and CC-BY-SA 4.0 (documentation).</p><hr />
+<p>The project is Mirantis-dominated: 5 of 6 active maintainers are Mirantis employees (Jussi Nummelin, Tom Wieczorek, Natanael Copa, Aleksey Makhov, Kimmo Lehto). One seat is held by Ethan Mosbaugh of Replicated, Inc. Mirantis originated k0s and sells commercial support (LabCare 8x5, ProdCare 24x7) and ships k0s inside Mirantis MKE. Replicated builds its “Embedded Cluster” commercial product on top of k0s. <code class="language-plaintext highlighter-rouge">ADOPTERS.md</code> lists further production users (AudioCodes, DeepSquare, Defense Unicorns, k0smotron, KubeArmor, National Astronomical Observatory of Japan, Progress Chef 360, Splunk, vCluster) but none hold maintainer seats. k0s is not a RISE member organization.</p>
+
+<p>Community stance on new ports is pragmatic and maintainer-driven: the riscv64 work was initiated and carried out by core Mirantis maintainers themselves (not an outside contributor push for the initial build-enablement phase), moving the architecture from “compiles” to “documented supported” to “has CI” over roughly 14 months, with caveats retained throughout (no official release binaries). The CI-enablement phase (PR #7414) was then driven by an external contributor over about ten weeks, with Mirantis maintainer Tom Wieczorek acting as technical gatekeeper.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -298,84 +301,119 @@
     <tr>
       <th>Date</th>
       <th>Event</th>
-      <th>PR / Issue</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>2022-07-14</td>
-      <td>Feature request filed: “RISC-V support” by jekader. Notes no Kubernetes distro supported riscv64 at the time; real hardware (low-end SBCs) emerging; containerd/Podman already functional on Debian/Ubuntu RISC-V ports.</td>
+      <td>Feature request filed: “RISC-V support,” by jekader. Notes no Kubernetes distro supported riscv64 at the time; containerd/Podman already functional on RISC-V; Debian/Ubuntu/Alpine all shipped riscv64 ports. Still the master tracking issue.</td>
       <td><a href="https://github.com/k0sproject/k0s/issues/1919">Issue #1919</a></td>
     </tr>
     <tr>
+      <td>2024-06-22</td>
+      <td>Community member (IngwiePhoenix) attempts <code class="language-plaintext highlighter-rouge">make HOST_ARCH=riscv64 EMBEDDED_BINS_BUILDMODE=none</code> on a StarFive VisionFive2 board, a year before official enablement work began. Fails with <code class="language-plaintext highlighter-rouge">binutils-gold (no such package)</code> (Alpine has no riscv64 build of that package). No maintainer response recorded; closed 2024-08-03 as not planned.</td>
+      <td><a href="https://github.com/k0sproject/k0s/issues/4665">Issue #4665</a></td>
+    </tr>
+    <tr>
       <td>2025-04-30</td>
-      <td>First intentional riscv64 commit. PR “Various Image version bumps for riscv64” migrates four container images (pause, metrics-server, coredns, cni-node) from registry.k8s.io to quay.io/k0sproject where riscv64 builds existed. Author: @ncopa (Mirantis).</td>
-      <td><a href="https://github.com/k0sproject/k0s/pull/5803">PR #5803</a></td>
+      <td>First riscv64-enabling code change: commit <code class="language-plaintext highlighter-rouge">c41ae49</code> “Use proper types on RISC-V” by Tom Wieczorek (Mirantis), “This makes the k0s sources compile on RISC-V.”</td>
+      <td><a href="https://github.com/k0sproject/k0s/commit/c41ae49">commit c41ae49</a></td>
+    </tr>
+    <tr>
+      <td>2025-04-30 to 2025-05-01</td>
+      <td>PR “Add initial RISC-V support to Makefile” opens and merges. Author: twz123 (Mirantis). Reviewed/approved by ncopa. This is the actual foundational build-system PR; #5803, #5807 and #5848 each describe themselves as fixing gaps left by it.</td>
+      <td><a href="https://github.com/k0sproject/k0s/pull/5802">PR #5802</a></td>
     </tr>
     <tr>
       <td>2025-05-07</td>
-      <td>PR #5803 merged.</td>
+      <td>PR “Various Image version bumps for riscv64” merges. Bumps metrics-server, pause, coredns, cni-node to versions that publish riscv64 image variants. Author: ncopa (Mirantis). Merge commit <code class="language-plaintext highlighter-rouge">e4d8fa2e</code>.</td>
       <td><a href="https://github.com/k0sproject/k0s/pull/5803">PR #5803</a></td>
     </tr>
     <tr>
-      <td>2025-05-14</td>
-      <td>PR “Allow riscv64 build” opens. Adds Kubernetes riscv64 build patch referencing upstream k/k PRs #86011 and #116686. Skips checks for etcd and cri-o (no riscv64 upstream binaries). Reviewer @twz123 flags that Envoy (NLLB) will not compile for riscv64. Author: @ncopa (Mirantis).</td>
-      <td><a href="https://github.com/k0sproject/k0s/pull/5848">PR #5848</a></td>
+      <td>2025-05-08</td>
+      <td>PR “Ignore RISC-V Linux airgap image bundle” merges, fixing an oversight left in #5802 (riscv64 airgap bundle entry not ignored in the Makefile). Author: twz123. Merge commit <code class="language-plaintext highlighter-rouge">e70c826e</code>.</td>
+      <td><a href="https://github.com/k0sproject/k0s/pull/5807">PR #5807</a></td>
     </tr>
     <tr>
       <td>2025-05-20</td>
-      <td>PR #5848 merged.</td>
+      <td>PR “Allow riscv64 build” merges. Fixes the embedded Kubernetes build for riscv64 via upstream-referencing patch (citing kubernetes/kubernetes#86011, #116686); skips check-externaletcd and check-byocri on riscv64 (no upstream binaries); reviewer twz123 flags that Envoy/NLLB will not compile for riscv64. Author: ncopa. Merge commit <code class="language-plaintext highlighter-rouge">9ed17923</code>.</td>
       <td><a href="https://github.com/k0sproject/k0s/pull/5848">PR #5848</a></td>
     </tr>
     <tr>
+      <td>2025-05-21</td>
+      <td>#5803, #5807 and #5848 all first ship in release <strong>v1.33.1+k0s.0</strong> (also same-day rc v1.33.1-rc.0).</td>
+      <td>Release history</td>
+    </tr>
+    <tr>
       <td>2025-06-27</td>
-      <td>Duplicate issue “Assessment of the difficulty in porting CPU architecture for k0s” filed. RAX tool rates k0s RISC-V migration complexity as “Low” (cyclomatic complexity score 9026). Closed as duplicate of #1919 by maintainers.</td>
+      <td>Duplicate issue “Assessment of the difficulty in porting CPU architecture for k0s” (automated complexity-scoring tool rates the port “Low difficulty,” cyclomatic complexity 9026). Closed as duplicate of #1919.</td>
       <td><a href="https://github.com/k0sproject/k0s/issues/6059">Issue #6059</a></td>
     </tr>
     <tr>
+      <td>2025-11-07 to 2025-11-13</td>
+      <td>PR “List RISC-V as supported architecture … with some caveats” merges, promoting riscv64 from build-only to a documented supported target in <code class="language-plaintext highlighter-rouge">docs/system-requirements.md</code>.</td>
+      <td>commit <code class="language-plaintext highlighter-rouge">0f43e86</code> via PR #6615</td>
+    </tr>
+    <tr>
       <td>2026-03-24</td>
-      <td>RISE announces RISE RISC-V Runners: free, native, bare-metal GitHub Actions CI on Scaleway EM-RV1 hardware for open-source projects.</td>
-      <td><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE blog</a></td>
+      <td>RISE announces the RISE RISC-V Runners: free, native, bare-metal GitHub Actions CI on Scaleway EM-RV1 hardware. Does not mention k0s by name.</td>
+      <td><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE blog, 2026-03-24</a></td>
     </tr>
     <tr>
       <td>2026-04-09</td>
-      <td>PR “ci: Add support for linux-riscv64” opens. Author: luhenry (external contributor). Adds RISE RISC-V CI runners and nightly workflow.</td>
+      <td>PR “ci: Add support for linux-riscv64” opens. Author: luhenry (external contributor). Explicitly framed “currently an experiment.” First blocker reported: anchore/syft has no riscv64 build.</td>
       <td><a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414</a></td>
     </tr>
     <tr>
       <td>2026-04-17</td>
-      <td>Dependency PR “Make airgap list-images platform-aware” merged by @twz123. Fixes airgap image list to be target-platform-aware, enabling correct riscv64 image lists.</td>
-      <td><a href="https://github.com/k0sproject/k0s/pull/7459">PR #7459</a></td>
+      <td>Dependency PR “Make airgap list-images platform-aware” merges (twz123 requested it as a prerequisite). First ships in v1.36.1+k0s.0 (2026-06-12). Same-day: groundwork commit <code class="language-plaintext highlighter-rouge">1c3aa2f</code> “[CI] Enable nightly build and tests on ubuntu-24.04-riscv,” authored by Ludovic Henry (committed 2026-06-01).</td>
+      <td><a href="https://github.com/k0sproject/k0s/pull/7459">PR #7459</a>, <a href="https://github.com/k0sproject/k0s/commit/1c3aa2fa8caf82a04b48c4a7fbce0b3e249af4e2">commit 1c3aa2f</a></td>
     </tr>
     <tr>
       <td>2026-05-05</td>
-      <td>CNCF approves installation of RISE RISC-V runners into the k0sproject GitHub org.</td>
-      <td><a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414</a> discussion</td>
+      <td>CNCF approves installing the RISE RISC-V Runners GitHub App into the k0sproject org. Scope narrowed at twz123’s request from per-PR to nightly-plus-manual-dispatch to avoid blocking normal development.</td>
+      <td><a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414 discussion</a></td>
     </tr>
     <tr>
       <td>2026-05-10</td>
-      <td>check-basic and check-airgap smoke tests confirmed passing on RISE runners.</td>
-      <td><a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414</a> discussion</td>
+      <td><code class="language-plaintext highlighter-rouge">check-basic</code> and <code class="language-plaintext highlighter-rouge">check-airgap</code> smoketests confirmed passing on RISE runners; <code class="language-plaintext highlighter-rouge">check-network-conformance-*</code> blocked only on sonobuoy’s missing riscv64 support.</td>
+      <td><a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414 discussion</a></td>
     </tr>
     <tr>
       <td>2026-05-12</td>
-      <td>RISE “six weeks in” blog post names k0s as near-completion integration target.</td>
-      <td><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE blog</a></td>
+      <td>RISE “six weeks in” post names k0s as “in the home stretch of integrating with the runners.”</td>
+      <td><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE blog, 2026-05-12</a></td>
     </tr>
     <tr>
       <td>2026-05-13</td>
-      <td>Prerequisite PR “Split out the unittests job to a separate workflow_call file” merged by @twz123.</td>
+      <td>Prerequisite PR “Split out the unittests job to a separate workflow_call file” merges.</td>
       <td><a href="https://github.com/k0sproject/k0s/pull/7606">PR #7606</a></td>
     </tr>
     <tr>
       <td>2026-06-19</td>
-      <td>PR #7414 merged by @twz123. Commit SHA: 1218cbd7ac5dd3e84b16c97d26d41085a0f0dab3. 306 of 311 CI checks passed at merge.</td>
+      <td>PR #7414 merges. Merge commit <code class="language-plaintext highlighter-rouge">1218cbd7ac5dd3e84b16c97d26d41085a0f0dab3</code>. twz123: “The changes here are a bit hacky, but I don’t have a better proposal right now… let’s just live with it for now.”</td>
       <td><a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414</a></td>
+    </tr>
+    <tr>
+      <td>2026-06-23</td>
+      <td>luhenry confirms nightly riscv64 CI has been green for several days.</td>
+      <td><a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414 discussion</a></td>
+    </tr>
+    <tr>
+      <td>2026-06-30</td>
+      <td><strong>v1.37.0-alpha.1+k0s.0</strong> becomes the first tagged release whose source tree includes the riscv64 CI workflow; this is a source-tag milestone, not evidence of a published riscv64 binary asset (see Section 8). No stable release has shipped it as of 2026-09-30.</td>
+      <td>Release history</td>
+    </tr>
+    <tr>
+      <td>2026-09-19</td>
+      <td>Latest stable release, <strong>v1.36.4+k0s.1</strong>, still ships assets for amd64/arm/arm64/windows2022-amd64 only. No riscv64 asset.</td>
+      <td><a href="https://github.com/k0sproject/k0s/releases">GitHub Releases</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The first intentional riscv64 commit was April 30, 2025 by Natanael Copa (@ncopa, Mirantis). The CI enablement (PR #7414) was driven by an external contributor (luhenry) over approximately 10 weeks.</p><hr />
+<p>The master tracking issue (#1919) remains open since 2022. Real implementation work happened entirely through a chain of merged PRs rather than issue-thread discussion. The CI-enablement path (PR #7414) is not yet reflected in any stable release.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -385,7 +423,7 @@
 </h2>
     
 
-<p>k0s does not publish a formal tiering policy with numbered tiers. The implicit hierarchy from docs and CI configuration is:</p>
+<p>k0s publishes no formal numbered tiering policy. The implicit hierarchy from <code class="language-plaintext highlighter-rouge">docs/system-requirements.md</code> and CI configuration is:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -393,9 +431,9 @@
       <th>Tier</th>
       <th>Architectures</th>
       <th>CI on PR</th>
-      <th>Nightly CI</th>
-      <th>Pre-built Binaries</th>
-      <th>Race Tests</th>
+      <th>Nightly/dispatch CI</th>
+      <th>Pre-built binaries</th>
+      <th>Race detector</th>
     </tr>
   </thead>
   <tbody>
@@ -419,16 +457,16 @@
       <td>Experimental</td>
       <td>riscv64</td>
       <td>No</td>
-      <td>Yes (nightly only, as of 2026-06-19)</td>
+      <td>Yes (nightly cron <code class="language-plaintext highlighter-rouge">45 2 * * *</code>, plus manual dispatch)</td>
       <td>No</td>
       <td>No</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The <code class="language-plaintext highlighter-rouge">docs.k0sproject.io</code> system-requirements page listed riscv64 with the caveat “No pre-compiled binaries, no CI coverage” prior to PR #7414. The CI coverage caveat is now partially resolved: nightly CI was added. The binary release caveat remains accurate as of the latest release (v1.35.5+k0s.0, 2026-06-16).</p>
+<p><code class="language-plaintext highlighter-rouge">docs/system-requirements.md</code> on <code class="language-plaintext highlighter-rouge">main</code> still states riscv64 has “No pre-compiled binaries, no CI coverage.” This text is stale: a dedicated <code class="language-plaintext highlighter-rouge">riscv64.yml</code> workflow exists and has run nightly since PR #7414 merged (2026-06-19), so the “no CI coverage” half of that sentence is now contradicted by the repository’s own CI configuration. The “no pre-compiled binaries” half remains accurate through the latest stable release, v1.36.4+k0s.1 (2026-09-19).</p>
 
-<p>The nightly CI is a canary, not a merge gate. No <code class="language-plaintext highlighter-rouge">pull_request:</code> trigger exists in <code class="language-plaintext highlighter-rouge">.github/workflows/riscv64.yml</code>. The workflow fires only on <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> and <code class="language-plaintext highlighter-rouge">schedule</code> (cron <code class="language-plaintext highlighter-rouge">45 2 * * *</code>). riscv64 failures do not block merges.</p><hr />
+<p>The riscv64 CI workflow (<code class="language-plaintext highlighter-rouge">.github/workflows/riscv64.yml</code>) is triggered only by <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> and <code class="language-plaintext highlighter-rouge">schedule</code>; it has no <code class="language-plaintext highlighter-rouge">pull_request</code> trigger, confirmed by direct fetch of the workflow file and by confirming <code class="language-plaintext highlighter-rouge">.github/workflows/go.yml</code> (the actual PR/push gate) contains zero occurrences of the string “riscv” anywhere in its build/smoketest matrices (which cover only amd64, arm64, and self-hosted arm). riscv64 failures do not block merges to <code class="language-plaintext highlighter-rouge">main</code>.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -438,25 +476,90 @@
 </h2>
     
 
-<p>k0s is a pure-Go project. It contains no C source files, no assembly, no SIMD intrinsics, no JIT backend, and no <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> guards anywhere in the repository. The Go application layer is fully architecture-agnostic and requires no riscv64-specific code modifications.</p>
+<p>k0s is a pure-Go project. It contains no C source files, no assembly, no SIMD intrinsics, no JIT backend, no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory, and no <code class="language-plaintext highlighter-rouge">__riscv</code> preprocessor guards anywhere in the repository (confirmed via repeated code search for <code class="language-plaintext highlighter-rouge">riscv</code>, <code class="language-plaintext highlighter-rouge">riscv64</code>, <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, <code class="language-plaintext highlighter-rouge">rvv</code>, and <code class="language-plaintext highlighter-rouge">__riscv</code>, all returning either the same 13-file plumbing set or zero hits). There is no category of code in k0s where RVV, Zba, or Zbb intrinsics would apply; this project has no natural analog to the hand-tuned/intrinsics/scalar-fallback rubric used for numerics or codec libraries.</p>
 
-<p>Architecture-specific artifacts in the repository are limited to four items:</p>
+<p>All 13 files referencing riscv64 are narrow, complete build/CI/ABI plumbing, none are stubs:</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">embedded-bins/kubernetes/riscv64.patch</code> (54 lines):</strong>
-Applied at Kubernetes build time via <code class="language-plaintext highlighter-rouge">embedded-bins/kubernetes/Dockerfile</code>. Adds <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to four platform lists in Kubernetes’ <code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code> (<code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_SERVER_PLATFORMS</code>, <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_NODE_PLATFORMS</code>, <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_CLIENT_PLATFORMS</code>, <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_TEST_PLATFORMS</code>) and adds <code class="language-plaintext highlighter-rouge">riscv64</code> to the <code class="language-plaintext highlighter-rouge">host_arch</code> detection case statement in <code class="language-plaintext highlighter-rouge">hack/lib/util.sh</code>. This patch is necessary because upstream Kubernetes 1.36.x does not officially include riscv64 in its build platform lists.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Purpose</th>
+      <th>ISA extensions</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">Makefile</code></td>
+      <td>Detects <code class="language-plaintext highlighter-rouge">HOST_HARDWARE=riscv64</code>, sets <code class="language-plaintext highlighter-rouge">HOST_ARCH</code>; disables Go race detector for riscv64/arm builds; defines riscv64 airgap-bundle targets</td>
+      <td>None</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">embedded-bins/kubernetes/patches/riscv64.patch</code> (53-54 lines)</td>
+      <td>Out-of-tree patch adding <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to Kubernetes’ own <code class="language-plaintext highlighter-rouge">KUBE_SUPPORTED_*_PLATFORMS</code> lists and <code class="language-plaintext highlighter-rouge">host_arch()</code> detection in <code class="language-plaintext highlighter-rouge">hack/lib/golang.sh</code>/<code class="language-plaintext highlighter-rouge">hack/lib/util.sh</code>, since upstream Kubernetes does not officially support riscv64</td>
+      <td>None</td>
+      <td>Complete (patch on vendored upstream source, not k0s-native code)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">embedded-bins/kubernetes/Dockerfile</code></td>
+      <td>Applies <code class="language-plaintext highlighter-rouge">riscv64.patch</code> during embedded-Kubernetes build stage</td>
+      <td>None</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">.github/workflows/riscv64.yml</code></td>
+      <td>Dedicated nightly-cron + manual-dispatch CI: build, unit tests, airgap bundle, basic/airgap smoketests on <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code></td>
+      <td>None</td>
+      <td>Complete, operational</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">.github/workflows/build-k0s.yml</code>, <code class="language-plaintext highlighter-rouge">build-image-bundle.yml</code>, <code class="language-plaintext highlighter-rouge">smoketest.yaml</code></td>
+      <td>Runner-selection and artifact-naming wiring for <code class="language-plaintext highlighter-rouge">target-arch == 'riscv64'</code></td>
+      <td>None</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">hack/list-images/main.go</code></td>
+      <td>Adds <code class="language-plaintext highlighter-rouge">{linux, riscv64}</code> to the enumerated image-reference platform list</td>
+      <td>None</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">pkg/airgap/images.go</code></td>
+      <td>Excludes the Envoy-based Node-Local Load-Balancing (NLLB) image for <code class="language-plaintext highlighter-rouge">arm</code>/<code class="language-plaintext highlighter-rouge">riscv64</code> targets</td>
+      <td>None</td>
+      <td>Complete (honest functional gap, not a stub)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">internal/pkg/sysinfo/probes/linux/types_signed.go</code> (8 lines)</td>
+      <td><code class="language-plaintext highlighter-rouge">//go:build linux &amp;&amp; !(arm \|\| riscv64)</code>; defines <code class="language-plaintext highlighter-rouge">utsChar = int8</code></td>
+      <td>None</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">internal/pkg/sysinfo/probes/linux/types_unsigned.go</code> (8 lines)</td>
+      <td><code class="language-plaintext highlighter-rouge">//go:build linux &amp;&amp; (arm \|\| riscv64)</code>; defines <code class="language-plaintext highlighter-rouge">utsChar = uint8</code>, since riscv64 (like arm) uses unsigned <code class="language-plaintext highlighter-rouge">char</code> in glibc’s <code class="language-plaintext highlighter-rouge">struct utsname</code>, needed for correct <code class="language-plaintext highlighter-rouge">uname()</code> syscall parsing</td>
+      <td>None</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">inttest/bootloose-alpine/Dockerfile</code></td>
+      <td>Skips installing the etcd test binary for arm/riscv64 targets (no upstream etcd binaries published)</td>
+      <td>None</td>
+      <td>Complete (confirms a real test-coverage gap)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">docs/system-requirements.md</code></td>
+      <td>Lists riscv64 as supported with caveats</td>
+      <td>N/A</td>
+      <td>Stale relative to current CI state (see Section 3)</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong><code class="language-plaintext highlighter-rouge">internal/pkg/sysinfo/probes/linux/types_unsigned.go</code> (9 lines):</strong>
-Build constraint: <code class="language-plaintext highlighter-rouge">//go:build linux &amp;&amp; (arm || riscv64)</code>. Defines <code class="language-plaintext highlighter-rouge">utsChar = uint8</code>. On riscv64 (as on 32-bit arm), <code class="language-plaintext highlighter-rouge">syscall.Utsname</code> uses <code class="language-plaintext highlighter-rouge">uint8</code> for character arrays rather than <code class="language-plaintext highlighter-rouge">int8</code>. This file provides the correct type alias for <code class="language-plaintext highlighter-rouge">parseUname()</code> to decode uname syscall results without sign-extension corruption.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">internal/pkg/sysinfo/probes/linux/types_signed.go</code> (9 lines):</strong>
-Build constraint: <code class="language-plaintext highlighter-rouge">//go:build linux &amp;&amp; !(arm || riscv64)</code>. Defines <code class="language-plaintext highlighter-rouge">utsChar = int8</code> for all other Linux targets.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">.github/workflows/riscv64.yml</code>:</strong>
-Dedicated CI workflow. Discussed in Section 7.</p>
-
-<p>The Makefile contains four riscv64 references: <code class="language-plaintext highlighter-rouge">HOST_ARCH</code> detection (maps <code class="language-plaintext highlighter-rouge">uname -m</code> output <code class="language-plaintext highlighter-rouge">riscv64</code>), airgap image targets (<code class="language-plaintext highlighter-rouge">airgap-images-linux-riscv64.txt</code>, <code class="language-plaintext highlighter-rouge">airgap-image-bundle-linux-riscv64.tar</code>), race detector exclusion (<code class="language-plaintext highlighter-rouge">ifneq (, $(filter $(HOST_ARCH), arm riscv64))</code>), and cleanup rules.</p>
-
-<p>There is no assembly, no SIMD dispatch, no architecture-specific optimization path, and no JIT code in k0s at any level.</p><hr />
+<p>Comparison vs amd64/arm64: both established architectures are the implicit default/fallback case throughout the Makefile and Go build-tag conditionals; riscv64 is one <code class="language-plaintext highlighter-rouge">case</code>/build-tag branch among several, functionally identical in kind (conditional compilation only, no vectorized code path for any architecture) but administratively second-tier (nightly CI rather than PR-gated, no release artifacts).</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -466,9 +569,9 @@ Dedicated CI workflow. Discussed in Section 7.</p>
 </h2>
     
 
-<p>k0s uses a Make + Docker build system. There is no CMake.</p>
+<p>k0s uses Make plus Docker. There is no CMake, no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, no <code class="language-plaintext highlighter-rouge">setup.py</code>, no <code class="language-plaintext highlighter-rouge">Cargo.toml</code>, and no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>/<code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> (confirmed by direct repository inspection). Build documentation is spread across <code class="language-plaintext highlighter-rouge">Makefile</code>, <code class="language-plaintext highlighter-rouge">embedded-bins/Makefile*</code>, and <code class="language-plaintext highlighter-rouge">.github/workflows/*.yml</code>.</p>
 
-<p><strong>Toolchain versions (from <code class="language-plaintext highlighter-rouge">embedded-bins/Makefile.variables</code>):</strong></p>
+<p><strong>Toolchain (from <code class="language-plaintext highlighter-rouge">embedded-bins/Makefile.variables</code>, cross-checked against <code class="language-plaintext highlighter-rouge">go.mod</code>):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -480,87 +583,46 @@ Dedicated CI workflow. Discussed in Section 7.</p>
   <tbody>
     <tr>
       <td>Go</td>
-      <td>1.26.4</td>
+      <td>1.27.1 (go.mod minimum: 1.27.0)</td>
+    </tr>
+    <tr>
+      <td>Build image</td>
+      <td><code class="language-plaintext highlighter-rouge">golang:1.27.1-alpine3.24</code></td>
     </tr>
     <tr>
       <td>Alpine base</td>
-      <td>3.24.1</td>
+      <td>3.24.2</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>CGO is disabled by default (<code class="language-plaintext highlighter-rouge">BUILD_GO_CGO_ENABLED = 0</code>). Build tags include <code class="language-plaintext highlighter-rouge">osusergo</code>. Static linking is enforced via <code class="language-plaintext highlighter-rouge">-extldflags=-static</code>. No GCC or Clang cross-compiler is required for k0s itself. Embedded component Dockerfiles install a native toolchain inside the container using the architecture-native Alpine/Debian package manager.</p>
+<p>CGO is disabled for the main k0s binary (<code class="language-plaintext highlighter-rouge">BUILD_GO_CGO_ENABLED = 0</code>), statically linked via <code class="language-plaintext highlighter-rouge">-extldflags=-static</code>. No pinned GCC/Clang version is documented or required beyond what Alpine 3.24 ships (<code class="language-plaintext highlighter-rouge">apk add make gcc musl-dev binutils</code>), since k0s itself has no C/C++ toolchain requirement outside building its small embedded C dependencies (iptables, keepalived) with the distro’s stock gcc.</p>
 
 <p><strong>Build commands:</strong></p>
 
-<p>Standard build (all architectures including riscv64):</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make .k0sbuild.docker-image.k0s
+touch go.sum
+make --touch codegen
+make build
 </code></pre></div></div>
 
-<p>Cross-compiling for riscv64 from a non-riscv64 host:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GOARCH=riscv64 make
-</code></pre></div></div>
+<p>Airgap image bundle for riscv64:</p>
 
-<p>Airgap image bundle for riscv64 (auto-sets <code class="language-plaintext highlighter-rouge">TARGET_PLATFORM := linux/riscv64</code>):</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make airgap-image-bundle-linux-riscv64.tar
 </code></pre></div></div>
 
-<p>Without embedded binaries (package maintainer mode):</p>
+<p>Package-maintainer mode (skip embedded binaries):</p>
+
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make EMBEDDED_BINS_BUILDMODE=none
 </code></pre></div></div>
 
-<p>The race detector is disabled for riscv64 builds. The Makefile condition <code class="language-plaintext highlighter-rouge">ifneq (, $(filter $(HOST_ARCH), arm riscv64))</code> unsets <code class="language-plaintext highlighter-rouge">GO_TEST_RACE</code>. This is not a k0s policy choice but a Go platform limitation: Go’s race detector does not support riscv64.</p>
+<p><code class="language-plaintext highlighter-rouge">HOST_ARCH</code> auto-detection recognizes riscv64 directly (<code class="language-plaintext highlighter-rouge">else ifneq (, $(filter $(HOST_HARDWARE), riscv64)) HOST_ARCH := riscv64</code>).</p>
 
-<p><strong>QEMU usage:</strong> None. The build system uses native riscv64 GitHub Actions runners (<code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>) rather than emulation. No <code class="language-plaintext highlighter-rouge">--platform linux/riscv64</code> Docker buildx cross-build invocations exist in any CI workflow.</p>
+<p><strong>No QEMU is used.</strong> Both the k0s binary and all embedded component binaries for riscv64 are built <strong>natively</strong> on GitHub-hosted <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> runners (real riscv64 hardware/VMs supplied by RISE, on Scaleway EM-RV1). The string “qemu” does not appear anywhere in the repository’s workflow files, confirmed by direct grep of all 26 files under <code class="language-plaintext highlighter-rouge">.github/workflows/</code>.</p>
 
-<p><strong>Embedded component versions relevant to riscv64:</strong></p>
+<p>The Go race detector is disabled for riscv64 builds (<code class="language-plaintext highlighter-rouge">ifneq (, $(filter $(HOST_ARCH), arm riscv64)) check-unit: GO_TEST_RACE ?=</code>). This is a Go platform limitation (the race detector does not support riscv64), not a k0s policy choice.</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Component</th>
-      <th>Version in k0s</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Kubernetes</td>
-      <td>1.36.1</td>
-    </tr>
-    <tr>
-      <td>containerd</td>
-      <td>2.3.2</td>
-    </tr>
-    <tr>
-      <td>runc</td>
-      <td>1.4.3</td>
-    </tr>
-    <tr>
-      <td>etcd</td>
-      <td>3.7.0-rc.0</td>
-    </tr>
-    <tr>
-      <td>kine</td>
-      <td>0.16.2</td>
-    </tr>
-    <tr>
-      <td>konnectivity</td>
-      <td>0.36.0</td>
-    </tr>
-    <tr>
-      <td>iptables</td>
-      <td>1.8.13</td>
-    </tr>
-    <tr>
-      <td>keepalived</td>
-      <td>2.3.4</td>
-    </tr>
-    <tr>
-      <td>libseccomp (for runc)</td>
-      <td>2.6.0</td>
-    </tr>
-  </tbody>
-</table></div><hr />
+<p><strong>Known build failure (historical, community-reported):</strong> Issue #4665 (2024-06-22) - <code class="language-plaintext highlighter-rouge">make HOST_ARCH=riscv64 EMBEDDED_BINS_BUILDMODE=none</code> failed with <code class="language-plaintext highlighter-rouge">ERROR: unable to select packages: binutils-gold (no such package)</code> on Alpine (riscv64 has no <code class="language-plaintext highlighter-rouge">binutils-gold</code> package). This predates official enablement work and was closed not-planned; the maintainer-driven enablement path (PR #5802 onward) did not hit or need to resolve this specific error, since it took a different code path.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -600,21 +662,14 @@ Dedicated CI workflow. Discussed in Section 7.</p>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Verified passing (PR #7414)</td>
+      <td>Confirmed passing, PR #7414 discussion, 2026-05-10</td>
     </tr>
     <tr>
       <td>Smoke test: airgap</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Verified passing (PR #7414)</td>
-    </tr>
-    <tr>
-      <td>Remaining 81 smoke tests</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>Not yet enabled</td>
+      <td>Confirmed passing, PR #7414 discussion</td>
     </tr>
     <tr>
       <td>Network conformance (Calico, kube-router)</td>
@@ -624,60 +679,48 @@ Dedicated CI workflow. Discussed in Section 7.</p>
       <td>Blocked on sonobuoy riscv64 image</td>
     </tr>
     <tr>
-      <td>NLLB (Node-Local Load Balancing via Envoy)</td>
+      <td>NLLB (Node-Local Load Balancing, Envoy)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td>Envoy has no riscv64 build; @twz123: “the last image directly used by k0s not available for RISC-V”</td>
+      <td>Envoy has no riscv64 build; twz123 (PR #7414): “the last image that’s directly used by k0s which is not available for RISC-V”</td>
     </tr>
     <tr>
       <td>SBOM generation (syft)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td>anchore/syft lacks riscv64; upstream PR filed</td>
+      <td>anchore/syft lacks riscv64; upstream PR filed, not re-verified live this run</td>
     </tr>
     <tr>
-      <td>IPv6 test image bundles</td>
+      <td>Support-bundle collection (troubleshoot)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (fixed)</td>
+      <td>Upstream replicatedhq/troubleshoot#2010 merged, resolving the riscv64 gap flagged during PR #7414</td>
+    </tr>
+    <tr>
+      <td>PR-gate CI</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td>build-k0s.yml restricts to amd64 and arm64</td>
-    </tr>
-    <tr>
-      <td>OS-level e2e tests (ostests)</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>No riscv64 entries in ostests-e2e.yaml or ostests-nightly.yaml</td>
+      <td><code class="language-plaintext highlighter-rouge">go.yml</code> has zero riscv references</td>
     </tr>
     <tr>
       <td>Release binary artifacts</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
-      <td>release.yml covers amd64, arm64, arm only</td>
-    </tr>
-    <tr>
-      <td>Docker image publishing</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>riscv64 not in release Docker manifest</td>
-    </tr>
-    <tr>
-      <td>CI merge gate</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>riscv64 workflow has no pull_request trigger</td>
+      <td><code class="language-plaintext highlighter-rouge">release.yml</code> has zero riscv64 references</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 port covers 2 of the 83 integration test scenarios that amd64 and arm64 run.</p>
+<p><strong>NaN/floating-point semantics:</strong> No k0s-specific NaN or floating-point bug was found. The relevant ecosystem issue is upstream Go itself: <a href="https://github.com/golang/go/issues/64917">golang/go#64917</a> documents that <code class="language-plaintext highlighter-rouge">uint32(math.NaN())</code> returns <code class="language-plaintext highlighter-rouge">4294967295</code> on riscv64 versus <code class="language-plaintext highlighter-rouge">0</code> on every other architecture (confirmed on Go 1.21.5/linux-riscv64). Status: open, labeled <code class="language-plaintext highlighter-rouge">NeedsInvestigation</code>/<code class="language-plaintext highlighter-rouge">FrozenDueToAge</code>. This is a real architecture-specific correctness divergence in the Go toolchain that any Go program, including k0s, could hit if it converts a NaN value to an unsigned integer on riscv64. No evidence was found that k0s code actually exercises this conversion path; it is flagged as ecosystem-level risk, not a confirmed k0s defect.</p>
 
-<p><strong>Real-world deployment note:</strong> A blog post published April 20, 2026 (Bas Magre, blog.k0sproject.io) describes deploying k0s on a StarFive VisionFive2 Lite with Debian Trixie, kernel 6.19.0. Key findings: k0s binary required building from source on-device; <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code> environment variable was required; node reached <code class="language-plaintext highlighter-rouge">Ready</code> status with <code class="language-plaintext highlighter-rouge">kubernetes.io/arch=riscv64</code>; MetalLB required custom riscv64 image builds (<code class="language-plaintext highlighter-rouge">opvolger/metallb-controller:v0.15.3</code>, <code class="language-plaintext highlighter-rouge">opvolger/metallb-speaker:v0.15.3</code>) with FRR disabled. No performance numbers were reported in this post.</p><hr />
+<p><strong>Security hardening gaps:</strong> Data not available: no riscv64-specific CVEs, security advisories, or hardening regressions for k0s were found in issue search, PR search, or web search.</p>
+
+<p><strong>Performance gaps:</strong> No riscv64 performance data of any kind exists for k0s (see Section 13.2), so no SIMD/vectorization-related performance delta can be quantified. k0s’s own layer is pure Go with no vectorized code path on any architecture; any performance gap would originate from the Go runtime or the embedded components (Kubernetes, etcd/kine, containerd) rather than from k0s itself.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -687,77 +730,151 @@ Dedicated CI workflow. Discussed in Section 7.</p>
 </h2>
     
 
-<p><strong>Workflow file:</strong> <code class="language-plaintext highlighter-rouge">.github/workflows/riscv64.yml</code> (merged via <a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414</a>, June 19, 2026)</p>
+<p><strong>Workflow file:</strong> <code class="language-plaintext highlighter-rouge">.github/workflows/riscv64.yml</code>, merged via <a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414</a> (2026-06-19), confirmed by direct fetch of the raw file content from <code class="language-plaintext highlighter-rouge">main</code> as of 2026-09-30:</p>
 
-<p><strong>Triggers:</strong></p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">workflow_dispatch</code> (manual, with optional <code class="language-plaintext highlighter-rouge">smoketests</code> input)</li>
-  <li><code class="language-plaintext highlighter-rouge">schedule</code>: daily cron at 02:45 UTC (<code class="language-plaintext highlighter-rouge">45 2 * * *</code>)</li>
-  <li>No <code class="language-plaintext highlighter-rouge">push</code> trigger. No <code class="language-plaintext highlighter-rouge">pull_request</code> trigger.</li>
-</ul>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">RISC-V</span><span class="nv"> </span><span class="s">build"</span>
 
-<p><strong>Runner:</strong> <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> – self-hosted label. Per RISE project documentation, this label maps to Scaleway EM-RV1 bare-metal nodes running jobs as ephemeral Kubernetes pods. The workflow YAML does not contain the string “QEMU”; however, native hardware confirmation derives from RISE project infrastructure documentation, not from the YAML itself.</p>
+<span class="na">on</span><span class="pi">:</span>
+  <span class="na">workflow_dispatch</span><span class="pi">:</span>
+    <span class="na">inputs</span><span class="pi">:</span>
+      <span class="na">smoketests</span><span class="pi">:</span>
+        <span class="na">description</span><span class="pi">:</span> <span class="s">Which smoketests to run.</span>
+        <span class="na">type</span><span class="pi">:</span> <span class="s">string</span>
+  <span class="na">schedule</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">cron</span><span class="pi">:</span> <span class="s">45 2 * * *</span>
 
-<p><strong>Hardware specification (from RISE runner announcements):</strong> Scaleway EM-RV1, TH1520 SoC. Kernel version 5.9 at time of PR #7414 development. RISE blog states transition to VMs on RVA23 hardware is planned once that hardware becomes available.</p>
+<span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">build-k0s</span><span class="pi">:</span>
+    <span class="na">uses</span><span class="pi">:</span> <span class="s">./.github/workflows/build-k0s.yml</span>
+    <span class="na">with</span><span class="pi">:</span>
+      <span class="na">target-os</span><span class="pi">:</span> <span class="s">linux</span>
+      <span class="na">target-arch</span><span class="pi">:</span> <span class="s">riscv64</span>
 
-<p><strong>Jobs:</strong></p>
-<ol>
-  <li><code class="language-plaintext highlighter-rouge">build-k0s</code> - calls <code class="language-plaintext highlighter-rouge">build-k0s.yml</code> with <code class="language-plaintext highlighter-rouge">target-os: linux</code>, <code class="language-plaintext highlighter-rouge">target-arch: riscv64</code></li>
-  <li><code class="language-plaintext highlighter-rouge">build-airgap-image-bundle</code> - calls <code class="language-plaintext highlighter-rouge">build-image-bundle.yml</code> with <code class="language-plaintext highlighter-rouge">image-bundle-platform: linux-riscv64</code>, <code class="language-plaintext highlighter-rouge">runs-on: ubuntu-24.04-riscv</code></li>
-  <li><code class="language-plaintext highlighter-rouge">unittests-k0s</code> - calls <code class="language-plaintext highlighter-rouge">unittests-k0s.yml</code> with <code class="language-plaintext highlighter-rouge">runs-on: ubuntu-24.04-riscv</code>; runs <code class="language-plaintext highlighter-rouge">make check-unit</code> natively</li>
-  <li><code class="language-plaintext highlighter-rouge">smoketests</code> - matrix over <code class="language-plaintext highlighter-rouge">["airgap", "basic"]</code>; calls <code class="language-plaintext highlighter-rouge">smoketest.yaml</code> with <code class="language-plaintext highlighter-rouge">arch: riscv64</code></li>
-</ol>
+  <span class="na">build-airgap-image-bundle</span><span class="pi">:</span>
+    <span class="na">needs</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">build-k0s</span><span class="pi">]</span>
+    <span class="na">uses</span><span class="pi">:</span> <span class="s">./.github/workflows/build-image-bundle.yml</span>
+    <span class="na">with</span><span class="pi">:</span>
+      <span class="na">image-bundle-name</span><span class="pi">:</span> <span class="s">airgap</span>
+      <span class="na">image-bundle-platform</span><span class="pi">:</span> <span class="s">linux-riscv64</span>
+      <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-24.04-riscv</span>
 
-<p><strong>Technical blockers encountered and resolved during PR #7414 development:</strong></p>
+  <span class="na">unittests-k0s</span><span class="pi">:</span>
+    <span class="na">uses</span><span class="pi">:</span> <span class="s">./.github/workflows/unittests-k0s.yml</span>
+    <span class="na">with</span><span class="pi">:</span>
+      <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-24.04-riscv</span>
+
+  <span class="na">smoketests</span><span class="pi">:</span>
+    <span class="na">needs</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">build-k0s</span><span class="pi">,</span> <span class="nv">build-airgap-image-bundle</span><span class="pi">]</span>
+    <span class="na">uses</span><span class="pi">:</span> <span class="s">./.github/workflows/smoketest.yaml</span>
+    <span class="na">with</span><span class="pi">:</span>
+      <span class="na">arch</span><span class="pi">:</span> <span class="s">riscv64</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">$</span>
+</code></pre></div></div>
+
+<p><strong>Triggers:</strong> <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> (manual, optional <code class="language-plaintext highlighter-rouge">smoketests</code> input) plus <code class="language-plaintext highlighter-rouge">schedule</code> (daily, 02:45 UTC). No <code class="language-plaintext highlighter-rouge">push</code> or <code class="language-plaintext highlighter-rouge">pull_request</code> trigger.</p>
+
+<p><strong>Runner:</strong> <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>, backed by RISE’s Scaleway EM-RV1 bare-metal nodes. No QEMU anywhere in any of the four riscv64-touching workflow files (<code class="language-plaintext highlighter-rouge">riscv64.yml</code>, <code class="language-plaintext highlighter-rouge">build-k0s.yml</code>, <code class="language-plaintext highlighter-rouge">build-image-bundle.yml</code>, <code class="language-plaintext highlighter-rouge">smoketest.yaml</code>), confirmed by direct content fetch, not merely repo-wide search. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exist in the repo; all CI is GitHub Actions.</p>
+
+<p><strong>Comparison table:</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PR-gate CI (<code class="language-plaintext highlighter-rouge">go.yml</code>)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Nightly/dispatch CI</td>
+      <td>N/A (covered by PR gate)</td>
+      <td>N/A</td>
+      <td>Yes, since 2026-06-19</td>
+    </tr>
+    <tr>
+      <td>Release CI (<code class="language-plaintext highlighter-rouge">release.yml</code>)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No riscv64 entries</td>
+    </tr>
+    <tr>
+      <td>Runner</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> (RISE/Scaleway)</td>
+    </tr>
+    <tr>
+      <td>Emulation</td>
+      <td>N/A</td>
+      <td>None</td>
+      <td>None (native)</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Technical blockers encountered and resolved during PR #7414 development</strong> (from the PR’s own discussion thread, verbatim where quoted):</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Issue</th>
-      <th>Root Cause</th>
+      <th>Root cause</th>
       <th>Resolution</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>overlayfs-on-overlayfs failure</td>
-      <td>RISE runners are k8s pods; k0s inside those pods attempted a second overlayfs layer. dmesg: “overlayfs: filesystem on ‘/var/lib/k0s/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/13/fs’ not supported as upperdir”</td>
-      <td>Mount empty k8s volume at /var/lib/k0s to provide ext4-backed path</td>
+      <td>anchore/syft has no riscv64 build</td>
+      <td>Upstream gap</td>
+      <td>Disabled for riscv64 in k0s CI; upstream PR filed</td>
     </tr>
     <tr>
-      <td>ip_set_hash_net module missing</td>
-      <td>Scaleway EM-RV1 kernel (5.9) does not include this module by default; required by kube-router</td>
-      <td>Manually build and load the module from Scaleway kernel sources</td>
+      <td>RISE runner org-level access</td>
+      <td>CNCF policy required approval before installing the RISE GitHub App into k0sproject</td>
+      <td>Approved 2026-05-05</td>
+    </tr>
+    <tr>
+      <td>overlayfs-on-overlayfs failure</td>
+      <td>RISE runners are themselves k8s pods; k0s inside those pods attempted a second overlayfs layer</td>
+      <td>Mount an empty volume at <code class="language-plaintext highlighter-rouge">/var/lib/k0s</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ip_set_hash_net</code> kernel module missing</td>
+      <td>Not present by default on the Scaleway EM-RV1 kernel image used by RISE at the time</td>
+      <td>Built/loaded from Scaleway-supplied kernel sources</td>
     </tr>
     <tr>
       <td>DNS CIDR conflict</td>
-      <td>kube-proxy CIDR inside k0s cluster clashed with outer k8s pod CIDR</td>
-      <td>Use hostNetwork for the pods</td>
+      <td>kube-proxy CIDR inside the nested k0s cluster clashed with the outer pod CIDR</td>
+      <td>Fixed at the pod-networking level</td>
     </tr>
     <tr>
-      <td>anchore/syft: no riscv64</td>
+      <td>replicatedhq/troubleshoot missing riscv64 releases</td>
       <td>Upstream gap</td>
-      <td>Disable syft for riscv64; file upstream <a href="https://github.com/anchore/syft/pull/4757">PR anchore/syft#4757</a></td>
+      <td>Upstream PR <a href="https://github.com/replicatedhq/troubleshoot/pull/2010">replicatedhq/troubleshoot#2010</a> merged</td>
     </tr>
     <tr>
-      <td>replicatedhq/troubleshoot: no riscv64</td>
+      <td>vmware-tanzu/sonobuoy unavailable on riscv64</td>
       <td>Upstream gap</td>
-      <td>File upstream <a href="https://github.com/replicatedhq/troubleshoot/pull/2010">PR replicatedhq/troubleshoot#2010</a> (merged)</td>
+      <td>Upstream PR <a href="https://github.com/vmware-tanzu/sonobuoy/pull/2049">vmware-tanzu/sonobuoy#2049</a> filed by luhenry, open at merge, not re-verified live in this pass</td>
     </tr>
     <tr>
-      <td>sonobuoy: no riscv64 image</td>
-      <td>Upstream gap</td>
-      <td>File upstream <a href="https://github.com/vmware-tanzu/sonobuoy/pull/2049">PR vmware-tanzu/sonobuoy#2049</a> (open at merge)</td>
-    </tr>
-    <tr>
-      <td>CNCF approval required</td>
-      <td>Policy: k0sproject org required CNCF approval before installing RISE GitHub App</td>
-      <td>Obtained May 5, 2026</td>
+      <td>Scope required narrowing from per-PR to nightly</td>
+      <td>Maintainer twz123 requested it explicitly to avoid blocking normal development given limited runner capacity</td>
+      <td>Workflow set to <code class="language-plaintext highlighter-rouge">schedule</code> + <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> only</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>RISE CI statistics at time of “six weeks in” report (March 19 - May 6, 2026):</strong> 13,000+ jobs completed across 197 unique repositories in 87 organizations, 99.78% completion rate, approximately 445 jobs/day.</p><hr />
+<p><strong>RISE usage context:</strong> per the RISE <a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">“six weeks in” post</a> (2026-05-12), RISE’s runner fleet ran 13,000+ jobs across 197 repos/87 orgs (2026-03-19 to 2026-05-06) at a 99.78% completion rate, roughly 445 jobs/day. k0s is named as “in the home stretch of integrating with the runners” in that post; llama.cpp (2,589 jobs), PyTorch (870 jobs), and post-quantum crypto workloads (2,208 jobs) are the heaviest users by job count. RISE does not maintain a k0s fork or package; its involvement is purely as CI infrastructure provider, via <code class="language-plaintext highlighter-rouge">riseproject-dev/riscv-runner*</code> app tooling. RISE holds no dedicated k0s repository in its GitHub org (confirmed: <code class="language-plaintext highlighter-rouge">search_repositories k0s org:riseproject-dev</code> returns zero results; full 26-repo org listing confirmed no k0s-named repo).</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -767,19 +884,23 @@ Dedicated CI workflow. Discussed in Section 7.</p>
 </h2>
     
 
-<p><strong>GitHub Releases:</strong> As of v1.35.5+k0s.0 (latest as of June 16, 2026), release assets are: <code class="language-plaintext highlighter-rouge">k0s-v1.35.5+k0s.0-amd64</code>, <code class="language-plaintext highlighter-rouge">k0s-v1.35.5+k0s.0-amd64.exe</code>, <code class="language-plaintext highlighter-rouge">k0s-v1.35.5+k0s.0-arm</code>, <code class="language-plaintext highlighter-rouge">k0s-v1.35.5+k0s.0-arm64</code>, <code class="language-plaintext highlighter-rouge">k0s-airgap-bundle-v1.35.5+k0s.0-amd64</code>, <code class="language-plaintext highlighter-rouge">k0s-airgap-bundle-v1.35.5+k0s.0-arm</code>, <code class="language-plaintext highlighter-rouge">k0s-airgap-bundle-v1.35.5+k0s.0-arm64</code>. No riscv64 asset in any release. The <code class="language-plaintext highlighter-rouge">release.yml</code> workflow matrix covers amd64, arm64, and arm only.</p>
+<p><strong>GitHub Releases:</strong> latest stable release as of 2026-09-30 is <strong>v1.36.4+k0s.1</strong> (published 2026-09-19). Full asset list: <code class="language-plaintext highlighter-rouge">airgap-images-linux-{amd64,arm,arm64}.txt</code>, <code class="language-plaintext highlighter-rouge">airgap-images-windows2022-amd64.txt</code>, <code class="language-plaintext highlighter-rouge">cosign.pub</code>, <code class="language-plaintext highlighter-rouge">k0s-airgap-bundle-v1.36.4+k0s.1-linux-{amd64,arm,arm64}.tar</code>, <code class="language-plaintext highlighter-rouge">k0s-airgap-bundle-...-windows2022-amd64.tar</code>, <code class="language-plaintext highlighter-rouge">k0s-v1.36.4+k0s.1-amd64</code>, source archives, attestation JSON. <strong>Zero asset filenames contain “riscv” or “riscv64.”</strong> Only amd64, arm, arm64, and windows2022-amd64 are shipped. Recent tags also include v1.35.8+k0s.1, v1.34.11+k0s.1 (all 2026-09-19), v1.36.4+k0s.0, v1.35.8+k0s.0 (2026-08-31) - none carry riscv64 assets. <code class="language-plaintext highlighter-rouge">release.yml</code> has no riscv64 target.</p>
 
-<p>PR #7414 (merged June 19, 2026) adds CI infrastructure but does not modify the release pipeline. No k0s release was tagged after the PR merged as of the research date.</p>
+<p>The pre-release tag <strong>v1.37.0-alpha.1+k0s.0</strong> (2026-06-30) is the first git tag whose source tree includes the riscv64 CI workflow file, but this reflects source-tree content, not a published riscv64 binary asset: since <code class="language-plaintext highlighter-rouge">release.yml</code> has no riscv64 build step, there is no reason to expect that pre-release’s published assets differ from the amd64/arm/arm64/windows pattern. Data not available: the exact asset list for v1.37.0-alpha.1+k0s.0 was not independently fetched in this research pass.</p>
 
-<p><strong>PyPI:</strong> A stub package <code class="language-plaintext highlighter-rouge">k0s-0.0.1.tar.gz</code> exists at <a href="https://pypi.org/project/k0s/">pypi.org/project/k0s</a>. No binary wheels for any architecture. Not relevant to riscv64 deployment.</p>
+<p><strong>PyPI:</strong> <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/k0s/json</code> returns a package named <code class="language-plaintext highlighter-rouge">k0s</code>, version <code class="language-plaintext highlighter-rouge">0.0.1</code>, a single source distribution (<code class="language-plaintext highlighter-rouge">k0s-0.0.1.tar.gz</code>, uploaded 2024-04-20). No wheels of any kind, no riscv64 evidence. This is almost certainly an unrelated, name-squatted package - k0s is a Go binary, not a Python distribution.</p>
 
-<p><strong>Debian:</strong> k0s has no Debian package. <a href="https://tracker.debian.org/pkg/k0s">tracker.debian.org/pkg/k0s</a> returns HTTP 404.</p>
+<p><strong>RISE wheel builder:</strong> <code class="language-plaintext highlighter-rouge">https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/k0s/</code> returns HTTP 302, redirecting to upstream PyPI (i.e., no RISE-built wheels exist for “k0s”; it simply proxies to the unrelated PyPI stub above).</p>
 
-<p><strong>Ubuntu:</strong> No k0s package in Ubuntu Noble. Search at packages.ubuntu.com returns only an unrelated package with a similar name prefix.</p>
+<p><strong>Debian:</strong> No Debian package; <code class="language-plaintext highlighter-rouge">tracker.debian.org/pkg/k0s</code> returns HTTP 404.</p>
 
-<p><strong>Arch Linux RISC-V:</strong> k0s is not present in the Arch RISC-V port repository (<a href="https://archriscv.felixc.at/">archriscv.felixc.at</a>).</p>
+<p><strong>Ubuntu (26.04 “resolute”):</strong> Inconclusive. Direct fetches of <code class="language-plaintext highlighter-rouge">packages.ubuntu.com/search?...suite=resolute...</code> returned HTTP 503 on every attempt across four URL variants in this research pass; separately, a page fetch returned only architecture-filter boilerplate with no package match table, and no “k0s,” “python3-k0s,” or “libk0s” entry. k0s has never been distributed as an apt package upstream (install is via curl script or standalone GitHub-release binaries), which makes an official Ubuntu package improbable, but this is not independently confirmed and should not be read as a verified “absent” result given the 503s.</p>
 
-<p><strong>Summary:</strong> There is no riscv64 k0s binary available through any distribution channel. The only path to a riscv64 k0s binary is building from source.</p><hr />
+<p><strong>Arch Linux RISC-V port (archriscv.felixc.at):</strong> No k0s entry found on direct fetch.</p>
+
+<p><strong>Ubuntu package graph (project-graph MCP):</strong> Not queried. The <code class="language-plaintext highlighter-rouge">project-graph</code> MCP server failed to connect (<code class="language-plaintext highlighter-rouge">CONNECTION_CLOSED</code>) across the entire research session. This is a tool-availability gap, not a finding that the package is absent from Ubuntu riscv64; it should be retried once the server is reachable.</p>
+
+<p><strong>Summary:</strong> There is no riscv64 k0s binary available through any distribution channel that could be directly checked. The only path to a riscv64 k0s binary today is building from source.</p>
 <h2 id="9-dependencies">
   
   
@@ -789,182 +910,169 @@ Dedicated CI workflow. Discussed in Section 7.</p>
 </h2>
     
 
-<p>The following table covers the critical embedded and runtime dependencies of k0s and their riscv64 status.</p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>Version in k0s</th>
-      <th>riscv64 Build</th>
-      <th>riscv64 Release Binary</th>
-      <th>riscv64 CI</th>
-      <th>Blocking Issues</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
+      <th>Blocking issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Go toolchain</td>
-      <td>Entire k0s binary</td>
-      <td>1.26.4</td>
-      <td>Yes, since Go 1.14</td>
-      <td>Official tarball <code class="language-plaintext highlighter-rouge">go1.26.4.linux-riscv64.tar.gz</code></td>
-      <td>Secondary port (non-blocking for Go releases)</td>
+      <td>Go</td>
+      <td>build-dependency, critical</td>
+      <td>Yes, since Go 1.14; official <code class="language-plaintext highlighter-rouge">go1.27.1.linux-riscv64</code> toolchain</td>
+      <td>Secondary Go port (non-blocking for Go’s own releases)</td>
+      <td>Official tarball</td>
       <td>None</td>
     </tr>
     <tr>
-      <td>Kubernetes (kubelet, apiserver, etc.)</td>
-      <td>Core orchestration; embedded</td>
-      <td>1.36.1</td>
-      <td>No official build; community branch <code class="language-plaintext highlighter-rouge">riseproject-dev/kubernetes-riscv</code> exists</td>
+      <td>Kubernetes</td>
+      <td>runtime-dependency, critical</td>
+      <td>No official upstream build; k0s carries out-of-tree <code class="language-plaintext highlighter-rouge">riscv64.patch</code> to compile embedded Kubernetes</td>
+      <td>None upstream</td>
       <td>None</td>
-      <td>None</td>
-      <td>Upstream PRs #116686 (closed 2023) and #123661 (closed 2024); proposal #132836 open. Maintainers have not merged riscv64 support. <strong>Hard blocker for official distribution.</strong></td>
+      <td>kubernetes/kubernetes#132836 open, no merge traction (confirmed live 2026-09-30); prior PRs #116686, #123661 closed. Hard blocker - k0s riscv64 users run a community-patched, not upstream-supported, Kubernetes build</td>
     </tr>
     <tr>
       <td>containerd</td>
-      <td>Container runtime (CRI); embedded</td>
-      <td>2.3.2</td>
-      <td>Yes; <code class="language-plaintext highlighter-rouge">containerd-2.3.2-linux-riscv64.tar.gz</code> confirmed in official release (30.3 MB)</td>
-      <td>Yes</td>
-      <td>CI PR <a href="https://github.com/containerd/containerd/pull/13124">containerd#13124</a> open (1752 tests pass, awaiting 2 reviews and RISE GitHub App install in containerd org)</td>
-      <td>No official riscv64 CI yet; PR pending</td>
+      <td>runtime-dependency, critical</td>
+      <td>Yes; official riscv64 release tarball (<code class="language-plaintext highlighter-rouge">containerd-2.3.2-linux-riscv64.tar.gz</code>, ~30.3 MB)</td>
+      <td>1752 tests passing in open PR <a href="https://github.com/containerd/containerd/pull/13124">containerd#13124</a>; issue #13020 (CI matrix) still open (confirmed live 2026-09-30)</td>
+      <td>Yes (release tarball)</td>
+      <td>No merged riscv64 CI yet; PR pending 2 reviews and RISE GitHub App install in containerd org</td>
     </tr>
     <tr>
       <td>runc</td>
-      <td>OCI container runtime; embedded</td>
-      <td>1.4.3 (k0s embeds 1.4.3; upstream v1.5.0 available)</td>
-      <td>Yes; <code class="language-plaintext highlighter-rouge">runc.riscv64</code> present in v1.5.0 release assets</td>
+      <td>runtime-dependency, critical</td>
+      <td>Yes; v1.5.0 release includes <code class="language-plaintext highlighter-rouge">runc.riscv64</code>. k0s embeds v1.4.3</td>
+      <td>No dedicated CI</td>
       <td>Yes (v1.5.0)</td>
-      <td>No dedicated riscv64 CI; Issue #5166 (2026-03-12) requested it, closed without linked merged PR</td>
-      <td>k0s embeds v1.4.3; upstream v1.5.0 has riscv64 binary. Static build confirmed.</td>
+      <td>Issue #5166 (2026-03-12) closed without a linked merged PR (confirmed live 2026-09-30); k0s’s embedded v1.4.3 predates the v1.5.0 riscv64 binary</td>
     </tr>
     <tr>
       <td>etcd</td>
-      <td>Distributed KV store (control-plane state); embedded</td>
-      <td>3.7.0-rc.0</td>
-      <td>Builds with <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code> env var</td>
+      <td>runtime-dependency, critical</td>
+      <td>Builds only via <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code></td>
+      <td>None (no Prow riscv64 nodes)</td>
       <td>None</td>
-      <td>None (Prow has no riscv64 nodes)</td>
-      <td>PR #15490 closed 2023-04; PR #21510 (remove arch check) closed: maintainer response “No plans.” <strong>Hard blocker for multi-node HA.</strong> Workaround: use kine backend for single-node deployments.</td>
+      <td>Maintainers stated “No plans” (issues #21509/#21510 closed, confirmed live 2026-09-30). Hard blocker for multi-node HA</td>
     </tr>
     <tr>
-      <td>kine (etcd shim)</td>
-      <td>Lightweight SQLite/Postgres/MySQL datastore; embedded</td>
-      <td>0.16.2</td>
+      <td>kine</td>
+      <td>runtime-dependency, optional</td>
       <td>Yes</td>
-      <td>Yes; <code class="language-plaintext highlighter-rouge">kine-riscv64</code> and <code class="language-plaintext highlighter-rouge">kine-riscv64-nocgo</code> in v0.16.2 (released 2026-06-02)</td>
-      <td>Basic build verification</td>
-      <td>Bypasses etcd gap for single-node clusters. Multi-node HA requires etcd.</td>
-    </tr>
-    <tr>
-      <td>modernc.org/sqlite</td>
-      <td>Pure-Go SQLite used by kine</td>
-      <td>v1.52.0</td>
-      <td>Yes</td>
-      <td>Via Go module</td>
-      <td>Listed as supported (linux/riscv64)</td>
-      <td>No issues.</td>
-    </tr>
-    <tr>
-      <td>konnectivity</td>
-      <td>Network proxy (control-plane to node); embedded</td>
-      <td>0.36.0</td>
-      <td>Unknown; <code class="language-plaintext highlighter-rouge">ALL_ARCH</code> in Makefile is <code class="language-plaintext highlighter-rouge">"amd64 arm arm64 ppc64le s390x"</code>, riscv64 absent</td>
-      <td>None</td>
-      <td>None</td>
-      <td>Likely buildable (pure Go) but untested and absent from release arch list. [NEEDS VERIFICATION]</td>
-    </tr>
-    <tr>
-      <td>iptables</td>
-      <td>Packet filtering (CNI dependency); embedded</td>
-      <td>1.8.13</td>
-      <td>Depends on Alpine riscv64 packages; Alpine supports riscv64 since 3.20</td>
-      <td>No k0s-specific binary</td>
-      <td>None</td>
-      <td>Alpine 3.24.1 is k0s build base. Build should succeed; runtime requires kernel netfilter (Linux 5.4+ has full riscv64 netfilter). [NEEDS VERIFICATION]</td>
-    </tr>
-    <tr>
-      <td>keepalived</td>
-      <td>VRRP-based HA virtual IP; embedded</td>
-      <td>2.3.4</td>
-      <td>Yes; snap builds added/fixed January 2025 via PRs #2525, #2533, #2543</td>
-      <td>riscv64 snap available since 2025; no official tarball</td>
-      <td>Via snap build infra</td>
-      <td>HA mode only. C binary.</td>
-    </tr>
-    <tr>
-      <td>helm</td>
-      <td>Kubernetes package manager (bundled)</td>
-      <td>v3.21.1</td>
-      <td>Yes</td>
-      <td>Yes; <code class="language-plaintext highlighter-rouge">helm-v3.21.2-linux-riscv64.tar.gz</code> confirmed in release</td>
-      <td>Yes (cross-compiled Go)</td>
-      <td>No issues.</td>
-    </tr>
-    <tr>
-      <td>golang.org/x/crypto</td>
-      <td>TLS/crypto</td>
-      <td>Current</td>
-      <td>Yes (pure Go)</td>
-      <td>Via Go module</td>
-      <td>Yes</td>
-      <td>No issues.</td>
-    </tr>
-    <tr>
-      <td>kube-router</td>
-      <td>Default CNI (pod networking); embedded image</td>
-      <td>bundled</td>
-      <td>Partial; PR #1525 added riscv64 (2023-08-28), then PR #1534 partially reverted (2023-08-30)</td>
-      <td>Uncertain; no confirmed riscv64 image in recent releases</td>
-      <td>None</td>
-      <td>k0s PR #7414 comments state kube-router “already available for RISC-V” [NEEDS VERIFICATION against current image manifest]</td>
-    </tr>
-    <tr>
-      <td>Calico</td>
-      <td>Alternative CNI (optional)</td>
-      <td>bundled</td>
-      <td>No</td>
-      <td>None</td>
-      <td>None</td>
-      <td>Not a blocker if kube-router is used.</td>
-    </tr>
-    <tr>
-      <td>Envoy</td>
-      <td>L4/L7 proxy (NLLB feature)</td>
-      <td>indirect</td>
-      <td>No; Envoy issue #42787 (“arch: official support for RISC-V”) marked “Not planned (skipped)” February 2026</td>
-      <td>None</td>
-      <td>None</td>
-      <td>Blocks NLLB and network conformance test suite. @twz123 (April 2026): “the last image directly used by k0s which is not available for RISC-V.” Traefik noted as potential future alternative.</td>
-    </tr>
-    <tr>
-      <td>sonobuoy</td>
-      <td>Kubernetes conformance testing</td>
-      <td>v0.57.3</td>
-      <td>No</td>
-      <td>None</td>
-      <td>None</td>
-      <td>Upstream <a href="https://github.com/vmware-tanzu/sonobuoy/pull/2049">PR vmware-tanzu/sonobuoy#2049</a> opened 2026-05-10 by luhenry, open at time of k0s PR #7414 merge. Blocks conformance certification.</td>
+      <td>Basic build verification only</td>
+      <td>Yes; <code class="language-plaintext highlighter-rouge">kine-riscv64</code> and <code class="language-plaintext highlighter-rouge">kine-riscv64-nocgo</code> assets shipped in v0.16.2</td>
+      <td>None - workaround path for the etcd gap, single-node only</td>
     </tr>
     <tr>
       <td>CoreDNS</td>
-      <td>Cluster DNS; embedded image</td>
-      <td>bundled</td>
-      <td>No official riscv64 release binary found; loong64 recently added but riscv64 absent</td>
-      <td>None</td>
-      <td>None</td>
-      <td>Pure Go; likely buildable but no official riscv64 image. Non-functional cluster DNS without it. [NEEDS VERIFICATION on current state]</td>
+      <td>runtime-dependency, optional</td>
+      <td>Pure Go, likely buildable</td>
+      <td>Unknown</td>
+      <td>No official riscv64 image confirmed</td>
+      <td>Non-functional cluster DNS without an official image [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>anchore/syft</td>
-      <td>SBOM generation</td>
-      <td>indirect</td>
-      <td>No at time of k0s PR merge</td>
+      <td>kube-router</td>
+      <td>runtime-dependency, optional</td>
+      <td>Partial; PR #1525 added riscv64 (2023-08-28), PR #1534 partially reverted it (2023-08-30)</td>
+      <td>Unknown</td>
+      <td>Uncertain; no confirmed riscv64 image in recent releases</td>
+      <td>twz123 (PR #7414 thread): “already available for RISC-V” [NEEDS VERIFICATION against current image manifest]. Is k0s’s default CNI, so this matters more than Calico</td>
+    </tr>
+    <tr>
+      <td>Calico</td>
+      <td>runtime-dependency, optional</td>
+      <td>No</td>
       <td>None</td>
       <td>None</td>
-      <td>Upstream <a href="https://github.com/anchore/syft/pull/4757">PR anchore/syft#4757</a> filed by luhenry. Disabled for riscv64 in k0s CI.</td>
+      <td>Not a blocker since kube-router is the default CNI</td>
+    </tr>
+    <tr>
+      <td>Envoy</td>
+      <td>runtime-dependency, optional</td>
+      <td>No</td>
+      <td>None</td>
+      <td>None</td>
+      <td>Envoy issue #42787 closed “Not planned” (Feb 2026). twz123: “the last image that’s directly used by k0s which is not available for RISC-V.” Blocks NLLB and part of the conformance suite</td>
+    </tr>
+    <tr>
+      <td>Helm</td>
+      <td>runtime-dependency, optional</td>
+      <td>Yes</td>
+      <td>Yes (cross-compiled Go)</td>
+      <td>Yes; <code class="language-plaintext highlighter-rouge">helm-v3.21.2-linux-riscv64.tar.gz</code> confirmed in release</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>keepalived</td>
+      <td>runtime-dependency, optional</td>
+      <td>Yes; snap builds added/fixed January 2025 (PRs #2525, #2533, #2543)</td>
+      <td>Via snap build infra</td>
+      <td>riscv64 snap available since 2025; no official tarball</td>
+      <td>HA mode only; C binary</td>
+    </tr>
+    <tr>
+      <td>konnectivity</td>
+      <td>runtime-dependency, optional</td>
+      <td>Unknown; <code class="language-plaintext highlighter-rouge">ALL_ARCH</code> in its Makefile (“amd64 arm arm64 ppc64le s390x”) does not list riscv64</td>
+      <td>None</td>
+      <td>None</td>
+      <td>Likely buildable (pure Go) but untested and absent from the release arch list [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>iptables</td>
+      <td>runtime-dependency, optional</td>
+      <td>Depends on Alpine riscv64 packages; Alpine has supported riscv64 since 3.20</td>
+      <td>None</td>
+      <td>No k0s-specific binary</td>
+      <td>Runtime needs Linux 5.4+ netfilter riscv64 support [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>sonobuoy</td>
+      <td>test-dependency, optional</td>
+      <td>No</td>
+      <td>None</td>
+      <td>None</td>
+      <td>Upstream PR <a href="https://github.com/vmware-tanzu/sonobuoy/pull/2049">vmware-tanzu/sonobuoy#2049</a> open (not re-verified live this pass); blocks network-conformance testing on riscv64</td>
+    </tr>
+    <tr>
+      <td>syft</td>
+      <td>test-dependency, optional</td>
+      <td>No</td>
+      <td>None</td>
+      <td>None</td>
+      <td>Upstream PR <a href="https://github.com/anchore/syft/pull/4757">anchore/syft#4757</a> open (not re-verified live this pass); disabled for riscv64 in k0s CI, blocks SBOM generation</td>
+    </tr>
+    <tr>
+      <td>troubleshoot</td>
+      <td>test-dependency, optional</td>
+      <td>Yes (fixed)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Upstream PR <a href="https://github.com/replicatedhq/troubleshoot/pull/2010">replicatedhq/troubleshoot#2010</a> merged, resolving the missing riscv64 releases gap flagged during PR #7414</td>
+    </tr>
+    <tr>
+      <td>modernc.org/sqlite (indirect, used by kine)</td>
+      <td>indirect dependency</td>
+      <td>Yes (pure Go)</td>
+      <td>Listed as supported (linux/riscv64)</td>
+      <td>Via Go module</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>golang.org/x/crypto (indirect, TLS/crypto)</td>
+      <td>indirect dependency</td>
+      <td>Yes (pure Go)</td>
+      <td>Yes</td>
+      <td>Via Go module</td>
+      <td>None</td>
     </tr>
   </tbody>
 </table></div>
@@ -972,28 +1080,12 @@ Dedicated CI workflow. Discussed in Section 7.</p>
 <p><strong>Summary by category:</strong></p>
 
 <ul>
-  <li>Unblocked (riscv64 binary released): Go, containerd (release exists, CI PR pending), runc (v1.5.0 has binary; k0s embeds v1.4.3), kine (v0.16.2 riscv64 released), modernc.org/sqlite, helm, golang.org/x/crypto, keepalived (snap).</li>
-  <li>Uncertain/partial: kube-router (partially reverted; claimed working but unverified), konnectivity (pure Go, absent from release arch list), iptables (Alpine should support; unverified), CoreDNS (pure Go, no official image).</li>
-  <li>Hard blockers: Kubernetes (no official binary; community branch only), etcd (explicit “no plans” from maintainers; multi-node HA blocked), Envoy (“not planned”), sonobuoy (PR open), syft (PR open).</li>
-</ul><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
+  <li>Unblocked (riscv64 artifact exists): Go, containerd (release exists, CI PR pending merge), runc (v1.5.0 has a binary; k0s’s embedded v1.4.3 does not), kine, Helm, keepalived (snap), troubleshoot, modernc.org/sqlite, golang.org/x/crypto.</li>
+  <li>Uncertain/partial: kube-router (partially reverted, claimed working but unverified against current manifest), konnectivity (pure Go, absent from release arch list), iptables (should build on Alpine but unverified), CoreDNS (pure Go, no official image confirmed).</li>
+  <li>Hard blockers: Kubernetes (no official upstream binary, k0s carries an out-of-tree patch), etcd (explicit upstream “no plans,” blocks multi-node HA), Envoy (upstream “not planned,” blocks NLLB), sonobuoy (upstream PR open), syft (upstream PR open).</li>
+</ul>
 
-<p><strong>RISE Project involvement:</strong> RISE provides the free Scaleway EM-RV1 runner infrastructure used by k0s CI. This is infrastructure access, not a funded development engagement. No RISE project number (RP0XX) is associated with k0s in any public RISE blog post or documentation. RISE Premier Members include Google, NVIDIA, Qualcomm, Red Hat, SiFive, MediaTek, DAMO Academy, Tenstorrent, Andes Technology. General members include Canonical, ByteDance, SpacemiT, and others. k0s/Mirantis is not listed as a RISE member.</p>
-
-<p><strong>Governance and merge-gate stance:</strong> CNCF membership provided the organizational pathway for runner approval. Maintainer @twz123 acted as primary technical gatekeeper for PR #7414, requiring the CI to run as nightly rather than on every PR to avoid blocking normal development. External contributors (luhenry) were accepted to drive the integration work.</p>
-
-<p><strong>Related projects:</strong> k3s (<a href="https://github.com/k3s-io/k3s">github.com/k3s-io/k3s</a>) is a comparable lightweight Kubernetes distribution. Its riscv64 status is outside the scope of this report.</p>
-
-<p><strong>Quantitative k0s benchmarks available (x86 only):</strong> The k0smotron Big Bang Benchmark (<a href="https://blog.k0sproject.io/posts/k0smotron-big-bang-benchmark/">blog.k0sproject.io/posts/k0smotron-big-bang-benchmark</a>) measures hosted control plane (HCP) provisioning latency and write throughput on AWS x86. At 100 concurrent HCPs, etcd backend achieves p50 provisioning latency of 22.5s and 2920 ops/s write throughput at c1000. These numbers are not relevant to riscv64 deployment and are cited only to establish that quantitative k0s performance data exists in the public domain, just not for riscv64.</p>
-
-<p>No riscv64 performance benchmarks for k0s have been published by any source.</p><hr />
+<p>All dependencies listed above fall within the broader RISC-V ecosystem tracking scope; several (kine, kube-router, keepalived, konnectivity, sonobuoy, syft, troubleshoot, iptables, modernc.org/sqlite, golang.org/x/crypto) do not yet have their own dedicated status reports and are candidates for individual deep-dives if further dependency-chain verification is needed.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1015,65 +1107,80 @@ Dedicated CI workflow. Discussed in Section 7.</p>
     <tr>
       <td><a href="https://github.com/k0sproject/k0s/issues/1919">Issue #1919</a> “RISC-V support”</td>
       <td>Open since 2022-07-14</td>
-      <td>Master tracking issue. Open despite PR #7414 merging – full production-grade support with release artifacts is not yet achieved.</td>
+      <td>Master tracking issue. Remains open despite PR #7414 merging - full production-grade support with release artifacts is not yet achieved</td>
     </tr>
     <tr>
-      <td>overlayfs-on-overlayfs (k0s inside k8s pod)</td>
-      <td>Resolved (PR #7414)</td>
-      <td>k0s inside a RISE runner pod (itself a k8s pod) cannot use overlayfs as upperdir. Fixed by mounting ext4-backed volume at /var/lib/k0s.</td>
+      <td><a href="https://github.com/k0sproject/k0s/issues/4665">Issue #4665</a> “feat(riscv64): Here is how far I’ve got.”</td>
+      <td>Closed, not planned (2024-08-03)</td>
+      <td>Community build attempt on a StarFive VisionFive2 failed at <code class="language-plaintext highlighter-rouge">binutils-gold</code> missing on Alpine riscv64. Predates official enablement; not revisited</td>
     </tr>
     <tr>
-      <td>ip_set_hash_net kernel module missing (Scaleway EM-RV1, kernel 5.9)</td>
-      <td>Resolved (PR #7414, manual workaround)</td>
-      <td>Required for kube-router. Module not present in Scaleway’s kernel image. Fixed by building from kernel sources.</td>
+      <td>overlayfs-on-overlayfs (k0s inside a nested k8s pod)</td>
+      <td>Resolved, via PR #7414</td>
+      <td>Mounted an ext4-backed empty volume at <code class="language-plaintext highlighter-rouge">/var/lib/k0s</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ip_set_hash_net</code> kernel module missing (Scaleway EM-RV1 default kernel)</td>
+      <td>Resolved, via PR #7414 (manual workaround)</td>
+      <td>Required by kube-router; built from Scaleway-supplied kernel sources</td>
     </tr>
     <tr>
       <td>DNS CIDR conflict in nested k0s</td>
-      <td>Resolved (PR #7414)</td>
-      <td>kube-proxy CIDR clashed with outer pod CIDR. Fixed by using hostNetwork.</td>
+      <td>Resolved, via PR #7414</td>
+      <td>kube-proxy CIDR clashed with the outer pod CIDR</td>
     </tr>
     <tr>
       <td>sonobuoy: no riscv64 image</td>
       <td>Open; upstream <a href="https://github.com/vmware-tanzu/sonobuoy/pull/2049">PR vmware-tanzu/sonobuoy#2049</a></td>
-      <td>Blocks check-network-conformance-calico and check-network-conformance-kuberouter in k0s CI.</td>
+      <td>Blocks <code class="language-plaintext highlighter-rouge">check-network-conformance-calico</code> and <code class="language-plaintext highlighter-rouge">check-network-conformance-kuberouter</code> in k0s CI</td>
     </tr>
     <tr>
       <td>anchore/syft: no riscv64</td>
       <td>Open; upstream <a href="https://github.com/anchore/syft/pull/4757">PR anchore/syft#4757</a></td>
-      <td>Blocks SBOM generation. syft disabled for riscv64 in k0s CI.</td>
+      <td>Blocks SBOM generation; syft disabled for riscv64 in k0s CI</td>
+    </tr>
+    <tr>
+      <td>replicatedhq/troubleshoot: no riscv64 releases</td>
+      <td>Resolved; upstream <a href="https://github.com/replicatedhq/troubleshoot/pull/2010">PR #2010</a> merged</td>
+      <td>Support-bundle collection now works on riscv64</td>
     </tr>
     <tr>
       <td>Envoy: no riscv64</td>
-      <td>Not planned (Envoy issue #42787 closed “Not planned,” February 2026)</td>
-      <td>Blocks NLLB feature and network conformance test infrastructure.</td>
+      <td>Not planned (Envoy issue #42787 closed, Feb 2026)</td>
+      <td>Blocks NLLB and part of the conformance test infrastructure</td>
     </tr>
     <tr>
       <td>etcd: no riscv64 support</td>
-      <td>Not planned (upstream maintainers: “No plans”)</td>
-      <td><code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code> workaround required to start. Blocks multi-node HA. kine is the workaround for single-node deployments.</td>
+      <td>Not planned (maintainers: “No plans,” confirmed live 2026-09-30)</td>
+      <td><code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code> workaround required. Blocks multi-node HA; kine is the single-node workaround</td>
     </tr>
     <tr>
       <td>Kubernetes: no official riscv64 binary</td>
-      <td>No upstream PR open with traction</td>
-      <td>k0s maintains its own <code class="language-plaintext highlighter-rouge">riscv64.patch</code> as a workaround. No official k8s release includes riscv64.</td>
+      <td>No merge traction on k8s#132836 (confirmed live 2026-09-30)</td>
+      <td>k0s maintains its own out-of-tree <code class="language-plaintext highlighter-rouge">riscv64.patch</code> as a workaround</td>
     </tr>
     <tr>
       <td>CoreDNS: no official riscv64 image</td>
       <td>Unknown upstream status</td>
-      <td>Pure Go; likely buildable but no official container image confirmed. Cluster DNS non-functional without it. [NEEDS VERIFICATION]</td>
+      <td>Pure Go; likely buildable but no official container image confirmed [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>konnectivity: no riscv64 in release arch list</td>
-      <td>Unknown; no upstream issue found</td>
-      <td><code class="language-plaintext highlighter-rouge">ALL_ARCH</code> in konnectivity Makefile does not include riscv64. [NEEDS VERIFICATION on buildability]</td>
+      <td>konnectivity: absent from riscv64 release arch list</td>
+      <td>No upstream issue found</td>
+      <td><code class="language-plaintext highlighter-rouge">ALL_ARCH</code> in its Makefile does not include riscv64 [NEEDS VERIFICATION on buildability]</td>
     </tr>
     <tr>
       <td>Race detector disabled on riscv64</td>
       <td>Permanent (Go platform limitation)</td>
-      <td>Go’s race detector does not support riscv64. This is a Go limitation, not a k0s bug.</td>
+      <td>Go’s race detector does not support riscv64; not a k0s-specific bug</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/golang/go/issues/64917">golang/go#64917</a>: <code class="language-plaintext highlighter-rouge">uint32(NaN())</code> returns <code class="language-plaintext highlighter-rouge">4294967295</code> on riscv64 vs <code class="language-plaintext highlighter-rouge">0</code> elsewhere</td>
+      <td>Open (Go toolchain, not k0s)</td>
+      <td>Real architecture-specific correctness divergence in Go’s float-to-uint conversion on riscv64. No evidence k0s code hits this conversion path; flagged as ecosystem-level risk</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1083,100 +1190,85 @@ Dedicated CI workflow. Discussed in Section 7.</p>
 </h2>
     
 
-<p><strong>Blocker 1 - Kubernetes (no official riscv64 binary):</strong>
-Upstream Kubernetes does not ship riscv64 binaries. k0s works around this with <code class="language-plaintext highlighter-rouge">embedded-bins/kubernetes/riscv64.patch</code>, a 7-line addition to Kubernetes’ own build scripts. This patch is maintained out-of-tree by k0s. Upstream PRs #116686 (2023) and #123661 (2024) were both closed. Proposal #132836 is open but shows no merge momentum. This means k0s riscv64 users are running a community-patched Kubernetes build, not an upstream-supported binary. Any security vulnerability requiring a Kubernetes patch would require the k0s team to maintain the fix in their embedded build rather than consuming an upstream release.</p>
+<p><strong>Blocker 1 - Kubernetes has no official riscv64 binary.</strong> k0s works around this with <code class="language-plaintext highlighter-rouge">embedded-bins/kubernetes/riscv64.patch</code>, maintained entirely out-of-tree. Upstream PRs #116686 (2023) and #123661 (2024) were both closed; proposal #132836 remains open with no merge momentum as of 2026-09-30. Any security fix requiring a patch to Kubernetes’ own build scripts must be carried in k0s’s patch rather than consumed from an upstream release.</p>
 
-<p><strong>Blocker 2 - etcd (explicit “no plans” for riscv64):</strong>
-etcd maintainers have stated no plans to support riscv64. The <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code> workaround allows single-node startup but is not a production posture. Multi-node HA control planes require etcd. kine (SQLite or Postgres backend) provides a workaround for single-node deployments only. High-availability riscv64 clusters are not achievable with the current upstream posture.</p>
+<p><strong>Blocker 2 - etcd maintainers have stated no plans to support riscv64.</strong> The <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code> environment variable permits single-node startup but is not a production posture; issues #21509/#21510 were closed with that explicit “no plans” response. kine (SQLite/Postgres backend) is a workaround, but only for single-node deployments. Multi-node HA control planes are not achievable with the current upstream posture.</p>
 
-<p><strong>Blocker 3 - Envoy (“not planned”):</strong>
-Envoy issue #42787 was closed as “Not planned (skipped)” in February 2026. This blocks NLLB (Node-Local Load Balancing), which is a k0s enterprise feature. @twz123 noted in PR #7414 that Traefik is a potential future alternative, but no implementation work has been done.</p>
+<p><strong>Blocker 3 - Envoy closed its riscv64 support request “Not planned.”</strong> Issue #42787 was closed in February 2026. This blocks NLLB (Node-Local Load Balancing), a feature k0s uses in default multi-node setups. twz123 noted Traefik as a potential future substitute, but no implementation work has started.</p>
 
-<p><strong>Blocker 4 - No release artifacts:</strong>
-The release pipeline (<code class="language-plaintext highlighter-rouge">release.yml</code>) does not include riscv64. Users must build from source or consume nightly CI artifacts, which are not persisted as public downloads. This is not a technical blocker but is an adoption blocker for any deployment that expects pre-built binaries.</p>
+<p><strong>Blocker 4 - No release artifacts.</strong> <code class="language-plaintext highlighter-rouge">release.yml</code> has zero riscv64 references, even in the pre-release tag (v1.37.0-alpha.1+k0s.0) that first contains the riscv64 CI workflow file. Users must build from source; nightly CI artifacts are not persisted as public downloads. This is an adoption blocker, not a technical one.</p>
 
-<p><strong>Blocker 5 - CI is nightly-only, not a merge gate:</strong>
-riscv64 regressions are not caught at PR time. A broken commit on main could go undetected for up to 24 hours. The full conformance test suite (83 integration tests) is not run on riscv64; only 2 are.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Blocker 5 - CI is nightly-only, not a merge gate.</strong> riscv64 regressions are not caught at PR time; a broken commit on <code class="language-plaintext highlighter-rouge">main</code> could go undetected for up to 24 hours. Only 2 smoketest suites (basic, airgap) run on riscv64; network-conformance and SBOM-related suites remain blocked on sonobuoy and syft respectively.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>The current port is functionally real: the k0s binary builds on riscv64, starts a cluster, and passes basic and airgap smoke tests. A community member (Bas Magre) has demonstrated a working single-node k0s cluster on StarFive VisionFive2 hardware (blog.k0sproject.io, April 2026). The remaining functional gaps are:</p>
 
 <ul>
-  <li>No pre-built binaries (users must build from source)</li>
-  <li>No cluster DNS confirmed working from official images (CoreDNS riscv64 image status unverified)</li>
-  <li>No NLLB/Envoy</li>
-  <li>etcd workaround required (<code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code>); multi-node HA requires etcd</li>
+  <li><strong>Color:</strong> blue (no color_case sub-type applies; sub-types apply only to grey, yellow, or orange projects in this model).</li>
+  <li><strong>Release provider:</strong> none.</li>
+  <li><strong>Optimization-purpose project:</strong> no - k0s is a lightweight Kubernetes distribution, not a SIMD/allocator/crypto-performance library, so the Step 2 optimization-level modifier does not apply and no optimization-level field is reported.</li>
+  <li><strong>Justification:</strong> Upstream k0s merged <a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414 “ci: Add support for linux-riscv64”</a> (merged 2026-06-19), which builds k0s natively on <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> runners, runs the unit-test suite (<code class="language-plaintext highlighter-rouge">unittests-k0s</code>), and runs “basic” and “airgap” smoketests, confirmed passing per the PR discussion (“I got check-basic to work… check-basic and check-airgap are working”). That satisfies build=yes and test=yes. However, no riscv64 asset exists in any stable <a href="https://github.com/k0sproject/k0s/releases">GitHub Release</a> (latest checked: v1.36.4+k0s.1, only amd64/arm/arm64/windows2022-amd64 assets), and <code class="language-plaintext highlighter-rouge">release.yml</code> has no riscv64 target, so release=yes/no/no maps to blue.</li>
+  <li><strong>Pending work that could change the grade:</strong> Master tracking issue <a href="https://github.com/k0sproject/k0s/issues/1919">#1919</a> “RISC-V support” remains open since 2022. The riscv64 CI (#7414) is nightly/workflow_dispatch only, not wired into the pull_request gate, and only landed in the v1.37.0-alpha.1+k0s.0 pre-release, not yet any stable release. Hard upstream blockers acknowledged by k0s maintainers themselves: etcd has no riscv64 plans (blocks multi-node HA), Envoy has no riscv64 build (blocks NLLB), and Kubernetes itself has no official riscv64 binaries (k0s carries an out-of-tree patch). Open upstream PRs for sonobuoy (<a href="https://github.com/vmware-tanzu/sonobuoy/pull/2049">vmware-tanzu/sonobuoy#2049</a>) and syft (<a href="https://github.com/anchore/syft/pull/4757">anchore/syft#4757</a>) would unblock network-conformance and SBOM testing on riscv64. RISE Project supplies the free native riscv64 CI runner hardware (Scaleway EM-RV1) behind #7414, though k0s/Mirantis is not a RISE member and RISE holds no dedicated k0s repo.</li>
 </ul>
+<h2 id="14-investment-analysis">
+  
+  
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
 
-<p>The upstream Kubernetes and etcd blockers require either out-of-tree maintenance (current approach for Kubernetes) or architectural workarounds (kine for etcd in single-node mode). Resolving them upstream is a multi-quarter engagement with projects that have explicitly declined riscv64 support (etcd) or have no active upstream momentum (Kubernetes riscv64).</p>
-<h3 id="132-performance-optimization">
+<p>RISE has already funded and continues to provide the free native riscv64 GitHub Actions runner infrastructure (Scaleway EM-RV1 hardware, <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> label) that backs <code class="language-plaintext highlighter-rouge">riscv64.yml</code>. That CI infrastructure cost should not be re-sized below; the remaining work is upstream engineering and release-pipeline integration, not runner procurement.</p>
+<h3 id="141-functional-enablement">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>Data not available: no riscv64 performance benchmarks for k0s have been published by any source. The k0smotron Big Bang Benchmark provides x86 control-plane latency and throughput data, not riscv64 data. No riscv64 vs arm64 comparison has been published.</p>
-
-<p>k0s itself is a pure-Go project with no architecture-specific optimization paths. Performance on riscv64 is determined entirely by the performance of the Go runtime on riscv64, the embedded binaries (Kubernetes, etcd/kine, containerd), and the underlying hardware. Performance optimization work at the k0s application layer is not applicable.</p>
-<h3 id="133-cicd-infrastructure">
+<p>The port is functionally real: the k0s binary builds on riscv64, starts a cluster, and passes basic and airgap smoke tests. A community member (Bas Magre) demonstrated a working single-node k0s cluster on StarFive VisionFive2 hardware in an April 2026 <a href="https://blog.k0sproject.io/posts/k0s-multi-arch-kubernetes-cluster/">k0s multi-arch blog post</a>, requiring <code class="language-plaintext highlighter-rouge">ETCD_UNSUPPORTED_ARCH=riscv64</code>, a from-source k0s build, and custom riscv64 MetalLB images with FRR disabled (no riscv64 FRR build). Remaining functional gaps: no pre-built binaries, unconfirmed CoreDNS riscv64 image availability, no NLLB/Envoy, and the etcd single-node-only workaround.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>The nightly CI is in place and uses native RISE RISC-V hardware (Scaleway EM-RV1) at no cost to the project. The infrastructure is functional and has been operational since June 2026. The current gaps are:</p>
-
-<ul>
-  <li>PR-gate CI does not exist for riscv64</li>
-  <li>81 of 83 integration tests are not run</li>
-  <li>Network conformance tests blocked on sonobuoy (upstream PR open)</li>
-</ul>
-
-<p>Adding riscv64 to the PR gate would require maintainer buy-in (unlikely until the architecture is more stable) and sufficient runner capacity from RISE.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>k0s is one of several CNCF sandbox projects adding riscv64 CI via RISE runners. The pattern – CI enablement first, release artifacts later – is consistent with how arm64 support was added to Kubernetes distributions. The critical path to a production-usable k0s on riscv64 runs through:</p>
-
-<ol>
-  <li>Upstream Kubernetes official riscv64 builds (no current traction)</li>
-  <li>Upstream etcd riscv64 support for multi-node HA (explicitly declined by maintainers)</li>
-  <li>sonobuoy riscv64 image (PR open)</li>
-  <li>Official k0s release pipeline inclusion</li>
-</ol>
-
-<p>Items 1 and 2 are the highest-effort, lowest-traction blockers. Both require sustained upstream engagement with project maintainer communities that have resisted riscv64 support.</p>
-<h3 id="135-summary-table">
+<p>Not applicable at the k0s application layer - k0s is pure Go with no architecture-specific optimization paths. Performance is entirely a function of the Go runtime, the embedded components (Kubernetes, etcd/kine, containerd), and the underlying hardware.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+
+<p>Nightly CI is operational on RISE hardware at no cost to k0s. Remaining gaps: no PR-gate CI for riscv64, network-conformance tests blocked on sonobuoy, SBOM generation blocked on syft. Extending to a PR gate requires maintainer buy-in (currently declined, citing runner capacity) and RISE capacity headroom, which the RISE “six weeks in” post itself flags as thin.</p>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>k0s follows the same pattern seen across other CNCF-adjacent projects adopting RISE runners: CI enablement first, release artifacts later. The critical path to a production-usable k0s on riscv64 runs through: (1) upstream Kubernetes official riscv64 builds (no current merge traction), (2) upstream etcd riscv64 support for multi-node HA (explicitly declined by etcd maintainers), (3) sonobuoy riscv64 image (PR open), (4) k0s release-pipeline inclusion. Items 1 and 2 are the highest-effort, lowest-traction blockers, requiring sustained upstream engagement with maintainer communities that have resisted riscv64 support.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1219,32 +1311,32 @@ riscv64 regressions are not caught at PR time. A broken commit on main could go 
       <td>Upstream Kubernetes riscv64 official build support</td>
       <td>12+</td>
       <td>Kubernetes SIG-Release</td>
-      <td>Critical (no current traction)</td>
+      <td>Critical, no current traction</td>
     </tr>
     <tr>
       <td>Functional</td>
       <td>etcd riscv64 support for multi-node HA</td>
       <td>8-16</td>
-      <td>etcd maintainers (explicitly declined)</td>
-      <td>Critical (blocked upstream)</td>
+      <td>etcd maintainers, explicitly declined</td>
+      <td>Critical, blocked upstream</td>
     </tr>
     <tr>
       <td>Functional</td>
       <td>Envoy riscv64 support for NLLB</td>
       <td>20+</td>
-      <td>Envoy maintainers (not planned)</td>
-      <td>Low (upstream closed as not planned)</td>
+      <td>Envoy maintainers, not planned</td>
+      <td>Low, upstream closed as not planned</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Merge sonobuoy riscv64 PR to unblock network conformance tests</td>
+      <td>Review and merge sonobuoy riscv64 PR to unblock network conformance tests</td>
       <td>1 (reviewer time)</td>
       <td>vmware-tanzu/sonobuoy maintainers</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Merge syft riscv64 PR to unblock SBOM generation</td>
+      <td>Review and merge syft riscv64 PR to unblock SBOM generation</td>
       <td>1 (reviewer time)</td>
       <td>anchore/syft maintainers</td>
       <td>Medium</td>
@@ -1253,15 +1345,15 @@ riscv64 regressions are not caught at PR time. A broken commit on main could go 
       <td>CI/CD</td>
       <td>Expand riscv64 smoke test matrix beyond basic and airgap</td>
       <td>4-8</td>
-      <td>k0s maintainers + luhenry</td>
+      <td>k0s maintainers plus luhenry</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 to PR gate CI</td>
+      <td>Add riscv64 to the PR-gate CI</td>
       <td>2-4</td>
-      <td>k0s maintainers + RISE</td>
-      <td>Low (requires runner capacity agreement)</td>
+      <td>k0s maintainers plus RISE</td>
+      <td>Low, requires runner capacity agreement</td>
     </tr>
     <tr>
       <td>Performance</td>
@@ -1271,17 +1363,7 @@ riscv64 regressions are not caught at PR time. A broken commit on main could go 
       <td>Medium</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1293,20 +1375,36 @@ riscv64 regressions are not caught at PR time. A broken commit on main could go 
 
 <ul>
   <li><a href="https://github.com/k0sproject/k0s">k0sproject/k0s GitHub repository</a></li>
-  <li><a href="https://github.com/k0sproject/k0s/issues/1919">Issue #1919 – RISC-V support (master tracking)</a></li>
-  <li><a href="https://github.com/k0sproject/k0s/issues/6059">Issue #6059 – Assessment of porting difficulty</a></li>
-  <li><a href="https://github.com/k0sproject/k0s/pull/5803">PR #5803 – Various Image version bumps for riscv64</a></li>
-  <li><a href="https://github.com/k0sproject/k0s/pull/5848">PR #5848 – Allow riscv64 build</a></li>
-  <li><a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414 – ci: Add support for linux-riscv64</a></li>
-  <li><a href="https://github.com/k0sproject/k0s/pull/7459">PR #7459 – Make airgap list-images platform-aware</a></li>
-  <li><a href="https://github.com/k0sproject/k0s/pull/7606">PR #7606 – Split out the unittests job to a separate workflow_call file</a></li>
-  <li><a href="https://github.com/anchore/syft/pull/4757">Upstream PR – anchore/syft#4757</a></li>
-  <li><a href="https://github.com/replicatedhq/troubleshoot/pull/2010">Upstream PR – replicatedhq/troubleshoot#2010</a></li>
-  <li><a href="https://github.com/vmware-tanzu/sonobuoy/pull/2049">Upstream PR – vmware-tanzu/sonobuoy#2049</a></li>
-  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners announcement (2026-03-24)</a></li>
-  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE RISC-V Runners: six weeks in (2026-05-12)</a></li>
-  <li><a href="https://blog.k0sproject.io/posts/k0s-multi-arch-kubernetes-cluster/">k0s real-world RISC-V deployment report (blog.k0sproject.io, 2026-04-20)</a></li>
-  <li><a href="https://blog.k0sproject.io/posts/k0smotron-big-bang-benchmark/">k0smotron Big Bang Benchmark (blog.k0sproject.io)</a></li>
+  <li><a href="https://k0sproject.io/">k0s project homepage</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/issues/1919">Issue #1919, RISC-V support, master tracking issue</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/issues/4665">Issue #4665, feat(riscv64): Here is how far I’ve got.</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/issues/6059">Issue #6059, Assessment of the difficulty in porting CPU architecture for k0s</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/commit/c41ae49">Commit c41ae49, Use proper types on RISC-V</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/pull/5802">PR #5802, Add initial RISC-V support to Makefile</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/pull/5803">PR #5803, Various Image version bumps for riscv64</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/pull/5807">PR #5807, Ignore RISC-V Linux airgap image bundle</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/pull/5848">PR #5848, Allow riscv64 build</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/pull/7414">PR #7414, ci: Add support for linux-riscv64</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/pull/7459">PR #7459, Make airgap list-images platform-aware</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/pull/7606">PR #7606, Split out the unittests job to a separate workflow_call file</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/commit/1c3aa2fa8caf82a04b48c4a7fbce0b3e249af4e2">Commit 1c3aa2f, [CI] Enable nightly build and tests on ubuntu-24.04-riscv</a></li>
+  <li><a href="https://github.com/k0sproject/k0s/releases">k0sproject/k0s GitHub Releases</a></li>
+  <li><a href="https://docs.k0sproject.io/main/system-requirements/">k0s system requirements documentation</a></li>
+  <li><a href="https://github.com/anchore/syft/pull/4757">Upstream PR, anchore/syft#4757</a></li>
+  <li><a href="https://github.com/replicatedhq/troubleshoot/pull/2010">Upstream PR, replicatedhq/troubleshoot#2010</a></li>
+  <li><a href="https://github.com/vmware-tanzu/sonobuoy/pull/2049">Upstream PR, vmware-tanzu/sonobuoy#2049</a></li>
+  <li><a href="https://github.com/containerd/containerd/pull/13124">Upstream PR, containerd/containerd#13124</a></li>
+  <li><a href="https://github.com/kubernetes/kubernetes/issues/132836">kubernetes/kubernetes#132836</a></li>
+  <li><a href="https://github.com/golang/go/issues/64917">golang/go#64917, uint32(math.NaN()) returns the wrong value on riscv64</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners announcement, 2026-03-24</a></li>
+  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE RISC-V Runners: six weeks in, 2026-05-12</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members page</a></li>
+  <li><a href="https://blog.k0sproject.io/posts/k0s-multi-arch-kubernetes-cluster/">k0s Multi Architectures Kubernetes Cluster AMD/ARM/RISC-V (blog.k0sproject.io)</a></li>
+  <li><a href="https://blog.k0sproject.io/posts/k0smotron-big-bang-benchmark/">The k0smotron Big Bang Benchmark (blog.k0sproject.io)</a></li>
+  <li><a href="https://www.cncf.io/blog/2026/01/26/k0s-in-2025-a-year-of-community-growth-governance-and-kubernetes-innovation/">CNCF blog, k0s in 2025: A year of community growth, governance, and Kubernetes innovation</a></li>
+  <li><a href="https://github.com/cncf/sandbox/issues/125">cncf/sandbox#125</a></li>
+  <li><a href="https://www.mirantis.com/blog/a-milestone-for-lightweight-kubernetes-k0s-joins-cncf-sandbox/">Mirantis blog, A milestone for lightweight Kubernetes: k0s joins CNCF Sandbox</a></li>
+  <li><a href="https://github.com/k3s-io/k3s/issues/7151">k3s-io/k3s#7151, Add support for riscv64 architecture (adjacent project, context only)</a></li>
 </ul>
 
           
