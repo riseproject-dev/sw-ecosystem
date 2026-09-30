@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;<br />
-<strong>Date:</strong> 2026-07-20<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for GStreamer<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,27 +280,28 @@
 </h2>
     
 
-<p>GStreamer is a pipeline-based multimedia framework written in C, licensed under LGPL 2.1. It provides a plugin architecture for media ingest, decode, encode, transform, and output across Linux, Windows, macOS, Android, and iOS. It is the dominant open-source multimedia framework for Linux desktop and embedded Linux products.</p>
+<p>GStreamer is a pipeline-based multimedia framework written in C, licensed under LGPL. It provides a plugin architecture for media ingest, decode, encode, transform and output across Linux, Windows, macOS, Android and iOS, and is the dominant open-source multimedia framework for Linux desktop and embedded Linux products.</p>
 
-<p><strong>Upstream location:</strong> <a href="https://gitlab.freedesktop.org/gstreamer/gstreamer">gitlab.freedesktop.org/gstreamer/gstreamer</a> (canonical). The <a href="https://github.com/GStreamer/gstreamer">GitHub mirror</a> is read-only; issue tracking is not used there.</p>
+<p><strong>Upstream location:</strong> <a href="https://gitlab.freedesktop.org/gstreamer/gstreamer">gitlab.freedesktop.org/gstreamer/gstreamer</a> (canonical, protected by Anubis anti-bot gating for automated access). A read-only <a href="https://github.com/GStreamer/gstreamer">GitHub mirror</a> exists; issue tracking is not used there, but every merged commit carries a <code class="language-plaintext highlighter-rouge">Part-of: &lt;gitlab.../merge_requests/NNNN&gt;</code> trailer written by GitLab at merge time, which is a reliable way to recover real GitLab merge-request numbers, authors and dates through the mirror.</p>
 
-<p><strong>Governance:</strong> Informal meritocracy under freedesktop.org infrastructure. No formal steering committee or foundation. Long-standing contributors hold de-facto maintainership.</p>
+<p><strong>Legal entity and governance:</strong> The GStreamer Foundation is a registered UK entity (Companies House #10367715), with Tim-Philipp Muller as director and Bristol Legal Services Limited as secretary. It is not part of a larger umbrella foundation such as X.Org or the Linux Foundation, though a “GStreamer Security Insights” page is hosted on insights.linuxfoundation.org. There is no formal tiered governance model; the MAINTAINERS file describes the project as “maintained by the consensus of a number of people,” with discussion on the gstreamer-devel mailing list, largely superseded by GStreamer Discourse. No formal RFC or tier process for architecture support exists.</p>
 
 <p><strong>Corporate sponsors and maintainers:</strong></p>
 
 <ul>
-  <li><strong>Centricular</strong> (UK): Dominant maintainer organization. Key contributors: Tim-Philipp Muller (release manager), Sebastian Droege (core), Jan Schmidt, Matthew Waters (OpenGL/Vulkan), Edward Hervey, Nirbheek Chauhan, Mathieu Duponchelle, Seungha Yang, Francois Laignel.</li>
+  <li><strong>Centricular</strong> (UK): dominant maintainer organization. Key contributors: Tim-Philipp Muller (release manager), Sebastian Droege, Jan Schmidt, Matthew Waters, Edward Hervey, Nirbheek Chauhan, Mathieu Duponchelle, Seungha Yang, Francois Laignel, Taruntej Kanakamalla (RISC-V Rust-bindings work).</li>
   <li><strong>Collabora</strong>: Nicolas Dufresne, Aaron Boxer, Daniel Morin. Co-maintains Debian packaging.</li>
-  <li><strong>Igalia</strong>: Victor Manuel Jaquez Leal, Stephane Cerveau, Philippe Normand, Thibault Saunier.</li>
-  <li>Companies with documented technical involvement: NVIDIA, AMD, Google, Meta, LG Electronics, Valve, Pexip, Twilio.</li>
-  <li><strong>Samsung Electronics</strong>: Active contributors to the ORC RISC-V backend (see Section 2).</li>
+  <li><strong>Igalia</strong>: Victor Manuel Jaquez Leal, Stephane Cerveau, Philippe Normand, Thibault Saunier. Maintains gstreamer-vaapi/VA plugin and leads GStreamer Editing Services.</li>
+  <li><strong>Wim Taymans</strong> (Red Hat), <strong>David Schleef</strong> (independent).</li>
+  <li><strong>Samsung Electronics</strong>: authored the foundational ORC RISC-V Vector (RVV) code-generation backend.</li>
+  <li><strong>ISCAS (Institute of Software, Chinese Academy of Sciences)</strong>: authored the first RVV-accelerated GStreamer element (audio resampler) and a large share of ORC’s RVV refinement work (contributor Felix-Gong).</li>
+  <li><strong>Alibaba</strong>: authored Android riscv64 cross-build support in cerbero (contributor Mao Han).</li>
+  <li>Conference sponsorship tiers (GStreamer Conference 2025): Platinum: Centricular, Pexip, Igalia. Gold: Axis Communications, Collabora, Fluendo. Silver: Tightrope Media Systems.</li>
 </ul>
 
-<p>GStreamer Conference 2025 platinum sponsors: Centricular, Collabora, Igalia, Pexip. Gold: Axis Communications, Fluendo.</p>
+<p><strong>Culture on new ports:</strong> Pragmatic and low-friction. Because GStreamer is portable C, new architecture support, including RISC-V, is typically landed as small targeted patches (for example, unaligned-access handling) rather than large port efforts, and is generally accepted without formal gatekeeping. The Samsung ORC RVV backend and the ISCAS follow-on work were both accepted without documented controversy.</p>
 
-<p><strong>Culture on new ports:</strong> The project accepts new architecture ports through the normal contribution path with no formal approval process. The Samsung ORC RISC-V work was accepted upstream without controversy. The project does not proactively invest in RISC-V but does not block downstream packaging or contributions.</p>
-
-<p><strong>SIMD acceleration model:</strong> GStreamer core and all standard plugins contain no architecture-specific assembly or intrinsics. All SIMD acceleration is delegated to <a href="https://gitlab.freedesktop.org/gstreamer/orc">liborc</a> (a portable JIT SIMD compiler). This design means a RISC-V gap in ORC is a gap for the entire GStreamer DSP path, but it also means the core framework compiles cleanly on any architecture that GCC or Clang supports.</p><hr />
+<p><strong>SIMD acceleration model:</strong> GStreamer core and its standard plugins contain almost no architecture-specific assembly or intrinsics of their own. The large majority of SIMD acceleration is delegated to <a href="https://gitlab.freedesktop.org/gstreamer/orc">liborc</a> (Oil Runtime Compiler), a portable JIT SIMD compiler. This means a RISC-V gap in ORC is a gap for most of GStreamer’s DSP path, but it also means the core framework compiles cleanly on any architecture GCC or Clang supports. As of 2026, one plugin (the audio resampler in gst-plugins-base) additionally carries hand-written RVV intrinsics of its own, independent of ORC.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -309,7 +311,7 @@
 </h2>
     
 
-<p>The freedesktop.org GitLab instance is protected by Anubis bot-challenge; all direct fetch attempts to issue/MR pages and API endpoints returned Access Denied (error code <code class="language-plaintext highlighter-rouge">9e4edb5b6b850c41</code>). Dates below are sourced from web searches, release notes, and accessible source files.</p>
+<p>gitlab.freedesktop.org is protected by Anubis bot-challenge; all direct fetch attempts to issue/MR pages and REST/GraphQL API endpoints returned Access Denied (error code <code class="language-plaintext highlighter-rouge">9e4edb5b6b850c41</code>) on every attempt across this research cycle. The timeline below is built from the read-only GitHub mirrors’ commit history (each commit’s <code class="language-plaintext highlighter-rouge">Part-of:</code> trailer is authoritative GitLab merge data), release-note files, and distro changelogs.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -321,93 +323,89 @@
   </thead>
   <tbody>
     <tr>
+      <td>2018-04-15</td>
+      <td>First RISC-V-aware commit: sets <code class="language-plaintext highlighter-rouge">GST_HAVE_UNALIGNED_ACCESS</code> to 0 for RISC-V in <code class="language-plaintext highlighter-rouge">gstconfig.h.in</code> (RISC-V allows unaligned access only slowly/unreliably depending on implementation). Author: Aurelien Jarno.</td>
+      <td>GitLab commit <code class="language-plaintext highlighter-rouge">8a156d1725ec...</code></td>
+    </tr>
+    <tr>
       <td>Pre-2024</td>
-      <td>GStreamer core and plugins build on riscv64 as generic portable C; Debian and Alpine package riscv64 builds. No architecture-specific work.</td>
+      <td>GStreamer core and plugins build on riscv64 as generic portable C; Debian and Alpine package riscv64 builds with no architecture-specific work.</td>
       <td>Debian tracker, Alpine pkgs</td>
     </tr>
     <tr>
-      <td>Aug 2024</td>
-      <td>Samsung engineers (Maksymilian Knust, Filip Wasil) begin ORC RISC-V backend development. Copyright notice in source: “2024-2025 Samsung Electronics”.</td>
+      <td>2024-2025</td>
+      <td>Samsung engineers (Maksymilian Knust, Filip Wasil) develop the ORC RISC-V Vector (RVV) backend. Copyright header: “2024-2025 Samsung Electronics.”</td>
       <td><code class="language-plaintext highlighter-rouge">orcriscv.c</code> source header</td>
     </tr>
     <tr>
-      <td>May 9, 2025</td>
-      <td>First large ORC RISC-V commit batch landed: “riscv: Add target” (SHA <code class="language-plaintext highlighter-rouge">c9c39f3482fd4f22b454dfb07aad253ed6c6705f</code>). 407 additions across 15 files introduce <code class="language-plaintext highlighter-rouge">orc/riscv/</code> directory and meson build integration.</td>
-      <td>ORC commit history</td>
+      <td>2025-05-09 to 2025-06-27</td>
+      <td>15 commits authored, implementing the full RVV code-generation backend: target registration, scalar/vector instruction emission, machine-code generation, label/fixup handling, accumulators, loop emission, load/store rules, function prologue/epilogue, opcode table, floating-point rules, and a testsuite.</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/236">orc !236</a></td>
     </tr>
     <tr>
-      <td>Jan 8, 2026</td>
-      <td>ORC 0.4.42 release announcement: “Initial 64-bit RISC-V support” included.</td>
-      <td><a href="https://gstreamer.freedesktop.org/">gstreamer.freedesktop.org news</a></td>
+      <td>2025-07-14</td>
+      <td>orc !236 merged. This is the load-bearing foundational MR; every later RVV feature in the ecosystem depends on it. Presented as a RISC-V Europe Summit 2025 poster, “Enabling RISC-V CI in Open-Source Projects: Challenges and Solutions” (P. Pikula et al.).</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/236">orc !236</a>, <a href="https://riscv-europe.org/summit/2025/media/proceedings/2025-05-15-RISC-V-Summit-Europe-P2.3.02-PIKULA-poster.pdf">RISC-V Summit Europe 2025 poster</a></td>
     </tr>
     <tr>
-      <td>Mar 22, 2026</td>
-      <td>GStreamer 1.29.1 release: “cerbero gained support for Android on RISC-V64” (build toolchain only, not a runtime feature).</td>
+      <td>2025-08-25 to 2025-09-19</td>
+      <td>orc !249 (register allocation, LMUL&gt;1 handling) and !254 (12-commit optimization cluster: cmp/swap/splat/signX rules, div255w, convlf/convfl, abs-via-vrsub, function epilogue fix), by Maksymilian Knust.</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/249">orc !249</a>, <a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/254">orc !254</a></td>
+    </tr>
+    <tr>
+      <td>2026-01-08</td>
+      <td>ORC 0.4.42 released: “Initial 64-bit RISC-V support.”</td>
+      <td>gstreamer.freedesktop.org release notes</td>
+    </tr>
+    <tr>
+      <td>2026-02-20</td>
+      <td>cerbero !1739 merged (“Add RISC-V 64 support for Android builds”), authored by Mao Han (Alibaba), merged by Nirbheek Chauhan (Centricular). Adds NDK r27c riscv64 config (<code class="language-plaintext highlighter-rouge">cross-android-riscv64.cbc</code>), riscv64 fixes in libass/libffi/opencore-amr/openssl/opus, and a manual-only CI job because of “approximately zero demand.”</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1739">cerbero !1739</a></td>
+    </tr>
+    <tr>
+      <td>2026-03-22</td>
+      <td>GStreamer 1.29.1 release notes record cerbero gaining Android riscv64 support (build toolchain only).</td>
       <td>GStreamer release notes</td>
     </tr>
     <tr>
-      <td>Jun 6, 2026</td>
-      <td>MR !11768 opened: adds <code class="language-plaintext highlighter-rouge">gst_cpuid_supports_riscv_v()</code> for runtime RVV detection via <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code>. Not yet reviewed or merged as of 2026-06-17.</td>
-      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11768">GStreamer MR !11768</a></td>
+      <td>2026-04-14 to 2026-07-21</td>
+      <td>18 further ORC RVV MRs land (!279, !281-283, !288-289, !291-292, !294, !297-299, !303-306, !308-309): a NULL-pointer crash fix in extension detection, non-Linux build fixes, <code class="language-plaintext highlighter-rouge">__riscv_hwprobe()</code>/<code class="language-plaintext highlighter-rouge">getauxval()</code> detection-path rework, missing <code class="language-plaintext highlighter-rouge">normalize_result</code> fixes in addF/subF, a buffer-overrun fix in <code class="language-plaintext highlighter-rouge">convsusN</code> (vsetvli VL corruption), a narrowing-conversion correctness fix (<code class="language-plaintext highlighter-rouge">convdl</code>, vfncvt.rtz), and gather-load rules for image resampling. Authors mainly Felix-Gong (ISCAS) and Brad Smith.</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/249">orc merge requests</a></td>
     </tr>
     <tr>
-      <td>Jun 8, 2026</td>
-      <td>MR !11773 opened: adds <code class="language-plaintext highlighter-rouge">HAVE_CPU_RISCV32</code> and <code class="language-plaintext highlighter-rouge">HAVE_CPU_RISCV64</code> preprocessor definitions in the ABI test <code class="language-plaintext highlighter-rouge">host_defines</code> arrays. Not yet reviewed or merged as of 2026-06-17.</td>
-      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11773">GStreamer MR !11773</a></td>
+      <td>2026-06-27</td>
+      <td>gstreamer !11773 merged: <code class="language-plaintext highlighter-rouge">HAVE_CPU_RISCV32</code>/<code class="language-plaintext highlighter-rouge">HAVE_CPU_RISCV64</code> host_defines plus riscv64 ABI struct definitions generated on real rv64imafdcv hardware. Author: Felix-Gong.</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11773">gstreamer !11773</a></td>
     </tr>
     <tr>
-      <td>Jun 15, 2026</td>
-      <td>MR !11784 merged into milestone 1.29.2 (backported to 1.28): fixes a Meson <code class="language-plaintext highlighter-rouge">full_path()</code> build error when building on Alpine RISC-V with system GLib but G-I from source.</td>
-      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11784">GStreamer MR !11784</a></td>
+      <td>2026-06-28</td>
+      <td>gstreamer !11768 merged: <code class="language-plaintext highlighter-rouge">gst_cpuid_supports_riscv_v()</code> using <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code>, GStreamer-core-level RVV detection API mirroring the existing x86/ARM cpuid functions. Lands for GStreamer 1.30. Author: Felix-Gong.</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11768">gstreamer !11768</a></td>
     </tr>
     <tr>
-      <td>Jun 25, 2026</td>
-      <td>ORC commit: “Fix convsusN vsetvli to preserve VL.” Active RVV bug fixes still landing.</td>
-      <td>ORC commit history</td>
+      <td>2026-07-09 to 2026-07-31</td>
+      <td>gstreamer-rs !2018 and !2028 merged, exposing <code class="language-plaintext highlighter-rouge">cpuid_supports_riscv_v()</code> through the Rust bindings and fixing its version-feature-flag gating.</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/merge_requests/2018">gstreamer-rs !2018</a>, <a href="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/merge_requests/2028">!2028</a></td>
+    </tr>
+    <tr>
+      <td>2026-07-10</td>
+      <td>gstreamer !11966 merged: the first RVV-accelerated GStreamer element, RVV intrinsics for the audio resampler’s inner_product/interpolate kernels (gint16/gint32/gfloat), depending on !11768, tested on SOPHGO SG2044 (rv64gcv) with a full checksuite pass. Author: Felix-Gong.</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11966">gstreamer !11966</a></td>
+    </tr>
+    <tr>
+      <td>2026-08-18</td>
+      <td>gstreamer !12311 merged: fixes a macOS-hosted prebuilt-bison checksum-lookup bug that assumed host CPU family equals build CPU family, surfaced specifically by Android riscv64 cross-compiles. Author: Dominique Leroux.</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12311">gstreamer !12311</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-07</td>
+      <td>Latest stable GStreamer tag, 1.28.7. Latest stable ORC tag, 0.4.44 (2026-09-09).</td>
+      <td>GitLab tags API</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Key contributors by organization:</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Contributor</th>
-      <th>Org</th>
-      <th>Work</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Maksymilian Knust (mbknust)</td>
-      <td>Samsung Electronics</td>
-      <td>ORC RISC-V backend initial implementation</td>
-    </tr>
-    <tr>
-      <td>Filip Wasil (filipwasil)</td>
-      <td>Samsung Electronics</td>
-      <td>ORC RISC-V backend, co-author of initial batch</td>
-    </tr>
-    <tr>
-      <td>brad0</td>
-      <td>(unknown) [NEEDS VERIFICATION]</td>
-      <td>ORC RISC-V hwprobe/getauxval CPU detection, OpenBSD support</td>
-    </tr>
-    <tr>
-      <td>ziyao233</td>
-      <td>(unknown) [NEEDS VERIFICATION]</td>
-      <td>ORC ISA string parse crash fix for multi-character extensions</td>
-    </tr>
-    <tr>
-      <td>Felix-Gong</td>
-      <td>(unknown) [NEEDS VERIFICATION]</td>
-      <td>GStreamer MRs !11768 and !11773 (runtime RVV detection, ABI defines)</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p><strong>Fully upstream?</strong> Yes, for what exists. All landed ORC changes are in the canonical upstream ORC repository. The two GStreamer core MRs (!11768, !11773) are open and pending review. There are no known out-of-tree or distro-specific RISC-V patches in Debian or Alpine.</p><hr />
+<p><strong>Fully upstream?</strong> Yes for everything cited above. All landed ORC and GStreamer-core RISC-V changes are in the canonical upstream repositories, not out-of-tree or distro-only patches. No RISC-V-specific patch was found carried only by a downstream distro.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -417,25 +415,13 @@
 </h2>
     
 
-<p>GStreamer has no published platform tier policy.</p>
+<p>GStreamer has no published platform-tier policy of any kind (no Rust-style tier 1/2/3).</p>
 
-<p><strong>CI evidence (what upstream actually tests):</strong></p>
+<p><strong>CI evidence (what upstream actually tests, confirmed by reading the live files):</strong> the monorepo <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> defines jobs only for amd64 Fedora/Debian (native), Windows x64/x86/arm64-cross (MSVC), and macOS arm64 (native). A repo-wide search of every <code class="language-plaintext highlighter-rouge">.yml</code> file in <code class="language-plaintext highlighter-rouge">gstreamer/gstreamer</code> for the string “riscv” returns zero matches. There is no riscv64 native runner, QEMU job, or cross-compile job anywhere in GStreamer’s own CI.</p>
 
-<p>The monorepo <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> defines jobs for:</p>
-<ul>
-  <li>x86-64 Linux (Fedora 43, Debian Bookworm) - native runners</li>
-  <li>Windows x86/x86_64/arm64 (MSVC) - native runners</li>
-  <li>macOS arm64 - native runners</li>
-  <li>Windows arm64 cross-compile - marked manual/allow_failure</li>
-</ul>
+<p><strong>Release-blocking:</strong> riscv64 is not release-blocking for GStreamer. The GitLab Releases API for <code class="language-plaintext highlighter-rouge">gstreamer/gstreamer</code> returns an empty list (<code class="language-plaintext highlighter-rouge">[]</code>): GStreamer does not publish GitLab binary release artifacts for any architecture. Official downloads (gstreamer.freedesktop.org) cover Windows, macOS, Android and iOS only; there is no Linux binary of any architecture distributed by the project itself.</p>
 
-<p>There is no riscv64 CI job of any kind: no native runner, no QEMU emulation, no cross-compilation target.</p>
-
-<p><strong>Release-blocking:</strong> riscv64 is not a release-blocking platform. Release manager Tim-Philipp Muller has never listed riscv64 as a required-passing architecture in any accessible release announcement.</p>
-
-<p><strong>Official binary releases:</strong> The <a href="https://gstreamer.freedesktop.org/download/">GStreamer download page</a> ships binaries for Windows (x86/x86_64/arm64), macOS (Universal x86_64+arm64), Android (armv7/arm64/x86/x86_64), and iOS. No riscv64 binary release exists and none is announced.</p>
-
-<p><strong>Cerbero (GStreamer’s build-integration tool):</strong> Platform configs cover Android (arm64, armv7, x86, x86_64), macOS/iOS (arm64, x86_64), Windows (x86, x86_64, arm64). GStreamer 1.29.1 added <code class="language-plaintext highlighter-rouge">cross-android-riscv64.cbc</code> for Android only. No Linux riscv64 cerbero config exists.</p>
+<p><strong>Cerbero (GStreamer’s cross-build/packaging tool):</strong> platform configs cover Android (arm64, armv7, x86, x86_64), macOS/iOS (arm64, x86_64), Windows (x86, x86_64, arm64). <code class="language-plaintext highlighter-rouge">cross-android-riscv64.cbc</code> was added for Android riscv64 only, is Rust-disabled (<code class="language-plaintext highlighter-rouge">norust</code>, because Android riscv64 is Rust tier-3 with no downloadable toolchain), and its CI jobs are manual-only, citing near-zero demand. No Linux riscv64 cerbero config exists.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -448,15 +434,21 @@
   </thead>
   <tbody>
     <tr>
-      <td>CI (upstream)</td>
-      <td>Yes - blocking</td>
-      <td>Yes - blocking (Windows arm64 manual)</td>
+      <td>CI (GStreamer core)</td>
+      <td>Yes, blocking</td>
+      <td>Yes, blocking (Windows arm64-cross manual)</td>
       <td>No</td>
     </tr>
     <tr>
+      <td>CI (ORC, the SIMD dependency)</td>
+      <td>Yes, blocking</td>
+      <td>Yes, blocking</td>
+      <td>One job exists, manual/scheduled-trigger only, not run on ordinary MRs</td>
+    </tr>
+    <tr>
       <td>Official binary releases</td>
-      <td>Yes</td>
-      <td>Yes</td>
+      <td>No (source only)</td>
+      <td>No (source only)</td>
       <td>No</td>
     </tr>
     <tr>
@@ -467,18 +459,18 @@
     </tr>
     <tr>
       <td>Formal tier name</td>
-      <td>(not published)</td>
-      <td>(not published)</td>
-      <td>(not published)</td>
+      <td>Not published</td>
+      <td>Not published</td>
+      <td>Not published</td>
     </tr>
     <tr>
       <td>ORC SIMD acceleration</td>
-      <td>Yes - SSE/AVX/AVX-512</td>
-      <td>Yes - NEON/AArch64</td>
-      <td>Partial - RVV, unstable API</td>
+      <td>SSE/AVX/AVX-512</td>
+      <td>NEON/AArch64</td>
+      <td>RVV, real backend, unstable API</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -488,122 +480,61 @@
 </h2>
     
 
-<p>GStreamer itself has no architecture-specific subsystems. All SIMD acceleration, JIT compilation, and CPU-dispatch is in ORC (liborc). The analysis below covers ORC, which is the critical dependency for RISC-V media performance.</p>
-<h3 id="41-orc-risc-v-backend">
+<p>GStreamer core and its standard plugins carry almost no architecture-specific code of their own; nearly all SIMD acceleration is delegated to ORC. The analysis below was produced by cloning and reading the actual source of both <code class="language-plaintext highlighter-rouge">GStreamer/orc</code> and <code class="language-plaintext highlighter-rouge">GStreamer/gstreamer</code> (mirrors), not by reading commit metadata alone.</p>
+<h3 id="41-orc-risc-v-vector-backend-orcriscv">
   
   
-    <a href="#41-orc-risc-v-backend" class="anchor-heading" aria-labelledby="41-orc-risc-v-backend"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 ORC RISC-V Backend
-  
-  
-</h3>
-    
-
-<p>ORC is a portable JIT SIMD compiler. At runtime it reads <code class="language-plaintext highlighter-rouge">.orc</code> bytecode (embedded in GStreamer plugins as generated C arrays) and emits native instructions for the detected CPU.</p>
-
-<p><strong>Backend files:</strong> 9 files in <code class="language-plaintext highlighter-rouge">orc/riscv/</code> subdirectory:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">orcriscv.c</code>, <code class="language-plaintext highlighter-rouge">orcriscv.h</code>, <code class="language-plaintext highlighter-rouge">orcriscv-internal.h</code></li>
-  <li><code class="language-plaintext highlighter-rouge">orcriscvcompiler.c</code> (~660 lines)</li>
-  <li><code class="language-plaintext highlighter-rouge">orcriscvinsn.c</code> (~700-750 lines) - RV64I + RVV instruction encoding</li>
-  <li><code class="language-plaintext highlighter-rouge">orcriscvinsn.h</code></li>
-  <li><code class="language-plaintext highlighter-rouge">orcriscvrules.c</code> (~900-950 lines) - ORC opcode to RISC-V mapping</li>
-  <li><code class="language-plaintext highlighter-rouge">orcriscvtarget.c</code> (~285-295 lines) - CPU feature detection</li>
-  <li><code class="language-plaintext highlighter-rouge">riscv/meson.build</code></li>
-</ul>
-
-<p><strong>Total:</strong> approximately 2,600-2,700 lines of substantive C code.</p>
-
-<p><strong>ISA extensions implemented:</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Extension</th>
-      <th>Detection</th>
-      <th>Code generation</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>RV64I (scalar)</td>
-      <td>Always</td>
-      <td>Full</td>
-      <td>Complete instruction encoding</td>
-    </tr>
-    <tr>
-      <td>V (RVV 1.0)</td>
-      <td>hwprobe, getauxval, cpuinfo</td>
-      <td>Broad - load/store, arith, shift, float, convert</td>
-      <td>Active bug fixes landing; API marked unstable</td>
-    </tr>
-    <tr>
-      <td>Zvkb</td>
-      <td>hwprobe + cpuinfo</td>
-      <td>Flag only</td>
-      <td>No dedicated rules</td>
-    </tr>
-    <tr>
-      <td>Zvbb</td>
-      <td>hwprobe + cpuinfo</td>
-      <td>Flag only</td>
-      <td>No dedicated rules</td>
-    </tr>
-    <tr>
-      <td>Zvkn</td>
-      <td>cpuinfo/getauxval only</td>
-      <td>Partial - not in hwprobe path</td>
-      <td>[NEEDS VERIFICATION] whether rules use it</td>
-    </tr>
-    <tr>
-      <td>Zvks</td>
-      <td>cpuinfo/getauxval only</td>
-      <td>Partial - not in hwprobe path</td>
-      <td>[NEEDS VERIFICATION]</td>
-    </tr>
-    <tr>
-      <td>RV32</td>
-      <td>Explicitly rejected</td>
-      <td>None</td>
-      <td>FIXME comment in <code class="language-plaintext highlighter-rouge">orcriscvcompiler.c</code></td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p><strong>CPU feature detection priority (<code class="language-plaintext highlighter-rouge">orcriscvtarget.c</code>):</strong></p>
-<ol>
-  <li><code class="language-plaintext highlighter-rouge">elf_aux_info()</code> - BSD</li>
-  <li><code class="language-plaintext highlighter-rouge">__riscv_hwprobe()</code> - Linux, requires kernel &gt;= 6.4</li>
-  <li><code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> + <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code></li>
-  <li><code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> string parsing only</li>
-</ol>
-
-<p><strong>Rules coverage in <code class="language-plaintext highlighter-rouge">orcriscvrules.c</code>:</strong></p>
-<ul>
-  <li>Memory: load/store in all widths (8/16/32/64-bit)</li>
-  <li>Integer arithmetic: add, sub, multiply (mull/muls/mulhs), divide (div255w via multiply optimization), abs, avg, sign, accumulate</li>
-  <li>Bitwise/shift: and, andn, or, xor, shl, shrs, shru</li>
-  <li>Pack/unpack: merge, split, select, splat</li>
-  <li>Conversions: narrowing, widening, signed/unsigned, saturating, float-to-int, int-to-float, double</li>
-  <li>Float: addf/d, subf/d, mulf/d, divf/d, sqrtf/d, minf/d, maxf/d</li>
-  <li>Known FIXMEs: two load rules noted as “should be fixed at a higher level”</li>
-</ul>
-
-<p><strong>API stability:</strong> All public ORC RISC-V API is gated behind <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code>. The backend is not yet promoted to stable ABI.</p>
-<h3 id="42-gstreamer-core-cpu-detection-mrs-in-progress">
-  
-  
-    <a href="#42-gstreamer-core-cpu-detection-mrs-in-progress" class="anchor-heading" aria-labelledby="42-gstreamer-core-cpu-detection-mrs-in-progress"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 GStreamer Core CPU Detection (MRs in progress)
+    <a href="#41-orc-risc-v-vector-backend-orcriscv" class="anchor-heading" aria-labelledby="41-orc-risc-v-vector-backend-orcriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 ORC RISC-V Vector backend (<code class="language-plaintext highlighter-rouge">orc/riscv/</code>)
   
   
 </h3>
     
 
-<p>MR !11768 adds <code class="language-plaintext highlighter-rouge">gst_cpuid_supports_riscv_v()</code> using <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> with <code class="language-plaintext highlighter-rouge">COMPAT_HWCAP_ISA_V</code>. This is detection plumbing only - no GStreamer plugin currently has RVV-optimized codepaths. The existing <code class="language-plaintext highlighter-rouge">gstcpuid</code> module covers only x86 (MMX/SSE/AVX) and ARM/AArch64 (NEON). MR !11773 adds <code class="language-plaintext highlighter-rouge">HAVE_CPU_RISCV32</code> and <code class="language-plaintext highlighter-rouge">HAVE_CPU_RISCV64</code> preprocessor defines to the ABI test framework. Neither MR is reviewed as of 2026-06-17.</p>
-<h3 id="43-comparison-table-per-component">
+<p>A complete, hand-tuned RVV code generator, structurally equivalent to ORC’s x86/ARM-NEON/MIPS/PowerPC backends: 8 files, approximately 4,779 lines, authored 2024-2025 by Samsung Electronics and substantially extended through mid-2026 by ISCAS (Felix-Gong) and Brad Smith.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">orcriscvinsn.c</code> (1,606 lines): a real RVV instruction encoder, bit-packing raw machine code (e.g. <code class="language-plaintext highlighter-rouge">OP_VECTOR = 0b1010111</code>), not a wrapper around a compiler’s own intrinsics.</li>
+  <li><code class="language-plaintext highlighter-rouge">orcriscvrules.c</code> (1,698 lines): registers 195 opcode rules mapping ORC’s portable IR to RVV instruction sequences, covering load/store in all widths, integer arithmetic (add/sub/mul/div/abs/avg/sign/accumulate), bitwise/shift, pack/unpack/merge/split/select/splat, narrowing/widening/saturating conversions, gather loads for image resampling (<code class="language-plaintext highlighter-rouge">ldresnearl</code>/<code class="language-plaintext highlighter-rouge">ldreslinl</code>, added 2026-07-21, tested 1061/1061 on SOPHGO SG2044, VLEN=128), and full float/double arithmetic. For comparison, ARM NEON’s single rule file registers 62 rules, so RISC-V’s coverage is broad, not partial.</li>
+  <li><code class="language-plaintext highlighter-rouge">orcriscvtarget.c</code> (approximately 308 lines): four-layer CPU feature detection, in priority order: <code class="language-plaintext highlighter-rouge">elf_aux_info()</code> (BSD), <code class="language-plaintext highlighter-rouge">__riscv_hwprobe()</code> (Linux, kernel &gt;= 6.4), <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> plus <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code>, and <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> string parsing alone. Detects the <code class="language-plaintext highlighter-rouge">V</code>, <code class="language-plaintext highlighter-rouge">Zvbb</code>, <code class="language-plaintext highlighter-rouge">Zvkb</code>, <code class="language-plaintext highlighter-rouge">Zvkn</code> and <code class="language-plaintext highlighter-rouge">Zvks</code> extensions, though <code class="language-plaintext highlighter-rouge">Zvkn</code>/<code class="language-plaintext highlighter-rouge">Zvks</code> detection is incomplete in the hwprobe path.</li>
+  <li>Build wiring treats <code class="language-plaintext highlighter-rouge">riscv</code> identically to <code class="language-plaintext highlighter-rouge">mips</code>/<code class="language-plaintext highlighter-rouge">aarch64</code>: <code class="language-plaintext highlighter-rouge">cpu_family.startswith('riscv')</code> triggers <code class="language-plaintext highlighter-rouge">HAVE_RISCV</code>, not an opt-in experimental flag. RV32 is explicitly unsupported (FIXME in <code class="language-plaintext highlighter-rouge">orcriscvcompiler.c</code>). All public RISC-V API is gated behind <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code>.</li>
+  <li>Real bugs have been found and fixed in production use: a NULL-pointer crash in <code class="language-plaintext highlighter-rouge">strsep</code>/<code class="language-plaintext highlighter-rouge">strcmp</code> when parsing cpuinfo extension strings on older devicetrees/kernels or pre-7.1.0 QEMU (<a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/279">orc !279</a>), and a genuine out-of-bounds write: the <code class="language-plaintext highlighter-rouge">convsusN</code> rule’s <code class="language-plaintext highlighter-rouge">vsetvli</code> used <code class="language-plaintext highlighter-rouge">rs1=x0</code>, resetting vector length to VLMAX and corrupting memory past the intended buffer on a loop’s tail (<a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/306">orc !306</a>, fixed 2026-06-25).</li>
+</ul>
+
+<p>Because dozens of GStreamer elements (videoconvert, audioconvert, volume, compositor, videoscale) generate their inner loops through ORC, this single backend gives broad RVV acceleration across the codebase whenever its rules fire, without per-plugin work.</p>
+<h3 id="42-gstreamer-core-cpu-feature-api-gstcpuidc">
   
   
-    <a href="#43-comparison-table-per-component" class="anchor-heading" aria-labelledby="43-comparison-table-per-component"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Comparison Table per Component
+    <a href="#42-gstreamer-core-cpu-feature-api-gstcpuidc" class="anchor-heading" aria-labelledby="42-gstreamer-core-cpu-feature-api-gstcpuidc"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 GStreamer core CPU-feature API (<code class="language-plaintext highlighter-rouge">gstcpuid.c</code>)
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">gst_cpuid_supports_riscv_v()</code> (merged as <a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11768">!11768</a>, lands in 1.30) is real and wired into the same dispatch pattern as x86/ARM detection, but checks only the single <code class="language-plaintext highlighter-rouge">V</code> extension via <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code>, is Linux-only, and does no finer-grained extension or VLEN probing. ARM’s equivalent detection is multi-OS and more thorough. Rated partial: functional, but thin.</p>
+<h3 id="43-gst-plugins-base-audio-resampler-rvv-kernels">
+  
+  
+    <a href="#43-gst-plugins-base-audio-resampler-rvv-kernels" class="anchor-heading" aria-labelledby="43-gst-plugins-base-audio-resampler-rvv-kernels"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 gst-plugins-base audio-resampler RVV kernels
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">audio-resampler-rvv.c</code> (merged as <a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11966">!11966</a>) is genuine hand-written C code using <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> intrinsics across 9 type/mode combinations (gint16/gint32/gfloat x full/linear/cubic, 15 functions total), gated behind a Meson <code class="language-plaintext highlighter-rouge">cc.compiles()</code> RVV capability probe with scalar-C fallback, and correctly dispatched at runtime via <code class="language-plaintext highlighter-rouge">gst_cpuid_supports_riscv_v()</code>, replacing function pointers the same way the SSE/NEON paths do. Validated on real SOPHGO SG2044 (rv64gcv) hardware with full checksuite passes (audioresample 11/11, libs_audio 32/32, audioconvert 18/18, audiotestsrc 2/2). Rated partial only because it is scoped to one plugin rather than a full SIMD library, not because it is a stub. No other plugin outside ORC’s coverage carries its own RVV intrinsics.</p>
+<h3 id="44-abi-and-alignment-plumbing">
+  
+  
+    <a href="#44-abi-and-alignment-plumbing" class="anchor-heading" aria-labelledby="44-abi-and-alignment-plumbing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 ABI and alignment plumbing
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">subprojects/gstreamer/tests/check/gst/struct_riscv64.h</code> and the equivalent <code class="language-plaintext highlighter-rouge">libs/</code> file hold riscv64 ABI struct sizes, generated on real rv64imafdcv hardware and merged as part of <a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11773">!11773</a>. <code class="language-plaintext highlighter-rouge">gstconfig.h.in</code> lists <code class="language-plaintext highlighter-rouge">__riscv</code> among architectures where <code class="language-plaintext highlighter-rouge">GST_HAVE_UNALIGNED_ACCESS</code> is defined 0 (unaligned access assumed slow/unsafe, consistent with ARM/MIPS/SPARC).</p>
+<h3 id="45-comparison-table-per-component">
+  
+  
+    <a href="#45-comparison-table-per-component" class="anchor-heading" aria-labelledby="45-comparison-table-per-component"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Comparison Table per Component
   
   
 </h3>
@@ -623,58 +554,52 @@
       <td>ORC JIT backend</td>
       <td>SSE/AVX/AVX-512, mature</td>
       <td>NEON/AArch64, mature</td>
-      <td>RVV 1.0, experimental, Samsung-driven</td>
+      <td>RVV 1.0, real backend, 195 opcode rules, unstable API</td>
     </tr>
     <tr>
       <td>ORC CPU detection</td>
       <td>CPUID instruction</td>
       <td>getauxval/HWCAP</td>
-      <td>hwprobe + getauxval + cpuinfo (4 paths)</td>
+      <td>hwprobe + getauxval + cpuinfo, 4-path fallback</td>
     </tr>
     <tr>
       <td>ORC API stability</td>
       <td>Stable</td>
       <td>Stable</td>
-      <td>Unstable (requires <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code>)</td>
+      <td>Unstable (<code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code>)</td>
     </tr>
     <tr>
-      <td>GStreamer CPU detection</td>
+      <td>GStreamer core CPU detection</td>
       <td>CPUID in gstcpuid.c</td>
       <td>NEON in gstcpuid.c</td>
-      <td>MR !11768 open, not merged</td>
+      <td><code class="language-plaintext highlighter-rouge">gst_cpuid_supports_riscv_v()</code>, merged, lands 1.30, Linux-only, V extension only</td>
     </tr>
     <tr>
       <td>GStreamer ABI test defines</td>
       <td>HAVE_CPU_X86_64</td>
       <td>HAVE_CPU_AARCH64</td>
-      <td>MR !11773 open, not merged</td>
+      <td>HAVE_CPU_RISCV64, merged</td>
     </tr>
     <tr>
-      <td>Plugin SIMD dispatch</td>
-      <td>Via ORC</td>
-      <td>Via ORC</td>
-      <td>Via ORC (when RVV rules fire)</td>
+      <td>Plugin-level RVV intrinsics</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>audio resampler only (gst-plugins-base), real intrinsics</td>
     </tr>
     <tr>
-      <td>Video scaler (plugins-base)</td>
+      <td>Video scaler / audio conversion (plugins-base)</td>
       <td>ORC-accelerated</td>
       <td>ORC-accelerated</td>
-      <td>ORC-accelerated if RVV available, else C</td>
-    </tr>
-    <tr>
-      <td>Audio format conversion (plugins-base)</td>
-      <td>ORC-accelerated</td>
-      <td>ORC-accelerated</td>
-      <td>ORC-accelerated if RVV available, else C</td>
+      <td>ORC-accelerated when RVV rules fire, else scalar C</td>
     </tr>
     <tr>
       <td>Compositor</td>
       <td>ORC-accelerated</td>
       <td>ORC-accelerated</td>
-      <td>C fallback (ORC rules may fire partially)</td>
+      <td>ORC-accelerated when RVV rules fire, else scalar C</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -684,17 +609,11 @@
 </h2>
     
 
-<p><strong>Build system:</strong> Meson, minimum version 1.4 (enforced in top-level <code class="language-plaintext highlighter-rouge">meson.build</code>). No CMake. No autotools.</p>
+<p><strong>Build system:</strong> Meson only, minimum version 1.4 (<code class="language-plaintext highlighter-rouge">meson_version : '&gt;= 1.4'</code> in the live top-level <code class="language-plaintext highlighter-rouge">meson.build</code>). No CMake, no autotools, no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> anywhere in the tree.</p>
 
-<p><strong>C standard:</strong> <code class="language-plaintext highlighter-rouge">gnu11,c11</code>. <strong>C++ standard:</strong> <code class="language-plaintext highlighter-rouge">c++14</code>. No explicit minimum GCC or Clang version is stated; any compiler supporting C11/C++14 with GNU extensions satisfies the formal requirement.</p>
+<p><strong>Language standard:</strong> the top-level <code class="language-plaintext highlighter-rouge">meson.build</code> sets <code class="language-plaintext highlighter-rouge">cpp_std=c++14</code> in <code class="language-plaintext highlighter-rouge">default_options</code>, but does <strong>not</strong> set a <code class="language-plaintext highlighter-rouge">c_std</code> at top level; the C standard follows whatever the compiler’s own default is (gnu17 on modern GCC/Clang). No minimum GCC or Clang version is enforced anywhere in the build; the only version gate in the file is Apple-Clang/Xcode-specific (“Xcode &gt;= 26.0 requires meson &gt;= 1.8.3”) and is irrelevant to riscv64/Linux. The practical floor is therefore whatever the target distro’s Meson &gt;= 1.4 pulls in (e.g. Debian sid ships GCC 14/Clang 19, Fedora 43 ships GCC 15/Clang 20), not a project-mandated minimum.</p>
 
-<p><strong>Cross-compilation files in repo:</strong> None for riscv64. The only cross files present are:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">ci/meson/vs2022-arm64-cross.ini</code> (Windows MSVC arm64)</li>
-  <li><code class="language-plaintext highlighter-rouge">ci/meson/vs2022-x64-native.ini</code> (Windows MSVC x64)</li>
-</ul>
-
-<p>A riscv64 Linux cross file must be created manually. Example derived from existing patterns and Meson documentation:</p>
+<p><strong>Cross-compilation files in repo:</strong> none for riscv64. The only cross files present are <code class="language-plaintext highlighter-rouge">ci/meson/vs2022-arm64-cross.ini</code> and <code class="language-plaintext highlighter-rouge">ci/meson/vs2022-x64-native.ini</code>, both Windows MSVC. A riscv64 Linux cross file must be authored manually, e.g.:</p>
 
 <div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">[host_machine]</span><span class="w">
 </span><span class="py">system</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'linux'</span>
@@ -713,22 +632,12 @@
 </span><span class="py">sys_root</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'/usr/riscv64-linux-gnu'</span>
 </code></pre></div></div>
 
-<p><strong>Cross-compilation build commands:</strong></p>
-
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>meson setup builddir <span class="se">\</span>
-  <span class="nt">--cross-file</span> riscv64-linux-gnu.ini <span class="se">\</span>
-  <span class="nt">-Dauto_features</span><span class="o">=</span>disabled <span class="se">\</span>
-  <span class="nt">-Ddoc</span><span class="o">=</span>disabled <span class="se">\</span>
-  <span class="nt">-Dintrospection</span><span class="o">=</span>disabled <span class="se">\</span>
-  <span class="nt">-Dtests</span><span class="o">=</span>disabled
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>meson setup builddir <span class="nt">--cross-file</span> riscv64-linux-gnu.ini <span class="se">\</span>
+  <span class="nt">-Dauto_features</span><span class="o">=</span>disabled <span class="nt">-Ddoc</span><span class="o">=</span>disabled <span class="nt">-Dintrospection</span><span class="o">=</span>disabled <span class="nt">-Dtests</span><span class="o">=</span>disabled
 meson compile <span class="nt">-C</span> builddir
 </code></pre></div></div>
 
-<p><strong>Native build on a riscv64 host:</strong></p>
-
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>meson setup builddir
-meson compile <span class="nt">-C</span> builddir
-</code></pre></div></div>
+<p>Native build on riscv64 hardware: <code class="language-plaintext highlighter-rouge">meson setup builddir &amp;&amp; meson compile -C builddir</code>.</p>
 
 <p><strong>Known -D flags relevant to riscv64:</strong></p>
 
@@ -742,43 +651,41 @@ meson compile <span class="nt">-C</span> builddir
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Ddoc=disabled</code></td>
-      <td>Documentation auto-disabled on cross-builds</td>
+      <td>docs auto-disabled on cross builds</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dintrospection=disabled</code></td>
-      <td>GObject Introspection may lack riscv64 support in some distros</td>
+      <td>GObject Introspection may be unavailable or broken on some riscv64 distro toolchains</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dgst-plugins-bad:intel-media-sdk=disabled</code></td>
-      <td>Intel MSDK is x86-only</td>
+      <td>x86-only</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dgst-plugins-bad:va=disabled</code></td>
-      <td>VA-API drivers absent on riscv64</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-Dauto_features=disabled</code></td>
-      <td>Safe starting point for cross-compilation</td>
+      <td>no riscv64 VA-API drivers</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dorc=disabled</code></td>
-      <td>Disable ORC if the unstable RVV backend causes issues</td>
+      <td>escape hatch if the unstable ORC RVV backend misbehaves</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">-Dauto_features=disabled</code></td>
+      <td>safe starting point for cross-compilation</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>libatomic:</strong> GStreamer’s <code class="language-plaintext highlighter-rouge">meson.build</code> includes a generic <code class="language-plaintext highlighter-rouge">cc.find_library('atomic', required: false)</code> workaround that applies to architectures requiring explicit <code class="language-plaintext highlighter-rouge">-latomic</code> linkage, including riscv64. No special action needed.</p>
-
-<p><strong>QEMU:</strong> GStreamer’s CI uses QEMU for virtme VM-based Linux kernel tests (<code class="language-plaintext highlighter-rouge">ci/scripts/build-linux.sh</code>), but this infrastructure has no riscv64 target. The script contains <code class="language-plaintext highlighter-rouge">s/riscv.*/riscv/</code> as host architecture normalization boilerplate; it is dead code in practice because no riscv64 CI runner is provisioned.</p>
-
-<p>For local riscv64 testing on an x86-64 host, <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code> user-mode emulation via <code class="language-plaintext highlighter-rouge">binfmt_misc</code> works with Debian and Alpine riscv64 sysroots. No GStreamer-specific QEMU configuration exists.</p>
+<p><strong>QEMU:</strong> GStreamer’s own <code class="language-plaintext highlighter-rouge">ci/scripts/build-linux.sh</code> builds x86 KVM-guest kernels for <code class="language-plaintext highlighter-rouge">virtme</code> VM testing and contains a generic <code class="language-plaintext highlighter-rouge">s/riscv.*/riscv/</code> architecture-name-normalization line, but since no riscv64 CI runner or job is provisioned anywhere in <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, that line never executes on a riscv64 path in practice. <code class="language-plaintext highlighter-rouge">ci/docker/fedora/install-deps.sh</code> strips <code class="language-plaintext highlighter-rouge">qemu</code> debug symbols from its install list, confirming QEMU is present in the CI image only as an incidental Fedora package, not as riscv64 build/test tooling. For local testing, <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code> user-mode emulation via <code class="language-plaintext highlighter-rouge">binfmt_misc</code> works against Debian/Alpine riscv64 sysroots; no GStreamer-specific QEMU configuration exists.</p>
 
 <p><strong>Known build failures:</strong></p>
 
 <ul>
-  <li>MR !11784 (merged Jun 2026): Meson <code class="language-plaintext highlighter-rouge">full_path()</code> method error when building on Alpine RISC-V with system GLib but G-I from source. Fixed in 1.29.2, backported to 1.28.</li>
-  <li>Arch Linux RISC-V: <code class="language-plaintext highlighter-rouge">riscv64.patch</code> fails to apply to current GStreamer source (“Hunk #3 FAILED at 243”). Hard FTBFS as of verification date. Dependency <code class="language-plaintext highlighter-rouge">svt-hevc</code> is also missing entirely on Arch RISC-V.</li>
-</ul><hr />
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11784">gstreamer !11784</a> (merged, backported to 1.28): fixed a Meson <code class="language-plaintext highlighter-rouge">full_path()</code> error building on Alpine riscv64 with system GLib but GObject-Introspection built from source.</li>
+  <li>Alpine <code class="language-plaintext highlighter-rouge">aports</code> issue <a href="https://gitlab.alpinelinux.org/alpine/aports/-/issues/18343">#18343</a>: the <code class="language-plaintext highlighter-rouge">orcc</code> bytecode compiler segfaults (signal 11) generating <code class="language-plaintext highlighter-rouge">videomixerorc.h</code>/<code class="language-plaintext highlighter-rouge">.c</code> on riscv64 (<code class="language-plaintext highlighter-rouge">ninja: job terminated due to signal 11: orcc --include glib.h --header -o gst/videomixer/videomixerorc.h ...</code>). Alpine disabled <code class="language-plaintext highlighter-rouge">gst-plugins-good</code> and <code class="language-plaintext highlighter-rouge">gst-plugins-bad</code> on riscv64 to unblock the builder. Filed 2026-07-18, closed 2026-07-21; the root-cause fix (believed to be in ORC’s riscv64 codegen) was not independently confirmed in public notes, since comments required authentication to read.</li>
+  <li>Arch Linux RISC-V: contradictory data points exist. Direct repository listing of <code class="language-plaintext highlighter-rouge">archriscv.felixc.at/repo/extra/</code> today shows <code class="language-plaintext highlighter-rouge">gstreamer-1.28.7-2-riscv64.pkg.tar.zst</code>, <code class="language-plaintext highlighter-rouge">gstreamer-docs-1.28.7-2-riscv64.pkg.tar.zst</code>, and roughly 80 further <code class="language-plaintext highlighter-rouge">gst-plugins-*</code>/<code class="language-plaintext highlighter-rouge">gst-plugin-*</code> riscv64 packages currently built and available, including <code class="language-plaintext highlighter-rouge">gst-plugin-skia-0.15.4-1-riscv64.pkg.tar.zst</code>. A separate, earlier data point held that a <code class="language-plaintext highlighter-rouge">riscv64.patch</code> failed to apply (hunk #3 failing at line 243) with a missing <code class="language-plaintext highlighter-rouge">svt-hevc</code> dependency, making the package uninstallable from source. The current repository listing, directly fetched, is the more recent and more authoritative signal and indicates the build is presently succeeding; the discrepancy is noted here rather than resolved, since the intermediate fix was not independently traced. [NEEDS VERIFICATION]</li>
+  <li>The informal claim that <code class="language-plaintext highlighter-rouge">gst-plugins-rs</code>’s bundled Skia build (<code class="language-plaintext highlighter-rouge">fetch-gn</code>) still lacks riscv64 support does not hold up against the same repository listing: <code class="language-plaintext highlighter-rouge">gst-plugin-skia</code> is built and shipping for riscv64 in Arch’s <code class="language-plaintext highlighter-rouge">extra</code> repo as of this check.</li>
+</ul>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -808,23 +715,23 @@ meson compile <span class="nt">-C</span> builddir
   </thead>
   <tbody>
     <tr>
-      <td>All pipeline features (decode, encode, mux, RTP, etc.)</td>
+      <td>Core pipeline features (decode, encode, mux, RTP, etc.)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Portable C; no functional gaps in framework</td>
+      <td>Portable C; no functional gaps in the framework itself</td>
     </tr>
     <tr>
       <td>GObject Introspection (language bindings)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Partial</td>
-      <td>Build workaround merged (MR !11784); distro support varies</td>
+      <td>Build workaround merged (!11784); distro support varies</td>
     </tr>
     <tr>
       <td>Hardware video decode via VA-API</td>
       <td>Yes</td>
-      <td>No (NVIDIA proprietary)</td>
+      <td>No</td>
       <td>No</td>
       <td>No riscv64 VA-API drivers</td>
     </tr>
@@ -833,48 +740,39 @@ meson compile <span class="nt">-C</span> builddir
       <td>Yes</td>
       <td>Yes (Jetson)</td>
       <td>No</td>
-      <td>NVIDIA hardware not available for riscv64 Linux</td>
+      <td>No riscv64 NVIDIA driver stack</td>
     </tr>
     <tr>
       <td>Hardware video decode via V4L2</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>Yes (on capable hardware)</td>
-      <td>V4L2 is kernel-level; portable</td>
+      <td>V4L2 is kernel-level, portable</td>
     </tr>
     <tr>
-      <td>RTP/RTSP streaming</td>
+      <td>RTP/RTSP streaming, WebRTC</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes</td>
-      <td>Portable</td>
+      <td>Yes, functional</td>
+      <td>No SIMD acceleration path for WebRTC-adjacent codecs on riscv64</td>
     </tr>
     <tr>
       <td>Android riscv64 (cerbero)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Partial - cerbero <code class="language-plaintext highlighter-rouge">cross-android-riscv64.cbc</code> added in 1.29.1</td>
-      <td>Toolchain only; runtime untested</td>
-    </tr>
-    <tr>
-      <td>WebRTC (gst-plugins-bad)</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes (functional)</td>
-      <td>No SIMD acceleration, software-only</td>
+      <td>Partial</td>
+      <td><code class="language-plaintext highlighter-rouge">cross-android-riscv64.cbc</code> added, Rust disabled (tier-3 toolchain), manual-only CI</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="performance-gaps-orc-simd">
+<h3 id="performance-gaps-simd">
   
   
-    <a href="#performance-gaps-orc-simd" class="anchor-heading" aria-labelledby="performance-gaps-orc-simd"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Performance Gaps (ORC SIMD)
+    <a href="#performance-gaps-simd" class="anchor-heading" aria-labelledby="performance-gaps-simd"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Performance Gaps (SIMD)
   
   
 </h3>
     
-
-<p>The primary performance gap is ORC having no RISC-V backend until 2025-2026, and the current backend being experimental. On riscv64 without RVV hardware or with ORC in C-fallback mode:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -882,78 +780,44 @@ meson compile <span class="nt">-C</span> builddir
       <th>Operation</th>
       <th>amd64</th>
       <th>arm64</th>
-      <th>riscv64 (C fallback)</th>
-      <th>riscv64 (ORC RVV, when available)</th>
+      <th>riscv64</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Video color space conversion (I420-&gt;NV12 etc.)</td>
-      <td>ORC/SSE</td>
-      <td>ORC/NEON</td>
-      <td>C scalar</td>
-      <td>ORC/RVV (partial, unstable)</td>
+      <td>Video color-space conversion, audio format conversion, compositing (via ORC)</td>
+      <td>SSE/AVX</td>
+      <td>NEON</td>
+      <td>RVV when the ORC backend’s rules fire and hardware has V extension; scalar C otherwise</td>
     </tr>
     <tr>
-      <td>Audio format conversion (S16-&gt;F32 etc.)</td>
-      <td>ORC/SSE</td>
-      <td>ORC/NEON</td>
-      <td>C scalar</td>
-      <td>ORC/RVV (partial, unstable)</td>
-    </tr>
-    <tr>
-      <td>Video compositing</td>
-      <td>ORC/SSE</td>
-      <td>ORC/NEON</td>
-      <td>C scalar</td>
-      <td>ORC/RVV (partial, unstable)</td>
+      <td>Audio resampling (gst-plugins-base, own intrinsics)</td>
+      <td>SSE/AVX</td>
+      <td>NEON</td>
+      <td>RVV intrinsics, merged, validated on SOPHGO SG2044</td>
     </tr>
     <tr>
       <td>H.264 decode (via gst-libav/FFmpeg)</td>
-      <td>RVV-optimized (FFmpeg)</td>
+      <td>Optimized</td>
       <td>NEON-optimized</td>
-      <td>RVV-optimized (FFmpeg, strong)</td>
-      <td>Same as “available”</td>
+      <td>RVV-optimized in FFmpeg (see Section 9 deep dive)</td>
     </tr>
     <tr>
       <td>AV1 decode (via dav1d)</td>
-      <td>RVV-optimized</td>
+      <td>Optimized</td>
       <td>NEON-optimized</td>
-      <td>RVV-optimized (dav1d &gt;= 1.4.0)</td>
-      <td>Same</td>
+      <td>RVV-optimized since dav1d 1.4.0</td>
     </tr>
     <tr>
-      <td>VP8/VP9 decode (via libvpx)</td>
+      <td>VP8/VP9 decode (libvpx), Opus (libopus), H.264/HEVC encode (x264/x265)</td>
       <td>SIMD</td>
       <td>SIMD</td>
-      <td>C scalar</td>
-      <td>C scalar (libvpx has no riscv64 SIMD)</td>
-    </tr>
-    <tr>
-      <td>Opus audio (via libopus)</td>
-      <td>SIMD</td>
-      <td>SIMD</td>
-      <td>C scalar</td>
-      <td>C scalar (libopus has no riscv64 SIMD)</td>
-    </tr>
-    <tr>
-      <td>H.264 encode (via x264)</td>
-      <td>x86 assembly</td>
-      <td>ARM assembly</td>
-      <td>C scalar</td>
-      <td>C scalar (x264 has no riscv64 SIMD)</td>
-    </tr>
-    <tr>
-      <td>HEVC encode (via x265)</td>
-      <td>x86 SIMD</td>
-      <td>ARM SIMD</td>
-      <td>C scalar</td>
-      <td>C scalar (x265 has no riscv64 SIMD)</td>
+      <td>No riscv64 SIMD in any of these four; scalar C fallback only</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No benchmark figures are published. Data not available: published fps, latency, or throughput comparisons between riscv64 and arm64/amd64 for any GStreamer pipeline.</p>
+<p>No GStreamer-pipeline-level benchmark numbers (fps, latency, CPU time) comparing riscv64 to arm64/amd64 were found in any public source, including GStreamer Discourse, the RISE blog, RVspace forum, and GitHub/GitLab search. The closest available data point is ORC-specific: a Samsung poster at RISC-V Summit Europe 2025 reports 82.00% test coverage for the RVV backend and a CI job matrix of <code class="language-plaintext highlighter-rouge">bld:linux-riscv64</code> (2 jobs) and <code class="language-plaintext highlighter-rouge">test:linux-riscv64</code> (10 jobs, versus 6 for amd64 and 2 for arm64, driven by multiple vector register lengths/VLEN needing separate configurations); it notes dual-toolchain (GNU and LLVM) testing “uncovered several previously unreported bugs” without itemizing them. This is ORC-only, not a GStreamer pipeline benchmark. An adjacent, non-GStreamer data point for context: SiFive’s <code class="language-plaintext highlighter-rouge">ffmpeg-rvv</code> project reports more than 2x average FPS improvement on 720p H.264 decode using RVV intrinsics versus scalar FFmpeg (<a href="https://github.com/sifive/ffmpeg-rvv">sifive/ffmpeg-rvv</a>).</p>
 <h3 id="security-hardening-gaps">
   
   
@@ -963,17 +827,17 @@ meson compile <span class="nt">-C</span> builddir
 </h3>
     
 
-<p>Data not available: any published analysis of security hardening feature coverage differences between riscv64 and other architectures for GStreamer. No riscv64-specific security bugs filed in any accessible tracker.</p>
-<h3 id="floating-point-semantics">
+<p>Data not available: any published analysis of security-hardening feature-coverage differences between riscv64 and other architectures for GStreamer. One active, tracked vulnerability affects plugins being packaged for riscv64 but is not riscv64-specific: CVE-2025-6663, an integer overflow parsing <code class="language-plaintext highlighter-rouge">subpic_level_info</code> in the H.266/VVC parser, fixed in Debian <code class="language-plaintext highlighter-rouge">gst-plugins-bad</code> 1.26.2-3 (<a href="https://osv.dev/vulnerability/CVE-2025-6663">osv.dev/vulnerability/CVE-2025-6663</a>).</p>
+<h3 id="floating-point--numeric-semantics">
   
   
-    <a href="#floating-point-semantics" class="anchor-heading" aria-labelledby="floating-point-semantics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Floating-Point Semantics
+    <a href="#floating-point--numeric-semantics" class="anchor-heading" aria-labelledby="floating-point--numeric-semantics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Floating-Point / Numeric Semantics
   
   
 </h3>
     
 
-<p>GStreamer relies on standard IEEE 754 via GLib and the C compiler. No riscv64-specific floating-point issues are documented. ORC’s RVV float rules (<code class="language-plaintext highlighter-rouge">addf</code>, <code class="language-plaintext highlighter-rouge">mulf</code>, <code class="language-plaintext highlighter-rouge">divf</code>, etc.) exist in <code class="language-plaintext highlighter-rouge">orcriscvrules.c</code> with a note that missing <code class="language-plaintext highlighter-rouge">normalize_result</code> bugs were fixed in May 2026; some subtlety around VL-preserving <code class="language-plaintext highlighter-rouge">vsetvli</code> was fixed in a June 25, 2026 ORC commit.</p><hr />
+<p>GStreamer relies on standard IEEE 754 via GLib and the C compiler; no riscv64-specific floating-point deviations are documented at the framework level. Within ORC’s RVV backend specifically, two concrete numeric bugs were found and fixed: missing <code class="language-plaintext highlighter-rouge">normalize_result</code> calls in the <code class="language-plaintext highlighter-rouge">addF</code>/<code class="language-plaintext highlighter-rouge">subF</code> float rules (<a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/297">orc !297</a>, <a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/298">!298</a>, merged May 2026), and a narrowing-conversion bug in <code class="language-plaintext highlighter-rouge">convdl</code> that used the wrong rounding mode until switched to truncation (<code class="language-plaintext highlighter-rouge">vfncvt.rtz</code>) (<a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/308">orc !308</a>, merged 2026-07-12), which had been silently producing wrong results.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -983,7 +847,28 @@ meson compile <span class="nt">-C</span> builddir
 </h2>
     
 
-<p><strong>GStreamer monorepo CI (<code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>):</strong></p>
+<p>Direct, live reads of <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">ci/docker/*</code>, <code class="language-plaintext highlighter-rouge">ci/gitlab/*</code>, <code class="language-plaintext highlighter-rouge">ci/scripts/*</code>, and <code class="language-plaintext highlighter-rouge">ci/meson/*.ini</code> in <code class="language-plaintext highlighter-rouge">gstreamer/gstreamer</code> were performed via the GitHub mirror (gitlab.freedesktop.org itself is Anubis-blocked for automated access).</p>
+
+<p><strong>GStreamer core (<code class="language-plaintext highlighter-rouge">gstreamer/gstreamer</code>):</strong> zero riscv64 CI of any kind. A repo-wide search of every <code class="language-plaintext highlighter-rouge">.yml</code> file for “riscv” returns 0 results. Defined jobs cover only amd64 Fedora/Debian (native), Windows (MSVC x64/x86/arm64-cross, msys2), and macOS arm64. No riscv64 Dockerfile, image directory, runner tag, or QEMU job exists.</p>
+
+<p><strong>ORC (<code class="language-plaintext highlighter-rouge">gstreamer/orc</code>), a dependency library rather than GStreamer core itself:</strong> contains one real, non-hidden riscv64 job:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">alpine 3.23 riscv64</span><span class="pi">:</span>
+  <span class="na">stage</span><span class="pi">:</span> <span class="s">build</span>
+  <span class="na">image</span><span class="pi">:</span> <span class="s">alpine:3.23</span>
+  <span class="na">needs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">trigger"</span><span class="pi">]</span>
+  <span class="na">tags</span><span class="pi">:</span> <span class="pi">[</span><span class="s1">'</span><span class="s">orc-alpine-riscv64'</span><span class="pi">]</span>
+  <span class="na">script</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">meson setup / compile / test / orc-bugreport / install</span>
+</code></pre></div></div>
+
+<p>This job genuinely builds and tests ORC via <code class="language-plaintext highlighter-rouge">meson test</code>, it is not a source-detection shim. However it <code class="language-plaintext highlighter-rouge">needs</code> a <code class="language-plaintext highlighter-rouge">trigger</code> job whose rules make it <code class="language-plaintext highlighter-rouge">when: manual</code> for an ordinary contributor push or merge request; it runs unattended only on scheduled pipelines or bot-merged MRs against the upstream branch. This corrects an earlier characterization that no riscv64 job exists at all for ORC: one exists, but it is gated, not automatic.</p>
+
+<p><strong>Cerbero (<code class="language-plaintext highlighter-rouge">gstreamer/cerbero</code>), the packaging/cross-build tool:</strong> two riscv64 jobs, <code class="language-plaintext highlighter-rouge">cerbero deps cross-android riscv64</code> and <code class="language-plaintext highlighter-rouge">build cerbero cross-android riscv64</code>, both explicitly <code class="language-plaintext highlighter-rouge">when: manual</code>. Both cross-compile for Android riscv64 only; neither executes or tests the resulting binaries, and neither runs automatically.</p>
+
+<p><strong>RISE runners:</strong> not used anywhere in this picture. No GStreamer, ORC, or cerbero CI job is tied to RISE’s runner program; RISE has no involvement with GStreamer at all (see Section 12).</p>
+
+<p><strong>Downstream regression gate:</strong> the only riscv64 regression detection in practice comes from distro infrastructure outside GStreamer’s control, and it is itself incomplete: Debian disabled the <code class="language-plaintext highlighter-rouge">gst-plugins-bad1.0</code> riscv64 autopkgtest after a longer timeout still proved insufficient (v1.26.6-5, 2025-10-09), rather than fixing the underlying slowness, and Alpine disabled <code class="language-plaintext highlighter-rouge">gst-plugins-good</code>/<code class="language-plaintext highlighter-rouge">gst-plugins-bad</code> on riscv64 after the <code class="language-plaintext highlighter-rouge">orcc</code> JIT segfault (aports #18343).</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -996,49 +881,37 @@ meson compile <span class="nt">-C</span> builddir
   </thead>
   <tbody>
     <tr>
-      <td>Native runner</td>
-      <td>Yes (Fedora, Debian)</td>
-      <td>Yes (Windows MSVC, macOS)</td>
+      <td>GStreamer core native runner</td>
+      <td>Yes</td>
+      <td>Partial (macOS arm64)</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>Cross-compile job</td>
-      <td>No</td>
-      <td>Yes (Windows arm64, manual)</td>
-      <td>No</td>
-    </tr>
-    <tr>
-      <td>QEMU emulation</td>
-      <td>No</td>
-      <td>No</td>
-      <td>No</td>
-    </tr>
-    <tr>
-      <td>Docker image</td>
+      <td>GStreamer core CI job of any kind</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>CI framework</td>
-      <td>GitLab CI</td>
-      <td>GitLab CI</td>
-      <td>N/A</td>
+      <td>ORC CI job</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes, manual/scheduled-trigger gated</td>
     </tr>
     <tr>
-      <td>Test suite runs</td>
-      <td>Yes (build + unit)</td>
-      <td>Windows: build only</td>
-      <td>N/A</td>
+      <td>Cerbero CI job</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes, manual-only, Android cross-compile, no test execution</td>
+    </tr>
+    <tr>
+      <td>Distro autopkgtest/buildtest coverage</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Partial; disabled for gst-plugins-bad on both Debian (timeout) and Alpine (orcc crash)</td>
     </tr>
   </tbody>
 </table></div>
-
-<p><strong>ORC CI:</strong> ORC’s own <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> runs jobs for amd64, arm64, ppc64le, and loongarch64. No riscv64 job exists for ORC either.</p>
-
-<p><strong>RISE CI runners:</strong> The RISE Project is not involved with GStreamer (see Section 12). No RISE-provisioned riscv64 runner is used by GStreamer or ORC.</p>
-
-<p><strong>Downstream regression gate:</strong> The only riscv64 regression detection for GStreamer comes from Debian sid autopkgtest runs and Alpine CI. These run on QEMU-emulated or native riscv64 hardware as part of distro infrastructure, not under GStreamer’s control.</p><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -1048,7 +921,7 @@ meson compile <span class="nt">-C</span> builddir
 </h2>
     
 
-<p><strong>Official upstream binaries:</strong> None for riscv64. The <a href="https://gstreamer.freedesktop.org/download/">GStreamer download page</a> ships binaries for Windows, macOS, Android, and iOS only. Linux consumers have always depended on distribution packages.</p>
+<p><strong>Official upstream binaries:</strong> none for any Linux architecture. GStreamer’s download page ships Windows, macOS, Android and iOS binaries only. The GitLab Releases API for <code class="language-plaintext highlighter-rouge">gstreamer/gstreamer</code> returns an empty array; GStreamer does not use GitLab’s release-artifact feature at all. The project instead publishes source tags: latest stable 1.28.7 (2026-09-07), with 1.28.6 before it, and a development snapshot 1.29.2 (2026-06-28) targeting the unreleased 1.30. Linux consumers have always depended on distribution packages, and riscv64 availability is therefore a distro-packaging question, not an upstream-release question.</p>
 
 <p><strong>Distribution package status:</strong></p>
 
@@ -1063,65 +936,53 @@ meson compile <span class="nt">-C</span> builddir
   </thead>
   <tbody>
     <tr>
-      <td>Debian sid (unstable)</td>
-      <td>1.28.4-2</td>
-      <td>YES - available</td>
-      <td><code class="language-plaintext highlighter-rouge">arch: any</code>; built on <code class="language-plaintext highlighter-rouge">rv-manda-03</code> buildd; 1,401.9 kB</td>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td>1.28.2-1 (base), some plugins patched further</td>
+      <td>Yes, for nearly all <code class="language-plaintext highlighter-rouge">gstreamer1.0-*</code> packages</td>
+      <td>32 matching packages confirmed by direct fetch of packages.ubuntu.com; riscv64 is built for <code class="language-plaintext highlighter-rouge">gstreamer1.0-tools</code>, <code class="language-plaintext highlighter-rouge">-plugins-base</code>, <code class="language-plaintext highlighter-rouge">-good</code>, <code class="language-plaintext highlighter-rouge">-bad</code>, <code class="language-plaintext highlighter-rouge">-bad-apps</code>, <code class="language-plaintext highlighter-rouge">-extra</code>, <code class="language-plaintext highlighter-rouge">-ugly</code>, <code class="language-plaintext highlighter-rouge">-libav</code>, <code class="language-plaintext highlighter-rouge">-nice</code>, <code class="language-plaintext highlighter-rouge">-vaapi</code>, <code class="language-plaintext highlighter-rouge">-rtsp</code>, <code class="language-plaintext highlighter-rouge">-gl</code>, <code class="language-plaintext highlighter-rouge">-gtk3</code>/<code class="language-plaintext highlighter-rouge">-gtk4</code>, <code class="language-plaintext highlighter-rouge">-qt5</code>/<code class="language-plaintext highlighter-rouge">-qt6</code>, <code class="language-plaintext highlighter-rouge">-pipewire</code>, <code class="language-plaintext highlighter-rouge">-fdkaac</code>, and more. Riscv64 builds mostly from the “ports” pocket alongside armhf/ppc64el/s390x, while amd64/arm64/i386 build from “security”; some packages (e.g. <code class="language-plaintext highlighter-rouge">gstreamer1.0-alsa</code>) have a newer security-updated build for primary architectures (1.28.2-1ubuntu0.1) while riscv64 remains on the older ports-pocket build (1.28.2-1), a patch-level lag, not a missing package.</td>
     </tr>
     <tr>
-      <td>Debian experimental</td>
-      <td>1.29.1-1</td>
-      <td>YES - available</td>
-      <td>Development snapshot</td>
-    </tr>
-    <tr>
-      <td>Debian testing</td>
-      <td>1.28.3-1</td>
-      <td>YES - available</td>
-      <td>Autopkgtest results include riscv64</td>
-    </tr>
-    <tr>
-      <td>Ubuntu Noble (24.04 LTS)</td>
-      <td>1.24.2-1</td>
-      <td>YES - available</td>
-      <td>Via Ubuntu Ports for riscv64; 32 of 33 packages include riscv64; <code class="language-plaintext highlighter-rouge">gstreamer1.0-fdkaac</code> excluded (FDK-AAC license restrictions)</td>
+      <td>Debian sid/testing/experimental</td>
+      <td>1.28.4-2 / 1.28.3-1 / 1.29.1-1</td>
+      <td>Yes</td>
+      <td><code class="language-plaintext highlighter-rouge">arch: any</code>; built on <code class="language-plaintext highlighter-rouge">rv-manda-03</code> buildd</td>
     </tr>
     <tr>
       <td>Alpine Linux edge</td>
-      <td>1.28.3-r0</td>
-      <td>YES - available</td>
-      <td>Main repo, build date 2026-05-29</td>
+      <td>1.28.3-r0 (core), but <code class="language-plaintext highlighter-rouge">gst-plugins-good</code>/<code class="language-plaintext highlighter-rouge">gst-plugins-bad</code> disabled</td>
+      <td>Partial</td>
+      <td>Core package available; good/bad plugin sets disabled on riscv64 due to the <code class="language-plaintext highlighter-rouge">orcc</code> JIT segfault (aports #18343)</td>
     </tr>
     <tr>
-      <td>Fedora 42</td>
+      <td>Fedora</td>
       <td>1.26.11</td>
-      <td>NO</td>
-      <td>Koji build arches: i386/aarch64/ppc64le/x86_64/s390x only. riscv64 absent.</td>
+      <td>No</td>
+      <td>Koji build arches: i386/aarch64/ppc64le/x86_64/s390x only; riscv64 absent</td>
     </tr>
     <tr>
       <td>Arch Linux RISC-V</td>
-      <td>1.26.0-3</td>
-      <td>BROKEN</td>
-      <td>FTBFS: <code class="language-plaintext highlighter-rouge">riscv64.patch</code> fails at hunk #3; <code class="language-plaintext highlighter-rouge">svt-hevc</code> dep missing entirely</td>
+      <td>1.28.7-2</td>
+      <td>Yes, per current repo listing</td>
+      <td><code class="language-plaintext highlighter-rouge">archriscv.felixc.at/repo/extra/</code> lists built <code class="language-plaintext highlighter-rouge">gstreamer</code> and roughly 80 <code class="language-plaintext highlighter-rouge">gst-plugins-*</code> riscv64 packages today, including <code class="language-plaintext highlighter-rouge">gst-plugin-skia</code>; this contradicts an earlier note of an FTBFS patch failure and missing <code class="language-plaintext highlighter-rouge">svt-hevc</code> dependency, which was not re-confirmed on this pass [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
       <td>Gentoo</td>
       <td>1.26.11</td>
       <td>Partial</td>
-      <td><code class="language-plaintext highlighter-rouge">~riscv</code> keyword (testing only, not stabilized)</td>
+      <td><code class="language-plaintext highlighter-rouge">~riscv</code> keyword, testing only, not stabilized [NEEDS VERIFICATION, not re-checked this cycle]</td>
+    </tr>
+    <tr>
+      <td>openSUSE Tumbleweed</td>
+      <td>1.26.3</td>
+      <td>Yes</td>
+      <td>riscv64 port build listed (rpmfind)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>What a user must do to get a working binary:</strong></p>
+<p><strong>What a user must do to get a working binary:</strong> on Ubuntu, Debian, Arch RISC-V, or openSUSE Tumbleweed, install via the distro package manager; no source build required. On Alpine, <code class="language-plaintext highlighter-rouge">gstreamer1.0-tools</code> and core are available, but <code class="language-plaintext highlighter-rouge">gst-plugins-good</code>/<code class="language-plaintext highlighter-rouge">gst-plugins-bad</code> must be built from source or accepted as unavailable until the Alpine-side fix is independently confirmed. On Fedora, GStreamer for riscv64 is not packaged at all; users must build from source with a riscv64 cross file or natively on riscv64 hardware.</p>
 
-<p>On Debian or Alpine: install via package manager (<code class="language-plaintext highlighter-rouge">apt install gstreamer1.0-tools libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good</code>). No source build required.</p>
-
-<p>On Fedora: GStreamer for riscv64 is not packaged. Users must build from source using Meson with a riscv64 cross file or on a native riscv64 host.</p>
-
-<p>On Arch Linux RISC-V: current package is broken. Users must build from source with patches applied manually.</p>
-
-<p><strong>PyPI / npm / Maven / OCI containers:</strong> Not applicable. GStreamer is a C library. Python bindings are accessed via system PyGObject packages, not standalone PyPI wheels. No GStreamer OCI container image for riscv64 is published by the upstream project.</p><hr />
+<p><strong>PyPI / npm / Maven / OCI containers:</strong> not applicable. <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/gstreamer/json</code> returns HTTP 404; no PyPI package literally named <code class="language-plaintext highlighter-rouge">gstreamer</code> exists (Python bindings ship via system PyGObject/<code class="language-plaintext highlighter-rouge">gst-python</code>, not a pip wheel). The RISE wheel-builder endpoint for <code class="language-plaintext highlighter-rouge">gstreamer</code> redirects (302) to the same non-existent PyPI project. No GStreamer OCI container image for riscv64 is published by the upstream project.</p>
 <h2 id="9-dependencies">
   
   
@@ -1144,6 +1005,7 @@ meson compile <span class="nt">-C</span> builddir
     <tr>
       <th>Dependency</th>
       <th>Role</th>
+      <th>Criticality</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
       <th>riscv64 Release</th>
@@ -1152,96 +1014,153 @@ meson compile <span class="nt">-C</span> builddir
   </thead>
   <tbody>
     <tr>
-      <td>GLib &gt;= 2.64</td>
-      <td>GObject, GIO, GThread, GMainLoop</td>
+      <td>GLib</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
       <td>Yes</td>
       <td>No dedicated CI</td>
       <td>Packaged universally</td>
-      <td>No riscv64-specific code in glib</td>
+      <td>No riscv64-specific code in GLib itself</td>
     </tr>
     <tr>
-      <td>ORC &gt;= 0.4.34</td>
-      <td>SIMD JIT acceleration</td>
-      <td>Yes (Alpine 0.4.42)</td>
-      <td>Partial (no ORC CI for riscv64)</td>
-      <td>Released in 0.4.42</td>
-      <td>RVV backend experimental; see deep-dive below</td>
+      <td>liborc</td>
+      <td>runtime-dependency</td>
+      <td>critical</td>
+      <td>Yes (0.4.42+, Alpine, Debian sid 1:0.4.42-3)</td>
+      <td>One manual/scheduled-gated riscv64 CI job (<code class="language-plaintext highlighter-rouge">alpine 3.23 riscv64</code>); not run on ordinary MRs</td>
+      <td>Released in 0.4.42 (Jan 2026), current 0.4.44 (Sep 2026)</td>
+      <td>See deep dive below; the single highest-leverage riscv64 performance dependency</td>
+    </tr>
+    <tr>
+      <td>Meson</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Yes</td>
+      <td>N/A (Python, portable)</td>
+      <td>Packaged universally</td>
+      <td>No riscv64-specific issues found; top-level <code class="language-plaintext highlighter-rouge">meson.build</code> requires &gt;= 1.4</td>
+    </tr>
+    <tr>
+      <td>GNU bison</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Yes</td>
+      <td>N/A</td>
+      <td>Packaged universally</td>
+      <td>A macOS-hosted prebuilt-bison checksum-key lookup bug assumed host CPU family equals build CPU family; broke specifically when cross-compiling for Android riscv64, fixed in <a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12311">gstreamer !12311</a></td>
+    </tr>
+    <tr>
+      <td>Flex</td>
+      <td>build-dependency</td>
+      <td>critical</td>
+      <td>Yes</td>
+      <td>N/A</td>
+      <td>Packaged universally</td>
+      <td>No riscv64-specific issues found</td>
+    </tr>
+    <tr>
+      <td>Check</td>
+      <td>test-dependency</td>
+      <td>critical</td>
+      <td>Yes</td>
+      <td>N/A</td>
+      <td>Packaged universally</td>
+      <td>No riscv64-specific issues found; standard portable C unit-test library</td>
+    </tr>
+    <tr>
+      <td>GObject Introspection</td>
+      <td>build-dependency</td>
+      <td>optional</td>
+      <td>Yes, with caveat</td>
+      <td>Unknown</td>
+      <td>Packaged</td>
+      <td>Meson <code class="language-plaintext highlighter-rouge">full_path()</code> build error on Alpine riscv64 when system GLib is paired with source-built G-I, fixed by <a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11784">gstreamer !11784</a>, backported to 1.28</td>
     </tr>
     <tr>
       <td>FFmpeg (libav*)</td>
-      <td>All codec decode/encode in gst-libav</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes (Alpine 8.1.1)</td>
-      <td>CI in development (QEMU riscv64 PR unmerged Mar 2026)</td>
+      <td>QEMU riscv64 CI reported unmerged as of Mar 2026 [NEEDS VERIFICATION, not re-checked this cycle]</td>
       <td>Packaged</td>
-      <td>Named RISC-V maintainer; 219+ riscv64 patches; strong RVV</td>
+      <td>Named upstream RISC-V maintainer, 219+ riscv64 patches, strong RVV coverage across H.264/VP8/VP9/HEVC/AAC/FLAC/Opus/Vorbis/swscale; see <code class="language-plaintext highlighter-rouge">project-reports/ffmpeg.md</code></td>
     </tr>
     <tr>
       <td>OpenSSL</td>
-      <td>TLS in gst-plugins-bad</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes</td>
       <td>Yes (QEMU cross-compile CI)</td>
       <td>Released since 3.0.3 (2022)</td>
-      <td>First-class riscv64 support</td>
+      <td>First-class riscv64 support; see <code class="language-plaintext highlighter-rouge">project-reports/openssl.md</code></td>
     </tr>
     <tr>
       <td>GnuTLS</td>
-      <td>TLS alternative</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes (Alpine 3.8.13)</td>
       <td>Unknown</td>
       <td>Packaged</td>
-      <td>Depends on nettle; no known issues</td>
+      <td>Depends on nettle; no known riscv64 issues</td>
     </tr>
     <tr>
       <td>dav1d</td>
-      <td>AV1 decode in gst-plugins-bad</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes (Alpine 1.5.3)</td>
-      <td>Yes (RVV CI added MR !1608, Feb 2024)</td>
+      <td>Yes, RVV CI added (MR !1608, Feb 2024)</td>
       <td>Released since 1.4.0</td>
-      <td>RVV-accelerated; excellent trajectory</td>
+      <td>RVV-accelerated, strong trajectory; see <code class="language-plaintext highlighter-rouge">project-reports/dav1d.md</code></td>
     </tr>
     <tr>
       <td>zlib</td>
-      <td>Compression (matroska, isomp4)</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes</td>
-      <td>Partial (OpenBSD CI Jan 2026)</td>
+      <td>Partial (OpenBSD CI, Jan 2026)</td>
       <td>Packaged</td>
       <td>No riscv64 SIMD; pure-C fallback</td>
     </tr>
     <tr>
       <td>zlib-ng</td>
-      <td>zlib replacement (some distros)</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes</td>
-      <td>Cross-compile CI</td>
+      <td>Cross-compile CI exists</td>
       <td>Packaged</td>
-      <td>SiFive/Icenowy RVV work for adler32/slide_hash</td>
+      <td>SiFive/Icenowy RVV work in progress for adler32/slide_hash</td>
     </tr>
     <tr>
       <td>libopus</td>
-      <td>Opus audio</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes (Alpine 1.6.1)</td>
       <td>None</td>
       <td>Packaged</td>
-      <td>No riscv64 SIMD; PR #476 abandoned. C fallback only</td>
+      <td>No riscv64 SIMD; a prior riscv64-SIMD PR was abandoned; C fallback only</td>
     </tr>
     <tr>
       <td>libvpx</td>
-      <td>VP8/VP9 encode/decode</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes (Alpine 1.15.2)</td>
       <td>Unknown</td>
       <td>Packaged</td>
-      <td>No riscv64 in <code class="language-plaintext highlighter-rouge">configure</code> ARCH_EXT_LIST; C fallback only</td>
+      <td>No riscv64 entry in <code class="language-plaintext highlighter-rouge">configure</code>’s ARCH_EXT_LIST; C fallback only</td>
     </tr>
     <tr>
-      <td>x264</td>
-      <td>H.264 encode</td>
+      <td>libx264</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes (Alpine 0.164.3108)</td>
       <td>Unknown</td>
       <td>Packaged</td>
       <td>No riscv64 assembly; C fallback only</td>
     </tr>
     <tr>
-      <td>x265</td>
-      <td>HEVC encode</td>
+      <td>libx265</td>
+      <td>runtime-dependency</td>
+      <td>optional</td>
       <td>Yes (Alpine 4.1)</td>
       <td>Unknown</td>
       <td>Packaged</td>
@@ -1249,63 +1168,43 @@ meson compile <span class="nt">-C</span> builddir
     </tr>
     <tr>
       <td>libvorbis / libogg</td>
-      <td>Vorbis audio</td>
+      <td>runtime-dependency (indirect)</td>
+      <td>optional</td>
       <td>Yes</td>
       <td>Unknown</td>
       <td>Packaged</td>
-      <td>Pure-C; zero risk</td>
+      <td>Pure C; no architecture risk</td>
     </tr>
     <tr>
       <td>libdrm</td>
-      <td>DRM/KMS for hardware decode</td>
+      <td>runtime-dependency (indirect, hardware decode)</td>
+      <td>optional</td>
       <td>Yes</td>
       <td>Unknown</td>
       <td>Packaged</td>
-      <td>Portable IOCTL layer; no arch code</td>
+      <td>Portable IOCTL layer; no architecture-specific code</td>
     </tr>
     <tr>
       <td>gst-plugins-rs</td>
-      <td>Rust plugins (dav1d, rav1e, rspng)</td>
+      <td>runtime-dependency (indirect, Rust plugins: dav1d/rav1e/rspng bindings)</td>
+      <td>optional</td>
       <td>Yes (Alpine 0.15.2)</td>
       <td>None</td>
       <td>Packaged</td>
-      <td>Rust riscv64 Tier 2; dav1d/rav1e leverage their riscv64 optimizations</td>
+      <td>Rust riscv64 is tier 2 on Linux (tier 3 on Android, per cerbero !1739); underlying dav1d/rav1e carry their own riscv64 optimizations</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="deep-dive-orc-liborc">
+<h3 id="deep-dive-liborc-orc">
   
   
-    <a href="#deep-dive-orc-liborc" class="anchor-heading" aria-labelledby="deep-dive-orc-liborc"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Deep Dive: ORC (liborc)
+    <a href="#deep-dive-liborc-orc" class="anchor-heading" aria-labelledby="deep-dive-liborc-orc"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Deep Dive: liborc (ORC)
   
   
 </h3>
     
 
-<p>ORC is the most important dependency for riscv64 performance. Its RISC-V backend is a genuine non-trivial implementation (9 files, ~2,700 lines) written by Samsung Electronics engineers.</p>
-
-<p><strong>Version shipped:</strong> ORC 0.4.42 (Alpine edge 2026-06-23, Debian sid <code class="language-plaintext highlighter-rouge">1:0.4.42-3</code>).</p>
-
-<p><strong>Strengths:</strong></p>
-<ul>
-  <li>Complete RV64I scalar instruction encoding</li>
-  <li>Broad RVV 1.0 opcode coverage: load/store all widths, integer arithmetic, shift, float, conversions</li>
-  <li>Four-path CPU feature detection supporting Linux and BSD</li>
-  <li>Detects V, Zvkb, Zvbb extensions</li>
-  <li>35+ commits through June 2026; active maintainer engagement</li>
-</ul>
-
-<p><strong>Weaknesses:</strong></p>
-<ul>
-  <li>RV32 explicitly unsupported (FIXME in source)</li>
-  <li>Entire API gated behind <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code></li>
-  <li>Two FIXME notes in load rules</li>
-  <li>Zvkn/Zvks detection incomplete in hwprobe path</li>
-  <li>No ORC CI for riscv64; correctness depends on downstream distro testing</li>
-  <li>ORC requires kernel &gt;= 6.4 for <code class="language-plaintext highlighter-rouge">sys_riscv_hwprobe</code>; falls back to <code class="language-plaintext highlighter-rouge">getauxval</code> on older kernels</li>
-</ul>
-
-<p><strong>ORC’s riscv64 CI gap is the highest-priority infrastructure investment for GStreamer on RISC-V.</strong> Without it, regressions in ORC’s RVV backend will reach distros undetected.</p>
+<p>ORC is the most important dependency for riscv64 performance and the single highest-leverage investment area (see Section 4.1 for architectural detail). Version shipped in Alpine edge and Debian sid is 0.4.42+ (current upstream stable is 0.4.44, 2026-09-09). Strengths: complete RV64I scalar encoding, broad RVV 1.0 opcode coverage (195 rules), four-path CPU detection spanning Linux and BSD, active maintainer engagement (over 20 merged riscv64 MRs from April to July 2026 alone). Weaknesses: RV32 explicitly unsupported, entire API gated behind <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code>, <code class="language-plaintext highlighter-rouge">Zvkn</code>/<code class="language-plaintext highlighter-rouge">Zvks</code> detection incomplete in the hwprobe path, and only one riscv64 CI job exists project-wide, gated behind manual/scheduled triggering rather than run on every MR. Two real memory-safety/correctness bugs (a NULL-deref crash and a buffer-overrun) were found and fixed in this backend within the past six months, underscoring the value of moving its CI from manual to automatic.</p>
 <h3 id="deep-dive-ffmpeg-via-gst-libav">
   
   
@@ -1315,7 +1214,7 @@ meson compile <span class="nt">-C</span> builddir
 </h3>
     
 
-<p>FFmpeg has a named RISC-V maintainer (Remi Denis-Courmont) and 219+ RISC-V patches. RVV-optimized implementations exist for H.264, VP8/VP9, HEVC, AAC, FLAC, Opus, Vorbis, and swscale. gst-libav passes all decode/encode operations through FFmpeg’s codec layer, so the quality of riscv64 codec support in gst-libav tracks FFmpeg’s trajectory directly. Full details in <code class="language-plaintext highlighter-rouge">./multimedia/ffmpeg.md</code>.</p>
+<p>FFmpeg has a named RISC-V maintainer and 219+ riscv64 patches, with RVV-optimized implementations across most major codecs. <code class="language-plaintext highlighter-rouge">gst-libav</code> passes all decode/encode through FFmpeg’s codec layer, so riscv64 quality in <code class="language-plaintext highlighter-rouge">gst-libav</code> tracks FFmpeg’s own trajectory directly rather than any GStreamer-specific work. Full detail in <code class="language-plaintext highlighter-rouge">project-reports/ffmpeg.md</code>.</p>
 <h3 id="codec-simd-gap-summary">
   
   
@@ -1325,7 +1224,7 @@ meson compile <span class="nt">-C</span> builddir
 </h3>
     
 
-<p>The three encoder dependencies (x264, x265, libvpx encode) and libopus have no riscv64 SIMD paths. For a media server workload that requires high-throughput VP9 or H.265 encoding on riscv64, performance will be significantly below arm64 and amd64 in the current state.</p><hr />
+<p>Four dependencies, x264, x265, libvpx (encode path), and libopus, have no riscv64 SIMD of any kind; all fall back to scalar C. For a GStreamer-based media-server workload requiring high-throughput VP9/H.265 encode or Opus transcode on riscv64, throughput will be materially below arm64 and amd64 until one of those upstream projects gains riscv64 SIMD, which is outside GStreamer’s or ORC’s control.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1335,7 +1234,7 @@ meson compile <span class="nt">-C</span> builddir
 </h2>
     
 
-<p><strong>Correctness bugs:</strong></p>
+<p><strong>Correctness and memory-safety bugs (riscv64-specific):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1349,23 +1248,51 @@ meson compile <span class="nt">-C</span> builddir
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/4856">#4856</a></td>
-      <td><code class="language-plaintext highlighter-rouge">libs_gstharness.test sometimes times out</code></td>
-      <td>Open (Jan 2026)</td>
-      <td>Low (test infrastructure)</td>
-      <td>Observed only on <code class="language-plaintext highlighter-rouge">qemuriscv5</code> QEMU; intermittent timeout after 104.9s; 1 error among 8 checks. Hypothesis: slow QEMU emulation triggering a pre-existing race in gstharness. No response or patch.</td>
+      <td><a href="https://gitlab.alpinelinux.org/alpine/aports/-/issues/18343">Alpine aports #18343</a></td>
+      <td><code class="language-plaintext highlighter-rouge">orcc</code> JIT segfaults generating <code class="language-plaintext highlighter-rouge">videomixerorc</code> on riscv64</td>
+      <td>Closed 2026-07-21 (opened 2026-07-18)</td>
+      <td>High (build-blocking)</td>
+      <td>Signal 11 in <code class="language-plaintext highlighter-rouge">orcc --header</code>/<code class="language-plaintext highlighter-rouge">--implementation</code>; forced Alpine to disable <code class="language-plaintext highlighter-rouge">gst-plugins-good</code>/<code class="language-plaintext highlighter-rouge">gst-plugins-bad</code> on riscv64; root-cause fix not independently confirmed in public notes</td>
     </tr>
     <tr>
-      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/3433">#3433</a></td>
-      <td><code class="language-plaintext highlighter-rouge">gst-libav: general:test_videoenc_drain fails on riscv64</code></td>
-      <td>Closed (Mar 2024)</td>
-      <td>Medium (was correctness)</td>
-      <td>SIGILL in gst-libav 1.22.11 on Alpine Linux riscv64 (real hardware). Root cause: FFmpeg codec path executed unsupported instruction. Closed same day by reporter (Natanael Copa, Alpine maintainer). Resolved upstream or in FFmpeg dep.</td>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/306">orc !306</a></td>
+      <td><code class="language-plaintext highlighter-rouge">convsusN</code> rule’s <code class="language-plaintext highlighter-rouge">vsetvli</code> resets VL to VLMAX, causing an out-of-bounds write past the intended buffer</td>
+      <td>Fixed, merged 2026-06-25</td>
+      <td>High (memory corruption)</td>
+      <td>The most safety-critical bug found in the RVV backend to date</td>
+    </tr>
+    <tr>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/279">orc !279</a></td>
+      <td>NULL-pointer crash in cpuinfo extension detection on platforms with no multi-character extension string (older devicetrees/kernels, pre-7.1.0 QEMU)</td>
+      <td>Fixed, merged 2026-04-14</td>
+      <td>Medium (crash on specific platforms)</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/308">orc !308</a></td>
+      <td><code class="language-plaintext highlighter-rouge">convdl</code> narrowing conversion used the wrong rounding mode, producing wrong results</td>
+      <td>Fixed, merged 2026-07-12</td>
+      <td>Medium (silent wrong output)</td>
+      <td>Switched to truncation (<code class="language-plaintext highlighter-rouge">vfncvt.rtz</code>)</td>
+    </tr>
+    <tr>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/3433">#3433 (GStreamer work item)</a></td>
+      <td><code class="language-plaintext highlighter-rouge">gst-libav: test_videoenc_drain</code> fails on riscv64, SIGILL on real Alpine hardware, gst-libav 1.22.11</td>
+      <td>Closed Mar 2024</td>
+      <td>Medium</td>
+      <td>Root cause traced to the FFmpeg codec path executing an unsupported instruction; resolved upstream or in the FFmpeg dependency</td>
+    </tr>
+    <tr>
+      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/4856">#4856 (GStreamer work item)</a></td>
+      <td><code class="language-plaintext highlighter-rouge">libs_gstharness.test</code> intermittently times out on <code class="language-plaintext highlighter-rouge">qemuriscv5</code></td>
+      <td>Open (Jan 2026)</td>
+      <td>Low (test infrastructure)</td>
+      <td>Intermittent, hypothesized as slow-QEMU-triggered pre-existing race; no response or patch</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Infrastructure/build issues:</strong></p>
+<p><strong>Packaging and build issues:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1378,46 +1305,37 @@ meson compile <span class="nt">-C</span> builddir
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11784">MR !11784</a></td>
-      <td>GObject-Introspection build fix for Alpine RISC-V</td>
-      <td>Merged Jun 2026, backported to 1.28</td>
-      <td>Meson <code class="language-plaintext highlighter-rouge">full_path()</code> error on Alpine riscv64 with mixed GLib/GI versions.</td>
+      <td>Debian <code class="language-plaintext highlighter-rouge">gst-plugins-bad1.0</code> riscv64 autopkgtest</td>
+      <td>Test too slow, times out</td>
+      <td>Disabled, not fixed</td>
+      <td>v1.26.6-4 increased the timeout (2025-10-08); v1.26.6-5 reverted that and simply stopped running the autopkgtest on riscv64 (2025-10-09), because a longer timeout was still insufficient</td>
     </tr>
     <tr>
-      <td>Arch RISC-V FTBFS</td>
-      <td><code class="language-plaintext highlighter-rouge">riscv64.patch</code> fails to apply</td>
+      <td><a href="https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg2046937.html">Debian Bug#1109780</a></td>
+      <td><code class="language-plaintext highlighter-rouge">gst-plugins-bad1.0-contrib</code>: enable riscv64 build</td>
+      <td>Fixed</td>
+      <td>riscv64 had been excluded from the architecture list; fixed by switching to <code class="language-plaintext highlighter-rouge">Arch: any</code> in v1.28.0-1 (2026-02-24)</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg2061717.html">Debian Bug#1114141</a></td>
+      <td><code class="language-plaintext highlighter-rouge">gst-plugins-bad1.0</code> FTBFS / test failure in <code class="language-plaintext highlighter-rouge">elements_curlhttpsrc</code></td>
       <td>Open</td>
-      <td>Hunk #3 fails at line 243; <code class="language-plaintext highlighter-rouge">svt-hevc</code> dep missing. GStreamer on Arch RISC-V is currently uninstallable from source. [NEEDS VERIFICATION - no upstream issue filed]</td>
+      <td>Triggered by curl 8.16; riscv64 noted among architectures with 2 test failures, not confirmed riscv64-exclusive</td>
+    </tr>
+    <tr>
+      <td>GStreamer-OMX on StarFive VisionFive 2</td>
+      <td>Crash in <code class="language-plaintext highlighter-rouge">OMX_UseEGLImage()</code> (segfault in <code class="language-plaintext highlighter-rouge">gst_omx_port_allocate_buffers_unlocked</code>)</td>
+      <td>Root-caused, worked around</td>
+      <td>gst-omx 1.18.5; reproduced on both Yocto and Debian images; patched to stub the function as NotImplemented; the affected project subsequently moved off gst-omx to the v4l2-m2m driver for its Wave5 VPU</td>
+    </tr>
+    <tr>
+      <td><a href="https://osv.dev/vulnerability/CVE-2025-6663">CVE-2025-6663</a></td>
+      <td>Integer overflow in H.266/VVC parser (<code class="language-plaintext highlighter-rouge">subpic_level_info</code>)</td>
+      <td>Fixed (Debian gst-plugins-bad 1.26.2-3)</td>
+      <td>Not riscv64-specific, listed because it is an active tracked vulnerability in a plugin set being packaged for riscv64</td>
     </tr>
   </tbody>
 </table></div>
-
-<p><strong>Open MRs adding riscv64 functionality (not yet merged):</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>MR</th>
-      <th>Title</th>
-      <th>Status</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11768">!11768</a></td>
-      <td>Add <code class="language-plaintext highlighter-rouge">gst_cpuid_supports_riscv_v()</code> RVV runtime detection</td>
-      <td>Open (Jun 6, 2026)</td>
-      <td>Detection plumbing only; no RVV codepaths yet. Author: Felix-Gong.</td>
-    </tr>
-    <tr>
-      <td><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11773">!11773</a></td>
-      <td>Add <code class="language-plaintext highlighter-rouge">HAVE_CPU_RISCV32/64</code> to ABI test <code class="language-plaintext highlighter-rouge">host_defines</code></td>
-      <td>Open (Jun 8, 2026)</td>
-      <td>Prerequisite for riscv64 ABI regression testing. Author: Felix-Gong.</td>
-    </tr>
-  </tbody>
-</table></div><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1427,81 +1345,91 @@ meson compile <span class="nt">-C</span> builddir
 </h2>
     
 
-<p><strong>No stated organizational objections.</strong> The Samsung ORC work was accepted without controversy. The project’s informal governance means there is no committee to lobby.</p>
+<p><strong>No stated organizational objections.</strong> The Samsung ORC backend and the ISCAS follow-on work were both accepted without documented controversy; GStreamer’s informal governance means there is no committee to lobby.</p>
 
-<p><strong>Technical blockers for CI:</strong></p>
-<ul>
-  <li>GStreamer’s CI runs on self-hosted GitLab runners maintained by Centricular and Collabora. Adding riscv64 requires provisioning physical or cloud riscv64 machines and registering them with the freedesktop.org GitLab instance. This is a resource/infrastructure problem, not a code problem.</li>
-  <li>freedesktop.org infrastructure is not part of the RISE project’s runner program.</li>
-  <li>The freedesktop.org GitLab instance has Anubis bot-challenge protection that blocks automated tooling, complicating CI integration work from outside the core team.</li>
-</ul>
+<p><strong>Technical blockers for CI:</strong> GStreamer’s CI runs on self-hosted GitLab runners maintained by Centricular and Collabora. Adding riscv64 requires provisioning physical or cloud riscv64 machines and registering them with the freedesktop.org GitLab instance, a resource and infrastructure problem rather than a code problem. ORC already has a working riscv64 job (<code class="language-plaintext highlighter-rouge">alpine 3.23 riscv64</code>); the remaining work there is to make it run automatically on every MR instead of manual/scheduled-trigger only, and to add an equivalent job to the GStreamer core monorepo, which currently has none.</p>
 
-<p><strong>Technical blocker for ORC stability:</strong> The RVV backend must exit <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code> gating before GStreamer distro packages can depend on it unconditionally. This requires the ORC maintainers to review, stabilize, and declare the API stable. Timeline is not published.</p>
+<p><strong>Technical blocker for ORC stability:</strong> the RVV backend must exit <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code> gating before GStreamer distro packages can depend on it unconditionally. This requires ORC maintainers to review and declare the API stable; no timeline is published.</p>
 
-<p><strong>Acceptance probability for well-formed contributions:</strong> High. Both the ORC backend and the build-fix MR were accepted without friction. The two open MRs (!11768, !11773) from Felix-Gong are straightforward and there is no documented reviewer pushback.</p>
+<p><strong>Acceptance probability for well-formed contributions:</strong> high. Every riscv64 MR found across ORC, GStreamer core, gstreamer-rs, and cerbero in this research (more than 30 merged MRs) was accepted without documented reviewer pushback.</p>
 
-<p><strong>RISE involvement:</strong> None. GStreamer is not a RISE-funded project. The RISE blog (28 posts through June 2026) contains zero mentions of GStreamer. RISE’s multimedia work covers FFmpeg (RP002: H.264 decode optimization) and libjpeg-turbo (RP003: RVV port). Neither Centricular nor Collabora appear in the RISE member list.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>RISE involvement:</strong> none, confirmed across every channel checked. The RISE blog (17 posts retrieved, spanning May 2025 through September 2026, including a site search for “GStreamer” that returned zero results) contains no GStreamer mention. GStreamer/freedesktop.org is not listed as a RISE member. The RISE Python wheel builder’s 89-package list does not include GStreamer, PyGObject, or gst-python. The <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub org’s repositories show zero GStreamer references in issues or PRs. The RISE Confluence wiki page on video/multimedia RVV requirements discusses x264 porting, not GStreamer. No RISE-funded RFP targets GStreamer; RISE’s adjacent multimedia-related funded work is FFmpeg (H.264 decode optimization) and libjpeg-turbo (RVV port), neither of which covers GStreamer or its ORC SIMD layer. The GStreamer RVV port that exists was built by Samsung (foundational ORC backend) and ISCAS (refinement and the first RVV-accelerated element), independent of RISE. Neither Centricular nor Collabora appear in the RISE member list.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has not funded GStreamer directly. FFmpeg (RP002) and libjpeg-turbo (RP003) are adjacent but do not cover GStreamer infrastructure or the ORC SIMD layer.</p>
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>MRs !11768 and !11773 are already submitted and need review only. No new code investment is required for basic riscv64 detection support in GStreamer core. The functional gap is in encoder SIMD: x264, x265, libvpx, and libopus all lack riscv64 SIMD paths and are independent projects with their own contribution processes.</p>
-<h3 id="132-performance-optimization">
-  
-  
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>The ORC RVV backend is the single highest-leverage performance investment. It accelerates all ORC-based DSP in gstreamer-plugins-base (color conversion, audio mixing, compositing) across every GStreamer application without per-codec work. The backend exists and is active; the investment need is in stabilizing it (fixing remaining FIXMEs, promoting out of <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code>, adding ZVKN/ZVKS hwprobe detection) and adding GStreamer-level CI to validate it.</p>
-
-<p>Encoder SIMD (x264, x265, libvpx) is higher effort, lower leverage for a multimedia framework evaluation: these are separate upstreams with large existing codebases and no RISC-V SIMD contributors currently engaged.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>The highest-impact infrastructure gap is the absence of any riscv64 CI in both GStreamer and ORC. Without it, regressions reach Debian and Alpine silently. The investment is:</p>
 <ul>
-  <li>Provision one or more riscv64 runners (native hardware or QEMU) registered with freedesktop.org GitLab.</li>
-  <li>Add a riscv64 CI job to ORC’s <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> (highest priority - this is where the active SIMD code lives).</li>
-  <li>Add a riscv64 CI job to GStreamer’s <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> (cross-compile + QEMU test run).</li>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li>GStreamer is a general-purpose multimedia pipeline framework, not a speed-differentiated library; the optimization-purpose modifier does not apply, and no optimization-level rating is assigned.</li>
+  <li><strong>Justification:</strong> No upstream riscv64 CI exists for GStreamer core: direct reads of <code class="language-plaintext highlighter-rouge">gstreamer/gstreamer</code>’s <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">ci/docker/*</code>, <code class="language-plaintext highlighter-rouge">ci/gitlab/*</code>, <code class="language-plaintext highlighter-rouge">ci/scripts/*</code>, and <code class="language-plaintext highlighter-rouge">ci/meson/*.ini</code> confirm no riscv64 build or test job, and the GitLab Releases API returns <code class="language-plaintext highlighter-rouge">[]</code>, meaning no upstream binary releases exist for any Linux architecture; only Windows/macOS/Android/iOS downloads are published. The distribution floor applies via <a href="https://packages.ubuntu.com/search?keywords=GStreamer&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 “resolute”</a>, which ships riscv64 for nearly all <code class="language-plaintext highlighter-rouge">gstreamer1.0-*</code> packages, but patch and build cleanliness is not uniform across distros: <a href="https://gitlab.alpinelinux.org/alpine/aports/-/issues/18343">Alpine aports #18343</a> documents a genuine riscv64-specific <code class="language-plaintext highlighter-rouge">orcc</code> JIT segfault that forced Alpine to disable <code class="language-plaintext highlighter-rouge">gst-plugins-bad</code>/<code class="language-plaintext highlighter-rouge">good</code> on riscv64, and Debian disabled the <code class="language-plaintext highlighter-rouge">gst-plugins-bad1.0</code> riscv64 autopkgtest rather than fix its timeout. This mix of exclusions and workarounds, rather than a clean unmodified-source build, places GStreamer at orange/downstream-only rather than yellow.</li>
+  <li><strong>Pending work that could change the grade:</strong> real upstream RVV/riscv64 momentum exists that could raise this grade if it extends to CI: ORC’s foundational RVV backend (<a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/236">orc !236</a>, merged 2025-07-14, in ORC 0.4.42+) plus roughly 20 follow-on refinement MRs through mid-2026; GStreamer core’s <code class="language-plaintext highlighter-rouge">gst_cpuid_supports_riscv_v()</code> (<a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11768">!11768</a>) and the first RVV-accelerated element, the audio resampler (<a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11966">!11966</a>, tested on SOPHGO SG2044, targeting the unreleased 1.30); ABI-test riscv64 struct definitions (<a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11773">!11773</a>); and cerbero’s manual-only Android riscv64 cross-build job (<a href="https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1739">!1739</a>). None of this adds a riscv64 CI job to <code class="language-plaintext highlighter-rouge">gstreamer/gstreamer</code>’s or <code class="language-plaintext highlighter-rouge">gstreamer/orc</code>’s own <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> running by default, which remains the blocking gap for yellow or blue; ORC does have one riscv64 CI job, but it is manual/scheduled-trigger gated, not run on ordinary MRs. No RISE involvement was found across any channel checked. The Alpine <code class="language-plaintext highlighter-rouge">orcc</code> crash (#18343) is marked closed but its fix was not independently confirmed in public notes.</li>
 </ul>
-<h3 id="134-ecosystem-enablement">
+<h2 id="14-investment-analysis">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has not funded GStreamer, ORC, or any adjacent component directly; its multimedia-adjacent funded work (FFmpeg H.264 decode, libjpeg-turbo RVV port) does not cover GStreamer or ORC, so nothing here is already RISE-funded. Samsung and ISCAS have, however, already delivered the foundational and follow-on RVV work described in Sections 2 and 4; the items below size only what remains open.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>Section 10 is omitted per the formatting rules: GStreamer is a C multimedia framework with no significant dependent package ecosystem requiring per-package riscv64 enablement work.</p>
-<h3 id="135-summary-table">
+<p>The functional detection and ABI plumbing work is done: <code class="language-plaintext highlighter-rouge">gst_cpuid_supports_riscv_v()</code> (!11768) and the riscv64 ABI struct definitions (!11773) are both merged, and the first RVV-accelerated element (audio resampler, !11966) has landed and targets the 1.30 release. No further functional-enablement investment is required for basic riscv64 support in GStreamer core. The remaining functional gap is encoder/codec SIMD (x264, x265, libvpx, libopus), which is entirely outside GStreamer’s own repositories and depends on those upstreams independently gaining riscv64 contributors.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
+  
+  
+</h3>
+    
+
+<p>The ORC RVV backend remains the single highest-leverage performance investment: it accelerates most ORC-based DSP in gst-plugins-base (color conversion, audio mixing, compositing) across every GStreamer application without per-codec work, and it already exists and is actively maintained. The investment need is stabilization: promoting the backend out of <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code>, completing <code class="language-plaintext highlighter-rouge">Zvkn</code>/<code class="language-plaintext highlighter-rouge">Zvks</code> detection in the hwprobe path, and continuing to harden the codegen rules, given that two real memory-safety/correctness bugs (!279, !306) have already been found and fixed in production use. Extending RVV intrinsics to additional plugins beyond the audio resampler (e.g. video scalers, compositors not fully covered by ORC) is a secondary, lower-leverage investment. Encoder SIMD (x264, x265, libvpx) is higher effort and lower leverage for a multimedia-framework evaluation specifically, since these are separate upstream projects with large existing codebases and no riscv64 SIMD contributors currently engaged there.</p>
+<h3 id="143-cicd-infrastructure">
+  
+  
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+
+<p>This is the single highest-priority gap. Concretely:</p>
+<ul>
+  <li>Promote ORC’s existing <code class="language-plaintext highlighter-rouge">alpine 3.23 riscv64</code> job from manual/scheduled-trigger to automatic on every MR, this is largely a <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> rules change plus runner-capacity planning, not new infrastructure.</li>
+  <li>Add a riscv64 job (cross-compile plus QEMU test run, or native runner) to GStreamer core’s <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, which today has none.</li>
+  <li>Provision one or more riscv64 CI runners (native hardware or QEMU-backed) and register them with the freedesktop.org GitLab instance; this is the underlying resourcing blocker for both items above.</li>
+  <li>Without automatic riscv64 CI, regressions such as the Alpine <code class="language-plaintext highlighter-rouge">orcc</code> crash and Debian’s timeout-driven test disablement will continue to reach distros silently.</li>
+</ul>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable. GStreamer is a C multimedia framework; it does not have a significant dependent package ecosystem (comparable to, e.g., a language’s package index or a Kubernetes operator catalog) that would require separate per-package riscv64 enablement work. The relevant downstream surface is distro packaging (Section 8) and the codec dependency tree (Section 9), both already covered above.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1519,53 +1447,60 @@ meson compile <span class="nt">-C</span> builddir
   </thead>
   <tbody>
     <tr>
-      <td>Functional</td>
-      <td>Review and merge MR !11768 (RVV detection) and MR !11773 (ABI defines)</td>
+      <td>CI/CD</td>
+      <td>Provision riscv64 CI runner(s) for freedesktop.org GitLab</td>
+      <td>2 (infrastructure)</td>
+      <td>freedesktop.org infra / sponsor</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Promote ORC’s <code class="language-plaintext highlighter-rouge">alpine 3.23 riscv64</code> job from manual/scheduled to automatic-on-MR</td>
       <td>1</td>
-      <td>GStreamer core maintainer</td>
+      <td>Centricular / ORC maintainers</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Add a riscv64 job (cross-compile or QEMU) to GStreamer core’s <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code></td>
+      <td>2-3</td>
+      <td>Centricular / freedesktop.org infra</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Stabilize ORC RVV backend: fix remaining FIXMEs, complete Zvkn/Zvks hwprobe detection, promote out of <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code></td>
+      <td>Stabilize ORC RVV backend: promote out of <code class="language-plaintext highlighter-rouge">ORC_ENABLE_UNSTABLE_API</code>, complete Zvkn/Zvks hwprobe detection</td>
       <td>4-6</td>
-      <td>Samsung/ORC maintainers</td>
+      <td>Samsung / ORC maintainers</td>
       <td>High</td>
     </tr>
     <tr>
-      <td>CI/CD</td>
-      <td>Add riscv64 QEMU job to ORC <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code></td>
+      <td>Performance</td>
+      <td>Independently confirm and, if needed, re-fix the Alpine <code class="language-plaintext highlighter-rouge">orcc</code> JIT segfault (#18343) so <code class="language-plaintext highlighter-rouge">gst-plugins-good</code>/<code class="language-plaintext highlighter-rouge">bad</code> can be re-enabled on Alpine riscv64</td>
+      <td>1-2</td>
+      <td>Alpine / ORC maintainers</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Fix Debian <code class="language-plaintext highlighter-rouge">gst-plugins-bad1.0</code> riscv64 autopkgtest timeout properly (rather than leaving it disabled)</td>
       <td>2</td>
-      <td>Centricular/freedesktop.org infra</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Add riscv64 QEMU or cross-compile job to GStreamer monorepo <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code></td>
-      <td>2-3</td>
-      <td>Centricular/freedesktop.org infra</td>
+      <td>Debian packager</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>CI/CD</td>
-      <td>Provision riscv64 CI runner for freedesktop.org GitLab</td>
-      <td>2 (infrastructure)</td>
-      <td>freedesktop.org / sponsor</td>
-      <td>High</td>
+      <td>Performance</td>
+      <td>Extend RVV intrinsics to additional gst-plugins-base elements beyond audio resampler (video scale/convert paths not covered by ORC)</td>
+      <td>6-10</td>
+      <td>New contributor / ISCAS</td>
+      <td>Medium</td>
     </tr>
     <tr>
-      <td>Performance</td>
-      <td>Fedora riscv64 packaging: enable GStreamer builds (investigate koji riscv64 arch enablement)</td>
+      <td>Distribution</td>
+      <td>Fedora riscv64 packaging: investigate koji riscv64 arch enablement for GStreamer</td>
       <td>2</td>
       <td>Fedora packager</td>
       <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Performance</td>
-      <td>Fix Arch Linux RISC-V <code class="language-plaintext highlighter-rouge">riscv64.patch</code> to apply against current GStreamer source</td>
-      <td>1</td>
-      <td>Arch RISC-V porter</td>
-      <td>Low</td>
     </tr>
     <tr>
       <td>Performance</td>
@@ -1583,23 +1518,13 @@ meson compile <span class="nt">-C</span> builddir
     </tr>
     <tr>
       <td>Performance</td>
-      <td>x264 riscv64 assembly (H.264 encode)</td>
-      <td>12-20</td>
+      <td>x264/x265 riscv64 assembly or intrinsics (H.264/HEVC encode)</td>
+      <td>12-20 each</td>
       <td>New contributor</td>
       <td>Low</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet - initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1610,25 +1535,37 @@ meson compile <span class="nt">-C</span> builddir
     
 
 <ul>
-  <li><a href="https://github.com/GStreamer/gstreamer">GStreamer monorepo (GitHub mirror)</a></li>
   <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer">GStreamer canonical upstream (GitLab, Anubis-protected)</a></li>
+  <li><a href="https://github.com/GStreamer/gstreamer">GStreamer monorepo (GitHub mirror)</a></li>
   <li><a href="https://gitlab.freedesktop.org/gstreamer/orc">GStreamer ORC library (GitLab)</a></li>
   <li><a href="https://github.com/GStreamer/orc">GStreamer ORC (GitHub mirror)</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/cerbero">GStreamer cerbero (GitLab)</a></li>
   <li><a href="https://gstreamer.freedesktop.org/download/">GStreamer download page</a></li>
-  <li><a href="https://gstreamer.freedesktop.org/releases/1.29/">GStreamer 1.29.1 release notes</a></li>
-  <li><a href="https://gstreamer.freedesktop.org/">ORC 0.4.42 release announcement</a></li>
-  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11768">MR !11768: Add gst_cpuid_supports_riscv_v()</a></li>
-  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11773">MR !11773: Add HAVE_CPU_RISCV32/64 ABI defines</a></li>
-  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11784">MR !11784: Alpine RISC-V G-I build fix (merged)</a></li>
-  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/4856">Issue #4856: gstharness test timeout on qemuriscv5</a></li>
-  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/3433">Issue #3433: gst-libav SIGILL on Alpine riscv64 (closed)</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/236">orc !236: riscv: Add target</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/249">orc !249</a>, <a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/254">orc !254</a>, <a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/279">orc !279</a>, <a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/297">orc !297</a>, <a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/298">orc !298</a>, <a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/306">orc !306</a>, <a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/308">orc !308</a>, <a href="https://gitlab.freedesktop.org/gstreamer/orc/-/merge_requests/309">orc !309</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11768">gstreamer !11768: cpuid RISC-V Vector detection</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11773">gstreamer !11773: riscv host_defines and ABI structs</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11966">gstreamer !11966: audio-resampler RVV optimization</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/11784">gstreamer !11784: Alpine RISC-V G-I build fix</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/12311">gstreamer !12311: macOS-to-Android-riscv64 bison cross-compile fix</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/merge_requests/2018">gstreamer-rs !2018</a>, <a href="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/-/merge_requests/2028">gstreamer-rs !2028</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/1739">cerbero !1739: RISC-V 64 support for Android builds</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/4856">GStreamer work item #4856: gstharness timeout on qemuriscv5</a></li>
+  <li><a href="https://gitlab.freedesktop.org/gstreamer/gstreamer/-/work_items/3433">GStreamer work item #3433: gst-libav SIGILL on Alpine riscv64 (closed)</a></li>
+  <li><a href="https://gitlab.alpinelinux.org/alpine/aports/-/issues/18343">Alpine aports #18343: orcc riscv64 segfault</a></li>
+  <li><a href="https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg2046937.html">Debian Bug#1109780</a></li>
+  <li><a href="https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg2061717.html">Debian Bug#1114141</a></li>
+  <li><a href="https://osv.dev/vulnerability/CVE-2025-6663">CVE-2025-6663</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=GStreamer&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 “resolute” GStreamer package search</a></li>
   <li><a href="https://tracker.debian.org/pkg/gstreamer1.0">Debian tracker: gstreamer1.0</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/libgstreamer1.0-0">Ubuntu Noble: libgstreamer1.0-0 packages</a></li>
   <li><a href="https://pkgs.alpinelinux.org/packages?name=gstreamer&amp;arch=riscv64">Alpine Linux pkgs: gstreamer edge riscv64</a></li>
   <li><a href="https://koji.fedoraproject.org/koji/buildinfo?buildID=2659447">Fedora Koji: gstreamer1-1.26.11-1.fc42</a></li>
   <li><a href="https://github.com/felixonmars/archriscv-packages">Arch Linux RISC-V porting: archriscv-packages</a></li>
+  <li><a href="https://riscv-europe.org/summit/2025/media/proceedings/2025-05-15-RISC-V-Summit-Europe-P2.3.02-PIKULA-poster.pdf">RISC-V Summit Europe 2025 ORC poster</a></li>
+  <li><a href="https://github.com/sifive/ffmpeg-rvv">SiFive ffmpeg-rvv</a></li>
   <li><a href="https://riseproject.dev/">RISE Project: riseproject.dev</a></li>
-  <li><a href="https://riseproject.dev/">RISE RFP002: Optimize H.264 Decoding in FFmpeg</a></li>
+  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
   <li><a href="https://www.centricular.com/">Centricular: core GStreamer maintainer organization</a></li>
 </ul>
 
