@@ -46,7 +46,7 @@ dependencies:
 # MyRocks
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-08-14<br/>
+**Date:** 2026-08-23<br/>
 **Scope:** RISC-V (riscv64/linux) support status for MyRocks<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -395,7 +395,7 @@ MyRocks has no dependent package ecosystem (it is a database storage engine plug
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-08-14.
+No updates yet -- initial report dated 2026-08-23.
 
 ---
 

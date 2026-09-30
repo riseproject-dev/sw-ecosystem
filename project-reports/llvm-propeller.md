@@ -30,7 +30,7 @@ dependencies:
 # llvm-propeller
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-08-14<br/>
+**Date:** 2026-08-23<br/>
 **Scope:** RISC-V (riscv64/linux) support status for llvm-propeller<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -304,7 +304,7 @@ The hardware dependency (CTR silicon) is not addressable through software invest
 
 ## 14. Updates
 
-No updates yet - initial report dated 2026-08-14.
+No updates yet - initial report dated 2026-08-23.
 
 ---
 

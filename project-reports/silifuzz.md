@@ -42,7 +42,7 @@ dependencies:
 # silifuzz
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-08-14<br/>
+**Date:** 2026-08-26<br/>
 **Scope:** RISC-V (riscv64/linux) support status for silifuzz<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -355,7 +355,7 @@ SiliFuzz has no package ecosystem. It distributes no binaries. Section 10 is omi
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-08-14.
+No updates yet -- initial report dated 2026-08-26.
 
 ---
 

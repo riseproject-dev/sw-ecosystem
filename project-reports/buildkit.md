@@ -25,7 +25,7 @@ dependencies:
 
 # BuildKit
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-06-23
+**Date:** 2026-07-20
 **Scope:** RISC-V (riscv64/linux) support status for BuildKit
 **Audience:** Technical leadership, resource allocation strategy
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
@@ -377,7 +377,7 @@ BuildKit itself has no package ecosystem (no plugins, no extensions, no language
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-06-23.
+No updates yet -- initial report dated 2026-07-20.
 
 ---
 
