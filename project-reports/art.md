@@ -32,7 +32,7 @@ dependencies:
 # ART
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
 **Scope:** RISC-V (riscv64/linux) support status for ART<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -54,7 +54,7 @@ dependencies:
 **Repository:** [android.googlesource.com/platform/art](https://android.googlesource.com/platform/art)<br/>
 **License:** Apache 2.0<br/>
 **Governance:** Google-controlled AOSP. All 21 OWNERS are Google employees (@google.com). No independent foundation or tiered membership governance. Contributions flow through [android-review.googlesource.com](https://android-review.googlesource.com).<br/>
-**RISE Project involvement:** None. ART is not a RISE workstream. Google is a Premier RISE member, but ART is not represented in RISE's tracked projects (confirmed by scanning all 27 RISE blog posts from May 2024 through June 2026, all 77 packages in the RISE wheel builder, and all repositories under github.com/riseproject-dev).<br/>
+**RISE Project involvement:** None. ART is not a RISE workstream. Google is a Premier RISE member, but ART is not represented in RISE's tracked projects (confirmed by scanning all 35 RISE blog posts published from May 2024 through September 2026, all 77 packages in the RISE wheel builder, and all repositories under github.com/riseproject-dev; re-verified 2026-09-30 against the live `riseproject.dev` WordPress post sitemap).<br/>
 
 ---
 
@@ -228,15 +228,49 @@ The QEMU CI builder uses: `-cpu rv64,v=true,elen=64,vlen=128,zba=true,zbb=true,z
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-ART uses the Android Soong build system (Android.bp). riscv64 is enabled via `-DART_ENABLE_CODEGEN_riscv64` in `build/Android.bp`. The build script `tools/buildbot-utils.sh` validates `TARGET_ARCH` against the regex `^(arm64|riscv64)$` -- any other architecture triggers a fatal error, indicating riscv64 has first-class build script support.
+**Build system type:** ART (and all of AOSP) is built with Google's Soong/Blueprint build system (`Android.bp` files, compiled by `build/soong/soong_ui.bash`) plus legacy `.mk` files, driven by the `lunch`/`m` wrapper in `build/envsetup.sh`. **ART has no CMake or GNU Autotools (`configure`) build path, and no Dockerfile was found anywhere in the `platform/art` repository, the `build/soong` repository, or the public `google/android-riscv64` GitHub org/wiki.** The only CMake-related file in the tree, `tools/generate_cmake_lists.py`, does not build ART -- it is a post-processing script that reads the CMakeFiles Soong already emitted (for a build that was performed by Soong) and stitches them into a synthetic super-project `CMakeLists.txt` purely so CLion/IDE indexing works; it takes an `--arch <arch>` argument (riscv64 accepted like any other Soong arch name) but performs no compilation itself. Consequently there are no `cmake -DUSE_X=OFF`-style flags in ART: the closest equivalent is Soong `Android.bp` `arch: { riscv64: { ... } }` conditional blocks and Soong config variables (e.g. `ART_ENABLE_CODEGEN_riscv64`), not preprocessor `-D` flags passed to a configure script.
 
-When `TARGET_ARCH=riscv64` and `frameworks/base` is absent (reduced manifest), `tools/buildbot-build.sh` copies prebuilts from `prebuilts/runtime/mainline/local_riscv64` for Conscrypt and StatsD, and applies pending `Android.bp.patch` files (workaround for bug `b/286551985`).
+**Exact end-to-end build commands (from the `google/android-riscv64` project wiki, cross-checked against `tools/buildbot-build.sh` and `tools/buildbot-utils.sh`):**
+```
+cd aosp
+source build/envsetup.sh
+lunch aosp_cf_riscv64_phone-trunk_staging-userdebug
+make -j
+```
+This is a full Cuttlefish (virtual device) product build, not an ART-only build; ART itself is pulled in as a normal platform component (`com.android.art` APEX). There is no separate `./configure && make` step and no per-component build script for ART riscv64 beyond the standard Soong invocation.
 
-The riscv64 QEMU builder (`qemu.riscv.64`) uses a custom QEMU binary: `device/google/cuttlefish_vmm/qemu/x86_64-linux-gnu/bin/qemu-system-riscv64`. This binary is sourced from the Cuttlefish VMM repo, not system QEMU. The VM uses Ubuntu 24.04 cloud image (`ubuntu-24.04-server-cloudimg-riscv64.img`), boots via U-Boot (not EFI, unlike the arm64 builder), runs with 16 GB RAM and 8 QEMU SMP cores.
+**riscv64-specific Android.bp fragments (`build/Android.bp`):**
+```
+riscv64: { cflags: ["-DART_ENABLE_CODEGEN_riscv64"] }
+riscv64: { ldflags: ["-z max-page-size=0x200000"] }
+```
+`-DART_ENABLE_CODEGEN_riscv64` is the sole "feature flag" gating the riscv64 code generator (functionally analogous to a `-DUSE_RISCV64=ON`; **no `-DUSE_X=OFF`-style disable flags exist anywhere in the ART build for riscv64** -- unimplemented features, e.g. SIMD codegen, are gated in C++ via `Unimplemented()`/`TODO` stubs and runtime capability checks, not build-time `OFF` switches). The `-z max-page-size=0x200000` linker flag sets a 2 MiB maximum ELF segment alignment for riscv64 binaries/shared objects, matching the larger page sizes some riscv64 kernels/hardware use (this flag is not applied to arm64 or x86_64 in the same file).
+
+The build script `tools/buildbot-utils.sh` validates `TARGET_ARCH` against the regex `^(arm64|riscv64)$` -- any other architecture triggers a fatal error `"unexpected TARGET_ARCH=$TARGET_ARCH; expected one of {arm64,riscv64}"`, indicating riscv64 has first-class build script support alongside arm64 only (no x86/x86_64/arm32 path in this particular script).
+
+When `TARGET_ARCH=riscv64` and `frameworks/base` is absent (reduced `master-art` manifest), `tools/buildbot-build.sh` copies prebuilts from `prebuilts/runtime/mainline/local_riscv64` for Conscrypt and StatsD, and applies pending `Android.bp.patch` files (workaround for bug `b/286551985`).
+
+**Toolchain versions:** ART uses Clang/LLVM exclusively -- **there is no GCC toolchain path and no documented GCC minimum version**; no separate, lower, or higher Clang/LLVM minimum-version requirement specific to riscv64 was found in `platform/art`, `prebuilts/clang`, or the `android-riscv64` project docs. riscv64 is cross-compiled with the same prebuilt Clang used for every other Android target architecture, currently **clang-r547379** (the AOSP `main`-branch default toolchain as of this report, used for the Android 16 release cycle) per `prebuilts/clang/host/linux-x86` `README.md`. No rationale document was found explaining *why* a particular Clang version was chosen for riscv64 specifically (e.g. for V-extension/RVV codegen or intrinsics support); the version tracks the AOSP-wide Clang roll, not a riscv64-specific requirement. [NEEDS VERIFICATION -- no primary source ties a specific minimum Clang/LLVM version to riscv64 RVV codegen correctness in ART itself]
+
+**QEMU:** `tools/buildbot-vm.sh` launches the riscv64 test VM with this exact command:
+```
+qemu-system-riscv64 \
+  -M virt \
+  -nographic \
+  -m 16G \
+  -smp 8 \
+  -cpu rv64,v=true,elen=64,vlen=128,zba=true,zbb=true,zbs=true \
+  -kernel uboot.elf \
+  -drive file="$ART_TEST_VM_IMG",if=virtio \
+  -drive file=user-data.img,format=raw,if=virtio \
+  -device virtio-net-device,netdev=usernet \
+  -netdev user,id=usernet,hostfwd=tcp::$ART_TEST_SSH_PORT-:22
+```
+The VM boots an Ubuntu 24.04 server cloud image (`ubuntu-24.04-server-cloudimg-riscv64.img`) via a `u-boot-qemu` ELF (not EFI, unlike the arm64 builder), with cloud-init supplying `user-data.img`, and forwards SSH from the host on `$ART_TEST_SSH_PORT`. The riscv64 LUCI CI builder (`qemu.riscv.64`) uses a custom QEMU binary at `device/google/cuttlefish_vmm/qemu/x86_64-linux-gnu/bin/qemu-system-riscv64` sourced from the Cuttlefish VMM repo rather than a system-installed `qemu-system-riscv64`. Separately, the `google/android-riscv64` project wiki states an explicit **minimum QEMU version of 8.1** for building/running Android riscv64 at all, and recommends 9.0 or later ("important fixes for the V extension") and notes 9.2 adds further vector-operation speedups -- this is general guidance for the wider Android riscv64 effort (Cuttlefish/emulator), not a value pinned inside the `platform/art` repo itself, so the exact QEMU version pinned for the `qemu.riscv.64` CI builder specifically could not be confirmed from `platform/art` sources alone. [NEEDS VERIFICATION -- exact QEMU version used by the `qemu.riscv.64` LUCI builder]
 
 A riscv64-specific test target exists in TEST_MAPPING: `art-run-test-458-checker-riscv64-shift-add` -- a Checker-annotation test for ShiftAdd optimizations in the Optimizing compiler. This test runs in both `art-mainline-presubmit` and `mainline-presubmit` groups.
 
-**Toolchain:** ART uses Clang/LLVM (the Android NDK clang), not GCC. riscv64 cross-compilation is handled transparently by the Soong build system when `TARGET_ARCH=riscv64` is set.
+**Summary -- what does not exist for ART riscv64:** no `cmake`/`configure` invocation of any kind, no `-DUSE_X=OFF` style disable flags (only the single enable flag `-DART_ENABLE_CODEGEN_riscv64`), no GCC toolchain or GCC version minimum, no Dockerfile/container-based build path, and no riscv64-specific Clang/LLVM minimum-version pin beyond "whatever Clang AOSP `main` currently uses for all architectures."
 
 ---
 
@@ -320,9 +354,17 @@ These fall back to slow interpreted paths. Tracked at [android-riscv64 issue #14
 
 ### 6.3 Performance admission
 
-The only quantitative performance data found: a GitHub comment in issue #122 (filed 2023-11-15 by romart), stating "we are just running the ART tests atm because everything else is so slow." No benchmark numbers (SPECjvm, DaCapo, microbenchmarks) were found in any public source. No performance comparison to arm64 or x86_64 has been published.
+The only quantitative performance data found: a GitHub comment in issue #122 (filed 2023-11-15 by romart), stating "we are just running the ART tests atm because everything else is so slow." Re-reading the full issue #122 thread (2026-09-30): the "so slow" remark is made in a testing-infrastructure context -- a later comment (2024-01-12) from ART developers advises running the riscv64 Cuttlefish test suite with `-j 1` or repeating it to avoid CI timeouts -- rather than a benchmarked statement about ART's execution speed on real workloads. It should not be read as a quantitative performance claim. No benchmark numbers (SPECjvm, DaCapo, microbenchmarks) were found in any public source. No performance comparison to arm64 or x86_64 has been published.
 
 Data not available: ART riscv64 JIT throughput, interpreter throughput, GC pause times, startup latency, or any published comparison against arm64 or x86_64.
+
+**2026-09-30 performance-data re-search:** Re-checked for published ART riscv64 vs. arm64 performance data via the `google/android-riscv64` issue tracker and the RISE Project blog/site. Two related-but-not-ART GitHub issues were found and read in full (body + comments):
+- [#67](https://github.com/google/android-riscv64/issues/67) "Comparative analysis of compiler statistics between Aarch64 and RISC-V" (opened 2023-03-03 by appujee): a request to measure spill counts and inlined-function counts when building AOSP on both architectures. No comments, no data ever posted -- the analysis was never carried out.
+- [#68](https://github.com/google/android-riscv64/issues/68) "Binary analysis of aosp to compare Aarch64 vs RISC-V" (opened 2023-03-03 by appujee): a request to use `bloaty` to compare binary section sizes and rebase/fixup counts. No comments, no data ever posted.
+- [#23](https://github.com/google/android-riscv64/issues/23) "Investigate the current state of Auto-vectorization for RISC-V targets" *does* contain quantitative data, but it is LLVM/Clang auto-vectorization of native (non-Java) code, not ART: TSVC-benchmark loop-vectorization counts comparing `-march=rv64gcv` against `-mcpu=cortex-a55`, under strict FP: 460/735 loops vectorized for rv64gcv vs. 176/736 for cortex-a55; under fast FP: 667/735 vs. 635/735. This measures the LLVM auto-vectorizer's ability to vectorize C/C++ loops targeting RVV vs. Arm NEON on a specific (in-order, little) Cortex-A55 core -- it says nothing about ART's Optimizing JIT/AOT compiler, which (per Section 6.2) does not generate RVV SIMD code at all, so this data cannot be used as an ART riscv64-vs-arm64 performance proxy.
+- [#167](https://github.com/google/android-riscv64/issues/167) "Support vector regalloc for RISC-V backend in ART": comment thread (Sep 2025) is coordination/design-proposal discussion between an external contributor (GreenSeal) and a Google ART engineer (enh-google); no performance numbers.
+
+Two RISE Project blog posts publish riscv64 vs. arm64/x86 vector-performance benchmarks for *other* language runtimes, underscoring that comparable ART data does not exist: [OpenJDK: Supercharging vectorized math with SLEEF](https://riseproject.dev/2025/09/24/openjdk-supercharging-vectorized-math-with-sleef/) (2025-09-24) reports "about 2.38x speedup" for RISC-V Vector-accelerated math but gives no cross-architecture comparison or methodology detail; [SALTyRN: turning Neon kernels into fast, verified RVV code with LLMs](https://riseproject.dev/2026/07/27/saltyrn-turning-neon-kernels-into-fast-verified-rvv-code-with-llms/) (2026-07-27) reports a 1.40x geometric-mean RVV-vs-NEON speedup across 35 XNNPACK microkernels (with unoptimized/mechanically-translated RVV at 0.78x and GCC auto-vectorized RVV at 0.25x of handwritten RVV), measured via FireSim cycle-accurate simulation of a Saturn vector core (512-bit VLEN) -- native XNNPACK kernels, not JVM/ART bytecode execution. Neither post mentions ART or Android Runtime. No published source of any kind (RISE, android-riscv64, Gerrit, academic) benchmarks ART riscv64 against arm64 or x86_64.
 
 ---
 
@@ -540,7 +582,15 @@ NDK ABI stabilization is a Google decision and is not directly actionable by ext
 
 ## 14. Updates
 
-No updates -- initial report dated 2026-07-20.
+**2026-09-30:** Report refreshed. Re-verified Section 7 (CI/CD Infrastructure) against the live upstream LUCI config source, `tools/luci/config/main.star` in [android.googlesource.com/platform/art](https://android.googlesource.com/platform/art/+/refs/heads/main/tools/luci/config/main.star). No changes found: `add_builder('qemu', 'riscv', bitness=64)` remains the only riscv64 builder definition, producing the single `qemu.riscv.64` builder (debug-mode only, QEMU-only, no hardware CI, same trigger set on platform/art, platform/libcore, platform/manifest, and platform/external/vogar). No second riscv64 builder (e.g. a release-mode or hardware variant) has been added since the initial 2026-07-20 report. All other sections unchanged from the initial report.
+
+**2026-09-30 (governance/sponsors/port-history re-verification):** Re-checked Sections 1, 2, 3, and 10 against live sources. The `OWNERS` file at [android.googlesource.com/platform/art/+/refs/heads/main/OWNERS](https://android.googlesource.com/platform/art/+/refs/heads/main/OWNERS) still lists exactly 21 owners, all `@google.com` addresses, confirming ART has no independent foundation, no tiered membership governance, and no non-Google approval authority. The first riscv64-related change remains [Change 2239704](https://android-review.googlesource.com/c/platform/art/+/2239704) ("Fix panics in art build code when target arch is riscv64"), merged 2022-10-05, authored by Colin Cross (Google) -- a build-system fix, not a runtime implementation; the first substantive runtime change remains [Change 2402707](https://android-review.googlesource.com/c/platform/art/+/2402707) (Ulya Trofimovich, Google, merged 2023-02-21). Confirmed via [riseproject.dev](https://riseproject.dev/members/) that RISE's current Premier member roster (Alibaba Damo (Hangzhou) Technology, Google, MediaTek, NVIDIA, Qualcomm Technologies, Red Hat, SiFive, Tenstorrent) includes Google, SiFive, and an Alibaba entity alongside Google -- three of ART riscv64's corporate contributor companies (Google, Syntacore's peers aside, and Alibaba) are RISE members via their broader corporate group, but the [riseproject.dev](https://riseproject.dev) site still does not list ART or Android Runtime as a tracked project or workstream, so ART's own port is not a RISE deliverable. No published, versioned tier policy for ART architectures was found; the closest public statement is Android engineering director Lars Bergstrom's stated goal (reported by multiple outlets, e.g. Ars Technica/Slashdot coverage of Google's Jan 2023 announcement) that RISC-V should become a "tier-1" Android architecture, which remains aspirational rather than a formal, dated policy -- this is consistent with the report's existing framing that ART's riscv64 tier is de-facto (CI presence, NDK ABI status, hardware builders) rather than governed by a published tier document. No community objection to the port itself (as opposed to objections about NDK ABI instability, missing hardware CI, and the Google OWNERS bottleneck already documented in Section 12) was found in any searched source. All other content in Sections 1, 2, 3, and 10 unchanged from the initial report.
+
+**2026-09-30 (build-system/toolchain deep-dive, Section 5):** Re-verified Section 5 by fetching the live upstream build sources directly (`build/Android.bp`, `build/README.md`, `tools/buildbot-utils.sh`, `tools/buildbot-build.sh`, `tools/buildbot-vm.sh`, `tools/generate_cmake_lists.py`), the `prebuilts/clang/host/linux-x86` `README.md`, and the `google/android-riscv64` project wiki. Confirmed ART has **no CMake or `configure`-based build**: `tools/generate_cmake_lists.py` is an IDE-indexing convenience script that consumes CMakeFiles Soong already produced and does not itself compile anything; it is not a build entry point. Confirmed **no Dockerfile exists** in `platform/art` or the public `android-riscv64` org/wiki. Captured the exact `lunch aosp_cf_riscv64_phone-trunk_staging-userdebug && make -j` build sequence, the two riscv64 `Android.bp` fragments (`-DART_ENABLE_CODEGEN_riscv64` cflag; `-z max-page-size=0x200000` ldflag), and the exact `qemu-system-riscv64` invocation from `tools/buildbot-vm.sh`. Found no `-DUSE_X=OFF`-style disable flags anywhere in the riscv64 build path -- only the single `-DART_ENABLE_CODEGEN_riscv64` enable flag exists; unimplemented functionality is gated in C++ source (`Unimplemented()`/TODO stubs), not via build-time switches. Confirmed ART uses Clang exclusively (no GCC path, no GCC minimum version) and that the current AOSP-wide default toolchain is `clang-r547379` (Android 16 cycle); no riscv64-specific minimum Clang/LLVM version requirement (e.g., for RVV codegen) could be found in `platform/art` sources -- this remains [NEEDS VERIFICATION]. Found an explicit minimum-QEMU-version statement (8.1, with 9.0+ recommended for V-extension fixes) in the `google/android-riscv64` wiki, but could not confirm from `platform/art` sources alone which exact QEMU version the `qemu.riscv.64` LUCI builder itself pins -- also [NEEDS VERIFICATION]. All other sections unchanged.
+
+**2026-09-30 (RISE Project and performance-data refresh):** Re-fetched `riseproject.dev` (homepage, `/members/`, and the live WordPress posts sitemap `wp-sitemap-posts-post-1.xml`) directly. Confirmed the Premier member roster is unchanged (Alibaba Damo (Hangzhou) Technology, Google, MediaTek, NVIDIA, Qualcomm Technologies, Red Hat, SiFive, Tenstorrent) and captured the full General member tier for the first time (Akeana, Andes Technology, Beijing ESWIN Computing Technology, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, Institute of Software Chinese Academy of Sciences, Microchip Technology, NextSilicon, Quintauris, SpacemiT (Hangzhou) Technology, ZTE). The post sitemap now lists 35 posts (up from 27 at last check), spanning 2024-05-15 through 2026-09-28; read the 8 posts published since the prior scan plus the two most plausible language-runtime candidates (OpenJDK/SLEEF, V8) in full and confirmed none mention "ART," "Android Runtime," or "Android." RISE's current working-group list (per the 2026-07-30 post "RISE working groups move their project tracking to GitHub") is: Enablement and Optimization / System Libraries, Compilers & Toolchains, Language Runtimes, Developer Tooling / Developer Infrastructure, Simulator/Emulator, Platform/Firmware, Distro Integration, Kernel & Virtualization, Security Software, AI/ML, and Microcontroller Software -- ART still does not appear under Language Runtimes or any other group. Performed a targeted re-search for published ART riscv64-vs-arm64 performance data (see the new entry in Section 6.3); found none. All other content unchanged.
+
+Initial report dated 2026-07-20.
 
 ---
 
@@ -555,7 +605,14 @@ No updates -- initial report dated 2026-07-20.
 - [ART compiler/utils/riscv64 source](https://android.googlesource.com/platform/art/+/refs/heads/main/compiler/utils/riscv64/)
 - [ART runtime/interpreter/mterp/riscv64 source](https://android.googlesource.com/platform/art/+/refs/heads/main/runtime/interpreter/mterp/riscv64/)
 - [RISE Project blog](https://riseproject.dev/blog/)
+- [RISE Project members](https://riseproject.dev/members/)
 - [RISE Project wheel builder](https://riseproject.gitlab.io/python/wheel_builder/)
+- [android-riscv64 issue #67 -- comparative compiler statistics (never populated)](https://github.com/google/android-riscv64/issues/67)
+- [android-riscv64 issue #68 -- binary analysis vs Aarch64 (never populated)](https://github.com/google/android-riscv64/issues/68)
+- [android-riscv64 issue #23 -- TSVC auto-vectorization data (LLVM, not ART)](https://github.com/google/android-riscv64/issues/23)
+- [android-riscv64 issue #167 -- ART vector regalloc design discussion](https://github.com/google/android-riscv64/issues/167)
+- [RISE blog -- OpenJDK: Supercharging vectorized math with SLEEF](https://riseproject.dev/2025/09/24/openjdk-supercharging-vectorized-math-with-sleef/)
+- [RISE blog -- SALTyRN: turning Neon kernels into fast, verified RVV code with LLMs](https://riseproject.dev/2026/07/27/saltyrn-turning-neon-kernels-into-fast-verified-rvv-code-with-llms/)
 - [Change 2239704 -- first riscv64 ART change](https://android-review.googlesource.com/c/platform/art/+/2239704)
 - [Change 2402707 -- initial ART riscv64 runtime support](https://android-review.googlesource.com/c/platform/art/+/2402707)
 - [android-riscv64 issue #141 -- unimplemented intrinsics](https://github.com/google/android-riscv64/issues/141)
@@ -564,3 +621,10 @@ No updates -- initial report dated 2026-07-20.
 - [android-riscv64 issue #167 -- vector regalloc](https://github.com/google/android-riscv64/issues/167)
 - [android-riscv64 issue #61 -- LTO ABI bug](https://github.com/google/android-riscv64/issues/61)
 - [android-riscv64 issue #36 -- BoringSSL riscv64 assembly](https://github.com/google/android-riscv64/issues/36)
+- [ART build/Android.bp source](https://android.googlesource.com/platform/art/+/refs/heads/main/build/Android.bp)
+- [ART tools/buildbot-vm.sh source (QEMU launch command)](https://android.googlesource.com/platform/art/+/refs/heads/main/tools/buildbot-vm.sh)
+- [ART tools/buildbot-utils.sh source](https://android.googlesource.com/platform/art/+/refs/heads/main/tools/buildbot-utils.sh)
+- [ART tools/buildbot-build.sh source](https://android.googlesource.com/platform/art/+/refs/heads/main/tools/buildbot-build.sh)
+- [ART tools/generate_cmake_lists.py source (IDE-only CMake export, not a build path)](https://android.googlesource.com/platform/art/+/refs/heads/main/tools/generate_cmake_lists.py)
+- [AOSP prebuilts/clang toolchain version tracking](https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/refs/heads/main/README.md)
+- [google/android-riscv64 project wiki (QEMU version guidance, lunch/make build commands)](https://github.com/google/android-riscv64/wiki)

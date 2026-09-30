@@ -23,7 +23,7 @@ dependencies:
 # async-profiler
 
 **Author:** Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;<br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30 (refreshed; originally published 2026-07-20)<br/>
 **Scope:** RISC-V (riscv64/linux) support status for async-profiler<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -50,9 +50,9 @@ The contributor base is heavily AWS/Amazon-dominated. The four highest-commit no
 | 2023-11-26 | PR #644 merged by `apangin` (merge commit `752b79ec4e4cc46c105dade93e1df1954fbbc638`). Follow-up fix commit `0d0f0f0` corrects `retval()` register mapping and adds missing interface methods. |
 | 2024-01-21 | v3.0 released. Changelog entry: "#644: RISC-V and LoongArch64 ports" under Features. First and only release to mention RISC-V. |
 | 2024-present | v4.0 through v4.4 (latest: v4.4, 2026-04-20): zero RISC-V mentions in any changelog. |
-| 2025-03-21 | [PR #1185](https://github.com/async-profiler/async-profiler/pull/1185) "Fix compilation with source merging disabled" (fandreuz, AWS) opened, targeting riscv64. Closed without merge. |
+| 2025-03-21 | [PR #1185](https://github.com/async-profiler/async-profiler/pull/1185) "Fix compilation with source merging disabled" (fandreuz, AWS) opened and merged same day. Fixes a `make MERGE=false` build failure (missing `<cerrno>` include for `errno`, undeclared `OS` symbol in `symbols_linux.cpp`) in the merged-source-disabled build path that compiles `src/stackFrame_riscv64.cpp` among all arch files. |
 
-The 14-month gap between PR submission (Sep 2022) and merge (Nov 2023) was caused by a maintainer-imposed contribution freeze, not by technical deficiencies in the patch. There is one merged RISC-V PR total in the repository's history. No dedicated tracking issue was ever filed. The entire RISC-V port effort resolves through a single PR thread.
+The 14-month gap between PR submission (Sep 2022) and merge (Nov 2023) was caused by a maintainer-imposed contribution freeze, not by technical deficiencies in the patch. There are two merged riscv64-related PRs in the repository's history: #644 (the port itself) and #1185 (a same-day build-infra fix for the `MERGE=false` build path, not a functional port change). No dedicated tracking issue was ever filed. The entire RISC-V port effort resolves through the single PR #644 thread.
 
 ---
 
@@ -247,29 +247,31 @@ Any riscv64 regression introduced in any commit since v3.0 is invisible to CI. N
 
 ### 8.1 Upstream Binary Releases
 
-Releases v4.2 (2025-10-19) through v4.4 (2026-04-20) and nightly (2026-06-11) ship exactly 7 assets per release:
+Releases v4.2 (2025-10-19) through v4.5 (2026-07-20, current latest stable) and nightly (2026-09-30 build, tagged `4.5-a07608e`) ship exactly 7 non-source assets per release:
 
-- `async-profiler-X.Y-linux-arm64.tar.gz`
-- `async-profiler-X.Y-linux-arm64-debug.tar.gz`
-- `async-profiler-X.Y-linux-x64.tar.gz`
-- `async-profiler-X.Y-linux-x64-debug.tar.gz`
-- `async-profiler-X.Y-macos.zip`
+- `async-profiler-X.Y[-<hash>]-linux-arm64.tar.gz`
+- `async-profiler-X.Y[-<hash>]-linux-arm64-debug.tar.gz`
+- `async-profiler-X.Y[-<hash>]-linux-x64.tar.gz`
+- `async-profiler-X.Y[-<hash>]-linux-x64-debug.tar.gz`
+- `async-profiler-X.Y[-<hash>]-macos.zip`
 - `async-profiler.jar`
 - `jfr-converter.jar`
 
-No `linux-riscv64` asset exists in any release. Users must build from source. The `pom.xml` produces classified JARs only for linux-x64, linux-arm64, and macos.
+(plus GitHub's auto-generated `Source code (zip)` / `Source code (tar.gz)`). No `linux-riscv64` asset exists in any release, including the current latest stable (v4.5) and the current nightly build, both re-checked on 2026-09-30 via the releases' asset-list fragments (`github.com/async-profiler/async-profiler/releases/expanded_assets/<tag>`). v4.5's changelog contains zero mentions of "riscv" or "RISC-V". Users must build from source. The `pom.xml` produces classified JARs only for linux-x64, linux-arm64, and macos.
 
 ### 8.2 Linux Distribution Packages
 
 | Distribution | Package status | riscv64 binary |
 |---|---|---|
 | Debian | Not in package archive (tracker.debian.org returns 404) | N/A |
-| Ubuntu | Not in any Ubuntu suite (packages.ubuntu.com returns no results) | N/A |
+| Ubuntu (noble/questing/resolute, i.e. 24.04-26.04) | Not in any Ubuntu suite, including 26.04 "Resolute" (packages.ubuntu.com search re-run 2026-09-30: "Sorry, your search gave no results" for `suite=resolute`) | N/A |
 | Arch Linux (official) | Not in official repos (0 results via packages API) | N/A |
 | Arch Linux (AUR) | `async-profiler 4.4-1`, `async-profiler-bin 4.4-2`, `async-profiler-git` exist as build scripts | `async-profiler-bin` explicitly downloads upstream x64/arm64 tarballs; would fail on riscv64 |
-| PyPI | HTTP 404 -- package does not exist | N/A |
-| RISE wheel builder | Not present in the RISE riscv64 wheel builder package list | N/A |
+| PyPI | HTTP 404 -- package does not exist (re-checked 2026-09-30 against both `pypi.org/pypi/async-profiler/json` and `pypi.org/simple/async-profiler/`) | N/A |
+| RISE wheel builder | GitLab RISE PyPI proxy (`gitlab.com/api/v4/projects/56254198/packages/pypi/simple/async-profiler/`) 302-redirects straight to the same non-existent upstream PyPI project; confirms no RISE-built wheel exists | N/A |
 | Arch Linux RISC-V (archriscv.felixc.at) | Not present | None |
+
+**Methodology note (2026-09-30 refresh):** the project graph database (`project-graph` MCP server) could not be queried this run -- the server failed to connect (`CONNECTION_CLOSED`) for both the Ubuntu 26.04/riscv64 binary-package query and the PyPI package-existence query. This is a connectivity failure, not a confirmed absence of data, so the findings above rely entirely on the live fallback checks (Ubuntu package search, PyPI JSON/simple API, GitHub releases asset listings). Direct GitHub API access (`api.github.com`) also returned HTTP 403 (unauthenticated rate limit) and the `github` MCP tool was not configured for the `async-profiler/async-profiler` repository in this session; release/asset data above was instead confirmed via the public `releases/expanded_assets/<tag>` HTML fragments for `v4.4`, `v4.5`, and `nightly`, and via `releases/latest`.
 
 ---
 
@@ -434,7 +436,9 @@ Effort within async-profiler: 0 (blocked on GraalVM). Monitoring: low ongoing ef
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-07-20.
+**2026-09-30 -- Binary/release availability refresh.** Re-verified riscv64 binary and package availability upstream. Findings unchanged from 2026-07-20: still no `linux-riscv64` release asset, still absent from Ubuntu (including the newly-checked 26.04 "Resolute" suite), still no PyPI package, still no RISE wheel-builder entry. The one factual update is the upstream release cadence: **v4.5** (published 2026-07-20) is now the latest stable release, superseding v4.4 (2026-04-20) referenced in the original report; v4.5's asset list and changelog were checked directly and contain no riscv64 build and no RISC-V mention. The project graph database was unreachable this run (connection failure), so this refresh relied on live web/API fallback checks instead; see the methodology note in Section 8.2.
+
+**2026-09-30 -- Issue/PR tracking refresh (with a correction).** Re-searched issues, PRs, and commits across the repository for `riscv`, `riscv64`, and `RISC-V` (via GitHub search, since direct `issue_read`/`pull_request_read` access to `async-profiler/async-profiler` is not configured in this session's GitHub tool and was denied on retry). No new RISC-V-tagged issues, PRs, or commits exist beyond the two already documented (PR #644, PR #1185); zero open RISC-V issues; still no dedicated tracking issue. **Correction:** PR #1185 was previously recorded in this report as "closed without merge." Re-fetching its record via `search_pull_requests` (with the `pull_request` field, which surfaces `merged_at`) shows it carries `merged_at: 2025-03-21T12:19:02Z` -- i.e. it **was merged**, the same day it was opened, not closed unmerged as originally stated. Section 2 and Section 15 have been corrected accordingly; this also raises the "merged riscv64-related PR" count in Section 2 from one to two, though #1185 is a build-infra fix (missing `<cerrno>` include, undeclared `OS` symbol under `make MERGE=false`) rather than a functional port change, so it does not alter Sections 3-13's assessment of the port's completeness or tier status.
 
 ---
 
@@ -444,8 +448,9 @@ No updates yet -- initial report dated 2026-07-20.
 - [async-profiler homepage](https://async-profiler.github.io/)
 - [PR #644 "Basic RISC-V support"](https://github.com/async-profiler/async-profiler/pull/644) -- merged 2023-11-26, merge commit `752b79ec4e4cc46c105dade93e1df1954fbbc638`
 - [v3.0 release](https://github.com/async-profiler/async-profiler/releases/tag/v3.0) -- first release containing RISC-V port, 2024-01-21
-- [v4.4 release](https://github.com/async-profiler/async-profiler/releases/tag/v4.4) -- latest stable release as of research date, 2026-04-20
-- [PR #1185 "Fix compilation with source merging disabled"](https://github.com/async-profiler/async-profiler/pull/1185) -- riscv64-related, closed without merge, 2025-03-21
+- [v4.4 release](https://github.com/async-profiler/async-profiler/releases/tag/v4.4) -- stable release, 2026-04-20
+- [v4.5 release](https://github.com/async-profiler/async-profiler/releases/tag/v4.5) -- latest stable release as of refresh date, 2026-07-20; no riscv64 asset, no RISC-V changelog mention
+- [PR #1185 "Fix compilation with source merging disabled"](https://github.com/async-profiler/async-profiler/pull/1185) -- riscv64-related build-infra fix, opened and merged same day, 2025-03-21
 - [GraalVM issue #13516](https://github.com/oracle/graal/issues/13516) -- LLVM backend calling convention not implemented on riscv64; blocks `jfr-converter`
 - [GraalVM issue #13386](https://github.com/oracle/graal/issues/13386) -- pthread crash on shutdown on riscv64
 - [RISE funded projects wiki](https://wiki.riseproject.dev/index.php/Main_Page) -- RP001-RP016 reviewed; async-profiler absent

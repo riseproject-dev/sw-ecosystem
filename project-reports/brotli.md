@@ -10,7 +10,7 @@ categories:
 
 # brotli
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-07-20
+**Date:** 2026-09-30
 **Scope:** RISC-V (riscv64/linux) support status for brotli
 **Audience:** Technical leadership, resource allocation strategy
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
@@ -358,7 +358,9 @@ PyPI has no riscv64 wheel for brotli. Adding brotli to the RISE wheel builder wo
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-07-20.
+**2026-09-30:** Re-verified CI/CD findings (Section 7) by cloning `google/brotli` at commit `558fc647cdaf391228d614ca85f711e02e4e583b` and inspecting all 8 workflow files under `.github/workflows/` (`build_test.yml`, `build_test_wasm.yml`, `codeql.yml`, `fuzz.yml`, `lint.yml`, `publish_to_bcr.yaml`, `release.yaml`, `scorecard.yml`) directly, plus a case-insensitive search for `riscv`/`riscv64`/`RISCV` across all workflow files. No matches found. Confirmed no `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` exists anywhere in the repository. NO RISCV64 CI: confirmed by reading `.github/workflows/build_test.yml`, `build_test_wasm.yml`, `codeql.yml`, `fuzz.yml`, `lint.yml`, `publish_to_bcr.yaml`, `release.yaml`, `scorecard.yml`. No change from the 2026-07-20 findings.
+
+Initial report dated 2026-07-20.
 
 ---
 

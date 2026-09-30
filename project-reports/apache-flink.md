@@ -65,7 +65,7 @@ dependencies:
 # Apache Flink
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Apache Flink<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -92,15 +92,15 @@ Flink is architecturally a JVM project. All core runtime logic is JVM bytecode. 
 
 ## 2. Port History and Upstreaming Timeline
 
-The RISC-V porting history for Apache Flink is minimal and concentrated in a single 48-hour window in August 2025, with one earlier abandoned attempt.
+The RISC-V porting history for Apache Flink spans two separate merged `os-maven-plugin` fixes, four years apart: an initial fix merged in February 2021 (first released in Flink 1.13.0) and a follow-up fix merged in August 2025 (first released in Flink 2.2.0).
 
-**February 2021 -- abandoned attempt**
+**February 2021 -- first merged riscv64 fix**
 
-[PR #14934](https://github.com/apache/flink/pull/14934) was submitted by contributor `advancedwebdeveloper`, proposing to upgrade `os-maven-plugin` from 1.7.0 to address riscv64 build failures. Testing was performed on a SiFive U54-MC based board. The PR CI passed. The PR was silently closed after the automated bot flagged a missing JIRA ID in the title, and the author's follow-up question ("@rmetzger, what's next?") went unanswered. No committer engaged. The fix lay dormant for 4.5 years.
+[PR #14934](https://github.com/apache/flink/pull/14934) was submitted by contributor `advancedwebdeveloper` on February 12, 2021, proposing to upgrade `os-maven-plugin` in `flink-formats/flink-parquet/pom.xml` from 1.5.0.Final to 1.7.0 to address riscv64 build failures. Testing was performed on a SiFive U54-MC based board and CI passed. After the author's follow-up question ("@rmetzger, what's next?") on February 23, 2021, committer Robert Metzger (rmetzger) reviewed and approved it the next day ("Thanks a lot for your contribution. The change looks good, I'll merge it.") and merged it into `apache:master` as commit [`808cae6`](https://github.com/apache/flink/commit/808cae68f6ecd6af67c76293d8c5d5b3d6084804) on February 24, 2021. The commit is present on every release tag from `release-1.13.0` onward -- first released in **Flink 1.13.0** (May 3, 2021). [Earlier drafts of this report mischaracterized this PR as "silently closed" and "abandoned"; corrected 2026-09-30, see Section 14.]
 
-**August 1-2, 2025 -- only landed RISC-V work**
+**August 1-2, 2025 -- follow-up fix for a residual riscv64 detection gap**
 
-Contributor Gong Xiaofei (GitHub: Felix-Gong) filed [FLINK-38178](https://issues.apache.org/jira/browse/FLINK-38178), an umbrella tracking issue for comprehensive RISC-V support, and immediately filed sub-task [FLINK-38179](https://issues.apache.org/jira/browse/FLINK-38179) covering the same build failure that had blocked the 2021 attempt.
+Contributor Gong Xiaofei (GitHub: Felix-Gong) filed [FLINK-38178](https://issues.apache.org/jira/browse/FLINK-38178), an umbrella tracking issue for comprehensive RISC-V support, and immediately filed sub-task [FLINK-38179](https://issues.apache.org/jira/browse/FLINK-38179) covering a residual riscv64-detection gap left in the `os-maven-plugin` 1.7.0 version that the 2021 fix had landed.
 
 - [PR #26852](https://github.com/apache/flink/pull/26852) was submitted July 31, 2025 and closed August 1, 2025 by the author after committer snuyanzin requested that the title follow Flink's JIRA-prefixed naming convention.
 - [PR #26860](https://github.com/apache/flink/pull/26860) was submitted August 1, 2025 and merged August 2, 2025 by Sergey Nuyanzin (snuyanzin). Merge commit: `d0eb9ef97908053a51df6b8e78c9a85ed9dc579b`. Fix version: Flink 2.2.0.
@@ -113,11 +113,12 @@ The umbrella issue FLINK-38178 remains open. No further sub-tasks have been file
 
 | Date | Event | Status |
 |---|---|---|
-| Feb 2021 | PR #14934: os-maven-plugin bump, SiFive U54-MC tested | Abandoned, no committer engagement |
+| Feb 24, 2021 | PR #14934 merged by rmetzger: os-maven-plugin 1.5.0.Final -> 1.7.0, SiFive U54-MC tested | Merged into master |
+| May 3, 2021 | Flink 1.13.0 released, containing the first os-maven-plugin riscv64 fix | Released |
 | Aug 1, 2025 | FLINK-38178 umbrella filed; FLINK-38179 sub-task filed | Open / Resolved |
 | Aug 1, 2025 | PR #26852 submitted | Closed (naming convention) |
-| Aug 2, 2025 | PR #26860 merged; FLINK-38179 resolved | Merged into master |
-| Dec 4, 2025 | Flink 2.2.0 released, containing the os-maven-plugin fix | Released |
+| Aug 2, 2025 | PR #26860 merged; FLINK-38179 resolved: os-maven-plugin 1.7.0 -> 1.7.1 | Merged into master |
+| Dec 4, 2025 | Flink 2.2.0 released, containing the follow-up os-maven-plugin fix | Released |
 | Jun 2026 | FLINK-38178 umbrella still open; no new sub-tasks | Stalled |
 
 ---
@@ -187,7 +188,7 @@ mvn clean install -DskipTests -Dfast -Pskip-webui-build -T 1C
 | Netty native epoll/io_uring | Full | Full | Missing (NIO fallback) | Performance |
 | Netty tcnative / BoringSSL | Full | Full | Missing (JSSE fallback) | Minor |
 | PyFlink wheels on PyPI | Full | Partial (macOS only) | Missing (source-buildable) | Gap |
-| LZ4 JNI compression | Full | Full | Missing (pure-Java fallback; repo archived) | Performance |
+| LZ4 JNI compression | Full | Full | Missing on shipped version (pure-Java fallback); riscv64 build exists upstream in fork since v1.11.0, unmerged into Flink (PR #28820 open) | Performance (fixable) |
 | Conscrypt TLS provider | Full | Full | Missing (JSSE fallback) | Minor |
 | Official Docker image | Full | Full | Missing | Gap |
 | CI test coverage | Full | None | None | Missing |
@@ -196,7 +197,7 @@ mvn clean install -DskipTests -Dfast -Pskip-webui-build -T 1C
 
 **RocksDB/ForSt JNI gap -- operational impact:** Stateful Flink applications using `EmbeddedRocksDBStateBackend` (the default for production large-state workloads) will fail at runtime on riscv64 with `UnsatisfiedLinkError`. The fallback `HashMapStateBackend` holds all state in JVM heap, which is functionally incompatible with large-state streaming jobs. This is the single most impactful gap for production use.
 
-**LZ4 gap -- operational impact:** The `lz4-java` library's riscv64 JNI binding was never released. [PR #212](https://github.com/lz4/lz4-java/pull/212) was submitted to add riscv64 support but was never reviewed or merged. The repository was archived on December 2, 2025 and is now read-only; there is no upstream path to land this fix. Flink's LZ4 shuffle compression falls back to the pure-Java implementation, which carries an estimated 3-5x throughput penalty [NEEDS VERIFICATION -- no benchmark cited in research findings; figure is from the research synthesis, not a primary source].
+**LZ4 gap -- resolved in principle, not yet in a released Flink version at the riscv64-capable version.** The original `lz4/lz4-java` repository was archived December 2, 2025 with [PR #212](https://github.com/lz4/lz4-java/pull/212) (riscv64 support) permanently unmerged. However, [FLINK-39139](https://issues.apache.org/jira/browse/FLINK-39139) (resolved February 25, 2026; fix versions 1.20.4, 2.1.2, 2.2.1, 2.3.0) migrated Flink's dependency from the archived `org.lz4:lz4-java:1.8.0` to the community-maintained continuation `at.yawk.lz4:lz4-java:1.10.3` (for CVE-2025-66566 and CVE-2025-12183, not for riscv64). This fork added a Linux riscv64 native binary starting in release 1.11.0 (April 9, 2026) -- version 1.10.3, the version Flink currently ships, predates that and still has **no** riscv64 native binary. An open Dependabot PR, [apache/flink#28820](https://github.com/apache/flink/pull/28820) (bumping `at.yawk.lz4:lz4-java` 1.10.3 -> 1.11.1, opened to pick up CVE-2026-59949), would bring in the riscv64-capable version if merged; as of this refresh it is unmerged and reports an Azure CI failure. Until that PR (or an equivalent version bump) lands, Flink's LZ4 shuffle/state compression still falls back to the pure-Java implementation on riscv64, with an estimated throughput penalty [NEEDS VERIFICATION -- no benchmark cited in research findings; figure is from the research synthesis, not a primary source].
 
 **Protoc build blocker -- developer impact:** The riscv64 `protoc` binary does not exist on Maven Central. Building Flink from source on a riscv64 host requires installing a system `protoc` and configuring the Maven plugin to use it, or cross-building. This is a non-trivial barrier for contributors working natively on riscv64 hardware.
 
@@ -258,13 +259,13 @@ The following table covers dependencies with JIT backends, SIMD paths, native co
 |---|---|---|---|---|
 | OpenJDK (JVM runtime) | Required to run all Flink code | Builds (cross-compile CI only; no full HotSpot CI job on riscv64) | Temurin 21/17/11 available from Adoptium; not Tier 1 | C2 JIT missing several intrinsics; no riscv64 jtreg CI. See `project-reports/openjdk.md` |
 | snappy-java 1.1.10.7 | Snappy compression for state/shuffle | riscv64 native `.so` bundled since 1.1.10.0 (PR #396, merged 2023) | riscv64 artifact present in releases >= 1.1.10.0; Flink uses 1.1.10.7 | None. Fully supported. |
-| lz4-java (archived) | LZ4 compression for shuffle and state | riscv64 JNI binding never released; [PR #212](https://github.com/lz4/lz4-java/pull/212) open and unreviewed | No riscv64 release; repository archived December 2, 2025 (read-only) | **Permanent gap:** repo archived, no path to merge PR #212. Pure-Java fallback exists but with significant performance penalty. |
+| at.yawk.lz4:lz4-java 1.10.3 (formerly org.lz4:lz4-java, archived) | LZ4 compression for shuffle and state | Flink migrated to the community fork `at.yawk.lz4:lz4-java` via [FLINK-39139](https://issues.apache.org/jira/browse/FLINK-39139) (merged Feb 25, 2026; fix versions 1.20.4/2.1.2/2.2.1/2.3.0), but at the pinned version 1.10.3, which predates riscv64 support | Fork added a riscv64 native binary in release 1.11.0 (Apr 9, 2026); Flink still ships 1.10.3, which has none | **No longer permanent:** upstream fork now builds riscv64; open Dependabot PR [#28820](https://github.com/apache/flink/pull/28820) would bump to 1.11.1 (riscv64-capable) but is unmerged as of this refresh (Azure CI failure reported). Pure-Java fallback remains active on riscv64 until it merges. |
 | Netty 4.2.13.Final | Network transport (RPC, checkpointing, REST) | riscv64 native epoll + io_uring built and shipped since 4.1.103.Final (PR #13670, merged Dec 2023) | riscv64 epoll + io_uring artifacts present in releases >= 4.1.103.Final | No open blocking issues for epoll/io_uring. tcnative (TLS) has no riscv64 artifact (see below). |
 | netty-tcnative (test scope) | TLS offload via BoringSSL | Not built for riscv64 | No riscv64 artifact; no issues or PRs filed | Test scope only; JSSE fallback is functional. Not a runtime blocker. |
 | frocksdbjni 8.10.0-ververica-1.0 | RocksDB state backend JNI | Not built for riscv64; no riscv64 targets in CircleCI build config | No riscv64 artifact published | **Runtime blocker for EmbeddedRocksDBStateBackend:** UnsatisfiedLinkError on riscv64. Must fall back to HashMapStateBackend. |
 | forstjni 0.1.8 | ForSt state backend JNI | Not built for riscv64; same ververica/ForSt source; file finder search for riscv returns no results | No riscv64 artifact published | **Runtime blocker for ForSt state backend:** same as frocksdbjni. |
 | Apache Arrow 19.0.0 (arrow-vector, arrow-memory-netty) | Python/Flink data exchange; flink-python Arrow-based batch | Arrow Java is JVM bytecode (architecture-neutral). Arrow C++ builds on riscv64 but has riscv64 test failures ([PR #49556](https://github.com/apache/arrow/pull/49556), open draft). | Arrow Java JARs are architecture-neutral; run on any JVM. No riscv64 PyArrow wheel on PyPI. | PyArrow wheel gap affects flink-python users; must build from source (~1 hour). Arrow C++ test failures on riscv64 (PR #49556 open). |
-| protoc 4.32.1 (build-time) | Proto code generation at build time | No pre-built riscv64 protoc binary on Maven Central ([protocolbuffers/protobuf#17798](https://github.com/protocolbuffers/protobuf/issues/17798), open, untriaged) | No riscv64 protoc binary on Maven Central | **Build blocker:** `mvn compile` on riscv64 fails at protoc download unless protoc is pre-installed to PATH. |
+| protoc 4.32.1 (build-time) | Proto code generation at build time | No pre-built riscv64 protoc binary on Maven Central ([protocolbuffers/protobuf#17798](https://github.com/protocolbuffers/protobuf/issues/17798), now closed but with no riscv64 artifact actually published -- verified against protoc 4.36.2 on Maven Central, Sept 2026) | No riscv64 protoc binary on Maven Central | **Build blocker (unchanged in practice):** `mvn compile` on riscv64 fails at protoc download unless protoc is pre-installed to PATH. |
 | os-maven-plugin 1.7.1 | Maven build-time arch/OS detection | Correctly maps riscv64 as of 1.7.1; Flink upgraded in PR #26860 (Flink 2.2.0) | 1.7.1 released; Flink uses it | Was broken before Flink 2.2.0. Fixed. |
 | Apache Hadoop 2.10.2 (provided scope) | HDFS file system connector | Hadoop 2.10.2 predates all riscv64 work | No riscv64 artifacts for 2.10.2 | Users requiring HDFS must use Hadoop 3.5.0+ (unreleased as of research). ISA-L erasure coding degrades to Java fallback. See `project-reports/apache-hadoop.md` |
 | Apache Parquet (parquet-hadoop, parquet-avro) | Columnar format read/write | Java-only | Architecture-neutral JARs | None. Pure Java. |
@@ -281,7 +282,7 @@ The following table covers dependencies with JIT backends, SIMD paths, native co
 |---|---|---|
 | Build blocker | protoc 4.32.1 | No riscv64 binary on Maven Central; [#17798](https://github.com/protocolbuffers/protobuf/issues/17798) open, untriaged |
 | Runtime blocker | frocksdbjni / forstjni | No riscv64 `.so`; EmbeddedRocksDBStateBackend and ForSt backend unusable on riscv64 |
-| Permanent performance gap | lz4-java | PR #212 unmerged; repo archived Dec 2025; no upstream resolution path |
+| Performance gap (fixable, not merged) | at.yawk.lz4:lz4-java | Flink pinned to 1.10.3 (pre-riscv64); fork added riscv64 in 1.11.0; open PR #28820 to 1.11.1 unmerged |
 | TLS performance gap | netty-tcnative | No riscv64 BoringSSL JNI; falls back to JSSE |
 | HDFS compatibility | Hadoop 2.10.2 | Predates riscv64 work; HDFS users must use Hadoop 3.5.0+ |
 | PyFlink gap | PyArrow | No riscv64 wheel; source build required (~1 hour); Arrow C++ has riscv64 test failures |
@@ -332,7 +333,7 @@ The following table covers dependencies with JIT backends, SIMD paths, native co
 - Affected versions: 1.20.4, 2.0.2, 2.1.2, 2.2.1, 2.3.0
 - Root cause: `ArraySortComparator.compare` violates the Java `Comparator` antisymmetry contract -- both `compare(a,b)` and `compare(b,a)` return -1 for equal elements. TimSort throws `"Comparison method violates its general contract!"` on arrays of 32 or more elements containing duplicates.
 - Relevance to riscv64: NaN and floating-point comparisons trigger this pattern (NaN comparisons are never equal under `>`), making this a correctness hazard for any floating-point analytical workload. Applies equally to riscv64.
-- Open PRs: [#28155](https://github.com/apache/flink/pull/28155), [#28159](https://github.com/apache/flink/pull/28159)
+- Fix PR status (re-checked 2026-09-30): [#28155](https://github.com/apache/flink/pull/28155) remains **open**, proposing a two-probe comparator fix (returns 0 when neither element is greater than the other). [#28159](https://github.com/apache/flink/pull/28159), a more thorough fix generating a proper `$COMPARE$1` codegen helper reused from ORDER BY comparison logic, was **auto-closed as stale on September 20, 2026** after 120 days of inactivity -- it was not merged. The underlying bug (FLINK-39677) is therefore still open and unfixed in any released or unreleased branch as of this refresh.
 - Reported: May 13, 2026
 
 **Published RISC-V benchmarks:** Data not available. No throughput, latency, or comparative performance figures for Apache Flink on riscv64 exist in any public source -- not on the Flink blog, the RISE blog, Apache JIRA, or GitHub as of mid-2026.
@@ -351,11 +352,11 @@ This is controlled by Ververica (Alibaba subsidiary). The build pipeline is Circ
 
 **Blocker 2 -- protoc riscv64 binary on Maven Central:**
 
-[protocolbuffers/protobuf#17798](https://github.com/protocolbuffers/protobuf/issues/17798) is open and untriaged as of mid-2026. This is a Google-owned project. The Flink community has no leverage here. The workaround (pre-install protoc to PATH) is documented in principle but not in Flink's official build documentation.
+[protocolbuffers/protobuf#17798](https://github.com/protocolbuffers/protobuf/issues/17798) (filed August 13, 2024) is now shown as **closed** as of this refresh, a change from the prior "open, untriaged" status -- but this is not a fix. A direct check of the Maven Central listing for `com.google.protobuf:protoc` confirms the latest release (4.36.2, published September 17, 2026) still ships no `linux-riscv64` classifier; only aarch64, ppcle64, s390_64, x86_32/64 (Linux), macOS, and Windows binaries are published. The issue's closure could not be attributed to a resolution (no accessible closing comment or linked merged PR was found); the underlying blocker -- no riscv64 `protoc` binary on Maven Central -- is unchanged in practice. This remains a Google-owned project where the Flink community has no leverage. The workaround (pre-install protoc to PATH) is documented in principle but not in Flink's official build documentation.
 
-**Blocker 3 -- lz4-java (permanently archived):**
+**Blocker 3 -- lz4-java (no longer a hard blocker; a version bump away):**
 
-The `lz4/lz4-java` repository was archived December 2, 2025. It is read-only. [PR #212](https://github.com/lz4/lz4-java/pull/212) adding riscv64 support is permanently unmerged with no path forward. The pure-Java LZ4 fallback is the only available option. Flink would need to either fork lz4-java, vendor the native code, or replace the dependency.
+The original `lz4/lz4-java` repository was archived December 2, 2025 and [PR #212](https://github.com/lz4/lz4-java/pull/212) remains permanently unmerged there. But Flink already migrated its dependency to the community-maintained fork `at.yawk.lz4:lz4-java` via FLINK-39139 (merged Feb 2026, for CVE fixes, unrelated to riscv64). That fork shipped a Linux riscv64 native binary starting with release 1.11.0 (April 2026). Flink is currently pinned to 1.10.3, one minor version behind the riscv64-capable release. An open Dependabot PR ([#28820](https://github.com/apache/flink/pull/28820)) already proposes bumping to 1.11.1, driven by a security fix (CVE-2026-59949) rather than riscv64, but it would resolve this gap as a side effect once merged. This is now a low-effort, low-risk merge rather than an unresolvable upstream dependency.
 
 **Blocker 4 -- no riscv64 CI:**
 
@@ -391,7 +392,7 @@ Flink's JVM core has no SIMD or architecture-specific code paths. Performance op
 
 There is no Flink-specific SIMD or RVV optimization work to be done within the apache/flink repository. Any RISC-V performance investment for Flink flows through OpenJDK and the native dependency layer.
 
-The lz4-java archival creates a permanent ~3-5x LZ4 compression throughput gap [NEEDS VERIFICATION -- no primary source benchmark found]. The practical mitigation is using Snappy (fully supported on riscv64) instead of LZ4 for shuffle and state compression, at the cost of slightly lower compression ratios.
+The LZ4 compression throughput gap on riscv64 is no longer structurally permanent: the `at.yawk.lz4:lz4-java` fork Flink now depends on (via FLINK-39139) added a riscv64 native binary in release 1.11.0, and merging the already-open [PR #28820](https://github.com/apache/flink/pull/28820) (1.10.3 -> 1.11.1) would close the gap. Until that merges, the practical mitigation remains using Snappy (fully supported on riscv64) instead of LZ4 for shuffle and state compression, at the cost of slightly lower compression ratios [NEEDS VERIFICATION -- no primary source benchmark quantifying the pure-Java LZ4 fallback penalty was found].
 
 ### 13.3 CI/CD Infrastructure
 
@@ -417,7 +418,7 @@ RISE Enablement WG has infrastructure (Scaleway riscv64 instances) that has been
 | Functional | RocksDB/ForSt JNI riscv64 build (frocksdbjni/forstjni) | 4-8 | Ververica (external) | Critical |
 | Functional | protoc riscv64 binary on Maven Central | 8-16 | Google/protocolbuffers (external) | High |
 | Functional | Workaround: document PATH-based protoc on riscv64 in Flink build docs | 0.25 | Flink contributor | High |
-| Functional | lz4-java replacement or fork for riscv64 JNI | 4-6 | TBD (lz4-java archived) | Medium |
+| Functional | Merge/adopt at.yawk.lz4:lz4-java >= 1.11.0 (riscv64-capable); e.g. land open PR #28820 | 0.25-0.5 | Flink committer | Medium |
 | Functional | Document HashMapStateBackend fallback and Snappy-vs-LZ4 tradeoffs for riscv64 | 0.5 | Flink contributor | Medium |
 | CI/CD | riscv64 CI runner integration (RISE Scaleway or QEMU) | 3-5 | Flink committer + RISE WG | High |
 | CI/CD | riscv64 CI Docker image for `apache/flink-ci-docker` | 1-2 | Flink committer | High |
@@ -432,7 +433,50 @@ RISE Enablement WG has infrastructure (Scaleway riscv64 instances) that has been
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-07-20.
+**2026-09-30 -- Correction: PR #14934 status was misreported; it was merged, not abandoned.**
+
+A PR-merge-status verification pass on the riscv64-related PRs cited in this report (#14934, #26852, #26860, #28820), using `mcp__github__pull_request_read` where the session's GitHub ACL allowed it and a direct fetch of the GitHub PR/commit pages otherwise (the apache/flink repository is outside this session's configured GitHub MCP scope, which only covers `riseproject-dev/sw-ecosystem`), found that [PR #14934](https://github.com/apache/flink/pull/14934) -- previously described in this report as "silently closed" and "abandoned" with "no committer engagement" -- was in fact **merged** on February 24, 2021 by committer Robert Metzger (rmetzger), as merge commit [`808cae6`](https://github.com/apache/flink/commit/808cae68f6ecd6af67c76293d8c5d5b3d6084804) ("Thanks a lot for your contribution. The change looks good, I'll merge it."). The commit is present on every Flink release tag from `release-1.13.0` onward, so it first shipped in **Flink 1.13.0** (May 3, 2021). This corrects the port-history narrative in Section 2 and the timeline table: Flink's first riscv64-relevant merged fix landed in 2021, not August 2025 -- PR #26860 (August 2025) was a follow-up fix for a residual riscv64-detection gap left in the `os-maven-plugin` 1.7.0 version the 2021 fix had landed, not the project's first merged RISC-V work. The other three PRs checked in this pass were confirmed unchanged from the prior report:
+
+| PR | Title | Status | Merged at | First release |
+|---|---|---|---|---|
+| [#14934](https://github.com/apache/flink/pull/14934) | Upgrade the os-maven-plugin dependency, to version 1.7.0 | Merged | 2021-02-24 | 1.13.0 |
+| [#26852](https://github.com/apache/flink/pull/26852) | Upgrade os-maven-plugin for RISC-V riscv64 support | Closed (unmerged, superseded by #26860) | -- | -- |
+| [#26860](https://github.com/apache/flink/pull/26860) | [FLINK-38179] Upgrade os-maven-plugin for RISC-V riscv64 support | Merged | 2025-08-02 | 2.2.0 |
+| [#28820](https://github.com/apache/flink/pull/28820) | Bump at.yawk.lz4:lz4-java from 1.10.3 to 1.11.1 | Open (CI failing) | -- | n/a |
+
+**2026-09-30 -- Refresh: GitHub issue/PR and dependency re-check; one material finding (LZ4).**
+
+This pass searched `apache/flink` GitHub issues and PRs for riscv64-related activity (queries: "riscv64 performance", "riscv64 bug", "riscv nan floating point"), re-checked the two open PRs tracking FLINK-39677, re-checked the protoc riscv64 tracking issue against the live Maven Central listing, and searched for any published Flink-on-riscv64 benchmark data (web search and a RISE blog fetch; no rendered post listing was retrievable from riseproject.dev/blog, and general web search found no Flink+riscv64 benchmark or performance content on any site as of this refresh). No new riscv64-specific GitHub issues or JIRA tickets beyond the previously known FLINK-38178/FLINK-38179 were found; one unrelated dependabot PR ([#28820](https://github.com/apache/flink/pull/28820)) incidentally matched a "riscv" search.
+
+**Material finding -- LZ4 gap is no longer structurally permanent:** The prior report characterized the riscv64 LZ4 gap as permanent because `lz4/lz4-java` was archived. Re-checking Flink's current `pom.xml` shows Flink already migrated (via [FLINK-39139](https://issues.apache.org/jira/browse/FLINK-39139), merged Feb 25, 2026, for CVE-2025-66566/CVE-2025-12183, unrelated to riscv64) to the community-maintained continuation `at.yawk.lz4:lz4-java`, currently pinned at 1.10.3. That fork added a `linux-riscv64` native binary starting with release 1.11.0 (April 9, 2026). Flink's pinned 1.10.3 predates this, so the riscv64 gap is still present in shipped Flink today, but an open Dependabot PR ([#28820](https://github.com/apache/flink/pull/28820), opened to pick up a security fix for CVE-2026-59949) would bump to 1.11.1 and close the gap as a side effect if merged. This downgrades the LZ4 item from "permanent gap, no path forward" to "known gap, low-effort fix pending merge." Sections 6, 9, 12, and 13.2/13.5 were updated accordingly.
+
+**Secondary finding -- FLINK-39677 (ARRAY_SORT comparator bug) still open; one of its two fix PRs went stale.** [#28155](https://github.com/apache/flink/pull/28155) remains open. [#28159](https://github.com/apache/flink/pull/28159), the more complete fix, was auto-closed as stale on September 20, 2026 without merging. The bug itself remains unresolved in all affected versions (1.20.4, 2.0.2, 2.1.2, 2.2.1, 2.3.0).
+
+**Secondary finding -- protoc riscv64 tracking issue closed, but no fix shipped.** [protocolbuffers/protobuf#17798](https://github.com/protocolbuffers/protobuf/issues/17798) now shows as closed (previously open/untriaged), but a direct check of Maven Central's `com.google.protobuf:protoc` listing (latest: 4.36.2, Sept 17, 2026) confirms no `linux-riscv64` artifact has been published. The build blocker for riscv64 `mvn compile` is unchanged in practice; only the tracking issue's state changed.
+
+**No published performance benchmarks for Apache Flink on riscv64 were found in this pass**, consistent with the prior report. GitHub issue/PR search, general web search, and a RISE blog fetch attempt all returned no benchmark data.
+
+---
+
+**2026-09-30 -- Re-verification, no change to findings.**
+
+Binary package and release availability for riscv64 was re-checked against upstream sources. No riscv64 package or release has appeared since the 2026-07-20 report:
+
+- GitHub Releases: [apache/flink/releases](https://github.com/apache/flink/releases) confirmed to show no releases at all (Flink is not distributed this way; see Section 8). No asset of any kind, let alone a riscv64 one, exists.
+- PyPI: `https://pypi.org/pypi/apache-flink/json` shows the latest version is still 2.3.0, publishing the same 13 files (`cp39`/`cp310`/`cp311`/`cp312` x macOS x86_64/arm64, manylinux x86_64, plus one source `.tar.gz`). No filename contains "riscv" or "riscv64".
+- RISE GitLab wheel builder: `https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/apache-flink/` 302-redirects to the canonical PyPI simple index (`https://pypi.org/simple/apache-flink/`), which lists the same x86_64/arm64-only wheel set with no riscv64 build. This confirms the RISE wheel builder is not building or hosting apache-flink for riscv64.
+- Ubuntu 26.04 (resolute): `https://packages.ubuntu.com/search?keywords=Apache%20Flink&suite=resolute&searchon=names&section=all` returns "Sorry, your search gave no results" -- Apache Flink remains unpackaged in Ubuntu 26.04 under any architecture, consistent with its absence from Noble (24.04).
+- Project graph database (`project_graph_query`): the MCP server for this query failed to connect this session (`CONNECTION_CLOSED`), so the SPARQL checks for an Ubuntu 26.04 riscv64 binary and the PyPI `apache-flink` package record could not be run this pass. This is a tooling gap for this session, not a finding of package absence; the live-source checks above independently confirm no riscv64 build exists.
+
+**No riscv64 binary package or release exists for Apache Flink as of 2026-09-30.** This distribution/packaging check found no changes from the 2026-07-20 report. The separate GitHub/dependency refresh entry above (also 2026-09-30, performed later the same day) did find one material change (the LZ4 dependency situation) -- see that entry for what moved.
+
+**2026-09-30 -- Re-verification: no CMake/native cross-compilation build system exists for riscv64 (confirms Section 5, no change).**
+
+A refresh pass attempted to locate riscv64-specific build-system documentation of the kind found in native-toolchain (C/C++/CMake) projects: a `CMakeLists.txt` referencing riscv, a `cmake/riscv64.cmake` or `cmake/toolchain-riscv64.cmake` cross-compilation toolchain file, `BUILDING.md`/`INSTALL`/`docs/building.md`/`docs/cross-compilation.md`, and riscv64 Dockerfiles under `.ci/docker/` or `docker/`. Direct file reads of `apache/flink` were not available this session (the GitHub MCP server here is scoped only to `riseproject-dev/sw-ecosystem`, as already noted in the 2026-09-30 correction entry above), so this was checked via GitHub code search instead: `riscv64 repo:apache/flink filename:Dockerfile` and `riscv repo:apache/flink extension:cmake` both returned zero results.
+
+This is consistent with, not a change to, what Section 5 already establishes: Apache Flink is a Maven-only build (no CMake, no Makefile-based native build, no cross-compilation toolchain files, no `Dockerfile.riscv64`) because the project has no C/C++ source tree to cross-compile -- a repository-wide search for `.c`/`.cpp`/`.h`/`.S` files and for the string "riscv" found none (Section 4). There are consequently no cmake/configure commands, no GCC/Clang minimum-version requirements, no `-DUSE_X=OFF`-style feature flags, and no QEMU-based build usage to report for riscv64 -- these concepts do not apply to Flink's build system. The only riscv64-relevant build-system artifact remains the `os-maven-plugin` Maven dependency fix described in Section 5 and Section 2 (PR #14934, PR #26860), and QEMU's only role anywhere in Flink's pipeline is emulating amd64/arm64 (not riscv64) during official Docker image publishing (Section 5, Section 8).
+
+Report initially dated 2026-07-20.
 
 ---
 
@@ -442,11 +486,17 @@ No updates yet -- initial report dated 2026-07-20.
 - [FLINK-38179 -- Build Failure: os-maven-plugin Missing riscv64 Support (JIRA)](https://issues.apache.org/jira/browse/FLINK-38179)
 - [FLINK-21139 -- ThresholdMeterTest unstable (JIRA)](https://issues.apache.org/jira/browse/FLINK-21139)
 - [FLINK-39677 -- ARRAY_SORT Comparator Contract Violation (JIRA)](https://issues.apache.org/jira/browse/FLINK-39677)
+- [PR #28155 -- FLINK-39677 fix, open](https://github.com/apache/flink/pull/28155)
+- [PR #28159 -- FLINK-39677 fix, closed stale 2026-09-20](https://github.com/apache/flink/pull/28159)
+- [FLINK-39139 -- lz4-java relocation to at.yawk.lz4 (JIRA, resolved)](https://issues.apache.org/jira/browse/FLINK-39139)
+- [PR #27644 -- lz4-java 1.10.3 relocation, release-2.2 (merged)](https://github.com/apache/flink/pull/27644)
+- [PR #28820 -- at.yawk.lz4:lz4-java 1.10.3 -> 1.11.1 bump, open (brings in riscv64 binary)](https://github.com/apache/flink/pull/28820)
 - [PR #26860 -- os-maven-plugin upgrade for riscv64 (merged)](https://github.com/apache/flink/pull/26860)
 - [PR #26852 -- os-maven-plugin upgrade for riscv64 (closed, superseded)](https://github.com/apache/flink/pull/26852)
-- [PR #14934 -- os-maven-plugin upgrade for riscv64 (abandoned 2021)](https://github.com/apache/flink/pull/14934)
-- [protocolbuffers/protobuf#17798 -- riscv64 protoc binary missing on Maven Central](https://github.com/protocolbuffers/protobuf/issues/17798)
-- [lz4/lz4-java#212 -- riscv64 JNI support (unmerged; repo archived)](https://github.com/lz4/lz4-java/pull/212)
+- [PR #14934 -- os-maven-plugin upgrade for riscv64 (merged 2021-02-24; first released Flink 1.13.0)](https://github.com/apache/flink/pull/14934)
+- [protocolbuffers/protobuf#17798 -- riscv64 protoc binary missing on Maven Central (now closed; no riscv64 artifact published as of protoc 4.36.2)](https://github.com/protocolbuffers/protobuf/issues/17798)
+- [lz4/lz4-java#212 -- riscv64 JNI support (unmerged; original repo archived)](https://github.com/lz4/lz4-java/pull/212)
+- [yawkat/lz4-java -- community-maintained continuation, riscv64 binary since v1.11.0](https://github.com/yawkat/lz4-java)
 - [apache/arrow PR #49556 -- Arrow C++ riscv64 test failures (open draft)](https://github.com/apache/arrow/pull/49556)
 - [apache/flink on Docker Hub](https://hub.docker.com/r/apache/flink/tags)
 - [apache/flink-docker repository](https://github.com/apache/flink-docker)

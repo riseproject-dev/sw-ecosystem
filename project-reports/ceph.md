@@ -41,7 +41,7 @@ dependencies:
 # Ceph
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Ceph<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -77,8 +77,11 @@ The chronological sequence of merged contributions:
 | 2026-06-02 | [#68098](https://github.com/ceph/ceph/pull/68098) | sunyuechi (ISCAS) | Enable ISA-L erasure coding plugin and zlib on RISC-V |
 | 2026-06-08 | [#69315](https://github.com/ceph/ceph/pull/69315) | zmc | Bump sccache; add riscv64 support to build container download script |
 | 2026-06-22 | [#69611](https://github.com/ceph/ceph/pull/69611) | sunyuechi (ISCAS) | Fix Boost.Context CMake Jamfile ordering under ASan on riscv64 |
+| 2026-07-03 | [#69908](https://github.com/ceph/ceph/pull/69908) | (author not independently verified in this refresh) | Fix Zbc CRC32C assembly clobbering `gp`/`tp` scratch registers |
+| 2026-07-08 | [#69783](https://github.com/ceph/ceph/pull/69783) | (author not independently verified in this refresh) | Add `%{?openruyi}` RPM-spec conditionals for openRuyi in `ceph.spec.in` |
+| 2026-09-09 | [#70141](https://github.com/ceph/ceph/pull/70141) | (author not independently verified in this refresh) | Add openRuyi as a selectable distro in `build-with-container.py` (local dev build tool, not CI) |
 
-The first meaningful architecture-level contribution was PR #65120 (September 2025). The critical correctness fix (PR #68047, wrong ZBC/ZVBC bit offsets) was merged March 2026, meaning hardware CRC32C acceleration was silently disabled on all hardware for the six months between #66026 and #68047. The ISA-L erasure coding enablement (June 2026) is the most significant recent milestone: it closes the primary performance gap for production workloads.
+The first meaningful architecture-level contribution was PR #65120 (September 2025). The critical correctness fix (PR #68047, wrong ZBC/ZVBC bit offsets) was merged March 2026, meaning hardware CRC32C acceleration was silently disabled on all hardware for the six months between #66026 and #68047. The ISA-L erasure coding enablement (June 2026) is the most significant recent milestone: it closes the primary performance gap for production workloads. A second correctness bug in the same Zbc CRC32C assembly (`gp`/`tp` register clobbering) was found and fixed in PR #69908 (July 2026) -- see Sections 4.2 and 7. The openRuyi (RISC-V-native distro) packaging and local-build-tooling additions (PR #69783, #70141) are new since the initial report and are summarized in Section 7; they are packaging/tooling enablement, not automated CI.
 
 ---
 
@@ -113,6 +116,8 @@ Two distinct hardware-accelerated paths:
 **Zbc path** (`src/common/crc32c_riscv_zbc_asm.S`, gated on `HAVE_RISCV_ZBC`): dedicated GNU assembly file (copyright ZTE Corporation, 2026) using `.option arch, +zbc`. Implements align, fold-by-4 loop, fold-by-1 loop, Barrett reduction, and excess byte handling via macros defined in `src/common/crc32c_riscv_zbc_asm.h`. Instructions: `clmul`, `clmulh`, `clmulr` plus base RV64I. Falls back to `ceph_crc32c_sctp` for inputs under 16 bytes.
 
 Dispatch in `ceph_choose_crc32()` (`src/common/crc32c.cc`) checks `ceph_arch_riscv_zvbc` first, then `ceph_arch_riscv_zbc`. No benchmark numbers were published in either PR.
+
+**2026-09-30 refresh:** PR #69908 (merged 2026-07-03) fixed `crc32c_riscv_zbc_asm.S` using the `gp` (global pointer) and `tp` (thread pointer) ABI-reserved registers as scratch space. Both registers are load-bearing for the RISC-V calling convention (`gp` for `__global_pointer$`-relative addressing, `tp` for thread-local storage); clobbering them inside a hand-written assembly routine can corrupt unrelated code running on the same thread after the call returns. The current tree (verified by direct source inspection) no longer references `gp`/`tp` in this file. This is the second correctness bug found in this same assembly file (after the ZBC/ZVBC bit-offset bug, PR #68047) and reinforces Section 7's and Section 12's point that riscv64-only code paths have no automated CI to catch this class of bug before merge.
 
 **Comparison to AArch64:** AArch64 uses `__crc32cd` intrinsics plus inline-asm PMULL with a 1024-byte pipelined three-way loop and explicit prefetch. The riscv64 implementation has no explicit prefetch and no multi-way loop -- it is slightly less optimized per cycle, but not qualitatively different in approach.
 
@@ -242,23 +247,31 @@ The core storage path (RADOS, RBD, CephFS) has no blocking gaps. All gaps identi
 
 ## 7. CI/CD Infrastructure
 
-**No automated riscv64 CI exists in the ceph/ceph repository.**
+**No automated riscv64 CI exists in the ceph/ceph repository.** (Re-verified 2026-09-30 by cloning `ceph/ceph` at HEAD and auditing every workflow file directly; see below.)
 
-All 12 GitHub Actions workflow files in `.github/workflows/` were audited:
+All 12 GitHub Actions workflow files currently in `.github/workflows/` were audited:
 
-- `check-license.yml`, `create-backport-trackers.yml`, `diff-ceph-config.yml`, `needs-rebase.yml`, `pr-check-deps.yml`, `pr-checklist.yml`, `pr-triage.yml`, `qa-symlink.yml`, `redmine-upkeep.yml`, `releng-audit.yaml`, `retrigger-rtd.yml`, `stale.yml`
+- `author-ci-perms.yml`, `check-license.yml`, `diff-ceph-config.yml`, `needs-rebase.yml`, `pr-check-deps.yml`, `pr-checklist.yml`, `pr-triage.yml`, `qa-symlink.yml`, `redmine-upkeep.yml`, `releng-audit.yaml`, `retrigger-rtd.yml`, `stale.yml`
 
-All 12 are administrative or triage workflows (license checks, backport tracking, PR labeling, stale issue management). Every job uses `runs-on: ubuntu-latest` (x86-64). Zero files contain the string "riscv". No QEMU emulation step for riscv64 exists anywhere. No GitHub-hosted or self-hosted riscv64 runner is configured.
+The file set has changed since the initial (2026-07-20) audit: `create-backport-trackers.yml` no longer exists in the tree, and `author-ci-perms.yml` (a new PR-author-permission-gating workflow, checked into the repo between the two audits) has taken its place in the count. The total remains 12.
+
+All 12 are administrative or triage workflows (CI-author permission gating, license checks, config-diff PR comments, PR labeling/rebase checks, stale issue management, Redmine/ReadTheDocs upkeep). Every job in every file uses `runs-on: ubuntu-latest` (x86-64) -- confirmed with a direct `grep -n "runs-on:"` across all 12 files, zero exceptions. Zero files contain the string "riscv" in any case -- confirmed with `grep -ril riscv .github/`, zero matches. No QEMU emulation step for riscv64 exists anywhere. No GitHub-hosted or self-hosted riscv64 runner is configured. `author-ci-perms.yml` itself only gates whether Jenkins CI is triggered for a PR author (write-access / `ci-approved` label check) -- it does not add or change any runner architecture.
+
+A repository-wide search also confirmed **no `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` / `.cirrus.star` file exists anywhere in the ceph/ceph tree** (checked at the repository root and recursively).
 
 Ceph's actual build and integration testing runs through Teuthology, an external test framework operating the Sepia test lab. The `ceph-build` Jenkins repository contains arm64 (`ceph-pull-requests-arm64`) and ppc64 (`ceph-make-check-periodic-ppc64`) periodic CI jobs. No equivalent riscv64 job exists.
 
 The `qa/archs/` directory contains `aarch64.yaml`, `armv7.yaml`, `i686.yaml`, and `x86_64.yaml`. There is no `riscv64.yaml`.
 
-The `Dockerfile.build` does contain riscv64 logic (sccache arch remapping added in PR #69315). This enables the build container to be used on a riscv64 host, but it is not wired to any CI trigger. It is developer convenience, not automated gating.
+The `Dockerfile.build` does contain riscv64 logic (sccache arch remapping added in PR #69315, still present). This enables the build container to be used on a riscv64 host, but it is not wired to any CI trigger. It is developer convenience, not automated gating.
+
+**New since the initial audit:** `src/script/build-with-container.py` (the local containerized-build helper script, invoked manually by developers per its own docstring: "test [changes] before submitting the changes to a real CI job") gained an `OPENRUYI` distro target -- `community-ci.openruyi.cn/openruyi-oci:riscv64` -- selectable via `-d openruyi` or `-d openruyi-creek` (PR [#70141](https://github.com/ceph/ceph/pull/70141), "build: add openRuyi as a containerized build target," merged 2026-09-09). `ceph.spec.in` gained matching `%{?openruyi}` RPM-spec conditionals for the openRuyi/openEuler-family distro (PR [#69783](https://github.com/ceph/ceph/pull/69783), merged 2026-07-08). Both are packaging/local-build enablement, not CI: neither PR touches `.github/workflows/`, and no automated job invokes `build-with-container.py -d openruyi`. This does not change the CI conclusion, but it is a new, real signal of riscv64-focused tooling investment (openRuyi is a RISC-V-native Linux distribution) between the initial report and this refresh.
 
 PR #68098 (ISA-L enablement) was merged with the explicit acknowledgment from tchaikov: "since RISC-V is not exercised by our test bed, we can skip the integration test." This confirms the maintainer team is aware of the CI gap and is proceeding on manual hardware testing from contributors.
 
-The consequence: every riscv64 bug introduced by a non-riscv64 patch will not be caught until a contributor manually tests on riscv64 hardware. The corrected ZBC/ZVBC bit offset bug (PR #68047) went six months between initial submission (PR #66026, March 2026) and fix -- consistent with the absence of automated regression detection.
+The consequence: every riscv64 bug introduced by a non-riscv64 patch will not be caught until a contributor manually tests on riscv64 hardware. The corrected ZBC/ZVBC bit offset bug (PR #68047) went six months between initial submission (PR #66026, March 2026) and fix -- consistent with the absence of automated regression detection. A second instance of this pattern surfaced during this refresh: PR [#69908](https://github.com/ceph/ceph/pull/69908) ("common/crc32c: stop using gp/tp as scratch in RISC-V Zbc CRC32C," merged 2026-07-03) fixed the Zbc CRC32C assembly (`src/common/crc32c_riscv_zbc_asm.S`, see Section 4.2) clobbering the `gp`/`tp` ABI-reserved registers -- a correctness bug in riscv64-only code that, as with #68047, had no automated riscv64 CI to catch it before merge.
+
+**NO RISCV64 CI: confirmed by reading `.github/workflows/*.yml` (all 12 files), repository root and full tree for `.gitlab-ci.yml`, `Jenkinsfile`, `.cirrus.yml`/`.cirrus.star`, `qa/archs/*.yaml`, and `Dockerfile.build`.**
 
 ---
 
@@ -268,7 +281,7 @@ The consequence: every riscv64 bug introduced by a non-riscv64 patch will not be
 |---|---|---|---|
 | GitHub Releases (ceph/ceph) | No | -- | Source-tag releases only; zero binary assets for any architecture |
 | PyPI | No | -- | `ceph` package name returns HTTP 404 on PyPI; no files exist |
-| RISE Python wheel builder | No | -- | Ceph is not among the ~80 packages built by the RISE wheel_builder project |
+| RISE Python wheel builder | No | -- | Ceph is not among the 86 packages built by the RISE wheel_builder project (re-verified 2026-09-30) |
 | Ubuntu 24.04 Noble | Yes | 19.2.0~git20240301...-0ubuntu6 | In ubuntu-ports (unofficial), not the main archive; lags behind amd64/arm64 main archive version (19.2.3) |
 | Debian sid | Yes | 18.2.8+ds-2.1 | Built on buildd host `rv-osuosl-02`, completed 2026-06-10 [NEEDS VERIFICATION -- build log status was "Maybe-Successful" before promotion to "Installed"]; Debian riscv64 is a ports (unofficial) architecture |
 | openSUSE Factory (OBS) | Expected yes | -- | ExclusiveArch in `ceph.spec.in` enables OBS builds; direct OBS verification not performed in research |
@@ -324,7 +337,16 @@ Proxmox (tchaikov / Kefu Chai) functions as the primary merger and reviewer for 
 
 ### 10.2 RISE Project Relationship
 
-RISE Project General Members include ISCAS (sunyuechi's organization) and ZTE (leiwen2025's organization). However, no RISE funding for Ceph work was found. The 27 RISE blog posts (May 2024 through June 2026) contain zero mentions of Ceph. Ceph is not listed among the ~80 packages built by the RISE Python wheel_builder project. No RISE RFP (publicly documented RP004, RP009, RP012, and others covering compilers, kernel CI, Java, Go, V8, Python, Yocto) covers Ceph. The RISE project is not a member of the Ceph Foundation.
+**RISE Project full membership roster (fetched directly from https://riseproject.dev/members/ on 2026-09-30):**
+
+| Tier | Members |
+|---|---|
+| Premier Members (8) | Alibaba Damo (Hangzhou) Technology Co., Ltd.; Google LLC; MediaTek Inc; NVIDIA Corporation; Qualcomm Technologies, Inc.; Red Hat LLC; SiFive; Tenstorrent |
+| General Members (12) | Akeana; Andes Technology Corporation; Beijing ESWIN Computing Technology Co., Ltd.; Beijing Institute of Open Source Chip; Canonical Group Limited; Douyin Vision Co., Ltd.; Institute of Software Chinese Academy of Sciences (ISCAS); Microchip Technology Inc.; NextSilicon; Quintauris GmbH; SpacemiT (Hangzhou) Technology Co. Ltd; ZTE Corporation |
+
+Membership requires concurrent sponsorship of both Linux Foundation Europe and RISC-V International. ISCAS (sunyuechi's organization, Section 10.1) and ZTE (leiwen2025's organization) are both confirmed General Members. Red Hat, a Premier Member, is also the largest Ceph Steering Committee employer by seat count (Section 1) -- but Red Hat's RISE membership is a general infrastructure/ecosystem commitment, not evidence of Ceph-specific funding; no source ties Red Hat's RISE membership to any Ceph riscv64 work. Ten RISE Working Groups are listed on the front page (Compilers & Toolchains, System Libraries, Kernel & Virtualization, Language Runtimes, Developer Infrastructure, Linux Distro Integration, Simulator/Emulators, System Firmware, Security Software, AI/ML) -- none is a storage-specific working group, and Ceph does not fall cleanly under any of them.
+
+However, no RISE funding for Ceph work was found. **NO RISE INVOLVEMENT: confirmed by checking https://riseproject.dev/blog (all 35 post titles/summaries as of the initial 2026-07-20 audit, plus a fresh fetch of the RSS feed on 2026-09-30 covering the seven most recent posts, July 7 through September 28, 2026 -- zero mention "Ceph" in any post, past or current), https://riseproject.gitlab.io/python/wheel_builder/ (re-fetched 2026-09-30: Ceph still absent from all 86 listed packages), WebSearch for "RISE project Ceph riscv64" and "riseproject.dev Ceph" (no result ties RISE to Ceph; RISE's own tracked-project mentions are Kubernetes, PyTorch, Llama.cpp, and Python packages, not Ceph), GitHub search `Ceph org:riseproject-dev` (0 repositories), and a fresh `mcp__github__search_repositories` query for "ceph riscv64 benchmark" run 2026-09-30 (0 repositories returned).** No RISE RFP (publicly documented RP004, RP009, RP012, and others covering compilers, kernel CI, Java, Go, V8, Python, Yocto) covers Ceph. The RISE project is not a member of the Ceph Foundation. No RISE runner usage (RISE RISC-V Runners, announced 2026-03-24) was found referenced in any Ceph CI configuration (consistent with Section 7's finding of zero riscv64 CI in ceph/ceph).
 
 The riscv64 work in Ceph is being driven by ISCAS and ZTE contributors under their own organizational mandates, not through a publicly documented RISE funded project.
 
@@ -444,7 +466,27 @@ The SPDK/DPDK gap requires either: (a) contributing riscv64 support to DPDK upst
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-07-20.
+**2026-09-30 refresh:** Re-verified Section 7 (CI/CD Infrastructure) against a fresh clone of `ceph/ceph` HEAD (previously audited 2026-07-20). Conclusion unchanged -- **no automated riscv64 CI exists**: all 12 current GitHub Actions workflow files run `on: ubuntu-latest` with zero "riscv" references (file set shifted slightly: `create-backport-trackers.yml` was removed and `author-ci-perms.yml`, an unrelated PR-permission-gating workflow, was added, net count still 12); no `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml`/`.cirrus.star` exists anywhere in the repository tree; `qa/archs/` still has no `riscv64.yaml`. New findings surfaced during this refresh, now incorporated above: (1) PR #70141 (merged 2026-09-09) and PR #69783 (merged 2026-07-08) add an "openRuyi" (RISC-V-native distro) target to the local `build-with-container.py` dev-build script and `ceph.spec.in` respectively -- packaging/tooling enablement, not CI; (2) PR #69908 (merged 2026-07-03) fixed a second correctness bug (`gp`/`tp` register clobbering) in the same Zbc CRC32C assembly file that had the ZBC/ZVBC bit-offset bug documented in the initial report, reinforcing the CI-gap risk analysis in Sections 7 and 12. No other sections were re-audited in this refresh; Sections 1-6 and 8-13 reflect the 2026-07-20 research pass except where the two items above are cross-referenced.
+
+**2026-09-30 RISE/Ceph verification pass (Section 10.2 and Section 8):** Re-checked the RISE Project's involvement with Ceph specifically. Fetched https://riseproject.dev/blog and enumerated all 35 posts currently listed (May 2024 through September 2026, up from 27 at the 2026-07-20 pass) -- zero post titles or summaries mention Ceph. Fetched https://riseproject.gitlab.io/python/wheel_builder/ -- Ceph is absent from all 86 listed packages (up from ~80). Ran WebSearch for "RISE project Ceph riscv64" and "riseproject.dev Ceph" -- no result ties RISE funding, tooling, or runners to Ceph; RISE's documented project involvements (Kubernetes, PyTorch, llama.cpp, Python packaging, Rust, Go, V8, Yocto, OpenJDK, IREE, OpenSBI) do not include Ceph. Ran GitHub search `Ceph org:riseproject-dev` via `mcp__github__search_repositories` -- 0 repositories returned, so no README fetch was applicable. Conclusion unchanged from the 2026-07-20 pass: no RISE involvement with Ceph, no RISE runner usage in Ceph CI, and no RISE-funded work on Ceph.
+
+**2026-09-30 second RISE/Ceph and performance-data re-verification pass:** Re-ran the RISE-relationship and quantitative-benchmark checks a second time this same day using live fetches rather than relying solely on the earlier pass. (1) Fetched https://riseproject.dev/members/ directly and captured the full roster for the first time in this report: 8 Premier Members (Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm Technologies, Red Hat, SiFive, Tenstorrent) and 12 General Members (Akeana, Andes Technology, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, ISCAS, Microchip Technology, NextSilicon, Quintauris, SpacemiT, ZTE) -- now reproduced in full in Section 10.2 (previously the report only named ISCAS and ZTE without the complete list). (2) Fetched the RISE blog RSS feed (https://riseproject.dev/feed/) and confirmed the seven most recent posts (Sept 28, Aug 24, Aug 18, Jul 30, Jul 27, Jul 16, Jul 7, all 2026) -- topics are Kairos/RISE Runners, CPython Tier 3 status, PyTorch wheels, GitHub project-tracking migration, Neon-to-RVV kernel translation (SALTyRN), OpenSBI interrupt handling, and IREE/YOLOv8n inference -- none mentions Ceph or any distributed-storage system. (3) Re-fetched https://riseproject.gitlab.io/python/wheel_builder/ -- still 86 packages, Ceph still absent. (4) For quantitative benchmark data specifically: WebSearch was unavailable this pass (session WebSearch budget exhausted at 200/200 calls, unrelated to this task), so the search for "Ceph riscv64 vs arm64 performance" and "Ceph riscv64 benchmark site:github.com" could not be re-run via WebSearch. As a substitute, ran `mcp__github__search_repositories` for "ceph riscv64 benchmark" (0 repositories) and `mcp__github__search_code` for "ceph riscv64 benchmark" and "ceph riscv64 crc32c OR IOPS OR throughput benchmark" (5,184 and 2 hits respectively) -- results were exclusively kernel `.config` files with `CONFIG_CEPH_LIB` stanzas, RPM `.spec`/`.spec.in` files with boilerplate "This package contains Ceph benchmarks and test tools" description strings (not actual benchmark results), and this report's own file in `riseproject-dev/sw-ecosystem`. No repository, gist, blog post, or slide deck containing actual riscv64-vs-other-architecture Ceph performance numbers (IOPS, throughput, latency) was found by any method across either verification pass. This reconfirms Objection 5 and Section 13.2: the `mem_is_zero` RVV microbenchmark from PR #65354 (Section 4.3) remains the only published quantitative Ceph riscv64 performance data of any kind.
+
+**2026-09-30 governance/sponsorship/port-history verification pass:** Re-ran the first-riscv-commit search using GitHub commit search with the literal query `riscv repo:ceph/ceph` (author-date ascending, 9 total matches on the default branch). The literal-keyword search surfaces a different "first" result than Section 2's PR-merge chronology: the earliest *authored* commit matching the literal token `riscv` is `60e95dba` ("inline_memory: optimize mem_is_zero for riscv using RISC-V Vector (RVV) intrinsics"), authored by **Sun Yuechi <sunyuechi@iscas.ac.cn> on 2025-09-03** (merged later as PR #65354 on 2025-09-25). This is one day earlier than PR #65120's 2025-09-04 authorship previously cited as the first riscv-specific change, and it does not include PR #51732 (Dec 2023, openSUSE `ExclusiveArch: ... riscv64`) or PR #65120 (`rdtime`, Sept 2025) because GitHub's commit-search tokenizer treats `riscv64` as a distinct token from `riscv` and does not substring-match it. Net: Section 2's "first meaningful contribution" framing (PR #65120, by merge date, Sept 2025) and this literal-keyword "first commit" (by author date, Sept 2025) agree on the same month/contributor community (ISCAS/ZTE) but differ by exact PR depending on search method; PR #51732 (Dec 2023) remains the first riscv64-related change of any kind (packaging, not code).
+
+Attempted direct reads of `MAINTAINERS`, `OWNERS`, and `CODEOWNERS` in `ceph/ceph` via the GitHub MCP file-contents tool; the call was rejected because this session's GitHub access is scoped to `riseproject-dev/sw-ecosystem` only and does not extend to `ceph/ceph`, so those files were not re-read in this pass. Ceph's governance is documented in prose (`doc/governance.rst`, re-fetched this pass) rather than via a `MAINTAINERS`/`CODEOWNERS` file; per-component leads are Component Team Leads appointed by the Executive Council (Section 1), not a flat file-based ownership list.
+
+Re-confirmed governance structure directly from `doc/governance.rst`: three-tier model (Executive Council, 3 seats, annual ranked-choice election by the Steering Committee, ">1 employer" diversity requirement; Steering Committee, which elects the Council and amends governance by 2/3 supermajority, open to non-voting public attendance; Component Team Leads appointed by the Council) -- consistent with Section 1.
+
+Re-confirmed license via `COPYING`: primary license is **LGPL-2.1 / LGPL-3** for the core project, with BSD-3-Clause (CMake modules, Intel code, ZFS plugin), CC-BY-SA-3.0 (docs), GPLv3 (git archive script), Boost-1.0, Apache-2.0 (s390x code, cpp-btree), MIT (JSON Spirit, jQuery), AGPLv3 (backport scripts), and other vendored-code licenses for specific subtrees -- consistent with Section 1's "LGPL-2.1" summary at the whole-project level.
+
+Checked `ceph.io/en/foundation/` and `ceph.io/en/foundation/members/` for a named roster of Foundation member companies by tier (Diamond/Platinum/Gold/Silver/Associate): the member directory renders company logos rather than a text list, so no machine-readable roster of member companies by tier could be extracted via fetch in this pass [NEEDS VERIFICATION -- requires a rendered-page or Foundation-charter check for named members by tier]. The corporate-affiliation data in Section 1 (Red Hat, IBM, Clyso, Intel, Bloomberg, ZTE, Xsky, croit, UI.com) is Steering Committee employer representation, not confirmed to be identical to the Foundation's own Diamond/Platinum/Gold/Silver/Associate member roster; these are related but distinct lists and should not be conflated.
+
+Checked `doc/start/os-recommendations.rst` directly: confirmed no explicit CPU-architecture tier-support policy exists in-tree. The only comparable precedent language found is for other non-default platforms: ARM ("limited set of daemons... check availability before you plan an ARM deployment") and the Windows client ("best effort, with no full-time maintainer"). No riscv64-specific sentence exists in this file. This is consistent with Section 3's conclusion that riscv64 operates as an unofficial, community-supported tier by precedent (same posture as ARM/Windows) rather than by written policy.
+
+Re-checked RISE Project's own site (`riseproject.dev`) for Ceph membership: the front page lists RISC-V International, Scaleway (EU build farm), OSU OSL (US board farm), and the Yocto Project as partners/members; it does not mention Ceph. Consistent with Section 10.2's conclusion of no RISE/Ceph relationship.
+
+Initial report dated 2026-07-20.
 
 ---
 
@@ -469,8 +511,12 @@ No updates yet -- initial report dated 2026-07-20.
 - [PR #69611 -- cmake/boost: load context Jamfile before passing context-impl to b2](https://github.com/ceph/ceph/pull/69611)
 - [PR #69621 -- build,test: fix issues surfaced by tests after enabling ASan](https://github.com/ceph/ceph/pull/69621)
 - [PR #69622 -- cmake: define BOOST_USE_UCONTEXT tree-wide under ASan](https://github.com/ceph/ceph/pull/69622)
+- [PR #69783 -- ceph.spec.in: add support for openRuyi](https://github.com/ceph/ceph/pull/69783)
+- [PR #69908 -- common/crc32c: stop using gp/tp as scratch in RISC-V Zbc CRC32C](https://github.com/ceph/ceph/pull/69908)
+- [PR #70141 -- build: add openRuyi as a containerized build target](https://github.com/ceph/ceph/pull/70141)
 - [Debian buildd riscv64 Ceph status](https://buildd.debian.org/status/package.php?p=ceph&suite=sid)
 - [RISE Project](https://riseproject.dev/)
+- [RISE Project members](https://riseproject.dev/members/)
 - [boostorg/context issue #306 -- Boost context support for riscv64](https://github.com/boostorg/context/issues/306)
 - [SPDK issue #3475 -- NVMe controller init timeout on riscv64](https://github.com/spdk/spdk/issues/3475)
 - [lz4 RVV optimization issue #1738](https://github.com/lz4/lz4/issues/1738)

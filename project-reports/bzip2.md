@@ -10,7 +10,7 @@ categories:
 
 # bzip2
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
 **Scope:** RISC-V (riscv64/linux) support status for bzip2<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -21,17 +21,23 @@ categories:
 
 bzip2 is a lossless data compression library and command-line tool implementing the Burrows-Wheeler block-sorting algorithm combined with Huffman coding. It produces `.bz2` files. The codebase is approximately 8,000 lines of pure C89 with no architecture-specific assembly, no SIMD, and no JIT on any platform.
 
-**Governance.** There is no foundation affiliation and no formal governance body. The project is hosted on sourceware.org infrastructure (a community service associated with the GCC Steering Committee umbrella) but has no formal membership in that body. There is no RISE Project membership.
+**Governance.** There is no foundation affiliation and no formal governance body for the original C codebase. The project is hosted on sourceware.org infrastructure (a community service associated with the GCC Steering Committee umbrella) but has no formal membership in that body. sourceware.org itself is not RISE Project-affiliated, and bzip2 (the C project) is not listed as a RISE member on [riseproject.dev](https://riseproject.dev) or its [members page](https://riseproject.dev/members/) [confirmed 2026-09-30].
 
-**License.** BSD-style open-source license. The original author noted the license is believed patent-free but could not guarantee it.
+**License.** BSD-style open-source license ("bzip2-1.0.6"). The original author noted the license is believed patent-free but could not guarantee it. Downstream Rust reimplementations (below) retain the same license text plus dual Apache-2.0/MIT terms for their Rust-specific code.
 
-**Dual upstream.** The project currently has two parallel upstreams:
-- **Stable (1.0.x):** [sourceware.org/git/bzip2.git](https://sourceware.org/git/bzip2.git), maintained by Mark Wielaard (Red Hat employee).
-- **Feature (1.1+):** [gitlab.com/bzip2/bzip2](https://gitlab.com/bzip2/bzip2), maintained by Micah Snyder (corporate affiliation not publicly documented). This branch has 1.1.0 in development with CMake and Meson build systems added; no 1.1.0 release tag has been cut as of the research date.
+**Dual upstream, now effectively single-upstream-plus-a-corporate-backed rewrite.** As of the 2026-07-20 initial report, the project had two parallel C upstreams. That has changed:
+- **Stable (1.0.x):** [sourceware.org/git/bzip2.git](https://sourceware.org/git/bzip2.git), maintained by Mark Wielaard (Red Hat employee). Still active; unchanged.
+- **Feature (1.1+), now archived:** [gitlab.com/bzip2/bzip2](https://gitlab.com/bzip2/bzip2), formerly maintained by Micah Snyder (corporate affiliation not publicly documented). **This repository was archived on or around 2026-07-08** [confirmed via direct fetch of the repository page, 2026-09-30], with the project's own description now reading: "This fork for v1.1+ development has been archived due to lack of interest, and because there are better options available through the Rust ecosystem." No 1.1.0 C release was ever tagged.
 
-**Prior maintainers.** Julian Seward (original author, 1996-2019, no corporate affiliation documented). Federico Mena Quintero (Red Hat/GNOME, Jun 2019 - Jun 2022). Micah Snyder took over the 1.1+ branch from Federico Mena Quintero in June 2022.
+**New corporate-sponsored successor: Trifecta Tech Foundation's Rust rewrite.** The "better options" the archival notice refers to are two Rust projects maintained by the **Trifecta Tech Foundation** (a nonprofit whose stated mission is maintaining "digital commons" open-source software for critical infrastructure) under its Data Compression initiative:
+- [**libbzip2-rs**](https://github.com/trifectatechfoundation/libbzip2-rs) - a from-scratch-safety-oriented Rust reimplementation of libbzip2, originally derived via c2rust translation of the original C source, publishing the drop-in-compatible `libbz2-rs-sys` C-ABI crate.
+- [**bzip2-rs** (the `bzip2` crate)](https://github.com/trifectatechfoundation/bzip2-rs) - the higher-level Rust bindings crate; as of v0.6.0 (announced 2025-06-17) it defaults to the pure-Rust `libbz2-rs-sys` backend instead of linking the C library, citing simpler cross-compilation (WebAssembly, Windows, Android) and 4-14% performance gains over the C implementation.
 
-**Community stance on new ports.** Not applicable. bzip2 is architecture-agnostic portable C. No porting work is required for any architecture that provides a C89 compiler. The community has never tracked architecture support as a distinct concern.
+**Corporate sponsors (of Trifecta Tech Foundation generally, not bzip2 specifically):** Gold sponsors Canonical and Google (each reported at €40,000/year for 2026); Silver sponsor AWS. The bzip2-rs/libbzip2-rs work itself was funded through project-specific grants: NLnet Foundation and NGI Zero Core (an NLnet-administered fund backed by the European Commission's Next Generation Internet programme), and the Dutch Ministry of the Interior (Ministerie van Binnenlandse Zaken en Koninkrijksrelaties) [confirmed via trifectatech.org, 2026-09-30]. No corporate sponsor is tied to the original C bzip2/libbzip2 codebase itself - the sponsorship attaches to the Rust rewrite, not to sourceware.org or gitlab.com/bzip2/bzip2.
+
+**Prior maintainers.** Julian Seward (original author, 1996-2019, no corporate affiliation documented). Federico Mena Quintero (Red Hat/GNOME, Jun 2019 - Jun 2022). Micah Snyder took over the 1.1+ branch from Federico Mena Quintero in June 2022 and maintained it until its 2026-07 archival.
+
+**Community stance on new ports.** For the original C codebase: not applicable. bzip2 is architecture-agnostic portable C; no porting work is required for any architecture with a C89 compiler, and the community has never tracked architecture support as a distinct concern. For the new libbzip2-rs/bzip2-rs Rust codebase: no stated stance on riscv64 either way was found. Its CI matrix (`.github/workflows/checks.yaml`, read in full from a shallow clone of the repository) tests x86_64, aarch64, i686, s390x, wasm32-wasip1, and Apple/Windows targets - **no riscv64 target is present** - and neither the repository's tracked files nor its GitHub issue search for "riscv" surfaced any riscv64-specific discussion, objection, or commit [confirmed 2026-09-30].
 
 ---
 
@@ -44,12 +50,14 @@ bzip2 is a lossless data compression library and command-line tool implementing 
 | 2022-06 | Micah Snyder takes over 1.1+ branch; CMake and Meson build systems added | [gitlab.com/bzip2/bzip2](https://gitlab.com/bzip2/bzip2) NEWS.md |
 | Ongoing | Debian sid ships 1.0.8-6+b2 on riscv64, built on builder rv-manda-04 | [buildd.debian.org bzip2](https://buildd.debian.org/status/package.php?p=bzip2) |
 | Ongoing | Ubuntu 24.04 Noble ships 1.0.8-5.1 on riscv64 | [packages.ubuntu.com/noble/bzip2](https://packages.ubuntu.com/noble/bzip2) |
+| 2025-06-17 | Trifecta Tech Foundation's `bzip2` Rust crate v0.6.0 switches its default backend from linked C `libbz2` to the pure-Rust `libbz2-rs-sys`, citing simplified cross-compilation and 4-14% performance gains | [trifectatech.org blog](https://trifectatech.org/blog/bzip2-crate-switches-from-c-to-rust/) |
+| 2026-07-08 (approx.) | `gitlab.com/bzip2/bzip2` (the C 1.1+ feature branch) archived by its maintainer; archival notice cites "lack of interest" and "better options available through the Rust ecosystem" | [gitlab.com/bzip2/bzip2](https://gitlab.com/bzip2/bzip2) (repo description, read live) |
 
-**No RISC-V-specific commit exists in either upstream.** A full review of all 40 GitLab issues (IID #20-#60) and all 69 merge requests (!29-!69) returned zero mentions of riscv, riscv64, or RISC-V. The sourceware.org Bugzilla has 10 open bugs, none architecture-specific. bzip2 requires no porting work and has never had any.
+**No RISC-V-specific commit exists in any upstream, C or Rust.** A full review of all 40 GitLab issues (IID #20-#60) and all 69 merge requests (!29-!69) on the now-archived C 1.1+ branch returned zero mentions of riscv, riscv64, or RISC-V. The sourceware.org Bugzilla has 10 open bugs, none architecture-specific. The successor Rust project, `trifectatechfoundation/libbzip2-rs` (cloned shallow and grepped in full, 2026-09-30), contains zero references to "riscv" anywhere in its tracked files, and a GitHub issue search for "riscv" in that repository returns no results. bzip2 requires no porting work in either language and has never had any - **there is no "first riscv64 commit" in this project's history because riscv64 has never needed one.**
 
-**Key contributors for riscv64:** None. The architecture works by construction.
+**Key contributors for riscv64:** None, in either the C or Rust codebase. The architecture works by construction (portable C89) and by Rust's own cross-platform target support (no riscv64 target is exercised in CI, but nothing in the Rust source is architecture-specific either).
 
-**Fully upstream:** Yes, trivially - there is nothing to upstream.
+**Fully upstream:** Yes, trivially - there is nothing to upstream, in the C project or its Rust successor.
 
 ---
 
@@ -319,13 +327,25 @@ Not applicable. bzip2 has no dependent package ecosystem requiring separate risc
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-07-20.
+**2026-09-30 governance/sponsors/port-history refresh.** Re-researched governance, corporate sponsorship, and port history. Key change since the 2026-07-20 initial report: `gitlab.com/bzip2/bzip2`, the C 1.1+ feature branch, was **archived around 2026-07-08** (confirmed by fetching the live repository page, whose description now states it was archived "due to lack of interest, and because there are better options available through the Rust ecosystem"). Those "better options" are two corporate/foundation-backed Rust projects, `libbzip2-rs` and the `bzip2` crate, maintained by the **Trifecta Tech Foundation** and funded by NLnet Foundation, NGI Zero Core, and the Dutch Ministry of the Interior for the bzip2 work specifically, with the Foundation's general operations backed by Gold sponsors Canonical and Google and Silver sponsor AWS (confirmed via trifectatech.org). This is the first identified instance of corporate sponsorship reaching bzip2's ecosystem, though it attaches to the new Rust rewrite, not to sourceware.org's stable 1.0.x C branch (still unsponsored, maintained by Mark Wielaard/Red Hat) or to the archived GitLab C branch. Confirmed bzip2 has no RISE Project membership (checked riseproject.dev directly). Cloned `trifectatechfoundation/libbzip2-rs` (shallow, read-only) and confirmed by grep that it contains zero mentions of "riscv" anywhere in its tracked files, and its CI matrix (`.github/workflows/checks.yaml`) covers x86_64, aarch64, i686, s390x, wasm32, and Apple/Windows targets but no riscv64. A GitHub issue search on that repository for "riscv" returned zero results. No formal tier policy exists in either the C or Rust codebase; no community stance for or against a riscv64 port was found in any source, because none has ever been needed - the codebase (C or Rust) has no architecture-specific code. Sources: direct fetch of gitlab.com/bzip2/bzip2, sourceware.org/bzip2/ and sourceware.org/git/bzip2.git (both returned Anubis bot-protection pages with no additional governance detail beyond what the 2026-07-20 report already captured), riseproject.dev, trifectatech.org and its blog posts, github.com/trifectatechfoundation/{bzip2-rs,libbzip2-rs}, and a shallow clone of the libbzip2-rs repository.
+
+---
+
+**2026-09-30 CI refresh.** Re-checked all CI configuration for riscv64 references. Confirmed via the GitLab API repository tree (`gitlab.com/bzip2/bzip2`, ref `master`) that only two CI-related files exist in the repo: `.gitlab-ci.yml` (GitLab CI) and `.appveyor.yml` (AppVeyor, Windows-only). Both were fetched and read in full: neither contains any mention of `riscv64`, `riscv`, or `risc-v`. No `.github/workflows`, `.cirrus.yml`, `.travis.yml`, Jenkinsfile, or Buildbot configuration exists in the repository. `sourceware.org/git/bzip2.git` (the stable 1.0.x upstream) returned an Anubis bot-protection challenge page with no CI links, consistent with the original research (sourceware.org's cgit interface does not host or link to CI configuration). WebSearch for "bzip2 riscv64 CI buildbot jenkins gitlab" surfaced no dedicated riscv64 CI system for bzip2. bzip2 is not a kernel project, so lore.kernel.org was not applicable. No change to findings: riscv64 CI status remains "none" for both upstreams. No new riscv64-related issues, MRs, or commits were found since the initial 2026-07-20 report.
+
+NO RISCV64 CI: confirmed by reading [.gitlab-ci.yml, .appveyor.yml, gitlab.com/bzip2/bzip2 repository file tree via GitLab API, sourceware.org/git/bzip2.git (blocked by Anubis, no CI links present)].
+
+---
+
+**2026-09-30 adversarial verification of riscv64 completeness.** Independently re-verified the "no architecture-specific code" claim by cloning actual source (not just search engines, which sourceware.org's Anubis challenge partially blocks) via two GitHub mirrors: `libarchive/bzip2` (tracks the archived 1.1+ CMake/Meson branch) and `nemequ/bzip2` (tracks the stable 1.0.x Makefile-based branch). Full-tree searches of both, run locally, found: zero `.S`/`.asm` files; zero hits for `riscv`, `__x86_64__`, `__aarch64__`, `__ARM_`, `__SSE`, `__AVX`, `__NEON`, `__asm__`, or `intrinsic`; zero endianness handling (`endian`, `__BYTE_ORDER`, `BIGENDIAN`); zero CPU-architecture `#ifdef` blocks of any kind. The only `#if`/`#ifdef` conditionals in the entire codebase are OS-level (`_WIN32`, `OS2`, `MSDOS`, `BZ_UNIX`, `_MSC_VER`, `BZ_DEBUG`), not CPU-architecture-level - riscv64 Linux takes the same `BZ_UNIX` path as amd64 and arm64 Linux. Core types in `bzlib_private.h` (`Int32`, `UInt32`, `Int16`, `UInt16`) are defined in terms of standard C `int`/`short`, not fixed-width or machine-specific types. Independently re-confirmed riscv64 binary package availability by direct fetch of `https://packages.ubuntu.com/resolute/bzip2` (Ubuntu 26.04, the current devel suite) - riscv64 download links are present alongside amd64/arm64. **Verdict: bzip2's riscv64 support is not a stub - there is no separate riscv64 code path to be a stub of.** Every listed component (block sort, compression, decompression, Huffman coding, CRC table, `bzip2recover`) rates as **scalar (C fallback)** uniformly across amd64, arm64, and riscv64; none rate as full (hand-tuned) or partial (intrinsics) on any architecture, including bzip2's primary amd64 target. This confirms, via direct source inspection rather than search-engine indexing, the report's existing Section 3/4/6 tables and Section 2/12 narrative. No correction to any prior finding was needed.
+
+Initial report dated 2026-07-20.
 
 ---
 
 ## 15. References
 
-- [bzip2 GitLab repository (gitlab.com/bzip2/bzip2)](https://gitlab.com/bzip2/bzip2)
+- [bzip2 GitLab repository (gitlab.com/bzip2/bzip2)](https://gitlab.com/bzip2/bzip2) (archived ~2026-07-08; superseded by libbzip2-rs)
 - [bzip2 sourceware.org homepage](https://sourceware.org/bzip2/) (blocked by Anubis bot protection during research)
 - [bzip2 sourceware.org git](https://sourceware.org/git/bzip2.git) (blocked by Anubis bot protection during research)
 - [libarchive/bzip2 GitHub mirror](https://github.com/libarchive/bzip2)
@@ -344,3 +364,12 @@ No updates yet -- initial report dated 2026-07-20.
 - [RISE Project blog](https://riseproject.dev/blog)
 - [RISE Project GitHub repositories](https://github.com/riseproject-dev)
 - [RISE wheel builder package roster](https://riseproject.gitlab.io/python/wheel_builder/)
+- [RISE Project members page](https://riseproject.dev/members/)
+- [Trifecta Tech Foundation homepage](https://trifectatech.org/)
+- [Trifecta Tech Foundation - Data compression initiative](https://trifectatech.org/initiatives/data-compression/)
+- [Trifecta Tech Foundation blog - "bzip2 crate switches from C to 100% rust"](https://trifectatech.org/blog/bzip2-crate-switches-from-c-to-rust/)
+- [Canonical becomes Gold Sponsor of Trifecta Tech Foundation](https://canonical.com/blog/canonical-becomes-gold-sponsor-of-trifecta-tech-foundation)
+- [libbzip2-rs GitHub repository](https://github.com/trifectatechfoundation/libbzip2-rs)
+- [bzip2-rs (Rust bindings crate) GitHub repository](https://github.com/trifectatechfoundation/bzip2-rs)
+- [libbzip2-rs CI workflow (.github/workflows/checks.yaml)](https://github.com/trifectatechfoundation/libbzip2-rs/blob/main/.github/workflows/checks.yaml)
+- [scivision.dev - "BZip2 1.1 development archived"](https://www.scivision.dev/bzip-1.1-archived)

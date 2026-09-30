@@ -44,7 +44,7 @@ dependencies:
 # Apache httpd
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Apache httpd<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
@@ -289,9 +289,9 @@ All dependency build status data is sourced from Debian Sid buildd records and t
 
 ## 10. Ecosystem Status
 
-**RISE Project involvement:** None. Apache httpd is not a member project, has no RISE RFP, and has received no RISE blog coverage. A review of all 27 RISE blog posts from May 2024 through June 2026 found zero mentions of Apache httpd. The RISE RFP list (RP001-RP016) has no httpd entry. The term "apache" appears in RISE content only in the phrase "Apache 2.0 license" in a post about Python wheels (RP011).
+**RISE Project involvement:** None. Apache httpd is not a member project, has no RISE RFP, and has received no RISE blog coverage. A direct fetch of the RISE blog sitemap (`riseproject.dev/wp-sitemap-posts-post-1.xml`) on 2026-09-30 lists 35 posts, from "Welcome to the RISE Project blog" (2024-05-15) through "How Kairos is charting the stepping stones of RISC-V productization" (2026-09-28); none of the 35 titles or URLs reference Apache, httpd, or web-server performance. The RISE RFP list (RP001-RP016) has no httpd entry. The term "apache" appears in RISE content only in the phrase "Apache 2.0 license" in a post about Python wheels (RP011).
 
-RISE Premier Members include Andes Technology, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, DAMO Academy (Alibaba), and Tenstorrent. The RISE project's focus is on compilers (LLVM/GCC), language runtimes (Go, Rust, Java, Python, V8), AI/ML (PyTorch, llama.cpp), firmware (EDK2, OpenSBI), and CI infrastructure.
+RISE Premier Members (per `riseproject.dev/members/`, checked 2026-09-30): Alibaba DAMO (Hangzhou) Technology, Google, MediaTek, NVIDIA, Qualcomm Technologies, Red Hat, SiFive, and Tenstorrent. General Members: Akeana, Andes Technology, Beijing ESWIN Computing Technology, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, Institute of Software Chinese Academy of Sciences, Microchip Technology, NextSilicon, Quintauris, SpacemiT (Hangzhou) Technology, and ZTE Corporation. (Correction from an earlier draft of this report: Andes Technology is a General Member, not a Premier Member.) The RISE project's focus is on compilers (LLVM/GCC), language runtimes (Go, Rust, Java, Python, V8), AI/ML (PyTorch, llama.cpp), firmware (EDK2, OpenSBI), and CI infrastructure -- none of it web-server-related.
 
 **Community activity on riscv64:** Zero. There are no mailing list threads, no GitHub issues, no PRs, and no commits in the upstream repository related to riscv64. The architecture works without intervention, so it has attracted no community discussion.
 
@@ -300,6 +300,8 @@ RISE Premier Members include Andes Technology, Google, MediaTek, NVIDIA, Qualcom
 ## 11. Known Bugs and Active Issues
 
 **Apache httpd (upstream):** No riscv64-specific bugs found. The GitHub repository contains zero issues or PRs mentioning riscv64. ASF Bugzilla required authentication and could not be searched; a residual uncertainty exists, but given the clean Debian/Ubuntu build record, active riscv64-specific bug reports are unlikely.
+
+Re-verified 2026-09-30 with three targeted GitHub issue searches against `apache/httpd` (`riscv64`, `riscv`, and `nan floating point RVV vector`, the last aimed at surfacing any RISC-V vector-extension floating-point correctness reports): all three returned 0 results, open or closed. No open correctness or performance bug carries an issue number in this repository for riscv64. Finding unchanged from the prior check.
 
 **Dependency issues affecting riscv64 httpd deployments:**
 
@@ -342,6 +344,10 @@ The only functional gap requiring attention is in the dependency layer: OpenSSL 
 
 Performance data for Apache httpd specifically on riscv64 does not exist in any publicly accessible source (no benchmarks found in the RISE blog, GitHub, or web search). The available riscv64 performance context is indirect: RISE RP009 (LLVM SPEC CPU 2017, May 2025, SpacemiT-X60) showed up to 15.7% reduction in SPEC CPU execution time from compiler scheduling model improvements. This is a compiler benchmark, not an httpd benchmark.
 
+Re-searched 2026-09-30 for "Apache httpd riscv64 benchmark" and "Apache httpd riscv performance 2025 2026": no source (vendor blog, RISE post, benchmark aggregator, or forum) publishes requests/sec, latency, or throughput figures for Apache httpd on riscv64. A direct check of the RISE Project blog's WordPress sitemap (`riseproject.dev/wp-sitemap-posts-post-1.xml`) returned no post mentioning Apache, httpd, or web-server performance, consistent with the Section 10 finding. No exact benchmark numbers exist to report as of this date.
+
+A further check on 2026-09-30 searched GitHub directly (`apache httpd riscv64 benchmark`, repositories and issues) and found zero repositories and no issue combining Apache httpd and riscv64 in a benchmarking context -- the only issues returned by the combined search were unrelated hits where "Apache" referred to an incidental process (a build system spawning an Apache httpd instance on a fixed port) or "riscv64" appeared as an unrelated label. `geerlingguy/sbc-reviews#47` (Milk-V Jupiter, a SpacemiT K1 riscv64 SBC review with CPU, disk, network, and GPU benchmarks) was checked directly and contains no HTTP/web-server benchmark section; its network figures are raw iperf3 throughput, not application-level web-server performance. No riscv64-vs-arm64 Apache httpd performance data exists in any source checked.
+
 Known performance gaps vs arm64 and amd64:
 
 1. **zlib deflate (mod_deflate):** riscv64 runs generic C. amd64 uses SSE2/AVX512; arm64 uses NEON. This is a throughput gap for compression-heavy workloads. The fix is in zlib, not httpd.
@@ -381,7 +387,13 @@ Apache httpd has no RISE project involvement and no community activity around ri
 
 ## 14. Updates
 
-No updates yet -- initial report dated 2026-07-20.
+**2026-09-30:** Re-verified RISE Project involvement (Section 10). Re-checked the RISE blog index (riseproject.dev/blog), the `riseproject-dev` GitHub org (26 public repos as of this date -- runner infrastructure, working-group trackers, the Python wheel builder, board-farm, CI tooling; none named or scoped to Apache httpd), the RISE Python wheel builder package list (riseproject.gitlab.io/python/wheel_builder/, 89 packages, no httpd), and web search for "RISE project Apache httpd riscv64" / "riseproject.dev Apache httpd". Result unchanged: no RISE blog post, RFP, or GitHub repository references Apache httpd. Finding confirmed, not new.
+
+**2026-09-30 (performance and bug re-check):** Re-ran three targeted GitHub issue searches against `apache/httpd` (`riscv64`; `riscv`; `nan floating point RVV vector`) -- all returned 0 results (Section 11). Re-searched the web for "Apache httpd riscv64 benchmark" and "Apache httpd riscv performance 2025 2026", and re-checked the RISE Project blog sitemap directly -- no requests/sec, latency, or throughput figures for Apache httpd on riscv64 exist in any public source, and no RISE post covers it (Section 13.2). Both findings confirmed, not new: no open riscv64 correctness/performance issues and no published benchmark data.
+
+**2026-09-30 (this refresh):** Directly fetched `riseproject.dev` and `riseproject.dev/members/` -- the RISE Premier Member list (8 members: Alibaba DAMO, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent) and General Member list (12 members) were re-verified; Andes Technology is corrected from Premier to General Member status (Section 10). Directly fetched the RISE blog sitemap: 35 posts now indexed (up from 27), none referencing Apache httpd. Searched GitHub directly for `apache httpd riscv64 benchmark` (repositories and issues): zero relevant results. Checked `geerlingguy/sbc-reviews#47` (Milk-V Jupiter riscv64 SBC review) directly for web-server benchmark content: none present (Section 13.2). All findings from the prior 2026-09-30 checks stand: no RISE involvement, no published Apache httpd riscv64 performance data, no upstream or dependency riscv64 correctness bugs.
+
+Initial report dated 2026-07-20.
 
 ---
 
@@ -398,6 +410,9 @@ No updates yet -- initial report dated 2026-07-20.
 - [Arch Linux RISC-V failure tracker](https://archriscv.felixc.at/)
 - [apache/apr GitHub](https://github.com/apache/apr)
 - [RISE Project](https://riseproject.dev/)
+- [RISE Project Members](https://riseproject.dev/members/)
+- [RISE Project blog sitemap](https://riseproject.dev/wp-sitemap-posts-post-1.xml)
+- [Milk-V Jupiter review (geerlingguy/sbc-reviews#47)](https://github.com/geerlingguy/sbc-reviews/issues/47)
 - [RISE RP009 LLVM SPEC Optimization report](https://riseproject.dev/2025/05/08/project-rp009-llvm-spec-optimization/)
 - [Igalia LLVM RISC-V optimization blog post](https://blogs.igalia.com/compilers/2025/05/05/boosting-risc-v-application-performance-an-8-month-llvm-journey/)
 - [RISE RFP list](https://lf-rise.atlassian.net/wiki/display/HOME/RISE+RFP)
