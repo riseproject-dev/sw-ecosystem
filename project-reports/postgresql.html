@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-10-01<br />
+<strong>Readiness:</strong> blue<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for PostgreSQL<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,9 +280,11 @@
 </h2>
     
 
-<p>PostgreSQL is a community-governed, BSD-licensed relational database server. Development is coordinated by the PostgreSQL Global Development Group through the <a href="https://www.postgresql.org/list/pgsql-hackers/">pgsql-hackers mailing list</a>. There is no foundation in the Apache or Linux Foundation sense. The project has a Core Team of 7 members and 31 committers with push access. The latest stable release is 18.4; 19beta1 is in pre-release.</p>
+<p>PostgreSQL is a community-governed, permissively-licensed (PostgreSQL License, an OSI-approved MIT/BSD-style license, not GPL) relational database server. There is no incorporated foundation comparable to the Apache Software Foundation or the Linux Foundation; the legal/copyright holder is the PostgreSQL Global Development Group, a loosely organized community entity (copyright 1996-2026). Governance (per <a href="https://www.postgresql.org/about/governance/">postgresql.org/about/governance</a>) is split across several standing bodies: a Core Team that is the central arbiter of project policy; Committers with direct git push access; a Sysadmin Team (PGInfra) that runs postgresql.org infrastructure; a Security Team; a Code of Conduct Committee; a Contributors Committee that curates contributor profiles; and a Sponsors Committee. Regional non-profits (PostgreSQL Europe, PostgreSQL US/SPI-affiliated) provide legal and financial support for conferences and trademark/infrastructure matters but none of them is “the” PostgreSQL foundation; the model is federated, not centralized.</p>
 
-<p><strong>Core Team members and known corporate affiliations:</strong></p>
+<p>All development happens on the <a href="https://www.postgresql.org/list/pgsql-hackers/">pgsql-hackers mailing list</a>, tracked through the Commitfest app (<a href="https://commitfest.postgresql.org/">commitfest.postgresql.org</a>), with commits landing in <a href="https://git.postgresql.org/gitweb/?p=postgresql.git">git.postgresql.org</a>. There is no GitHub issue tracker for the project; the canonical <code class="language-plaintext highlighter-rouge">postgres/postgres</code> GitHub mirror is read-only and does not accept pull requests. An unofficial third-party bot, <code class="language-plaintext highlighter-rouge">MisterRaindrop/postgresql-github-mirror</code>, mirrors mailing-list threads as GitHub issues/PRs for discoverability; it is explicitly not affiliated with the project (confirmed: 95 open issues, 302 open PRs, 65,283 commits, 0 stars/forks at time of check). There is no single RISC-V tracking issue or meta-thread anywhere; RISC-V work is a series of independent mailing-list threads and Commitfest entries.</p>
+
+<p><strong>Core Team members and known corporate affiliations</strong> [NEEDS VERIFICATION, single-sourced from existing project tracking]:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -322,9 +325,9 @@
   </tbody>
 </table></div>
 
-<p>EDB holds 2 of 7 Core Team seats. Microsoft and Snowflake each hold one seat. No chip vendor holds a Core Team seat.</p>
+<p>EDB holds 2 of 7 Core Team seats; Microsoft and Snowflake each hold one. No chip vendor holds a Core Team seat. Beyond individual Core Team affiliations, the companies most frequently cited as heavy corporate contributors to PostgreSQL are EnterpriseDB (EDB), Microsoft (dedicated Postgres team behind Azure Database for PostgreSQL, Citus, Patroni), Fujitsu (20+ years of core contributions), Google Cloud (Cloud SQL, AlloyDB), and secondarily AWS, NTT and VMware. PostgreSQL does not publish a GitHub-style MAINTAINERS file tying individuals to companies; affiliations are documented informally via the Contributors Committee’s profile pages.</p>
 
-<p>PostgreSQL has no GitHub issue tracker. All development occurs on the <a href="https://www.postgresql.org/list/pgsql-hackers/">pgsql-hackers mailing list</a>. There is no dedicated RISC-V tracking issue or meta-thread.</p><hr />
+<p>PostgreSQL is not a RISE Project member (see Section 10/14.4 discussion); RISE’s own site lists no PostgreSQL membership or funded project.</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -334,19 +337,56 @@
 </h2>
     
 
-<p>The initial RISC-V port was introduced by a single commit in 2021:</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Event</th>
+      <th>Source</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2016-11-19</td>
+      <td>First reported build failure on RISC-V (“PostgreSQL cannot be compiled on RISC-V,” Richard W.M. Jones/Red Hat, PostgreSQL 9.5.5): <code class="language-plaintext highlighter-rouge">src/include/storage/s_lock.h</code> errors with “does not have native spinlock support on this platform.” Tom Lane asks for a GCC-asm implementation; <code class="language-plaintext highlighter-rouge">config.sub</code>/<code class="language-plaintext highlighter-rouge">config.guess</code> also needed RISC-V triplets.</td>
+      <td><a href="https://www.postgresql.org/message-id/16690.1479611287%40sss.pgh.pa.us">pgsql-bugs thread</a></td>
+    </tr>
+    <tr>
+      <td>2019-10-17 to 2021-04-21</td>
+      <td>Second report of the identical spinlock failure on a SiFive HiFive Unleashed board (rv64imafdc, Linux 5.2.9), Robert Henry. Multi-year debate between Tom Lane (favored hand-written asm) and Andres Freund (favored GCC/Clang intrinsics); Thomas Munro confirms a GCC-intrinsic fix passes under QEMU in 2021.</td>
+      <td><a href="https://www.postgresql.org/message-id/CAEYr_8nnwxQji0pQJYqFx7%3DgSM8x7jFJi16O-bLuVYvqvkjsLg%40mail.gmail.com">pgsql-bugs thread</a></td>
+    </tr>
+    <tr>
+      <td>2021-08-13</td>
+      <td>Commitfest #3284, “Native spinlock support on RISC-V,” patch author Marek Szuba (Gentoo), committed by Tom Lane. Implements RISC-V spinlocks via GCC’s <code class="language-plaintext highlighter-rouge">__sync_lock_test_and_set()</code> (compiles to <code class="language-plaintext highlighter-rouge">AMOSWAP.W.AQ</code>), same pattern used for ARM/ARM64. Tested on PostgreSQL 13.3, physical BeagleV Starlight board (rv64gc), all tests passing. Commit <code class="language-plaintext highlighter-rouge">c32fcac56a212b4e6bb5ba63596f60a25a18109a</code>, back-patched to all then-supported branches.</td>
+      <td><a href="https://commitfest.postgresql.org/34/3284">Commitfest #3284</a>, <a href="https://git.postgresql.org/gitweb/?p=postgresql.git;a=commit;h=c32fcac56a212b4e6bb5ba63596f60a25a18109a">commit</a></td>
+    </tr>
+    <tr>
+      <td>2021-09-30</td>
+      <td>First tagged release containing the fix: <strong>PostgreSQL 14.0</strong>. Contemporaneous minor releases 13.5/12.9/11.14/10.19 (2021-11-11) carry the back-port.</td>
+      <td>Commitfest status page</td>
+    </tr>
+    <tr>
+      <td>2025-10-11</td>
+      <td>Alexander Lakhin reports “IO in wrong state on riscv64”: <code class="language-plaintext highlighter-rouge">ERROR: IO in wrong state: 0</code> in the new AIO subsystem (<code class="language-plaintext highlighter-rouge">pgaio_io_wait()</code>), reproduced on QEMU/Debian trixie/Clang 19.1.4 with <code class="language-plaintext highlighter-rouge">--enable-debug --enable-cassert</code>. See Section 11 for full detail and an unresolved discrepancy between sources on fix status.</td>
+      <td><a href="https://www.postgresql.org/message-id/d79691be-22bd-457d-9d90-18033b78c40a%40gmail.com">pgsql-hackers thread</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-10</td>
+      <td>Greg Burd opens “Trying out <code class="language-plaintext highlighter-rouge">&lt;stdatomic.h&gt;</code>,” an opt-in C11-atomics-based atomics implementation, tested across x86-64/aarch64/RISC-V/FreeBSD/Windows-ARM64; surfaces real RISC-V correctness issues (see Section 11). Open, not merged.</td>
+      <td><a href="https://github.com/MisterRaindrop/postgresql-github-mirror/pull/234">Mirror PR #234</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-16/09-18</td>
+      <td>“[PATCH v1/v2] Optimize 64-bit atomic access on RV64” (Hongyan Wang et al.) proposes a dedicated <code class="language-plaintext highlighter-rouge">arch-riscv.h</code> atomics header defining <code class="language-plaintext highlighter-rouge">PG_HAVE_8BYTE_SINGLE_COPY_ATOMICITY</code> for RV64. Open, under review as of 2026-10-01.</td>
+      <td><a href="http://www.mail-archive.com/pgsql-hackers@lists.postgresql.org/msg239387.html">v2 mail-archive</a>, <a href="https://github.com/MisterRaindrop/postgresql-github-mirror/pull/422">mirror PR #422</a></td>
+    </tr>
+  </tbody>
+</table></div>
 
-<ul>
-  <li><strong>Date:</strong> 2021-08-13</li>
-  <li><strong>Commit:</strong> <code class="language-plaintext highlighter-rouge">c32fcac56a212b4e6bb5ba63596f60a25a18109a</code></li>
-  <li><strong>Committer:</strong> Tom Lane (Snowflake)</li>
-  <li><strong>Patch author:</strong> Marek Szuba (Gentoo contributor)</li>
-  <li><strong>Change:</strong> Added RISC-V spinlock support in <code class="language-plaintext highlighter-rouge">src/include/storage/s_lock.h</code> using <code class="language-plaintext highlighter-rouge">GCC __sync_lock_test_and_set()</code>, which compiles to <code class="language-plaintext highlighter-rouge">AMOSWAP.W.AQ</code>. The patch was back-patched to all then-supported branches.</li>
-</ul>
+<p><strong>Key contributors:</strong> Marek Szuba (Gentoo, spinlock author), Tom Lane (Snowflake, committer), Thomas Munro (IO-wrong-state fix), Andres Freund (Microsoft, Core Team reviewer), Greg Burd (independent, stdatomic proposal and Zbb/Zbc patch series, also owns build farm worker <code class="language-plaintext highlighter-rouge">greenfly</code>), Hongyan Wang/Ni Jincheng/Yuansheng (RV64 atomics patch authors).</p>
 
-<p>Notable: the commit message references a missing <code class="language-plaintext highlighter-rouge">arch-riscv.h</code> atomics file, which still does not exist as of mid-2026. The spinlock path used <code class="language-plaintext highlighter-rouge">__sync_lock_test_and_set</code> rather than a dedicated atomics header, meaning full native atomics were deferred.</p>
-
-<p>Since 2021, all RISC-V-specific activity has been in-flight patch series on pgsql-hackers, none of which have been merged to master. The three active threads are documented in Section 11.</p><hr />
+<p><strong>Fully upstream?</strong> Only the 2021 spinlock fix is merged to master. Every subsequent RISC-V-specific improvement (atomics fast path, Zbb popcount, Zbc CRC32C, centralized architecture macros, stdatomic migration) remains an open, unmerged pgsql-hackers thread as of 2026-10-01. Direct inspection of the current <code class="language-plaintext highlighter-rouge">master</code> tree (see Section 4) further found that the 2021 spinlock commit’s dedicated RISC-V block may no longer be present in the live source, an unresolved discrepancy flagged below.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -356,11 +396,56 @@
 </h2>
     
 
-<p>PostgreSQL has no formal Tier 1 / Tier 2 / Tier 3 classification. A platform is considered “supported” if: (a) the source contains provisions for it, and (b) it has recently built and passed regression tests on the <a href="https://buildfarm.postgresql.org/">PostgreSQL Build Farm</a>. New ports go through pgsql-hackers.</p>
+<p>PostgreSQL has no formal Tier 1/2/3 classification analogous to Rust’s or LLVM’s. A platform is considered “supported” if (a) the source contains provisions for it, and (b) it has recently built and passed regression tests on the <a href="https://buildfarm.postgresql.org/">PostgreSQL Build Farm</a>, a community-run fleet of volunteer-operated machines continuously testing <code class="language-plaintext highlighter-rouge">master</code> and stable branches. The community’s documented stance for a platform not yet represented in the Build Farm is informal and meritocratic: anyone interested is “strongly encouraged to set up a build farm member machine.” There is no dedicated “architecture maintainer” role, no tier ranking, and no governance vote required for a new port.</p>
 
-<p>RISC-V (riscv64) is explicitly listed as a supported CPU architecture in the <a href="https://www.postgresql.org/docs/18/supported-platforms.html">PostgreSQL 18 supported platforms documentation</a>, alongside x86, PowerPC, S/390, SPARC, ARM, and MIPS. There is no dedicated platform-specific notes section for riscv64 in Chapter 17.7 (only Cygwin, macOS, MinGW, Solaris, and Visual Studio are covered with notes). The documentation states: “Platforms not covered here have no known platform-specific installation issues.”</p>
+<p>RISC-V (riscv64) is explicitly listed in <a href="https://www.postgresql.org/docs/current/supported-platforms.html">PostgreSQL’s Supported Platforms documentation</a>: “PostgreSQL can be expected to work on these CPU architectures: x86, PowerPC, S/390, SPARC, ARM, MIPS, and RISC-V, including big-endian, little-endian, 32-bit, and 64-bit variants where applicable.” That is the entire clause; there is no elaboration. The Platform-Specific Notes chapter covers only Cygwin, macOS, MinGW, Solaris, SPARC and Windows; riscv64 is not mentioned there at all, and the documentation states platforms not covered “have no known platform-specific installation issues.”</p>
 
-<p>In practice, riscv64 is equivalent to the project’s informal second tier: it builds and passes regression tests, has build farm coverage, and is documented as supported, but has no architecture-specific optimizations, no hand-tuned assembly, and no dedicated CI runners in the primary pipeline.</p><hr />
+<p><strong>amd64 vs arm64 vs riscv64:</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GitHub Actions CI (<code class="language-plaintext highlighter-rouge">pg-ci.yml</code>)</td>
+      <td>Yes (primary)</td>
+      <td>No (also absent; GH Actions covers only Linux x86_64/i386, macOS, Windows)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Build Farm coverage</td>
+      <td>Extensive, many workers</td>
+      <td>Extensive, many workers</td>
+      <td>4 active workers (Section 7.3)</td>
+    </tr>
+    <tr>
+      <td>Release-blocking status</td>
+      <td>Yes</td>
+      <td>Yes (via QEMU/native, not GHA)</td>
+      <td>No (satisfied only via Build Farm, which is PostgreSQL’s own sanctioned support mechanism, not GitHub Actions)</td>
+    </tr>
+    <tr>
+      <td>Listed in Supported Platforms doc</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes, since 2021 (commit <code class="language-plaintext highlighter-rouge">c32fcac5</code>, first in PG14)</td>
+    </tr>
+    <tr>
+      <td>Dedicated platform notes</td>
+      <td>None needed (default target)</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>In practice, riscv64 occupies the project’s informal second tier: it builds, passes regression tests via Build Farm, and is documented as supported, but it has essentially zero architecture-specific optimization code (Section 4) and no presence in the project’s primary GitHub Actions CI pipeline.</p><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -370,66 +455,104 @@
 </h2>
     
 
-<p>PostgreSQL builds and runs on riscv64 entirely via generic C fallback paths. The following table summarizes architecture-specific coverage across the subsystems that matter for correctness and performance.</p>
+<p>Direct inspection of the live <code class="language-plaintext highlighter-rouge">postgres/postgres</code> source tree (checked 2026-10-01) confirms riscv64 support is built almost entirely on generic/portable C and compiler-builtin paths, not dedicated architecture code.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Subsystem</th>
-      <th>Coverage</th>
-      <th>Gap Description</th>
+      <th>riscv64 coverage</th>
+      <th>Detail</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Spinlocks</td>
-      <td>Generic</td>
-      <td>No <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> block in <code class="language-plaintext highlighter-rouge">src/include/storage/s_lock.h</code>. RISC-V falls through to a semaphore-based slow path. All other supported architectures (x86, ARM, PowerPC, SPARC, S/390, MIPS) have hand-written inline asm.</td>
+      <td>Generic fallback, with an unresolved discrepancy</td>
+      <td>Commit <code class="language-plaintext highlighter-rouge">c32fcac56a212b4e6bb5ba63596f60a25a18109a</code> (2021) added a dedicated <code class="language-plaintext highlighter-rouge">#if defined(__riscv)</code> block in <code class="language-plaintext highlighter-rouge">src/include/storage/s_lock.h</code> using <code class="language-plaintext highlighter-rouge">__sync_lock_test_and_set()</code>. A direct grep of the current <code class="language-plaintext highlighter-rouge">master</code> tree, however, found no RISC-V-named section between the <code class="language-plaintext highlighter-rouge">__arm__</code>/<code class="language-plaintext highlighter-rouge">__aarch64__</code> block and the next (<code class="language-plaintext highlighter-rouge">__s390__</code>/<code class="language-plaintext highlighter-rouge">__s390x__</code>) block: RISC-V now appears to fall through to the file’s unnamed generic catch-all (<code class="language-plaintext highlighter-rouge">#if !defined(TAS)</code> / <code class="language-plaintext highlighter-rouge">HAVE_GCC__SYNC_INT32_TAS</code>), which functionally resolves to the same <code class="language-plaintext highlighter-rouge">__sync_lock_test_and_set()</code> builtin but is no longer a maintained, named RISC-V branch. <strong>This is a genuine discrepancy between the 2021 commit record (still shown as “applied to all supported branches” in the Commitfest log) and the current tree state</strong>; it was not independently reconciled in this research pass and should be re-verified directly against a current <code class="language-plaintext highlighter-rouge">master</code> checkout before being treated as settled.</td>
     </tr>
     <tr>
-      <td>Memory barriers</td>
-      <td>Generic (with known bug, now fixed)</td>
-      <td>No <code class="language-plaintext highlighter-rouge">arch-riscv.h</code> in <code class="language-plaintext highlighter-rouge">src/include/port/atomics/</code>. Only <code class="language-plaintext highlighter-rouge">arch-arm.h</code>, <code class="language-plaintext highlighter-rouge">arch-ppc.h</code>, <code class="language-plaintext highlighter-rouge">arch-x86.h</code> exist. RISC-V uses <code class="language-plaintext highlighter-rouge">generic-gcc.h</code> (<code class="language-plaintext highlighter-rouge">__atomic_thread_fence</code>). A correctness bug from LLVM reordering loads past this fence was confirmed in production (see Section 11, Bug 1). Fixed 2025-11-07, backpatched. A dedicated <code class="language-plaintext highlighter-rouge">arch-riscv.h</code> emitting <code class="language-plaintext highlighter-rouge">FENCE R,R</code> / <code class="language-plaintext highlighter-rouge">FENCE W,W</code> inline asm has been proposed but not merged.</td>
-    </tr>
-    <tr>
-      <td>Atomic operations (32/64-bit)</td>
-      <td>Generic</td>
-      <td>Same dispatch gap. All atomic ops use <code class="language-plaintext highlighter-rouge">generic-gcc.h</code> <code class="language-plaintext highlighter-rouge">__atomic_*</code> builtins. No LR/SC or AMO instruction paths exist in the PostgreSQL source tree.</td>
-    </tr>
-    <tr>
-      <td>Popcount</td>
-      <td>Missing</td>
-      <td>No RISC-V Zbb popcount. A patch (v4, Greg Burd) shows ~4x speedup and is under review. Not merged.</td>
+      <td>Atomics (32/64-bit)</td>
+      <td>Generic (CAS-loop fallback)</td>
+      <td><code class="language-plaintext highlighter-rouge">src/include/port/atomics/</code> contains only <code class="language-plaintext highlighter-rouge">arch-arm.h</code>, <code class="language-plaintext highlighter-rouge">arch-ppc.h</code>, <code class="language-plaintext highlighter-rouge">arch-x86.h</code>, plus <code class="language-plaintext highlighter-rouge">generic.h</code>/<code class="language-plaintext highlighter-rouge">generic-gcc.h</code>/<code class="language-plaintext highlighter-rouge">generic-msvc.h</code>/<code class="language-plaintext highlighter-rouge">fallback.h</code>. No <code class="language-plaintext highlighter-rouge">arch-riscv.h</code> exists. 64-bit atomic reads/writes on riscv64 therefore go through a compare-exchange loop emulation rather than a plain aligned load/store, even though RV64 guarantees naturally-aligned XLEN-wide accesses are atomic. The open “Optimize 64-bit atomic access on RV64” patch (v2, 2026-09-18) proposes exactly this: a new <code class="language-plaintext highlighter-rouge">arch-riscv.h</code> defining <code class="language-plaintext highlighter-rouge">PG_HAVE_8BYTE_SINGLE_COPY_ATOMICITY</code> for RV64 only (RV32 untouched). Author-reported testing: SpacemiT K3 (RV64GC) hardware, 240/240 regression tests passed, disassembly confirmed CAS-loop paths replaced by plain loads, 130-paired pgbench runs showing a median ~1.67% improvement (bootstrap CI ~1.36-1.90%). Not merged as of 2026-10-01.</td>
     </tr>
     <tr>
       <td>CRC32C</td>
-      <td>Missing</td>
-      <td><code class="language-plaintext highlighter-rouge">pg_crc32c.h</code> dispatches to x86 SSE4.2, ARMv8, and LoongArch. RISC-V falls to the software slice-by-8 fallback. A patch (v4, Greg Burd, adapted from Google Abseil) shows ~2000x speedup via Zbc clmul and is under review. Not merged.</td>
+      <td>Missing (software fallback only)</td>
+      <td><code class="language-plaintext highlighter-rouge">pg_crc32c.h</code> dispatches to hand-tuned paths for x86 (SSE4.2/AVX512), ARMv8, and LoongArch. There is no <code class="language-plaintext highlighter-rouge">#elif defined(__riscv)</code> branch and no RISC-V CRC32C source file; riscv64 unconditionally falls to the software slice-by-8 table-driven fallback. Notably, LoongArch (a far less widely deployed architecture) already has a dedicated hardware path that riscv64 lacks. An open 3-patch series (Greg Burd, v4) adds a Zbc/Zbkc <code class="language-plaintext highlighter-rouge">clmul</code>-based implementation adapted from Google Abseil, reporting a roughly 1800-2000x throughput improvement over the software fallback; not merged, under reviewer skepticism (Section 12).</td>
     </tr>
     <tr>
-      <td>Architecture macros</td>
-      <td>Missing</td>
-      <td>No <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV</code> macro defined anywhere in the tree. A centralized architecture detection patch proposes <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV</code>, <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV_32</code>, <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV_64</code> in <code class="language-plaintext highlighter-rouge">c.h</code>/<code class="language-plaintext highlighter-rouge">pg_cpu.h</code>. Not merged; blocked by naming dispute (see Section 11, Thread 3).</td>
+      <td>Popcount</td>
+      <td>Missing (compiler-builtin generic)</td>
+      <td>Relies on generic <code class="language-plaintext highlighter-rouge">__builtin_popcount</code>, no RISC-V Zbb-specific code path in <code class="language-plaintext highlighter-rouge">pg_bitutils.c</code>. The same open patch series (Zbb popcount, v4) adds a hardware path gated on <code class="language-plaintext highlighter-rouge">-march=rv64gc_zbb</code>; author-reported throughput on build-farm hardware (<code class="language-plaintext highlighter-rouge">greenfly</code>) rose from 510 MB/s (software) to 2280 MB/s (Zbb), roughly a 4x gain. Not merged.</td>
     </tr>
     <tr>
-      <td>SIMD dispatch</td>
+      <td>Memory barriers / stdatomic exploration</td>
+      <td>Generic, with surfaced correctness issues</td>
+      <td>RISC-V uses <code class="language-plaintext highlighter-rouge">generic-gcc.h</code> (<code class="language-plaintext highlighter-rouge">__atomic_thread_fence</code>). A separate, open, opt-in proposal to migrate PostgreSQL’s atomics layer to C11 <code class="language-plaintext highlighter-rouge">&lt;stdatomic.h&gt;</code> (Greg Burd, PR #234) surfaced two concrete RISC-V-specific correctness problems during testing: (1) <code class="language-plaintext highlighter-rouge">memory_order_relaxed</code> loads are not equivalent to PostgreSQL’s existing <code class="language-plaintext highlighter-rouge">volatile</code> loads (relaxed ordering caused data loss in parallel hash joins on RISC-V, which needs sequential consistency there), and (2) RISC-V lacks byte-granular atomic operations, forcing <code class="language-plaintext highlighter-rouge">pg_atomic_flag</code> to stay 32-bit. These are genuine, currently-open correctness risks in a proposed (not-yet-merged) code path, not in the shipped generic-gcc.h path.</td>
+    </tr>
+    <tr>
+      <td>JIT (LLVM ORC)</td>
+      <td>Broken</td>
+      <td><code class="language-plaintext highlighter-rouge">--with-llvm</code> JIT crashes on riscv64 during regression tests with <code class="language-plaintext highlighter-rouge">relocation target ... out of range of R_RISCV_PCREL_HI20 fixup</code>. Root cause (per the open upstream bug): ORC JIT is invoking <code class="language-plaintext highlighter-rouge">RuntimeDyld</code>, an MCJIT-only component, on RISC-V targets, an apparent architectural bug in how ORC JIT delegates to lower-level LLVM components rather than a simple relocation-range tuning issue. No fix or linked PR exists. <a href="https://github.com/llvm/llvm-project/issues/106203">llvm/llvm-project#106203</a>, open since 2024-08-27.</td>
+    </tr>
+    <tr>
+      <td>Platform-detection macros</td>
+      <td>Present but vestigial</td>
+      <td><code class="language-plaintext highlighter-rouge">src/include/c.h</code> normalizes <code class="language-plaintext highlighter-rouge">__riscv64__</code>/<code class="language-plaintext highlighter-rouge">__riscv__</code> via one <code class="language-plaintext highlighter-rouge">#elif defined(__riscv)</code> block (“RISC-V doesn’t follow the common naming pattern, so force it”). Grepping the full tree shows these macros are never referenced anywhere else in PostgreSQL’s own code: dead code today. <code class="language-plaintext highlighter-rouge">config/config.sub</code>/<code class="language-plaintext highlighter-rouge">config.guess</code> recognize <code class="language-plaintext highlighter-rouge">riscv*</code> GNU triplets but are stock upstream GNU Autoconf boilerplate, not PostgreSQL-authored logic.</td>
+    </tr>
+    <tr>
+      <td>SIMD dispatch, assembly files</td>
       <td>Not applicable</td>
-      <td>No architecture-specific SIMD dispatch for riscv64, or for any architecture other than x86 via checksum/SIMD headers in storage.</td>
-    </tr>
-    <tr>
-      <td>JIT (LLVM)</td>
-      <td>Disabled on riscv64</td>
-      <td>PostgreSQL’s LLVM JIT backend is disabled on riscv64 in all major distributions. Root cause: segfaults on riscv64 under the distribution-packaged LLVM backend. Confirmed disabled in Debian trixie packages and in <code class="language-plaintext highlighter-rouge">docker-library/postgres</code> PR #1345 (merged 2025-06-09). No pgsql-hackers thread exists on riscv64 JIT enablement.</td>
-    </tr>
-    <tr>
-      <td>Assembly files</td>
-      <td>Not applicable</td>
-      <td>No <code class="language-plaintext highlighter-rouge">.S</code> assembly files exist anywhere in the PostgreSQL source tree for any architecture.</td>
+      <td>No <code class="language-plaintext highlighter-rouge">.S</code> assembly files exist anywhere in the PostgreSQL tree for any architecture, and no <code class="language-plaintext highlighter-rouge">arch/riscv/</code>-style subtree exists (PostgreSQL does not use per-architecture source directories at all; branching is via <code class="language-plaintext highlighter-rouge">#ifdef</code> inside shared headers). No RISC-V Vector (RVV) SIMD dispatch exists.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The GNU autoconf boilerplate files (<code class="language-plaintext highlighter-rouge">config/config.guess</code>, <code class="language-plaintext highlighter-rouge">config/config.sub</code>) recognize <code class="language-plaintext highlighter-rouge">riscv32</code>, <code class="language-plaintext highlighter-rouge">riscv32be</code>, <code class="language-plaintext highlighter-rouge">riscv64</code>, <code class="language-plaintext highlighter-rouge">riscv64be</code> as valid Linux build targets (lines 1174 and 1397-1401). This is upstream GNU config, not PostgreSQL-authored RISC-V code.</p><hr />
+<p><strong>amd64 vs arm64 vs riscv64, by component:</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Spinlock inline/builtin path</td>
+      <td>Dedicated (LOCK XCHG)</td>
+      <td>Dedicated</td>
+      <td>Generic/unnamed fallback (disputed, see above)</td>
+    </tr>
+    <tr>
+      <td>Native atomics header</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">arch-x86.h</code>)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">arch-arm.h</code>)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Hardware popcount</td>
+      <td>Yes (SSE4.2)</td>
+      <td>Yes (ARMv8)</td>
+      <td>No (patch pending)</td>
+    </tr>
+    <tr>
+      <td>Hardware CRC32C</td>
+      <td>Yes (SSE4.2)</td>
+      <td>Yes (ARMv8)</td>
+      <td>No (patch pending, also behind LoongArch)</td>
+    </tr>
+    <tr>
+      <td>LLVM JIT</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (upstream LLVM bug, open)</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -441,125 +564,112 @@
 <h3 id="51-compiler-requirements">
   
   
-    <a href="#51-compiler-requirements" class="anchor-heading" aria-labelledby="51-compiler-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Compiler Requirements
+    <a href="#51-compiler-requirements" class="anchor-heading" aria-labelledby="51-compiler-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Compiler requirements
   
   
 </h3>
     
 
-<p><strong>Officially documented minimums:</strong></p>
-<ul>
-  <li>C standard: C99 minimum; configure probes for C11 with <code class="language-plaintext highlighter-rouge">-std=gnu11</code> / <code class="language-plaintext highlighter-rouge">-std=c11</code></li>
-  <li>GCC: “Recent versions recommended” – no specific floor documented</li>
-  <li>Clang: No minimum stated for basic builds; LLVM 14 minimum required only when enabling <code class="language-plaintext highlighter-rouge">--with-llvm</code> / <code class="language-plaintext highlighter-rouge">-Dllvm=enabled</code></li>
-  <li>Meson: 0.57.2 minimum</li>
-  <li>Autoconf (maintainers only): exactly 2.69</li>
-</ul>
+<p>Officially documented minimums: C99 baseline, configure probes for C11; GCC “recent versions recommended” with no explicit floor; Clang has no stated minimum for ordinary builds, only LLVM 14 minimum when <code class="language-plaintext highlighter-rouge">--with-llvm</code>/<code class="language-plaintext highlighter-rouge">-Dllvm=enabled</code> is used; Meson 0.57.2 minimum; Autoconf (maintainers only) exactly 2.69.</p>
 
-<p><strong>Effective versions in use on riscv64 (from build farm evidence):</strong></p>
-<ul>
-  <li>GCC 13.3.0 (mollusk, Ubuntu 24.04)</li>
-  <li>GCC 14 (boomslang/copperhead, Debian 13 Trixie)</li>
-  <li>Clang 22.1.6 (greenfly, Ubuntu 24.04)</li>
-</ul>
+<p>Effective versions confirmed in use on riscv64, from active Build Farm workers: GCC 13.3.0 (<code class="language-plaintext highlighter-rouge">mollusk</code>, Ubuntu 24.04), GCC 14 (<code class="language-plaintext highlighter-rouge">boomslang</code>/<code class="language-plaintext highlighter-rouge">copperhead</code>, Debian 13 Trixie), Clang 22.1.6 (<code class="language-plaintext highlighter-rouge">greenfly</code>, Ubuntu 24.04).</p>
 
-<p><strong>Critical Clang version constraint (riscv64-specific):</strong> Clang versions 20.x and 21.x contain a confirmed miscompilation bug in the RISC-V vector (RVV) backend’s LoopVectorize pass (see Section 11, Bug 2). Clang 22.1.6 is the first confirmed-correct version. If building with <code class="language-plaintext highlighter-rouge">rv64gcv</code> and Clang, Clang &lt; 22 must not be used. An in-progress patch adds a configure/meson check enforcing <code class="language-plaintext highlighter-rouge">__clang_major__ &gt;= 22</code> for RISC-V V-extension builds.</p>
+<p><strong>Critical Clang version constraint (riscv64-specific):</strong> Clang 20.x and 21.x contain a confirmed miscompilation in the RISC-V vector (RVV) backend’s LoopVectorize pass that silently corrupts output of indexed scatter-store loops (reproduced concretely in PostgreSQL’s <code class="language-plaintext highlighter-rouge">crypt-des.c</code> <code class="language-plaintext highlighter-rouge">des_init()</code>, with 28 permutation-table mismatches). Clang 22.1.6 is the first confirmed-correct version; GCC is unaffected at any tested version. If building with <code class="language-plaintext highlighter-rouge">rv64gcv</code> and Clang, Clang &lt; 22 must not be used. Root cause tracked to LLVM issues <a href="https://github.com/llvm/llvm-project/issues/176001">#176001</a>, <a href="https://github.com/llvm/llvm-project/issues/187458">#187458</a>, <a href="https://github.com/llvm/llvm-project/issues/171978">#171978</a>; fixed in Clang 22, not backported to 21.x. An in-progress PostgreSQL patch adds a configure/meson check enforcing <code class="language-plaintext highlighter-rouge">__clang_major__ &gt;= 22</code> for RISC-V V-extension builds; not yet merged.</p>
 <h3 id="52-autoconf-native-build">
   
   
-    <a href="#52-autoconf-native-build" class="anchor-heading" aria-labelledby="52-autoconf-native-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Autoconf Native Build
+    <a href="#52-autoconf-native-build" class="anchor-heading" aria-labelledby="52-autoconf-native-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Autoconf native build
   
   
 </h3>
     
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./configure <span class="se">\</span>
-  <span class="nt">--prefix</span><span class="o">=</span>/usr/local/pgsql <span class="se">\</span>
-  <span class="nt">--with-pgport</span><span class="o">=</span>5432 <span class="se">\</span>
-  <span class="nt">--with-system-tzdata</span><span class="o">=</span>/usr/share/zoneinfo <span class="se">\</span>
-  <span class="nt">--enable-thread-safety</span>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./configure \
+  --prefix=/usr/local/pgsql \
+  --with-pgport=5432 \
+  --with-system-tzdata=/usr/share/zoneinfo \
+  --enable-thread-safety
 </code></pre></div></div>
 <h3 id="53-autoconf-cross-compilation-x86-64-host-to-riscv64">
   
   
-    <a href="#53-autoconf-cross-compilation-x86-64-host-to-riscv64" class="anchor-heading" aria-labelledby="53-autoconf-cross-compilation-x86-64-host-to-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Autoconf Cross-Compilation (x86-64 host to riscv64)
+    <a href="#53-autoconf-cross-compilation-x86-64-host-to-riscv64" class="anchor-heading" aria-labelledby="53-autoconf-cross-compilation-x86-64-host-to-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Autoconf cross-compilation (x86-64 host to riscv64)
   
   
 </h3>
     
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir </span>build-riscv64 <span class="o">&amp;&amp;</span> <span class="nb">cd </span>build-riscv64
-/path/to/postgres/source/configure <span class="se">\</span>
-  <span class="nt">--host</span><span class="o">=</span>riscv64-linux-gnu <span class="se">\</span>
-  <span class="nt">--build</span><span class="o">=</span>x86_64-linux-gnu <span class="se">\</span>
-  <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <span class="se">\</span>
-  <span class="nv">CXX</span><span class="o">=</span>riscv64-linux-gnu-g++ <span class="se">\</span>
-  <span class="nt">--with-system-tzdata</span><span class="o">=</span>/usr/share/zoneinfo <span class="se">\</span>
-  <span class="nt">--without-readline</span> <span class="se">\</span>
-  <span class="nt">--without-icu</span> <span class="se">\</span>
-  <span class="nt">--disable-rpath</span>
-make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir build-riscv64 &amp;&amp; cd build-riscv64
+/path/to/postgres/source/configure \
+  --host=riscv64-linux-gnu \
+  --build=x86_64-linux-gnu \
+  CC=riscv64-linux-gnu-gcc \
+  CXX=riscv64-linux-gnu-g++ \
+  --with-system-tzdata=/usr/share/zoneinfo \
+  --without-readline \
+  --without-icu \
+  --disable-rpath
+make -j$(nproc)
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">--with-system-tzdata</code> is called out in official documentation as enabling more straightforward cross-compilation by avoiding the need to execute host binaries during the timezone database build.</p>
+<p><code class="language-plaintext highlighter-rouge">--with-system-tzdata</code> is documented upstream as simplifying cross-compilation by avoiding execution of host binaries during the timezone-database build.</p>
 <h3 id="54-meson-native-build">
   
   
-    <a href="#54-meson-native-build" class="anchor-heading" aria-labelledby="54-meson-native-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Meson Native Build
+    <a href="#54-meson-native-build" class="anchor-heading" aria-labelledby="54-meson-native-build"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Meson native build
   
   
 </h3>
     
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>meson setup build <span class="se">\</span>
-  <span class="nt">--prefix</span><span class="o">=</span>/usr/local/pgsql <span class="se">\</span>
-  <span class="nt">--buildtype</span><span class="o">=</span>debugoptimized <span class="se">\</span>
-  <span class="nt">-Dssl</span><span class="o">=</span>openssl <span class="se">\</span>
-  <span class="nt">-Dicu</span><span class="o">=</span>enabled <span class="se">\</span>
-  <span class="nt">-Dsystem_tzdata</span><span class="o">=</span>/usr/share/zoneinfo
-ninja <span class="nt">-C</span> build
-ninja <span class="nt">-C</span> build <span class="nb">install</span>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>meson setup build \
+  --prefix=/usr/local/pgsql \
+  --buildtype=debugoptimized \
+  -Dssl=openssl \
+  -Dicu=enabled \
+  -Dsystem_tzdata=/usr/share/zoneinfo
+ninja -C build
+ninja -C build install
 </code></pre></div></div>
 <h3 id="55-meson-cross-compilation">
   
   
-    <a href="#55-meson-cross-compilation" class="anchor-heading" aria-labelledby="55-meson-cross-compilation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Meson Cross-Compilation
+    <a href="#55-meson-cross-compilation" class="anchor-heading" aria-labelledby="55-meson-cross-compilation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Meson cross-compilation
   
   
 </h3>
     
 
-<p>No PostgreSQL-maintained meson cross-file for riscv64 exists in the upstream source tree. The following cross-file is derived from Meson cross-compilation documentation and build farm evidence:</p>
+<p>No PostgreSQL-maintained meson cross-file for riscv64 exists in the upstream tree. The following is derived from general Meson cross-compilation documentation and Build Farm evidence, not an upstream-published file:</p>
 
 <p><code class="language-plaintext highlighter-rouge">/etc/meson/cross/linux-riscv64.ini</code>:</p>
-<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">[binaries]</span><span class="w">
-</span><span class="py">c</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64-linux-gnu-gcc'</span>
-<span class="py">cpp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64-linux-gnu-g++'</span>
-<span class="py">ar</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64-linux-gnu-ar'</span>
-<span class="py">strip</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64-linux-gnu-strip'</span>
-<span class="py">pkgconfig</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64-linux-gnu-pkg-config'</span>
-<span class="py">exe_wrapper</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'qemu-riscv64-static'</span>
-<span class="w">
-</span><span class="nn">[host_machine]</span><span class="w">
-</span><span class="py">system</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'linux'</span>
-<span class="py">cpu_family</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64'</span>
-<span class="py">cpu</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64'</span>
-<span class="py">endian</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'little'</span>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[binaries]
+c = 'riscv64-linux-gnu-gcc'
+cpp = 'riscv64-linux-gnu-g++'
+ar = 'riscv64-linux-gnu-ar'
+strip = 'riscv64-linux-gnu-strip'
+pkgconfig = 'riscv64-linux-gnu-pkg-config'
+exe_wrapper = 'qemu-riscv64-static'
+
+[host_machine]
+system = 'linux'
+cpu_family = 'riscv64'
+cpu = 'riscv64'
+endian = 'little'
 </code></pre></div></div>
 
-<p>Then:</p>
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>meson setup build <span class="se">\</span>
-  <span class="nt">--cross-file</span> /etc/meson/cross/linux-riscv64.ini <span class="se">\</span>
-  <span class="nt">--prefix</span><span class="o">=</span>/usr/local/pgsql <span class="se">\</span>
-  <span class="nt">-Dsystem_tzdata</span><span class="o">=</span>/usr/share/zoneinfo <span class="se">\</span>
-  <span class="nt">-Dllvm</span><span class="o">=</span>disabled <span class="se">\</span>
-  <span class="nt">-Dbonjour</span><span class="o">=</span>disabled
-ninja <span class="nt">-C</span> build
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>meson setup build \
+  --cross-file /etc/meson/cross/linux-riscv64.ini \
+  --prefix=/usr/local/pgsql \
+  -Dsystem_tzdata=/usr/share/zoneinfo \
+  -Dllvm=disabled \
+  -Dbonjour=disabled
+ninja -C build
 </code></pre></div></div>
 <h3 id="56-flags-to-disable-on-riscv64">
   
   
-    <a href="#56-flags-to-disable-on-riscv64" class="anchor-heading" aria-labelledby="56-flags-to-disable-on-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 Flags to Disable on riscv64
+    <a href="#56-flags-to-disable-on-riscv64" class="anchor-heading" aria-labelledby="56-flags-to-disable-on-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 Flags to disable on riscv64
   
   
 </h3>
@@ -577,7 +687,7 @@ ninja <span class="nt">-C</span> build
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dllvm=disabled</code></td>
       <td><code class="language-plaintext highlighter-rouge">--without-llvm</code></td>
-      <td>JIT disabled on riscv64 due to segfaults in distro LLVM backends</td>
+      <td>JIT disabled on riscv64 in all known distro packages because of the open ORC-JIT relocation bug (Section 4)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dbonjour=disabled</code></td>
@@ -587,7 +697,7 @@ ninja <span class="nt">-C</span> build
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-Dtap_tests=disabled</code></td>
       <td>N/A</td>
-      <td>TAP tests require QEMU <code class="language-plaintext highlighter-rouge">exe_wrapper</code> setup for cross-compiled binaries</td>
+      <td>TAP tests on cross-compiled binaries need a QEMU <code class="language-plaintext highlighter-rouge">exe_wrapper</code></td>
     </tr>
   </tbody>
 </table></div>
@@ -600,9 +710,7 @@ ninja <span class="nt">-C</span> build
 </h3>
     
 
-<p>No official PostgreSQL-maintained Dockerfile for riscv64 exists in <code class="language-plaintext highlighter-rouge">postgres/postgres</code> or in <code class="language-plaintext highlighter-rouge">anarazel/pg-vm-images</code>. The <code class="language-plaintext highlighter-rouge">docker-library/postgres</code> official image supports <code class="language-plaintext highlighter-rouge">linux/riscv64</code> via Docker multi-arch builds using QEMU emulation, based on the Debian/Ubuntu riscv64 base image. The Dockerfile is not riscv64-specific.</p>
-
-<p>The <code class="language-plaintext highlighter-rouge">anarazel/pg-vm-images</code> CI infrastructure uses a multi-stage <code class="language-plaintext highlighter-rouge">docker/linux_debian_ci</code> Dockerfile with stages (<code class="language-plaintext highlighter-rouge">base</code>, <code class="language-plaintext highlighter-rouge">normal</code>, <code class="language-plaintext highlighter-rouge">linux-meson-64</code>, etc.) and a <code class="language-plaintext highlighter-rouge">scripts/linux_debian_install_deps.sh</code> script that contains no riscv64-specific handling.</p><hr />
+<p>No official PostgreSQL-maintained Dockerfile for riscv64 exists in <code class="language-plaintext highlighter-rouge">postgres/postgres</code> or in <code class="language-plaintext highlighter-rouge">anarazel/pg-vm-images</code>. The <code class="language-plaintext highlighter-rouge">docker-library/postgres</code> official image supports <code class="language-plaintext highlighter-rouge">linux/riscv64</code> through standard multi-arch <code class="language-plaintext highlighter-rouge">docker buildx</code>, based on the Debian/Ubuntu riscv64 base image; the Dockerfile itself is not riscv64-specific. <code class="language-plaintext highlighter-rouge">anarazel/pg-vm-images</code>’ multi-stage <code class="language-plaintext highlighter-rouge">docker/linux_debian_ci</code> Dockerfile and its <code class="language-plaintext highlighter-rouge">scripts/linux_debian_install_deps.sh</code> contain no riscv64-specific handling.</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -626,66 +734,66 @@ ninja <span class="nt">-C</span> build
       <td>Spinlock inline asm</td>
       <td>Yes (x86 LOCK XCHG)</td>
       <td>Yes</td>
-      <td>No (semaphore fallback)</td>
+      <td>Generic builtin fallback only (named block possibly dropped from master, see Section 4)</td>
     </tr>
     <tr>
       <td>Memory barrier inline asm</td>
-      <td>Yes (arch-x86.h)</td>
-      <td>Yes (arch-arm.h)</td>
-      <td>No (generic-gcc.h __atomic)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">arch-x86.h</code>)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">arch-arm.h</code>)</td>
+      <td>No (<code class="language-plaintext highlighter-rouge">generic-gcc.h</code> <code class="language-plaintext highlighter-rouge">__atomic_thread_fence</code>)</td>
     </tr>
     <tr>
       <td>Native atomics header</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No (generic-gcc.h)</td>
+      <td>No (<code class="language-plaintext highlighter-rouge">generic-gcc.h</code> CAS-loop); fast path proposed, not merged</td>
     </tr>
     <tr>
       <td>Hardware popcount</td>
       <td>Yes (SSE4.2 POPCNT)</td>
       <td>Yes (ARMv8 VCNT)</td>
-      <td>No (patch pending)</td>
+      <td>No; patch pending</td>
     </tr>
     <tr>
       <td>Hardware CRC32C</td>
       <td>Yes (SSE4.2)</td>
       <td>Yes (ARMv8)</td>
-      <td>No (patch pending, Zbc)</td>
+      <td>No; patch pending (behind LoongArch)</td>
     </tr>
     <tr>
       <td>LLVM JIT</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No (disabled; segfaults)</td>
+      <td>No (disabled; open ORC-JIT bug)</td>
     </tr>
     <tr>
-      <td>Native CI runners</td>
+      <td>Primary GitHub Actions CI</td>
       <td>Yes</td>
-      <td>Yes</td>
+      <td>No (also not covered by <code class="language-plaintext highlighter-rouge">pg-ci.yml</code>)</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>QEMU CI coverage</td>
-      <td>No</td>
-      <td>No</td>
-      <td>No (proposed, not implemented)</td>
-    </tr>
-    <tr>
-      <td>Build farm coverage</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes (4 workers)</td>
+      <td>Build Farm coverage</td>
+      <td>Extensive</td>
+      <td>Extensive</td>
+      <td>Yes, 4 active workers</td>
     </tr>
     <tr>
       <td>Distribution packages</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes</td>
+      <td>Yes (ports/secondary-architecture pockets)</td>
+    </tr>
+    <tr>
+      <td>Upstream binary releases</td>
+      <td>No (source only, applies to every arch)</td>
+      <td>No</td>
+      <td>No</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Summary: riscv64 has binary parity (the database builds and runs) but no performance parity. Every architecture-specific optimization present for arm64 and amd64 is absent for riscv64.</p><hr />
+<p>Summary: riscv64 has functional parity (the database builds, runs, and passes the full regression suite) but no performance parity. Every architecture-specific optimization present for arm64 and amd64 is absent for riscv64, and the single historical RISC-V-specific optimization (2021 spinlock block) is in question as of the current tree. Data not available on NaN/floating-point semantics divergence specific to riscv64: no such issue was surfaced in any searched source.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -703,38 +811,23 @@ ninja <span class="nt">-C</span> build
 </h3>
     
 
-<p>The <code class="language-plaintext highlighter-rouge">.github/workflows/pg-ci.yml</code> file (1,275 lines) defines jobs exclusively targeting:</p>
-<ul>
-  <li>Linux x86_64 and i386 on <code class="language-plaintext highlighter-rouge">ubuntu-24.04</code></li>
-  <li>macOS on <code class="language-plaintext highlighter-rouge">macos-15</code></li>
-  <li>Windows on <code class="language-plaintext highlighter-rouge">windows-2022</code></li>
-</ul>
+<p>Direct inspection of <code class="language-plaintext highlighter-rouge">.github/workflows/pg-ci.yml</code> (1,275 lines, fetched at commit <code class="language-plaintext highlighter-rouge">42e96cf2fe095c822f76bc94669ea875cb1e3351</code>) confirms it defines jobs exclusively for: Linux-Autoconf, Linux-Meson (32-bit), Linux-Meson (64-bit), macOS-Meson, Windows-VisualStudio, Windows-MinGW-Meson, CompilerWarnings, and SanityCheck, running on <code class="language-plaintext highlighter-rouge">ubuntu-24.04</code>, <code class="language-plaintext highlighter-rouge">macos-15</code>, <code class="language-plaintext highlighter-rouge">windows-2022</code>, and <code class="language-plaintext highlighter-rouge">ubuntu-slim</code>. A full-text search of the file for “riscv64,” “risc-v,” and “RISC-V” returns zero matches.</p>
 
-<p>The only cross-compilation present is MinGW x86-64 Windows. There are zero references to <code class="language-plaintext highlighter-rouge">riscv64</code>, <code class="language-plaintext highlighter-rouge">riscv</code>, or <code class="language-plaintext highlighter-rouge">QEMU</code> anywhere in the file. No riscv64 CI exists in the primary pipeline.</p>
+<p>The project’s own canonical description of its CI system, <code class="language-plaintext highlighter-rouge">src/tools/ci/README</code>, documents exactly two forms of CI: the Build Farm (a separate, non-GitHub system) and GitHub Actions. Its <code class="language-plaintext highlighter-rouge">ci-os-only</code> commit-message control enumerates the complete, exhaustive list of supported CI platforms: <code class="language-plaintext highlighter-rouge">compilerwarnings|linux|macos|mingw|sanitycheck|windows</code>. RISC-V does not appear in that list, and there is no architecture-level selector at all in this CI system, meaning there is no riscv64 <em>variant</em> of any job to add short of a new job class entirely. <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>/<code class="language-plaintext highlighter-rouge">.cirrus.tasks.yml</code> do not exist in the repository at all (confirmed 404 and zero filename matches); PostgreSQL no longer uses Cirrus CI, GitHub Actions is the sole current GitHub-hosted CI backend. A 2026-04-14 pgsql-hackers proposal from Thomas Munro to add QEMU-based images for RISC-V (and other architectures) as a CI alternative, raised in the context of the Cirrus CI shutdown, remains a mailing-list proposal only; no such job has been added.</p>
 
-<p>Source: <a href="https://raw.githubusercontent.com/postgres/postgres/master/.github/workflows/pg-ci.yml">pg-ci.yml</a></p>
-<h3 id="72-qemu-proposal-not-implemented">
+<p>A repo-wide code search for “riscv” (GitHub code search, <code class="language-plaintext highlighter-rouge">repo:postgres/postgres</code>) returns exactly 3 matches, none in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> or <code class="language-plaintext highlighter-rouge">src/tools/ci/</code>: the <code class="language-plaintext highlighter-rouge">c.h</code> macro-normalization block, and the generic <code class="language-plaintext highlighter-rouge">config.sub</code>/<code class="language-plaintext highlighter-rouge">config.guess</code> autoconf triplet tables.</p>
+
+<p><strong>Conclusion: PostgreSQL’s primary, GitHub-hosted CI pipeline has zero riscv64 coverage of any kind.</strong></p>
+<h3 id="72-postgresql-build-farm">
   
   
-    <a href="#72-qemu-proposal-not-implemented" class="anchor-heading" aria-labelledby="72-qemu-proposal-not-implemented"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.2 QEMU Proposal (not implemented)
+    <a href="#72-postgresql-build-farm" class="anchor-heading" aria-labelledby="72-postgresql-build-farm"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.2 PostgreSQL Build Farm
   
   
 </h3>
     
 
-<p>On 2026-04-14, Thomas Munro posted to pgsql-hackers proposing QEMU images for RISC-V (and other architectures) as a CI alternative following the Cirrus CI shutdown. This is a mailing list proposal only. No such job has been added to the CI configuration.</p>
-
-<p>Source: <a href="https://www.postgresql.org/message-id/CA+hUKGL_cWRzY9aA+FgfUPhdd0CciB-qOoGdnduFu6mPiNDxsQ@mail.gmail.com">Thomas Munro, 2026-04-14</a></p>
-<h3 id="73-postgresql-build-farm">
-  
-  
-    <a href="#73-postgresql-build-farm" class="anchor-heading" aria-labelledby="73-postgresql-build-farm"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.3 PostgreSQL Build Farm
-  
-  
-</h3>
-    
-
-<p>The <a href="https://buildfarm.postgresql.org/">PostgreSQL Build Farm</a> is a distributed self-hosted CI system where volunteers run workers on their own hardware. Four active riscv64 workers are registered and reporting:</p>
+<p>The <a href="https://buildfarm.postgresql.org/">PostgreSQL Build Farm</a> is the project’s own, non-GitHub, self-hosted continuous testing infrastructure: volunteer-run machines that continuously build and run the full regression test suite against <code class="language-plaintext highlighter-rouge">master</code> and stable branches. Per the <a href="https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&amp;arch=riscv64">Build Farm’s riscv64 member list</a>, four workers are active and reporting current status:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -763,7 +856,7 @@ ninja <span class="nt">-C</span> build
     </tr>
     <tr>
       <td>greenfly</td>
-      <td>Ubuntu 24.04.4 LTS</td>
+      <td>Ubuntu 24.04.4 LTS (OrangePi RV2, VisionFive 2 CPU, RV64GC+Zba/Zbb/Zbc/Zbs)</td>
       <td>Clang 22.1.6</td>
       <td>master through REL_13_STABLE</td>
       <td>greg@burd.me</td>
@@ -778,11 +871,48 @@ ninja <span class="nt">-C</span> build
   </tbody>
 </table></div>
 
-<p>All four workers report as current (0-1 days lag). <code class="language-plaintext highlighter-rouge">boomslang</code> and <code class="language-plaintext highlighter-rouge">copperhead</code> share the same owner and appear to be a coordinated pair. <code class="language-plaintext highlighter-rouge">greenfly</code> was approved 2025-08-29 [NEEDS VERIFICATION] and runs Clang 22.1.6, the first version without the RISC-V LoopVectorize miscompilation bug.</p>
+<p>All four report as current. <code class="language-plaintext highlighter-rouge">boomslang</code> and <code class="language-plaintext highlighter-rouge">copperhead</code> share the same owner and appear to be a coordinated pair. <code class="language-plaintext highlighter-rouge">greenfly</code>’s owner, Greg Burd, is also the author of the open Zbb/Zbc and stdatomic patch series discussed in Sections 4 and 11, meaning the person whose hardware generates the test coverage is also the primary author of the pending optimization work. This Build Farm coverage is precisely the mechanism the readiness grade (Section 13) treats as satisfying PostgreSQL’s own sanctioned CI build/test bar for riscv64.</p>
 
-<p>Source: <a href="https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&amp;arch=riscv64">Build Farm riscv64 members</a></p>
+<p><strong>Assessment:</strong> coverage is broad (4 workers, 2 compilers, 2 distros, all supported branches) but entirely dependent on volunteer-owned hardware, with no organizationally owned riscv64 CI capacity anywhere in the project, and no JIT-enabled testing (since JIT is disabled on riscv64).</p>
 
-<p><strong>Assessment:</strong> Build farm coverage is broad (4 workers, 2 compilers, 2 distros, all supported branches) but is entirely dependent on volunteer-owned hardware. There is no organizationally owned riscv64 CI capacity. The absence of JIT-enabled testing means no regressions in LLVM code generation paths will be caught.</p><hr />
+<p><strong>amd64 vs arm64 vs riscv64 (CI):</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GitHub Actions job</td>
+      <td>Yes</td>
+      <td>No</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Build Farm coverage</td>
+      <td>Extensive</td>
+      <td>Extensive</td>
+      <td>4 workers, volunteer-owned</td>
+    </tr>
+    <tr>
+      <td>Organizationally owned CI</td>
+      <td>Yes (project infra)</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>RISE Runners used</td>
+      <td>Data not available: no evidence PostgreSQL’s own CI uses RISE RISC-V Runners; RISE’s runner infrastructure uses PostgreSQL as its own internal scheduler database, not the reverse</td>
+      <td> </td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -792,13 +922,13 @@ ninja <span class="nt">-C</span> build
 </h2>
     
 
-<p>PostgreSQL upstream distributes source-only tarballs. Binary packaging is entirely handled by distributions.</p>
+<p>PostgreSQL’s upstream Global Development Group ships source-only tarballs for every architecture; there are no upstream-built binary releases for amd64, arm64, or riscv64. All installable binaries come from downstream distributions or vendors.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Distribution</th>
-      <th>riscv64 Present</th>
+      <th>riscv64 present</th>
       <th>Version</th>
       <th>Notes</th>
     </tr>
@@ -807,43 +937,51 @@ ninja <span class="nt">-C</span> build
     <tr>
       <td>Upstream (postgresql.org)</td>
       <td>N/A (source only)</td>
-      <td>18.4 stable, 19beta1</td>
-      <td>No binary releases for any architecture</td>
+      <td>18.4 stable; 19beta1 pre-release</td>
+      <td>No binary releases for any architecture, for any CPU</td>
     </tr>
     <tr>
       <td>Debian trixie (stable)</td>
       <td>Yes</td>
       <td>17.10-0+deb13u1</td>
-      <td><code class="language-plaintext highlighter-rouge">postgresql-17_17.10-0+deb13u1_riscv64.deb</code>, 6.6 MB, HTTP 200, SHA256 <code class="language-plaintext highlighter-rouge">0cf3b6ed941c2c6aed607161b9ada99308ec66f7902b2cf20c2bbb421ab1303e</code>. Ports archive. JIT (LLVM) disabled.</td>
+      <td><code class="language-plaintext highlighter-rouge">postgresql-17_17.10-0+deb13u1_riscv64.deb</code>, ports archive, JIT disabled</td>
     </tr>
     <tr>
       <td>Ubuntu 24.04 Noble</td>
       <td>Yes</td>
       <td>16.14-0ubuntu0.24.04.1</td>
-      <td>Ports archive, universe. JIT (LLVM) disabled on riscv64.</td>
+      <td>Ports archive, universe pocket, JIT disabled</td>
+    </tr>
+    <tr>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td>Yes</td>
+      <td>18.3-1 (search-page cache), 18.6-0ubuntu0.26.04.1 / 18.6-3build2 (confirmed in live <code class="language-plaintext highlighter-rouge">ports.ubuntu.com</code> pool and the <code class="language-plaintext highlighter-rouge">dists/resolute/main/binary-riscv64/Packages.gz</code> index, with matching SHA256)</td>
+      <td>riscv64 is an Ubuntu ports architecture (not a primary release arch); the cached tracker page lags the primary-arch version, but the live pool mirror already carries 18.6 builds. <code class="language-plaintext highlighter-rouge">apt install postgresql-18</code> genuinely resolves and installs on a riscv64 Ubuntu 26.04 system</td>
     </tr>
     <tr>
       <td>Arch Linux RISC-V</td>
       <td>Yes</td>
-      <td>18.4-1</td>
-      <td><code class="language-plaintext highlighter-rouge">postgresql-18.4-1-riscv64.pkg.tar.zst</code>, packages <code class="language-plaintext highlighter-rouge">postgresql</code>, <code class="language-plaintext highlighter-rouge">postgresql-docs</code>, <code class="language-plaintext highlighter-rouge">postgresql-ip4r</code>, and several Haskell/language bindings. This is the latest upstream stable release.</td>
+      <td>18.6-2 (confirmed rebuilt today, 2026-10-01, via <code class="language-plaintext highlighter-rouge">archriscv.felixc.at/repo/extra/</code>)</td>
+      <td>Packages: <code class="language-plaintext highlighter-rouge">postgresql</code>, <code class="language-plaintext highlighter-rouge">postgresql-libs</code>, <code class="language-plaintext highlighter-rouge">postgresql-docs</code>, <code class="language-plaintext highlighter-rouge">postgresql-old-upgrade</code>, plus an unrelated extension <code class="language-plaintext highlighter-rouge">postgresql-ip4r</code>. Caution: the Arch RISC-V repo directory also lists several unrelated third-party libraries sharing the <code class="language-plaintext highlighter-rouge">postgresql-</code> name prefix (Haskell/other-ecosystem packages); only the <code class="language-plaintext highlighter-rouge">postgresql-18.6-2-riscv64.pkg.tar.zst</code> family is the actual RDBMS. The project’s own <code class="language-plaintext highlighter-rouge">?q=</code> search page is non-functional (static, JS-only widget); the repo directory listing must be checked directly</td>
     </tr>
     <tr>
       <td>Debian sid (unstable)</td>
-      <td>No compiled binary confirmed</td>
+      <td>Not confirmed this pass</td>
       <td>N/A</td>
-      <td><code class="language-plaintext highlighter-rouge">postgresql_18+292_all.deb</code> exists but is architecture-independent (<code class="language-plaintext highlighter-rouge">_all</code>). No riscv64 compiled package found for <code class="language-plaintext highlighter-rouge">postgresql-17</code> in sid.</td>
+      <td><code class="language-plaintext highlighter-rouge">postgresql_18+292_all.deb</code> found is architecture-independent (<code class="language-plaintext highlighter-rouge">_all</code>, a metapackage); no riscv64-specific compiled binary for <code class="language-plaintext highlighter-rouge">postgresql-17</code>/<code class="language-plaintext highlighter-rouge">postgresql-18</code> was independently confirmed in sid</td>
     </tr>
     <tr>
       <td>PyPI</td>
       <td>Not applicable</td>
       <td>N/A</td>
-      <td>PyPI distributes no PostgreSQL server binaries for any architecture. The <code class="language-plaintext highlighter-rouge">postgresql</code> PyPI package does not exist (HTTP 404).</td>
+      <td>No package literally named <code class="language-plaintext highlighter-rouge">postgresql</code> exists (HTTP 404). The historical Python driver <code class="language-plaintext highlighter-rouge">py-postgresql</code> ships only a source sdist across all 17 of its releases, no wheels at all, so there is no riscv64-specific wheel to find for that package either</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The LLVM JIT is explicitly disabled in all confirmed riscv64 packages. The Debian disable reason (recorded in <code class="language-plaintext highlighter-rouge">docker-library/postgres</code> PR #1345, merged 2025-06-09) is: “still segfaulting.” Architectures excluded from JIT in that PR: i386, loong64, riscv64.</p><hr />
+<p><strong>What a user must do to get a working binary:</strong> install from Debian, Ubuntu (ports pocket), or Arch Linux RISC-V’s package repositories; there is no upstream-signed binary and no official riscv64 Docker image from the PostgreSQL project itself (the <code class="language-plaintext highlighter-rouge">docker-library/postgres</code> image supports <code class="language-plaintext highlighter-rouge">linux/riscv64</code> via standard multi-arch buildx, built from the Debian/Ubuntu riscv64 packages, not from an upstream PostgreSQL binary).</p>
+
+<p><strong>RISE-built artifact note:</strong> the RISE Project’s <code class="language-plaintext highlighter-rouge">python-wheels</code> repository built a riscv64 wheel for <code class="language-plaintext highlighter-rouge">pgserver</code> (<a href="https://github.com/riseproject-dev/python-wheels/pull/2276">PR #2276</a>, <a href="https://github.com/riseproject-dev/python-wheels/releases/tag/pgserver-v0.1.4-20260928155916">release pgserver-v0.1.4-20260928155916</a>), an embedded PostgreSQL 16.2 + pgvector 0.6.2 distribution (upstream: <code class="language-plaintext highlighter-rouge">github.com/orm011/pgserver</code>, which ships no riscv64 wheel itself). RISE’s fixes were riscv64-specific: patched out <code class="language-plaintext highlighter-rouge">-march=native</code> (rejected by GCC on <code class="language-plaintext highlighter-rouge">manylinux_2_39_riscv64</code> for the pgvector build) and relinked with <code class="language-plaintext highlighter-rouge">LDFLAGS=-Wl,-Ttext-segment=0x200000</code> to avoid segfaults against the kernel’s <code class="language-plaintext highlighter-rouge">mmap_min_addr</code>. This is a RISE-funded riscv64 build of an embedded PostgreSQL distribution, not of mainline PostgreSQL server packages, and it is not reflected in RISE’s own <code class="language-plaintext highlighter-rouge">wheel_builder</code> documentation page, which lists 87 packages but omits pgserver.</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -853,7 +991,7 @@ ninja <span class="nt">-C</span> build
 </h2>
     
 
-<p>The following table covers all significant PostgreSQL build and runtime dependencies. “Green” means builds and passes tests on riscv64 with no known correctness blockers. Blocking issues are noted inline; see the relevant ecosystem status report for full details where one exists.</p>
+<p>“Build” reflects whether the dependency itself builds/is available on riscv64. “Test” reflects whether it has riscv64 test coverage. “Release” reflects whether riscv64 binary packages exist (always via distro, since neither PostgreSQL nor most of its dependencies ship upstream binaries).</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -863,218 +1001,224 @@ ninja <span class="nt">-C</span> build
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
       <th>riscv64 Release</th>
-      <th>Blocking Issues</th>
+      <th>Notes / Blocking issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>OpenSSL</td>
-      <td>TLS/SSL connections; optional but enabled by default in all production distro packages</td>
-      <td>Green</td>
-      <td>Mostly green</td>
-      <td>Green</td>
-      <td>AES T-table implementation is not constant-time on hardware without Zkn or Zvkned extensions. This applies to the majority of current riscv64 silicon (SG2042, TH1520, JH7110, SpacemiT K1). Key material leaks via cache timing on those platforms. PRs #31080 and #31082 open. See <code class="language-plaintext highlighter-rouge">project-reports/openssl.md</code>.</td>
-    </tr>
-    <tr>
-      <td>Python (CPython)</td>
-      <td>PL/Python procedural language; optional</td>
-      <td>Green</td>
-      <td>Mostly green</td>
-      <td>Green (distro only)</td>
-      <td>Stack unwinding broken in Python 3.15 betas on riscv64 (issues #150919, #151040). riscv64 buildbot broken since March 2026. No JIT. See <code class="language-plaintext highlighter-rouge">project-reports/python.md</code>.</td>
-    </tr>
-    <tr>
-      <td>glibc / libm / pthreads</td>
-      <td>C runtime (required), math library (required), threading (required)</td>
+      <td>GCC</td>
+      <td>Build-dependency, critical</td>
       <td>Green</td>
       <td>Green</td>
       <td>Green</td>
-      <td>No blocking issues. hwprobe prototype bug (BZ#32932) fixed May 2025; vector register syscall clobber fixed September 2025. See <code class="language-plaintext highlighter-rouge">project-reports/glibc.md</code>.</td>
+      <td>Primary compiler used by 3 of 4 active Build Farm riscv64 workers (GCC 13.3.0 on <code class="language-plaintext highlighter-rouge">mollusk</code>, GCC 14 on <code class="language-plaintext highlighter-rouge">boomslang</code>/<code class="language-plaintext highlighter-rouge">copperhead</code>). No documented riscv64-specific version floor for GCC (unlike Clang, see below)</td>
     </tr>
     <tr>
       <td>LLVM</td>
-      <td>JIT query compilation; optional</td>
-      <td>Green</td>
-      <td>Mostly green</td>
-      <td>Green</td>
-      <td>No PostgreSQL-specific LLVM riscv64 blockers at the library level. riscv64 backend is LLVM Tier 2. Disabled in all distro PostgreSQL packages due to segfaults. See <code class="language-plaintext highlighter-rouge">project-reports/lldb.md</code>.</td>
+      <td>Build-dependency, optional (<code class="language-plaintext highlighter-rouge">--with-llvm</code>)</td>
+      <td>Green (compiles)</td>
+      <td>Mostly green, with a critical caveat</td>
+      <td>Green (distro package; no upstream LLVM binary releases)</td>
+      <td>Two separate riscv64 defects: (1) Clang 20/21 miscompile RVV LoopVectorize loops, fixed only in Clang 22.1.6 (Section 5.1); (2) ORC-JIT relocation failure (<code class="language-plaintext highlighter-rouge">R_RISCV_PCREL_HI20</code>) keeps <code class="language-plaintext highlighter-rouge">--with-llvm</code> JIT disabled on riscv64 in all known distro PostgreSQL packages (<a href="https://github.com/llvm/llvm-project/issues/106203">llvm/llvm-project#106203</a>, open)</td>
     </tr>
     <tr>
-      <td>zlib</td>
-      <td>WAL and network compression; optional, default on</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>No correctness blockers. No RVV/SIMD path; performance gap vs arm64/x86-64.</td>
-    </tr>
-    <tr>
-      <td>ICU</td>
-      <td>Unicode collation and locale-aware text; optional, default on</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td>LZ4</td>
-      <td>WAL and table LZ4 compression; optional</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td>zstd</td>
-      <td>WAL and table ZSTD compression; optional</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Performance only: 4-way decompression loop disabled on riscv64 (<a href="https://github.com/facebook/zstd/issues/4622">zstd#4622</a>). Not a correctness blocker.</td>
-    </tr>
-    <tr>
-      <td>readline</td>
-      <td>psql interactive line editing; optional, default on</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td>libxml2</td>
-      <td>XML data type; optional</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td>libxslt</td>
-      <td>XSLT in contrib/xml2; optional</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td>libcurl</td>
-      <td>OAuth/libpq-oauth; optional, Linux-only</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td>liburing</td>
-      <td>io_uring async I/O; optional</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None. io_uring is well-supported on riscv64 kernels &gt;= 5.1.</td>
-    </tr>
-    <tr>
-      <td>libnuma</td>
-      <td>NUMA memory allocation; optional</td>
-      <td>Green</td>
-      <td>Mostly green</td>
-      <td>Green</td>
-      <td>None. NUMA topology is sparse on current riscv64 hardware; library itself has no riscv64 gaps.</td>
-    </tr>
-    <tr>
-      <td>GSSAPI / Kerberos</td>
-      <td>Kerberos authentication; optional</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td>PAM</td>
-      <td>PAM authentication; optional</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td>LDAP</td>
-      <td>LDAP authentication; optional</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td>UUID (bsd/e2fs/ossp variants)</td>
-      <td>contrib/uuid-ossp; optional</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None.</td>
+      <td>LLVM</td>
+      <td>Runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">--with-llvm</code> JIT)</td>
+      <td>Green (library present)</td>
+      <td>Broken for PostgreSQL’s JIT use case specifically</td>
+      <td>No upstream release binaries; distro package unpatched</td>
+      <td>Same ORC-JIT issue as above; this is why JIT ships disabled</td>
     </tr>
     <tr>
       <td>Perl</td>
-      <td>Build-time parser and catalog generation; required at build</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Build-time only; no runtime impact.</td>
+      <td>Build-dependency, critical</td>
+      <td>Not independently verified this pass</td>
+      <td>Unverified</td>
+      <td>Expected present (essential Debian/Ubuntu package)</td>
+      <td>Required at build time for code-generation scripts (e.g. <code class="language-plaintext highlighter-rouge">genbki.pl</code>) when building from git source (pre-generated in release tarballs). [NEEDS VERIFICATION]: no dedicated riscv64 source check was performed this pass; given “critical, build-dependency” status for building from git, this is the single highest-priority gap to close</td>
     </tr>
     <tr>
-      <td>flex / bison</td>
-      <td>Build-time parser generation</td>
+      <td>Flex</td>
+      <td>Build-dependency, critical</td>
+      <td>Not independently verified this pass</td>
+      <td>Unverified</td>
+      <td>Expected present</td>
+      <td>Required to build the scanner from git source. [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>GNU bison</td>
+      <td>Build-dependency, critical</td>
+      <td>Not independently verified this pass</td>
+      <td>Unverified</td>
+      <td>Expected present</td>
+      <td>Required to build the grammar from git source. [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>Meson</td>
+      <td>Build-dependency, optional</td>
+      <td>Not independently verified this pass</td>
+      <td>Unverified</td>
+      <td>Expected present</td>
+      <td>Pure-Python build-system generator; architecture-independent by construction. 0.57.2 is PostgreSQL’s documented minimum</td>
+    </tr>
+    <tr>
+      <td>Ninja</td>
+      <td>Build-dependency, optional</td>
+      <td>Not independently verified this pass</td>
+      <td>Unverified</td>
+      <td>Expected present</td>
+      <td>Standard Linux/C++ build tool invoked by Meson; no riscv64-specific gating found in any searched source</td>
+    </tr>
+    <tr>
+      <td>QEMU</td>
+      <td>Test-dependency, optional</td>
       <td>Green</td>
       <td>Green</td>
+      <td>Green (distro)</td>
+      <td><code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code> is the standard <code class="language-plaintext highlighter-rouge">exe_wrapper</code> for Meson cross-builds’ TAP tests and for cross-compiled binary execution in CI-style setups; also used in the (unmerged) QEMU CI proposal of Section 7.1</td>
+    </tr>
+    <tr>
+      <td>OpenSSL</td>
+      <td>Runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">--with-ssl=openssl</code>, default)</td>
       <td>Green</td>
-      <td>Build-time only.</td>
+      <td>Mostly green</td>
+      <td>Green, confirmed Ubuntu 26.04 resolute (3.5.5-1ubuntu3)</td>
+      <td>AES T-table implementation is not constant-time on riscv64 hardware lacking the Zkn or Zvkned extensions, which describes the majority of current riscv64 silicon (SG2042, TH1520, JH7110, SpacemiT K1). Key material can leak via cache-timing on those platforms. Open PRs #31080 and #31082 against OpenSSL address this; not a PostgreSQL-authored issue but affects the security posture of any riscv64 PostgreSQL server using TLS. See <code class="language-plaintext highlighter-rouge">project-reports/openssl.md</code></td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td>Runtime-dependency, optional (PL/Python)</td>
+      <td>Green, confirmed (<code class="language-plaintext highlighter-rouge">python3</code> 3.12.3-0ubuntu1 on Ubuntu 24.04 noble; not independently re-confirmed on 26.04 this pass)</td>
+      <td>Stack-unwinding tests (<code class="language-plaintext highlighter-rouge">test_frame_pointer_unwind</code>, <code class="language-plaintext highlighter-rouge">test_c_stack_unwind</code>) fail on riscv64 in CPython 3.15 beta; riscv64 is effectively untiered (Tier 0) per PEP 11</td>
+      <td>Distro-built only, no upstream official binary</td>
+      <td>No Tier-2 copy-and-patch JIT and no perf-profiling trampoline support on riscv64; stack unwinding actively broken in the 3.15 beta series. See <code class="language-plaintext highlighter-rouge">project-reports/python.md</code></td>
+    </tr>
+    <tr>
+      <td>glibc</td>
+      <td>Runtime-dependency, critical</td>
+      <td>Green</td>
+      <td>Unclear whether the full glibc test suite actually executes under QEMU</td>
+      <td>Green, Ubuntu 26.04 resolute (libc6 2.43-2ubuntu2)</td>
+      <td>Unconfirmed bug <a href="https://sourceware.org/bugzilla/show_bug.cgi?id=33911">sourceware #33911</a>, <code class="language-plaintext highlighter-rouge">--static-pie</code> SIGSEGV on riscv64/glibc 2.43 under QEMU, unlikely to affect normally-linked PostgreSQL binaries. See <code class="language-plaintext highlighter-rouge">project-reports/glibc.md</code></td>
+    </tr>
+    <tr>
+      <td>zlib</td>
+      <td>Runtime-dependency, optional (default on)</td>
+      <td>Green</td>
+      <td>Green via OpenBSD/QEMU CI, no dedicated Linux release-blocking CI</td>
+      <td>Green</td>
+      <td>No correctness blockers; no RVV/SIMD path, so a performance gap vs arm64/x86-64 exists on the Adler32 path (unmerged RVV PR, perf only). See <code class="language-plaintext highlighter-rouge">project-reports/zlib.md</code></td>
+    </tr>
+    <tr>
+      <td>ICU</td>
+      <td>Runtime-dependency, optional (default collation provider since PG15)</td>
+      <td>Green</td>
+      <td>Green</td>
+      <td>Green, confirmed Ubuntu 26.04 resolute</td>
+      <td>None; a prior correctness bug (ICU-21613) was fixed as of ICU 71 (2022). See <code class="language-plaintext highlighter-rouge">project-reports/icu.md</code></td>
+    </tr>
+    <tr>
+      <td>LZ4</td>
+      <td>Runtime-dependency, optional</td>
+      <td>Green, confirmed Ubuntu 26.04 resolute (1.10.0-8), continuous riscv64 lineage since 1.9.4 (2024)</td>
+      <td>Not detailed</td>
+      <td>Green</td>
+      <td>None noted. See <code class="language-plaintext highlighter-rouge">project-reports/lz4.md</code></td>
+    </tr>
+    <tr>
+      <td>zstd</td>
+      <td>Runtime-dependency, optional</td>
+      <td>Green</td>
+      <td>CI uses QEMU user-mode, not release-blocking</td>
+      <td>Green (distro “full”)</td>
+      <td>Performance only: the 4-way decompression loop is disabled on riscv64 (<a href="https://github.com/facebook/zstd/issues/4622">zstd#4622</a>); RVV vectorization only partially merged. See <code class="language-plaintext highlighter-rouge">project-reports/zstd.md</code></td>
+    </tr>
+    <tr>
+      <td>readline</td>
+      <td>Runtime-dependency, optional (default on)</td>
+      <td>Green, confirmed on the Debian rv-osuosl-02 porter box</td>
+      <td>No upstream CI for any architecture (source-only releases)</td>
+      <td>Green</td>
+      <td>None; zero riscv64-specific code needed. See <code class="language-plaintext highlighter-rouge">project-reports/readline.md</code></td>
+    </tr>
+    <tr>
+      <td>libxml2</td>
+      <td>Runtime-dependency, optional</td>
+      <td>Green</td>
+      <td>No upstream riscv64 CI</td>
+      <td>Green, Debian sid and Ubuntu 24.04/26.04 resolute</td>
+      <td>Open <a href="https://gitlab.gnome.org/GNOME/libxml2/-/issues/971">GNOME/libxml2#971</a>: relaxed-atomics race in catalog code on weakly-ordered architectures including riscv64, non-blocking for typical single-threaded PostgreSQL backend use. See <code class="language-plaintext highlighter-rouge">project-reports/libxml2.md</code></td>
+    </tr>
+    <tr>
+      <td>libxslt</td>
+      <td>Runtime-dependency, optional</td>
+      <td>Green, confirmed on Ubuntu 26.04 resolute</td>
+      <td>Inherits libxml2’s CI gap</td>
+      <td>Green</td>
+      <td>Same libxml2 atomics caveat (upstream dependency). See <code class="language-plaintext highlighter-rouge">project-reports/libxslt.md</code></td>
+    </tr>
+    <tr>
+      <td>libcurl</td>
+      <td>Runtime-dependency, optional (PG18+, OAuth)</td>
+      <td>Green, confirmed Ubuntu 26.04 resolute (8.18.0-1ubuntu2)</td>
+      <td>Not detailed</td>
+      <td>Ports pocket, one revision behind the security pocket</td>
+      <td>None noted. See <code class="language-plaintext highlighter-rouge">project-reports/libcurl.md</code></td>
+    </tr>
+    <tr>
+      <td>liburing</td>
+      <td>Runtime-dependency, optional (PG18+, io_uring AIO backend)</td>
+      <td>Green, confirmed genuine riscv64 ELF via <code class="language-plaintext highlighter-rouge">file(1)</code> on the shipped <code class="language-plaintext highlighter-rouge">.so</code></td>
+      <td>Builds only; no sanitizer execution for non-x86_64 including riscv64</td>
+      <td>Green, Debian sid and Ubuntu 26.04 resolute, 2.14-1</td>
+      <td>No functional blocker; “first-class in source/packaging, second-class in CI.” See <code class="language-plaintext highlighter-rouge">project-reports/liburing.md</code></td>
+    </tr>
+    <tr>
+      <td>libnuma</td>
+      <td>Runtime-dependency, optional (PG18+, NUMA-aware shared-buffer allocation)</td>
+      <td>Green, but emits a spurious non-fatal <code class="language-plaintext highlighter-rouge">#warning</code> for <code class="language-plaintext highlighter-rouge">set_mempolicy_home_node</code> on riscv64</td>
+      <td>No upstream riscv64 CI at all</td>
+      <td>Green, Debian sid and Ubuntu ports ship v2.0.19</td>
+      <td>Fix merged to <code class="language-plaintext highlighter-rouge">master</code> but not yet in a tagged release, a release-cadence gap rather than a code gap. See <code class="language-plaintext highlighter-rouge">project-reports/libnuma.md</code></td>
+    </tr>
+    <tr>
+      <td>Kerberos</td>
+      <td>Runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">--with-gssapi</code>)</td>
+      <td>Not independently verified this pass</td>
+      <td>Unverified</td>
+      <td>Expected present</td>
+      <td>[NEEDS VERIFICATION]: general-knowledge expectation only, no dedicated riscv64 source check performed</td>
+    </tr>
+    <tr>
+      <td>Linux-PAM</td>
+      <td>Runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">--with-pam</code>)</td>
+      <td>Not independently verified this pass</td>
+      <td>Unverified</td>
+      <td>Expected present</td>
+      <td>[NEEDS VERIFICATION]: essential-tier Debian/Ubuntu package, no dedicated check performed</td>
+    </tr>
+    <tr>
+      <td>OpenLDAP</td>
+      <td>Runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">--with-ldap</code>)</td>
+      <td>Not independently verified this pass</td>
+      <td>Unverified</td>
+      <td>Expected present</td>
+      <td>[NEEDS VERIFICATION]: no dedicated riscv64 source check performed</td>
+    </tr>
+    <tr>
+      <td>UUID library</td>
+      <td>Runtime-dependency, optional (<code class="language-plaintext highlighter-rouge">contrib/uuid-ossp</code>, <code class="language-plaintext highlighter-rouge">--with-uuid</code>)</td>
+      <td>Not independently verified this pass</td>
+      <td>Unverified</td>
+      <td>Expected present</td>
+      <td>[NEEDS VERIFICATION]: util-linux (<code class="language-plaintext highlighter-rouge">libuuid</code>) is an essential Debian/Ubuntu package, no dedicated check performed</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Critical dependency note:</strong> The highest-severity riscv64 issue in the dependency chain is the OpenSSL AES T-table constant-time gap. Any riscv64 PostgreSQL deployment using TLS on hardware without Zkn or Zvkned (which is the majority of current riscv64 deployments) operates with a non-constant-time AES fallback that is vulnerable to cache-timing key extraction. This is an OpenSSL issue, not a PostgreSQL issue, but it affects the security posture of any riscv64 PostgreSQL server.</p><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-<h3 id="101-rise-project">
-  
-  
-    <a href="#101-rise-project" class="anchor-heading" aria-labelledby="101-rise-project"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 RISE Project
-  
-  
-</h3>
-    
+<p><strong>Research gap:</strong> Perl, Flex, GNU bison, Meson, Ninja, Kerberos, Linux-PAM, OpenLDAP, and UUID library all lack independently-verified riscv64 package evidence in this research pass; the project’s internal dependency-graph query tool (<code class="language-plaintext highlighter-rouge">project-graph</code> MCP) was unavailable (<code class="language-plaintext highlighter-rouge">CONNECTION_CLOSED</code>) across this entire research effort, which is the proximate cause. Of these, Perl, Flex, and GNU bison are the highest priority to verify, since all three are flagged critical build-dependencies required to build PostgreSQL from git source (release tarballs ship pre-generated parser/scanner output and so do not need them at build time).</p>
 
-<p>PostgreSQL is not a RISE Project member and has no RISE-funded work. A full crawl of all 27 RISE blog posts (May 2024 to June 2026) found zero PostgreSQL-focused articles. All 16 funded RFPs (RP001-RP016) were reviewed; none involve PostgreSQL or any database workload.</p>
-
-<p>PostgreSQL appears in one RISE blog post (<a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE RISC-V Runners: Six Weeks In, May 12 2026</a>) as an internal infrastructure component: the RISE runner scheduler uses PostgreSQL as its coordination database. This is not ecosystem work.</p>
-
-<p>Data not available: whether any RISE member company is running PostgreSQL on riscv64 in production. No such information was found in any searched source.</p>
-<h3 id="102-hardware-context">
-  
-  
-    <a href="#102-hardware-context" class="anchor-heading" aria-labelledby="102-hardware-context"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 Hardware Context
-  
-  
-</h3>
-    
-
-<p>Greg Burd’s build farm worker <code class="language-plaintext highlighter-rouge">greenfly</code> runs on an OrangePi RV2 (VisionFive 2 CPU, RV64GC+Zba/Zbb/Zbc/Zbs). His patch series references Scaleway and Milk-V Pioneer as cloud/server platforms with riscv64 availability. No benchmark data comparing PostgreSQL throughput across riscv64 hardware platforms was found.</p>
-
-<p>Data not available: PostgreSQL TPS benchmarks (pgbench) comparing riscv64 vs arm64 vs x86-64. No such data was found in PostgreSQL mailing list archives, RISE Project blog, or openbenchmarking.org (HTTP 403).</p>
-<h3 id="103-language-ecosystem-drivers-and-orms">
-  
-  
-    <a href="#103-language-ecosystem-drivers-and-orms" class="anchor-heading" aria-labelledby="103-language-ecosystem-drivers-and-orms"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 Language Ecosystem (Drivers and ORMs)
-  
-  
-</h3>
-    
-
-<p>Data not available: riscv64 status of PostgreSQL client drivers (psycopg2, psycopg3, libpq, JDBC) and ORM layers. No research was conducted on these components.</p><hr />
+<p><strong>Highest-severity confirmed dependency risk:</strong> the OpenSSL AES T-table cache-timing gap. Any riscv64 PostgreSQL deployment using TLS on hardware without Zkn/Zvkned, which describes most current riscv64 silicon, runs a non-constant-time AES fallback vulnerable to cache-timing key extraction. This is an OpenSSL-level issue, not a PostgreSQL defect, but it materially affects the security posture of any riscv64 PostgreSQL server that terminates TLS.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1083,103 +1227,101 @@ ninja <span class="nt">-C</span> build
   
 </h2>
     
-<h3 id="bug-1-io-in-wrong-state-on-riscv64--resolved-2025-11-07">
-  
-  
-    <a href="#bug-1-io-in-wrong-state-on-riscv64--resolved-2025-11-07" class="anchor-heading" aria-labelledby="bug-1-io-in-wrong-state-on-riscv64--resolved-2025-11-07"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Bug 1: IO in wrong state on riscv64 – RESOLVED (2025-11-07)
-  
-  
-</h3>
-    
-
-<ul>
-  <li><strong>Type:</strong> Correctness / data integrity crash</li>
-  <li><strong>Severity:</strong> Critical (assertion failure, data access failure)</li>
-  <li><strong>Environment:</strong> riscv64, Debian Trixie, kernel 6.11.10-riscv64, Clang 19.1.4; reproduced on <code class="language-plaintext highlighter-rouge">qemu-system-riscv64</code></li>
-  <li><strong>Symptom:</strong> Assertion failure <code class="language-plaintext highlighter-rouge">IO in wrong state: 0</code> during full-text search queries</li>
-  <li><strong>Root cause:</strong> <code class="language-plaintext highlighter-rouge">pgaio_io_wait()</code> had no compiler barrier. LLVM’s <code class="language-plaintext highlighter-rouge">MachineSink</code> optimization moved load instructions past <code class="language-plaintext highlighter-rouge">__atomic_thread_fence()</code> calls. RISC-V’s relaxed memory model (unlike x86 TSO) exposed the race. The problem also reproduced on MIPS and LoongArch; not RISC-V-specific.</li>
-  <li><strong>Fix:</strong> Commit <a href="https://github.com/postgres/postgres/commit/c5d34f4"><code class="language-plaintext highlighter-rouge">c5d34f4</code></a> (“Fix generic read and write barriers for Clang”, Thomas Munro, 2025-11-07). Inserted <code class="language-plaintext highlighter-rouge">pg_compiler_barrier_impl()</code> before <code class="language-plaintext highlighter-rouge">__atomic_thread_fence()</code> in <code class="language-plaintext highlighter-rouge">src/include/port/atomics/generic-gcc.h</code>. Backpatched to PostgreSQL 13.</li>
-  <li><strong>Remaining work noted by Thomas Munro:</strong> (1) A dedicated <code class="language-plaintext highlighter-rouge">arch-riscv.h</code> should be written to emit <code class="language-plaintext highlighter-rouge">FENCE R,R</code> / <code class="language-plaintext highlighter-rouge">FENCE W,W</code> inline asm rather than relying on the generic path. (2) RISC-V should declare <code class="language-plaintext highlighter-rouge">PG_HAVE_8BYTE_SINGLE_COPY_ATOMICITY</code> with a citation to the ISA spec. Neither item has been implemented.</li>
-  <li><strong>Key participants:</strong> Thomas Munro, Andres Freund, Alexander Lakhin, Tom Lane, Greg Burd</li>
-  <li><strong>Sources:</strong> <a href="https://www.postgresql.org/message-id/CA+hUKG+JXKG=+U=demYXu0mVdhP3-ndf0gCk9LqRkZ03yh9qrw@mail.gmail.com">Initial report 2025-10-12</a>, <a href="https://www.postgresql.org/message-id/CA+hUKGJt82c69MwXwxCnYJTJadMmmtVqeZnApQCJPoVyOOZR1A@mail.gmail.com">Fix committed 2025-11-07</a></li>
-</ul><hr />
-<h3 id="thread-1-add-risc-v-zbb-popcount-optimization-3-patch-series--open">
-  
-  
-    <a href="#thread-1-add-risc-v-zbb-popcount-optimization-3-patch-series--open" class="anchor-heading" aria-labelledby="thread-1-add-risc-v-zbb-popcount-optimization-3-patch-series--open"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Thread 1: Add RISC-V Zbb popcount optimization (3-patch series) – OPEN
-  
-  
-</h3>
-    
-
-<ul>
-  <li><strong>Status:</strong> Open, not merged. Latest: v4, 2026-05-27. Rebased and retested on 2026-06-01.</li>
-  <li><strong>Patches (v4):</strong> <code class="language-plaintext highlighter-rouge">v4-0001</code> (2.7 KB, DES Clang bug fix), <code class="language-plaintext highlighter-rouge">v4-0002</code> (11.4 KB, Zbb popcount), <code class="language-plaintext highlighter-rouge">v4-0003</code> (19.3 KB, Zbc CRC32C)</li>
-  <li><strong>Author:</strong> Greg Burd; <strong>Reviewers:</strong> Andres Freund, Nathan Bossart</li>
-  <li><strong>Motivation:</strong> Build farm machine <code class="language-plaintext highlighter-rouge">greenfly</code> (OrangePi RV2, RV64GC+Zba/Zbb/Zbc/Zbs)</li>
-</ul>
-
-<p><strong>Patch 0001 (DES Clang miscompilation fix):</strong> Clang 20 and 21 LoopVectorize generates incorrect code for indexed scatter-store loops (<code class="language-plaintext highlighter-rouge">dst[idx[i]-1] = i</code>) at <code class="language-plaintext highlighter-rouge">-O2 -march=rv64gcv</code>. The bug manifests in <code class="language-plaintext highlighter-rouge">crypt-des.c</code> <code class="language-plaintext highlighter-rouge">des_init()</code>. Without the fix, DES produces wrong results silently. Confirmed by Greg Burd with output showing 28 permutation table mismatches. Root cause traced to LLVM issues <a href="https://github.com/llvm/llvm-project/issues/176001">#176001</a>, <a href="https://github.com/llvm/llvm-project/issues/187458">#187458</a>, <a href="https://github.com/llvm/llvm-project/issues/171978">#171978</a>. Fixed in Clang 22, not backported to 21.x. The original workaround (<code class="language-plaintext highlighter-rouge">pg_memory_barrier()</code>, overhead 335%) was rejected; the agreed resolution is a configure/meson check requiring <code class="language-plaintext highlighter-rouge">__clang_major__ &gt;= 22</code> for <code class="language-plaintext highlighter-rouge">rv64gcv</code> builds. This patch revision was pending as of 2026-06-01.</p>
-
-<p>Compiler matrix for the raw miscompilation (from Greg Burd):</p>
-<ul>
-  <li>Clang 20.1.2 at <code class="language-plaintext highlighter-rouge">-O2 -march=rv64gcv</code>: WRONG</li>
-  <li>Clang 21.1.8 at <code class="language-plaintext highlighter-rouge">-O2 -march=rv64gcv</code>: WRONG</li>
-  <li>Clang 22.1.6 at <code class="language-plaintext highlighter-rouge">-O2 -march=rv64gcv</code>: correct</li>
-  <li>GCC at <code class="language-plaintext highlighter-rouge">-O2 -march=rv64gcv</code>: correct</li>
-  <li>Any compiler at <code class="language-plaintext highlighter-rouge">-O1</code> or with <code class="language-plaintext highlighter-rouge">-fno-vectorize</code>: correct</li>
-</ul>
-
-<p><strong>Patch 0002 (Zbb popcount):</strong> Hardware popcount via <code class="language-plaintext highlighter-rouge">-march=rv64gc_zbb</code>. Measured speedup on <code class="language-plaintext highlighter-rouge">greenfly</code>:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Method</th>
-      <th>Throughput</th>
+      <th>ID / Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Software popcount (no Zbb, -O2)</td>
-      <td>510.08 MB/s</td>
+      <td>pgsql-bugs 2016-11-19, “cannot be compiled on RISC-V”</td>
+      <td>Closed, superseded</td>
+      <td>Historical</td>
+      <td>No standalone patch landed from this thread; the problem was ultimately resolved by Commitfest #3284 below</td>
     </tr>
     <tr>
-      <td>Hardware path without <code class="language-plaintext highlighter-rouge">-march=rv64gc_zbb</code></td>
-      <td>341.48 MB/s (slower than SW)</td>
+      <td>pgsql-bugs 2019-10-17/2021-04-21, “no spinlock support on riscv rv64imafdc”</td>
+      <td>Closed, superseded</td>
+      <td>Historical</td>
+      <td>Same resolution path as above</td>
     </tr>
     <tr>
-      <td>Hardware path with <code class="language-plaintext highlighter-rouge">-march=rv64gc_zbb</code></td>
-      <td>2279.89 MB/s (~4.15x vs SW)</td>
+      <td>Commitfest #3284, “Native spinlock support on RISC-V”</td>
+      <td>Merged, commit <code class="language-plaintext highlighter-rouge">c32fcac56a212b4e6bb5ba63596f60a25a18109a</code></td>
+      <td>Resolved (historical)</td>
+      <td>First shipped in PostgreSQL 14.0 (2021-09-30). See Section 4 for the unresolved discrepancy found between this commit record and the current <code class="language-plaintext highlighter-rouge">master</code> tree</td>
+    </tr>
+    <tr>
+      <td>“IO in wrong state on riscv64”</td>
+      <td><strong>Contradictory status across sources, see discussion below</strong></td>
+      <td>Potentially critical (data-integrity/assertion failure)</td>
+      <td>See below</td>
+    </tr>
+    <tr>
+      <td>LLVM #106203, “[RISC-V][ORCJIT] PostgreSql JIT fails with relocation target out of range error”</td>
+      <td>Open, unresolved, no linked fix</td>
+      <td>High (blocks <code class="language-plaintext highlighter-rouge">--with-llvm</code> on riscv64)</td>
+      <td><a href="https://github.com/llvm/llvm-project/issues/106203">llvm/llvm-project#106203</a>, open since 2024-08-27</td>
+    </tr>
+    <tr>
+      <td>LLVM #164194, “RISCV fence and load order broken when function inlined twice”</td>
+      <td>Closed by LLVM maintainers as “not planned”</td>
+      <td>High (underlying compiler hazard unresolved)</td>
+      <td><a href="https://github.com/llvm/llvm-project/issues/164194">llvm/llvm-project#164194</a>; LLVM declined to accept this as a required fix, meaning the class of hazard is not fixed in the compiler itself</td>
+    </tr>
+    <tr>
+      <td>Known Buildfarm Test Failures item 1.62, “regression tests fail with segmentation faults on riscv64 with llvm enabled”</td>
+      <td>Archived</td>
+      <td>Historical</td>
+      <td><a href="https://wiki.postgresql.org/wiki/Known_Buildfarm_Test_Failures_-_Archive">Buildfarm Known Failures Archive</a>; likely overlapping with the LLVM JIT relocation issue</td>
+    </tr>
+    <tr>
+      <td>Known Buildfarm Test Failures item 1.58, “RISC-V animals fail sporadically due to memory-related issues”</td>
+      <td>Archived</td>
+      <td>Historical</td>
+      <td>Same archive page; specific root cause not detailed in available excerpts</td>
+    </tr>
+    <tr>
+      <td>Known Buildfarm Test Failures item 2.113/2.113.1</td>
+      <td>Tracked</td>
+      <td>See discussion below</td>
+      <td><a href="https://wiki.postgresql.org/wiki/Known_Buildfarm_Test_Failures">Known Buildfarm Test Failures</a>, <code class="language-plaintext highlighter-rouge">027_stream_regress.pl</code> failures on the <code class="language-plaintext highlighter-rouge">greenfly</code> riscv64 worker</td>
+    </tr>
+    <tr>
+      <td>“[PATCH v1/v2] Optimize 64-bit atomic access on RV64”</td>
+      <td>Open, under review</td>
+      <td>Performance (non-blocking)</td>
+      <td>See Sections 2 and 4</td>
+    </tr>
+    <tr>
+      <td>“Trying out <code class="language-plaintext highlighter-rouge">&lt;stdatomic.h&gt;</code>”</td>
+      <td>Open, exploratory/WIP, opt-in, disabled by default</td>
+      <td>Correctness risk only if adopted as-is</td>
+      <td>See Section 4; surfaced parallel-hash-join data-loss risk under relaxed ordering on RISC-V</td>
+    </tr>
+    <tr>
+      <td>“Add RISC-V Zbb popcount / Zbc CRC32C optimization” (3-patch series, v4)</td>
+      <td>Open, under review, reviewer skepticism</td>
+      <td>Performance (non-blocking)</td>
+      <td>See Section 2/12</td>
+    </tr>
+    <tr>
+      <td>“Centralised architecture detection” (<code class="language-plaintext highlighter-rouge">PG_ARCH_*</code> macros)</td>
+      <td>Open, blocked</td>
+      <td>Infrastructure, blocks cleaner riscv64 dispatch</td>
+      <td>See Section 12</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Andres Freund questioned whether PostgreSQL workloads are actually bottlenecked by popcount on riscv64. Discussion ongoing.</p>
+<p><strong>Discrepancy flagged under “IO in wrong state on riscv64”:</strong> The existing project record states this bug, reported by Alexander Lakhin on 2025-10-11 (<code class="language-plaintext highlighter-rouge">pgaio_io_wait()</code> assertion failure, traced to LLVM’s MachineSink optimization reordering loads past <code class="language-plaintext highlighter-rouge">__atomic_thread_fence()</code>), was fixed by commit <code class="language-plaintext highlighter-rouge">c5d34f4</code> (“Fix generic read and write barriers for Clang,” Thomas Munro, 2025-11-07), which added an explicit <code class="language-plaintext highlighter-rouge">pg_compiler_barrier_impl()</code> before the atomic fence in <code class="language-plaintext highlighter-rouge">generic-gcc.h</code> and was back-patched to PostgreSQL 13. The live research pass for this report, however, independently characterizes the same bug as “active/unresolved” as of 2026-10-01, traces its root cause specifically to Clang reordering a load before an acquire fence when a function is inlined twice (confirmed via a Godbolt repro at <code class="language-plaintext highlighter-rouge">-O1</code>+, GCC unaffected), and reports that the underlying LLVM defect (<code class="language-plaintext highlighter-rouge">llvm/llvm-project#164194</code>) was closed by LLVM maintainers as “not planned,” with the failure still listed on PostgreSQL’s Known Buildfarm Test Failures page. <strong>Both claims cannot be fully reconciled from the sources gathered</strong>: it is plausible that PostgreSQL’s own <code class="language-plaintext highlighter-rouge">c5d34f4</code> workaround (a compiler barrier added inside PostgreSQL’s own macros) resolved the specific reproduction while the underlying LLVM compiler hazard remains open and unaddressed upstream, meaning similar reordering could recur in code paths the PostgreSQL-level fix does not cover. This should be independently re-verified against the current <code class="language-plaintext highlighter-rouge">master</code> branch and a current run of the <code class="language-plaintext highlighter-rouge">greenfly</code> buildfarm animal before being treated as either fully resolved or still actively failing. [NEEDS VERIFICATION].</p>
 
-<p><strong>Patch 0003 (Zbc CRC32C):</strong> Adapted from <a href="https://github.com/abseil/abseil-cpp">Google Abseil <code class="language-plaintext highlighter-rouge">absl/crc/internal/crc_riscv.cc</code></a>. Requires Zbc/Zbkc (<code class="language-plaintext highlighter-rouge">clmul</code> instruction). Measured speedup: GCC ~2004x (154 MB/s to 308,052 MB/s), Clang ~1807x. CRC32C test vector validated (<code class="language-plaintext highlighter-rouge">"123456789"</code> = <code class="language-plaintext highlighter-rouge">0xE3069283</code>).</p>
-
-<ul>
-  <li><strong>Sources:</strong> <a href="https://www.postgresql.org/message-id/ec81011b-c502-4702-b041-e4bdd2aa346f@app.fastmail.com">Initial, 2026-03-22</a>, <a href="https://www.postgresql.org/message-id/038b2469-776f-404b-ad7e-e85f45da2166@app.fastmail.com">v3 with DES fix, 2026-03-27</a>, <a href="https://www.postgresql.org/message-id/3a222ec2-01bb-4798-99e2-eedaf6cae19b@app.fastmail.com">v4 rebase, 2026-05-27</a>, <a href="https://www.postgresql.org/message-id/d15fe767-e6d1-488e-915a-42794be2cb12@app.fastmail.com">DES root cause, 2026-06-01</a></li>
-</ul><hr />
-<h3 id="thread-2-centralised-architecture-detection--open">
-  
-  
-    <a href="#thread-2-centralised-architecture-detection--open" class="anchor-heading" aria-labelledby="thread-2-centralised-architecture-detection--open"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Thread 2: Centralised architecture detection – OPEN
-  
-  
-</h3>
-    
-
-<ul>
-  <li><strong>Status:</strong> Open, not merged. Latest reply: Tom Lane, 2026-06-03.</li>
-  <li><strong>Author:</strong> Thomas Munro (reviving a 2-year-old patch); Co-author: Dagfinn Ilmari Mannsaker</li>
-  <li><strong>Patches:</strong> <code class="language-plaintext highlighter-rouge">0001-Remove-IRIX-remnant.patch</code> (901 bytes), <code class="language-plaintext highlighter-rouge">0002-Standardize-macros-for-detecting-architectures.patch</code> (14.1 KB)</li>
-  <li><strong>Scope:</strong> Unified <code class="language-plaintext highlighter-rouge">PG_ARCH_*</code> macros in <code class="language-plaintext highlighter-rouge">c.h</code>/<code class="language-plaintext highlighter-rouge">pg_cpu.h</code> to replace ad-hoc preprocessor checks. Proposes <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV</code>, <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV_32</code>, <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV_64</code>.</li>
-  <li><strong>Immediate motivation:</strong> A Visual Studio bug caused silent x86 detection failure, causing <code class="language-plaintext highlighter-rouge">pg_read/write_barrier()</code> to fall back to full memory barriers, <code class="language-plaintext highlighter-rouge">pg_spin_delay()</code> to do nothing, and <code class="language-plaintext highlighter-rouge">PG_HAVE_8BYTE_SINGLE_COPY_ATOMICITY</code> to be undefined.</li>
-  <li><strong>Blocker:</strong> Tom Lane (2026-06-03) objects to a custom namespace: “why should we invent our own instead of standardizing on gcc’s spellings (that is, <code class="language-plaintext highlighter-rouge">__x86_64__</code> etc).” No resolution as of latest activity.</li>
-  <li><strong>Sources:</strong> <a href="https://www.postgresql.org/message-id/CA+hUKGL8Hs-phHPugrWM=5dAkcT897rXyazYzLw-Szxnzgx-rA@mail.gmail.com">Munro proposal, 2026-04-09</a>, <a href="https://www.postgresql.org/message-id/3100002.1780514662@sss.pgh.pa.us">Tom Lane objection, 2026-06-03</a></li>
-</ul><hr />
+<p><strong>Performance benchmarks:</strong> no rigorous, sourced PostgreSQL-on-RISC-V throughput/latency benchmark with concrete numbers was found in any publicly indexed source as of 2026-10-01. The RISC-V International blog’s “Database Adaptation Evaluation On RISC-V Server” tested PostgreSQL on an HS-2/SOPHON SG2042 platform (64 cores, 32GB RAM, Ubuntu 22.10) and reports only pass/fail compatibility (“compiled smoothly and had the best performance in compatibility testing” among the databases evaluated), with no TPS, latency, or throughput figures published. A <code class="language-plaintext highlighter-rouge">cloud-v.co</code> RISC-V comparison dashboard has a pgbench slot for boards like the Milk-V Pioneer, but the pgbench column was empty/unfilled at the time checked, and the comparison page itself returned 404 on direct fetch. The one concretely-sourced performance claim found anywhere is qualitative: before native spinlock support landed (2021), PostgreSQL on RISC-V required <code class="language-plaintext highlighter-rouge">--disable-spinlocks</code>, which the build system itself flags as giving “poor” performance. <a href="https://riscv.org/blog/risc-v-public-beta-platform-release-%C2%B7-database-adaptation-evaluation-on-risc-v-server/">Source</a>.</p><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1189,114 +1331,130 @@ ninja <span class="nt">-C</span> build
 </h2>
     
 
-<p><strong>Andres Freund (Microsoft / PostgreSQL Core Team), reviewing Thread 1 (Zbb popcount):</strong></p>
+<p><strong>Andres Freund (Microsoft, PostgreSQL Core Team), reviewing the Zbb/Zbc patch series:</strong></p>
 <blockquote>
   <p>“there’s afaict not yet a whole lot of riscv production adoption”</p>
 </blockquote>
 
-<p>This is the canonical upstream objection to riscv64 optimization work: insufficient production deployment justifies the complexity and review burden. This objection is on record from a Core Team member with commit access. It is not a hard block – Greg Burd has continued submitting revisions – but it establishes the review bar.</p>
+<p>This is the canonical upstream objection to riscv64-specific optimization work: insufficient production deployment evidence, raised by a Core Team member with commit access. It is not a hard block (Greg Burd has continued submitting revisions through v4), but it establishes the review bar any further riscv64 performance patch must clear.</p>
 
-<p><strong>Tom Lane (Snowflake / PostgreSQL Core Team), on Thread 2 (arch macros):</strong>
-Objects to the <code class="language-plaintext highlighter-rouge">PG_ARCH_*</code> naming scheme in favor of using GCC’s built-in spellings directly. This blocks a patch that is a prerequisite for cleaner architecture-specific dispatch, including for riscv64.</p>
+<p><strong>Tom Lane (Snowflake, PostgreSQL Core Team), on the centralized architecture-detection patch:</strong>
+Objects to the proposed <code class="language-plaintext highlighter-rouge">PG_ARCH_*</code> naming scheme, preferring GCC’s built-in spellings (<code class="language-plaintext highlighter-rouge">__x86_64__</code>, etc.) directly: “why should we invent our own instead of standardizing on gcc’s spellings.” This blocks a patch that would be a prerequisite for cleaner riscv64-specific dispatch elsewhere in the codebase. No resolution as of the latest recorded activity.</p>
 
-<p><strong>No upstream policy objection to riscv64 as a supported platform exists.</strong> The architecture was committed by a Core Team member (Tom Lane) in 2021, is in the supported platforms documentation, and has active build farm coverage. The objection is to the pace and complexity of new optimizations.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Peter Eisentraut (EDB, PostgreSQL Core Team), on the <code class="language-plaintext highlighter-rouge">&lt;stdatomic.h&gt;</code> migration proposal:</strong>
+Questioned the long-term maintenance burden of carrying multiple parallel atomics implementations and asked whether the project’s end goal is eventually eliminating the custom atomics code entirely. Author Greg Burd confirmed the intended end state is full migration to stdatomic, with a period of parallel testing proposed before a mid-release-cycle cutover.</p>
+
+<p><strong>No upstream policy objection to riscv64 as a supported platform exists.</strong> The architecture was committed by a Core Team member (Tom Lane) in 2021, is listed in the supported-platforms documentation, and has active Build Farm coverage. All current objections target the pace, naming conventions, and production-adoption evidence behind new optimization work, not riscv64’s standing as a supported platform.</p><hr />
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> blue</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p><strong>Justification:</strong> PostgreSQL’s primary GitHub Actions CI (<code class="language-plaintext highlighter-rouge">.github/workflows/pg-ci.yml</code>) has zero riscv64 jobs (only x86_64/i386 Linux, macOS, and Windows), but the project’s own sanctioned platform-support mechanism, the community PostgreSQL Build Farm, continuously builds and runs the full regression test suite on riscv64 across master and stable branches via multiple active, current-reporting workers (<code class="language-plaintext highlighter-rouge">boomslang</code>, <code class="language-plaintext highlighter-rouge">copperhead</code>, <code class="language-plaintext highlighter-rouge">greenfly</code>, <code class="language-plaintext highlighter-rouge">mollusk</code>), per the <a href="https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&amp;arch=riscv64">Build Farm’s riscv64 member list</a>. riscv64 has been upstream-supported since <a href="https://git.postgresql.org/gitweb/?p=postgresql.git;a=commit;h=c32fcac56a212b4e6bb5ba63596f60a25a18109a">commit <code class="language-plaintext highlighter-rouge">c32fcac5</code></a> (2021, first in PG14). This satisfies CI build=yes, test=yes. However, PostgreSQL ships no binary releases from upstream for any architecture (source tarballs only); the installable riscv64 artifacts that exist (Debian 17.10, Ubuntu ports/resolute builds, Arch Linux RISC-V) are built and published by distributions, not by the PostgreSQL Global Development Group itself. Per the release-provider rule, a non-upstream release caps the color at blue rather than green.</p>
+
+<p><strong>Pending work that could change the grade:</strong> Open, unmerged pgsql-hackers patches as of late 2026: “Optimize 64-bit atomic access on RV64” (v2, defines <code class="language-plaintext highlighter-rouge">PG_HAVE_8BYTE_SINGLE_COPY_ATOMICITY</code> for RV64, mirrored as GitHub mirror <a href="https://github.com/MisterRaindrop/postgresql-github-mirror/pull/422">PR #422</a>, <a href="http://www.mail-archive.com/pgsql-hackers@lists.postgresql.org/msg239387.html">mail-archive</a>); a 3-patch Zbb-popcount/Zbc-CRC32C optimization series (v4, Greg Burd) still under reviewer skepticism from Core Team member Andres Freund over production-adoption evidence; a centralized <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV</code> macro patch blocked by Tom Lane’s naming objection; and an open, unresolved upstream LLVM ORC-JIT relocation bug (<a href="https://github.com/llvm/llvm-project/issues/106203">llvm/llvm-project#106203</a>) that keeps <code class="language-plaintext highlighter-rouge">--with-llvm</code> JIT disabled on riscv64 in all known distro packages. PostgreSQL is not a RISE member project and has no RISE-funded riscv64 work on mainline PostgreSQL itself; RISE’s own infrastructure merely runs PostgreSQL internally as its CI scheduler’s datastore, and RISE’s one riscv64-related PostgreSQL artifact (the <code class="language-plaintext highlighter-rouge">pgserver</code> embedded-PostgreSQL wheel) is a separate downstream project, not mainline PostgreSQL packaging.</p><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing work: RISE has not funded any riscv64 work against mainline PostgreSQL. Its only PostgreSQL-adjacent riscv64 output is the <code class="language-plaintext highlighter-rouge">pgserver</code> embedded-distribution wheel (Section 8), which does not touch PostgreSQL’s own source tree, build system, or CI. Nothing below should be read as already covered by RISE.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>PostgreSQL is functionally complete on riscv64. It builds, runs, and passes the full regression test suite. The one confirmed correctness bug (IO wrong state, memory barrier reordering) has been fixed and backpatched. No functional gap prevents running a PostgreSQL database server on riscv64 hardware today.</p>
-
-<p>The only pending functional item is the Clang miscompilation bug fix (Thread 1, patch 0001), which requires a configure/meson guard preventing use of <code class="language-plaintext highlighter-rouge">rv64gcv</code> with Clang &lt; 22. This is a narrow, low-risk fix.</p>
-<h3 id="132-performance-optimization">
+<p>PostgreSQL is functionally complete on riscv64: it builds, runs, and passes the full regression test suite via the Build Farm. The one historically confirmed correctness bug in the AIO subsystem has at minimum a PostgreSQL-level workaround on record (commit <code class="language-plaintext highlighter-rouge">c5d34f4</code>), though its true current status is disputed between sources (Section 11) and needs direct re-verification. The one other pending functional item is the Clang-miscompilation guard (Section 5.1), a narrow, low-risk configure/meson check preventing <code class="language-plaintext highlighter-rouge">rv64gcv</code> builds with Clang &lt; 22.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>All architecture-specific optimizations present on arm64 and amd64 are absent on riscv64. The measured gaps from open patches are:</p>
+<p>Every architecture-specific optimization present on arm64 and amd64 is absent on riscv64, with real, author-measured gaps from open (unmerged) patches:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Subsystem</th>
-      <th>Measured Gap</th>
+      <th>Measured gap (from open-patch author testing)</th>
       <th>Status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Popcount (Zbb)</td>
-      <td>~4x slower than hardware-accelerated</td>
-      <td>Patch v4 pending, under reviewer skepticism</td>
+      <td>Software ~510 MB/s vs. Zbb ~2280 MB/s, roughly 4x</td>
+      <td>Patch v4 pending, reviewer skepticism</td>
     </tr>
     <tr>
       <td>CRC32C (Zbc)</td>
-      <td>~2000x slower than hardware-accelerated</td>
-      <td>Patch v4 pending, under reviewer skepticism</td>
+      <td>Software ~154 MB/s vs. Zbc clmul ~308,052 MB/s, roughly 2000x (GCC); roughly 1800x (Clang)</td>
+      <td>Patch v4 pending, reviewer skepticism</td>
+    </tr>
+    <tr>
+      <td>64-bit atomics</td>
+      <td>~1.67% median pgbench improvement across 130 paired runs (CAS-loop removed for aligned 64-bit access)</td>
+      <td>Patch v2 pending</td>
     </tr>
     <tr>
       <td>Spinlocks</td>
-      <td>Uses semaphore fallback instead of AMOSWAP inline asm</td>
-      <td>No patch; original spinlock used __sync builtin</td>
-    </tr>
-    <tr>
-      <td>Memory barriers</td>
-      <td>Uses generic __atomic_thread_fence; arch-riscv.h with FENCE R,R / FENCE W,W not written</td>
-      <td>No patch</td>
+      <td>Possible regression from a named, hand-tuned block back to an unnamed generic fallback (unconfirmed, Section 4)</td>
+      <td>No open patch; needs investigation first</td>
     </tr>
     <tr>
       <td>JIT (LLVM)</td>
-      <td>Disabled; segfaults in distro LLVM backends</td>
-      <td>No patch; no pgsql-hackers thread</td>
+      <td>Disabled entirely; no measured gap possible</td>
+      <td>Blocked on an open upstream LLVM bug; no PostgreSQL-side patch exists</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The CRC32C gap is the most significant for PostgreSQL workloads: CRC32C is used for WAL integrity checking on every write. A ~2000x software-to-hardware speedup means that on hardware with Zbc, WAL write throughput is currently dominated by software CRC32C computation.</p>
-
-<p>The JIT gap affects analytical workloads. There is no active upstream effort to re-enable JIT on riscv64.</p>
-<h3 id="133-cicd-infrastructure">
+<p>The CRC32C gap is the most consequential for production workloads: CRC32C guards WAL integrity on every write, so on Zbc-capable hardware, WAL write throughput is currently dominated by software CRC32C computation whenever the pending patch is not applied.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>The only riscv64 CI coverage consists of 4 volunteer-owned build farm workers. This is a single-point-of-failure structure: if those volunteers’ hardware goes offline, there is zero riscv64 coverage. There is no organizational ownership of any riscv64 CI capacity in the PostgreSQL project.</p>
-
-<p>A QEMU-based riscv64 CI job was proposed to pgsql-hackers in April 2026 (after Cirrus CI shutdown) but has not been implemented.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>No RISE-funded work targets PostgreSQL. No major chip vendor has publicly committed to PostgreSQL riscv64 investment. The build farm work is driven by one individual (Greg Burd, <code class="language-plaintext highlighter-rouge">greg@burd.me</code>) who owns both the primary Clang worker (<code class="language-plaintext highlighter-rouge">greenfly</code>) and the CRC32C/Zbb patch series.</p>
-<h3 id="135-summary-table">
+<p>The only riscv64 CI coverage consists of 4 volunteer-owned Build Farm workers; this is a single-point-of-failure structure with zero organizational ownership. GitHub Actions, PostgreSQL’s primary CI surface, has no riscv64 job class at all and no architecture-level selector to add one to without new infrastructure work. A QEMU-based riscv64 CI proposal exists on the mailing list (2026-04-14) but has not been implemented.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>No RISE-funded work targets mainline PostgreSQL; PostgreSQL is not a RISE member project. No major chip vendor has publicly committed riscv64 investment specifically to PostgreSQL. The riscv64-specific Build Farm and optimization-patch work is driven almost entirely by one individual, Greg Burd (<code class="language-plaintext highlighter-rouge">greg@burd.me</code>), who owns the primary Clang worker (<code class="language-plaintext highlighter-rouge">greenfly</code>) and authors the Zbb/Zbc and stdatomic patch series. The only organizationally-adjacent riscv64 PostgreSQL artifact found is RISE’s <code class="language-plaintext highlighter-rouge">pgserver</code> wheel, which is a separate embedded-distribution project, not mainline PostgreSQL.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1315,86 +1473,97 @@ Objects to the <code class="language-plaintext highlighter-rouge">PG_ARCH_*</cod
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Merge Clang miscompilation guard (configure/meson check for Clang &gt;= 22 on rv64gcv); resolve approach with Andres Freund and Nathan Bossart</td>
+      <td>Independently re-verify current status of “IO in wrong state on riscv64” against current <code class="language-plaintext highlighter-rouge">master</code> and the <code class="language-plaintext highlighter-rouge">greenfly</code> buildfarm animal (reconcile the “fixed via c5d34f4” vs. “active/tracked” discrepancy)</td>
       <td>1</td>
-      <td>External contributor (Greg Burd active)</td>
+      <td>No current owner</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Write <code class="language-plaintext highlighter-rouge">arch-riscv.h</code> with <code class="language-plaintext highlighter-rouge">FENCE R,R</code> / <code class="language-plaintext highlighter-rouge">FENCE W,W</code> inline asm and <code class="language-plaintext highlighter-rouge">PG_HAVE_8BYTE_SINGLE_COPY_ATOMICITY</code> declaration (noted as remaining work after Bug 1 fix)</td>
-      <td>2</td>
+      <td>Investigate whether the 2021 RISC-V-named spinlock block has actually been removed from <code class="language-plaintext highlighter-rouge">s_lock.h</code>, and restore a named, maintained block if so</td>
+      <td>1</td>
       <td>No current owner</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Merge the Clang-miscompilation guard (configure/meson check for Clang &gt;= 22 on rv64gcv); align with Greg Burd, Andres Freund, Nathan Bossart</td>
+      <td>1</td>
+      <td>External contributor (Greg Burd active)</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Unblock and merge centralized <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV</code> macro patch (resolve Tom Lane’s naming objection)</td>
+      <td>Write and merge a dedicated <code class="language-plaintext highlighter-rouge">arch-riscv.h</code> atomics header (the open RV64 atomics patch)</td>
+      <td>2</td>
+      <td>External contributor (Hongyan Wang et al., active)</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Unblock and merge the centralized <code class="language-plaintext highlighter-rouge">PG_ARCH_RISCV</code> macro patch (resolve Tom Lane’s naming objection)</td>
       <td>1</td>
       <td>No current owner</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Merge Zbc CRC32C optimization (Zbc/Zbkc required; ~2000x on WAL path); address Andres Freund’s adoption-skepticism with production data</td>
+      <td>Merge the Zbc CRC32C optimization (~2000x on the WAL integrity path); supply production-adoption evidence to address Andres Freund’s skepticism</td>
       <td>3</td>
       <td>External contributor (Greg Burd active)</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Merge Zbb popcount optimization</td>
+      <td>Merge the Zbb popcount optimization</td>
       <td>1</td>
       <td>External contributor (Greg Burd active)</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Write <code class="language-plaintext highlighter-rouge">s_lock.h</code> RISC-V spinlock (AMOSWAP inline asm); currently falls back to semaphore path</td>
-      <td>2</td>
-      <td>No current owner</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Performance</td>
-      <td>Investigate and fix LLVM JIT segfaults on riscv64; re-enable JIT in distribution packages</td>
+      <td>Investigate and fix LLVM ORC-JIT segfault/relocation bug on riscv64 (llvm/llvm-project#106203); re-enable JIT in distro packages</td>
       <td>8</td>
       <td>No current owner</td>
       <td>Low</td>
     </tr>
     <tr>
+      <td>Correctness</td>
+      <td>Resolve the RISC-V-specific correctness gaps found while prototyping <code class="language-plaintext highlighter-rouge">&lt;stdatomic.h&gt;</code> (relaxed-ordering data loss in parallel hash joins, no byte-granular atomics) before that migration proceeds</td>
+      <td>2</td>
+      <td>External contributor (Greg Burd active)</td>
+      <td>High</td>
+    </tr>
+    <tr>
       <td>CI/CD</td>
-      <td>Add QEMU-based riscv64 emulation job to <code class="language-plaintext highlighter-rouge">.github/workflows/pg-ci.yml</code> (proposal exists; no implementation)</td>
+      <td>Add a QEMU-based riscv64 emulation job to <code class="language-plaintext highlighter-rouge">.github/workflows/pg-ci.yml</code> (proposal exists, no implementation)</td>
       <td>2</td>
       <td>No current owner</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Establish organizationally owned riscv64 build farm worker with Clang (reduces single-contributor dependency)</td>
+      <td>Establish an organizationally owned riscv64 Build Farm worker with Clang, reducing single-contributor dependency on <code class="language-plaintext highlighter-rouge">greenfly</code></td>
       <td>1</td>
       <td>No current owner</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Publish riscv64 pgbench TPS benchmarks vs arm64 and x86-64 to counter Andres Freund’s adoption-skepticism argument</td>
+      <td>Publish riscv64 pgbench TPS benchmarks vs. arm64 and x86-64 to substantiate production-readiness claims and counter Andres Freund’s adoption-skepticism argument</td>
       <td>2</td>
       <td>No current owner</td>
       <td>High</td>
     </tr>
+    <tr>
+      <td>Security</td>
+      <td>Track and, where feasible, help land OpenSSL’s AES T-table constant-time fix for riscv64 (PRs #31080/#31082) given its direct impact on TLS-terminating PostgreSQL deployments</td>
+      <td>1</td>
+      <td>No current owner (OpenSSL-side work)</td>
+      <td>Medium</td>
+    </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
 <h2 id="15-references">
   
   
@@ -1405,35 +1574,53 @@ Objects to the <code class="language-plaintext highlighter-rouge">PG_ARCH_*</cod
     
 
 <ul>
-  <li><a href="https://www.postgresql.org/docs/18/supported-platforms.html">PostgreSQL 18 Supported Platforms</a></li>
-  <li><a href="https://www.postgresql.org/docs/18/install-requirements.html">PostgreSQL 18 Installation Requirements</a></li>
-  <li><a href="https://www.postgresql.org/docs/18/install-meson.html">PostgreSQL 18 Meson Build Options</a></li>
-  <li><a href="https://www.postgresql.org/docs/18/install-make.html">PostgreSQL 18 Autoconf/Make Build</a></li>
-  <li><a href="https://www.postgresql.org/docs/18/installation-platform-notes.html">PostgreSQL 18 Platform Notes</a></li>
-  <li><a href="https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&amp;arch=riscv64">PostgreSQL Build Farm riscv64 members</a></li>
-  <li><a href="https://buildfarm.postgresql.org/cgi-bin/show_status.pl">PostgreSQL Build Farm status</a></li>
-  <li><a href="https://github.com/postgres/postgres">postgres/postgres GitHub mirror</a></li>
-  <li><a href="https://github.com/postgres/postgres/commit/c5d34f4">commit c5d34f4 – Fix generic read and write barriers for Clang</a></li>
-  <li><a href="https://www.postgresql.org/message-id/ec81011b-c502-4702-b041-e4bdd2aa346f@app.fastmail.com">Thread 1 initial – Add RISC-V Zbb popcount optimization, 2026-03-22</a></li>
-  <li><a href="https://www.postgresql.org/message-id/038b2469-776f-404b-ad7e-e85f45da2166@app.fastmail.com">Thread 1 v3 – DES fix added, 2026-03-27</a></li>
-  <li><a href="https://www.postgresql.org/message-id/3a222ec2-01bb-4798-99e2-eedaf6cae19b@app.fastmail.com">Thread 1 v4 – rebase, 2026-05-27</a></li>
-  <li><a href="https://www.postgresql.org/message-id/d15fe767-e6d1-488e-915a-42794be2cb12@app.fastmail.com">Thread 1 – DES root cause final, 2026-06-01</a></li>
-  <li><a href="https://www.postgresql.org/message-id/CA+hUKG+JXKG=+U=demYXu0mVdhP3-ndf0gCk9LqRkZ03yh9qrw@mail.gmail.com">Thread 2 – IO in wrong state, initial report, 2025-10-12</a></li>
-  <li><a href="https://www.postgresql.org/message-id/w3qc4gzqywinffeglpwyxbwocpsjvh3yqqy5d42zsqhciy3yr5@tb63f2ipdzrl">Thread 2 – LLVM MachineSink identified, 2025-10-22 (Andres Freund)</a></li>
-  <li><a href="https://www.postgresql.org/message-id/CA+hUKGLJHW7QjNGpfo+yKD6GzhdVnHxaSf0QJZp4VTu7jAt68A@mail.gmail.com">Thread 2 – proposed fix, 2025-10-22 (Thomas Munro)</a></li>
-  <li><a href="https://www.postgresql.org/message-id/CA+hUKGJt82c69MwXwxCnYJTJadMmmtVqeZnApQCJPoVyOOZR1A@mail.gmail.com">Thread 2 – fix committed, 2025-11-07</a></li>
-  <li><a href="https://www.postgresql.org/message-id/CA+hUKGL8Hs-phHPugrWM=5dAkcT897rXyazYzLw-Szxnzgx-rA@mail.gmail.com">Thread 3 – Centralised architecture detection, Munro proposal, 2026-04-09</a></li>
-  <li><a href="https://www.postgresql.org/message-id/87pl482zr1.fsf@wibble.ilmari.org">Thread 3 – Dagfinn review, 2026-04-09</a></li>
-  <li><a href="https://www.postgresql.org/message-id/3100002.1780514662@sss.pgh.pa.us">Thread 3 – Tom Lane objection, 2026-06-03</a></li>
-  <li><a href="https://www.postgresql.org/message-id/CA+hUKGL_cWRzY9aA+FgfUPhdd0CciB-qOoGdnduFu6mPiNDxsQ@mail.gmail.com">Thread 4 – Cirrus CI shutdown / QEMU RISC-V CI proposal, 2026-04-14</a></li>
+  <li><a href="https://www.postgresql.org/docs/current/supported-platforms.html">PostgreSQL Supported Platforms documentation</a></li>
+  <li><a href="https://www.postgresql.org/docs/current/installation.html">PostgreSQL Installation from Source Code (Ch. 17)</a></li>
+  <li><a href="https://www.postgresql.org/docs/current/installation-platform-notes.html">PostgreSQL Installation Platform Notes</a></li>
+  <li><a href="https://www.postgresql.org/docs/current/install-make.html">PostgreSQL configure/install-make options</a></li>
+  <li><a href="https://www.postgresql.org/about/governance/">PostgreSQL governance</a></li>
+  <li><a href="https://buildfarm.postgresql.org/cgi-bin/show_members.pl?os=Linux&amp;arch=riscv64">PostgreSQL Build Farm, riscv64 members</a></li>
+  <li><a href="https://wiki.postgresql.org/wiki/Known_Buildfarm_Test_Failures">PostgreSQL Known Buildfarm Test Failures</a></li>
+  <li><a href="https://wiki.postgresql.org/wiki/Known_Buildfarm_Test_Failures_-_Archive">PostgreSQL Known Buildfarm Test Failures, Archive</a></li>
+  <li><a href="https://git.postgresql.org/gitweb/?p=postgresql.git">git.postgresql.org gitweb, PostgreSQL source tree</a></li>
+  <li><a href="https://git.postgresql.org/gitweb/?p=postgresql.git;a=commit;h=c32fcac56a212b4e6bb5ba63596f60a25a18109a">Commit c32fcac5, native RISC-V spinlock support</a></li>
+  <li><a href="https://commitfest.postgresql.org/34/3284">Commitfest #3284, Native spinlock support on RISC-V</a></li>
+  <li><a href="https://www.postgresql.org/message-id/16690.1479611287%40sss.pgh.pa.us">pgsql-bugs 2016-11-19, “PostgreSQL cannot be compiled on RISC-V”</a></li>
+  <li><a href="https://www.postgresql.org/message-id/CAEYr_8nnwxQji0pQJYqFx7%3DgSM8x7jFJi16O-bLuVYvqvkjsLg%40mail.gmail.com">pgsql-bugs thread, SiFive HiFive Unleashed spinlock failure</a></li>
+  <li><a href="https://www.postgresql.org/message-id/d79691be-22bd-457d-9d90-18033b78c40a%40gmail.com">“IO in wrong state on riscv64,” initial report</a></li>
+  <li><a href="https://www.mail-archive.com/pgsql-hackers@lists.postgresql.org/msg209326.html">“IO in wrong state on riscv64,” mail-archive mirror</a></li>
+  <li><a href="https://github.com/llvm/llvm-project/issues/106203">LLVM issue #106203, ORC-JIT relocation failure on RISC-V</a></li>
+  <li><a href="https://github.com/llvm/llvm-project/issues/164194">LLVM issue #164194, RISCV fence/load reorder on double inline</a></li>
+  <li><a href="https://github.com/llvm/llvm-project/issues/176001">LLVM issue #176001</a>, <a href="https://github.com/llvm/llvm-project/issues/187458">#187458</a>, <a href="https://github.com/llvm/llvm-project/issues/171978">#171978</a> (Clang RVV LoopVectorize miscompilation)</li>
+  <li><a href="http://www.mail-archive.com/pgsql-hackers@lists.postgresql.org/msg239174.html">“Optimize 64-bit atomic access on RV64,” v1</a></li>
+  <li><a href="http://www.mail-archive.com/pgsql-hackers@lists.postgresql.org/msg239387.html">“Optimize 64-bit atomic access on RV64,” v2</a></li>
+  <li><a href="https://github.com/MisterRaindrop/postgresql-github-mirror/pull/422">Mirror PR #422, RV64 atomics patch</a></li>
+  <li><a href="https://github.com/MisterRaindrop/postgresql-github-mirror/pull/234">Mirror PR #234, “Trying out stdatomic.h”</a></li>
+  <li><a href="https://www.postgresql.org/message-id/ec81011b-c502-4702-b041-e4bdd2aa346f@app.fastmail.com">“Add RISC-V Zbb popcount optimization,” initial, 2026-03-22</a></li>
+  <li><a href="https://www.postgresql.org/message-id/038b2469-776f-404b-ad7e-e85f45da2166@app.fastmail.com">Zbb/Zbc series v3, DES fix added</a></li>
+  <li><a href="https://www.postgresql.org/message-id/3a222ec2-01bb-4798-99e2-eedaf6cae19b@app.fastmail.com">Zbb/Zbc series v4, rebase</a></li>
+  <li><a href="https://www.postgresql.org/message-id/d15fe767-e6d1-488e-915a-42794be2cb12@app.fastmail.com">Zbb/Zbc series, DES root cause final</a></li>
+  <li><a href="https://www.postgresql.org/message-id/CA+hUKGL8Hs-phHPugrWM=5dAkcT897rXyazYzLw-Szxnzgx-rA@mail.gmail.com">“Centralised architecture detection,” Munro proposal</a></li>
+  <li><a href="https://www.postgresql.org/message-id/87pl482zr1.fsf@wibble.ilmari.org">“Centralised architecture detection,” Dagfinn review</a></li>
+  <li><a href="https://www.postgresql.org/message-id/3100002.1780514662@sss.pgh.pa.us">“Centralised architecture detection,” Tom Lane objection</a></li>
+  <li><a href="https://www.postgresql.org/message-id/CA+hUKGL_cWRzY9aA+FgfUPhdd0CciB-qOoGdnduFu6mPiNDxsQ@mail.gmail.com">QEMU RISC-V CI proposal, Thomas Munro, 2026-04-14</a></li>
   <li><a href="https://www.postgresql.org/search/?m=1&amp;ln=pgsql-hackers&amp;q=riscv">pgsql-hackers RISC-V search</a></li>
   <li><a href="https://packages.debian.org/trixie/riscv64/postgresql-17/download">Debian trixie postgresql-17 riscv64 download page</a></li>
   <li><a href="https://packages.ubuntu.com/noble/postgresql-16">Ubuntu noble postgresql-16</a></li>
-  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
-  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE RISC-V Runners: Six Weeks In, 2026-05-12</a></li>
-  <li><a href="https://github.com/docker-library/postgres/pull/1345">docker-library/postgres PR #1345 – disable JIT on riscv64</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/postgresql-18">Ubuntu resolute postgresql-18</a></li>
+  <li><a href="https://github.com/docker-library/postgres/pull/1345">docker-library/postgres PR #1345, disable JIT on riscv64</a></li>
   <li><a href="https://github.com/anarazel/pg-vm-images">anarazel/pg-vm-images CI infrastructure</a></li>
-  <li><a href="https://github.com/facebook/zstd/issues/4622">Facebook zstd#4622 – 4-way decompression loop not enabled on riscv64</a></li>
+  <li><a href="https://github.com/facebook/zstd/issues/4622">Facebook zstd#4622, 4-way decompression loop not enabled on riscv64</a></li>
+  <li><a href="https://gitlab.gnome.org/GNOME/libxml2/-/issues/971">GNOME libxml2#971, relaxed-atomics race on weakly-ordered architectures</a></li>
+  <li><a href="https://sourceware.org/bugzilla/show_bug.cgi?id=33911">sourceware glibc bug #33911, static-pie SIGSEGV on riscv64/glibc 2.43 under QEMU</a></li>
+  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
+  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE RISC-V Runners, six weeks in, 2026-05-12</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners launch post, 2026-03-24</a></li>
+  <li><a href="https://riscv-runners.riseproject.dev/docs/architecture/ghfe">RISE Runners architecture docs</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/pull/2276">riseproject-dev/python-wheels PR #2276, pgserver 0.1.4</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/releases/tag/pgserver-v0.1.4-20260928155916">riseproject-dev/python-wheels release, pgserver-v0.1.4-20260928155916</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel builder doc page</a></li>
+  <li><a href="https://riscv.org/blog/risc-v-public-beta-platform-release-%C2%B7-database-adaptation-evaluation-on-risc-v-server/">RISC-V International, Database Adaptation Evaluation On RISC-V server</a></li>
 </ul>
 
           
