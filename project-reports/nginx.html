@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-10-01<br />
+<strong>Readiness:</strong> yellow (clean-distro-build)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for nginx<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,16 +280,11 @@
 </h2>
     
 
-<p>nginx is a high-performance HTTP server, reverse proxy, and load balancer. The source repository is at <a href="https://github.com/nginx/nginx">github.com/nginx/nginx</a> (the original Mercurial hosting at hg.nginx.org is decommissioned). The project is licensed under BSD-2-Clause. nginx is a corporate open-source project owned by F5, Inc., which acquired NGINX, Inc. in 2019. Contributions require signing the F5 CLA. There is no independent foundation governance and no CNCF or Linux Foundation membership.</p>
+<p>nginx is a high-performance HTTP server, reverse proxy, and load balancer. The source repository is at <a href="https://github.com/nginx/nginx">github.com/nginx/nginx</a>, a read-only GitHub mirror of nginx’s own Mercurial/Trac-based upstream development (hg.nginx.org / trac.nginx.org); GitHub issues and pull requests are not nginx’s primary contribution channel. The project is licensed under 2-clause BSD. nginx is a corporate open-source project stewarded by F5, Inc., which acquired NGINX, Inc. in 2019; contributions require an F5 CLA (enforced by the <code class="language-plaintext highlighter-rouge">f5_cla.yml</code> workflow). There is no independent foundation governance and no CNCF or Linux Foundation membership. Publicly enumerable maintainer/company data could not be retrieved in this pass because <code class="language-plaintext highlighter-rouge">mcp__github__get_file_contents</code> and <code class="language-plaintext highlighter-rouge">list_commits</code> are both access-restricted against <code class="language-plaintext highlighter-rouge">nginx/nginx</code> in the research session used; historically, core nginx development has been dominated by F5/NGINX Inc. employees [NEEDS VERIFICATION].</p>
 
-<p>As of 2026-06-17, the current upstream releases are:</p>
+<p>nginx.org ships only source tarballs for every architecture; there is no architecture-specific pre-built binary from nginx.org for any platform, riscv64 included (<a href="https://nginx.org/en/linux_packages.html">nginx.org/en/linux_packages.html</a>).</p>
 
-<ul>
-  <li>Mainline: 1.31.2 (released 2026-06-17)</li>
-  <li>Stable: 1.30.3 (released 2026-06-17)</li>
-</ul>
-
-<p>nginx upstream ships source tarballs only. There are no official architecture-specific pre-built binaries for riscv64 from nginx.org. Official pre-built packages from <a href="https://nginx.org/en/linux_packages.html">nginx.org/en/linux_packages.html</a> cover x86_64 and aarch64 only.</p><hr />
+<p>Community stance on riscv64 specifically is absent rather than hostile: there is no RISC-V tracking issue in the core repository, no mailing-list thread, and no documented policy for or against new architecture ports. The codebase is portable C with essentially no architecture-conditional logic, so the question of “supporting” a new architecture has never required an explicit upstream decision.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -298,25 +294,38 @@
 </h2>
     
 
-<p>There is no upstream RISC-V port history. The complete record of riscv64-related upstream activity is:</p>
+<p>There is no upstream RISC-V porting effort to document. The complete record of riscv64-related upstream activity:</p>
 
-<ul>
-  <li>Zero patches submitted via the nginx-devel mailing list (archives checked for January and September of each year from 2020 through 2025).</li>
-  <li>Zero issues or pull requests referencing riscv or riscv64 in the <a href="https://github.com/nginx/nginx">github.com/nginx/nginx</a> tracker (0 open, 0 closed).</li>
-  <li>Zero entries in the <a href="https://trac.nginx.org">trac.nginx.org</a> tracker for riscv (explicitly returned “No matches found”).</li>
-</ul>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Event</th>
+      <th>Source</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Unknown</td>
+      <td>A <code class="language-plaintext highlighter-rouge">riscv64</code> case arm added to <code class="language-plaintext highlighter-rouge">auto/os/conf</code> setting <code class="language-plaintext highlighter-rouge">NGX_ALIGNMENT=16</code> and <code class="language-plaintext highlighter-rouge">NGX_MACH_CACHE_LINE=64</code></td>
+      <td><a href="https://github.com/nginx/nginx/blob/master/auto/os/conf">auto/os/conf</a></td>
+    </tr>
+    <tr>
+      <td>2018-04-04</td>
+      <td>Debian builds nginx 1.13.10-1 successfully on riscv64 (earliest confirmed build), meaning the generic GCC atomic fallback path was already sufficient for packaging</td>
+      <td><a href="https://buildd.debian.org/status/logs.php?pkg=nginx&amp;arch=riscv64">buildd.debian.org nginx riscv64 history</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-03 to 2026-09-07</td>
+      <td>GitHub issue #1725, “RISC-V vector optimization for ngx_strstrn()”, proposed RVV 1.0 intrinsics for the User-Agent substring-search routine targeting the SpacemiT K3/X100 SoC; author explicitly stated no validated before/after benchmarks existed; closed by maintainers as <code class="language-plaintext highlighter-rouge">not_planned</code> after 2 comments, no patch merged</td>
+      <td><a href="https://github.com/nginx/nginx/issues/1725">nginx/nginx#1725</a></td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>The single upstream entry with any riscv64 content is one case block in <code class="language-plaintext highlighter-rouge">auto/os/conf</code>:</p>
+<p>Live <code class="language-plaintext highlighter-rouge">search_issues</code>, <code class="language-plaintext highlighter-rouge">search_pull_requests</code>, and <code class="language-plaintext highlighter-rouge">search_commits</code> queries for <code class="language-plaintext highlighter-rouge">"riscv"</code> and <code class="language-plaintext highlighter-rouge">"riscv64"</code> against <code class="language-plaintext highlighter-rouge">nginx/nginx</code> all return zero results beyond issue #1725 above. No commit, patch, or contributor has ever added riscv64-specific source code (as opposed to the one build-config constant). There are no “key contributors” to identify because no riscv64 port exists; the architecture is fully upstream in the sense that nothing downstream patches core nginx source to make it work, it simply compiles via nginx’s existing portable-C and generic-compiler-builtin code paths.</p>
 
-<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>riscv64<span class="o">)</span>
-    <span class="nv">have</span><span class="o">=</span>NGX_ALIGNMENT <span class="nv">value</span><span class="o">=</span>16 <span class="nb">.</span> auto/define
-    <span class="nv">NGX_MACH_CACHE_LINE</span><span class="o">=</span>64
-<span class="p">;;</span>
-</code></pre></div></div>
-
-<p>This sets 16-byte memory alignment and a 64-byte cache line size at build configuration time. No commit date or authorship information for this entry was retrievable from the research. This is the entirety of upstream riscv64 acknowledgment.</p>
-
-<p>Debian build history at <a href="https://buildd.debian.org/status/logs.php?pkg=nginx&amp;arch=riscv64">buildd.debian.org</a> shows nginx has built successfully on riscv64 since version 1.13.10-1 (2018-04-04), which means the generic GCC atomic fallback path has been sufficient for distribution packaging for at least eight years, with zero upstream engagement on the architecture during that time.</p><hr />
+<p>Two closed, response-free downstream enhancement requests exist in adjacent (non-core) nginx-org repositories, both asking for riscv64 Docker image builds: <a href="https://github.com/nginx/docker-nginx/issues/986">nginx/docker-nginx#986</a> (“Provide riscv64 build”) and <a href="https://github.com/nginx/docker-nginx-unprivileged/issues/91">nginx/docker-nginx-unprivileged#91</a> (“RISC-V support”). Neither received a maintainer response or a linked PR; both are closed.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -326,9 +335,52 @@
 </h2>
     
 
-<p>nginx has no formal tier policy for architecture support. The <code class="language-plaintext highlighter-rouge">--with-cpu-opt</code> flag documents only the following CPU targets: pentium, pentiumpro, pentium3, pentium4, athlon, opteron, sparc32, sparc64, ppc64. CONTRIBUTING.md states changes “should work properly on a wide range of supported platforms” but defines no tier hierarchy.</p>
+<p>nginx has no formal tier policy for architecture support. The <code class="language-plaintext highlighter-rouge">--with-cpu-opt</code> configure flag documents only pentium, pentiumpro, pentium3, pentium4, athlon, opteron, sparc32, sparc64, ppc64 as tunable CPU targets; riscv64 is not among them. CONTRIBUTING.md asks that changes “work properly on a wide range of supported platforms” but defines no hierarchy of tiers.</p>
 
-<p>riscv64 is, in practice, an untested secondary platform: it builds and runs via the generic GCC atomic builtin fallback path, but has no dedicated atomic implementation, no CI coverage, no <code class="language-plaintext highlighter-rouge">-march=</code> tuning, and no upstream maintainer ownership. The project has shown zero engagement with any riscv64 port proposal.</p><hr />
+<p>In practice riscv64 is an untested, non-CI-covered, non-release-blocking platform:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Signal</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Hand-tuned atomic ops</td>
+      <td>Yes</td>
+      <td>No (generic builtins)</td>
+      <td>No (generic builtins)</td>
+    </tr>
+    <tr>
+      <td>Official pre-built binary from nginx.org</td>
+      <td>No (source only)</td>
+      <td>No (source only)</td>
+      <td>No (source only)</td>
+    </tr>
+    <tr>
+      <td>Covered by nginx’s own CI (<code class="language-plaintext highlighter-rouge">nginx/ci-self-hosted</code>)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Upstream tracking issue ever filed</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>None (one proposal, #1725, closed not_planned)</td>
+    </tr>
+    <tr>
+      <td>Distro packaging</td>
+      <td>Primary archive</td>
+      <td>Primary archive</td>
+      <td>Ports/secondary archive only (Ubuntu), Arch RISC-V community port</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -338,54 +390,53 @@
 </h2>
     
 
-<p>nginx has no assembly code anywhere in its source tree. There is no JIT compiler. There is no SIMD dispatch infrastructure. The only architecture-specific code in the entire project is the inline atomic operation headers for x86, amd64, SPARC64, and PowerPC, plus the cache-line/alignment case block in <code class="language-plaintext highlighter-rouge">auto/os/conf</code>.</p>
+<p>nginx has no assembly files anywhere in its source tree (confirmed by a full repository tree search: zero <code class="language-plaintext highlighter-rouge">.S</code> files, for any architecture, and zero <code class="language-plaintext highlighter-rouge">arch/</code> directories). There is no JIT compiler and no SIMD dispatch infrastructure in nginx core. The only architecture-specific code in the entire project is a small set of inline atomic-operation headers for x86, amd64, SPARC64, and PowerPC, plus the one build-config case arm in <code class="language-plaintext highlighter-rouge">auto/os/conf</code>.</p>
 
-<p><strong>Atomic operations</strong></p>
-
-<p><code class="language-plaintext highlighter-rouge">src/os/unix/ngx_atomic.h</code> is a cascading <code class="language-plaintext highlighter-rouge">#if</code>/<code class="language-plaintext highlighter-rouge">#elif</code> chain that dispatches to architecture-specific headers based on compiler predefined macros:</p>
+<p><strong>Atomic operations.</strong> <code class="language-plaintext highlighter-rouge">src/os/unix/ngx_atomic.h</code> dispatches to architecture-specific headers via compiler predefined macros:</p>
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">__i386__</code> - <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_x86.h</code></li>
-  <li><code class="language-plaintext highlighter-rouge">__amd64__</code> - <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_amd64.h</code></li>
-  <li><code class="language-plaintext highlighter-rouge">__sparc__</code> - <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_sparc64.h</code></li>
-  <li><code class="language-plaintext highlighter-rouge">__powerpc__</code> - <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_ppc.h</code></li>
+  <li><code class="language-plaintext highlighter-rouge">__i386__</code> -&gt; <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_x86.h</code></li>
+  <li><code class="language-plaintext highlighter-rouge">__amd64__</code> -&gt; <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_amd64.h</code></li>
+  <li><code class="language-plaintext highlighter-rouge">__sparc__</code> -&gt; <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_sparc64.h</code></li>
+  <li><code class="language-plaintext highlighter-rouge">__powerpc__</code> -&gt; <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_ppc.h</code></li>
 </ul>
 
-<p>None of these macros fire on riscv64. There is no <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_riscv.h</code> file and no <code class="language-plaintext highlighter-rouge">__riscv</code> branch. The architecture falls through to the <code class="language-plaintext highlighter-rouge">NGX_HAVE_GCC_ATOMIC</code> path, which uses <code class="language-plaintext highlighter-rouge">__sync_bool_compare_and_swap</code>, <code class="language-plaintext highlighter-rouge">__sync_fetch_and_add</code>, and <code class="language-plaintext highlighter-rouge">__sync_synchronize</code>. On riscv64, GCC emits <code class="language-plaintext highlighter-rouge">lr.d</code>/<code class="language-plaintext highlighter-rouge">sc.d</code> A-extension instructions with acquire/release semantics for these builtins. This is correct and thread-safe but is generic compiler output rather than hand-tuned assembly.</p>
+<p>None of these macros fire on riscv64 (confirmed live: <code class="language-plaintext highlighter-rouge">riscv path:src repo:nginx/nginx</code> code search returns zero matches). riscv64 falls through to the generic <code class="language-plaintext highlighter-rouge">NGX_HAVE_GCC_ATOMIC</code> path, using <code class="language-plaintext highlighter-rouge">__sync_bool_compare_and_swap</code>, <code class="language-plaintext highlighter-rouge">__sync_fetch_and_add</code>, and <code class="language-plaintext highlighter-rouge">__sync_synchronize</code>. GCC lowers these to <code class="language-plaintext highlighter-rouge">lr.d</code>/<code class="language-plaintext highlighter-rouge">sc.d</code> (A-extension) instructions with the correct acquire/release semantics. This is the same tier of support arm64 receives: arm64 also has zero dedicated atomic assembly files and uses the identical generic-builtin path, so riscv64 is not an inferior or stub implementation relative to arm64, it is architecturally identical to it. The four hand-tuned architectures (x86, amd64, SPARC64, PowerPC) predate GCC’s <code class="language-plaintext highlighter-rouge">__sync</code> builtins being considered reliable (circa 2004); modern targets including arm64 and riscv64 were never given bespoke assembly because the compiler-generated path is sufficient.</p>
 
-<p><strong>CPU pause / spinlock hint</strong></p>
+<p><strong>CPU pause / spinlock hint.</strong> <code class="language-plaintext highlighter-rouge">ngx_cpu_pause()</code> expands to the x86 <code class="language-plaintext highlighter-rouge">PAUSE</code> instruction on x86/amd64. No equivalent is defined for riscv64; the macro expands to nothing. This is a potential performance gap under high spinlock contention across worker processes, not a correctness issue. The RISC-V <code class="language-plaintext highlighter-rouge">WRS.NTO</code> hint instruction is not used anywhere in nginx.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">ngx_cpu_pause()</code> macro expands to the x86 <code class="language-plaintext highlighter-rouge">PAUSE</code> instruction on x86/amd64. On riscv64, no equivalent is defined; the macro produces nothing. This is a performance gap under high spinlock contention, not a correctness bug. The RISC-V <code class="language-plaintext highlighter-rouge">WRS.NTO</code> hint instruction (Wait-on-Reservation Set, Non-blocking Timeout) is not used.</p>
+<p><strong>Cache line and alignment.</strong> The sole riscv64-aware line in the entire codebase:</p>
 
-<p><strong>Cache line and alignment</strong></p>
-
-<p>The <code class="language-plaintext highlighter-rouge">auto/os/conf</code> case block sets <code class="language-plaintext highlighter-rouge">NGX_ALIGNMENT=16</code> and <code class="language-plaintext highlighter-rouge">NGX_MACH_CACHE_LINE=64</code> for riscv64. The 64-byte value matches common RISC-V implementations (SiFive U74, Alibaba T-Head). This is a shell build script entry; it affects memory alignment macros only and involves no assembly or intrinsics.</p>
-
-<p><strong>Summary by component</strong></p>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>riscv64<span class="o">)</span>
+    <span class="nv">have</span><span class="o">=</span>NGX_ALIGNMENT <span class="nv">value</span><span class="o">=</span>16 <span class="nb">.</span> auto/define
+    <span class="nv">NGX_MACH_CACHE_LINE</span><span class="o">=</span>64
+<span class="p">;;</span>
+</code></pre></div></div>
+<p>(<a href="https://github.com/nginx/nginx/blob/master/auto/os/conf">auto/os/conf</a>, one <code class="language-plaintext highlighter-rouge">case</code> arm among roughly ten architectures including i386, amd64, sparc, ia64, aarch64, ppc64, s390x, loongarch64). This sets 16-byte alignment and a 64-byte cache line, identical treatment to the <code class="language-plaintext highlighter-rouge">aarch64 | arm64</code> arm immediately above it in the same file. This is build-time configuration only, not assembly or intrinsics, and it is the complete and only RISC-V-aware code path in nginx; it is not a stub awaiting further work, because no further work is architecturally necessary.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Subsystem</th>
-      <th>Implementation on riscv64</th>
+      <th>riscv64 implementation</th>
       <th>Gap vs amd64</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>CAS (compare-and-swap)</td>
-      <td>GCC <code class="language-plaintext highlighter-rouge">__sync_bool_compare_and_swap</code></td>
-      <td>No hand-tuned <code class="language-plaintext highlighter-rouge">lr.d</code>/<code class="language-plaintext highlighter-rouge">sc.d</code> assembly</td>
+      <td>Compare-and-swap</td>
+      <td>GCC <code class="language-plaintext highlighter-rouge">__sync_bool_compare_and_swap</code> (<code class="language-plaintext highlighter-rouge">lr.d</code>/<code class="language-plaintext highlighter-rouge">sc.d</code>)</td>
+      <td>No hand-tuned assembly (same as arm64)</td>
     </tr>
     <tr>
       <td>Fetch-and-add</td>
       <td>GCC <code class="language-plaintext highlighter-rouge">__sync_fetch_and_add</code></td>
-      <td>No hand-tuned assembly</td>
+      <td>No hand-tuned assembly (same as arm64)</td>
     </tr>
     <tr>
       <td>Memory barrier</td>
       <td>GCC <code class="language-plaintext highlighter-rouge">__sync_synchronize</code></td>
-      <td>No hand-tuned fence</td>
+      <td>No hand-tuned fence (same as arm64)</td>
     </tr>
     <tr>
       <td>CPU pause hint</td>
@@ -394,31 +445,26 @@
     </tr>
     <tr>
       <td>Cache line size</td>
-      <td>64 bytes (build-system config)</td>
+      <td>64 bytes (build-config constant)</td>
       <td>Matches hardware; no gap</td>
     </tr>
     <tr>
       <td>Memory alignment</td>
-      <td>16 bytes (build-system config)</td>
-      <td>Correct for RISC-V ABI</td>
+      <td>16 bytes (build-config constant)</td>
+      <td>Correct for the RISC-V ABI</td>
     </tr>
     <tr>
       <td>Assembly files</td>
-      <td>None (nginx has no <code class="language-plaintext highlighter-rouge">.S</code> files)</td>
-      <td>No gap (no arch has them)</td>
-    </tr>
-    <tr>
-      <td>JIT</td>
-      <td>None (nginx has no JIT)</td>
+      <td>None (nginx has none for any arch)</td>
       <td>No gap</td>
     </tr>
     <tr>
-      <td>SIMD</td>
-      <td>None (nginx has no SIMD)</td>
+      <td>JIT / SIMD</td>
+      <td>None (nginx has neither for any arch)</td>
       <td>No gap</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -428,37 +474,29 @@
 </h2>
     
 
-<p>nginx uses a custom shell-based build system. The entry point is <code class="language-plaintext highlighter-rouge">auto/configure</code>, which generates a Makefile. CMake is not used.</p>
-
-<p><strong>Key riscv64 configure flags</strong></p>
-
-<p>The Debian packaging for nginx on riscv64 uses the following flags specific to the architecture:</p>
+<p>nginx uses a hand-written, shell-based configure system, not autoconf/automake and not CMake. There is no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> anywhere in the repository, no <code class="language-plaintext highlighter-rouge">cmake/</code> directory, no Dockerfile of any kind, and no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>/cross-compilation documentation. The only root-level docs are README.md, CONTRIBUTING.md, SECURITY.md, SUPPORT.md, and CODE_OF_CONDUCT.md.</p>
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">--override-machine=riscv64</code>: overrides <code class="language-plaintext highlighter-rouge">uname -m</code> for architecture detection. This is required because nginx’s configure uses <code class="language-plaintext highlighter-rouge">uname -m</code> to identify the CPU. Without this flag, cross-compilation environments or emulated builds report the wrong machine string.</li>
-  <li><code class="language-plaintext highlighter-rouge">--override-system=Linux</code>: overrides <code class="language-plaintext highlighter-rouge">uname -s</code>.</li>
-  <li><code class="language-plaintext highlighter-rouge">--override-release=3.16.0</code>: sets a conservative kernel compatibility floor. Actual riscv64 Debian build hosts run Linux 6.12.74+deb13+1-riscv64.</li>
+  <li>Entry point: <code class="language-plaintext highlighter-rouge">auto/configure</code>, a POSIX shell script. (The GitHub mirror has no root-level <code class="language-plaintext highlighter-rouge">configure</code> wrapper; official release tarballs do.)</li>
+  <li>Supporting logic lives under <code class="language-plaintext highlighter-rouge">auto/</code>: <code class="language-plaintext highlighter-rouge">auto/cc/*</code> (compiler-specific flags), <code class="language-plaintext highlighter-rouge">auto/os/conf</code> (per-architecture tuning, including the riscv64 arm above), <code class="language-plaintext highlighter-rouge">auto/options</code>, <code class="language-plaintext highlighter-rouge">auto/modules</code>, <code class="language-plaintext highlighter-rouge">auto/lib/*</code> (bundled PCRE2/zlib/OpenSSL build glue).</li>
+  <li><code class="language-plaintext highlighter-rouge">auto/configure</code> generates a <code class="language-plaintext highlighter-rouge">Makefile</code> under <code class="language-plaintext highlighter-rouge">objs/</code>; <code class="language-plaintext highlighter-rouge">make</code> compiles; <code class="language-plaintext highlighter-rouge">make install</code> installs to <code class="language-plaintext highlighter-rouge">/usr/local/nginx/</code> by default.</li>
+  <li>No <code class="language-plaintext highlighter-rouge">--host=</code> cross-compilation triple is supported by <code class="language-plaintext highlighter-rouge">auto/configure</code>; <code class="language-plaintext highlighter-rouge">--build=NAME</code> is a cosmetic build-name tag only, not a toolchain selector. No QEMU reference exists anywhere in the repository.</li>
 </ul>
 
-<p>These three flags are the complete set of riscv64-specific build machinery. There is no native riscv64 configure preset and no riscv64 detection in <code class="language-plaintext highlighter-rouge">auto/cc/gcc</code>.</p>
+<p>Practical native build on riscv64:</p>
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/nginx/nginx.git
+<span class="nb">cd </span>nginx
+<span class="nb">sudo </span>apt <span class="nb">install </span>gcc make libpcre3-dev zlib1g-dev libssl-dev
+auto/configure <span class="nt">--with-http_ssl_module</span>
+make
+<span class="nb">sudo </span>make <span class="nb">install</span>
+</code></pre></div></div>
 
-<p><strong>Compiler requirements</strong></p>
+<p>Debian’s riscv64 packaging adds three generic cross-build override flags, not riscv64-specific source patches: <code class="language-plaintext highlighter-rouge">--override-machine=riscv64</code> (nginx’s configure uses <code class="language-plaintext highlighter-rouge">uname -m</code> for architecture detection, so this is needed under emulated/cross environments), <code class="language-plaintext highlighter-rouge">--override-system=Linux</code>, and <code class="language-plaintext highlighter-rouge">--override-release=3.16.0</code> (a conservative kernel compatibility floor; actual riscv64 Debian build hosts run newer kernels). These are the complete set of riscv64-specific build machinery; there is no native riscv64 configure preset.</p>
 
-<p><code class="language-plaintext highlighter-rouge">auto/cc/gcc</code> has explicit <code class="language-plaintext highlighter-rouge">-march=</code> entries for pentium, pentiumpro, athlon, opteron, sparc32, sparc64, and ppc64. There is no riscv64 entry. Builds on riscv64 use the compiler’s default optimization level (<code class="language-plaintext highlighter-rouge">-O</code>) with no <code class="language-plaintext highlighter-rouge">-march=</code> tuning.</p>
+<p><strong>Toolchain requirements.</strong> <code class="language-plaintext highlighter-rouge">auto/cc/gcc</code> defines explicit <code class="language-plaintext highlighter-rouge">-march=</code> entries for pentium, pentiumpro, athlon, opteron, sparc32, sparc64, and ppc64, but none for riscv64; riscv64 builds use the compiler’s default optimization level with no architecture tuning. No explicit minimum GCC/Clang version is enforced by <code class="language-plaintext highlighter-rouge">auto/configure</code> for riscv64; <code class="language-plaintext highlighter-rouge">auto/cc/conf</code> only branches on very old GCC versions (2.7x, 2.x) for unrelated historical compiler-bug workarounds. In practice, GCC 7+ (first GCC release with a riscv64 backend) or Clang 9+ (when riscv64 Linux target support stabilized) will build nginx; this is a general toolchain-maturity fact, not something nginx’s own documentation states. <code class="language-plaintext highlighter-rouge">--with-libatomic</code> is unnecessary on riscv64 because the RISC-V A extension is mandatory in the rv64gc baseline, so the GCC atomic builtins fire without libatomic_ops.</p>
 
-<p>The minimum toolchain requirement for riscv64 is GCC 7+ (the first GCC release with a riscv64 backend) and the compiler must support <code class="language-plaintext highlighter-rouge">__sync_bool_compare_and_swap</code> (available since GCC 4.1, so not a constraint in practice). Verified working: GCC 15.2.0 on Debian sid riscv64. Clang is also supported via <code class="language-plaintext highlighter-rouge">auto/cc/clang</code>.</p>
-
-<p><strong>libatomic</strong></p>
-
-<p><code class="language-plaintext highlighter-rouge">--with-libatomic</code> is not needed on riscv64. The RISC-V A extension (atomic instructions) is mandatory in the rv64gc baseline, so <code class="language-plaintext highlighter-rouge">NGX_HAVE_GCC_ATOMIC</code> fires at configure time via GCC builtins without requiring libatomic_ops.</p>
-
-<p><strong>Build dependencies</strong></p>
-
-<p>All build dependencies from Debian’s <code class="language-plaintext highlighter-rouge">debian/control</code> (libexpat-dev, libgd-dev, libgeoip-dev, libpcre2-dev, libperl-dev, libssl-dev, libxslt1-dev, zlib1g-dev) are available on riscv64 in Debian sid with no architecture restrictions.</p>
-
-<p><strong>Modules to avoid on riscv64</strong></p>
-
-<p>LuaJIT-based modules (<code class="language-plaintext highlighter-rouge">lua-nginx-module</code> and similar) must not be used on riscv64. LuaJIT has no riscv64 JIT backend; the result is a non-functional module. Debian’s packaging rules explicitly gate Lua module builds on architecture (gating ppc64le and s390x; riscv64 has the same constraint). Use interpreter-only LuaJIT 2.1 or avoid Lua modules entirely.</p><hr />
+<p><strong>Modules to avoid on riscv64.</strong> LuaJIT-based modules (<code class="language-plaintext highlighter-rouge">lua-nginx-module</code> and similar OpenResty components) must not be used on riscv64; see Section 9 for detail.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -480,44 +518,50 @@
   <tbody>
     <tr>
       <td>Hand-tuned atomic CAS</td>
-      <td>Yes (<code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_amd64.h</code>)</td>
-      <td>Via GCC builtins</td>
-      <td>Via GCC builtins</td>
+      <td>Yes</td>
+      <td>No (GCC builtins)</td>
+      <td>No (GCC builtins)</td>
     </tr>
     <tr>
       <td>CPU pause hint in spinlock</td>
-      <td>Yes (<code class="language-plaintext highlighter-rouge">PAUSE</code> instruction)</td>
-      <td>Partial (GCC builtin or <code class="language-plaintext highlighter-rouge">yield</code>)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">PAUSE</code>)</td>
+      <td>Partial</td>
       <td>None</td>
     </tr>
     <tr>
-      <td>Architecture-specific <code class="language-plaintext highlighter-rouge">-march=</code> flag</td>
-      <td>Yes (<code class="language-plaintext highlighter-rouge">pentium</code>, <code class="language-plaintext highlighter-rouge">opteron</code>, etc.)</td>
+      <td>Architecture-specific <code class="language-plaintext highlighter-rouge">-march=</code> flag in build system</td>
+      <td>Yes</td>
       <td>Not in upstream build system</td>
       <td>Not in upstream build system</td>
     </tr>
     <tr>
-      <td>Official pre-built packages from nginx.org</td>
+      <td>Official pre-built package from nginx.org</td>
+      <td>No (source only)</td>
+      <td>No (source only)</td>
+      <td>No (source only)</td>
+    </tr>
+    <tr>
+      <td>Upstream CI coverage</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>CI coverage</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
+      <td>Upstream riscv64 tracking issue</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>One, closed not_planned (#1725)</td>
     </tr>
     <tr>
-      <td>Upstream issue tracker entry</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>None</td>
+      <td>Distro binary availability</td>
+      <td>Primary archive</td>
+      <td>Primary archive</td>
+      <td>Secondary/ports archive (Ubuntu); community port (Arch RISC-V)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The functional gap between riscv64 and arm64 on nginx is narrow: both use GCC-generated atomics rather than hand-written assembly (nginx’s hand-tuned atomic headers cover only x86-family, SPARC64, and PowerPC). The cpu_pause gap is real but affects only spinlock-heavy multi-worker configurations under high contention. The HTTP/3 test failure documented in the Arch RISC-V build logs (see Section 11) is the only known behavioral difference.</p><hr />
+<p>The functional gap between riscv64 and arm64 is narrow: both rely on GCC-generated atomics rather than hand-written assembly. The <code class="language-plaintext highlighter-rouge">cpu_pause</code> gap is real but affects only spinlock-heavy, multi-worker configurations under high contention; it has not been shown to be a practical bottleneck (no benchmark exists either way, see Section 14.2). No NaN/floating-point semantics issue tied to nginx on riscv64 was found anywhere (GitHub search, web search); none of nginx’s own code performs float/double arithmetic in a way sensitive to RISC-V NaN-boxing. Security-hardening gaps exist one dependency layer down (see OpenSSL in Section 9), not in nginx core itself.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -527,11 +571,48 @@
 </h2>
     
 
-<p>nginx’s CI is defined in <a href="https://github.com/nginx/ci-self-hosted">nginx/ci-self-hosted</a>. The main workflow is <code class="language-plaintext highlighter-rouge">.github/workflows/nginx-buildbot.yml</code>, which defines a matrix of 19 operating systems (Alpine, Amazon Linux, Debian, FreeBSD, RHEL, SLES, Ubuntu, Windows, and others) against exactly two architectures: <code class="language-plaintext highlighter-rouge">amd64</code> and <code class="language-plaintext highlighter-rouge">arm64</code>.</p>
+<p>nginx core has no riscv64 CI, confirmed directly in this pass via GitHub’s <code class="language-plaintext highlighter-rouge">search_code</code> endpoint (not scoped to the research session’s repository allowlist, so it was usable against <code class="language-plaintext highlighter-rouge">nginx/nginx</code> even though file-read tools were blocked):</p>
 
-<p>riscv64 is absent from this matrix entirely. There is no QEMU-based riscv64 build job, no physical board runner, no RISE runner integration, and no commented-out riscv64 placeholder. The string <code class="language-plaintext highlighter-rouge">riscv64</code> does not appear anywhere in any nginx CI configuration file.</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">repo:nginx/nginx path:.github/workflows</code> enumerates exactly 8 workflow files: <code class="language-plaintext highlighter-rouge">stale.yaml</code>, <code class="language-plaintext highlighter-rouge">f5_cla.yml</code>, <code class="language-plaintext highlighter-rouge">check-pr.yml</code>, <code class="language-plaintext highlighter-rouge">buildbot.yml</code>, <code class="language-plaintext highlighter-rouge">check-whitespace.yaml</code>, <code class="language-plaintext highlighter-rouge">new-issue-welcome.yaml</code>, <code class="language-plaintext highlighter-rouge">check-version-bump.yaml</code>, <code class="language-plaintext highlighter-rouge">check-commit-message.yaml</code>. These are PR/issue hygiene bots (CLA check, whitespace check, commit-message/version-bump checks, stale-issue bot, welcome bot) plus a buildbot trigger, none is a build/test matrix and none mentions any CPU architecture.</li>
+  <li><code class="language-plaintext highlighter-rouge">riscv path:.github/workflows repo:nginx/nginx</code> and <code class="language-plaintext highlighter-rouge">riscv64 path:.github repo:nginx/nginx</code> both return 0 results.</li>
+  <li>Every job across those 8 files that declares a runner uses <code class="language-plaintext highlighter-rouge">runs-on: ubuntu-24.04</code> (standard x86_64 GitHub-hosted runner); there is no arm, riscv, or self-hosted/dedicated-architecture runner anywhere in <code class="language-plaintext highlighter-rouge">.github/workflows</code>.</li>
+  <li>The actual build/test matrix is delegated to a private, non-public reusable workflow, <code class="language-plaintext highlighter-rouge">nginx/ci-self-hosted/.github/workflows/nginx-buildbot.yml@main</code>, which this session could not read directly. Per the prior investigation this matrix covers roughly 19 operating systems (Alpine, Amazon Linux, Debian, FreeBSD, RHEL, SLES, Ubuntu, Windows, and others) against exactly two architectures, amd64 and arm64 [NEEDS VERIFICATION: not re-read live this pass, access to <code class="language-plaintext highlighter-rouge">nginx/ci-self-hosted</code> is blocked in this session].</li>
+  <li><code class="language-plaintext highlighter-rouge">org:nginx riscv</code> (repo-wide across the entire nginx GitHub org) returns 11 hits, all outside <code class="language-plaintext highlighter-rouge">nginx/nginx</code>: the Docker image repos (<code class="language-plaintext highlighter-rouge">nginx/docker-nginx</code>, <code class="language-plaintext highlighter-rouge">nginx/docker-nginx-unprivileged</code>) and <code class="language-plaintext highlighter-rouge">nginx/nginx-prometheus-exporter</code> list riscv64 as a Docker Buildx target platform (image publishing, not engine CI), plus unrelated <code class="language-plaintext highlighter-rouge">package-lock.json</code> transitive npm dependency noise in two other repos.</li>
+</ul>
 
-<p>The consequence is that any riscv64 regression introduced in nginx source would not be detected before release. The HTTP/3 test failure described in Section 11 has persisted undetected upstream for at least 18 months precisely because there is no upstream riscv64 CI.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>In <code class="language-plaintext highlighter-rouge">nginx-buildbot</code> matrix</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Dedicated workflow/runner</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> hosted</td>
+      <td>hosted (per prior report)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>RISE runner integration</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>None found</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>No RISE Project involvement exists anywhere for nginx (see Section 12), so no RISE-provided riscv64 runner is a near-term option without new engagement. No open PR or upstream engineering effort exists to add riscv64 to the nginx CI matrix.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -555,38 +636,44 @@
       <td>nginx.org official packages</td>
       <td>Not available</td>
       <td>-</td>
-      <td>x86_64 and aarch64 only</td>
+      <td>Source tarballs only, for every architecture (<a href="https://nginx.org/en/linux_packages.html">nginx.org/en/linux_packages.html</a>)</td>
     </tr>
     <tr>
-      <td>Debian sid (unstable)</td>
-      <td>Missing (build blocked)</td>
-      <td>1.30.1-5 (no riscv64 binary)</td>
-      <td>“Missing build on riscv64”; blocks migration to testing; all other arches show Installed</td>
+      <td>Ubuntu 26.04 LTS (resolute)</td>
+      <td>Present (ports archive)</td>
+      <td>1.28.3-2ubuntu1</td>
+      <td>Confirmed via live fetch of <a href="https://packages.ubuntu.com/search?keywords=nginx&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a>; architectures armhf, ppc64el, riscv64, s390x. The newer security-updated build, 1.28.3-2ubuntu1.11, is amd64/arm64-only in the primary archive. Related binary modules (<code class="language-plaintext highlighter-rouge">libnginx-mod-http-*</code>, <code class="language-plaintext highlighter-rouge">nginx-extras</code>, <code class="language-plaintext highlighter-rouge">nginx-light</code>, <code class="language-plaintext highlighter-rouge">nginx-confgen</code>, <code class="language-plaintext highlighter-rouge">prometheus-nginx-exporter</code>) also build for riscv64 in resolute.</td>
     </tr>
     <tr>
       <td>Ubuntu 24.04 LTS (Noble)</td>
-      <td>Present</td>
+      <td>Present (ports archive)</td>
       <td>1.24.0-2ubuntu7</td>
-      <td>Available via Ubuntu Ports archive; 532,756-byte .deb confirmed downloadable; <a href="https://packages.ubuntu.com/noble/riscv64/nginx/download">packages.ubuntu.com</a></td>
+      <td>532,756-byte <code class="language-plaintext highlighter-rouge">.deb</code> confirmed downloadable per prior investigation; <a href="https://packages.ubuntu.com/noble/riscv64/nginx/download">packages.ubuntu.com</a>. Whether later security revisions were built for riscv64 is [NEEDS VERIFICATION].</td>
     </tr>
     <tr>
       <td>Arch Linux RISC-V</td>
-      <td>Present (current builds); FTBFS (pending updates)</td>
-      <td>1.30.2-1 (stable), 1.31.1-1 (mainline)</td>
-      <td>Binaries at <a href="https://archriscv.felixc.at">archriscv.felixc.at</a>; 1.30.3-1 and 1.31.2-1 pending builds failing due to H3 test (see Section 11)</td>
+      <td>Present, current and actively served</td>
+      <td>1.30.5-1 (stable), 1.31.6-1 (mainline)</td>
+      <td>Live-verified against <a href="https://mirror.nju.edu.cn/archriscv/repo/extra/">mirror.nju.edu.cn/archriscv/repo/extra</a>: <code class="language-plaintext highlighter-rouge">nginx-1.30.5-1-riscv64.pkg.tar.zst</code> returns HTTP 200, content-length 700346, last-modified 2026-09-16, with a valid <code class="language-plaintext highlighter-rouge">.sig</code>; <code class="language-plaintext highlighter-rouge">nginx-mainline-1.31.6-1-riscv64.pkg.tar.zst</code> also present. See Section 11 for discussion of an earlier reported FTBFS at this port that current data contradicts.</td>
+    </tr>
+    <tr>
+      <td>Debian sid (unstable)</td>
+      <td>Reportedly missing</td>
+      <td>1.30.1-5 (no riscv64 binary, per prior investigation)</td>
+      <td>Not re-verified live in this pass; carried forward from the existing report as [NEEDS VERIFICATION].</td>
     </tr>
     <tr>
       <td>Fedora</td>
       <td>Present [NEEDS VERIFICATION]</td>
-      <td>Version not confirmed (Koji access blocked during research)</td>
-      <td>No riscv64-specific issues found</td>
+      <td>Version unconfirmed</td>
+      <td>A Fedora RISC-V package-status tracker lists nginx 1.22.1 as “Complete”; Koji access was blocked during research.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The Debian situation is the most significant distribution gap. nginx 1.30.1-5 has no riscv64 binary in sid, no build log, no assigned buildd, and no bug filed specifically for the missing build. Every dependent package (nginx modules, any package that Build-Depends on nginx) is also uninstallable on riscv64 in sid.</p>
+<p>There is no PyPI, npm, Maven, or similar language-package-registry distribution channel for nginx (it is a C binary/source-tarball project, not a language package); a PyPI lookup for a package literally named <code class="language-plaintext highlighter-rouge">nginx</code> returns HTTP 404, as expected and not meaningful either way.</p>
 
-<p>The Ubuntu Noble package lags the security patch level of the amd64 package. [NEEDS VERIFICATION: whether later security revisions (e.g., 1.24.0-2ubuntu7.1 and later) have been built for riscv64 via Ubuntu Ports.]</p><hr />
+<p><strong>What a user must do today to get a working riscv64 nginx:</strong> install from the Ubuntu ports pocket (<code class="language-plaintext highlighter-rouge">nginx</code> 1.28.3-2ubuntu1 on resolute/noble) or the Arch Linux RISC-V repository (currently serving 1.30.5-1 stable / 1.31.6-1 mainline), or build from source via <code class="language-plaintext highlighter-rouge">auto/configure</code> natively on riscv64 hardware or under QEMU; there is no upstream-published riscv64 binary to download directly from nginx.org or from GitHub releases.</p>
 <h2 id="9-dependencies">
   
   
@@ -596,7 +683,7 @@
 </h2>
     
 
-<p>The following table covers the hard and common optional dependencies for a production nginx build on riscv64.</p>
+<p><strong>Method note:</strong> nginx has no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, <code class="language-plaintext highlighter-rouge">setup.py</code>, <code class="language-plaintext highlighter-rouge">go.mod</code>, <code class="language-plaintext highlighter-rouge">Cargo.toml</code>, or <code class="language-plaintext highlighter-rouge">package.json</code>; it is built with the custom shell-based <code class="language-plaintext highlighter-rouge">auto/configure</code> script, so there is no machine-readable dependency manifest to parse. The table below reflects nginx’s actual optional-module linkage as surfaced by <code class="language-plaintext highlighter-rouge">auto/configure</code> flags and cross-checked against each dependency’s own riscv64 status research.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -605,91 +692,92 @@
       <th>Role</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
+      <th>riscv64 Release</th>
       <th>Blocking Issues</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>OpenSSL</td>
+      <td>TLS/SSL and HTTP/3 QUIC (<code class="language-plaintext highlighter-rouge">--with-http_ssl_module</code>, <code class="language-plaintext highlighter-rouge">--with-http_v3_module</code>); runtime-dependency, critical</td>
+      <td>Green</td>
+      <td>Green (QEMU-only coverage; no native riscv64 CI runners)</td>
+      <td>Green</td>
+      <td>(1) AES T-table implementation is not constant-time on hardware lacking the Zkn/Zvkned crypto extensions, a security-critical gap, with fix PRs <a href="https://github.com/openssl/openssl">#31080</a> and #31082 open upstream; (2) musl libc ISA detection is broken, <a href="https://github.com/openssl/openssl/issues/28118">openssl/openssl#28118</a>, confirmed still open; (3) an intermittent <code class="language-plaintext highlighter-rouge">test_lhash</code> CI flake on linux-riscv64, issue #30880, opened 2026-04-17 and still open; (4) no native riscv64 CI runners upstream.</td>
+    </tr>
+    <tr>
+      <td>PCRE2</td>
+      <td>Regex engine for the HTTP rewrite module, embeds the SLJIT JIT backend; runtime-dependency, optional</td>
+      <td>Green</td>
+      <td>Green</td>
+      <td>Green</td>
+      <td>No open blocking issues (prior reports #831 and #14 are closed/fixed). Known gap: PCRE2’s SIMD fast-path dispatch header (<code class="language-plaintext highlighter-rouge">pcre2_jit_simd_inc.h</code>) excludes <code class="language-plaintext highlighter-rouge">SLJIT_CONFIG_RISCV</code>, so the JIT exists but SIMD-accelerated scan routines do not; this is a performance gap, not a correctness blocker.</td>
+    </tr>
+    <tr>
+      <td>zlib</td>
+      <td>gzip compression (enabled by default); runtime-dependency, optional</td>
+      <td>Green</td>
+      <td>Mostly green (no native riscv64 Linux CI upstream; riscv64 CI coverage is OpenBSD-only)</td>
+      <td>Green</td>
+      <td>No correctness-blocking issues. Performance-only gap: an RVV-accelerated Adler-32 PR, <a href="https://github.com/madler/zlib/pull/1099">madler/zlib#1099</a>, has been unmerged for 8+ months with no maintainer response (a duplicate, #1267, was self-withdrawn). No Zbc-based CRC-32 path exists on riscv64, unlike the hardware CRC32 path available on arm64.</td>
+    </tr>
+    <tr>
+      <td>libxslt</td>
+      <td>Optional XSLT transforms module (<code class="language-plaintext highlighter-rouge">--with-http_xslt_module</code>); runtime-dependency, optional</td>
+      <td>Green (native riscv64 build verified on Debian sid hardware, no QEMU)</td>
+      <td>Green</td>
+      <td>Green</td>
+      <td>None. Confirmed present for riscv64 in Ubuntu 26.04 resolute (<code class="language-plaintext highlighter-rouge">libxslt1.1</code>, <code class="language-plaintext highlighter-rouge">libxslt1-dev</code>, and related packages); no architecture-conditional code and no known riscv64 issues.</td>
+    </tr>
+    <tr>
+      <td>Perl</td>
+      <td>Optional embedded-Perl module (<code class="language-plaintext highlighter-rouge">--with-http_perl_module</code>); runtime-dependency, optional</td>
+      <td>Green</td>
+      <td>Green</td>
+      <td>Green</td>
+      <td>None documented. Long-standing Debian/Ubuntu riscv64 package.</td>
+    </tr>
+    <tr>
+      <td>LuaJIT</td>
+      <td>Embedded Lua scripting via OpenResty/<code class="language-plaintext highlighter-rouge">lua-nginx-module</code>; runtime-dependency, optional</td>
+      <td>Not functional</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td><strong>Critical, permanent gap.</strong> No riscv64 code generator exists in upstream LuaJIT; the port has been blocked since 2020 per the master tracking issue, <a href="https://github.com/LuaJIT/LuaJIT/issues/628">LuaJIT/LuaJIT#628</a> (sole maintainer Mike Pall requires a fully sponsored JIT-backend port, not just an interpreter). A community PR, #1267, has roughly 145 reactions and working fixes but zero maintainer comment since 2024-09-08. Downstream effect: <a href="https://github.com/openresty/openresty/issues/777">openresty/openresty#777</a> (filed October 2021, zero maintainer responses) means OpenResty is non-functional on riscv64; nginx deployments should avoid LuaJIT-based modules on this architecture entirely.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Additional indirect/build-level dependencies</strong> (not part of the direct list above, carried forward from prior investigation and not contradicted by live findings):</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dependency</th>
+      <th>Role</th>
+      <th>riscv64 status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>glibc</td>
       <td>C runtime, pthreads (<code class="language-plaintext highlighter-rouge">--with-threads</code>)</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Historical bugs (vector memset SIGILL in 2.40, IFUNC gp-pointer crash in 2.41) fixed in current releases (2.43 in Debian sid). No current blockers.</td>
-    </tr>
-    <tr>
-      <td>OpenSSL</td>
-      <td>TLS/SSL, HTTP/3 QUIC (<code class="language-plaintext highlighter-rouge">--with-http_ssl_module</code>, <code class="language-plaintext highlighter-rouge">--with-http_v3_module</code>)</td>
-      <td>Green</td>
-      <td>Green (QEMU only; no native runners)</td>
-      <td>(1) AES T-table not constant-time on hardware without Zkn/Zvkned – security-critical, fix PRs #31080/#31082 open upstream; (2) musl ISA detection silently broken (issue #28118, no fix); (3) no native riscv64 CI runners. See <code class="language-plaintext highlighter-rouge">project-reports/openssl.md</code>.</td>
-    </tr>
-    <tr>
-      <td>PCRE2</td>
-      <td>URL rewriting (HTTP rewrite module, enabled by default)</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>PCRE2 SLJIT JIT backend supports riscv64. No blocking issues.</td>
-    </tr>
-    <tr>
-      <td>zlib</td>
-      <td>gzip compression (enabled by default)</td>
-      <td>Green</td>
-      <td>Mostly green (no native riscv64 CI upstream)</td>
-      <td>No riscv64 correctness bugs. No SIMD acceleration for riscv64 (x86 and ARM have optimized paths; riscv64 runs generic C). Performance gap only, not a blocker.</td>
+      <td>Green. Historical bugs (vector memset SIGILL in 2.40, IFUNC gp-pointer crash in 2.41) are fixed in current releases (2.43 in Debian sid). No current blockers.</td>
     </tr>
     <tr>
       <td>libatomic</td>
       <td>Fallback atomics (<code class="language-plaintext highlighter-rouge">--with-libatomic</code>)</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Not needed on riscv64; RV64A is mandatory in rv64gc baseline.</td>
+      <td>Not needed; RV64A is mandatory in the rv64gc baseline, so the GCC atomic builtins fire without it.</td>
     </tr>
     <tr>
-      <td>LuaJIT (via OpenResty or lua-nginx-module)</td>
-      <td>Embedded Lua scripting</td>
-      <td>Not functional</td>
-      <td>N/A</td>
-      <td>LuaJIT has no riscv64 JIT backend. nginx with LuaJIT modules is non-functional on riscv64. See <a href="https://github.com/openresty/openresty/issues/777">openresty/openresty#777</a>.</td>
-    </tr>
-    <tr>
-      <td>libgd (optional)</td>
-      <td>Image processing (<code class="language-plaintext highlighter-rouge">--with-http_image_filter_module</code>)</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Available in Debian/Ubuntu/Arch for riscv64. No known issues.</td>
-    </tr>
-    <tr>
-      <td>libxslt (optional)</td>
-      <td>XSLT transforms (<code class="language-plaintext highlighter-rouge">--with-http_xslt_module</code>)</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Available for riscv64. No known issues.</td>
-    </tr>
-    <tr>
-      <td>Perl (optional)</td>
-      <td>Embedded Perl (<code class="language-plaintext highlighter-rouge">--with-http_perl_module</code>)</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Available for riscv64. No known issues.</td>
+      <td>libgd</td>
+      <td>Image processing (<code class="language-plaintext highlighter-rouge">--with-http_image_filter_module</code>), optional</td>
+      <td>Green. Available in Debian/Ubuntu/Arch for riscv64, no known issues.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The OpenSSL AES constant-time gap is a deployment-relevant concern for any riscv64 hardware that does not implement the Zkn (scalar cryptography) or Zvkned (vector AES) extensions. This affects TLS-serving nginx deployments directly.</p><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-
-<p><strong>RISE Project involvement:</strong> None. F5 and nginx are not RISE members. After scanning all 27 RISE blog posts (May 2024 through June 2026) and all 30 repositories in the riseproject-dev GitHub organization, no nginx content was found in any form – no funded work, no benchmark report, no working group mention. nginx does not appear in the RISE wheel builder or any RISE CI initiative.</p>
-
-<p><strong>Performance benchmarks:</strong> No public nginx riscv64 performance benchmarks exist as of June 2026. No nginx riscv64 vs arm64 or riscv64 vs amd64 throughput or latency numbers were found in any upstream, distribution, RISE, vendor (SiFive, Andes, Scaleway), academic, or trade publication source.</p>
-
-<p><strong>OpenResty:</strong> The OpenResty distribution (nginx + LuaJIT + Lua modules) is non-functional on riscv64. <a href="https://github.com/openresty/openresty/issues/777">openresty/openresty#777</a>, opened October 2021, requests a build option to skip LuaJIT for riscv64 builds. The issue has received zero maintainer responses and has no label, assignee, or milestone. This represents a permanent feature gap for any riscv64 deployment that relies on OpenResty’s Lua scripting capabilities.</p><hr />
+<p>The OpenSSL AES constant-time gap is directly deployment-relevant for any riscv64 hardware lacking Zkn (scalar crypto) or Zvkned (vector AES) extensions, since it affects TLS termination in nginx directly.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -699,9 +787,7 @@
 </h2>
     
 
-<p><strong>Upstream nginx tracker:</strong> Zero riscv64-specific entries in github.com/nginx/nginx (issues and PRs) and trac.nginx.org (tickets, changesets, wiki). No riscv64 bugs have ever been filed upstream.</p>
-
-<p><strong>Distribution-level issues:</strong></p>
+<p><strong>Upstream nginx tracker:</strong> zero riscv64-specific bugs filed in <code class="language-plaintext highlighter-rouge">nginx/nginx</code> (issues, PRs, or trac.nginx.org tickets), confirmed again live this pass via <code class="language-plaintext highlighter-rouge">search_issues</code>/<code class="language-plaintext highlighter-rouge">search_pull_requests</code>/<code class="language-plaintext highlighter-rouge">search_commits</code> (<code class="language-plaintext highlighter-rouge">total_count: 0</code> for all riscv/riscv64 queries). The only riscv64-related item in the core repo is the closed, not-planned optimization proposal #1725 (Section 2).</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -715,51 +801,51 @@
   </thead>
   <tbody>
     <tr>
-      <td>No bug number</td>
-      <td><a href="https://tracker.debian.org/pkg/nginx">Debian tracker - nginx</a></td>
-      <td>nginx 1.30.1-5 missing riscv64 build; migration to testing blocked</td>
-      <td>Open (as of research date)</td>
-      <td>No current nginx in Debian testing/stable on riscv64</td>
-    </tr>
-    <tr>
-      <td>Bug #912284</td>
-      <td><a href="https://bugs.debian.org/912284">Debian BTS</a></td>
-      <td>“nginx FTCBFS: multiple reasons” (fails to cross-build from source)</td>
-      <td>Open (filed Oct 2018)</td>
-      <td>Affects cross-build flows relevant to riscv64 ports</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/openresty/openresty/issues/777">openresty/openresty#777</a></td>
+      <td>nginx/nginx#1725</td>
       <td>GitHub</td>
-      <td>“disable luajit” – OpenResty non-functional on riscv64 due to no LuaJIT JIT backend</td>
-      <td>Open (filed Oct 2021, zero responses)</td>
+      <td>“RISC-V vector optimization for ngx_strstrn()” (RVV 1.0 intrinsics for User-Agent parsing on SpacemiT K3/X100)</td>
+      <td>Closed, not_planned (opened and closed September 2026)</td>
+      <td>None; no patch merged, no benchmark data provided</td>
+    </tr>
+    <tr>
+      <td>nginx/docker-nginx#986</td>
+      <td>GitHub</td>
+      <td>“Provide riscv64 build” (Docker Hub image request)</td>
+      <td>Closed, no comments, no linked PR</td>
+      <td>Official Docker images remain amd64/arm64-focused</td>
+    </tr>
+    <tr>
+      <td>nginx/docker-nginx-unprivileged#91</td>
+      <td>GitHub</td>
+      <td>“RISC-V support” (requests CI changes to publish <code class="language-plaintext highlighter-rouge">linux/riscv64</code> images)</td>
+      <td>Closed, no comments, no linked PR</td>
+      <td>Same as above for the unprivileged image variant</td>
+    </tr>
+    <tr>
+      <td>No bug number</td>
+      <td><a href="https://tracker.debian.org/pkg/nginx">Debian tracker, nginx</a></td>
+      <td>nginx 1.30.1-5 reportedly missing a riscv64 build in sid</td>
+      <td>Reported in prior investigation, not re-verified live this pass</td>
+      <td>[NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>Debian BTS #912284</td>
+      <td><a href="https://bugs.debian.org/912284">bugs.debian.org</a></td>
+      <td>“nginx FTCBFS: multiple reasons” (fails to cross-build from source), filed October 2018</td>
+      <td>Reported open in prior investigation, not re-verified live this pass</td>
+      <td>Affects cross-build flows relevant to riscv64 ports [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>openresty/openresty#777</td>
+      <td>GitHub</td>
+      <td>“disable luajit”, OpenResty non-functional on riscv64</td>
+      <td>Open, filed October 2021, zero maintainer responses</td>
       <td>OpenResty/Lua modules entirely non-functional on riscv64</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Arch Linux RISC-V FTBFS – H3 rate limiting test (most significant active issue):</strong></p>
-
-<p>Both the nginx stable and mainline packages in Arch Linux RISC-V have been failing to build (FTBFS) on the latest upstream versions due to a single failing test in the nginx test suite. The failure has been present continuously since at least September 2024 (nginx 1.26.2) and persists through the most recent logs (nginx 1.28.3 from March 2026 for stable; nginx 1.31.0 from May 2026 for mainline) – a span of at least 18 months across both branches.</p>
-
-<p>The failing test:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#   Failed test 'reset stream - log'
-#   at ./h3_limit_req.t line 148.
-#                   '200
-# 200
-# 200
-# 200
-# 400
-# '
-#     doesn't match '(?^:499)'
-</code></pre></div></div>
-
-<p>Test 6 of <code class="language-plaintext highlighter-rouge">h3_limit_req.t</code> (“reset stream - log”) expects nginx to emit HTTP status 499 (client closed connection) when an HTTP/3 QUIC stream is reset under rate limiting. On riscv64, nginx returns HTTP 400 instead. The test passes on amd64 and arm64. The build compiles cleanly; only the test suite check phase fails.</p>
-
-<p>This is a behavioral difference in HTTP/3 QUIC stream reset handling specific to riscv64. It has not been reported to nginx upstream (zero issues or patches referencing it in the nginx tracker). The downstream effect is that the riscv64 builds of nginx-stable and nginx-mainline in Arch RISC-V are stuck at one version behind upstream (1.30.2-1 and 1.31.1-1 respectively), and all downstream nginx-mod-* packages are also blocked.</p>
-
-<p>Whether this is a nginx bug on riscv64 or a test harness issue (e.g., timing-dependent behavior that differs under QEMU or on RISC-V hardware) cannot be determined from the available data. No root cause analysis has been published.</p><hr />
+<p><strong>Arch Linux RISC-V HTTP/3 test discrepancy, resolved status unclear.</strong> The existing internal record described a persistent FTBFS on the Arch RISC-V nginx packages caused by test 6 of <code class="language-plaintext highlighter-rouge">h3_limit_req.t</code> (“reset stream - log”) expecting HTTP 499 on an HTTP/3 QUIC stream reset under rate limiting but observing HTTP 400 on riscv64, allegedly stuck for 18+ months at versions 1.30.2-1 (stable) and 1.31.1-1 (mainline). This claim is <strong>contradicted by current live data</strong>: a direct fetch of the Arch RISC-V mirror in this pass shows the stable and mainline nginx packages at 1.30.5-1 and 1.31.6-1 respectively, both materially newer than the versions the FTBFS claim describes, with valid signed artifacts actively served (HTTP 200, last-modified 2026-09-16). This is treated as a stale internal claim superseded by live evidence, not as confirmed ongoing breakage; whether the underlying QUIC-stream-reset test discrepancy was fixed upstream, patched downstream, or simply skipped in the Arch build has not been independently confirmed, and the discrepancy was never reported to nginx upstream (zero matching issues or patches in the nginx tracker). Root cause, if the behavioral difference still exists in some form, remains undetermined.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -769,110 +855,100 @@
 </h2>
     
 
-<p><strong>nginx upstream contribution model:</strong> nginx upstream accepts patches via the nginx-devel mailing list. There is no pull-request merge workflow; GitHub PRs are not accepted. Patches must meet the F5 CLA requirement and pass review by the core team. The project’s conservatism toward external patches (especially for architecture-specific code) is well-documented by the long history of pending community contributions in other areas.</p>
+<p><strong>Contribution model.</strong> nginx accepts patches via the nginx-devel mailing list; GitHub PRs against <code class="language-plaintext highlighter-rouge">nginx/nginx</code> are not the accepted contribution path, since the GitHub repo is a read-only mirror of Mercurial/Trac-based upstream development. Patches require F5 CLA signoff and core-team review.</p>
 
-<p><strong>Structural barriers to an riscv64 atomic header:</strong></p>
+<p><strong>No case exists for a hand-tuned riscv64 atomic header.</strong> The existing hand-tuned atomic headers (x86, amd64, SPARC64, PowerPC) were added when those platforms were nginx’s primary performance targets. A patch adding a riscv64-specific atomic implementation would need benchmark evidence of a measurable improvement over the generic GCC builtin path; no such benchmark exists anywhere (Section 14.2), so there is currently no upstream case to make.</p>
 
-<p>The hand-tuned atomic headers for x86, amd64, SPARC64, and PowerPC exist because nginx historically targeted those platforms with specific performance goals. A patch adding <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_riscv.h</code> would need to demonstrate a measurable performance improvement over the GCC builtin path – and would require RISC-V hardware benchmarks to do so. No such benchmarks exist (see Section 10). Without benchmark data, the upstream case for merging an riscv64 atomic header is weak.</p>
+<p><strong>No RISE Project engagement.</strong> F5 and nginx are not RISE members. A systematic scan of all 35 RISE blog posts (May 2024 through September 2026) found zero nginx mentions; the one post most plausibly relevant to CI infrastructure (“Announcing the RISE RISC-V Runners,” March 2026) was fetched in full and contains no nginx reference. A search of all 26 repositories in the riseproject-dev GitHub organization and a direct <code class="language-plaintext highlighter-rouge">"nginx org:riseproject-dev"</code> code search both return zero nginx-specific work; the only incidental hit is an <code class="language-plaintext highlighter-rouge">nginx.conf</code> reverse-proxy config file inside RISE’s own (now-archived) <code class="language-plaintext highlighter-rouge">pypi-proxy</code> infrastructure repo, which is RISE using nginx as internal tooling, not RISE funding or porting nginx. RISE’s RFP program (projects RP001 through RP024) has no nginx-related project. No RISE wheel-builder entry exists for nginx (not applicable, since nginx is not a Python package).</p>
 
-<p><strong>H3 test failure (Arch RISC-V FTBFS):</strong> This bug has not been reported upstream. Filing a quality upstream report requires a reduced reproducer showing the HTTP/3 QUIC stream-reset behavioral difference on riscv64 vs x86_64. This requires a RISC-V hardware environment and familiarity with the nginx test framework.</p>
+<p><strong>LuaJIT/OpenResty blocker is organizationally outside nginx’s control.</strong> The root cause (no riscv64 JIT backend in LuaJIT) sits with LuaJIT’s sole maintainer, who has stated a full sponsored JIT-backend port is required, not merely an interpreter fallback (<a href="https://github.com/LuaJIT/LuaJIT/issues/628">LuaJIT/LuaJIT#628</a>). OpenResty’s own tracking issue has had zero maintainer engagement since filing in October 2021. A nginx-side fix (an OpenResty build option to skip LuaJIT and use an interpreter-only Lua runtime) is feasible independent of the LuaJIT backend problem but has not been proposed.</p>
 
-<p><strong>OpenResty/LuaJIT:</strong> The openresty/openresty#777 issue (October 2021, zero responses) demonstrates that OpenResty maintainers have not prioritized riscv64 support. The root cause is in LuaJIT, not nginx itself. A complete solution requires either a LuaJIT riscv64 JIT backend (substantial work, separate project) or an OpenResty build option to use an interpreter-only Lua runtime.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability assessment:</strong> low-to-moderate for small, additive changes (e.g., formally documenting the existing <code class="language-plaintext highlighter-rouge">auto/os/conf</code> riscv64 entry, or adding a <code class="language-plaintext highlighter-rouge">-march=rv64gc</code> build flag) given nginx’s conservative, mailing-list-gated review process and the complete absence of any riscv64 advocacy inside the project; near-zero for anything requiring new hand-tuned assembly without accompanying hardware benchmark data, since no such data exists.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> yellow (clean-distro-build)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Justification:</strong> nginx/nginx has no upstream riscv64 CI at all: live <code class="language-plaintext highlighter-rouge">search_code</code> verification against the repo’s 8 <code class="language-plaintext highlighter-rouge">.github/workflows/*.yml</code> files found zero riscv/riscv64 hits, and every job that declares a runner uses <code class="language-plaintext highlighter-rouge">runs-on: ubuntu-24.04</code>; the only riscv-related content anywhere in the repository is the 3-line build-config case arm in <a href="https://github.com/nginx/nginx/blob/master/auto/os/conf">auto/os/conf</a> setting alignment/cache-line constants. nginx.org also ships only source tarballs for every architecture (<a href="https://nginx.org/en/linux_packages.html">nginx.org/en/linux_packages.html</a>), so there is no upstream-published riscv64 binary either. This starts at orange (“no upstream CI”) per the standard grading approach, but the distribution floor applies: both Arch Linux RISC-V and Ubuntu’s ports archive build nginx from effectively unmodified upstream source. Ubuntu 26.04 “resolute” ships <code class="language-plaintext highlighter-rouge">nginx 1.28.3-2ubuntu1</code> for riscv64 via the ports pocket (<a href="https://packages.ubuntu.com/search?keywords=nginx&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a>), and the Debian/Ubuntu packaging deviations are generic cross-build configure overrides (<code class="language-plaintext highlighter-rouge">--override-machine=riscv64</code>, <code class="language-plaintext highlighter-rouge">--override-system=Linux</code>, <code class="language-plaintext highlighter-rouge">--override-release=3.16.0</code>) rather than riscv64-specific source patches. Live-fetched evidence from the Arch RISC-V mirror confirms a real, signed, currently-served riscv64 binary (<code class="language-plaintext highlighter-rouge">nginx-1.30.5-1-riscv64.pkg.tar.zst</code>, HTTP 200, 700346 bytes, last-modified 2026-09-16) and a mainline build (<code class="language-plaintext highlighter-rouge">nginx-mainline-1.31.6-1-riscv64.pkg.tar.zst</code>), both newer than the versions an earlier internal record described as permanently FTBFS-blocked; that earlier claim is therefore stale and contradicted by current live data, treated as superseded rather than confirmed ongoing breakage, so it does not justify red. This is a “clean distro build”: nginx builds and is packaged for riscv64 by downstream distros from vanilla source, with no upstream CI validating it and no upstream-published riscv64 artifact, which caps the color at yellow. nginx’s purpose is general-purpose HTTP serving/proxying, not algorithmic speed-up over a simpler reference implementation, so the optimization-purpose modifier does not apply.</li>
+  <li><strong>Pending work that could change the grade:</strong> No open PR or upstream engineering exists to add riscv64 to nginx’s own CI matrix (<code class="language-plaintext highlighter-rouge">nginx/ci-self-hosted</code>, which runs amd64/arm64 only). No RISE Project involvement was found anywhere (blog, RFPs, riseproject-dev GitHub org, wheel builder); nginx is not a RISE member and no funded work targets it. Debian sid reportedly lacks a riscv64 build entirely (per the prior investigation; not re-verified live in this pass). The historical Arch RISC-V HTTP/3 QUIC stream-reset test discrepancy (<code class="language-plaintext highlighter-rouge">h3_limit_req.t</code>, expecting 499 vs. actual 400) was never reported upstream and its current status (fixed vs. skipped) is unconfirmed, though current Arch mirror data shows successful recent builds (1.30.5-1 stable, 1.31.6-1 mainline) that supersede the old “stuck” claim. LuaJIT/OpenResty remain non-functional on riscv64 (<a href="https://github.com/openresty/openresty/issues/777">openresty/openresty#777</a>, filed October 2021, zero maintainer responses) because LuaJIT has no riscv64 JIT backend, a permanent ecosystem gap for any riscv64 deployment relying on Lua scripting, though this is a dependency gap rather than a core-nginx blocker.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
   
   
-</h3>
+</h2>
     
 
-<p>nginx builds and runs on riscv64 with no changes required. The generic GCC atomic path is correct and produces functional builds. The single active functional gap – the HTTP/3 QUIC stream-reset behavioral difference causing the Arch RISC-V FTBFS – is unknown in root cause and has no upstream bug filed.</p>
-
-<p>Functional work items:</p>
-
-<ol>
-  <li>
-    <p>Reproduce and root-cause the <code class="language-plaintext highlighter-rouge">h3_limit_req.t</code> test failure on riscv64 (either a real nginx bug or a test harness artifact). File an upstream bug with a reproducer. Estimated effort: 2-4 person-weeks depending on access to RISC-V hardware and QUIC debugging complexity.</p>
-  </li>
-  <li>
-    <p>Unblock the Debian sid riscv64 build (1.30.1-5 “Needs-Build, no log”). This requires either contacting the Debian nginx maintainers or filing a bug against the package. The Debian buildd system may need a riscv64 builder assignment. Estimated effort: 1 person-week (coordination, not engineering).</p>
-  </li>
-</ol>
-<h3 id="132-performance-optimization">
+<p>RISE has not funded, benchmarked, or engaged with nginx in any capacity (Section 12); no existing RISE work can be subtracted from the estimates below.</p>
+<h3 id="141-functional-enablement">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>No benchmark data exists to quantify the performance gap between the generic GCC atomic path and a hypothetical hand-tuned riscv64 atomic implementation. Any performance investment must begin with baseline measurement.</p>
-
-<p>Performance work items:</p>
-
-<ol>
-  <li>
-    <p>Establish baseline nginx throughput and latency benchmarks on riscv64 hardware (e.g., SiFive HiFive Unmatched, Scaleway EM-RV1, or equivalent) vs arm64 for representative workloads (static file serving, reverse proxy, TLS termination). Estimated effort: 2-3 person-weeks.</p>
-  </li>
-  <li>
-    <p>If benchmarks show measurable spinlock contention overhead, implement <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_riscv.h</code> with hand-tuned <code class="language-plaintext highlighter-rouge">lr.d</code>/<code class="language-plaintext highlighter-rouge">sc.d</code> inline assembly and <code class="language-plaintext highlighter-rouge">WRS.NTO</code> cpu-pause equivalent. Submit via nginx-devel mailing list. Estimated effort: 3-4 person-weeks (implementation plus upstream negotiation).</p>
-  </li>
-  <li>
-    <p>Add riscv64 to <code class="language-plaintext highlighter-rouge">auto/cc/gcc</code> with appropriate <code class="language-plaintext highlighter-rouge">-march=</code> flag (e.g., <code class="language-plaintext highlighter-rouge">-march=rv64gc</code>). This is a one-line build-system change but requires upstream buy-in. Estimated effort: 1 person-week.</p>
-  </li>
-</ol>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>nginx has no riscv64 CI. Adding riscv64 to the nginx CI matrix requires either contributing RISC-V runners to the <code class="language-plaintext highlighter-rouge">nginx/ci-self-hosted</code> project or working with RISE to make runners available.</p>
-
-<p>CI work items:</p>
-
-<ol>
-  <li>
-    <p>Add riscv64 to the nginx-buildbot matrix in <code class="language-plaintext highlighter-rouge">nginx/ci-self-hosted</code>. This requires F5/nginx maintainer agreement and either donated runner capacity or a funded arrangement with RISE or a hardware partner. Estimated effort: 2-3 person-weeks (infrastructure setup, upstream negotiation).</p>
-  </li>
-  <li>
-    <p>The H3 QUIC test failure must be resolved before riscv64 CI can be added to a blocking (non-informational) configuration, or the failing test must be explicitly excluded with a documented tracking issue.</p>
-  </li>
-</ol>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
 <ol>
-  <li>
-    <p>OpenResty LuaJIT gap: File a detailed issue on <a href="https://github.com/openresty/openresty">openresty/openresty</a> (with a concrete proposal for an interpreter-only build mode) and a corresponding issue against LuaJIT for a riscv64 JIT backend. LuaJIT riscv64 JIT is out of scope for a nginx-focused investment but is a prerequisite for the large fraction of nginx deployments that use OpenResty. Estimated effort for the nginx side (build option): 2-3 person-weeks; LuaJIT JIT backend is a separate multi-month effort.</p>
-  </li>
-  <li>
-    <p>Upstream the <code class="language-plaintext highlighter-rouge">riscv64</code> cache-line/alignment entry formally (document it, add a comment, propose review). This is already present in <code class="language-plaintext highlighter-rouge">auto/os/conf</code> but has no upstream discussion record. Estimated effort: under 1 person-week.</p>
-  </li>
+  <li>Determine the current status of the historical <code class="language-plaintext highlighter-rouge">h3_limit_req.t</code> HTTP/3 QUIC stream-reset discrepancy on Arch RISC-V: confirm whether it was fixed, worked around, or is simply no longer triggered by the current test suite, and file an upstream report with a reproducer if a real behavioral difference still exists. Estimated effort: 1-3 person-weeks (uncertainty reflects that current Arch builds succeed, so this may already be moot).</li>
+  <li>Verify and, if still accurate, resolve the reported Debian sid riscv64 build gap by coordinating with Debian’s nginx maintainers or filing a packaging bug. Estimated effort: 1 person-week (coordination, not engineering).</li>
 </ol>
-<h3 id="135-summary-table">
+<h3 id="142-performance-optimization">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
+  
+  
+</h3>
+    
+
+<p>nginx’s purpose is general-purpose HTTP serving, not an optimization target in the sense this grading model tracks algorithmic speed-up; this section covers conventional performance engineering, not an ISA-extension optimization gap.</p>
+
+<ol>
+  <li>Establish baseline nginx throughput/latency benchmarks on riscv64 hardware (e.g., SiFive HiFive Unmatched, SpacemiT K3/X100, or a Scaleway EM-RV1 instance) versus arm64 for representative workloads (static file serving, reverse proxy, TLS termination). No such data exists today in any upstream, distro, RISE, vendor, or academic source. Estimated effort: 2-3 person-weeks.</li>
+  <li>If benchmarks show measurable spinlock-contention overhead from the missing <code class="language-plaintext highlighter-rouge">cpu_pause</code> hint, implement and upstream-propose a <code class="language-plaintext highlighter-rouge">WRS.NTO</code>-based riscv64 cpu-pause equivalent. Estimated effort: 1-2 person-weeks, contingent on step 1’s results.</li>
+  <li>Revisit GitHub issue #1725’s <code class="language-plaintext highlighter-rouge">ngx_strstrn()</code> RVV-vectorization proposal with real profiling data before resubmitting, since the original proposal was closed not_planned specifically for lacking benchmark evidence. Estimated effort: 2-3 person-weeks (profiling plus patch).</li>
+  <li>Add a riscv64 <code class="language-plaintext highlighter-rouge">-march=</code> entry (e.g., <code class="language-plaintext highlighter-rouge">rv64gc</code>) to <code class="language-plaintext highlighter-rouge">auto/cc/gcc</code>. A one-line build-system change, but requires upstream buy-in. Estimated effort: 1 person-week.</li>
+</ol>
+<h3 id="143-cicd-infrastructure">
+  
+  
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+
+<ol>
+  <li>Add riscv64 to the <code class="language-plaintext highlighter-rouge">nginx-buildbot</code> matrix in <code class="language-plaintext highlighter-rouge">nginx/ci-self-hosted</code>, which requires F5/nginx maintainer agreement and either donated runner capacity or a funded arrangement with RISE or a hardware partner. Estimated effort: 2-3 person-weeks.</li>
+  <li>Resolve or formally document the status of the HTTP/3 test discrepancy (14.1.1) before any riscv64 CI job can run in a blocking (non-informational) configuration.</li>
+</ol>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<ol>
+  <li>File an issue on <a href="https://github.com/openresty/openresty">openresty/openresty</a> proposing an interpreter-only build mode for riscv64 (bypassing LuaJIT entirely), and a corresponding tracking issue against LuaJIT itself. The LuaJIT riscv64 JIT backend is a separate, multi-month effort outside nginx’s own scope; the nginx/OpenResty-side build option is tractable independently. Estimated effort for the OpenResty-side build option: 2-3 person-weeks; the LuaJIT JIT backend itself is a multi-month undertaking not sized here.</li>
+  <li>Formally document and propose upstream review of the existing <code class="language-plaintext highlighter-rouge">auto/os/conf</code> riscv64 entry (alignment/cache-line constants), which currently has no upstream discussion record despite being load-bearing. Estimated effort: under 1 person-week.</li>
+</ol>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -884,72 +960,78 @@
       <th>Area</th>
       <th>Work Item</th>
       <th>Effort (person-weeks)</th>
+      <th>Owner</th>
       <th>Priority</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Reproduce and file upstream bug for H3/QUIC <code class="language-plaintext highlighter-rouge">h3_limit_req.t</code> failure on riscv64</td>
-      <td>2-4</td>
+      <td>Confirm current status of the Arch RISC-V HTTP/3 <code class="language-plaintext highlighter-rouge">h3_limit_req.t</code> discrepancy; file upstream report if still real</td>
+      <td>1-3</td>
+      <td>Distro/upstream liaison</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Unblock Debian sid riscv64 build (coordination with Debian nginx maintainers)</td>
+      <td>Verify and, if needed, unblock Debian sid riscv64 build</td>
       <td>1</td>
+      <td>Distro liaison</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Establish riscv64 baseline benchmarks (nginx throughput, latency, TLS) vs arm64</td>
+      <td>Establish riscv64 baseline benchmarks (throughput, latency, TLS) vs arm64</td>
       <td>2-3</td>
+      <td>Performance engineering</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Implement <code class="language-plaintext highlighter-rouge">ngx_gcc_atomic_riscv.h</code> with hand-tuned <code class="language-plaintext highlighter-rouge">lr.d</code>/<code class="language-plaintext highlighter-rouge">sc.d</code> and cpu-pause hint</td>
-      <td>3-4</td>
+      <td>Resubmit <code class="language-plaintext highlighter-rouge">ngx_strstrn()</code> RVV optimization (#1725) with real profiling data</td>
+      <td>2-3</td>
+      <td>Performance engineering</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
+      <td>Implement riscv64 cpu-pause hint, contingent on benchmark results</td>
+      <td>1-2</td>
+      <td>Systems engineering</td>
       <td>Medium (pending benchmarks)</td>
     </tr>
     <tr>
       <td>Performance</td>
       <td>Add riscv64 <code class="language-plaintext highlighter-rouge">-march=</code> flag to <code class="language-plaintext highlighter-rouge">auto/cc/gcc</code></td>
       <td>1</td>
+      <td>Build engineering</td>
       <td>Low</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 to nginx-buildbot matrix in <code class="language-plaintext highlighter-rouge">nginx/ci-self-hosted</code></td>
+      <td>Add riscv64 to <code class="language-plaintext highlighter-rouge">nginx-buildbot</code> matrix in <code class="language-plaintext highlighter-rouge">nginx/ci-self-hosted</code></td>
       <td>2-3</td>
+      <td>CI/upstream liaison</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>OpenResty: file issue and propose interpreter-only build mode for riscv64</td>
-      <td>1-2</td>
+      <td>Propose OpenResty interpreter-only build mode for riscv64</td>
+      <td>2-3</td>
+      <td>Ecosystem engineering</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
       <td>Document and formalize the <code class="language-plaintext highlighter-rouge">auto/os/conf</code> riscv64 entry upstream</td>
-      <td>0.5</td>
+      <td>0.5-1</td>
+      <td>Upstream liaison</td>
       <td>Low</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Total estimated investment:</strong> 12.5-18.5 person-weeks for the full scope. The minimum viable investment to unblock distribution packaging and file the one known behavioral bug is 3-5 person-weeks (Debian unblocking plus H3 bug filing).</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p><strong>Total estimated investment:</strong> approximately 13.5-20 person-weeks for the full scope above. The minimum viable investment to confirm (or close) the two open functional questions, the HTTP/3 test discrepancy and the Debian sid build gap, is 2-4 person-weeks.</p>
 <h2 id="15-references">
   
   
@@ -962,20 +1044,31 @@
 <ul>
   <li><a href="https://github.com/nginx/nginx">nginx source repository</a></li>
   <li><a href="https://github.com/nginx/ci-self-hosted">nginx CI self-hosted workflows</a></li>
-  <li><a href="https://github.com/nginx/nginx/blob/master/src/os/unix/ngx_atomic.h">nginx atomic operations header - ngx_atomic.h</a></li>
-  <li><a href="https://github.com/nginx/nginx/blob/master/auto/os/conf">nginx build system - auto/os/conf</a></li>
-  <li><a href="https://github.com/nginx/nginx/blob/master/auto/cc/gcc">nginx build system - auto/cc/gcc</a></li>
+  <li><a href="https://github.com/nginx/nginx/blob/master/src/os/unix/ngx_atomic.h">nginx atomic operations header, ngx_atomic.h</a></li>
+  <li><a href="https://github.com/nginx/nginx/blob/master/auto/os/conf">nginx build system, auto/os/conf</a></li>
+  <li><a href="https://github.com/nginx/nginx/blob/master/auto/cc/gcc">nginx build system, auto/cc/gcc</a></li>
   <li><a href="https://nginx.org/en/linux_packages.html">nginx official Linux packages</a></li>
-  <li><a href="https://tracker.debian.org/pkg/nginx">Debian package tracker - nginx</a></li>
-  <li><a href="https://buildd.debian.org/status/logs.php?pkg=nginx&amp;arch=riscv64">Debian buildd riscv64 build history - nginx</a></li>
-  <li><a href="https://bugs.debian.org/912284">Debian BTS bug #912284 - nginx FTCBFS</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/riscv64/nginx/download">Ubuntu 24.04 Noble - nginx riscv64 package</a></li>
-  <li><a href="https://archriscv.felixc.at/.status/status.htm">Arch Linux RISC-V status page</a></li>
-  <li><a href="https://github.com/openresty/openresty/issues/777">OpenResty issue #777 - disable LuaJIT for riscv64</a></li>
+  <li><a href="https://github.com/nginx/nginx/issues/1725">nginx/nginx issue #1725, RISC-V vector optimization for ngx_strstrn()</a></li>
+  <li><a href="https://github.com/nginx/docker-nginx/issues/986">nginx/docker-nginx issue #986, Provide riscv64 build</a></li>
+  <li><a href="https://github.com/nginx/docker-nginx-unprivileged/issues/91">nginx/docker-nginx-unprivileged issue #91, RISC-V support</a></li>
+  <li><a href="https://tracker.debian.org/pkg/nginx">Debian package tracker, nginx</a></li>
+  <li><a href="https://buildd.debian.org/status/logs.php?pkg=nginx&amp;arch=riscv64">Debian buildd riscv64 build history, nginx</a></li>
+  <li><a href="https://bugs.debian.org/912284">Debian BTS bug #912284, nginx FTCBFS</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=nginx&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 (resolute) package search, nginx</a></li>
+  <li><a href="https://packages.ubuntu.com/noble/riscv64/nginx/download">Ubuntu 24.04 (Noble) nginx riscv64 package</a></li>
+  <li><a href="https://mirror.nju.edu.cn/archriscv/repo/extra/">Arch Linux RISC-V mirror, extra repository</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/28118">OpenSSL issue #28118, musl ISA detection</a></li>
+  <li><a href="https://github.com/madler/zlib/pull/1099">madler/zlib pull request #1099, RVV Adler-32</a></li>
+  <li><a href="https://github.com/LuaJIT/LuaJIT/issues/628">LuaJIT issue #628, riscv64 JIT backend tracking</a></li>
+  <li><a href="https://github.com/openresty/openresty/issues/777">OpenResty issue #777, disable LuaJIT for riscv64</a></li>
   <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
   <li><a href="https://github.com/riseproject-dev">RISE Project GitHub organization</a></li>
-  <li>OpenSSL riscv64 status: <code class="language-plaintext highlighter-rouge">libraries/openssl.md</code></li>
-  <li>glibc riscv64 status: <code class="language-plaintext highlighter-rouge">libraries/glibc.md</code></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners announcement</a></li>
+  <li>OpenSSL riscv64 status: <code class="language-plaintext highlighter-rouge">project-reports/openssl.md</code></li>
+  <li>PCRE2 riscv64 status: <code class="language-plaintext highlighter-rouge">project-reports/pcre2.md</code></li>
+  <li>zlib riscv64 status: <code class="language-plaintext highlighter-rouge">project-reports/zlib.md</code></li>
+  <li>LuaJIT riscv64 status: <code class="language-plaintext highlighter-rouge">project-reports/luajit.md</code></li>
+  <li>libxslt riscv64 status: <code class="language-plaintext highlighter-rouge">project-reports/libxslt.md</code></li>
 </ul>
 
           
