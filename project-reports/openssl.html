@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:mail@ludovic.dev">mail@ludovic.dev</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> blue<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for OpenSSL<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,13 +280,19 @@
 </h2>
     
 
-<p><a href="https://www.openssl.org/">OpenSSL</a> is the dominant open-source TLS/cryptographic library. It underpins the majority of Linux userspace TLS stacks, package managers, language runtimes (Python, Ruby, Node.js), and critical infrastructure software. Any RISC-V platform targeting production workloads requires a functional, performant OpenSSL.</p>
+<p><a href="https://www.openssl.org/">OpenSSL</a> is the dominant open source TLS/cryptographic library and underpins the majority of Linux userspace TLS stacks, package managers, and language runtimes. Any RISC-V platform targeting production workloads requires a functional, performant OpenSSL.</p>
 
 <p><strong>Repository:</strong> <a href="https://github.com/openssl/openssl">openssl/openssl</a>
-<strong>License:</strong> Apache License 2.0
-<strong>Latest releases (all published 2026-06-09):</strong> openssl-4.0.1, openssl-3.6.3, openssl-3.5.7, openssl-3.4.6, openssl-3.0.21
-<strong>Governance:</strong> Multi-entity structure. The OpenSSL Foundation (nonprofit) holds mission and funding. The OpenSSL Corporation delivers commercial support. The library project itself is governed by 26 elected committers with a Business Advisory Committee and Technical Advisory Committee. Board of Directors: Matt Caswell, Richard Levitte, Tomas Mraz.
-<strong>Premier sponsors:</strong> OpenSSL Corporation, Cisco, Sovereign Tech Fund, FLOSS/fund, Nominet.</p><hr />
+<strong>License:</strong> Apache License 2.0 (since OpenSSL 3.0)
+<strong>Build system:</strong> Perl-driven <code class="language-plaintext highlighter-rouge">./Configure</code>/<code class="language-plaintext highlighter-rouge">./config</code>, not CMake, setuptools, Cargo, Go modules, or npm. There is no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> anywhere in the tree.</p>
+
+<p><strong>Governance:</strong> No single “OpenSSL Foundation” the way Linux or Apache have one foundation. Governance is split across two co-equal legal entities per openssl-library.org and the project’s <code class="language-plaintext highlighter-rouge">funding.json</code>: the <strong>OpenSSL Software Foundation</strong> (est. 2014, non-commercial/community focus, funded by donations and grants) and the <strong>OpenSSL Corporation</strong> (OpenSSL Software Services Inc, commercial support/enterprise focus), sharing one mission statement and funding the same engineering team. There is no <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>/<code class="language-plaintext highlighter-rouge">OWNERS</code> file in the repository; <code class="language-plaintext highlighter-rouge">.github/CODEOWNERS</code> only scopes <code class="language-plaintext highlighter-rouge">/.github/workflows/</code> to a single CI owner. Day-to-day code decisions are governed by roughly 27-34 elected <strong>Committers</strong> (2+ approvals required to merge), with a <strong>Foundation Advisory Committee</strong> elected annually (most recent election September 2026) above that. Prior reporting cycles identified a Board of Directors (Matt Caswell, Richard Levitte, Tomas Mraz) [NEEDS VERIFICATION, not re-confirmed against a second source this cycle].</p>
+
+<p><strong>Technical policies</strong> (openssl-library.org/policies/technical/) cover Branch Policy, Design Process, Coding Style, Documentation Policy, a dedicated “Policy for Accepting Assembler Optimisations,” API compatibility in minor releases, Release Requirements, Stable Release Updates, and Testing. No published platform/architecture “tier” document (no <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, no <code class="language-plaintext highlighter-rouge">docs/platforms/</code>) was found.</p>
+
+<p><strong>Corporate sponsors:</strong> Sponsorship tiers are Premier ($100k+/yr), Platinum ($50k+), Gold ($25k+), Silver ($10k+), Bronze ($5k+), Copper (&lt;$5k), plus individual “Code Protector” donors. <strong>Cisco</strong> is listed as a Premier Sponsor; <strong>Nominet</strong> and <strong>Sovereign Tech Fund</strong> are also listed supporters. Commit-email domains show active corporate contributors beyond the Foundation payroll, e.g. Timo Keller (<code class="language-plaintext highlighter-rouge">@linux.ibm.com</code>, IBM) and Mounir Idrassi (<code class="language-plaintext highlighter-rouge">@idrix.fr</code>, Idrix); core reviewers such as Tomas Mraz, Paul “Pauli” Dale, Richard Levitte, Bob Beck, Jakub Zelenka, and Ryan Hooper commit from <code class="language-plaintext highlighter-rouge">@openssl.org</code>/<code class="language-plaintext highlighter-rouge">@openssl.foundation</code> addresses, i.e. they are paid directly by the Foundation/Corporation rather than a third-party vendor.</p>
+
+<p><strong>Community stance on new ports:</strong> <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> is explicit that review bandwidth, not code quality, is the project’s bottleneck: contributors are asked to keep to 3-4 open PRs at a time, avoid bundling unrelated changes, and open a discussion issue first for large contributions. New-architecture work, including RISC-V, goes through the same 2-approver Committer review and CLA process as everything else, with no formal or expedited new-platform onboarding track. The clearest evidence of this is the three-month governance delay (described in Section 2) the very first riscv64 patch encountered purely because it targeted a bugfix-only stable branch, not because of any technical objection.</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -295,95 +302,150 @@
 </h2>
     
 
-<p>The RISC-V port of OpenSSL began in early 2022 and has been active since.</p>
+<p><strong>Origin of the port:</strong> The first RISC-V commit, “Add riscv64 target,” was authored <strong>2021-03-29</strong> by <strong>luyahan</strong> (<code class="language-plaintext highlighter-rouge">yahan@iscas.ac.cn</code>, Institute of Software, Chinese Academy of Sciences – ISCAS) and merged to <code class="language-plaintext highlighter-rouge">master</code> <strong>2021-04-01</strong> via <a href="https://github.com/openssl/openssl/pull/14723">PR #14723</a>, reviewed by Richard Levitte, Paul Dale, and Tomas Mraz. This was a bare <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> Configure-target addition with no assembly or algorithm code.</p>
 
-<p><strong>First RISC-V commit:</strong> May 19, 2022. <a href="https://github.com/openssl/openssl/pull/17640">PR #17640</a> was opened February 4, 2022 and merged May 19, 2022 by paulidale (Paul Dale). Author: Henry Brausen (henry.brausen@vrull.eu). Reviewers: Philipp Tomsich (vrull.eu), Tomas Mraz, Paul Dale.</p>
-
-<p>The initial merge introduced four commits: linux64-riscv64 ASM target support, a four-table AES implementation in RV64I assembly, a RISC-V CPUID stub with <code class="language-plaintext highlighter-rouge">OPENSSL_riscvcap</code> env variable, carry-less-multiplication GCM via Zbb/Zbc, and BSWAP routines via Zbb <code class="language-plaintext highlighter-rouge">rev8</code>.</p>
-
-<p><strong>Subsequent major milestones (all merged unless noted):</strong></p>
+<p>A companion backport, <a href="https://github.com/openssl/openssl/pull/14724">PR #14724 “Add riscv64 target for OpenSSL_1_1_1”</a> (same author), illustrates the project’s governance process rather than any technical resistance to RISC-V: reviewer t8m flagged that the 1.1.1 branch is bug-fix-only and the change needed an OTC/OMC (Technical/Management Committee) exception; paulidale cited precedent (<a href="https://github.com/openssl/openssl/pull/12369">PR #12369</a>) for allowing similar config-only additions; the change sat on “hold: need omc decision” from late March to late June 2026; paulidale confirmed “the vote has passed, this can be merged to 1.1.1” on 2026-06-27; and it merged 2026-06-29 after the mandatory 24-hour grace period. No technical objection was raised at any point – the entire three-month delay was process, not correctness.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Year</th>
+      <th>Date</th>
       <th>Event</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>2022</td>
-      <td>AES RV32 Zkn (<a href="https://github.com/openssl/openssl/pull/18308">#18308</a>), AES RV64 Zkn (<a href="https://github.com/openssl/openssl/pull/18197">#18197</a>), SM3 Zksh (<a href="https://github.com/openssl/openssl/pull/18287">#18287</a>), GCM GHASH (<a href="https://github.com/openssl/openssl/pull/20078">#20078</a>)</td>
+      <td>2021-03-29 / 2021-04-01</td>
+      <td><code class="language-plaintext highlighter-rouge">linux64-riscv64</code> Configure target added (config-only, no asm)</td>
+      <td><a href="https://github.com/openssl/openssl/pull/14723">PR #14723</a></td>
     </tr>
     <tr>
-      <td>2023</td>
-      <td>Full Zvk vector crypto suite – Zvkned/Zvkg/Zvksh/Zvksed/Zvknha/Zvknhb/Zvbc/Zvbb (<a href="https://github.com/openssl/openssl/pull/21923">#21923</a>), dual-licensing cleanup (<a href="https://github.com/openssl/openssl/pull/21018">#21018</a>, <a href="https://github.com/openssl/openssl/pull/20649">#20649</a>, <a href="https://github.com/openssl/openssl/pull/21357">#21357</a>)</td>
+      <td>2021-04-25</td>
+      <td><code class="language-plaintext highlighter-rouge">config</code> script auto-detection for <code class="language-plaintext highlighter-rouge">linux64-riscv64</code></td>
+      <td>Andreas Schwab, SUSE (commit search)</td>
     </tr>
     <tr>
-      <td>2024</td>
-      <td>ChaCha20 vector-only (<a href="https://github.com/openssl/openssl/pull/24069">#24069</a>), hwprobe syscall for capability detection (<a href="https://github.com/openssl/openssl/pull/24172">#24172</a>), vlenb symbol for assembler (<a href="https://github.com/openssl/openssl/pull/25539">#25539</a>), musl riscv64 fix (<a href="https://github.com/openssl/openssl/pull/25787">#25787</a>), SM2 RV64 asm (<a href="https://github.com/openssl/openssl/pull/25918">#25918</a>)</td>
+      <td>2021-06-29</td>
+      <td>Backported to OpenSSL_1_1_1-stable after OMC vote</td>
+      <td><a href="https://github.com/openssl/openssl/pull/14724">PR #14724</a></td>
     </tr>
     <tr>
-      <td>2025</td>
-      <td>Montgomery multiplication RV64GC (<a href="https://github.com/openssl/openssl/pull/27926">#27926</a>), SHA512 RVV (<a href="https://github.com/openssl/openssl/pull/29263">#29263</a>), SM3 vector crypto (<a href="https://github.com/openssl/openssl/pull/29264">#29264</a>)</td>
+      <td>2021-12-18</td>
+      <td><code class="language-plaintext highlighter-rouge">BSD-riscv64</code> / <code class="language-plaintext highlighter-rouge">BSD-riscv32</code> targets added</td>
+      <td>Piotr Kubaj, FreeBSD project</td>
     </tr>
     <tr>
-      <td>2026</td>
-      <td>Montgomery squaring RV64GC (<a href="https://github.com/openssl/openssl/pull/29440">#29440</a>), AES-GCM dispatch fixes (<a href="https://github.com/openssl/openssl/pull/30714">#30714</a>, <a href="https://github.com/openssl/openssl/pull/30713">#30713</a>), SM4-CBC instruction reordering (<a href="https://github.com/openssl/openssl/pull/29544">#29544</a>), cpuid BIO_snprintf refactor (<a href="https://github.com/openssl/openssl/pull/30557">#30557</a>)</td>
+      <td>2022-01-28 onward / merged 2022-05-19</td>
+      <td>riscv64 asm architecture hookup and four-table generic RV64I AES assembly, reviewed by Philipp Tomsich (vrull.eu)</td>
+      <td><a href="https://github.com/openssl/openssl/pull/17640">PR #17640</a></td>
+    </tr>
+    <tr>
+      <td>2022-04-30</td>
+      <td>Scalar crypto extension capability detection</td>
+      <td>Hongren “Zenithal” Zheng</td>
+    </tr>
+    <tr>
+      <td>2022-06-10</td>
+      <td>AES RISC-V64 Zkn asm</td>
+      <td><a href="https://github.com/openssl/openssl/pull/18197">PR #18197</a></td>
+    </tr>
+    <tr>
+      <td>2022-06-22</td>
+      <td>SM3 Zksh inline asm</td>
+      <td><a href="https://github.com/openssl/openssl/pull/18287">PR #18287</a></td>
+    </tr>
+    <tr>
+      <td>2022-07-19</td>
+      <td>Zbkb/Zbb bswap handling</td>
+      <td>marcfedorow, CloudBear</td>
+    </tr>
+    <tr>
+      <td>2023-01-17/18</td>
+      <td>Capability-macro cleanup, GCM/clmul simplification</td>
+      <td>Christoph Mullner (cmuellner), vrull.eu</td>
+    </tr>
+    <tr>
+      <td>2023-03-16</td>
+      <td>GCM <code class="language-plaintext highlighter-rouge">.ghash()</code> implementation</td>
+      <td><a href="https://github.com/openssl/openssl/pull/20078">PR #20078</a></td>
+    </tr>
+    <tr>
+      <td>2023-10-26</td>
+      <td>Full Zvk vector-crypto suite (Zvkned/Zvkg/Zvksh/Zvksed/Zvknha/Zvknhb/Zvbc/Zvbb)</td>
+      <td><a href="https://github.com/openssl/openssl/pull/21923">PR #21923</a>, first shipped in 3.3.0</td>
+    </tr>
+    <tr>
+      <td>2023-12-12</td>
+      <td>riscv64/riscv32 detection fix, backported to 3.2</td>
+      <td><a href="https://github.com/openssl/openssl/pull/22881">PR #22881</a>, shipped 3.2.1</td>
+    </tr>
+    <tr>
+      <td>2024-05-08 / 2024-05-09</td>
+      <td>ChaCha20 vector-only implementation; hwprobe syscall capability detection</td>
+      <td><a href="https://github.com/openssl/openssl/pull/24069">PR #24069</a>, <a href="https://github.com/openssl/openssl/pull/24172">PR #24172</a></td>
+    </tr>
+    <tr>
+      <td>2024-10-28</td>
+      <td>musl riscv64 build fix, backported to 3.4</td>
+      <td><a href="https://github.com/openssl/openssl/pull/25787">PR #25787</a>, shipped 3.4.1</td>
+    </tr>
+    <tr>
+      <td>2025-09-08</td>
+      <td>SM2 implementation in generic riscv64 asm</td>
+      <td><a href="https://github.com/openssl/openssl/pull/25918">PR #25918</a></td>
+    </tr>
+    <tr>
+      <td>2025-03-28</td>
+      <td>SHA-256 and SHA-512 optimized via Zbb</td>
+      <td>merged to master (est. first shipped 3.6.0)</td>
+    </tr>
+    <tr>
+      <td>2025-05-06</td>
+      <td>Generic optimized SHA-256 for rv64gc</td>
+      <td><a href="https://github.com/openssl/openssl/pull/27381">PR #27381</a></td>
+    </tr>
+    <tr>
+      <td>2025-07-07</td>
+      <td>SM3 optimized via Zbb</td>
+      <td><a href="https://github.com/openssl/openssl/pull/27709">PR #27709</a></td>
+    </tr>
+    <tr>
+      <td>2025-08-13</td>
+      <td>MD5 assembly, rv64gc and Zbb</td>
+      <td><a href="https://github.com/openssl/openssl/pull/27990">PR #27990</a></td>
+    </tr>
+    <tr>
+      <td>2025-10-01</td>
+      <td>ChaCha20 unaligned-data crash fix, backported to 3.4/3.5/3.6</td>
+      <td><a href="https://github.com/openssl/openssl/pull/28684">PR #28684</a>, <a href="https://github.com/openssl/openssl/pull/28733">PR #28733</a></td>
+    </tr>
+    <tr>
+      <td>2025-10-06</td>
+      <td>SM2 carry bug in modulo reduction fixed</td>
+      <td><a href="https://github.com/openssl/openssl/pull/28746">PR #28746</a></td>
+    </tr>
+    <tr>
+      <td>2025-12-23 / 2025-12-31</td>
+      <td>SHA-512 and SM3 performance optimized with RISC-V Vector Crypto (RVV)</td>
+      <td><a href="https://github.com/openssl/openssl/pull/29263">PR #29263</a>, <a href="https://github.com/openssl/openssl/pull/29264">PR #29264</a></td>
+    </tr>
+    <tr>
+      <td>2026-07-20</td>
+      <td>SM2 RISC-V64 crash fix (functions emitted into <code class="language-plaintext highlighter-rouge">.rodata</code>), backported to 4.0</td>
+      <td><a href="https://github.com/openssl/openssl/pull/31874">PR #31874</a>, shipped 4.0.2</td>
+    </tr>
+    <tr>
+      <td>2026-09-07</td>
+      <td>EC <code class="language-plaintext highlighter-rouge">ecp_nistz256</code> RISC-V64 assembly closed unmerged after review concerns, despite measured 1.78x-6.9x gains</td>
+      <td><a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Primary RISC-V contributors since 2022:</strong></p>
+<p><strong>Primary contributors and affiliations identified across both commit history and PR authorship:</strong> luyahan (ISCAS, origin of the Configure target), Henry Brausen and Philipp Tomsich (vrull.eu, original AES assembly and ongoing scalar/vector crypto extension work), Christoph Mullner / cmuellner (vrull.eu, capability detection, CI, RV32 fixes, CFI review), Hongren “Zenithal” Zheng (ZenithalHourlyRate, scalar capability detection, AES Zkn, public benchmark gist), marcfedorow (CloudBear), Andreas Schwab (SUSE), Piotr Kubaj (FreeBSD project), Matt Caswell (musl build fix), mattcaswell, cxx194832 and ISCAS-affiliated contributors (SHA-3, ChaCha20, Poly1305 dot-asm ports), and zl523856 / OpenAnolis-Alibaba-ZTE (SM4-XTS, SM4-CBC).</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Contributor</th>
-      <th>Affiliation</th>
-      <th>Contribution area</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Henry Brausen</td>
-      <td>vrull.eu</td>
-      <td>Original port author</td>
-    </tr>
-    <tr>
-      <td>Philipp Tomsich</td>
-      <td>vrull.eu</td>
-      <td>Original reviewer</td>
-    </tr>
-    <tr>
-      <td>ZenithalHourlyRate / Hongren Zheng</td>
-      <td>Google / Tsinghua</td>
-      <td>Vector crypto extensions, CI</td>
-    </tr>
-    <tr>
-      <td>Christoph Mullner (cmuellner)</td>
-      <td>(independent / upstream)</td>
-      <td>hwprobe detection, April 2026 fixes burst</td>
-    </tr>
-    <tr>
-      <td>cxx194832</td>
-      <td>(unknown)</td>
-      <td>SHA512 RVV optimization (Nov 2025)</td>
-    </tr>
-    <tr>
-      <td>HeliC829 / Julian Zhu</td>
-      <td>ISCAS</td>
-      <td>ChaCha20, Poly1305, SHA3</td>
-    </tr>
-    <tr>
-      <td>zl523856</td>
-      <td>OpenAnolis / Alibaba-ZTE</td>
-      <td>SM4-XTS, SM4-CBC</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>No master tracking issue exists for RISC-V work. OpenSSL does not maintain an umbrella ticket; all work is tracked through individual PRs.</p><hr />
+<p><strong>Is it fully upstream?</strong> Yes – all shipping riscv64 code lives in <code class="language-plaintext highlighter-rouge">openssl/openssl</code> master and is backported through the normal stable-branch process; there is no out-of-tree or vendor-only fork required for core functionality. No single master/meta tracking issue exists for the riscv64 port overall; work is coordinated through roughly 80 individual algorithm/extension PRs and ad hoc bug issues rather than a pinned tracking issue or GitHub Project board. The three strongest tracking-issue candidates were checked and ruled out: <a href="https://github.com/openssl/openssl/issues/20091">#20091 “Expand our RISC-V testing”</a> (a CI-coverage request, closed 2026-03-25), <a href="https://github.com/openssl/openssl/issues/11073">#11073 “RISC-V arch support?”</a> (a 2020 support question, closed within days), and <a href="https://github.com/openssl/openssl/discussions/23336">Discussion #23336</a> (a user build-support thread).</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -393,17 +455,16 @@
 </h2>
     
 
-<p>OpenSSL does not publish a formal platform support tier document (no PLATFORMS.md in the repository). The practical evidence indicates RISC-V is treated as a first-class supported target:</p>
+<p>OpenSSL does not publish a formal platform support tier document. The practical evidence treats riscv64 as a first-class, actively maintained target:</p>
 
 <ul>
-  <li>Bug fixes are backported across all active stable branches (3.4, 3.5, 3.6, 4.0, master).</li>
-  <li>A dedicated named CI workflow (<code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code>) exists covering 13 extension-specific configurations.</li>
-  <li>The <code class="language-plaintext highlighter-rouge">severity: fips change</code> label is applied to RISC-V PRs that touch security-critical code paths, indicating the same scrutiny level as other architectures.</li>
-  <li>The project accepts RISC-V contributions under the standard committer review process.</li>
-  <li>36 RISC-V architecture-specific files are present in the repository (source files only; does not count build.info entries).</li>
+  <li>Bug fixes are routinely backported across all active stable branches (3.4, 3.5, 3.6, 4.0, master) – see <a href="https://github.com/openssl/openssl/pull/25787">PR #25787</a>, <a href="https://github.com/openssl/openssl/pull/28684">PR #28684</a>/<a href="https://github.com/openssl/openssl/pull/28733">#28733</a>, and <a href="https://github.com/openssl/openssl/pull/31874">PR #31874</a>.</li>
+  <li>A dedicated named CI workflow (<code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code>) exercises 13 ISA-extension-specific configurations under QEMU, and a nightly job (<code class="language-plaintext highlighter-rouge">os-zoo.yml</code>) runs on a real, non-emulated riscv64 self-hosted runner (see Section 7).</li>
+  <li>riscv64 assembly sources are included in the FIPS module source/checksum manifest (<code class="language-plaintext highlighter-rouge">providers/fips.module.sources</code>, <code class="language-plaintext highlighter-rouge">providers/fips-sources.checksums</code>), i.e. RISC-V code is FIPS-module-boundary-eligible even though no CI leg currently runs FIPS self-tests end to end on riscv64 (Section 7, Section 13).</li>
+  <li>The project accepts RISC-V contributions under the standard committer review process – no expedited path, but also no special barrier.</li>
 </ul>
 
-<p><strong>RISE Project involvement:</strong> The RISE Project (<a href="https://riseproject.dev">riseproject.dev</a>) has no blog posts, funded work, repositories, or documented involvement with OpenSSL. All 27 RISE blog posts from May 2024 through June 2026 were reviewed; none mention OpenSSL. RISE does not appear as a co-author or funder on any OpenSSL RISC-V PR. However, several organizations that contribute to OpenSSL RISC-V are RISE members: ISCAS (General Member), Alibaba DAMO Academy (Premier Member), ZTE (General Member). This is indirect alignment, not direct RISE funding.</p><hr />
+<p><strong>Comparison with amd64/arm64:</strong> Both amd64 and arm64 have native, non-emulated GitHub-hosted runners in OpenSSL’s main CI matrix (<code class="language-plaintext highlighter-rouge">ci.yml</code>) running on every commit with FIPS coverage. riscv64 has no presence at all in <code class="language-plaintext highlighter-rouge">ci.yml</code>; its coverage comes entirely from the two QEMU-based workflows plus the nightly native-hardware <code class="language-plaintext highlighter-rouge">os-zoo.yml</code> job, which only fires on cron or manual dispatch, never on push or pull_request. This is a structural gap: amd64/arm64 get continuous native-hardware signal on every change, riscv64 gets continuous QEMU signal on every change plus nightly native-hardware signal, not change-gated native signal.</p><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -412,209 +473,184 @@
   
 </h2>
     
-<h3 id="41-runtime-cpu-feature-detection">
+
+<p>OpenSSL has no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory and no JIT (OpenSSL has no JIT anywhere in the project). RISC-V support follows OpenSSL’s existing per-algorithm pattern: <code class="language-plaintext highlighter-rouge">crypto/&lt;alg&gt;/asm/*-riscv64*.pl</code> Perl “perlasm” generators that emit <code class="language-plaintext highlighter-rouge">.S</code>/<code class="language-plaintext highlighter-rouge">.s</code> GNU assembler files at build time, small C dispatch shims named <code class="language-plaintext highlighter-rouge">*_riscv.c</code>, and a shared capability-detection layer. All RISC-V code is hand-written assembly (scalar and RVV vector-crypto), not C intrinsics – a code search for <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code> (an RVV-intrinsic type) returned zero hits in the repository.</p>
+<h3 id="41-capability-detection-infrastructure">
   
   
-    <a href="#41-runtime-cpu-feature-detection" class="anchor-heading" aria-labelledby="41-runtime-cpu-feature-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Runtime CPU Feature Detection
+    <a href="#41-capability-detection-infrastructure" class="anchor-heading" aria-labelledby="41-capability-detection-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Capability detection infrastructure
   
   
 </h3>
     
 
-<p>Three files implement the detection infrastructure:</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">crypto/riscvcap.c</code></strong> – CPU feature detection, runtime capability dispatch. Implements <code class="language-plaintext highlighter-rouge">OPENSSL_cpuid_setup()</code> as a constructor that runs at library load. Detection sources in priority order: (1) <code class="language-plaintext highlighter-rouge">OPENSSL_riscvcap</code> env var (parses arch strings like <code class="language-plaintext highlighter-rouge">rv64gc_zba_zbb</code>), (2) Linux <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall (Linux 6.4+), (3) <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code>. Calls <code class="language-plaintext highlighter-rouge">riscv_vlen_asm()</code> to measure actual VLEN if vector support is detected.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">crypto/riscv64cpuid.pl</code></strong> and <strong><code class="language-plaintext highlighter-rouge">crypto/riscv32cpuid.pl</code></strong> – Perlasm generators for three utility routines each: <code class="language-plaintext highlighter-rouge">CRYPTO_memcmp</code> (constant-time), <code class="language-plaintext highlighter-rouge">OPENSSL_cleanse</code> (secure zero), <code class="language-plaintext highlighter-rouge">riscv_vlen_asm</code> (reads CSR <code class="language-plaintext highlighter-rouge">0xc22</code> = <code class="language-plaintext highlighter-rouge">vlenb</code>, returns VLEN in bits). ISA: RV64I/RV32I base only.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">include/arch/riscv_arch.h</code></strong> – Architecture header. Defines <code class="language-plaintext highlighter-rouge">OPENSSL_riscvcap_P[]</code> capability array, <code class="language-plaintext highlighter-rouge">RISCV_HAS_xxx()</code> check macros, combination macros (e.g. <code class="language-plaintext highlighter-rouge">RISCV_HAS_ZVKB_AND_ZVKNHA()</code>), and <code class="language-plaintext highlighter-rouge">riscv_vlen()</code> accessor.</p>
-
-<p><strong><code class="language-plaintext highlighter-rouge">include/arch/riscv_arch.def</code></strong> – X-macro definition file listing all 24 tracked ISA extensions:</p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Extension</th>
-      <th>Category</th>
+      <th>Path</th>
+      <th>Lines</th>
+      <th>Purpose</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>ZBA, ZBB, ZBC, ZBS</td>
-      <td>Bit-manipulation</td>
+      <td><code class="language-plaintext highlighter-rouge">crypto/riscvcap.c</code></td>
+      <td>157</td>
+      <td>Runtime feature detection: Linux <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall + <code class="language-plaintext highlighter-rouge">OPENSSL_riscvcap</code> env-var override, <code class="language-plaintext highlighter-rouge">OPENSSL_cpuid_setup()</code> constructor, <code class="language-plaintext highlighter-rouge">riscv_vlen()</code> (reads VLEN via the <code class="language-plaintext highlighter-rouge">vlenb</code> CSR)</td>
     </tr>
     <tr>
-      <td>ZBKB, ZBKC, ZBKX</td>
-      <td>Scalar crypto support</td>
+      <td><code class="language-plaintext highlighter-rouge">include/arch/riscv_arch.h</code></td>
+      <td>130</td>
+      <td>X-macro machinery generating <code class="language-plaintext highlighter-rouge">RISCV_HAS_&lt;EXT&gt;()</code> predicates and combination macros (e.g. <code class="language-plaintext highlighter-rouge">RISCV_HAS_ZBB_AND_ZBC()</code>)</td>
     </tr>
     <tr>
-      <td>ZKND, ZKNE</td>
-      <td>Scalar AES decrypt/encrypt</td>
+      <td><code class="language-plaintext highlighter-rouge">include/arch/riscv_arch.def</code></td>
+      <td>61</td>
+      <td>X-macro table of 24 tracked ISA extensions mapped to hwprobe key/bit</td>
     </tr>
     <tr>
-      <td>ZKNH</td>
-      <td>Scalar SHA</td>
+      <td><code class="language-plaintext highlighter-rouge">crypto/riscv64cpuid.pl</code> / <code class="language-plaintext highlighter-rouge">crypto/riscv32cpuid.pl</code></td>
+      <td>106 each</td>
+      <td>Perlasm: <code class="language-plaintext highlighter-rouge">CRYPTO_memcmp</code> (constant-time), <code class="language-plaintext highlighter-rouge">OPENSSL_cleanse</code>, <code class="language-plaintext highlighter-rouge">riscv_vlen_asm</code></td>
     </tr>
     <tr>
-      <td>ZKSED</td>
-      <td>Scalar SM4</td>
-    </tr>
-    <tr>
-      <td>ZKSH</td>
-      <td>Scalar SM3</td>
-    </tr>
-    <tr>
-      <td>ZKR</td>
-      <td>Entropy source (no hwprobe mapping)</td>
-    </tr>
-    <tr>
-      <td>ZKT</td>
-      <td>Scalar crypto group</td>
-    </tr>
-    <tr>
-      <td>V</td>
-      <td>Vector base</td>
-    </tr>
-    <tr>
-      <td>ZVBB</td>
-      <td>Vector bit-manipulation</td>
-    </tr>
-    <tr>
-      <td>ZVBC</td>
-      <td>Vector carry-less multiply</td>
-    </tr>
-    <tr>
-      <td>ZVKB</td>
-      <td>Vector crypto bit-manipulation</td>
-    </tr>
-    <tr>
-      <td>ZVKG</td>
-      <td>Vector GCM</td>
-    </tr>
-    <tr>
-      <td>ZVKNED</td>
-      <td>Vector AES</td>
-    </tr>
-    <tr>
-      <td>ZVKNHA, ZVKNHB</td>
-      <td>Vector SHA-256, SHA-512</td>
-    </tr>
-    <tr>
-      <td>ZVKSED</td>
-      <td>Vector SM4</td>
-    </tr>
-    <tr>
-      <td>ZVKSH</td>
-      <td>Vector SM3</td>
+      <td><code class="language-plaintext highlighter-rouge">crypto/perlasm/riscv.pm</code></td>
+      <td>1132</td>
+      <td>Shared perlasm helper emitting all scalar/vector instruction encodings used by the generators below</td>
     </tr>
   </tbody>
 </table></div>
+
+<p>Tracked extensions: Zba, Zbb, Zbc, Zbs (bitmanip); Zbkb, Zbkc, Zbkx, Zknd, Zkne, Zknh, Zksed, Zksh, Zkr, Zkt (scalar crypto); V, Zvbb, Zvbc, Zvkb, Zvkg, Zvkned, Zvknha, Zvknhb, Zvksed, Zvksh (vector/vector-crypto). ZBKC, ZBKX, ZKR, ZKT are tracked in <code class="language-plaintext highlighter-rouge">riscv_arch.def</code> but have no dedicated assembly implementation. Detection priority: <code class="language-plaintext highlighter-rouge">OPENSSL_riscvcap</code> env override, then the Linux <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall (kernel &gt;= 6.5 for ZBA/ZBB/ZBS, &gt;= 6.8 for ZBC/ZBKB/ZBKC/ZBKX/ZKND/ZKNE/ZKNH and related, per <code class="language-plaintext highlighter-rouge">doc/man3/OPENSSL_riscvcap.pod</code>), falling back to <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code>.</p>
 <h3 id="42-cryptographic-primitives-implemented">
   
   
-    <a href="#42-cryptographic-primitives-implemented" class="anchor-heading" aria-labelledby="42-cryptographic-primitives-implemented"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Cryptographic Primitives Implemented
+    <a href="#42-cryptographic-primitives-implemented" class="anchor-heading" aria-labelledby="42-cryptographic-primitives-implemented"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Cryptographic primitives implemented
   
   
 </h3>
     
 
-<p><strong>AES</strong> (6 assembly files):</p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>File</th>
+      <th>Algorithm</th>
+      <th>File(s)</th>
       <th>ISA requirements</th>
+      <th>Status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
+      <td>AES (scalar baseline)</td>
       <td><code class="language-plaintext highlighter-rouge">aes-riscv64.pl</code></td>
-      <td>RV64I table-based (baseline)</td>
+      <td>RV64I only</td>
+      <td>Complete</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">aes-riscv64-zkn.pl</code></td>
-      <td>RV64I + Zkne + Zknd</td>
+      <td>AES (scalar crypto ext)</td>
+      <td><code class="language-plaintext highlighter-rouge">aes-riscv64-zkn.pl</code>, <code class="language-plaintext highlighter-rouge">aes-riscv32-zkn.pl</code></td>
+      <td>Zknd/Zkne (+ Zbkb on RV32)</td>
+      <td>Complete</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">aes-riscv32-zkn.pl</code></td>
-      <td>RV32I + Zkne + Zknd + (opt) Zbkb</td>
+      <td>AES (vector, ECB/CBC/CTR)</td>
+      <td><code class="language-plaintext highlighter-rouge">aes-riscv64-zvkned.pl</code>, <code class="language-plaintext highlighter-rouge">aes-riscv64-zvkb-zvkned.pl</code></td>
+      <td>V + Zvkned (+ Zvkb)</td>
+      <td>Complete</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">aes-riscv64-zvkned.pl</code></td>
-      <td>RV64I + V (VLEN&gt;=128) + Zvkned</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">aes-riscv64-zvkb-zvkned.pl</code></td>
-      <td>RV64I + V (VLEN&gt;=128) + Zvkb + Zvkned + Zicclsm</td>
-    </tr>
-    <tr>
+      <td>AES-XTS (vector)</td>
       <td><code class="language-plaintext highlighter-rouge">aes-riscv64-zvbb-zvkg-zvkned.pl</code></td>
-      <td>RV64I + V (VLEN&gt;=128) + Zvbb + Zvkg + Zvkned + Zicclsm (AES-XTS)</td>
+      <td>V + Zvbb + Zvkg + Zvkned</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td>Montgomery mul/sqr (RSA/DH)</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv64-mont.pl</code> (1879 lines)</td>
+      <td>RV64I + M</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td>SM2 P-256 field arithmetic</td>
+      <td><code class="language-plaintext highlighter-rouge">ecp_sm2p256-riscv64.pl</code></td>
+      <td>RV64I + M + Zba</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td>GHASH/GCM</td>
+      <td><code class="language-plaintext highlighter-rouge">ghash-riscv64.pl</code>, <code class="language-plaintext highlighter-rouge">ghash-riscv64-zvkg.pl</code>, <code class="language-plaintext highlighter-rouge">ghash-riscv64-zvkb-zvbc.pl</code>, fused <code class="language-plaintext highlighter-rouge">aes-gcm-riscv64-zvkb-zvkg-zvkned.pl</code></td>
+      <td>Zbc (scalar) or Zvkg/Zvbc (vector)</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td>SHA-256/SHA-512 (scalar)</td>
+      <td><code class="language-plaintext highlighter-rouge">sha256-riscv64-zbb.pl</code>, <code class="language-plaintext highlighter-rouge">sha512-riscv64-zbb.pl</code></td>
+      <td>RV64I + Zbb</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td>SHA-256/SHA-512 (vector)</td>
+      <td><code class="language-plaintext highlighter-rouge">sha256-riscv64-zvkb-zvknha_or_zvknhb.pl</code>, <code class="language-plaintext highlighter-rouge">sha512-riscv64-zvkb-zvknhb.pl</code></td>
+      <td>V + Zvkb + Zvknha/Zvknhb</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td>SM3</td>
+      <td><code class="language-plaintext highlighter-rouge">sm3-riscv64-zbb.pl</code> (scalar), <code class="language-plaintext highlighter-rouge">sm3-riscv64-zvksh.pl</code> (vector)</td>
+      <td>Zbb / V+Zvkb+Zvksh</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td>SM4</td>
+      <td><code class="language-plaintext highlighter-rouge">sm4-riscv64-zvksed.pl</code> (vector)</td>
+      <td>V + Zvkb + Zvksed</td>
+      <td>Complete (vector); scalar Zksed path still open, <a href="https://github.com/openssl/openssl/pull/30735">PR #30735</a></td>
+    </tr>
+    <tr>
+      <td>MD5</td>
+      <td><code class="language-plaintext highlighter-rouge">md5-riscv64-zbb.pl</code></td>
+      <td>RV64I + Zbb</td>
+      <td>Complete</td>
+    </tr>
+    <tr>
+      <td>ChaCha20</td>
+      <td><code class="language-plaintext highlighter-rouge">chacha-riscv64-v-zbb.pl</code></td>
+      <td>V + Zbb (+ optional Zvkb)</td>
+      <td>Complete (dot-asm port still open, <a href="https://github.com/openssl/openssl/pull/30787">PR #30787</a>)</td>
+    </tr>
+    <tr>
+      <td>SHA-3/Keccak</td>
+      <td>none merged</td>
+      <td>targeted: Zbb</td>
+      <td>No merged implementation; see gap analysis</td>
+    </tr>
+    <tr>
+      <td>Poly1305</td>
+      <td>none merged (dot-asm RVV port open)</td>
+      <td>targeted: RVV</td>
+      <td>No merged implementation; see gap analysis</td>
+    </tr>
+    <tr>
+      <td>EC P-256 (<code class="language-plaintext highlighter-rouge">ecp_nistz256</code>)</td>
+      <td>none merged</td>
+      <td>targeted: RV64I</td>
+      <td>Attempted and closed unmerged, <a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a></td>
+    </tr>
+    <tr>
+      <td>Curve448</td>
+      <td>none merged (two open PRs)</td>
+      <td>targeted: RVV</td>
+      <td><a href="https://github.com/openssl/openssl/pull/32847">PR #32847</a>, <a href="https://github.com/openssl/openssl/pull/32835">PR #32835</a>, both open</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Note: AES-192 has a known limitation with Zvkned key scheduling (hardware encryption, software key generation). AES-128 and AES-256 are fully accelerated.</p>
-
-<p>Provider dispatch files cover CBC, ECB, CTR, GCM, CCM modes for both RV32 and RV64, with three-tier fallback: vector crypto &gt; scalar Zkn &gt; generic C.</p>
-
-<p><strong>SHA-2</strong> (4 assembly files):</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>File</th>
-      <th>ISA requirements</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">sha256-riscv64-zbb.pl</code></td>
-      <td>RV64I + Zbb</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">sha256-riscv64-zvkb-zvknha_or_zvknhb.pl</code></td>
-      <td>RV64I + V (VLEN&gt;=128) + Zvkb + Zvknha/b</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">sha512-riscv64-zbb.pl</code></td>
-      <td>RV64I + Zbb</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">sha512-riscv64-zvkb-zvknhb.pl</code></td>
-      <td>RV64I + V (VLEN&gt;=128) + Zvkb + Zvknhb</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>Dispatcher selects: vector crypto (Zvkb + Zvknha/b) &gt; Zbb &gt; generic C.</p>
-
-<p><strong>GCM/GHASH</strong> (3 assembly files): Zbc scalar (with Zbb or Zbkb variants), Zvbc vector, Zvkg vector. A combined AES-GCM path (<code class="language-plaintext highlighter-rouge">aes-gcm-riscv64-zvkb-zvkg-zvkned.pl</code>) provides the highest-performance AES-128/256 GCM.</p>
-
-<p><strong>ChaCha20</strong>: <code class="language-plaintext highlighter-rouge">chacha-riscv64-v-zbb.pl</code> (V + Zbb + optional Zvkb). Dispatcher guards on <code class="language-plaintext highlighter-rouge">len &gt; CHACHA_BLK_SIZE &amp;&amp; RISCV_HAS_ZBB() &amp;&amp; riscv_vlen() &gt;= 128</code>.</p>
-
-<p><strong>SM3</strong> (2 assembly files): Zbb scalar, V+Zvkb+Zvksh vector.</p>
-
-<p><strong>SM4</strong> (1 assembly file merged): V+Zvkb+Zvksed vector. Scalar Zksed PR (<a href="https://github.com/openssl/openssl/pull/30735">#30735</a>) is open as of June 2026.</p>
-
-<p><strong>Big Number / Montgomery arithmetic</strong>: <code class="language-plaintext highlighter-rouge">riscv64-mont.pl</code> – Montgomery multiplication <code class="language-plaintext highlighter-rouge">bn_mul_mont</code> and optimized squaring <code class="language-plaintext highlighter-rouge">bn_sqr8x_mont</code>. ISA: RV64I + M. No vector or crypto extensions required.</p>
-
-<p><strong>Elliptic Curve SM2</strong>: <code class="language-plaintext highlighter-rouge">ecp_sm2p256-riscv64.pl</code> – SM2 P-256 finite field arithmetic (Generalized Mersenne reduction). ISA: RV64I + M + Zba.</p>
-
-<p><strong>SHA-3</strong>: No merged optimized implementation. <a href="https://github.com/openssl/openssl/pull/29970">PR #29970</a> (Keccak-1600 via Zbb) is open with correctness review concerns (alignment bug). <a href="https://github.com/openssl/openssl/pull/29567">PR #29567</a> and <a href="https://github.com/openssl/openssl/pull/29498">#29498</a> were closed without merging.</p>
-
-<p><strong>Poly1305</strong>: No merged optimized implementation. <a href="https://github.com/openssl/openssl/pull/31182">PR #31182</a> (dot-asm port, RVV) is open as of May 2026.</p>
-
-<p><strong>MD5</strong>: <code class="language-plaintext highlighter-rouge">md5-riscv64-zbb.pl</code> exists (referenced in issue <a href="https://github.com/openssl/openssl/issues/29357">#29357</a> context).</p>
-
-<p><strong>RSA</strong>: Accelerated via the Montgomery arithmetic backend above. No RSA-specific assembly beyond <code class="language-plaintext highlighter-rouge">riscv64-mont.pl</code>.</p>
-
-<p><strong>Perlasm helper</strong>: <code class="language-plaintext highlighter-rouge">crypto/perlasm/riscv.pm</code> encodes all scalar Zkn instructions, Zbb/Zbkb, full RVV base, and all Zvk vector crypto instructions. Also provides pure-RV64I software fallbacks for brev8, orn, roriw.</p>
-<h3 id="43-extension-coverage-summary">
+<p>C dispatch shims (pick the asm variant at runtime based on detected capabilities) exist for SHA (<code class="language-plaintext highlighter-rouge">crypto/sha/sha_riscv.c</code>), SM3, MD5, ChaCha20, and the AES/SM4 cipher providers (<code class="language-plaintext highlighter-rouge">providers/implementations/ciphers/cipher_aes_hw_rv64i.c</code>, <code class="language-plaintext highlighter-rouge">cipher_aes_hw_rv32i.c</code>, and the SM4 <code class="language-plaintext highlighter-rouge">.inc</code> variants for GCM/CCM/XTS). None of the implemented paths are stubs; every file above implements a working primitive.</p>
+<h3 id="43-comparison-with-amd64arm64">
   
   
-    <a href="#43-extension-coverage-summary" class="anchor-heading" aria-labelledby="43-extension-coverage-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Extension Coverage Summary
+    <a href="#43-comparison-with-amd64arm64" class="anchor-heading" aria-labelledby="43-comparison-with-amd64arm64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Comparison with amd64/arm64
   
   
 </h3>
@@ -623,63 +659,57 @@
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Category</th>
-      <th>Extensions with merged code</th>
+      <th>Component</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Scalar bit-manipulation</td>
-      <td>Zba, Zbb, Zbc, Zbkb</td>
+      <td>AES</td>
+      <td>AES-NI</td>
+      <td>Crypto Extension (CE)</td>
+      <td>Zkn (scalar) / Zvkned (vector); AES-192 Zvkned key schedule falls back to software [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>Scalar AES</td>
-      <td>Zknd, Zkne</td>
+      <td>SHA-256/512</td>
+      <td>SHA extensions / AVX2</td>
+      <td>SHA CE</td>
+      <td>Zbb (scalar) / Zvknha-Zvknhb (vector)</td>
     </tr>
     <tr>
-      <td>Scalar hash</td>
-      <td>Zknh (via dispatcher), Zksh</td>
+      <td>GHASH/GCM</td>
+      <td>PCLMULQDQ</td>
+      <td>PMULL</td>
+      <td>Zbc / Zvkg / Zvbc</td>
     </tr>
     <tr>
-      <td>Scalar SM4</td>
-      <td>Zksed (tracked but scalar asm open in <a href="https://github.com/openssl/openssl/pull/30735">#30735</a>)</td>
+      <td>ChaCha20/Poly1305</td>
+      <td>AVX2/AVX-512</td>
+      <td>NEON</td>
+      <td>ChaCha20: V+Zbb (merged); Poly1305: no merged optimization</td>
     </tr>
     <tr>
-      <td>Vector base</td>
-      <td>V (VLEN &gt;= 128 required throughout)</td>
+      <td>SHA-3</td>
+      <td>AVX2/AVX-512</td>
+      <td>Data not available</td>
+      <td>No merged optimization; two closed-unmerged attempts, one active successor PR</td>
     </tr>
     <tr>
-      <td>Vector bit-manipulation</td>
-      <td>Zvbb, Zvkb</td>
+      <td>RSA/DH (Montgomery)</td>
+      <td>AVX2/ADX</td>
+      <td>NEON</td>
+      <td>RV64GC-only, merged</td>
     </tr>
     <tr>
-      <td>Vector carry-less multiply</td>
-      <td>Zvbc</td>
-    </tr>
-    <tr>
-      <td>Vector GCM</td>
-      <td>Zvkg</td>
-    </tr>
-    <tr>
-      <td>Vector AES</td>
-      <td>Zvkned</td>
-    </tr>
-    <tr>
-      <td>Vector SHA</td>
-      <td>Zvknha, Zvknhb</td>
-    </tr>
-    <tr>
-      <td>Vector SM3</td>
-      <td>Zvksh</td>
-    </tr>
-    <tr>
-      <td>Vector SM4</td>
-      <td>Zvksed</td>
+      <td>EC P-256/P-384</td>
+      <td>AVX2/ADX dedicated asm</td>
+      <td>NEON dedicated asm</td>
+      <td>No merged riscv64-specific asm; one serious attempt closed unmerged</td>
     </tr>
   </tbody>
-</table></div>
-
-<p>ZBKC, ZBKX, ZKR, ZKT are tracked in <code class="language-plaintext highlighter-rouge">riscv_arch.def</code> but have no dedicated assembly implementations.</p><hr />
+</table></div><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -689,48 +719,48 @@
 </h2>
     
 
-<p>OpenSSL uses a Perl-based <code class="language-plaintext highlighter-rouge">./Configure</code> build system. There is no CMakeLists.txt. All RISC-V targets are declared in <code class="language-plaintext highlighter-rouge">Configurations/10-main.conf</code>:</p>
+<p>OpenSSL uses a Perl-based <code class="language-plaintext highlighter-rouge">./Configure</code>/<code class="language-plaintext highlighter-rouge">./config</code> build system. There is no CMakeLists.txt, no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code> toolchain file, and no riscv64 Dockerfile anywhere in the repository (confirmed by exhaustive search of <code class="language-plaintext highlighter-rouge">.ci/docker/</code>, <code class="language-plaintext highlighter-rouge">docker/</code>, and a content search for <code class="language-plaintext highlighter-rouge">riscv64 filename:Dockerfile</code>). CI runs directly on GitHub-hosted <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> runners with cross-toolchain <code class="language-plaintext highlighter-rouge">apt</code> packages, not containers.</p>
 
+<p><strong>Configure targets</strong> (<code class="language-plaintext highlighter-rouge">Configurations/10-main.conf</code>):</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>linux64-riscv64: inherits linux-generic64, perlasm_scheme=linux64, asm_arch=riscv64
-linux32-riscv32: inherits linux-latomic, perlasm_scheme=linux32, asm_arch=riscv32
-BSD-riscv64:     inherits BSD-generic64, perlasm_scheme=linux64, asm_arch=riscv64
-BSD-riscv32:     inherits BSD-generic32, perlasm_scheme=linux32, asm_arch=riscv32
+linux32-riscv32: inherits linux-latomic,    perlasm_scheme=linux32, asm_arch=riscv32
+BSD-riscv64:     inherits BSD-generic64,    perlasm_scheme=linux64, asm_arch=riscv64
+BSD-riscv32:     inherits BSD-generic32,    perlasm_scheme=linux32, asm_arch=riscv32
 </code></pre></div></div>
-
-<p><code class="language-plaintext highlighter-rouge">linux32-riscv32</code> inherits <code class="language-plaintext highlighter-rouge">linux-latomic</code> (adds <code class="language-plaintext highlighter-rouge">-latomic</code> for 32-bit atomic operations).</p>
+<p><code class="language-plaintext highlighter-rouge">android-riscv64</code> is also defined (<code class="language-plaintext highlighter-rouge">Configurations/15-android.conf</code>). <code class="language-plaintext highlighter-rouge">util/perl/OpenSSL/config.pm</code> autodetects <code class="language-plaintext highlighter-rouge">riscv64-*-linux*</code> and maps it to <code class="language-plaintext highlighter-rouge">linux64-riscv64</code>.</p>
 
 <p><strong>Native build on a riscv64 host:</strong></p>
-
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./config
 make -j$(nproc)
 make test
 </code></pre></div></div>
 
-<p><strong>Cross-compilation from x86_64:</strong></p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./Configure linux64-riscv64 \
-    --cross-compile-prefix=riscv64-linux-gnu- \
-    --prefix=/usr/local
-make -j$(nproc)
+<p><strong>OpenSSL’s own native CI job</strong> (<code class="language-plaintext highlighter-rouge">os-zoo.yml</code>, <code class="language-plaintext highlighter-rouge">linux-riscv64</code>, on a real self-hosted riscv64 runner):</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./config enable-fips enable-ec_nistp_64_gcc_128 enable-md2 enable-rc5 enable-trace
+make -j8
+OPENSSL_riscvcap=RV64GC_ZBA_ZBB_ZBC_ZBS_ZKT_V make test HARNESS_JOBS=4 LHASH_WORKERS=16
 </code></pre></div></div>
 
-<p><strong>Capability override for testing:</strong></p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>OPENSSL_riscvcap=RV64GC_ZBA_ZBB_ZBC_ZBS_ZKT_V make test HARNESS_JOBS=4
+<p><strong>Cross-compilation from x86_64</strong> (<code class="language-plaintext highlighter-rouge">cross-compiles.yml</code> pattern):</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-get install gcc-riscv64-linux-gnu libc6-dev-riscv64-cross
+./config --banner=Configured --strict-warnings --cross-compile-prefix=riscv64-linux-gnu- linux64-riscv64
+make -j4
+QEMU_CPU="rv64,v=true,vext_spec=v1.0" QEMU_LD_PREFIX=/usr/riscv64-linux-gnu make test
 </code></pre></div></div>
-
-<p><strong>Assembler requirements:</strong> GNU assembler supports rv64gc fully. ISA extension encoding for the Zvk suite requires binutils &gt;= 2.38. OpenSSL CI uses <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> with the <code class="language-plaintext highlighter-rouge">binutils-riscv64-linux-gnu</code> cross-toolchain without issues. Older binutils (&lt; 2.38, e.g. Ubuntu 20.04) will fail to assemble vector crypto paths.</p>
+<p>The <code class="language-plaintext highlighter-rouge">vext_spec=v1.0</code> pin exists specifically to silence a QEMU “vector version is not specified” stderr warning that otherwise breaks tests parsing stderr output.</p>
 
 <p><strong>Disabling assembly:</strong></p>
-
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./Configure linux64-riscv64 no-asm --cross-compile-prefix=riscv64-linux-gnu-
 </code></pre></div></div>
+<p>There is no <code class="language-plaintext highlighter-rouge">-DUSE_X=OFF</code>-style CMake flag convention since OpenSSL is not CMake-based; the closest equivalents are <code class="language-plaintext highlighter-rouge">no-asm</code>, <code class="language-plaintext highlighter-rouge">no-shared</code>, <code class="language-plaintext highlighter-rouge">enable-fips</code>/no fips flag, and feature toggles such as <code class="language-plaintext highlighter-rouge">enable-ec_nistp_64_gcc_128</code>, <code class="language-plaintext highlighter-rouge">enable-md2</code>, <code class="language-plaintext highlighter-rouge">enable-rc5</code>, <code class="language-plaintext highlighter-rouge">enable-trace</code>, <code class="language-plaintext highlighter-rouge">enable-lms</code>. Runtime (not build-time) capability gating is via the <code class="language-plaintext highlighter-rouge">OPENSSL_riscvcap</code> environment variable.</p>
 
-<p><strong>FIPS module:</strong> All riscv64 CI configurations use <code class="language-plaintext highlighter-rouge">fips: no</code>. The FIPS provider is not tested for riscv64 [NEEDS VERIFICATION that FIPS provider builds correctly on riscv64].</p>
+<p><strong>Toolchain/version requirements:</strong> No explicit minimum GCC/Clang/binutils version is pinned in-repo for riscv64 (no <code class="language-plaintext highlighter-rouge">NOTES-RISCV.md</code>, no version-gate comments found in <code class="language-plaintext highlighter-rouge">crypto/perlasm/riscv.pm</code>, <code class="language-plaintext highlighter-rouge">crypto/riscv64cpuid.pl</code>, or <code class="language-plaintext highlighter-rouge">include/arch/riscv_arch.def</code>). CI simply installs Ubuntu’s <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>/<code class="language-plaintext highlighter-rouge">libc6-dev-riscv64-cross</code> packages at whatever version ships with <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>. The practical constraint is that the assembler must accept the ISA extension mnemonics used (<code class="language-plaintext highlighter-rouge">_zvkned</code>, <code class="language-plaintext highlighter-rouge">_zvbb</code>, <code class="language-plaintext highlighter-rouge">_zvksh</code>, <code class="language-plaintext highlighter-rouge">_zksed</code>, etc.) – a binutils/GCC-integrated-assembler capability rather than a documented minimum.</p>
 
-<p><strong>RV32 cross-compilation limitation:</strong> No Ubuntu package provides an RV32 cross-compiler. Confirmed by <a href="https://github.com/openssl/openssl/pull/30733">PR #30733</a> author (cmuellner, 2026-04-08): “There is no Ubuntu package for a riscv32 cross-compiler.” This is a practical gap for embedded RISC-V targets.</p>
+<p><strong>QEMU-specific caveat (load-bearing for CI):</strong> Ubuntu 24.04’s QEMU 8.2.2 (the version <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> ships) does not correctly report <code class="language-plaintext highlighter-rouge">ZVKB</code>/most <code class="language-plaintext highlighter-rouge">Zvk*</code> vector-crypto extensions via <code class="language-plaintext highlighter-rouge">-cpu</code> flags or hwprobe; workflow comments explicitly document this workaround (“do not use zvkb flag for qemucpu as ubuntu-latest (24.04) uses QEMU 8.2.2 … Should be zvkg=true, zvbb=false, zvkb=false”) with a TODO to tighten detection “once CI moves to a newer QEMU.”</p>
 
-<p><strong>Cross-compilation with <code class="language-plaintext highlighter-rouge">no-deprecated</code> flag (open bug):</strong> <a href="https://github.com/openssl/openssl/issues/29357">Issue #29357</a> (opened 2025-12-09, open as of June 2026): <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> cross-compilation fails when <code class="language-plaintext highlighter-rouge">no-deprecated</code> is specified. Root cause: <code class="language-plaintext highlighter-rouge">crypto/md5/md5_riscv.c</code> and <code class="language-plaintext highlighter-rouge">crypto/sha/sha_riscv.c</code> reference deprecated public type names (<code class="language-plaintext highlighter-rouge">MD5_CTX</code>, <code class="language-plaintext highlighter-rouge">SHA256_CTX</code>, <code class="language-plaintext highlighter-rouge">SHA512_CTX</code>). All other architectures are unaffected. Fix candidate <a href="https://github.com/openssl/openssl/pull/30763">PR #30763</a> is open. Affects all branches: 3.4, 3.5, 3.6, 4.0, master.</p><hr />
+<p><strong>RV32 cross-compilation limitation:</strong> No Ubuntu package provides an RV32 cross-compiler, per <a href="https://github.com/openssl/openssl/pull/30733">PR #30733</a> author cmuellner (2026-04-08): “There is no Ubuntu package for a riscv32 cross-compiler.” This is a practical gap for embedded RISC-V targets.</p>
+
+<p><strong>Known build failure:</strong> <a href="https://github.com/openssl/openssl/issues/29357">Issue #29357</a>, open 2025-12-09 through at least 2026-07-23: <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> cross-compilation fails when <code class="language-plaintext highlighter-rouge">no-deprecated</code> is specified, because <code class="language-plaintext highlighter-rouge">crypto/md5/md5_riscv.c</code> and <code class="language-plaintext highlighter-rouge">crypto/sha/sha_riscv.c</code> reference deprecated public type names (<code class="language-plaintext highlighter-rouge">MD5_CTX</code>, <code class="language-plaintext highlighter-rouge">SHA256_CTX</code>, <code class="language-plaintext highlighter-rouge">SHA512_CTX</code>). Affects all active branches. Fix candidate <a href="https://github.com/openssl/openssl/pull/30763">PR #30763</a> is open as of the latest check.</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -740,11 +770,9 @@ make -j$(nproc)
 </h2>
     
 
-<p>Data not available: No cross-architecture <code class="language-plaintext highlighter-rouge">openssl speed</code> comparison (riscv64 vs. arm64 vs. amd64) was found in any RISE publication, OpenSSL PR, or publicly indexed benchmark report. All benchmarks in upstream PRs are within-architecture before/after comparisons on FPGA or hardware simulation platforms.</p>
+<p>Data not available: no cross-architecture <code class="language-plaintext highlighter-rouge">openssl speed</code> comparison (riscv64 vs. arm64 vs. amd64) was found in any RISE publication, OpenSSL PR, or OpenBenchmarking.org dataset; OpenBenchmarking’s public OpenSSL dataset (2,560 results, latest run Oct 2025) covers x86_64 and aarch64 only, with no riscv64 entries. All available riscv64 benchmark data (Section 14) is within-architecture, before/after (baseline-C vs. optimized-assembly) comparison on a single SoC, not head-to-head against arm64/amd64 hardware.</p>
 
-<p>The following gap analysis is therefore based on which algorithm/extension combinations have merged optimized implementations, not on measured throughput ratios.</p>
-
-<p><strong>Coverage gaps on riscv64 relative to what the ISA supports:</strong></p>
+<p><strong>Functional gaps:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -763,10 +791,10 @@ make -j$(nproc)
       <td>None for baseline modes</td>
     </tr>
     <tr>
-      <td>AES-192 GCM</td>
+      <td>AES-192</td>
       <td>Accelerated</td>
-      <td>Partial: Zvkned key schedule falls back to software</td>
-      <td>AES-192 Zvkned key schedule not implemented</td>
+      <td>Zvkned key schedule reportedly falls back to software [NEEDS VERIFICATION]</td>
+      <td>Possible partial gap</td>
     </tr>
     <tr>
       <td>AES-XTS</td>
@@ -777,25 +805,25 @@ make -j$(nproc)
     <tr>
       <td>SHA-256/512</td>
       <td>Accelerated (SHA CE)</td>
-      <td>Accelerated (Zvknha/b)</td>
+      <td>Accelerated (Zvknha/b, Zbb)</td>
       <td>None</td>
     </tr>
     <tr>
       <td>SHA-3/Keccak</td>
       <td>Data not available</td>
-      <td>No merged optimization; open PR #29970 with correctness issues</td>
+      <td>No merged optimization; original <a href="https://github.com/openssl/openssl/pull/29970">PR #29970</a> carries an unresolved alignment concern and was closed/reopened, successor pair <a href="https://github.com/openssl/openssl/pull/32607">PR #32607</a>/<a href="https://github.com/openssl/openssl/pull/32606">#32606</a> open/closed as of Aug 2026</td>
       <td>Gap – no merged SHA-3 optimization</td>
     </tr>
     <tr>
       <td>ChaCha20</td>
       <td>Accelerated (NEON)</td>
-      <td>Vector (V+Zbb) merged; dot-asm Zbb version in open PR #30787</td>
-      <td>Open PR only</td>
+      <td>Vector (V+Zbb) merged; dot-asm Zbb port open, <a href="https://github.com/openssl/openssl/pull/30787">PR #30787</a>, 2 approvals pending merge</td>
+      <td>Minor – further optimization pending</td>
     </tr>
     <tr>
       <td>Poly1305</td>
       <td>Accelerated</td>
-      <td>No merged optimization; open PR #31182</td>
+      <td>No merged optimization; dot-asm RVV port open, <a href="https://github.com/openssl/openssl/pull/31182">PR #31182</a></td>
       <td>Gap – no merged Poly1305 optimization</td>
     </tr>
     <tr>
@@ -807,32 +835,26 @@ make -j$(nproc)
     <tr>
       <td>SM4</td>
       <td>Data not available</td>
-      <td>Vector (Zvksed) merged; scalar Zksed open in PR #30735</td>
-      <td>Scalar Zksed not yet merged</td>
+      <td>Vector (Zvksed) merged; scalar Zksed open, <a href="https://github.com/openssl/openssl/pull/30735">PR #30735</a>; perf-only PRs open for CBC/XTS</td>
+      <td>Scalar path not yet merged</td>
     </tr>
     <tr>
-      <td>RSA (Montgomery)</td>
+      <td>RSA/DH (Montgomery)</td>
       <td>Accelerated</td>
       <td>Merged (RV64GC)</td>
       <td>None for RV64</td>
     </tr>
     <tr>
-      <td>ECDH P-256/P-384</td>
+      <td>EC P-256/P-384</td>
       <td>Accelerated</td>
-      <td>Data not available: no riscv64-specific EC P-256/P-384 assembly found</td>
-      <td>Likely gap – no vector or scalar EC acceleration beyond SM2</td>
+      <td>No merged riscv64-specific asm; <a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a> (<code class="language-plaintext highlighter-rouge">ecp_nistz256</code>, 6.9x ECDSA sign / 1.78x verify / 2.5x ECDH measured on SG2044) closed unmerged 2026-09-07 after review concerns</td>
+      <td>Material gap – real attempt exists but is not merged</td>
     </tr>
     <tr>
-      <td>ECDH SM2</td>
-      <td>N/A</td>
-      <td>Merged (RV64I+M+Zba)</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>AES-CCM</td>
-      <td>Accelerated</td>
-      <td>Dispatch exists (Zvkned)</td>
-      <td>None</td>
+      <td>Curve448</td>
+      <td>Data not available</td>
+      <td>No merged implementation; two open RVV PRs, <a href="https://github.com/openssl/openssl/pull/32847">#32847</a>, <a href="https://github.com/openssl/openssl/pull/32835">#32835</a></td>
+      <td>Gap, in progress</td>
     </tr>
     <tr>
       <td>GHASH</td>
@@ -843,7 +865,13 @@ make -j$(nproc)
   </tbody>
 </table></div>
 
-<p><strong>AES constant-time security gap (critical):</strong> The AES T-table fallback path (used when neither Zknd/Zkne nor Zvkned is available) is not constant-time. This affects all riscv64 hardware without Zkn or Zvkned extensions, which is the majority of deployed riscv64 silicon (SG2042, TH1520, JH7110, SpacemiT K1 all lack these extensions [NEEDS VERIFICATION per-chip extension support]). Fix PRs <a href="https://github.com/openssl/openssl/pull/31080">#31080</a> and <a href="https://github.com/openssl/openssl/pull/31082">#31082</a> are open as of June 2026 per the dependency analysis findings.</p><hr />
+<p><strong>Security hardening gap (critical):</strong> The AES scalar fallback path used when neither Zkn nor Zvkned is available is <strong>not constant-time</strong>, per <a href="https://github.com/openssl/openssl/issues/20980">Issue #20980 “AES for RISC-V without Zkn extensions is not constant time”</a> (opened 2023-05-17). Fix PRs <a href="https://github.com/openssl/openssl/pull/31080">#31080</a> (“make riscv64 no-Zkn fallback constant time”) and <a href="https://github.com/openssl/openssl/pull/31082">#31082</a> (“make riscv64 no-clmul GHASH fallback constant time”) remain open. This affects any riscv64 silicon lacking the Zkn/Zvkned/Zbc extensions, which is a meaningful share of currently deployed RISC-V hardware.</p>
+
+<p><strong>Capability-coupling bug (performance-relevant):</strong> <a href="https://github.com/openssl/openssl/issues/25334">Issue #25334</a>, open since 2024-08-30: AES only takes the fast Zkn path when <strong>both</strong> <code class="language-plaintext highlighter-rouge">_zknd</code> and <code class="language-plaintext highlighter-rouge">_zkne</code> are present in <code class="language-plaintext highlighter-rouge">OPENSSL_riscvcap</code>; with only one set, it silently falls back to the slow path (measured &gt;5x regression, ~8,046 KB/s vs. ~1,517 KB/s for AES-128-ECB). No linked PR.</p>
+
+<p><strong>musl-specific gap:</strong> <a href="https://github.com/openssl/openssl/issues/28118">Issue #28118 “Riscv extension detection is broken on musl”</a> (open since 2025-07-29): <code class="language-plaintext highlighter-rouge">RISCV_HAS_ZBB()</code> wrongly returns false under musl libc, silently disabling the Zbb-accelerated ChaCha20 path (and likely others). This is the third of three related musl capability-detection incidents (Section 9/11). No PR exists.</p>
+
+<p><strong>NaN/floating-point semantics:</strong> Data not available: no issue matching riscv-specific floating point/NaN handling was found; OpenSSL’s RISC-V code is integer/bitmanip/vector-crypto only, with no floating-point-sensitive numerics identified.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -853,150 +881,95 @@ make -j$(nproc)
 </h2>
     
 
-<p>OpenSSL uses GitHub Actions only. No Jenkinsfile, .gitlab-ci.yml, or .cirrus.yml exists in the repository.</p>
-<h3 id="71-baseline-cross-compile-unconditional">
-  
-  
-    <a href="#71-baseline-cross-compile-unconditional" class="anchor-heading" aria-labelledby="71-baseline-cross-compile-unconditional"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.1 Baseline cross-compile (unconditional)
-  
-  
-</h3>
-    
-
-<p>File: <code class="language-plaintext highlighter-rouge">.github/workflows/cross-compiles.yml</code>
-Trigger: Every pull_request and push (no conditional guard).
-Runner: <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64).
-Configuration: <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> / <code class="language-plaintext highlighter-rouge">linux64-riscv64</code>, FIPS disabled, no extension-specific flags, no <code class="language-plaintext highlighter-rouge">qemucpu</code> override.
-Tests: Full suite on push (excluding <code class="language-plaintext highlighter-rouge">test_afalg</code>); <code class="language-plaintext highlighter-rouge">test_evp*</code> only on pull_request. All via <code class="language-plaintext highlighter-rouge">qemu-user</code>.</p>
-<h3 id="72-extension-specific-matrix-conditionally-triggered">
-  
-  
-    <a href="#72-extension-specific-matrix-conditionally-triggered" class="anchor-heading" aria-labelledby="72-extension-specific-matrix-conditionally-triggered"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.2 Extension-specific matrix (conditionally triggered)
-  
-  
-</h3>
-    
-
-<p>File: <code class="language-plaintext highlighter-rouge">.github/workflows/riscv-more-cross-compiles.yml</code>
-Trigger: pull_request OR push, subject to a hard <code class="language-plaintext highlighter-rouge">if:</code> condition. The job runs only when:</p>
-<ul>
-  <li>PR title contains <code class="language-plaintext highlighter-rouge">riscv</code> or <code class="language-plaintext highlighter-rouge">RISC-V</code>, OR</li>
-  <li>PR body contains <code class="language-plaintext highlighter-rouge">[riscv ci]</code>, OR</li>
-  <li>Commit message contains <code class="language-plaintext highlighter-rouge">[riscv ci]</code>, OR</li>
-  <li>Nightly cron (<code class="language-plaintext highlighter-rouge">35 02 * * *</code>) on <code class="language-plaintext highlighter-rouge">openssl/openssl</code>, OR</li>
-  <li>Manual <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>.</li>
-</ul>
-
-<p>On a plain push or plain PR that does not match these conditions, the job is skipped entirely.</p>
-
-<p>Runner: <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64). All execution via QEMU user-mode emulation.</p>
-
-<p><strong>13 matrix configurations:</strong></p>
+<p>OpenSSL uses GitHub Actions exclusively – <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, and <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> do not exist in the repository. Of 32 workflow files, exactly 3 reference riscv in any form.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>#</th>
-      <th>Extensions tested</th>
-      <th>VLEN</th>
+      <th>File</th>
+      <th>Trigger</th>
+      <th>Runner</th>
+      <th>FIPS</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>1</td>
-      <td>Zbb, Zbc, Zbkb, Zknd, Zkne</td>
-      <td>N/A</td>
+      <td><code class="language-plaintext highlighter-rouge">cross-compiles.yml</code></td>
+      <td>Every <code class="language-plaintext highlighter-rouge">pull_request</code> and <code class="language-plaintext highlighter-rouge">push</code>, unconditional</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code> + QEMU user-mode (one riscv64 leg among many arches)</td>
+      <td><code class="language-plaintext highlighter-rouge">fips: no</code></td>
     </tr>
     <tr>
-      <td>2</td>
-      <td>Zbc, Zbb</td>
-      <td>N/A</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code></td>
+      <td><code class="language-plaintext highlighter-rouge">pull_request</code>/<code class="language-plaintext highlighter-rouge">push</code> gated on PR title containing “riscv”/”RISC-V”, PR body or commit message containing <code class="language-plaintext highlighter-rouge">[riscv ci]</code>, nightly cron (<code class="language-plaintext highlighter-rouge">35 02 * * *</code>), or manual dispatch</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code> + QEMU user-mode, 13-leg extension matrix</td>
+      <td><code class="language-plaintext highlighter-rouge">fips: no</code> on every leg</td>
     </tr>
     <tr>
-      <td>3</td>
-      <td>Zbc only</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>4</td>
-      <td>V, Zbb (no Zvbb/Zvkb)</td>
-      <td>128</td>
-    </tr>
-    <tr>
-      <td>5</td>
-      <td>V, Zvkg (no Zvbb, QEMU 8.2.2 workaround)</td>
-      <td>128</td>
-    </tr>
-    <tr>
-      <td>6</td>
-      <td>V, Zvkb, Zvbc (no Zvkg, QEMU 8.2.2 workaround)</td>
-      <td>128</td>
-    </tr>
-    <tr>
-      <td>7</td>
-      <td>V, Zvkned (no Zvbb/Zvkb/Zvkg)</td>
-      <td>128</td>
-    </tr>
-    <tr>
-      <td>8</td>
-      <td>All scalar+vector extensions</td>
-      <td>128</td>
-    </tr>
-    <tr>
-      <td>9</td>
-      <td>All scalar+vector extensions</td>
-      <td>256</td>
-    </tr>
-    <tr>
-      <td>10</td>
-      <td>All scalar+vector extensions</td>
-      <td>512</td>
-    </tr>
-    <tr>
-      <td>11</td>
-      <td>Zbb, Zbkb, Zknh, Zksh (inline asm path, -march= flag)</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>12</td>
-      <td>Zbb, no V – hwprobe detection (no OPENSSL_riscvcap override)</td>
-      <td>N/A</td>
-    </tr>
-    <tr>
-      <td>13</td>
-      <td>V, Zvkned – hwprobe detection (no OPENSSL_riscvcap override)</td>
-      <td>128</td>
+      <td><code class="language-plaintext highlighter-rouge">os-zoo.yml</code>, job <code class="language-plaintext highlighter-rouge">linux-riscv64</code></td>
+      <td><code class="language-plaintext highlighter-rouge">schedule</code> (<code class="language-plaintext highlighter-rouge">50 02 * * *</code>) or manual <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> only, never <code class="language-plaintext highlighter-rouge">push</code>/<code class="language-plaintext highlighter-rouge">pull_request</code></td>
+      <td><code class="language-plaintext highlighter-rouge">runs-on: linux-riscv64</code> – a real self-hosted riscv64 runner label, not QEMU</td>
+      <td>builds with <code class="language-plaintext highlighter-rouge">enable-fips</code> directly in its <code class="language-plaintext highlighter-rouge">./config</code> invocation (distinct from the <code class="language-plaintext highlighter-rouge">fips:</code> matrix flag used by the other two files)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Rows 12-13 test the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall-based runtime detection path. Note: QEMU 8.2.2 does not report ZVKNED via hwprobe; this is documented as a known limitation in the workflow file.</p>
+<p>A 2026-09-18 commit (<code class="language-plaintext highlighter-rouge">0dcf16644d</code>, “CI: treat <code class="language-plaintext highlighter-rouge">[aarch64 ci]</code>/<code class="language-plaintext highlighter-rouge">[riscv ci]</code> in a PR body as a full-test opt-in”) formalizes the tag-based opt-in mechanism for the extension matrix.</p>
 
-<p>FIPS: all 13 rows have <code class="language-plaintext highlighter-rouge">fips: no</code>. No FIPS testing for riscv64 in any workflow.</p>
-<h3 id="73-main-ci-matrix">
-  
-  
-    <a href="#73-main-ci-matrix" class="anchor-heading" aria-labelledby="73-main-ci-matrix"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.3 Main CI matrix
-  
-  
-</h3>
-    
+<p><strong>Test depth:</strong> <code class="language-plaintext highlighter-rouge">cross-compiles.yml</code> runs EVP-only tests on ordinary PRs, the full suite on push or PRs labeled “extended tests.” <code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code> runs EVP-subset tests on ordinary PRs and the full suite on push/schedule/<code class="language-plaintext highlighter-rouge">[riscv ci]</code>-tagged PRs. <code class="language-plaintext highlighter-rouge">os-zoo.yml</code>’s native job runs <code class="language-plaintext highlighter-rouge">make test</code> in full, nightly, on real hardware.</p>
 
-<p><code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code> contains zero references to riscv. RISC-V is entirely absent from the main CI matrix.</p>
-<h3 id="74-native-hardware-runners">
-  
-  
-    <a href="#74-native-hardware-runners" class="anchor-heading" aria-labelledby="74-native-hardware-runners"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.4 Native hardware runners
-  
-  
-</h3>
-    
+<p><strong>13-leg extension matrix</strong> (<code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code>) sweeps scalar crypto (Zbb/Zbc/Zbkb/Zknd/Zkne), vector/vector-crypto (V, Zvkg, Zvkb+Zvbc, Zvkned) at VLEN 128/256/512, an inline-asm <code class="language-plaintext highlighter-rouge">-march=</code> path, and two hwprobe-detection-path legs (no <code class="language-plaintext highlighter-rouge">OPENSSL_riscvcap</code> override, relying on the runtime syscall). A documented QEMU 8.2.2 limitation (it misreports <code class="language-plaintext highlighter-rouge">ZVKB</code>/most <code class="language-plaintext highlighter-rouge">Zvk*</code> extensions) forces several legs to avoid flags QEMU cannot emulate correctly.</p>
 
-<p>There are no native riscv64 GitHub Actions runners in the openssl/openssl repository. All riscv64 testing uses <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) with QEMU user-mode emulation.</p>
+<p><strong>No native riscv64 presence in the main CI matrix:</strong> <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>, which gates amd64/arm64 on every commit, contains zero riscv references. All riscv64 signal on ordinary pushes/PRs is QEMU-emulated; real-hardware signal exists only via the nightly, non-change-gated <code class="language-plaintext highlighter-rouge">os-zoo.yml</code> job. QEMU does not model cache behavior, pipeline timing, or memory latency, so hardware-specific race conditions (Section 11) and performance regressions on real silicon are not reliably caught by the per-PR workflows.</p>
 
-<p><a href="https://github.com/openssl/openssl/pull/27240">PR #27240</a> (“Add riscv64 runner”) was closed in 2025. The workflow files confirm no riscv64 runner label is in use.</p>
+<p><strong>No riscv64 GitHub-hosted runner exists</strong> – GitHub does not offer one. The <code class="language-plaintext highlighter-rouge">linux-riscv64</code> label in <code class="language-plaintext highlighter-rouge">os-zoo.yml</code> is self-hosted hardware, consistent with <a href="https://github.com/openssl/openssl/pull/27240">PR #27240 “Add riscv64 CI runner”</a>’s closure history in the earlier cycle of this report.</p>
 
-<p><strong>Implication:</strong> All riscv64 CI results are QEMU-emulated. QEMU does not model cache behavior, pipeline timing, or memory latency. Performance regressions on real hardware are not caught by CI. Certain race conditions reproducible on real multi-core hardware (e.g. issue <a href="https://github.com/openssl/openssl/issues/22166">#22166</a>) cannot be reliably reproduced or caught in QEMU.</p><hr />
+<p><strong>RISE runner usage:</strong> No evidence was found that OpenSSL’s riscv64 CI uses RISE’s free native RISC-V runner infrastructure (announced on the RISE blog, <a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">March 2026</a>). The only tracked RISE item for OpenSSL (<a href="https://github.com/riseproject-dev/system-libraries-wg/issues/3">riseproject-dev/system-libraries-wg#3</a>) is explicitly blocked on a Simulator/Emulator WG dependency, not runner infrastructure.</p>
+
+<p><strong>Comparison table:</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Main CI (<code class="language-plaintext highlighter-rouge">ci.yml</code>), every commit</td>
+      <td>Native GitHub-hosted</td>
+      <td>Native GitHub-hosted</td>
+      <td>Not present</td>
+    </tr>
+    <tr>
+      <td>Cross-compile matrix</td>
+      <td>N/A (native)</td>
+      <td>Included</td>
+      <td>Included, QEMU-emulated</td>
+    </tr>
+    <tr>
+      <td>Extension-specific matrix</td>
+      <td>N/A</td>
+      <td>Not identified</td>
+      <td>13-leg QEMU matrix, opt-in trigger</td>
+    </tr>
+    <tr>
+      <td>Native-hardware nightly job</td>
+      <td>N/A</td>
+      <td>Not identified for this comparison</td>
+      <td><code class="language-plaintext highlighter-rouge">os-zoo.yml</code>, <code class="language-plaintext highlighter-rouge">linux-riscv64</code>, self-hosted, nightly/manual only</td>
+    </tr>
+    <tr>
+      <td>FIPS coverage</td>
+      <td>Yes, main CI</td>
+      <td>Yes, main CI</td>
+      <td>No on QEMU legs (<code class="language-plaintext highlighter-rouge">fips: no</code>); native nightly job builds <code class="language-plaintext highlighter-rouge">enable-fips</code> but FIPS self-test execution during <code class="language-plaintext highlighter-rouge">make test</code> is not separately confirmed</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -1006,17 +979,19 @@ Trigger: pull_request OR push, subject to a hard <code class="language-plaintext
 </h2>
     
 
-<p><strong>Upstream releases:</strong> OpenSSL upstream publishes source-only releases (tarballs + signatures). No prebuilt binary assets exist for any architecture in GitHub releases. This is consistent across all releases examined: openssl-3.0.21, openssl-3.4.6, openssl-3.5.7, openssl-3.6.3, openssl-4.0.1.</p>
+<p><strong>Upstream GitHub releases:</strong> OpenSSL publishes <strong>source tarballs only</strong> for every architecture – there is no riscv64-specific gap, because there are no architecture-specific binary release assets for any platform. Direct API confirmation of the release-asset listing was blocked in this research cycle by session repository-access restrictions (<code class="language-plaintext highlighter-rouge">GitHub access to this repository is not enabled for this session</code>), but this is consistent with established project practice and with every prior cross-check. Consumable riscv64 binaries come entirely from Linux distribution packaging of unmodified upstream source.</p>
 
-<p><strong>Debian:</strong> <code class="language-plaintext highlighter-rouge">openssl 3.6.3-1</code> is present in Debian sid (unstable) with status <code class="language-plaintext highlighter-rouge">Installed</code> on riscv64, built on buildd host <code class="language-plaintext highlighter-rouge">rv-manda-01</code>. <code class="language-plaintext highlighter-rouge">openssl_3.5.6-1~deb13u2_riscv64.deb</code> is available in Debian trixie security updates. Direct download URLs from ftp.us.debian.org, ftp.debian.org, ftp.cn.debian.org confirmed.</p>
+<p><strong>Ubuntu:</strong> <code class="language-plaintext highlighter-rouge">openssl</code> version <strong>3.5.5-1ubuntu3</strong> is built for riscv64 in Ubuntu 26.04 “resolute” (confirmed directly via <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code>, both the package page listing riscv64 among armhf/ppc64el/riscv64/s390x “ports” architectures, and the architecture-specific file list at <code class="language-plaintext highlighter-rouge">/resolute/riscv64/openssl/filelist</code>). Many related packages (<code class="language-plaintext highlighter-rouge">libcrypt-openssl-*-perl</code>, <code class="language-plaintext highlighter-rouge">librust-openssl-*-dev</code>, <code class="language-plaintext highlighter-rouge">libengine-*-openssl</code>) also build for riscv64 in the same suite.</p>
 
-<p><strong>Ubuntu 24.04 (Noble):</strong> Of 65 OpenSSL-related packages searched, the core <code class="language-plaintext highlighter-rouge">openssl</code> package supports riscv64. Only two of the 65 exclude riscv64: <code class="language-plaintext highlighter-rouge">openssl-ibmca</code> (s390x only) and <code class="language-plaintext highlighter-rouge">openssl-pkcs11-sign-provider</code> (no riscv64). All other packages either explicitly list riscv64 or are architecture-independent.</p>
+<p><strong>Debian:</strong> <code class="language-plaintext highlighter-rouge">openssl 3.6.3-1</code> is present in Debian sid (unstable), status <code class="language-plaintext highlighter-rouge">Installed</code> on riscv64 (buildd host <code class="language-plaintext highlighter-rouge">rv-manda-01</code>); <code class="language-plaintext highlighter-rouge">openssl_3.5.6-1~deb13u2_riscv64.deb</code> is available in Debian trixie security updates.</p>
 
-<p><strong>Arch Linux RISC-V:</strong> Two packages found in the core repository: <code class="language-plaintext highlighter-rouge">openssl-1.1-1.1.1.w-2-riscv64.pkg.tar.zst</code> (legacy 1.1 branch) and <code class="language-plaintext highlighter-rouge">openssl-3.6.3-1-riscv64.pkg.tar.zst</code>. Both filenames contain <code class="language-plaintext highlighter-rouge">riscv64</code> explicitly.</p>
+<p><strong>Arch Linux RISC-V</strong> (archriscv.felixc.at): <code class="language-plaintext highlighter-rouge">[core]/openssl-3.6.5-1-riscv64.pkg.tar.zst</code> was built <strong>2026-09-30</strong>, one day before this report’s cutoff, per the port’s live build-status feed (<code class="language-plaintext highlighter-rouge">.status/lastupdate.txt</code>), with the <code class="language-plaintext highlighter-rouge">[core]</code> repo showing 294/299 (98.33%) packages built for riscv64. This is a rolling, actively maintained package, not a stale snapshot.</p>
 
-<p><strong>PyPI:</strong> The <code class="language-plaintext highlighter-rouge">openssl</code> PyPI package does not exist (404). The relevant binding (<code class="language-plaintext highlighter-rouge">pyOpenSSL</code> v26.3.0) ships pure Python only (<code class="language-plaintext highlighter-rouge">none-any.whl</code>) with no compiled wheels for any architecture. Not relevant to the assessment.</p>
+<p><strong>PyPI:</strong> No PyPI package literally named <code class="language-plaintext highlighter-rouge">openssl</code> exists (HTTP 404 on both <code class="language-plaintext highlighter-rouge">pypi.org/pypi/openssl/json</code> and <code class="language-plaintext highlighter-rouge">pypi.org/simple/openssl/</code>). The related binding <code class="language-plaintext highlighter-rouge">pyOpenSSL</code> ships pure Python only with no compiled wheels for any architecture. Not materially relevant since OpenSSL is a C library, not a Python-distributed package.</p>
 
-<p><strong>Release cadence:</strong> OpenSSL does not ship riscv64 prebuilt binaries upstream. All deployment on riscv64 goes through Linux distribution packaging. The three active distros confirmed above (Debian, Ubuntu, Arch RISC-V) all carry current versions.</p><hr />
+<p><strong>RISE wheel builder</strong> (GitLab project, PyPI-compatible simple index): also has no <code class="language-plaintext highlighter-rouge">openssl</code> package (redirects to the same 404 on pypi.org), consistent with the PyPI finding.</p>
+
+<p><strong>What a user must do to get a working riscv64 binary:</strong> install from an active distro’s riscv64 ports repository (Ubuntu resolute, Debian sid/trixie, Arch RISC-V core) or build from upstream source using the <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> Configure target; there is no official upstream binary artifact for any architecture.</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -1034,116 +1009,78 @@ Trigger: pull_request OR push, subject to a hard <code class="language-plaintext
       <th>riscv64 build</th>
       <th>riscv64 test</th>
       <th>riscv64 release</th>
-      <th>Blocking issues</th>
+      <th>Notes / blocking issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
+      <td>Perl</td>
+      <td>build-dependency, critical</td>
+      <td>Green. Pure interpreted language, architecture-independent; ships on every riscv64 distro</td>
+      <td>Green (not arch-specific)</td>
+      <td>Green</td>
+      <td><code class="language-plaintext highlighter-rouge">search_issues riscv64 repo:Perl/perl5</code> returned no riscv64-specific open report</td>
+    </tr>
+    <tr>
+      <td>GNU binutils</td>
+      <td>build-dependency, critical</td>
+      <td>Green. riscv64 backend (as/ld/objdump) supported upstream; requires &gt;= 2.38 to assemble the Zvk vector-crypto instruction set used by several OpenSSL <code class="language-plaintext highlighter-rouge">.pl</code> generators</td>
+      <td>Not independently verified this cycle</td>
+      <td>Shipped via <code class="language-plaintext highlighter-rouge">binutils-riscv64-linux-gnu</code> in Debian/Ubuntu</td>
+      <td>Canonical development happens on sourceware.org mailing lists/Bugzilla, not GitHub Issues; the <code class="language-plaintext highlighter-rouge">bminor/binutils-gdb</code> GitHub mirror has no usable issue tracker for cross-checking riscv64 status</td>
+    </tr>
+    <tr>
       <td>glibc</td>
-      <td>Runtime C library; <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall for ISA detection</td>
-      <td>Green</td>
-      <td>Mostly green (SIGILL in <code class="language-plaintext highlighter-rouge">__memset_vector</code> when RVV disabled via <code class="language-plaintext highlighter-rouge">prctl()</code>)</td>
-      <td>Green</td>
-      <td><code class="language-plaintext highlighter-rouge">hwprobe</code> prototype fixed May 2025 (BZ #32932); vector register syscall clobber fixed Sep 2025</td>
+      <td>runtime-dependency, critical</td>
+      <td>Green. Builds on riscv64; official Debian/Ubuntu/Arch RISC-V ports</td>
+      <td>Ambiguous – Sourceware Buildbot riscv64 builders (293/336 reported) show “build successful,” but whether <code class="language-plaintext highlighter-rouge">make check</code> executes under QEMU vs. cross-compile-only is unconfirmed; an open correctness bug reports SIGILL when RVV is <code class="language-plaintext highlighter-rouge">prctl()</code>-disabled then <code class="language-plaintext highlighter-rouge">memset()</code> is called (since a December 2025 RVV <code class="language-plaintext highlighter-rouge">memset</code> merge) [NEEDS VERIFICATION]</td>
+      <td>Source-only upstream, consumed via distro riscv64 ports</td>
+      <td>No dedicated project report exists for glibc in this research set to cross-reference further</td>
     </tr>
     <tr>
-      <td>Perl 5 + Text::Template</td>
-      <td>Build system only (perlasm)</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>GNU assembler (binutils)</td>
-      <td>Assembles all perlasm-generated crypto .S files</td>
-      <td>Green (requires &gt;= 2.38 for Zvk)</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Binutils &lt; 2.38 (Ubuntu 20.04) cannot assemble Zvk paths</td>
+      <td>musl</td>
+      <td>runtime-dependency, critical</td>
+      <td>Green for the base build; OpenSSL’s own riscv64-musl build was fixed in <a href="https://github.com/openssl/openssl/pull/25787">PR #25787</a> (2024)</td>
+      <td><strong>Broken for capability detection</strong>: <code class="language-plaintext highlighter-rouge">RISCV_HAS_ZBB()</code> and related macros incorrectly return false under musl, silently disabling optimized paths (<a href="https://github.com/openssl/openssl/issues/28118">Issue #28118</a>, open since 2025-07-29, no PR)</td>
+      <td>Alpine Linux (musl-based) ships riscv64</td>
+      <td>Third musl-related incident after <a href="https://github.com/openssl/openssl/issues/25772">Issue #25772</a> -&gt; <a href="https://github.com/openssl/openssl/pull/25787">PR #25787</a> (missing <code class="language-plaintext highlighter-rouge">__NR_riscv_hwprobe</code> define) – fixes have been point patches, not a systemic rewrite of the capability-detection subsystem</td>
     </tr>
     <tr>
       <td>zlib</td>
-      <td>Optional TLS compression</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None</td>
+      <td>runtime-dependency, optional</td>
+      <td>Green. No external dependencies of its own; builds cleanly on riscv64</td>
+      <td>Green, covered by Debian/Ubuntu CI</td>
+      <td>Debian sid, Ubuntu noble/resolute ship it</td>
+      <td>Open, unreviewed RVV-optimized Adler32 PR (zlib #1099) with no maintainer response since 2025-11; no riscv64 correctness bugs</td>
     </tr>
     <tr>
       <td>brotli</td>
-      <td>Optional certificate compression</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>Green</td>
-      <td>None</td>
+      <td>runtime-dependency, optional</td>
+      <td>Green. Base riscv64 port upstream since 2018; builds from unmodified source</td>
+      <td>No riscv64 CI job exists in any of brotli’s 8 GitHub Actions workflows</td>
+      <td>Debian sid, Alpine edge, Chimera ship it; no official binary release artifacts</td>
+      <td>No RVV optimization merged; CMake cross-compile auto-detection has no <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-*</code> branch, so QEMU test-wrapping is not automatic</td>
     </tr>
     <tr>
       <td>zstd</td>
-      <td>Optional certificate compression</td>
-      <td>Mostly green</td>
-      <td>Mostly green</td>
+      <td>runtime-dependency, optional</td>
       <td>Green</td>
-      <td>Open: <a href="https://github.com/facebook/zstd/issues/4622">facebook/zstd#4622</a> – <code class="language-plaintext highlighter-rouge">huf_decompress</code> 4-way loop not enabled on riscv64; decompression throughput impact, not a correctness or build blocker</td>
+      <td>Green, QEMU CI since zstd PR #4502</td>
+      <td>Shipped Debian/Ubuntu</td>
+      <td>Two riscv64 correctness bugs already fixed upstream (<code class="language-plaintext highlighter-rouge">ZSTD_row_getRVVMask()</code> silent corruption, <code class="language-plaintext highlighter-rouge">__64BIT__</code> misdetection); none open</td>
     </tr>
     <tr>
-      <td>musl libc</td>
-      <td>Alternative runtime C library</td>
-      <td>Broken for ISA detection</td>
-      <td>Broken</td>
+      <td>QEMU</td>
+      <td>test-dependency, critical</td>
+      <td>N/A (QEMU itself is not built as part of OpenSSL; it is the execution vehicle for riscv64 CI)</td>
+      <td>QEMU user-mode (<code class="language-plaintext highlighter-rouge">qemu-user</code>) is how both <code class="language-plaintext highlighter-rouge">cross-compiles.yml</code> and <code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code> execute riscv64 test binaries on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> x86 runners; Ubuntu 24.04 ships QEMU 8.2.2, which <strong>misreports <code class="language-plaintext highlighter-rouge">ZVKB</code> and most <code class="language-plaintext highlighter-rouge">Zvk*</code> vector-crypto extensions</strong>, forcing several CI legs to work around flags QEMU cannot emulate correctly, with an open TODO to tighten detection “once CI moves to a newer QEMU”</td>
       <td>N/A</td>
-      <td><a href="https://github.com/openssl/openssl/issues/28118">Issue #28118</a>: <code class="language-plaintext highlighter-rouge">RISCV_HAS_ZBB()</code> returns false on musl; optimized paths silently skipped; no fix merged as of July 2025</td>
-    </tr>
-  </tbody>
-</table></div><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-
-<p><strong>RISE Project:</strong> No direct involvement with OpenSSL. Confirmed by scanning all 27 RISE blog posts (May 2024 through June 2026), all 30 repos in the RISE GitHub org, and the RISE Python wheel builder index. OpenSSL does not appear in any RISE deliverable, blog post, or project repository.</p>
-
-<p>The RISE runners announcement (May 12, 2026) identifies <code class="language-plaintext highlighter-rouge">pq-code-package</code> (post-quantum crypto) and <code class="language-plaintext highlighter-rouge">pyca cryptography</code> as projects using RISE CI runners – these are crypto-adjacent, but neither is OpenSSL.</p>
-
-<p><strong>Key contributing organizations (identified from PR authorship):</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Organization</th>
-      <th>RISE membership</th>
-      <th>Contribution</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>ISCAS</td>
-      <td>General Member</td>
-      <td>ChaCha20 (<a href="https://github.com/openssl/openssl/pull/30787">#30787</a>), Poly1305 (<a href="https://github.com/openssl/openssl/pull/31182">#31182</a>), SHA3 (<a href="https://github.com/openssl/openssl/pull/29970">#29970</a>)</td>
-    </tr>
-    <tr>
-      <td>Alibaba DAMO Academy + ZTE (OpenAnolis)</td>
-      <td>Premier Member (Alibaba), General Member (ZTE)</td>
-      <td>SM4-XTS (<a href="https://github.com/openssl/openssl/pull/30633">#30633</a>), SM4-CBC (<a href="https://github.com/openssl/openssl/pull/29544">#29544</a>)</td>
-    </tr>
-    <tr>
-      <td>vrull.eu</td>
-      <td>Not a RISE member</td>
-      <td>Original port (2022)</td>
-    </tr>
-    <tr>
-      <td>Google / Tsinghua</td>
-      <td>Google is RISE Premier Member</td>
-      <td>Vector crypto extensions, CI (<a href="https://github.com/openssl/openssl/pull/24403">#24403</a>)</td>
+      <td>This is the single most consequential dependency for CI fidelity: every per-PR riscv64 signal in OpenSSL’s CI runs through this specific QEMU version’s emulation accuracy, not real silicon</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>AI contribution strain (June 2026):</strong> The OpenSSL Foundation flagged that AI-generated contributions are straining the GitHub issue backlog. This is a governance signal that review bandwidth is constrained.</p><hr />
+<p><strong>project-graph cross-check:</strong> Not performed – the <code class="language-plaintext highlighter-rouge">project-graph</code> MCP server was unreachable (<code class="language-plaintext highlighter-rouge">CONNECTION_CLOSED</code>) throughout this research cycle. Ubuntu/Debian/Arch riscv64 package availability above was confirmed via direct <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> and distro-site fetches instead, not via the graph database; re-running the graph query once that server is reachable would add a second, independent confirmation channel for these same facts.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1161,7 +1098,36 @@ Trigger: pull_request OR push, subject to a hard <code class="language-plaintext
 </h3>
     
 
-<p><strong>No issue number assigned in findings for AES T-table constant-time gap:</strong> The AES T-table fallback path (used when Zkn and Zvkned are both absent) leaks key material via cache side-channels. Fix PRs <a href="https://github.com/openssl/openssl/pull/31080">#31080</a> and <a href="https://github.com/openssl/openssl/pull/31082">#31082</a> are open as of June 2026. This affects all riscv64 hardware without Zkn or Zvkned. Severity: critical for any riscv64 deployment handling sensitive data in environments where Zkn/Zvkned are absent.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/20980">#20980</a></td>
+      <td>AES for RISC-V without Zkn extensions is not constant time</td>
+      <td>Open since 2023-05-17</td>
+      <td>Root issue underlying fix PRs below; a cache-timing side channel on hardware without Zkn/Zvkned</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/pull/31080">#31080</a></td>
+      <td>aes: make riscv64 no-Zkn fallback constant time</td>
+      <td>Open</td>
+      <td>Fix for #20980, still unmerged</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/pull/31082">#31082</a></td>
+      <td>modes: make riscv64 no-clmul GHASH fallback constant time</td>
+      <td>Open</td>
+      <td>Companion fix for GHASH</td>
+    </tr>
+  </tbody>
+</table></div>
 <h3 id="high--reliability">
   
   
@@ -1171,73 +1137,121 @@ Trigger: pull_request OR push, subject to a hard <code class="language-plaintext
 </h3>
     
 
-<p><strong><a href="https://github.com/openssl/openssl/issues/22166">Issue #22166</a></strong> – “SSL related tests are failing with high HARNESS_JOBS on riscv64”
-Opened: September 2023. Labels: <code class="language-plaintext highlighter-rouge">triaged: bug</code>, <code class="language-plaintext highlighter-rouge">backlog fix</code>, <code class="language-plaintext highlighter-rouge">help wanted</code>.
-Root cause: Race condition or resource exhaustion in TLSProxy under high parallelism. Failures appear at <code class="language-plaintext highlighter-rouge">HARNESS_JOBS &gt;= 38</code>, hangs at &gt;= 50. Affects SG2042, TH1520, JH7110, and QEMU. No fix merged.
-Impact: Blocks reliable CI at scale on multi-core riscv64 hardware.</p>
-<h3 id="medium--correctness">
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/30880">#30880</a></td>
+      <td>test_lhash occasionally failing on linux-riscv64 CI (OS Zoo CI)</td>
+      <td>Open since 2026-04-17</td>
+      <td>Flaky failure specific to the native riscv64 self-hosted runner</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/28118">#28118</a></td>
+      <td>Riscv extension detection is broken on musl</td>
+      <td>Open since 2025-07-29</td>
+      <td>See Section 9; no PR</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/25334">#25334</a></td>
+      <td>Both _zknd and _zkne must be presented simultaneously in OPENSSL_riscvcap to speed up AES</td>
+      <td>Open since 2024-08-30</td>
+      <td>&gt;5x performance regression when caps are set independently; no PR</td>
+    </tr>
+  </tbody>
+</table></div>
+<h3 id="medium--correctness--performance-open">
   
   
-    <a href="#medium--correctness" class="anchor-heading" aria-labelledby="medium--correctness"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Medium – Correctness
-  
-  
-</h3>
-    
-
-<p><strong><a href="https://github.com/openssl/openssl/issues/28118">Issue #28118</a></strong> – “Riscv extension detection is broken on musl (Zbb incorrectly not detected)”
-Opened: 2025-07-29. Labels: <code class="language-plaintext highlighter-rouge">triaged: bug</code>, <code class="language-plaintext highlighter-rouge">help wanted</code>.
-Root cause: <code class="language-plaintext highlighter-rouge">__NR_riscv_hwprobe</code> define absent in musl environments; <code class="language-plaintext highlighter-rouge">RISCV_HAS_ZBB()</code> and related macros return false. Optimized paths (Zbb-accelerated ChaCha20, etc.) silently fall back to generic C. Workaround: set <code class="language-plaintext highlighter-rouge">OPENSSL_riscvcap</code> manually. No PR exists. Last activity: August 2025. Affects OrangePi RV2 (confirmed), likely all musl-based riscv64 deployments.</p>
-
-<p><strong><a href="https://github.com/openssl/openssl/issues/29357">Issue #29357</a></strong> – “linux64-riscv64 cross-compilation fails with no-deprecated option”
-Opened: 2025-12-09. Open on all branches (3.4, 3.5, 3.6, 4.0, master).
-Root cause: <code class="language-plaintext highlighter-rouge">crypto/md5/md5_riscv.c</code> and <code class="language-plaintext highlighter-rouge">crypto/sha/sha_riscv.c</code> use deprecated public types excluded by <code class="language-plaintext highlighter-rouge">no-deprecated</code>. No other architecture affected. Fix candidate <a href="https://github.com/openssl/openssl/pull/30763">PR #30763</a> open but not merged.</p>
-
-<p><strong><a href="https://github.com/openssl/openssl/issues/26989">Issue #26989</a></strong> – “RISC-V rv32 zksed SM4 fails: key setup failed”
-Opened: 2025-03-06. Labels: <code class="language-plaintext highlighter-rouge">triaged: feature</code>, <code class="language-plaintext highlighter-rouge">help wanted</code>.
-Root cause: <code class="language-plaintext highlighter-rouge">rvi_zksed_set_encrypt_key</code> assembly never sets <code class="language-plaintext highlighter-rouge">a0</code> return value before <code class="language-plaintext highlighter-rouge">ret</code>. On RV32 with high-address pointer (e.g. <code class="language-plaintext highlighter-rouge">0x80000000</code>), <code class="language-plaintext highlighter-rouge">bltz</code> comparison on <code class="language-plaintext highlighter-rouge">a0</code> treats the pointer as a negative signed value; key setup returns false failure. SM4 is non-functional on RV32+Zksed. Fix is <code class="language-plaintext highlighter-rouge">li a0, 0</code> before <code class="language-plaintext highlighter-rouge">ret</code>, but no PR has been submitted. The affected code (<a href="https://github.com/openssl/openssl/pull/18285">PR #18285</a>) is itself unmerged (draft, last updated 2026-04-09), so this is a pre-merge bug.</p>
-
-<p><strong><a href="https://github.com/openssl/openssl/pull/30733">PR #30733</a></strong> – “riscv: fix RV32 issues found during validation”
-Opened: 2026-04-08 by cmuellner. Labels: <code class="language-plaintext highlighter-rouge">approval: review pending</code>, <code class="language-plaintext highlighter-rouge">severity: fips change</code>.
-Three RV32 fixes: <code class="language-plaintext highlighter-rouge">size_t</code> format specifier, AES-XTS function-pointer assignment under strict builds, documentation example. Stale since April 2026; automated stale notice issued June 10, 2026 (61 days without committer action).</p>
-<h3 id="medium--performance-open-prs-pending-review">
-  
-  
-    <a href="#medium--performance-open-prs-pending-review" class="anchor-heading" aria-labelledby="medium--performance-open-prs-pending-review"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Medium – Performance (open PRs pending review)
-  
-  
-</h3>
-    
-
-<p><strong><a href="https://github.com/openssl/openssl/pull/30501">PR #30501</a></strong> – “riscv: Add lpad instructions for CFI support (Zicfilp)”
-Opened: 2026-03-19. Labels: <code class="language-plaintext highlighter-rouge">approval: review pending</code>, <code class="language-plaintext highlighter-rouge">triaged: feature</code>, <code class="language-plaintext highlighter-rouge">severity: fips change</code>.
-Reviewer cmuellner identified missing <code class="language-plaintext highlighter-rouge">lpad</code> on multiple global symbols (<code class="language-plaintext highlighter-rouge">rv64i_zvksed_sm4_cbc_encrypt</code>, <code class="language-plaintext highlighter-rouge">rv64i_zvksed_sm4_cbc_decrypt</code>, <code class="language-plaintext highlighter-rouge">riscv_vlen_asm</code>, functions in <code class="language-plaintext highlighter-rouge">riscv64-mont.pl</code>, <code class="language-plaintext highlighter-rouge">ecp_sm2p256-riscv64.pl</code>, and several SHA/SM3/MD5 files) and spurious <code class="language-plaintext highlighter-rouge">lpad</code> on local branch targets (20 unnecessary insertions in <code class="language-plaintext highlighter-rouge">aes-riscv64-zvkned.pl</code>). PR must be revised before merge. Stale notice issued May 24, 2026.</p>
-
-<p><strong><a href="https://github.com/openssl/openssl/pull/29970">PR #29970</a></strong> – “riscv: support sha3 perf optimization (Keccak-1600 via Zbb)”
-Opened: 2026-02-10 by cxx194832. Labels: <code class="language-plaintext highlighter-rouge">approval: review pending</code>, <code class="language-plaintext highlighter-rouge">severity: fips change</code>.
-Open review issues: alignment not guaranteed (may trap or be slow on real hardware), <code class="language-plaintext highlighter-rouge">.balign</code> / <code class="language-plaintext highlighter-rouge">.p2align</code> duplication, URL typo in license header, CI workflow not updated. Commit hygiene addressed (rebased May 2026). Stale notice June 9, 2026. No committer approval.</p>
-
-<p><strong><a href="https://github.com/openssl/openssl/pull/30787">PR #30787</a></strong> – “RISC-V: Port dot-asm ChaCha20 assembly implementation with rv64gc and zbb”
-Opened: 2026-04-12. 2 approvals. Open as of June 2026. ~2.25x speedup vs. C baseline at large blocks on hardware (see Section 12).</p>
-
-<p><strong><a href="https://github.com/openssl/openssl/pull/31182">PR #31182</a></strong> – “RISC-V: Port dot-asm poly1305 assembly implementation”
-Opened: 2026-05-14. Open as of June 2026. ~2x speedup at large blocks for RVV path.</p>
-
-<p><strong><a href="https://github.com/openssl/openssl/pull/30633">PR #30633</a></strong> – “Performance optimization of SM4-XTS encryption and decryption on RISC-V”
-Opened: 2026-03-31. Security review concerns pending: VLEN &gt; 512 buffer overread, GF multiplier overflow at VLEN=2048.</p>
-<h3 id="low--functional">
-  
-  
-    <a href="#low--functional" class="anchor-heading" aria-labelledby="low--functional"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Low – Functional
+    <a href="#medium--correctness--performance-open" class="anchor-heading" aria-labelledby="medium--correctness--performance-open"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Medium – Correctness / Performance (open)
   
   
 </h3>
     
 
-<p><strong><a href="https://github.com/openssl/openssl/pull/30735">PR #30735</a></strong> – “riscv: add scalar Zksed SM4 support”
-Opened: 2026-04-08. Open as of June 2026. Adds scalar Zksed path currently missing from mainline.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/30330">#30330</a></td>
+      <td>rv64i_zkne_set_encrypt_key logic for checking for null keys is backwards</td>
+      <td>Likely fixed</td>
+      <td>Matches <a href="https://github.com/openssl/openssl/pull/30333">PR #30333</a> “riscv: aes: fix checks on null keys,” merged 2026-03-13 – treat #30330 as resolved pending final closure confirmation</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/29453">#29453</a></td>
+      <td>RISCV: Use intrinsic function instead of inline assembly</td>
+      <td>Open since 2025-12-19</td>
+      <td>Portability/codegen request, not a correctness bug</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/28664">#28664</a></td>
+      <td>[RISC-V] Further optimization for SHA256 performance</td>
+      <td>Open since 2025-09-25</td>
+      <td>Further gains found on real hardware beyond the initial +116-122% improvement from <a href="https://github.com/openssl/openssl/pull/27381">PR #27381</a></td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/29135">#29135</a></td>
+      <td>Performance Optimization of SM4-CBC Encryption and Decryption under RISC-V Architecture</td>
+      <td>Open since 2025-11-13</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/29269">#29269</a></td>
+      <td>Additional architecture specific testing</td>
+      <td>Open since 2025-11-30</td>
+      <td>Broader testing-coverage request</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/issues/29522">#29522</a></td>
+      <td>Consider adding compile-time detection of RISC-V ISA extensions (Zvkned, Zvkb)</td>
+      <td>Status ambiguous – one source lists it closed, another lists it open/”help wanted”</td>
+      <td>Discrepancy noted; related to the same <code class="language-plaintext highlighter-rouge">riscv_arch.h</code> architectural gap as #28118</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/pull/32022">#32022</a></td>
+      <td>riscv64: fix slow MD5 computation when input is misaligned</td>
+      <td>Open</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/pull/30501">#30501</a></td>
+      <td>riscv: Add lpad instructions for CFI support (Zicfilp)</td>
+      <td>Open</td>
+      <td>Reviewer identified missing/spurious <code class="language-plaintext highlighter-rouge">lpad</code> insertions across multiple assembly files; stale notice issued</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/openssl/openssl/pull/30733">#30733</a></td>
+      <td>riscv: fix RV32 issues found during validation</td>
+      <td>Open</td>
+      <td><code class="language-plaintext highlighter-rouge">size_t</code> format specifier, AES-XTS function-pointer assignment under strict builds; stale notice issued</td>
+    </tr>
+  </tbody>
+</table></div>
+<h3 id="recently-fixed--closed-context">
+  
+  
+    <a href="#recently-fixed--closed-context" class="anchor-heading" aria-labelledby="recently-fixed--closed-context"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Recently fixed / closed (context)
+  
+  
+</h3>
+    
 
-<p><strong><a href="https://github.com/openssl/openssl/issues/29453">Issue #29453</a></strong> – “RISCV: Use intrinsic function instead of inline assembly”
-Opened: 2025-12-19. Feature request. No implementation.</p><hr />
+<p><a href="https://github.com/openssl/openssl/issues/28731">#28731 SM2 CI regression</a> (closed, a side-channel fix for ARM modular inversion had broken RISC-V SM2 correctness), <a href="https://github.com/openssl/openssl/issues/28550">#28550 intermittent deadlock in riscv64 CI job</a> (closed; root cause traced via <a href="https://github.com/openssl/openssl/pull/26898">PR #26898</a> to a generic RCU/memory-ordering defect that riscv64’s weaker memory model exposed first, not a riscv64-only bug), <a href="https://github.com/openssl/openssl/issues/24070">#24070 chacha_internal_test failed with Zvkb</a> (closed 2024), <a href="https://github.com/openssl/openssl/issues/32229">#32229 some CI tests fail on the RISC-V runner</a> (closed 2026-08), <a href="https://github.com/openssl/openssl/issues/29357">#29357 no-deprecated cross-compile failure</a> (open, see Section 5), <a href="https://github.com/openssl/openssl/issues/26989">#26989 RV32 Zksed SM4 key setup failure</a> (closed; root cause was <code class="language-plaintext highlighter-rouge">rvi_zksed_set_encrypt_key</code> never setting <code class="language-plaintext highlighter-rouge">a0</code> before <code class="language-plaintext highlighter-rouge">ret</code>, and the affected PR #18285 was itself never merged), <a href="https://github.com/openssl/openssl/issues/20091">#20091 Expand our RISC-V testing</a> (closed 2026-03-25; resulted in the current QEMU extension matrix).</p><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1247,61 +1261,83 @@ Opened: 2025-12-19. Feature request. No implementation.</p><hr />
 </h2>
     
 
-<p><strong>Blocker 1 (Security, unresolved): AES T-table is not constant-time on hardware without Zkn/Zvkned.</strong>
-This is the highest-priority open issue for any riscv64 production deployment of OpenSSL. PRs <a href="https://github.com/openssl/openssl/pull/31080">#31080</a> and <a href="https://github.com/openssl/openssl/pull/31082">#31082</a> are open. Without a CLA-covered contributor pushing these to merge, any riscv64 deployment without hardware AES acceleration leaks AES key material through cache timing. The majority of deployed riscv64 silicon falls into this category.</p>
+<p><strong>Blocker 1 (Security, unresolved):</strong> The AES scalar fallback is not constant-time on hardware lacking Zkn/Zvkned (<a href="https://github.com/openssl/openssl/issues/20980">#20980</a>). Fix PRs <a href="https://github.com/openssl/openssl/pull/31080">#31080</a> and <a href="https://github.com/openssl/openssl/pull/31082">#31082</a> remain open with no stated merge blocker beyond normal review queue – this is the highest-priority unresolved item for any riscv64 deployment handling sensitive key material without hardware AES acceleration.</p>
 
-<p><strong>Blocker 2 (Reliability, unresolved): SSL test hangs at high parallelism.</strong>
-<a href="https://github.com/openssl/openssl/issues/22166">Issue #22166</a> has been open since September 2023 with label <code class="language-plaintext highlighter-rouge">backlog fix</code>. On multi-core riscv64 hardware running the full SSL test suite with <code class="language-plaintext highlighter-rouge">HARNESS_JOBS &gt;= 38</code>, tests hang or fail non-deterministically. This prevents any automated regression testing at scale on high-core-count riscv64 boards (e.g. SG2042 with 64 cores).</p>
+<p><strong>Blocker 2 (Correctness, musl, structural):</strong> Three separate musl capability-detection incidents (<a href="https://github.com/openssl/openssl/issues/25772">#25772</a> -&gt; <a href="https://github.com/openssl/openssl/pull/25787">PR #25787</a>, then <a href="https://github.com/openssl/openssl/issues/28118">#28118</a>) against the same <code class="language-plaintext highlighter-rouge">include/arch/riscv_arch.h</code> subsystem suggest point patches rather than a systemic fix. Issues <a href="https://github.com/openssl/openssl/issues/29453">#29453</a> (intrinsics vs. inline asm) and <a href="https://github.com/openssl/openssl/issues/29522">#29522</a> (compile-time detection) are pushing toward a more durable architectural fix but neither has a merged PR.</p>
 
-<p><strong>Blocker 3 (Correctness, low severity): musl extension detection broken.</strong>
-<a href="https://github.com/openssl/openssl/issues/28118">Issue #28118</a> has been open since July 2025. Any riscv64 deployment on Alpine Linux or other musl-based distributions will run at generic C performance with all hardware acceleration silently disabled. No PR exists.</p>
+<p><strong>Blocker 3 (CI, structural):</strong> No riscv64 presence in the main <code class="language-plaintext highlighter-rouge">ci.yml</code> matrix that gates amd64/arm64 on every commit. All per-PR riscv64 signal is QEMU-emulated on a QEMU version (8.2.2, Ubuntu 24.04) with documented vector-crypto-extension reporting bugs; genuine native-hardware signal exists only via a nightly, non-change-gated job.</p>
 
-<p><strong>Blocker 4 (CI, structural): No native riscv64 CI runners.</strong>
-All RISC-V CI uses QEMU. Performance regressions, hardware-specific race conditions, and VLEN detection on real silicon are not caught. This is a structural gap compared to arm64 (which has native runners).</p>
+<p><strong>Blocker 4 (FIPS, structural):</strong> All QEMU-based riscv64 CI legs explicitly set <code class="language-plaintext highlighter-rouge">fips: no</code>. The native <code class="language-plaintext highlighter-rouge">os-zoo.yml</code> job does build with <code class="language-plaintext highlighter-rouge">enable-fips</code>, but this is a build-time flag in that job’s <code class="language-plaintext highlighter-rouge">./config</code> invocation, not a <code class="language-plaintext highlighter-rouge">fips:</code> matrix variable, and no finding confirms FIPS self-tests are exercised as part of <code class="language-plaintext highlighter-rouge">make test</code> on that job specifically. Net effect: FIPS-validated riscv64 OpenSSL has no clearly confirmed, continuous CI coverage [NEEDS VERIFICATION].</p>
 
-<p><strong>Blocker 5 (Build, medium): no-deprecated cross-compile failure affects all branches.</strong>
-<a href="https://github.com/openssl/openssl/issues/29357">Issue #29357</a> blocks <code class="language-plaintext highlighter-rouge">no-deprecated</code> builds on all supported branches. Fix PR exists (<a href="https://github.com/openssl/openssl/pull/30763">#30763</a>) but is not merged.</p>
+<p><strong>Blocker 5 (EC performance, structural):</strong> <a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a>, a serious <code class="language-plaintext highlighter-rouge">ecp_nistz256</code> riscv64 assembly implementation with measured 1.78x-6.9x gains and a validated test methodology (130 tests plus a 2064-vector field-arithmetic cross-check against a big-integer oracle), was closed unmerged after 30 days of inactivity and unaddressed review concerns. This is the single largest “nearly there” opportunity identified in this research cycle – reviving and merging it would close OpenSSL’s most visible riscv64 EC performance gap.</p>
 
-<p><strong>Objection: No FIPS testing.</strong>
-All riscv64 CI configurations set <code class="language-plaintext highlighter-rouge">fips: no</code>. Any customer requiring FIPS-validated OpenSSL on riscv64 has no CI coverage and no documented status.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Organizational blocker:</strong> Review bandwidth, not technical disagreement, is the recurring theme – <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> states this explicitly, and it is corroborated by the stale-notice pattern on <a href="https://github.com/openssl/openssl/pull/30501">#30501</a>, <a href="https://github.com/openssl/openssl/pull/29970">#29970</a>, and <a href="https://github.com/openssl/openssl/pull/31873">#31873</a>, plus the OpenSSL Foundation’s separately noted concern (identified in a prior research cycle) that AI-generated contributions are straining the issue backlog [NEEDS VERIFICATION, single source].</p>
+
+<p><strong>RISE involvement:</strong> Minimal and indirect. OpenSSL is not a RISE member project, has no RISE blog coverage, and is not listed in the RISE wheel builder. The only tracked item, <a href="https://github.com/riseproject-dev/system-libraries-wg/issues/3">riseproject-dev/system-libraries-wg#3 “OpenSSL”</a> (open, created 2026-07-15), references VRULL/SiFive vector-crypto patches and is marked <strong>Blocked</strong>, with no assignee and no linked PRs, dependent on the Simulator/Emulator WG. A related open issue, <a href="https://github.com/riseproject-dev/language-runtimes-wg/issues/57">riseproject-dev/language-runtimes-wg#57</a>, requests adding <code class="language-plaintext highlighter-rouge">linux-riscv64</code> to <code class="language-plaintext highlighter-rouge">org.wildfly.openssl:wildfly-openssl</code>’s supported-platform matrix – this is about a downstream Java binding, not OpenSSL itself. ISCAS, the employer of the port’s original author (luyahan), is itself a RISE General Member, which is an indirect link but does not make OpenSSL a RISE-funded project.</p><hr />
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> blue (n/a – no sub-case applies to blue)</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p>OpenSSL’s upstream CI both builds riscv64 and executes the test suite: <a href="https://github.com/openssl/openssl/blob/master/.github/workflows/riscv-more-cross-compiles.yml"><code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code></a> (13 extension-matrix QEMU legs, EVP-subset tests on ordinary PRs, full suite on push/schedule/<code class="language-plaintext highlighter-rouge">[riscv ci]</code>-tagged PRs) and <code class="language-plaintext highlighter-rouge">cross-compiles.yml</code> (one riscv64 QEMU leg) both run <code class="language-plaintext highlighter-rouge">make test</code>-equivalent steps, and <a href="https://github.com/openssl/openssl/blob/master/.github/workflows/os-zoo.yml"><code class="language-plaintext highlighter-rouge">os-zoo.yml</code></a>’s <code class="language-plaintext highlighter-rouge">linux-riscv64</code> job additionally runs <code class="language-plaintext highlighter-rouge">make test</code> nightly on a native, non-QEMU, riscv64 self-hosted runner. Upstream publishes only source tarballs for every architecture (no riscv64-specific release gap), with the consumable riscv64 binary coming from Debian/Ubuntu/Arch RISC-V packaging of unmodified upstream source – so per the color model this is “CI build yes / CI test yes / upstream artifact no” = blue, matching sibling C libraries such as zlib and zstd rather than a downstream-only orange grade.</p>
+
+<p><strong>Pending work that could change the grade:</strong></p>
+
+<ul>
+  <li>Open, security-relevant riscv64 PRs: AES scalar-fallback constant-time fixes (<a href="https://github.com/openssl/openssl/pull/31080">#31080</a>, <a href="https://github.com/openssl/openssl/pull/31082">#31082</a>, still open).</li>
+  <li>Scalar SM4 Zksed (<a href="https://github.com/openssl/openssl/pull/30735">#30735</a>), SHA-3 Keccak via Zbb with unresolved alignment concerns (<a href="https://github.com/openssl/openssl/pull/29970">#29970</a>), ChaCha20 dot-asm (<a href="https://github.com/openssl/openssl/pull/30787">#30787</a>, 2 approvals pending merge), Poly1305 dot-asm (<a href="https://github.com/openssl/openssl/pull/31182">#31182</a>) – all open.</li>
+  <li>Open correctness/perf issues: musl Zbb/hwprobe detection broken (<a href="https://github.com/openssl/openssl/issues/28118">#28118</a>, no PR yet), <code class="language-plaintext highlighter-rouge">no-deprecated</code> cross-compile failure on all branches (<a href="https://github.com/openssl/openssl/issues/29357">#29357</a>, fix PR <a href="https://github.com/openssl/openssl/pull/30763">#30763</a> open), flaky riscv64 CI (<a href="https://github.com/openssl/openssl/issues/30880">#30880</a> open, <a href="https://github.com/openssl/openssl/issues/32229">#32229</a> closed), SHA-256 further optimization ask (<a href="https://github.com/openssl/openssl/issues/28664">#28664</a>).</li>
+  <li>No FIPS testing on any riscv64 CI leg via the <code class="language-plaintext highlighter-rouge">fips:</code> matrix flag (<code class="language-plaintext highlighter-rouge">fips: no</code> on every QEMU leg across both <code class="language-plaintext highlighter-rouge">cross-compiles.yml</code> and <code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code>). Note: the native <code class="language-plaintext highlighter-rouge">os-zoo.yml</code> job does pass <code class="language-plaintext highlighter-rouge">enable-fips</code> to its <code class="language-plaintext highlighter-rouge">./config</code> call, a distinction from the matrix-driven <code class="language-plaintext highlighter-rouge">fips: no</code> legs; whether FIPS self-tests are actually exercised by that job’s <code class="language-plaintext highlighter-rouge">make test</code> step was not independently confirmed this cycle, so this should be read as “no confirmed FIPS CI coverage” rather than a flat contradiction.</li>
+  <li>RISE Project involvement is minimal/indirect: OpenSSL is not a RISE member project, has no RISE blog coverage or wheel listing, and the only tracked item is a blocked planning issue (<a href="https://github.com/riseproject-dev/system-libraries-wg/issues/3">riseproject-dev/system-libraries-wg#3</a>, status Blocked, no assignee/PRs) referencing VRULL/SiFive vector-crypto patches.</li>
+  <li><a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a> (EC P-256 assembly, measured 1.78x-6.9x gains) closed unmerged after review concerns – reviving it would close OpenSSL’s largest remaining riscv64 performance gap but does not itself change the blue grade, since the grade already reflects CI build+test coverage rather than feature completeness.</li>
+</ul><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing work: RISE has not funded or completed any OpenSSL-specific engineering. Its only tracked item (<a href="https://github.com/riseproject-dev/system-libraries-wg/issues/3">system-libraries-wg#3</a>) is a blocked planning issue with no assignee or linked PRs, so none of the items below should be treated as already covered by RISE.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>Three functional gaps exist that block deployment or correctness on riscv64:</p>
+<p>Three functional gaps materially affect correctness or build success on riscv64:</p>
 
 <ol>
-  <li>AES constant-time fallback (security critical, fix PRs open).</li>
-  <li>musl extension detection (silently broken, no PR).</li>
-  <li><code class="language-plaintext highlighter-rouge">no-deprecated</code> cross-compile failure (affects all branches, fix PR open but unreviewed).</li>
+  <li>AES constant-time fallback gap (security-critical, fix PRs open: <a href="https://github.com/openssl/openssl/pull/31080">#31080</a>, <a href="https://github.com/openssl/openssl/pull/31082">#31082</a>).</li>
+  <li>musl extension detection silently broken (<a href="https://github.com/openssl/openssl/issues/28118">#28118</a>, no PR).</li>
+  <li><code class="language-plaintext highlighter-rouge">no-deprecated</code> cross-compile failure on all branches (<a href="https://github.com/openssl/openssl/issues/29357">#29357</a>, fix PR <a href="https://github.com/openssl/openssl/pull/30763">#30763</a> open but unmerged).</li>
 </ol>
 
-<p>The SM4 scalar Zksed path (<a href="https://github.com/openssl/openssl/pull/30735">PR #30735</a>) is a functional gap on scalar-only hardware.</p>
-
-<p>SHA-3 has no merged optimized implementation despite two closed failed attempts and one open PR with correctness issues.</p>
-<h3 id="132-performance-optimization">
+<p>SM4 scalar Zksed (<a href="https://github.com/openssl/openssl/pull/30735">#30735</a>) remains a functional gap on scalar-only hardware lacking vector support. SHA-3 has no merged optimized implementation despite two closed/superseded attempts and an active successor PR pair.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Measured benchmark results from upstream PRs (all on RISC-V hardware or FPGA, not cross-architecture comparisons):</p>
+<p>Measured upstream benchmark data (all riscv64-only before/after comparisons on specific hardware, not cross-architecture):</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1314,87 +1350,109 @@ All riscv64 CI configurations set <code class="language-plaintext highlighter-ro
   </thead>
   <tbody>
     <tr>
-      <td>SHA-512 (RVV)</td>
-      <td>~5.1x</td>
-      <td>Xuantie C930 FPGA, VLEN256</td>
-      <td><a href="https://github.com/openssl/openssl/pull/29263">PR #29263</a></td>
+      <td>EC P-256 (<code class="language-plaintext highlighter-rouge">ecp_nistz256</code>) ECDSA sign</td>
+      <td>~6.9x</td>
+      <td>SG2044, openEuler, XuanTie C920, no crypto ext</td>
+      <td><a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a> (closed unmerged)</td>
     </tr>
     <tr>
-      <td>SM3 (Zvksh)</td>
-      <td>~2.68x</td>
-      <td>C930 FPGA</td>
-      <td><a href="https://github.com/openssl/openssl/pull/29264">PR #29264</a></td>
+      <td>EC P-256 ECDH</td>
+      <td>~2.5x</td>
+      <td>same</td>
+      <td><a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a></td>
     </tr>
     <tr>
-      <td>SM4-XTS encrypt (Zvbb+Zvkg+Zvksed, 8KB)</td>
-      <td>~4.2x</td>
-      <td>HW simulation</td>
-      <td><a href="https://github.com/openssl/openssl/pull/30633">PR #30633</a></td>
+      <td>EC P-256 ECDSA verify</td>
+      <td>~1.78x</td>
+      <td>same</td>
+      <td><a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a></td>
     </tr>
     <tr>
-      <td>ChaCha20 (rv64gc+Zbb, 8KB)</td>
-      <td>~2.25x vs. C baseline</td>
-      <td>Unspecified HW</td>
-      <td><a href="https://github.com/openssl/openssl/pull/30787">PR #30787</a></td>
+      <td>SHA-384/SHA-512 round interleaving</td>
+      <td>+7.6% to +36.5% (saturates at large block sizes)</td>
+      <td>SpacemiT K3, VLEN=256</td>
+      <td><a href="https://github.com/openssl/openssl/pull/32575">PR #32575</a></td>
     </tr>
     <tr>
-      <td>Poly1305 (RVV, 8KB)</td>
-      <td>~2x vs. C</td>
-      <td>Unspecified HW</td>
-      <td><a href="https://github.com/openssl/openssl/pull/31182">PR #31182</a></td>
+      <td>AES-128-CBC encryption</td>
+      <td>+17.7% to +32.0% (64B-16384B, 16B flat)</td>
+      <td>SpacemiT K3 (X100), VLEN=256</td>
+      <td><a href="https://github.com/openssl/openssl/pull/32583">PR #32583</a></td>
     </tr>
     <tr>
-      <td>RSA-2048 sign</td>
-      <td>+5.77%</td>
-      <td>RISC-V (RV64GC)</td>
-      <td><a href="https://github.com/openssl/openssl/pull/29440">PR #29440</a></td>
+      <td>AES-128-XTS small-packet decryption</td>
+      <td>+13% (vlen=128 sim), +15% (A100, vlen=256), 16B packets only</td>
+      <td>HW simulation + SpacemiT A100</td>
+      <td><a href="https://github.com/openssl/openssl/pull/30552">PR #30552</a></td>
     </tr>
     <tr>
-      <td>RSA-2048 verify</td>
-      <td>+10.66%</td>
-      <td>RISC-V (RV64GC)</td>
-      <td><a href="https://github.com/openssl/openssl/pull/29440">PR #29440</a></td>
+      <td>SHA-256 (hand asm vs. C+rv64gc)</td>
+      <td>+116% to +122%</td>
+      <td>rv64gc</td>
+      <td><a href="https://github.com/openssl/openssl/pull/27381">PR #27381</a></td>
     </tr>
     <tr>
-      <td>SHA3-256 (Zbb, 8KB)</td>
-      <td>+15%</td>
-      <td>C950 FPGA 1GHz</td>
-      <td><a href="https://github.com/openssl/openssl/pull/29970">PR #29970</a></td>
+      <td>AES (Zknd/Zkne vs. pure C)</td>
+      <td>2.7x-5x (up to ~9.5x for AES-ECB)</td>
+      <td>100MHz Rocket Chip FPGA (not representative of real silicon)</td>
+      <td>community gist, ZenithalHourlyRate</td>
+    </tr>
+    <tr>
+      <td>Montgomery/RSA (RV64GC)</td>
+      <td>“significant acceleration across all RSA operations” (no exact figure) vs. none</td>
+      <td>SpacemiT X60</td>
+      <td><a href="https://github.com/openssl/openssl/issues/27926">Issue #27926</a></td>
+    </tr>
+    <tr>
+      <td>SpacemiT 3.5 suite: AES-CBC 16KiB</td>
+      <td>1.52x-1.71x by key size</td>
+      <td>SpacemiT X100, VLEN=256</td>
+      <td>spacemit-com/openssl PR #1</td>
+    </tr>
+    <tr>
+      <td>SpacemiT 3.5 suite: SHA-256/SHA-512 16KiB</td>
+      <td>1.84x / 1.19x</td>
+      <td>same</td>
+      <td>spacemit-com/openssl PR #1</td>
+    </tr>
+    <tr>
+      <td>SpacemiT 3.5 suite: SM2 sign/verify</td>
+      <td>~1.0x (a prior 6.7x claim was reverted for a security issue – input-dependent branching in the field reducer)</td>
+      <td>same</td>
+      <td>spacemit-com/openssl PR #1</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Five performance PRs are open and awaiting merge: ChaCha20 Zbb (<a href="https://github.com/openssl/openssl/pull/30787">#30787</a>), Poly1305 RVV (<a href="https://github.com/openssl/openssl/pull/31182">#31182</a>), SM4-XTS (<a href="https://github.com/openssl/openssl/pull/30633">#30633</a>), SHA3 Zbb (<a href="https://github.com/openssl/openssl/pull/29970">#29970</a>), AES-128-XTS small-packet (<a href="https://github.com/openssl/openssl/pull/30552">#30552</a>). The SM4-XTS PR has security review concerns; the SHA3 PR has an alignment correctness issue; the others have approvals but no committer merge action.</p>
+<p>Open performance PRs awaiting merge: ChaCha20 dot-asm (<a href="https://github.com/openssl/openssl/pull/30787">#30787</a>, 2 approvals), Poly1305 dot-asm (<a href="https://github.com/openssl/openssl/pull/31182">#31182</a>), SM4-XTS (<a href="https://github.com/openssl/openssl/pull/30633">#30633</a>, security review concerns re: VLEN&gt;512 buffer overread and GF multiplier overflow at VLEN=2048), Curve448 vectorization (<a href="https://github.com/openssl/openssl/pull/32847">#32847</a>, <a href="https://github.com/openssl/openssl/pull/32835">#32835</a>), SHA-3 scalar optimization (<a href="https://github.com/openssl/openssl/pull/32607">#32607</a>).</p>
 
-<p>P-256/P-384 ECDH has no riscv64-specific optimization. ECDH is a dominant workload in TLS handshakes; this is a material performance gap vs. aarch64.</p>
-<h3 id="133-cicd-infrastructure">
+<p>P-256/P-384 ECDH has the largest confirmed-but-unmerged opportunity: real benchmark data exists (<a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a>) but the PR was closed for inactivity/review concerns, not technical rejection.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>The structural absence of native riscv64 runners is the highest-leverage CI investment. All current CI is QEMU-based and catches compilation errors and functional regressions but not performance regressions or hardware-specific race conditions. Adding native riscv64 GitHub Actions runners (e.g. via RISE runner infrastructure) would close this gap. This requires either upstream negotiation with the OpenSSL project or contributing a self-hosted runner configuration.</p>
-
-<p>A secondary investment is extending the FIPS test matrix to riscv64. Currently zero FIPS CI coverage exists for any riscv64 configuration.</p>
-<h3 id="134-ecosystem-enablement">
+<p>The structural absence of riscv64 from the main <code class="language-plaintext highlighter-rouge">ci.yml</code> matrix (Section 7) is the highest-leverage CI investment: adding a change-gated native riscv64 runner (e.g. via RISE runner infrastructure, which OpenSSL does not currently use) would close the gap between QEMU-only per-PR signal and the nightly-only native-hardware signal that exists today. A secondary investment is extending confirmed FIPS test execution to a riscv64 CI leg – currently only a build-time <code class="language-plaintext highlighter-rouge">enable-fips</code> flag on the native nightly job, with no confirmed FIPS self-test execution in CI output.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
 
-<p>The musl detection bug (<a href="https://github.com/openssl/openssl/issues/28118">Issue #28118</a>) is an unowned fix that affects Alpine Linux and other musl-based riscv64 deployments. The fix is small (define <code class="language-plaintext highlighter-rouge">__NR_riscv_hwprobe</code> ourselves if absent, or add <code class="language-plaintext highlighter-rouge">AT_HWCAP</code> fallback) but requires a CLA-covered contributor.</p>
+<p>Section 10 is omitted: OpenSSL is a system library consumed by a vast ecosystem of other software, but it does not itself have a dependent package ecosystem (Python/npm/Maven/Kubernetes-operator style) that requires separate riscv64 enablement work – OpenSSL’s own riscv64 readiness is the enabling factor for those downstream consumers, not the other way around.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">no-deprecated</code> cross-compile bug (<a href="https://github.com/openssl/openssl/issues/29357">Issue #29357</a>) has a fix PR open but no committer has merged it. Nudging this through review would unblock all affected branches.</p>
-<h3 id="135-summary-table">
+<p>The musl capability-detection bug (<a href="https://github.com/openssl/openssl/issues/28118">#28118</a>) is a small, unowned fix (define <code class="language-plaintext highlighter-rouge">__NR_riscv_hwprobe</code> or add an <code class="language-plaintext highlighter-rouge">AT_HWCAP</code> fallback) that affects Alpine Linux and other musl-based riscv64 deployments; it requires only a CLA-covered contributor. The <code class="language-plaintext highlighter-rouge">no-deprecated</code> cross-compile bug (<a href="https://github.com/openssl/openssl/issues/29357">#29357</a>) already has a fix PR (<a href="https://github.com/openssl/openssl/pull/30763">#30763</a>) open and unmerged – pushing it through review is a low-cost, high-leverage action.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1413,128 +1471,118 @@ All riscv64 CI configurations set <code class="language-plaintext highlighter-ro
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Fix AES T-table constant-time gap (PRs <a href="https://github.com/openssl/openssl/pull/31080">#31080</a>, <a href="https://github.com/openssl/openssl/pull/31082">#31082</a>)</td>
+      <td>Push AES T-table constant-time fix through review and merge (<a href="https://github.com/openssl/openssl/pull/31080">#31080</a>, <a href="https://github.com/openssl/openssl/pull/31082">#31082</a>)</td>
       <td>2-4 (review + fix + test)</td>
-      <td>Open (CLA required)</td>
+      <td>Open, CLA required</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix musl extension detection (<a href="https://github.com/openssl/openssl/issues/28118">Issue #28118</a>)</td>
+      <td>Fix musl extension detection (<a href="https://github.com/openssl/openssl/issues/28118">#28118</a>)</td>
       <td>1-2</td>
-      <td>Open (unowned)</td>
+      <td>Open, unowned</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix <code class="language-plaintext highlighter-rouge">no-deprecated</code> cross-compile (<a href="https://github.com/openssl/openssl/issues/29357">Issue #29357</a>, <a href="https://github.com/openssl/openssl/pull/30763">PR #30763</a>)</td>
+      <td>Push <code class="language-plaintext highlighter-rouge">no-deprecated</code> cross-compile fix through review (<a href="https://github.com/openssl/openssl/issues/29357">#29357</a>, <a href="https://github.com/openssl/openssl/pull/30763">#30763</a>)</td>
       <td>0.5 (review push)</td>
-      <td>Open (fix exists)</td>
+      <td>Open, fix exists</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>SHA-3 Keccak-1600 Zbb optimization (<a href="https://github.com/openssl/openssl/pull/29970">PR #29970</a>, fix alignment + rebase)</td>
+      <td>Fix <code class="language-plaintext highlighter-rouge">_zknd</code>/<code class="language-plaintext highlighter-rouge">_zkne</code> independent-capability coupling (<a href="https://github.com/openssl/openssl/issues/25334">#25334</a>)</td>
       <td>1-2</td>
-      <td>cxx194832 / ISCAS</td>
-      <td>Medium</td>
+      <td>Open, unowned, no PR</td>
+      <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>SM4 scalar Zksed (<a href="https://github.com/openssl/openssl/pull/30735">PR #30735</a>)</td>
+      <td>Revive EC P-256 <code class="language-plaintext highlighter-rouge">ecp_nistz256</code> assembly (<a href="https://github.com/openssl/openssl/pull/31873">PR #31873</a>), address review concerns, resubmit</td>
+      <td>3-5 (address review + re-verify)</td>
+      <td>Open, prior author or new contributor</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>SM4 scalar Zksed (<a href="https://github.com/openssl/openssl/pull/30735">#30735</a>)</td>
       <td>1 (review)</td>
-      <td>cmuellner / openssl committer</td>
+      <td>Open, committer review</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>CFI lpad for all global asm symbols (<a href="https://github.com/openssl/openssl/pull/30501">PR #30501</a>, address cmuellner review)</td>
+      <td>SHA-3 Keccak-1600 optimization, resolve alignment concern (<a href="https://github.com/openssl/openssl/pull/29970">#29970</a>/<a href="https://github.com/openssl/openssl/pull/32607">#32607</a> lineage)</td>
+      <td>1-2</td>
+      <td>ISCAS / committer</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>CFI <code class="language-plaintext highlighter-rouge">lpad</code> coverage fixes (<a href="https://github.com/openssl/openssl/pull/30501">#30501</a>)</td>
       <td>2-3</td>
-      <td>phoebesv / committer</td>
+      <td>Open, committer review</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>RV32 portability fixes (<a href="https://github.com/openssl/openssl/pull/30733">PR #30733</a>)</td>
+      <td>RV32 portability fixes (<a href="https://github.com/openssl/openssl/pull/30733">#30733</a>)</td>
       <td>0.5 (committer merge)</td>
-      <td>openssl committer</td>
+      <td>Open, committer review</td>
       <td>Low</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>ChaCha20 Zbb (<a href="https://github.com/openssl/openssl/pull/30787">PR #30787</a>, 2 approvals)</td>
+      <td>Merge ChaCha20 dot-asm, already at 2 approvals (<a href="https://github.com/openssl/openssl/pull/30787">#30787</a>)</td>
       <td>0.5 (committer merge)</td>
-      <td>openssl committer</td>
+      <td>Open, committer review</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Poly1305 RVV (<a href="https://github.com/openssl/openssl/pull/31182">PR #31182</a>)</td>
+      <td>Merge Poly1305 dot-asm RVV (<a href="https://github.com/openssl/openssl/pull/31182">#31182</a>)</td>
       <td>1-2 (review + merge)</td>
-      <td>HeliC829 / committer</td>
+      <td>Open, committer review</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>SM4-XTS (<a href="https://github.com/openssl/openssl/pull/30633">PR #30633</a>, fix security issues)</td>
+      <td>Resolve SM4-XTS security concerns and merge (<a href="https://github.com/openssl/openssl/pull/30633">#30633</a>)</td>
       <td>2-3 (fix buffer overread + review)</td>
-      <td>zl523856 / committer</td>
+      <td>Open, committer review</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>Performance</td>
-      <td>AES-128-XTS small-packet (<a href="https://github.com/openssl/openssl/pull/30552">PR #30552</a>, 4 approvals)</td>
-      <td>0.5 (committer merge)</td>
-      <td>openssl committer</td>
+      <td>CI/CD</td>
+      <td>Add a change-gated native riscv64 runner to the main CI matrix</td>
+      <td>4-8 (infrastructure setup, upstream negotiation; consider RISE runners)</td>
+      <td>No current owner / RISE</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Confirm and, if absent, add FIPS self-test execution to a riscv64 CI leg</td>
+      <td>2-4</td>
+      <td>Open, committer</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>Performance</td>
-      <td>P-256/P-384 ECDH riscv64 scalar or vector optimization</td>
-      <td>8-16 (new implementation)</td>
+      <td>CI/CD</td>
+      <td>Diagnose and fix the flaky <code class="language-plaintext highlighter-rouge">test_lhash</code> failure on <code class="language-plaintext highlighter-rouge">linux-riscv64</code> (<a href="https://github.com/openssl/openssl/issues/30880">#30880</a>)</td>
+      <td>2-4</td>
       <td>No current owner</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>CI/CD</td>
-      <td>Native riscv64 GitHub Actions runner</td>
-      <td>4-8 (infrastructure setup, upstream negotiation)</td>
-      <td>RISE or Qualcomm</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>FIPS provider testing on riscv64</td>
-      <td>2-4</td>
-      <td>OpenSSL committer</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Fix SSL test parallelism hang (<a href="https://github.com/openssl/openssl/issues/22166">Issue #22166</a>)</td>
-      <td>4-8 (root cause diagnosis on real hardware)</td>
-      <td>Open (labeled backlog)</td>
-      <td>High</td>
-    </tr>
-    <tr>
       <td>Ecosystem</td>
-      <td>Publish riscv64 vs. arm64 vs. amd64 benchmark comparison</td>
+      <td>Publish a riscv64 vs. arm64 vs. amd64 benchmark comparison (none currently exists anywhere)</td>
       <td>2-4 (test infrastructure + reporting)</td>
       <td>No current owner</td>
       <td>Medium</td>
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>(No updates yet – initial report dated 2026-07-20.)</p><hr />
 <h2 id="15-references">
   
   
@@ -1546,39 +1594,58 @@ All riscv64 CI configurations set <code class="language-plaintext highlighter-ro
 
 <ul>
   <li><a href="https://github.com/openssl/openssl">OpenSSL GitHub repository</a></li>
+  <li><a href="https://www.openssl.org/">OpenSSL homepage</a></li>
   <li><a href="https://openssl.foundation">OpenSSL Foundation</a></li>
-  <li><a href="https://www.openssl.org/">OpenSSL Library project</a></li>
-  <li><a href="https://github.com/openssl/openssl/releases">OpenSSL releases</a></li>
   <li><a href="https://github.com/openssl/openssl/blob/master/.github/workflows/riscv-more-cross-compiles.yml">riscv-more-cross-compiles.yml</a></li>
   <li><a href="https://github.com/openssl/openssl/blob/master/.github/workflows/cross-compiles.yml">cross-compiles.yml</a></li>
+  <li><a href="https://github.com/openssl/openssl/blob/master/.github/workflows/os-zoo.yml">os-zoo.yml</a></li>
   <li><a href="https://github.com/openssl/openssl/blob/master/include/arch/riscv_arch.def">include/arch/riscv_arch.def</a></li>
   <li><a href="https://github.com/openssl/openssl/blob/master/include/arch/riscv_arch.h">include/arch/riscv_arch.h</a></li>
   <li><a href="https://github.com/openssl/openssl/blob/master/crypto/riscvcap.c">crypto/riscvcap.c</a></li>
   <li><a href="https://github.com/openssl/openssl/blob/master/Configurations/10-main.conf">Configurations/10-main.conf</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/17640">PR #17640 - Initial RISC-V port</a></li>
+  <li><a href="https://github.com/openssl/openssl">doc/man3/OPENSSL_riscvcap.pod</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/14723">PR #14723 - Add riscv64 target</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/14724">PR #14724 - Add riscv64 target for OpenSSL_1_1_1</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/17640">PR #17640 - Implementations of AES and GCM for RISC-V</a></li>
   <li><a href="https://github.com/openssl/openssl/pull/21923">PR #21923 - Full Zvk vector crypto suite</a></li>
   <li><a href="https://github.com/openssl/openssl/pull/24172">PR #24172 - hwprobe syscall capability detection</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/29263">PR #29263 - SHA512 RVV</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/29264">PR #29264 - SM3 vector crypto</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/29440">PR #29440 - Montgomery squaring RV64GC</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/29544">PR #29544 - SM4-CBC instruction reordering</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/29970">PR #29970 - SHA3 Keccak-1600 Zbb</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/30501">PR #30501 - CFI lpad Zicfilp</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/30633">PR #30633 - SM4-XTS RVV</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/30713">PR #30713 - hwprobe CI coverage fix</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/30714">PR #30714 - AES-GCM VLEN guard fix</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/25787">PR #25787 - Fix builds on riscv64 using musl</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/27381">PR #27381 - Generic optimized SHA-256 for rv64gc</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/29263">PR #29263 - SHA512 performance optimized by RISC-V RVV</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/29264">PR #29264 - SM3 performance optimized with RISC-V Vector Crypto</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/29970">PR #29970 - riscv: support sha3 perf optimization</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/30501">PR #30501 - CFI lpad instructions (Zicfilp)</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/30552">PR #30552 - AES-128-XTS small-packet decryption optimization</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/30633">PR #30633 - SM4-XTS performance optimization</a></li>
   <li><a href="https://github.com/openssl/openssl/pull/30733">PR #30733 - RV32 portability fixes</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/30735">PR #30735 - Scalar Zksed SM4</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/30787">PR #30787 - ChaCha20 rv64gc+Zbb</a></li>
-  <li><a href="https://github.com/openssl/openssl/pull/31182">PR #31182 - Poly1305 RVV</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/22166">Issue #22166 - SSL tests hang at high HARNESS_JOBS</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/26989">Issue #26989 - RV32 SM4 key setup failure</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/30735">PR #30735 - Scalar Zksed SM4 support</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/30763">PR #30763 - no-deprecated cross-compile fix</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/30787">PR #30787 - ChaCha20 dot-asm, rv64gc+zbb</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/31080">PR #31080 - AES no-Zkn fallback constant time</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/31082">PR #31082 - GHASH no-clmul fallback constant time</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/31182">PR #31182 - Poly1305 dot-asm RVV</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/31873">PR #31873 - EC ecp_nistz256 RISC-V64 assembly</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/31874">PR #31874 - Fix SM2 RISC-V64 crash from .rodata emission</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/32575">PR #32575 - SHA-512 round interleaving</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/32583">PR #32583 - AES-128-CBC encryption performance</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/32835">PR #32835 - Curve448 constant_time_lookup RVV</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/32847">PR #32847 - Curve448 field helpers RVV</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/20980">Issue #20980 - AES for RISC-V without Zkn extensions is not constant time</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/22166">Issue #22166 - SSL tests hang at high HARNESS_JOBS on riscv64</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/25334">Issue #25334 - _zknd and _zkne must be presented simultaneously</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/26989">Issue #26989 - RV32 Zksed SM4 key setup failure</a></li>
   <li><a href="https://github.com/openssl/openssl/issues/28118">Issue #28118 - musl Zbb detection broken</a></li>
   <li><a href="https://github.com/openssl/openssl/issues/29357">Issue #29357 - no-deprecated cross-compile failure</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=openssl&amp;suite=sid">Debian buildd riscv64 status</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/openssl">Ubuntu 24.04 openssl package</a></li>
-  <li><a href="https://archriscv.felixc.at/repo/core/">Arch Linux RISC-V core repository</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/30880">Issue #30880 - test_lhash flaky on linux-riscv64 CI</a></li>
+  <li><a href="https://github.com/riseproject-dev/system-libraries-wg/issues/3">riseproject-dev/system-libraries-wg#3 - OpenSSL (blocked)</a></li>
+  <li><a href="https://github.com/riseproject-dev/language-runtimes-wg/issues/57">riseproject-dev/language-runtimes-wg#57 - Port wildfly-openssl to linux-riscv64</a></li>
   <li><a href="https://riseproject.dev">RISE Project</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners announcement</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/openssl">Ubuntu resolute openssl package</a></li>
+  <li><a href="https://buildd.debian.org/status/package.php?p=openssl&amp;suite=sid">Debian buildd riscv64 status</a></li>
+  <li><a href="https://archriscv.felixc.at/.status/lastupdate.txt">Arch Linux RISC-V core repository status</a></li>
+  <li><a href="https://gist.github.com/ZenithalHourlyRate/7b5175734f87acb73d0bbc53391d7140">Benchmark of OpenSSL AES for RISC-V 64 (community gist)</a></li>
 </ul>
 
           
