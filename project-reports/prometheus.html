@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-10-01<br />
+<strong>Readiness:</strong> yellow (build-only-ci)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for Prometheus<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,15 +280,15 @@
 </h2>
     
 
-<p><a href="https://prometheus.io/">Prometheus</a> (<a href="https://github.com/prometheus/prometheus">github.com/prometheus/prometheus</a>) is an open-source systems monitoring and alerting toolkit originally built at SoundCloud. It is written entirely in Go, scraped-pull-model-based, and stores time-series data in a custom on-disk database (TSDB). The project is the canonical monitoring backend in cloud-native deployments.</p>
+<p><a href="https://prometheus.io/">Prometheus</a> (<a href="https://github.com/prometheus/prometheus">github.com/prometheus/prometheus</a>) is an open-source systems monitoring and alerting toolkit originally built at SoundCloud. It is written entirely in Go, uses a scrape-pull model, and stores time-series data in a custom on-disk database (TSDB). It is the canonical monitoring backend in cloud-native deployments.</p>
 
-<p><strong>Governance:</strong> Prometheus is a <a href="https://www.cncf.io/projects/prometheus/">CNCF graduated project</a> – the second project to reach graduation after Kubernetes. It operates under The Linux Foundation via the CNCF. Licensing is Apache 2.0. As of June 2026, the project is completing its first bootstrap Steering Committee election (voting window: June 15-29 2026, results: July 6 2026). The 7-seat Steering Committee is the new formal governance body; governance votes are resolved by simple majority (&gt;50%). Seats are held by individuals, not companies.</p>
+<p><strong>Governance:</strong> Prometheus is a <a href="https://www.cncf.io/projects/prometheus/">CNCF graduated project</a>, the second project to reach graduation after Kubernetes, and operates under The Linux Foundation via the CNCF. Licensing is Apache 2.0 (the Linux Foundation holds certain Prometheus trademarks). Governance is documented at prometheus.io/governance/: a 7-seat Steering Committee (staggered 2-year terms, annual elections) oversees bylaws, GitHub org administration, and financial planning. Below it sits a 3-tier contributor ladder (Contributor, Member, Maintainer), tracked per-repo via <code class="language-plaintext highlighter-rouge">MAINTAINERS.md</code>/<code class="language-plaintext highlighter-rouge">CODEOWNERS</code>. Decisions default to consensus, falling back to majority vote among Steering Committee members; inactive members (no contributions for 6+ months, or fewer than 20 contributions/year) can be removed by majority vote. The current Steering Committee: Arthur Sens (Grafana Labs), Bartlomiej Plotka (Google), Ben Kochie (independent), Bryan Boreham (Grafana Labs), Jan Fajerski (Red Hat), Kemal Akkoyun (Datadog), Solomon Jacobs (Checkmk GmbH). Seats are held by individuals, not companies.</p>
 
-<p><strong>Corporate sponsorship:</strong> Grafana Labs is the dominant commercial sponsor by maintainer count. Active general maintainers include George Krajcsovits (@krajorama, Grafana), Bryan Boreham (@bboreham, Grafana Labs), Arve Knudsen (@aknuds1, Grafana), Julien Pivotto (@roidelapluie, independent), Bartlomiej Plotka (@bwplotka, Google), and Ayoub Mrini (@machine424, Red Hat). Release coordination for v3.x is also predominantly Grafana-affiliated.</p>
+<p><strong>Corporate sponsorship:</strong> Grafana Labs is by far the dominant corporate sponsor of maintainer time. General maintainers per <code class="language-plaintext highlighter-rouge">MAINTAINERS.md</code>: Bryan Boreham (Grafana Labs), Ayoub Mrini, Julien Pivotto (independent), Gyorgy Krajcsovits (Grafana Labs), Bartlomiej Plotka (Google), Arve Knudsen. Subsystem maintainers skew heavily Grafana-affiliated (Jesus Vazquez, Ganesh Vernekar, Arthur Silva Sens, Kyle Eckhart, and v3 release coordinators Carrie Edwards, Fiona Liao, Nico Pazos, Owen Williams, Jan Fajerski, Tom Braack). Other employers represented among area maintainers: Hetzner Cloud (Jonas Lammler, Julian Tolle), Scaleway (Remy Leone), STACKIT (Jan-Otto Kropke). Google, Red Hat, Datadog, Checkmk, Hetzner, and Scaleway are also represented but at lower density than Grafana Labs.</p>
 
-<p><strong>RISE membership:</strong> Prometheus is not a RISE project member and has no RISE affiliation. A search of all 27 RISE blog posts (May 2024 - June 2026) and the full RISE project repository list returns zero mentions of Prometheus. The RISE wheel builder (gitlab.com/riseproject) does not contain a Prometheus entry.</p>
+<p><strong>RISE membership:</strong> No evidence was found that Prometheus is a RISE member project or that RISE has funded Prometheus-specific work. A site search of riseproject.dev for “Prometheus” returns zero results; a review of the 7 most recent RISE blog posts (through 2026-09-28) contains no mention of Prometheus; the riseproject-dev GitHub org (52 repos) contains no Prometheus repo; and the RISE Python wheel builder (riseproject.gitlab.io/python/wheel_builder/, 80+ packages) does not list Prometheus. RISE’s 20-member roster (8 Premier: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent; 12 General, including ISCAS) does not include Prometheus as an entity (it is a software project, not a RISE member company). One contributor to the riscv64 Docker-image PR, co-author nijincheng@iscas.ac.cn, is affiliated with the Institute of Software Chinese Academy of Sciences (ISCAS), a RISE General Member, but this is an individual contribution, not an institutional RISE engagement.</p>
 
-<p><strong>Language:</strong> Pure Go. No C, no assembly, no CGO. No JIT backends. No SIMD dispatch.</p><hr />
+<p><strong>Language:</strong> Pure Go. No C, no assembly, no CGO, no JIT backend, no SIMD dispatch of its own.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -307,74 +308,84 @@
   </thead>
   <tbody>
     <tr>
-      <td>May 31, 2019</td>
-      <td><a href="https://github.com/prometheus/prometheus/pull/5621">PR #5621</a> (“Riscv support”) opened by carlosedp. Attempted to patch Utsname string conversions for the pre-upstream Go RISC-V fork.</td>
+      <td>2019-05-31</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/5621">PR #5621</a> (“Riscv support”) opened by carlosedp, patching Utsname string conversions for a pre-upstream experimental Go-RISCV toolchain fork.</td>
       <td>PR #5621</td>
     </tr>
     <tr>
-      <td>Aug 21, 2019</td>
-      <td><a href="https://github.com/prometheus/prometheus/pull/5625">PR #5625</a> (“pkg/runtime: simplify Utsname string conversion”) merged. Switched Utsname handling to golang.org/x/sys/unix, which uses portable byte arrays rather than int8/uint8 arrays. This eliminated the need for any RISC-V-specific patch.</td>
+      <td>2019-08-21</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/5625">PR #5625</a> (“pkg/runtime: simplify Utsname string conversion”) merged, switching Utsname handling to <code class="language-plaintext highlighter-rouge">golang.org/x/sys/unix</code>’s portable byte-array representation, removing the need for any RISC-V-specific patch.</td>
       <td>PR #5625</td>
     </tr>
     <tr>
-      <td>Sep 2, 2019</td>
-      <td>PR #5621 closed by author (carlosedp) as unnecessary. Author confirmed <code class="language-plaintext highlighter-rouge">make build</code> succeeded from master without the patch after #5625 and its follow-on.</td>
+      <td>2019-09-02</td>
+      <td>PR #5621 closed by its author as unnecessary, confirming <code class="language-plaintext highlighter-rouge">make build</code> succeeded from master without the patch once mainline Go/<code class="language-plaintext highlighter-rouge">x/sys</code> gained native riscv64 support.</td>
       <td>PR #5621 discussion</td>
     </tr>
     <tr>
-      <td>Jul 6, 2023</td>
-      <td><a href="https://github.com/prometheus/prometheus/pull/12530">PR #12530</a> (“Update promu”) merged by Julien Pivotto. Bumped the promu build tool from v0.14.0 to v0.15.0. promu v0.15.0 added <code class="language-plaintext highlighter-rouge">linux/riscv64</code> to its <code class="language-plaintext highlighter-rouge">defaultPlatforms</code> list, which automatically included riscv64 in all Prometheus release cross-builds without code changes. Authored by Ben Kochie (@SuperQ).</td>
+      <td>2023-07-06</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/12530">PR #12530</a> (“Update promu”) merged (author Ben Kochie/SuperQ, merged by Julien Pivotto). Bumped the <code class="language-plaintext highlighter-rouge">promu</code> build tool to add riscv64 to its default crossbuild platform list, with no Prometheus code changes required. Commit: <a href="https://github.com/prometheus/prometheus/commit/4edf8999da266339c0a27172976de5fd0de53596">4edf8999</a> (“Update promu to support riscv64”).</td>
       <td>PR #12530</td>
     </tr>
     <tr>
-      <td>Jul 25, 2023</td>
-      <td>v2.46.0 released. First release to include <code class="language-plaintext highlighter-rouge">prometheus-2.46.0.linux-riscv64.tar.gz</code> as a named GitHub Release asset. v2.45.0 (Jun 23, 2023) did not include this asset.</td>
-      <td>GitHub Releases API</td>
+      <td>2023-07-25</td>
+      <td>v2.46.0 released, the first release to include <code class="language-plaintext highlighter-rouge">prometheus-2.46.0.linux-riscv64.tar.gz</code> as a GitHub Release asset. v2.45.0 (2023-06-23) did not include this asset.</td>
+      <td>GitHub Releases</td>
     </tr>
     <tr>
-      <td>Nov 8, 2025</td>
-      <td><a href="https://github.com/prometheus/prometheus/pull/17508">PR #17508</a> (“Build riscv64 docker image by default”) opened by ffgan. Co-authored by nijincheng@iscas.ac.cn (ISCAS is a RISE General Member).</td>
+      <td>2025-11-08</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/17508">PR #17508</a> (“Build riscv64 docker image by default”) opened by ffgan, co-authored with nijincheng@iscas.ac.cn and Ben Kochie. Adds riscv64 to the default Docker build/publish pipeline (<code class="language-plaintext highlighter-rouge">Makefile.common</code> <code class="language-plaintext highlighter-rouge">DOCKER_ARCHS</code>), mirroring the existing s390x pattern; riscv64 was already in promu’s default crossbuild list and Prometheus already cross-compiled cleanly for it, so this PR only turns on image <em>publishing</em>. Commit: <a href="https://github.com/prometheus/prometheus/commit/90166d3ddb0be9986f5d32a35379d7b35a7636c2">90166d3d</a>.</td>
       <td>PR #17508</td>
     </tr>
     <tr>
-      <td>Jan 19, 2026</td>
-      <td><a href="https://github.com/prometheus/prometheus/pull/17876">PR #17876</a> (“Add distroless Docker image variant”) merged by roidelapluie. Post-merge discovery: <code class="language-plaintext highlighter-rouge">gcr.io/distroless/static-debian13:nonroot-riscv64</code> did not exist, blocking the v3.10 release.</td>
+      <td>2026-01-19</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/17876">PR #17876</a> (“Add distroless Docker image variant”) merged. Post-merge it was discovered that <code class="language-plaintext highlighter-rouge">gcr.io/distroless/static-debian13:nonroot-riscv64</code> did not exist, blocking the v3.10 release.</td>
       <td>PR #17876</td>
     </tr>
     <tr>
-      <td>Feb 10, 2026</td>
-      <td>PR #17508 merged by George Krajcsovits (@krajorama, Grafana). riscv64 added to the default Docker build pipeline (<code class="language-plaintext highlighter-rouge">DOCKER_ARCHS</code>).</td>
+      <td>2026-02-10</td>
+      <td>PR #17508 merged by George Krajcsovits (Grafana). riscv64 added to the default Docker build pipeline.</td>
       <td>PR #17508</td>
     </tr>
     <tr>
-      <td>Feb 19, 2026</td>
-      <td><a href="https://github.com/prometheus/prometheus/pull/18115">PR #18115</a> (“Cut v3.10.0-rc.1”) merged. Originally drafted to remove riscv64 from distroless targets; superseded by a Makefile.common fix in PR #18110. Release candidate cut.</td>
-      <td>PR #18115</td>
+      <td>2026-02-18/19</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/18115">PR #18115</a> (“Cut v3.10.0-rc.1”, branch <code class="language-plaintext highlighter-rouge">codesome/distroless-riscv64</code>) opened by Ganesh Vernekar (codesome) to remove riscv64 from the build process and unblock the release. Discussion: SuperQ wanted the fix centralized in <code class="language-plaintext highlighter-rouge">Makefile.common</code>; Plotka raised a “do it right vs. ship now” tradeoff; Pivotto accepted either this PR or the alternative, <a href="https://github.com/prometheus/prometheus/pull/18110">PR #18110</a>. codesome ultimately merged #18110 and repurposed #18115 into simply cutting the v3.10.0-rc.1 release candidate (merged 2026-02-19).</td>
+      <td>PR #18115, #18110</td>
     </tr>
     <tr>
-      <td>Feb 20, 2026</td>
-      <td><a href="https://github.com/prometheus/prometheus/pull/18124">PR #18124</a> (“chore(ci): Add registry-specific architecture exclusions”) merged. Introduced <code class="language-plaintext highlighter-rouge">DOCKER_REGISTRY_ARCH_EXCLUSIONS</code> to exclude riscv64 from quay.io pushes (which returned “unauthorized” because the quay.io riscv64 repository had never been created). riscv64 images continued publishing to docker.io.</td>
+      <td>2026-02-19</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/18110">PR #18110</a> (“chore: Exclude riscv64 from distroless images”, branch <code class="language-plaintext highlighter-rouge">roidelapluie/riskv64</code>) merged into <code class="language-plaintext highlighter-rouge">release-3.10</code> by Julien Pivotto. Body: “Upstream distroless does not support riskv64 yet.” Adds <code class="language-plaintext highlighter-rouge">DOCKERFILE_ARCH_EXCLUSIONS ?= Dockerfile.distroless:riscv64</code>. SuperQ asked for this to live in <code class="language-plaintext highlighter-rouge">Makefile.common</code> since “we will probably be doing this in several downstream repos”; codesome merged anyway to unblock the release, deferring the refactor to a follow-up.</td>
+      <td>PR #18110</td>
+    </tr>
+    <tr>
+      <td>2026-02-20</td>
+      <td><a href="https://github.com/prometheus/prometheus/issues/18123">Issue #18123</a> (“s390x is not pushed to quay.io because quay does not support ris[c]v64”) opened and closed same day by Julien Pivotto. Once riscv64 image publishing went live, quay.io rejected pushes with “unauthorized,” which blocked the entire multi-arch manifest (including s390x) from reaching quay.io; only Docker Hub carried the full architecture set.</td>
+      <td>Issue #18123</td>
+    </tr>
+    <tr>
+      <td>2026-02-20</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/18124">PR #18124</a> (“chore(ci): Add registry-specific architecture exclusions”) merged same day by Julien Pivotto. Introduces <code class="language-plaintext highlighter-rouge">DOCKER_REGISTRY_ARCH_EXCLUSIONS</code> and a <code class="language-plaintext highlighter-rouge">registry_arch_is_excluded</code> function so riscv64 is skipped on quay.io specifically while continuing to publish to docker.io, keeping other architectures (e.g. s390x) in the quay.io manifest. Approved by Plotka (“Thanks!”). Commit: <a href="https://github.com/prometheus/prometheus/commit/6acbd1aa42131c7fcd22b84dc05cca9a1995fbb8">6acbd1aa</a>.</td>
       <td>PR #18124</td>
     </tr>
     <tr>
-      <td>Feb 26, 2026</td>
-      <td>v3.10.0 released. First release with linux/riscv64 Docker images.</td>
-      <td>GitHub Releases API</td>
+      <td>2026-02-24/26</td>
+      <td>v3.10.0 released, the first stable release with linux/riscv64 Docker images (to docker.io; quay.io still excluded).</td>
+      <td>GitHub Releases</td>
     </tr>
     <tr>
-      <td>Apr 16, 2026</td>
-      <td><a href="https://github.com/prometheus/prometheus/pull/18527">PR #18527</a> (“Fix quay.io riscv64 publishing”) merged by SuperQ. Root cause: quay.io requires manual repository creation before images can be pushed. The riscv64 repository was created; no code change was needed.</td>
+      <td>2026-04-16</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/18527">PR #18527</a> (“Fix quay.io riscv64 publishing”, branch <code class="language-plaintext highlighter-rouge">superq/quay_riscv</code>) merged same day by Ben Kochie. Root cause of the #18123 “unauthorized” error: quay.io requires manual per-architecture repository creation, and nobody had created one for riscv64. No code change was required beyond creating the repository; reviewer Pivotto’s comment was simply “what x)”. Commit: <a href="https://github.com/prometheus/prometheus/commit/a2e000133bf29343235c9699bffab1ebc1d08ab2">a2e00013</a>.</td>
       <td>PR #18527</td>
     </tr>
     <tr>
-      <td>Apr 20, 2026</td>
-      <td><a href="https://github.com/prometheus/prometheus/pull/18548">PR #18548</a> (“build: remove DOCKER_REGISTRY_ARCH_EXCLUSIONS and DOCKERFILE_ARCH_EXCLUSIONS logic”) merged. All workaround exclusion logic removed. Both the quay.io riscv64 repository and upstream distroless riscv64 support were confirmed available.</td>
+      <td>2026-04-20</td>
+      <td><a href="https://github.com/prometheus/prometheus/pull/18548">PR #18548</a> (“build: remove DOCKER_REGISTRY_ARCH_EXCLUSIONS and DOCKERFILE_ARCH_EXCLUSIONS logic”) merged same day by Julien Pivotto, with SuperQ’s approval. Two commits close the loop: <code class="language-plaintext highlighter-rouge">7f31983</code> removes <code class="language-plaintext highlighter-rouge">DOCKER_REGISTRY_ARCH_EXCLUSIONS</code> (“registry misconfiguration issues have been fixed,” i.e. #18527 created the quay.io repo), and <code class="language-plaintext highlighter-rouge">dd03bb4</code> removes <code class="language-plaintext highlighter-rouge">DOCKERFILE_ARCH_EXCLUSIONS</code> (“Upstream distroless now supports all architectures,” resolving the #18110 blocker). This marks the formal end of the riscv64 Docker-publishing rollout.</td>
       <td>PR #18548</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Summary:</strong> The riscv64 binary port required zero architecture-specific code changes to Prometheus itself. Enablement was purely a build-tooling event (promu v0.15.0). Docker image support required 17 months of additional infrastructure work after binary release, involving three rounds of publication bug fixes.</p><hr />
+<p><strong>Summary:</strong> The riscv64 binary port required zero architecture-specific code changes to Prometheus itself; enablement was a pure build-tooling event (promu’s platform list). Docker image support took roughly five months of additional infrastructure work after PR #17508 (November 2025 to April 2026), driven entirely by registry-configuration problems (missing distroless riscv64 variant, missing quay.io repository) rather than anything in the Prometheus codebase. As of PR #18548 (2026-04-20), both workarounds have been removed and riscv64 image/binary publishing is stable with no open exclusions.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -384,15 +395,72 @@
 </h2>
     
 
-<p>Prometheus does not publish a formal platform tier policy. There is no PLATFORMS.md, SUPPORT.md, or analogous document defining tiers.</p>
+<p>Prometheus publishes no formal platform-tier policy. No <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> file exists in the repository. A reviewer on PR #17508 summarized the de facto stance: “Prometheus itself has good support for riscv64, so it’s normal to successfully cross-compile the results here” - new ports are accepted pragmatically once the underlying Go toolchain and <code class="language-plaintext highlighter-rouge">promu</code> support the target, rather than through a formal RFC or tier process. riscv64 is treated the same as other secondary architectures (s390x, mips, ppc64) in this regard.</p>
 
-<p><strong>De facto binary tier:</strong> riscv64 is a first-class release artifact. <code class="language-plaintext highlighter-rouge">prometheus-X.Y.Z.linux-riscv64.tar.gz</code> has appeared in every release from v2.46.0 (July 2023) through v3.12.0 (May 28, 2026), the current latest stable. The riscv64 binary is produced by promu’s default <code class="language-plaintext highlighter-rouge">crossbuild</code> – the same mechanism that produces amd64, arm64, armv5/v6/v7, mips, mips64, ppc64, s390x.</p>
+<p><strong>De facto binary tier:</strong> riscv64 is a first-class release artifact. <code class="language-plaintext highlighter-rouge">prometheus-X.Y.Z.linux-riscv64.tar.gz</code> has appeared in every release from v2.46.0 (July 2023) through the current stable, confirmed via direct asset-list checks on v3.1.0, v3.15.0, and others; v2.45.0 (June 2023) is confirmed absent.</p>
 
-<p><strong>De facto Docker tier:</strong> riscv64 Docker images are built and published by default to docker.io and quay.io since v3.10.0 (February 2026). The <code class="language-plaintext highlighter-rouge">DOCKER_ARCHS ?= amd64 arm64 armv7 ppc64le riscv64 s390x</code> variable in <code class="language-plaintext highlighter-rouge">Makefile.common</code> is the authoritative platform list.</p>
+<p><strong>De facto Docker tier:</strong> riscv64 Docker images are built and published to docker.io by default since v3.10.0 (February 2026), and to quay.io since PR #18527 (April 2026). The authoritative platform list is <code class="language-plaintext highlighter-rouge">DOCKER_ARCHS ?= amd64 arm64 armv7 ppc64le riscv64 s390x</code> in <code class="language-plaintext highlighter-rouge">Makefile.common</code>.</p>
 
-<p><strong>De facto test tier:</strong> riscv64 receives no test execution in CI. All test jobs (<code class="language-plaintext highlighter-rouge">test_go</code>, <code class="language-plaintext highlighter-rouge">test_go_more</code>, <code class="language-plaintext highlighter-rouge">test_go_386</code>, <code class="language-plaintext highlighter-rouge">test_windows</code>, etc.) run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) runners. There is no QEMU-based riscv64 test, no native riscv64 runner, and no <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code> test invocation anywhere in the CI configuration. The riscv64 binary ships untested on riscv64 hardware.</p>
+<p><strong>De facto test tier:</strong> riscv64 receives no test execution anywhere in CI. All test jobs run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) GitHub-hosted runners. There is no QEMU-based riscv64 test, no native riscv64 runner, and no <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code> test invocation anywhere in the CI configuration.</p>
 
-<p><strong>PR CI tier:</strong> riscv64 is explicitly excluded from the PR/branch build job. The <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code> <code class="language-plaintext highlighter-rouge">build</code> job specifies <code class="language-plaintext highlighter-rouge">promu_opts: "-p linux/amd64 -p windows/amd64 -p linux/arm64 -p darwin/amd64 -p darwin/arm64 -p linux/386"</code>. riscv64 is not in this list; it is not even cross-compiled on pull request CI runs.</p><hr />
+<p><strong>PR CI tier:</strong> riscv64 is explicitly excluded from the PR-triggered <code class="language-plaintext highlighter-rouge">build</code> job. <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>’s <code class="language-plaintext highlighter-rouge">build</code> job specifies <code class="language-plaintext highlighter-rouge">promu_opts: "-p linux/amd64 -p windows/amd64 -p linux/arm64 -p darwin/amd64 -p darwin/arm64 -p linux/386"</code>; riscv64 is not in this list and is not cross-compiled on ordinary pull-request CI runs. A repo-wide grep of <code class="language-plaintext highlighter-rouge">.github/workflows/</code> across all 15 workflow files confirms zero matches for “riscv” anywhere.</p>
+
+<p><strong>Comparison table:</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PR build job (<code class="language-plaintext highlighter-rouge">build</code>)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">build_all</code> crossbuild (main/tags)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Test execution in CI</td>
+      <td>Yes (native)</td>
+      <td>No (cross-build only, no QEMU test confirmed)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>GitHub Release binary</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (since v2.46.0)</td>
+    </tr>
+    <tr>
+      <td>Docker Hub image</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (since v3.10.0)</td>
+    </tr>
+    <tr>
+      <td>quay.io image</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (since PR #18527, April 2026)</td>
+    </tr>
+    <tr>
+      <td>Distro packages (Debian/Ubuntu)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -402,11 +470,16 @@
 </h2>
     
 
-<p>Prometheus is a pure-Go application. There are no architecture-specific code paths in the entire repository.</p>
+<p>Prometheus is a pure-Go application with no architecture-specific code paths anywhere in the repository. This was independently verified three times across this research: via GitHub code search for <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code>, <code class="language-plaintext highlighter-rouge">filename:*_riscv64.go</code>, <code class="language-plaintext highlighter-rouge">filename:*_amd64.go</code>, <code class="language-plaintext highlighter-rouge">filename:*_arm64.go</code>, <code class="language-plaintext highlighter-rouge">"go:build amd64"</code>, <code class="language-plaintext highlighter-rouge">extension:s</code> (assembly), and <code class="language-plaintext highlighter-rouge">GOARCH riscv64</code> (all zero hits except the three non-code matches below); via a direct local grep of a cloned working copy; and via the dependency-level analysis in Section 9.</p>
 
-<p><strong>Architecture-specific source file inventory:</strong></p>
+<p><strong>The only three repo-wide matches for “riscv64”</strong> are not source code:</p>
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">Makefile.common</code> line 93: <code class="language-plaintext highlighter-rouge">DOCKER_ARCHS ?= amd64 arm64 armv7 ppc64le riscv64 s390x</code> - the Docker multi-arch build/push target list (PR #17508’s actual change).</li>
+  <li><code class="language-plaintext highlighter-rouge">.dockerignore</code>: <code class="language-plaintext highlighter-rouge">!.build/linux-riscv64/</code> - a build-output-directory exclusion pattern.</li>
+  <li><code class="language-plaintext highlighter-rouge">web/ui/pnpm-lock.yaml</code>: transitive npm lockfile entries for optional native binaries of frontend build tools (<code class="language-plaintext highlighter-rouge">@rollup/rollup-linux-riscv64-musl</code>, <code class="language-plaintext highlighter-rouge">@unrs/resolver-binding-linux-riscv64-musl</code>) - third-party JS tooling for the React UI build step, not Prometheus runtime code.</li>
+</ol>
 
-<p>The <code class="language-plaintext highlighter-rouge">tsdb/fileutil/</code> directory contains files with misleading names (<code class="language-plaintext highlighter-rouge">mmap_amd64.go</code>, <code class="language-plaintext highlighter-rouge">mmap_arm64.go</code>, <code class="language-plaintext highlighter-rouge">mmap_386.go</code>). All three carry the build constraint <code class="language-plaintext highlighter-rouge">//go:build windows</code> and contain only a <code class="language-plaintext highlighter-rouge">maxMapSize</code> constant. They are Windows-specific, not architecture-specific. The actual mmap implementation (<code class="language-plaintext highlighter-rouge">mmap_unix.go</code>, build tag <code class="language-plaintext highlighter-rouge">//go:build !windows &amp;&amp; !plan9 &amp;&amp; !js</code>) covers riscv64/linux without modification.</p>
+<p>The <code class="language-plaintext highlighter-rouge">tsdb/fileutil/</code> directory contains files with misleading names (<code class="language-plaintext highlighter-rouge">mmap_amd64.go</code>, <code class="language-plaintext highlighter-rouge">mmap_arm64.go</code>, <code class="language-plaintext highlighter-rouge">mmap_386.go</code>); all three carry the build constraint <code class="language-plaintext highlighter-rouge">//go:build windows</code> and contain only a <code class="language-plaintext highlighter-rouge">maxMapSize</code> constant - they are Windows-specific, not architecture-specific. The actual mmap implementation (<code class="language-plaintext highlighter-rouge">mmap_unix.go</code>, build tag <code class="language-plaintext highlighter-rouge">!windows &amp;&amp; !plan9 &amp;&amp; !js</code>) covers riscv64/linux without modification.</p>
 
 <p><strong>Full inventory of build-tagged files and riscv64 coverage:</strong></p>
 
@@ -436,7 +509,7 @@
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">util/runtime/uname_linux.go</code></td>
-      <td>(linux, no arch constraint)</td>
+      <td>linux, no arch constraint</td>
       <td>Covered</td>
     </tr>
     <tr>
@@ -462,7 +535,7 @@
   </tbody>
 </table></div>
 
-<p>No <code class="language-plaintext highlighter-rouge">.s</code> assembly files of any kind exist in the repository. No CGO usage exists in <code class="language-plaintext highlighter-rouge">go.mod</code> or source. No arch-tagged Go files (<code class="language-plaintext highlighter-rouge">_riscv64.go</code>, <code class="language-plaintext highlighter-rouge">_amd64.go</code>, etc.) exist.</p>
+<p>No <code class="language-plaintext highlighter-rouge">.s</code> assembly files exist anywhere in the repository. No CGO usage exists in <code class="language-plaintext highlighter-rouge">go.mod</code> or source. No arch-tagged Go files (<code class="language-plaintext highlighter-rouge">_riscv64.go</code>, <code class="language-plaintext highlighter-rouge">_amd64.go</code>) exist for application logic.</p>
 
 <p><strong>Subsystem assessment:</strong></p>
 
@@ -513,7 +586,7 @@
   </tbody>
 </table></div>
 
-<p><strong>There is no riscv64-specific implementation gap in Prometheus itself.</strong> The riscv64 build is not a stub or partial port. It is the direct output of <code class="language-plaintext highlighter-rouge">GOOS=linux GOARCH=riscv64 CGO_ENABLED=0 go build</code> on the same source tree used for all other architectures.</p><hr />
+<p>On the hand-tuned/intrinsics/scalar/missing scale this section asks about, every Prometheus-authored subsystem is “scalar, full parity” because none of amd64, arm64, or riscv64 has an architecture-specific implementation in this codebase at all - the comparison is not meaningful at the application layer. The architecture-specific gaps that do exist live one layer down, in dependencies (Section 9).</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -523,7 +596,7 @@
 </h2>
     
 
-<p><strong>Build system:</strong> Prometheus uses promu (v0.18.1, as defined by <code class="language-plaintext highlighter-rouge">PROMU_VERSION</code> in <code class="language-plaintext highlighter-rouge">Makefile.common</code>) as its primary build tool. promu wraps <code class="language-plaintext highlighter-rouge">go build</code> with injected ldflags for version metadata. There is no CMake, autoconf, or Meson. There are no <code class="language-plaintext highlighter-rouge">-D</code> style build flags.</p>
+<p><strong>Build system:</strong> Prometheus uses <a href="https://github.com/prometheus/promu">promu</a> as its primary build tool, wrapping <code class="language-plaintext highlighter-rouge">go build</code> with injected ldflags for version metadata. There is no CMake, autoconf, or Meson, and no <code class="language-plaintext highlighter-rouge">-D</code>-style build flags. <code class="language-plaintext highlighter-rouge">promu</code> is pinned via <code class="language-plaintext highlighter-rouge">PROMU_VERSION</code> in <code class="language-plaintext highlighter-rouge">Makefile.common</code>.</p>
 
 <p><strong>Toolchain requirements for riscv64:</strong></p>
 
@@ -531,47 +604,54 @@
   <thead>
     <tr>
       <th>Component</th>
-      <th>Minimum Version</th>
-      <th>Notes</th>
+      <th>Version / Source</th>
+      <th>Why Needed</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Go</td>
-      <td>1.25.0 (<code class="language-plaintext highlighter-rouge">go.mod</code> directive); promu config specifies 1.26</td>
-      <td>GOARCH=riscv64 supported since Go 1.14</td>
+      <td><code class="language-plaintext highlighter-rouge">go 1.26.7</code> minimum per <code class="language-plaintext highlighter-rouge">go.mod</code>; <code class="language-plaintext highlighter-rouge">.promu.yml</code> pins <code class="language-plaintext highlighter-rouge">go: version: 1.27</code> for release builds</td>
+      <td>GOARCH=riscv64 has been supported by the Go toolchain since Go 1.14; no Prometheus-side version floor is riscv64-specific</td>
     </tr>
     <tr>
       <td>CGO</td>
       <td>Not required</td>
-      <td><code class="language-plaintext highlighter-rouge">netgo</code> build tag + <code class="language-plaintext highlighter-rouge">CGO_ENABLED=0</code>; pure Go networking</td>
+      <td>Builds use <code class="language-plaintext highlighter-rouge">CGO_ENABLED=0</code> with the <code class="language-plaintext highlighter-rouge">netgo</code> build tag; Go’s native cross-compiler handles riscv64 directly</td>
     </tr>
     <tr>
       <td>GCC / Clang cross-compiler</td>
       <td>Not required</td>
-      <td>Only needed if CGO enabled; it is not</td>
+      <td>Only needed if CGO were enabled; it is not</td>
     </tr>
     <tr>
       <td>promu</td>
-      <td>0.18.1</td>
-      <td><code class="language-plaintext highlighter-rouge">PROMU_VERSION</code> in <code class="language-plaintext highlighter-rouge">Makefile.common</code></td>
+      <td>Pinned in <code class="language-plaintext highlighter-rouge">Makefile.common</code></td>
+      <td>riscv64 has been in promu’s default crossbuild platform list since PR #12530 (2023-07-06)</td>
     </tr>
     <tr>
       <td>Node.js / pnpm</td>
-      <td>Per <code class="language-plaintext highlighter-rouge">.nvmrc</code></td>
-      <td>Only for <code class="language-plaintext highlighter-rouge">make assets</code> (React UI asset pre-compilation); see known limitation below</td>
+      <td>Per <code class="language-plaintext highlighter-rouge">web/ui/.nvmrc</code>; npm &gt;= 10</td>
+      <td>Only for <code class="language-plaintext highlighter-rouge">make assets</code> (React UI asset pre-compilation); irrelevant to the riscv64 backend binary itself, but see the known limitation below</td>
     </tr>
     <tr>
-      <td>Docker</td>
-      <td>Any with manifest support</td>
-      <td>For image packaging only</td>
+      <td>QEMU</td>
+      <td><code class="language-plaintext highlighter-rouge">docker/setup-qemu-action</code></td>
+      <td>Used only for Docker multi-platform image builds when <code class="language-plaintext highlighter-rouge">enable_docker_multibuild: true</code> is set; not used for binary cross-compilation (Go cross-compiles natively) and not used for any test execution</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>The <code class="language-plaintext highlighter-rouge">golang-builder</code> Docker image</strong> (<code class="language-plaintext highlighter-rouge">quay.io/prometheus/golang-builder</code>), which installs GCC cross-compilers for CGO-enabled architectures, does not support riscv64. That image covers arm, powerpc, mips, and s390x only. This is irrelevant for Prometheus itself (no CGO required) but matters for any downstream project that adds CGO dependencies.</p>
+<p><strong>Exact commands to cross-build for riscv64</strong> (from the repository’s own README “Building the Docker image” section):</p>
 
-<p><strong>Standard cross-compilation command:</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/prometheus/prometheus.git
+cd prometheus
+make promu
+promu crossbuild -p linux/riscv64
+make common-docker-riscv64
+</code></pre></div></div>
+
+<p>Direct <code class="language-plaintext highlighter-rouge">go build</code> equivalent:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GOOS=linux GOARCH=riscv64 CGO_ENABLED=0 go build \
   -tags "netgo builtinassets" \
@@ -579,47 +659,11 @@
   ./cmd/prometheus ./cmd/promtool
 </code></pre></div></div>
 
-<p><strong>Via promu:</strong></p>
+<p>riscv64 is not listed in <code class="language-plaintext highlighter-rouge">.promu.yml</code>’s <code class="language-plaintext highlighter-rouge">crossbuild.platforms</code> section (which lists OS families, not architectures); it is included via promu’s internal default architecture list.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>promu crossbuild -p linux/riscv64
-</code></pre></div></div>
+<p><strong>Known build limitation - Node.js on native riscv64 hardware:</strong> PR #17508 explicitly notes that “Node.js currently does not officially support riscv64, which could lead to problems such as illegal instructions” when running <code class="language-plaintext highlighter-rouge">make build</code> natively on riscv64 hardware. The <code class="language-plaintext highlighter-rouge">make assets</code> step (React UI compilation via Node.js/pnpm) is the failure point; the author treated this as out of scope. The workaround is to cross-compile from an x86 or arm64 host, which is how all official riscv64 release artifacts are produced. This limitation does not affect downloaded binaries (assets are pre-compiled and embedded) but it does block native <code class="language-plaintext highlighter-rouge">make build</code> on riscv64 hardware, and it is the same root cause behind the Arch Linux RISC-V <code class="language-plaintext highlighter-rouge">sv39-blacklist</code> entry for <code class="language-plaintext highlighter-rouge">prometheus</code> (Section 8).</p>
 
-<p>riscv64 is not listed in <code class="language-plaintext highlighter-rouge">.promu.yml</code>’s <code class="language-plaintext highlighter-rouge">crossbuild.platforms</code> section. It is included via promu’s internal <code class="language-plaintext highlighter-rouge">defaultPlatforms</code> list (which includes <code class="language-plaintext highlighter-rouge">linux/riscv64</code>). To build riscv64 explicitly via the <code class="language-plaintext highlighter-rouge">.promu.yml</code> crossbuild config, <code class="language-plaintext highlighter-rouge">linux/riscv64</code> must be added manually to that file.</p>
-
-<p><strong>Known build limitation – Node.js:</strong> PR #17508 explicitly notes that “Node.js currently does not officially support riscv64, which could lead to problems such as illegal instructions” when running <code class="language-plaintext highlighter-rouge">make build</code> natively on riscv64 hardware. The <code class="language-plaintext highlighter-rouge">make assets</code> step (React UI compilation via Node.js/pnpm) is the failure point. The workaround is to cross-compile from an x86 or arm64 host. This limitation is acknowledged as out of scope by the PR author and does not affect the released binary (assets are pre-compiled and embedded).</p>
-
-<p><strong>QEMU usage:</strong> QEMU is used only for Docker multi-platform image builds (<code class="language-plaintext highlighter-rouge">docker/setup-qemu-action@v4.0.0</code>) when <code class="language-plaintext highlighter-rouge">enable_docker_multibuild: true</code> is set. It is not used for binary cross-compilation (Go cross-compiles natively without emulation) and is not used for any test execution.</p>
-
-<p><strong>Build tags of note:</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Build Tag</th>
-      <th>Effect</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">netgo</code></td>
-      <td>Pure Go net stack; no CGO dependency on libc resolver</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">builtinassets</code></td>
-      <td>Embeds pre-compiled React UI into binary</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">remove_all_sd</code></td>
-      <td>Strips optional service discovery backends (retains file_sd, static_sd, http_sd)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">enable_&lt;name&gt;_sd</code></td>
-      <td>Re-enables a specific service discovery module</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>For a minimal riscv64 binary: <code class="language-plaintext highlighter-rouge">go build -tags "netgo builtinassets remove_all_sd" ./cmd/prometheus</code></p><hr />
+<p><strong>Build tags of note:</strong> <code class="language-plaintext highlighter-rouge">netgo</code> (pure-Go net stack, no CGO libc resolver dependency), <code class="language-plaintext highlighter-rouge">builtinassets</code> (embeds pre-compiled React UI into the binary), <code class="language-plaintext highlighter-rouge">remove_all_sd</code> (strips optional service-discovery backends, retaining file_sd/static_sd/http_sd), and <code class="language-plaintext highlighter-rouge">enable_&lt;name&gt;_sd</code> (re-enables a specific service-discovery module). A minimal riscv64 binary: <code class="language-plaintext highlighter-rouge">go build -tags "netgo builtinassets remove_all_sd" ./cmd/prometheus</code>.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -629,9 +673,7 @@
 </h2>
     
 
-<p>Because Prometheus has no architecture-specific code paths, the feature gap between riscv64, arm64, and amd64 is zero at the application level.</p>
-
-<p><strong>Performance gaps (indirect, via dependencies):</strong></p>
+<p>Because Prometheus has no architecture-specific application code, the feature gap between riscv64, arm64, and amd64 is zero at the application level - every feature available on amd64 is available on riscv64. The gaps that exist are all at the dependency layer (performance, not functionality):</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -649,7 +691,7 @@
       <td>Hardware intrinsics (<code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code>)</td>
       <td>Hardware intrinsics</td>
       <td>Pure-Go fallback</td>
-      <td>~3-5x slower TLS throughput on riscv64 for HTTPS scraping at high cardinality</td>
+      <td>Materially slower TLS throughput on riscv64 for HTTPS scraping at high cardinality</td>
     </tr>
     <tr>
       <td>ChaCha20-Poly1305 (TLS)</td>
@@ -667,10 +709,10 @@
     </tr>
     <tr>
       <td>xxhash (TSDB label hashing)</td>
-      <td>asm (<code class="language-plaintext highlighter-rouge">xxhash_amd64.s</code>)</td>
-      <td>asm (<code class="language-plaintext highlighter-rouge">xxhash_arm64.s</code>)</td>
+      <td>Hand-written asm</td>
+      <td>Hand-written asm</td>
       <td>Pure-Go (<code class="language-plaintext highlighter-rouge">xxhash_other.go</code>, build tag <code class="language-plaintext highlighter-rouge">!amd64,!arm64</code>)</td>
-      <td>~2x slower label fingerprinting at high series cardinality</td>
+      <td>Slower label fingerprinting at high series cardinality</td>
     </tr>
     <tr>
       <td>zstd (remote-write compression)</td>
@@ -681,7 +723,7 @@
     </tr>
     <tr>
       <td>Snappy (remote-write legacy)</td>
-      <td>Pure-Go (golang/snappy)</td>
+      <td>Pure-Go (<code class="language-plaintext highlighter-rouge">golang/snappy</code>)</td>
       <td>Pure-Go</td>
       <td>Pure-Go</td>
       <td>No gap</td>
@@ -703,9 +745,11 @@
   </tbody>
 </table></div>
 
-<p>Data not available: Published benchmark figures quantifying the above throughput deltas for Prometheus specifically on riscv64 hardware. The gaps above are inferred from dependency-level findings, not from Prometheus-specific profiling results.</p>
+<p>Data not available: published, quantified benchmark figures isolating these throughput deltas for Prometheus specifically on riscv64 hardware. No search (GitHub issues/PRs across the Prometheus org, web search for “Prometheus riscv64 benchmark,” RISE blog) produced any such figures; the gaps above are inferred from dependency-level findings, not from Prometheus-specific profiling.</p>
 
-<p><strong>Race detector:</strong> The Go race detector does not support riscv64 as of the current Go 1.25/1.26 toolchain. riscv64 cannot be tested with <code class="language-plaintext highlighter-rouge">-race</code>.</p><hr />
+<p><strong>Security hardening:</strong> The Go race detector does not support riscv64 under the current Go toolchain, so riscv64 builds cannot be tested with <code class="language-plaintext highlighter-rouge">-race</code>. FIPS140 mode combined with <code class="language-plaintext highlighter-rouge">-buildmode=pie</code> is broken on riscv64 in the Go toolchain itself (<a href="https://github.com/golang/go/issues/74683">golang/go#74683</a>, open), which would block a Prometheus build in a FIPS-enforcing environment (e.g. RHEL 9 FIPS mode) on riscv64.</p>
+
+<p><strong>NaN / floating-point semantics:</strong> No RISC-V-specific NaN or floating-point correctness issue was found anywhere in the Prometheus org’s repositories (<code class="language-plaintext highlighter-rouge">prometheus/prometheus</code>, <code class="language-plaintext highlighter-rouge">prometheus/node_exporter</code>, <code class="language-plaintext highlighter-rouge">prometheus/procfs</code>).</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -715,25 +759,56 @@
 </h2>
     
 
-<p><strong>Upstream CI (github.com/prometheus/prometheus):</strong></p>
+<p>Prometheus uses GitHub Actions exclusively; no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository (confirmed by repo-wide GitHub code search for each filename, zero results). 15 workflow files exist in <code class="language-plaintext highlighter-rouge">.github/workflows/</code>: <code class="language-plaintext highlighter-rouge">ci.yml</code>, <code class="language-plaintext highlighter-rouge">buf.yml</code>, <code class="language-plaintext highlighter-rouge">buf-lint.yml</code>, <code class="language-plaintext highlighter-rouge">lock.yml</code>, <code class="language-plaintext highlighter-rouge">stale.yml</code>, <code class="language-plaintext highlighter-rouge">fuzzing.yml</code>, <code class="language-plaintext highlighter-rouge">repo_sync.yml</code>, <code class="language-plaintext highlighter-rouge">prombench.yml</code>, <code class="language-plaintext highlighter-rouge">scorecards.yml</code>, <code class="language-plaintext highlighter-rouge">govulncheck.yml</code>, <code class="language-plaintext highlighter-rouge">codeql-analysis.yml</code>, <code class="language-plaintext highlighter-rouge">approve-workflows.yml</code>, <code class="language-plaintext highlighter-rouge">check_release_notes.yml</code>, <code class="language-plaintext highlighter-rouge">automerge-dependabot.yml</code>, <code class="language-plaintext highlighter-rouge">container_description.yml</code>. A direct read of <code class="language-plaintext highlighter-rouge">ci.yml</code> in full (487 lines), cross-checked against a repo-wide case-insensitive grep for “riscv,” confirms zero matches anywhere in <code class="language-plaintext highlighter-rouge">.github/workflows/</code>.</p>
 
-<p>All CI runs on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) GitHub-hosted runners. The project uses GitHub Actions exclusively; no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">build</code> job</strong> (the job that actually runs on pull requests): <code class="language-plaintext highlighter-rouge">promu_opts: "-p linux/amd64 -p windows/amd64 -p linux/arm64 -p darwin/amd64 -p darwin/arm64 -p linux/386"</code>. riscv64 is absent; it is not even cross-compiled on ordinary PR runs. Runner: <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64).</p>
 
-<p>14 workflow files exist in <code class="language-plaintext highlighter-rouge">.github/workflows/</code>. Zero contain any mention of riscv64 in the context of test execution or native-architecture build. The relevant jobs are:</p>
+<p><strong><code class="language-plaintext highlighter-rouge">build_all</code> job:</strong> no <code class="language-plaintext highlighter-rouge">-p</code> override, so it falls back to promu’s default crossbuild platform list, which includes riscv64 (a cross-compilation step, not a test-execution step). Runner: <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64). There is a discrepancy in this research between two independent checks of this job’s trigger conditions: one direct read states it runs “only on release tags <code class="language-plaintext highlighter-rouge">v2.*</code>/<code class="language-plaintext highlighter-rouge">v3.*</code>, release-branch PRs, or pushes to <code class="language-plaintext highlighter-rouge">main</code>” (i.e., it does run on some PRs, specifically those targeting <code class="language-plaintext highlighter-rouge">release-*</code> branches), while the readiness-grading pass characterizes it as running “solely on pushes to <code class="language-plaintext highlighter-rouge">main</code>/release tags, not on PRs” at all. Both agree on the key fact driving the readiness grade: riscv64 is never cross-compiled, let alone tested, on the ordinary PR-triggered <code class="language-plaintext highlighter-rouge">build</code> job that gates regular pull requests. [NEEDS VERIFICATION: exact trigger set for <code class="language-plaintext highlighter-rouge">build_all</code>, specifically whether release-branch PRs are included.]</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">build</code> job (triggers on: PRs, non-release branch pushes):</strong>
-<code class="language-plaintext highlighter-rouge">promu_opts: "-p linux/amd64 -p windows/amd64 -p linux/arm64 -p darwin/amd64 -p darwin/arm64 -p linux/386"</code>
-riscv64 is explicitly absent. It is not cross-compiled on ordinary PR CI runs.</p>
+<p><strong>Test jobs</strong> (<code class="language-plaintext highlighter-rouge">test_go</code>, <code class="language-plaintext highlighter-rouge">test_go_more</code>, <code class="language-plaintext highlighter-rouge">test_go_386</code>, <code class="language-plaintext highlighter-rouge">test_windows</code>): all run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64). No QEMU emulation, no <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code>, no riscv64 test execution of any kind.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">build_all</code> job (triggers on: pushes to <code class="language-plaintext highlighter-rouge">main</code>, pushes to <code class="language-plaintext highlighter-rouge">refs/tags/v2.*</code> and <code class="language-plaintext highlighter-rouge">refs/tags/v3.*</code>, PRs targeting <code class="language-plaintext highlighter-rouge">release-*</code> branches):</strong>
-No <code class="language-plaintext highlighter-rouge">promu_opts</code> override. Calls <code class="language-plaintext highlighter-rouge">prometheus/promci/build</code> action, which runs <code class="language-plaintext highlighter-rouge">promu crossbuild</code> using promu’s full <code class="language-plaintext highlighter-rouge">defaultPlatforms</code> list. riscv64 is included here. The runner is <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64). This is a cross-compilation build step, not a test execution step.</p>
+<p><strong>Docker image publishing</strong> (<code class="language-plaintext highlighter-rouge">publish_main</code>/<code class="language-plaintext highlighter-rouge">publish_release</code> in <code class="language-plaintext highlighter-rouge">ci.yml</code>, triggered only on push to <code class="language-plaintext highlighter-rouge">main</code> or on release tags, never on PRs): these jobs call an external composite action, <code class="language-plaintext highlighter-rouge">prometheus/promci/publish_main</code> (pinned by SHA), which in turn calls <code class="language-plaintext highlighter-rouge">prometheus/promci-images/publish</code>, a third, separate repository. A clone of <code class="language-plaintext highlighter-rouge">promci</code> was grepped directly and also shows zero matches for “riscv” - the riscv64 Docker build is driven by reading <code class="language-plaintext highlighter-rouge">Makefile.common</code>’s <code class="language-plaintext highlighter-rouge">DOCKER_ARCHS</code> list inside that external action chain, not by anything spelled out in <code class="language-plaintext highlighter-rouge">prometheus/prometheus</code>’s own workflow YAML.</p>
 
-<p><strong>Test jobs (<code class="language-plaintext highlighter-rouge">test_go</code>, <code class="language-plaintext highlighter-rouge">test_go_more</code>, <code class="language-plaintext highlighter-rouge">test_go_386</code>, <code class="language-plaintext highlighter-rouge">test_windows</code>):</strong>
-All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64). No QEMU emulation. No <code class="language-plaintext highlighter-rouge">GOARCH=riscv64</code>. No riscv64 test execution of any kind.</p>
+<p><strong>Comparison table:</strong></p>
 
-<p><strong>Summary:</strong> riscv64 receives zero test execution in upstream CI. The binary is cross-compiled on main/release pushes but ships without functional or unit testing on the target architecture.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PR-triggered <code class="language-plaintext highlighter-rouge">build</code> job</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">build_all</code> crossbuild</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (build only, no tests)</td>
+    </tr>
+    <tr>
+      <td>Unit/integration test execution</td>
+      <td>Yes</td>
+      <td>No evidence of native arm64 test execution either (cross-build only)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Docker image publish</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (via external <code class="language-plaintext highlighter-rouge">promci</code>/<code class="language-plaintext highlighter-rouge">promci-images</code> action chain reading <code class="language-plaintext highlighter-rouge">Makefile.common</code>)</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>RISE runners:</strong> The RISE project operates Scaleway EM-RV1 native RISC-V GitHub Actions runners. As of May 6, 2026, these runners have completed 13,000+ CI jobs across 197 repositories (99.78% completion rate, ~445 jobs/day). Prometheus is not among the repositories using RISE runners. There is no open issue or PR in prometheus/prometheus requesting RISE runner integration.</p><hr />
+<p><strong>RISE runners:</strong> The RISE project operates native riscv64 GitHub Actions runners (Scaleway EM-RV1 hardware). Prometheus has no known integration with them - no open PR or issue in <code class="language-plaintext highlighter-rouge">prometheus/prometheus</code> requests riscv64 be added to the PR-triggered build job, the test suite, or RISE runner infrastructure.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -743,35 +818,23 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
 </h2>
     
 
-<p><strong>GitHub Releases (upstream binary tarballs):</strong></p>
+<p><strong>GitHub Releases (upstream binary tarballs):</strong> <code class="language-plaintext highlighter-rouge">prometheus-X.Y.Z.linux-riscv64.tar.gz</code> is present in every release from v2.46.0 (2023-07-25) onward, confirmed by a direct, successful download check against v3.15.0 (<code class="language-plaintext highlighter-rouge">prometheus-3.15.0.linux-riscv64.tar.gz</code>, Content-Length 106,822,592 bytes - a real binary, not a placeholder) and by tag-ancestry checks against a local clone. v2.45.0 (2023-06-23) is confirmed absent. Current stable as of this research includes v3.15.0 (2026-09-24) and v3.12.0 (2026-05-28).</p>
 
-<p><code class="language-plaintext highlighter-rouge">prometheus-X.Y.Z.linux-riscv64.tar.gz</code> is present in every release from v2.46.0 (July 25, 2023) through v3.12.0 (May 28, 2026). Confirmed via GitHub Releases API for v3.5.4 (June 17, 2026), v3.12.0, and v3.12.0-rc.0.</p>
+<p><strong>Docker Hub (docker.io/prom/prometheus):</strong> riscv64 images present on versioned tags from v3.10.0 onward. The v3.12.0 image platform matrix is <code class="language-plaintext highlighter-rouge">linux/amd64</code>, <code class="language-plaintext highlighter-rouge">linux/arm64</code>, <code class="language-plaintext highlighter-rouge">linux/arm/v7</code>, <code class="language-plaintext highlighter-rouge">linux/ppc64le</code>, <code class="language-plaintext highlighter-rouge">linux/riscv64</code>, <code class="language-plaintext highlighter-rouge">linux/s390x</code>. [NEEDS VERIFICATION: whether the <code class="language-plaintext highlighter-rouge">latest</code> tag (pointing to the busybox variant) carries riscv64 identically to versioned tags - one data source showed 5 architectures without riscv64 for <code class="language-plaintext highlighter-rouge">latest</code> specifically, though <code class="language-plaintext highlighter-rouge">DOCKER_ARCHS</code> and PR #17508/#18548 confirm riscv64 is in the default build matrix.]</p>
 
-<p>v2.45.0 (June 23, 2023) does not include a riscv64 tarball. v2.46.0 is the first.</p>
+<p><strong>quay.io (quay.io/prometheus/prometheus):</strong> Broken for riscv64 from v3.10.0 (February 2026) through PR #18527 (2026-04-16), due to quay.io requiring manual per-architecture repository creation. Fixed by creating the missing repository; no code change required. All releases from v3.12.0 onward (first stable release after the fix, 2026-05-28) publish riscv64 images to quay.io without exclusion, confirmed closed out by PR #18548 (2026-04-20) removing the exclusion logic.</p>
 
-<p><strong>Docker Hub (docker.io/prom/prometheus):</strong></p>
+<p><strong>Debian (tracker.debian.org / buildd):</strong> <code class="language-plaintext highlighter-rouge">prometheus</code> version 2.53.5+ds1-5 (sid), status “Installed” on riscv64, built by buildd <code class="language-plaintext highlighter-rouge">rv-manda-02</code>. All mainstream Debian architectures are built: amd64, arm64, armhf, i386, loong64, ppc64el, riscv64, s390x. This Debian version (2.53.x) lags significantly behind upstream (v3.12.0/v3.15.0).</p>
 
-<p>riscv64 images are present on <code class="language-plaintext highlighter-rouge">latest-busybox</code>, <code class="language-plaintext highlighter-rouge">latest-distroless</code>, and all versioned tags from v3.10.0 onward. The current image platform matrix for v3.12.0 is: <code class="language-plaintext highlighter-rouge">linux/amd64</code>, <code class="language-plaintext highlighter-rouge">linux/arm64</code>, <code class="language-plaintext highlighter-rouge">linux/arm/v7</code>, <code class="language-plaintext highlighter-rouge">linux/ppc64le</code>, <code class="language-plaintext highlighter-rouge">linux/riscv64</code>, <code class="language-plaintext highlighter-rouge">linux/s390x</code>.</p>
+<p><strong>Ubuntu 24.04 (Noble):</strong> Package <code class="language-plaintext highlighter-rouge">prometheus</code> 2.45.3+ds-2build1 lists riscv64 alongside amd64, arm64, armhf, ppc64el, s390x. Related packages (prometheus-alertmanager, prometheus-node-exporter, prometheus-pushgateway, prometheus-postgres-exporter) carry the same architecture list.</p>
 
-<p>Note: The <code class="language-plaintext highlighter-rouge">latest</code> tag (which points to the busybox variant) shows 5 architectures without riscv64 in one data source [NEEDS VERIFICATION – the Docker Hub API response for <code class="language-plaintext highlighter-rouge">latest</code> vs <code class="language-plaintext highlighter-rouge">latest-busybox</code> may differ; PR #17508 and #18548 confirm riscv64 is in <code class="language-plaintext highlighter-rouge">DOCKER_ARCHS</code>].</p>
+<p><strong>Ubuntu 26.04 (resolute):</strong> Package <code class="language-plaintext highlighter-rouge">prometheus</code> 2.53.5+ds1-3 (section <code class="language-plaintext highlighter-rouge">net</code>, universe) lists architectures amd64, arm64, armhf, ppc64el, riscv64, s390x, with real package/installed sizes (17,918.9 kB / 88,679.0 kB) confirming a genuine build, not a placeholder entry. The same riscv64 row with real sizes is also present on <code class="language-plaintext highlighter-rouge">noble</code> (24.04 LTS) and <code class="language-plaintext highlighter-rouge">questing</code> (25.10), so riscv64 Ubuntu packaging is not a recent or one-off addition.</p>
 
-<p><strong>quay.io (quay.io/prometheus/prometheus):</strong></p>
+<p><strong>Arch Linux RISC-V (archriscv.felixc.at / felixonmars/archriscv-packages):</strong> The <code class="language-plaintext highlighter-rouge">prometheus</code> package is in <code class="language-plaintext highlighter-rouge">sv39-blacklist.txt</code> as of <a href="https://github.com/felixonmars/archriscv-packages/pull/4854">PR #4854</a> (“sv39-blacklist: add prometheus”), merged 2025-08-06. Root cause: a Node.js WebAssembly “Out of memory” error on sv39 virtual-address-space-constrained hardware during the web UI asset build step (the same Node.js limitation noted in Section 5). The package is blacklisted for the most common RISC-V hardware class (sv39, e.g. VisionFive 2, HiFive Unmatched); it may build on sv48/sv57 hardware. The Arch Linux RISC-V mirror’s last successful build, <code class="language-plaintext highlighter-rouge">prometheus-2.52.1-1-riscv64.pkg.tar.zst</code> (2024-06-02), is significantly behind upstream.</p>
 
-<p>riscv64 support was broken from v3.10.0 (February 2026) through April 2026 due to quay.io requiring manual repository creation. PR #18527 (merged April 16, 2026) created the missing quay.io repository. All subsequent releases publish riscv64 images to quay.io without exclusion.</p>
+<p><strong>PyPI:</strong> Not applicable. The <code class="language-plaintext highlighter-rouge">prometheus</code> package on PyPI (last release 0.3.0, source-only sdist, no wheels) is an unrelated, unmaintained Python client library by a different author, not the Go-based Prometheus server. Checking it for riscv64 relevance is a category error; it is noted here only to preempt confusion.</p>
 
-<p><strong>Debian (tracker.debian.org):</strong></p>
-
-<p>Version 2.53.5+ds1-5, status “Installed” on riscv64, built by buildd <code class="language-plaintext highlighter-rouge">rv-manda-02</code>. All mainstream Debian architectures built: amd64, arm64, armhf, i386, loong64, ppc64el, riscv64, s390x. This version is significantly behind upstream (v2.53.x vs upstream v3.12.0).</p>
-
-<p><strong>Ubuntu 24.04 (Noble):</strong></p>
-
-<p>Package <code class="language-plaintext highlighter-rouge">prometheus</code> version 2.45.3+ds-2build1 is explicitly listed for riscv64 alongside amd64, arm64, armhf, ppc64el, s390x. Related packages (prometheus-alertmanager, prometheus-node-exporter, prometheus-pushgateway, prometheus-postgres-exporter) carry the same architecture list.</p>
-
-<p><strong>Arch Linux RISC-V (archriscv.felixc.at):</strong></p>
-
-<p>The package is in <code class="language-plaintext highlighter-rouge">sv39-blacklist.txt</code> as of <a href="https://github.com/felixonmars/archriscv-packages/pull/4854">PR #4854</a> (“sv39-blacklist: add prometheus”), merged August 6, 2025. Root cause: Node.js WebAssembly <code class="language-plaintext highlighter-rouge">Out of memory</code> error on sv39 virtual address space-constrained hardware during the web UI asset build step. The package is blacklisted for the most common RISC-V hardware class (sv39, e.g., VisionFive 2, HiFive Unmatched). It may build on sv48/sv57 hardware. The Arch Linux RISC-V mirror shows <code class="language-plaintext highlighter-rouge">prometheus-2.52.1-1-riscv64.pkg.tar.zst</code> (dated June 2, 2024), significantly behind upstream.</p>
-
-<p><strong>PyPI:</strong> Not applicable. The <code class="language-plaintext highlighter-rouge">prometheus</code> package on PyPI (v0.3.0) is an unrelated Python project. The real Prometheus monitoring system does not publish to PyPI.</p>
+<p><strong>What a user must do to get a working binary:</strong> On x86_64/arm64/ppc64le/s390x Linux, <code class="language-plaintext highlighter-rouge">apt install prometheus</code> (Debian/Ubuntu) or download the official <code class="language-plaintext highlighter-rouge">linux-riscv64</code> tarball from GitHub Releases both work out of the box. On sv39 RISC-V hardware under Arch Linux specifically, the official repository package is unavailable and the user must either use the upstream GitHub tarball directly or build on sv48/sv57 hardware.</p>
 
 <p><strong>Release status summary:</strong></p>
 
@@ -787,37 +850,37 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
   <tbody>
     <tr>
       <td>GitHub upstream releases</td>
-      <td>YES</td>
-      <td>v3.12.0 (current)</td>
+      <td>Yes</td>
+      <td>v3.15.0 (current)</td>
       <td>Present since v2.46.0 (Jul 2023)</td>
     </tr>
     <tr>
       <td>Docker Hub</td>
-      <td>YES</td>
-      <td>v3.12.0</td>
+      <td>Yes</td>
+      <td>v3.12.0+</td>
       <td>Since v3.10.0 (Feb 2026)</td>
     </tr>
     <tr>
       <td>quay.io</td>
-      <td>YES</td>
-      <td>v3.10.0+</td>
-      <td>Fixed Apr 2026; broken Feb-Apr 2026</td>
+      <td>Yes</td>
+      <td>v3.12.0+</td>
+      <td>Broken Feb-Apr 2026, fixed by PR #18527</td>
     </tr>
     <tr>
-      <td>Ubuntu 24.04</td>
-      <td>YES</td>
-      <td>2.45.3+ds (distro-packaged)</td>
-      <td>Listed for riscv64</td>
+      <td>Ubuntu 24.04 / 26.04</td>
+      <td>Yes</td>
+      <td>2.45.3+ds / 2.53.5+ds1-3</td>
+      <td>Listed for riscv64 on both releases</td>
     </tr>
     <tr>
       <td>Debian sid</td>
-      <td>YES</td>
+      <td>Yes</td>
       <td>2.53.5+ds1-5</td>
       <td>“Installed” on riscv64 buildd</td>
     </tr>
     <tr>
       <td>Arch Linux RISC-V</td>
-      <td>PARTIAL</td>
+      <td>Partial</td>
       <td>2.52.1-1</td>
       <td>sv39-blacklisted since Aug 2025</td>
     </tr>
@@ -828,7 +891,7 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
       <td>Wrong package; not applicable</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="9-dependencies">
   
   
@@ -838,145 +901,176 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
 </h2>
     
 
-<p>The following direct and key indirect dependencies carry riscv64-relevant build or performance considerations. “riscv64 build status” means: does the module compile cleanly under <code class="language-plaintext highlighter-rouge">GOOS=linux GOARCH=riscv64</code>?</p>
+<p>“riscv64 Build” means: does the module compile cleanly under <code class="language-plaintext highlighter-rouge">GOOS=linux GOARCH=riscv64</code>? Build-dependencies are tools required to produce the binary/image; runtime-dependencies are Go modules linked into the shipped binary.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
-      <th>Role in Prometheus</th>
+      <th>Role</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test CI</th>
-      <th>riscv64 Asm/Accel</th>
-      <th>Blocking Issues</th>
+      <th>riscv64 Release</th>
+      <th>Notes / Blocking Issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Go toolchain (<code class="language-plaintext highlighter-rouge">golang/go</code>)</td>
-      <td>Runtime, GC, scheduler, stdlib, crypto</td>
-      <td>Builds (secondary port since Go 1.14)</td>
-      <td>Community builders only</td>
-      <td>Partial (soft-float optimized since ~1.22; no RVV)</td>
-      <td>Open: <a href="https://github.com/golang/go/issues/74683">#74683</a> FIPS140 broken on riscv64 with <code class="language-plaintext highlighter-rouge">-buildmode=pie</code>. Open: <a href="https://github.com/golang/go/issues/77069">#77069</a> crypto P256 mul unoptimized. Open: <a href="https://github.com/golang/go/issues/77328">#77328</a> Zvkned assembler missing.</td>
+      <td>Go</td>
+      <td>Compiler/runtime toolchain (build-dependency, critical)</td>
+      <td>Supported since Go 1.14 (secondary port)</td>
+      <td>Community builders only, not GitHub-hosted</td>
+      <td>N/A</td>
+      <td>Open: <a href="https://github.com/golang/go/issues/74683">golang/go#74683</a> FIPS140 broken with <code class="language-plaintext highlighter-rouge">-buildmode=pie</code> on riscv64. Open: <a href="https://github.com/golang/go/issues/77069">golang/go#77069</a> crypto P256 mul unoptimized on riscv64. Open: <a href="https://github.com/golang/go/issues/77328">golang/go#77328</a> Zvkned assembler support missing.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code></td>
-      <td>TLS, AEAD, certificates for HTTPS scrape and remote-write</td>
-      <td>Builds; pure-Go fallback on riscv64</td>
+      <td>promu</td>
+      <td>Cross-build/release tool (build-dependency, critical)</td>
+      <td>N/A (build tool)</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>riscv64 added to default crossbuild platform list via PR #12530 (2023-07-06); this is the single event that enabled all subsequent riscv64 binary releases.</td>
+    </tr>
+    <tr>
+      <td>Node.js</td>
+      <td>Web UI asset build (build-dependency, critical)</td>
+      <td>Officially unsupported on riscv64</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>PR #17508: “Node.js currently does not officially support riscv64, which could lead to problems such as illegal instructions.” This blocks native <code class="language-plaintext highlighter-rouge">make build</code> on riscv64 hardware and is the root cause of the Arch Linux <code class="language-plaintext highlighter-rouge">sv39-blacklist</code> entry for <code class="language-plaintext highlighter-rouge">prometheus</code> (PR #4854). Does not affect cross-compiled release binaries, which embed pre-built assets.</td>
+    </tr>
+    <tr>
+      <td>QEMU</td>
+      <td>Docker multi-platform image build emulation (build-dependency, optional)</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Used only for Docker image builds (<code class="language-plaintext highlighter-rouge">docker/setup-qemu-action</code>), not for binary cross-compilation (Go cross-compiles natively) and not for test execution.</td>
+    </tr>
+    <tr>
+      <td>golang.org/x/crypto</td>
+      <td>TLS/AEAD for HTTPS scrape and remote-write (runtime-dependency, optional)</td>
+      <td>Builds; pure-Go fallback</td>
       <td>No riscv64 CI</td>
-      <td>No asm for riscv64 (AES-GCM, ChaCha20, SHA-256 asm absent)</td>
-      <td>Performance: ~3-5x slower TLS throughput vs amd64/arm64. FIPS PIE blocked by golang/go#74683.</td>
+      <td>N/A (part of Go module graph)</td>
+      <td>No AES-GCM/ChaCha20/SHA asm for riscv64; materially slower TLS throughput vs amd64/arm64. Blocked upstream by golang/go#74683, #77069, #77328.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">cespare/xxhash/v2</code></td>
-      <td>64-bit hash for TSDB chunk indexing, label fingerprinting</td>
+      <td>cespare/xxhash</td>
+      <td>64-bit hashing for TSDB indexing/fingerprinting (runtime-dependency, optional)</td>
       <td>Builds; falls back to <code class="language-plaintext highlighter-rouge">xxhash_other.go</code> (build tag <code class="language-plaintext highlighter-rouge">!amd64,!arm64</code>)</td>
       <td>No riscv64 CI</td>
-      <td>No asm for riscv64</td>
-      <td>No open correctness issues. Pure-Go fallback ~2x slower than asm paths on other arches. No upstream plan to add riscv64 asm.</td>
+      <td>N/A (vendored Go module)</td>
+      <td>No riscv64 asm; no upstream plan to add it. No open correctness issues.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">klauspost/compress</code></td>
-      <td>Snappy, zstd, gzip for remote-write and TSDB</td>
-      <td>Builds; riscv64 unsafe little-endian path was added (issue #1036, closed)</td>
+      <td>klauspost/compress</td>
+      <td>Snappy/zstd/gzip for remote-write and TSDB (runtime-dependency, optional)</td>
+      <td>Builds; a riscv64 unsafe little-endian path was added (issue #1036, closed)</td>
       <td>No riscv64 CI</td>
-      <td>No riscv64 SIMD (x86 AVX2 / arm64 NEON only)</td>
-      <td>No open riscv64 issues. Pure-Go zstd active on riscv64.</td>
+      <td>N/A</td>
+      <td>No riscv64 SIMD (x86 AVX2 / arm64 NEON only); pure-Go zstd active on riscv64. No open riscv64 issues.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">golang/snappy</code></td>
-      <td>Legacy Snappy framing for remote-write protocol</td>
+      <td>golang/snappy</td>
+      <td>Legacy Snappy framing for remote-write (runtime-dependency, optional)</td>
       <td>Builds; pure-Go on non-amd64/non-arm64</td>
       <td>No riscv64 CI</td>
-      <td>No asm for riscv64</td>
+      <td>N/A</td>
       <td>No open riscv64 issues.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">google/pprof</code></td>
-      <td>CPU/memory profiling, <code class="language-plaintext highlighter-rouge">/debug/pprof</code> endpoint</td>
-      <td>Builds; uses Go runtime stack walking</td>
+      <td>pprof</td>
+      <td>CPU/memory profiling, <code class="language-plaintext highlighter-rouge">/debug/pprof</code> endpoint (runtime-dependency, optional)</td>
+      <td>Builds; Go runtime stack walking, no arch-specific code</td>
       <td>No riscv64 CI</td>
-      <td>No arch-specific code</td>
-      <td>No open riscv64 issues. Native perf annotation (Linux perf) non-functional without riscv64 perf support.</td>
+      <td>N/A</td>
+      <td>No open riscv64 issues; native Linux-perf annotation non-functional without riscv64 perf support.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">prometheus/procfs</code></td>
-      <td>Reads <code class="language-plaintext highlighter-rouge">/proc</code> and <code class="language-plaintext highlighter-rouge">/sys</code> for node metrics</td>
-      <td>Builds; CPUInfo parsing for RISC-V was added (<a href="https://github.com/prometheus/procfs/pull/318">PR #318</a>) and a wiring bug fixed (<a href="https://github.com/prometheus/procfs/pull/325">PR #325</a>)</td>
+      <td>prometheus/procfs</td>
+      <td><code class="language-plaintext highlighter-rouge">/proc</code> and <code class="language-plaintext highlighter-rouge">/sys</code> parsing for node metrics (runtime-dependency, critical)</td>
+      <td>Builds; RISC-V CPUInfo parsing added (<a href="https://github.com/prometheus/procfs/pull/318">procfs PR #318</a>), with a dispatch-wiring bug fixed in <a href="https://github.com/prometheus/procfs/pull/325">procfs PR #325</a></td>
       <td>No riscv64 CI</td>
-      <td>No asm</td>
-      <td>No open riscv64 issues. Historical build breakage (v0.1.3-v0.2.0) was resolved in v0.3.0.</td>
+      <td>N/A</td>
+      <td>Historical build breakage (v0.1.3-v0.2.0, <code class="language-plaintext highlighter-rouge">parseCPUInfo</code> undefined on riscv64) resolved in v0.3.0. No open issues.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">prometheus/client_golang</code></td>
-      <td>Prometheus self-instrumentation</td>
-      <td>Builds; was broken on riscv64 before bumping procfs dependency (PR #833, closed)</td>
+      <td>prometheus/client_golang</td>
+      <td>Prometheus self-instrumentation (runtime-dependency, critical)</td>
+      <td>Builds; was broken on riscv64 before bumping its procfs dependency (<a href="https://github.com/prometheus/client_golang/pull/833">PR #833</a>, closed)</td>
       <td>No riscv64 CI</td>
-      <td>No asm</td>
+      <td>N/A</td>
       <td>No open riscv64 issues.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">edsrzf/mmap-go</code></td>
-      <td>Memory-mapped file I/O for TSDB WAL and chunk files</td>
+      <td>edsrzf/mmap-go</td>
+      <td>Memory-mapped I/O for TSDB WAL/chunks (runtime-dependency, critical)</td>
       <td>Builds; <code class="language-plaintext highlighter-rouge">mmap</code> syscall is arch-independent via <code class="language-plaintext highlighter-rouge">golang.org/x/sys</code></td>
       <td>No riscv64 CI</td>
-      <td>No asm</td>
+      <td>N/A</td>
       <td>No open riscv64 issues.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">grafana/regexp</code></td>
-      <td>DFA-based regex for label selector matching</td>
+      <td>grafana/regexp</td>
+      <td>DFA-based regex for label selector matching (runtime-dependency, optional)</td>
       <td>Builds; pure-Go fork of stdlib regexp</td>
       <td>No riscv64 CI</td>
-      <td>No asm</td>
+      <td>N/A</td>
       <td>No open riscv64 issues.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">google.golang.org/grpc</code></td>
-      <td>Remote-write gRPC transport</td>
+      <td>gRPC-Go</td>
+      <td>Remote-write gRPC transport (runtime-dependency, critical)</td>
       <td>Builds; no arch-specific code</td>
       <td>No riscv64 CI</td>
-      <td>No asm</td>
+      <td>N/A</td>
+      <td>No open riscv64 issues. Note: a separate C++ “gRPC” core project exists with its own report; this entry is the Go implementation only.</td>
+    </tr>
+    <tr>
+      <td>automaxprocs</td>
+      <td>cgroup CPU quota to GOMAXPROCS (runtime-dependency, optional)</td>
+      <td>Builds; pure Go</td>
+      <td>No riscv64 CI</td>
+      <td>N/A</td>
       <td>No open riscv64 issues.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">go.uber.org/automaxprocs</code></td>
-      <td>cgroup CPU quota -&gt; GOMAXPROCS</td>
+      <td>automemlimit</td>
+      <td>cgroup memory.max to soft memory limit (runtime-dependency, optional)</td>
       <td>Builds; pure Go</td>
       <td>No riscv64 CI</td>
-      <td>No asm</td>
+      <td>N/A</td>
       <td>No open riscv64 issues.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">KimMachineGun/automemlimit</code></td>
-      <td>cgroup memory.max -&gt; soft memory limit</td>
+      <td>dennwc/varint</td>
+      <td>Varint encoding for TSDB posting lists (runtime-dependency, optional)</td>
       <td>Builds; pure Go</td>
       <td>No riscv64 CI</td>
-      <td>No asm</td>
-      <td>No open riscv64 issues.</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">dennwc/varint</code></td>
-      <td>Varint encoding for TSDB posting lists</td>
-      <td>Builds; pure Go</td>
-      <td>No riscv64 CI</td>
-      <td>No asm</td>
+      <td>N/A</td>
       <td>No open riscv64 issues.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Blocking dependency issues:</strong></p>
+<p><strong>Deep-dive on the dependencies with numerics/crypto-adjacent content:</strong></p>
 
+<ul>
+  <li><strong>golang.org/x/crypto</strong> is the highest-priority dependency gap. It provides the TLS stack used for HTTPS scraping and remote-write; on amd64/arm64 it dispatches to hardware AES-GCM/ChaCha20-Poly1305/SHA intrinsics, and on riscv64 it falls back to pure-Go implementations. Three open upstream Go issues constrain any fix: golang/go#74683 (FIPS140 + <code class="language-plaintext highlighter-rouge">-buildmode=pie</code> broken on riscv64), golang/go#77069 (P256 multiplication unoptimized), and golang/go#77328 (Zvkned vector-crypto extension support missing from the Go assembler). These are Go toolchain issues, not something fixable inside <code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code> or Prometheus alone.</li>
+  <li><strong>cespare/xxhash</strong> and <strong>klauspost/compress</strong> both lack riscv64-specific assembly/SIMD paths and fall back to portable Go. Neither has an open upstream issue or stated roadmap item for riscv64 acceleration.</li>
+  <li><strong>prometheus/procfs</strong> is the one dependency in this list with riscv64-specific <em>source</em> (CPUInfo parsing), and it is also the one dependency with a documented, now-resolved riscv64 correctness bug (the dispatch-wiring defect fixed in procfs PR #325).</li>
+</ul>
+
+<p><strong>Blocking dependency issues, summarized:</strong></p>
 <ol>
-  <li><code class="language-plaintext highlighter-rouge">golang/go#74683</code> (open) – FIPS140 broken on riscv64 with <code class="language-plaintext highlighter-rouge">-buildmode=pie</code>. Blocks any Prometheus build in a FIPS-enforcing environment on riscv64 (e.g., RHEL 9 in FIPS mode). Affects all PIE builds, including hardened OS default configurations.</li>
-  <li>No riscv64 native CI runners in any part of the dependency stack. All builds are cross-compiled. Correctness validation on real hardware is absent throughout.</li>
-  <li><code class="language-plaintext highlighter-rouge">cespare/xxhash</code> and <code class="language-plaintext highlighter-rouge">klauspost/compress</code> lack riscv64 asm. No upstream plans to add them. TSDB ingestion and remote-write compression run on pure-Go fallbacks.</li>
-  <li><code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code> pure-Go TLS on riscv64 produces approximately 3-5x slower AEAD throughput vs the asm-accelerated amd64/arm64 paths. This is a material concern for Prometheus deployments that scrape thousands of HTTPS targets.</li>
+  <li><code class="language-plaintext highlighter-rouge">golang/go#74683</code> (open): FIPS140 broken on riscv64 with <code class="language-plaintext highlighter-rouge">-buildmode=pie</code>, blocking Prometheus builds in FIPS-enforcing environments on riscv64.</li>
+  <li>No riscv64 native CI runners anywhere in the dependency stack; all builds are cross-compiled, so correctness validation on real riscv64 hardware is absent throughout the supply chain, not just in Prometheus’s own CI.</li>
+  <li><code class="language-plaintext highlighter-rouge">cespare/xxhash</code> and <code class="language-plaintext highlighter-rouge">klauspost/compress</code> lack riscv64 asm with no upstream plan to add it; TSDB ingestion and remote-write compression run on pure-Go fallbacks.</li>
+  <li><code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code> pure-Go TLS on riscv64 is materially slower than the asm-accelerated amd64/arm64 paths, a concern for Prometheus deployments scraping large numbers of HTTPS targets.</li>
 </ol>
 
-<p>Data not available: Published Prometheus-specific benchmark figures isolating the throughput impact of these dependency-level fallbacks on riscv64 hardware.</p><hr />
+<p>Data not available: Prometheus-specific benchmark figures isolating the throughput impact of any of these dependency-level fallbacks on riscv64 hardware.</p>
 <h2 id="10-ecosystem-status">
   
   
@@ -986,23 +1080,21 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
 </h2>
     
 
-<p><strong>node_exporter (<code class="language-plaintext highlighter-rouge">prometheus/node_exporter</code>):</strong></p>
+<p>Prometheus itself is a standalone Go binary with no dependent package ecosystem in the Python/npm/Maven/Kubernetes-operator sense - nothing installs “a Prometheus plugin” the way one installs a pip or npm package. However, Prometheus anchors a companion ecosystem of exporters and auxiliary binaries (node_exporter, alertmanager, pushgateway, blackbox_exporter, and dozens of third-party exporters) that must each independently ship riscv64 builds for a riscv64 Prometheus deployment to have full observability parity with amd64/arm64 deployments. That ecosystem’s riscv64 status:</p>
 
-<p>riscv64 binary releases began with v1.7.0 (November 13, 2023). A GitHub issue (#2645) documenting a user request to add riscv64 to the CI build pipeline was closed. The user confirmed that <code class="language-plaintext highlighter-rouge">GOARCH=riscv64 make build</code> cross-compiled successfully and that the resulting binary ran on a StarFive VisionFive 2 board with standard metrics accessible. No performance issues were reported in that issue.</p>
+<p><strong>node_exporter (<code class="language-plaintext highlighter-rouge">prometheus/node_exporter</code>):</strong> riscv64 binary releases began with v1.7.0 (2023-11-13); <a href="https://github.com/prometheus/node_exporter/issues/2645">node_exporter#2645</a> (“ci: build riscv64 binaries,” closed 2023-07-18) confirmed <code class="language-plaintext highlighter-rouge">GOARCH=riscv64 make build</code> cross-compiled successfully and ran on a StarFive VisionFive 2 board under go1.20.2. Container images lagged: <a href="https://github.com/prometheus/node_exporter/issues/3311">node_exporter#3311</a> (“Provide linux/riscv64 container images”) was open reporting riscv64 images were missing after a regression, and was closed 2026-04-09 once fixed. Two open correctness issues remain: <a href="https://github.com/prometheus/node_exporter/issues/3180">node_exporter#3180</a> (open since 2024-11-10) - the end-to-end test suite fails on riscv64 because expected output includes x86-only CPU bug/flag metrics (<code class="language-plaintext highlighter-rouge">node_cpu_bug_info</code> with <code class="language-plaintext highlighter-rouge">cpu_meltdown</code>/<code class="language-plaintext highlighter-rouge">mds</code>/<code class="language-plaintext highlighter-rouge">spectre_v1</code>/<code class="language-plaintext highlighter-rouge">spectre_v2</code>, <code class="language-plaintext highlighter-rouge">node_cpu_flag_info</code> with <code class="language-plaintext highlighter-rouge">aes</code>/<code class="language-plaintext highlighter-rouge">avx</code>/<code class="language-plaintext highlighter-rouge">avx2</code>) that don’t exist in riscv64’s <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code>; the reporter suggests these collectors should be guarded to x86_64 only, but no fix has landed. <a href="https://github.com/prometheus/node_exporter/issues/2296">node_exporter#2296</a> (open since 2022-02-25) reports <code class="language-plaintext highlighter-rouge">go test ./...</code> and the end-to-end test script failing on riscv64 (Linux 5.11, node_exporter 1.3.1) with a log attached but no diagnosed root cause in the issue body.</p>
 
-<p><strong>alertmanager (<code class="language-plaintext highlighter-rouge">prometheus/alertmanager</code>):</strong></p>
+<p><strong>alertmanager (<code class="language-plaintext highlighter-rouge">prometheus/alertmanager</code>):</strong> riscv64 binary and Docker image present in the current release; multi-arch images including riscv64 are published to quay.io. No open riscv64 issues found.</p>
 
-<p>riscv64 binary and Docker image present in latest v0.33.0 (June 12, 2026). Docker multi-arch images published to quay.io including riscv64. No open riscv64 issues.</p>
+<p><strong>pushgateway (<code class="language-plaintext highlighter-rouge">prometheus/pushgateway</code>):</strong> riscv64 binary present in the current release. No open riscv64 issues found.</p>
 
-<p><strong>pushgateway (<code class="language-plaintext highlighter-rouge">prometheus/pushgateway</code>):</strong></p>
+<p><strong>prometheus/procfs:</strong> Fixed a riscv64-specific CPUInfo-parsing wiring bug (PR #325, discussed in Section 9).</p>
 
-<p>riscv64 binary present in latest v1.11.3 (May 27, 2026). No open riscv64 issues.</p>
+<p><strong>Arch Linux RISC-V exporter ecosystem:</strong> The Arch Linux RISC-V mirror carries a wide set of exporter packages (prometheus-node-exporter, prometheus-blackbox-exporter, prometheus-postgres-exporter, prometheus-ssl-exporter, prometheus-redis-exporter, and others), all available as riscv64 packages and generally more current than the core <code class="language-plaintext highlighter-rouge">prometheus</code> package itself, which is sv39-blacklisted (Section 8).</p>
 
-<p><strong>Arch Linux RISC-V ecosystem:</strong></p>
+<p><strong>RISE ecosystem:</strong> No RISE working group activity specific to Prometheus or its exporter ecosystem was identified in blog posts, repository listings, or site search.</p>
 
-<p>The Arch Linux RISC-V mirror (<code class="language-plaintext highlighter-rouge">mirror.iscas.ac.cn/archriscv</code>) contains a rich set of exporters: prometheus-node-exporter 1.11.1, prometheus-blackbox-exporter 0.28.0, prometheus-postgres-exporter 0.19.1, prometheus-ssl-exporter 2.6.1, prometheus-redis-exporter 1.81.0, and 15+ others. These are all available as riscv64 packages and are more current than the main prometheus package (which is sv39-blacklisted due to the Node.js build issue).</p>
-
-<p><strong>RISE ecosystem:</strong> No RISE working group activity specific to Prometheus has been identified. The RISE Language Runtimes working group (lead: Jeff Law, Qualcomm) covers Go, Java, and Python runtimes but no Prometheus-specific work has been published.</p><hr />
+<p><strong>Assessment:</strong> The core <code class="language-plaintext highlighter-rouge">prometheus</code> server and its primary companion binaries (node_exporter, alertmanager, pushgateway) are all riscv64-buildable and distributed, but the ecosystem’s test coverage on riscv64 is weaker than its binary coverage - two of node_exporter’s open issues are specifically riscv64 test failures, one unresolved for close to four years.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1012,30 +1104,86 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
 </h2>
     
 
-<p><strong>Open riscv64-specific issues in prometheus/prometheus:</strong> Zero. GitHub searches for <code class="language-plaintext highlighter-rouge">riscv64 state:open repo:prometheus/prometheus</code> and an org-wide <code class="language-plaintext highlighter-rouge">riscv org:prometheus</code> search return no open issues.</p>
+<p><strong>Open riscv64-specific issues in <code class="language-plaintext highlighter-rouge">prometheus/prometheus</code> itself:</strong> Zero. Searches for <code class="language-plaintext highlighter-rouge">riscv64 state:open repo:prometheus/prometheus</code> and an org-wide <code class="language-plaintext highlighter-rouge">riscv org:prometheus</code> search return no open issues against the core repository.</p>
 
-<p><strong>Closed riscv64-specific bugs:</strong></p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/prometheus/procfs/pull/325">procfs PR #325</a></td>
+      <td>Fix build on RISCV</td>
+      <td>Closed (fixed in procfs v0.3.0)</td>
+      <td>Correctness</td>
+      <td>PR #318 added <code class="language-plaintext highlighter-rouge">parseCPUInfoRISCV</code> for <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> parsing on riscv64 but failed to wire the function into the dispatch table, causing a <code class="language-plaintext highlighter-rouge">parseCPUInfo</code> undefined compile error on riscv64 for procfs v0.1.3-v0.2.0. <code class="language-plaintext highlighter-rouge">prometheus/client_golang</code> PR #833 had to bump its procfs dependency to pick up the fix.</td>
+    </tr>
+    <tr>
+      <td>PR #17876 / #18110</td>
+      <td>Distroless riscv64 image not found</td>
+      <td>Closed (resolved Feb 2026)</td>
+      <td>Release-blocking</td>
+      <td><code class="language-plaintext highlighter-rouge">gcr.io/distroless/static-debian13:nonroot-riscv64</code> did not exist when PR #17876 merged, blocking v3.10.0; resolved once upstream distroless added riscv64 support and the temporary exclusion (PR #18110) was removed by PR #18548.</td>
+    </tr>
+    <tr>
+      <td>Issue #18123 / PR #18124 / PR #18527</td>
+      <td>quay.io riscv64 “unauthorized” error</td>
+      <td>Closed (resolved Apr 2026)</td>
+      <td>Release-blocking</td>
+      <td>quay.io requires manual per-architecture repository creation; the riscv64 repo was never created, silently failing all pushes. Resolved by creating the repository (PR #18527); the interim exclusion (PR #18124) was removed by PR #18548.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/prometheus/node_exporter/issues/3180">node_exporter#3180</a></td>
+      <td>End-to-end test fails on riscv64 machine</td>
+      <td>Open (since 2024-11-10)</td>
+      <td>Correctness (test suite)</td>
+      <td>x86-only CPU bug/flag metrics are expected in test output but don’t exist on riscv64’s <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code>.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/prometheus/node_exporter/issues/2296">node_exporter#2296</a></td>
+      <td>Fail to test with version 1.3.1 under RISC-V</td>
+      <td>Open (since 2022-02-25)</td>
+      <td>Correctness (test suite)</td>
+      <td><code class="language-plaintext highlighter-rouge">go test ./...</code> and end-to-end tests fail on riscv64; no diagnosed root cause published.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/golang/go/issues/74683">golang/go#74683</a></td>
+      <td>FIPS140 broken on riscv64 with <code class="language-plaintext highlighter-rouge">-buildmode=pie</code></td>
+      <td>Open</td>
+      <td>Build-blocking (FIPS environments)</td>
+      <td>Go toolchain issue, not Prometheus-specific, but blocks Prometheus builds in FIPS-enforcing riscv64 environments.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/golang/go/issues/77069">golang/go#77069</a></td>
+      <td>crypto P256 mul unoptimized on riscv64</td>
+      <td>Open</td>
+      <td>Performance</td>
+      <td>Go toolchain issue.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/golang/go/issues/77328">golang/go#77328</a></td>
+      <td>Zvkned assembler support missing</td>
+      <td>Open</td>
+      <td>Performance</td>
+      <td>Go toolchain issue.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/felixonmars/archriscv-packages/pull/4854">felixonmars/archriscv-packages PR #4854</a></td>
+      <td>sv39-blacklist: add prometheus</td>
+      <td>Merged (2025-08-06)</td>
+      <td>Packaging</td>
+      <td>Node.js WebAssembly OOM on sv39 address-space-constrained riscv64 hardware during web UI asset build; Prometheus is unbuildable via the Arch Linux RISC-V repo on the most common RISC-V hardware class.</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<ol>
-  <li>
-    <p><strong>procfs CPUInfo wiring bug</strong> (procfs <a href="https://github.com/prometheus/procfs/pull/325">PR #325</a>, closed, fixed in procfs v0.3.0): PR #318 added <code class="language-plaintext highlighter-rouge">parseCPUInfoRISCV</code> for <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> parsing on riscv64 but failed to wire the function to the dispatch table. On riscv64, the code compiled with a <code class="language-plaintext highlighter-rouge">parseCPUInfo</code> undefined error. Affected procfs v0.1.3-v0.2.0. Downstream: prometheus/client_golang PR #833 had to bump its procfs dependency to pick up the fix.</p>
-  </li>
-  <li>
-    <p><strong>Distroless riscv64 image not found</strong> (PR #17876 post-merge, resolved via PR #18115 and Makefile.common fix, Feb 2026): <code class="language-plaintext highlighter-rouge">gcr.io/distroless/static-debian13:nonroot-riscv64</code> did not exist at the time PR #17876 was merged, blocking the v3.10.0 release. Resolved by upstream distroless adding riscv64 support.</p>
-  </li>
-  <li>
-    <p><strong>quay.io riscv64 “unauthorized” error</strong> (PR #18124, root cause resolved PR #18527, Apr 2026): quay.io requires manual repository creation for each new architecture. The riscv64 repository was never created, silently failing all pushes. Resolved by creating the repository. No code change was required.</p>
-  </li>
-</ol>
-
-<p><strong>Open upstream issues affecting riscv64 Prometheus deployments:</strong></p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">golang/go#74683</code> (open): FIPS140 <code class="language-plaintext highlighter-rouge">-buildmode=pie</code> broken on riscv64.</li>
-  <li><code class="language-plaintext highlighter-rouge">golang/go#77069</code> (open): <code class="language-plaintext highlighter-rouge">crypto/internal/fips140/nistec</code> P256 mul unoptimized on riscv64.</li>
-  <li><code class="language-plaintext highlighter-rouge">golang/go#77328</code> (open): Zvkned extension missing in Go assembler.</li>
-  <li>Node.js riscv64 instability (<code class="language-plaintext highlighter-rouge">nodejs/build#4099</code>, open): Relevant for the Prometheus web UI build step on native riscv64 hardware (illegal instruction errors, Wasm OOM on sv39). Prometheus v3.x build blocked on native riscv64 hardware for this reason.</li>
-</ul><hr />
+<p>The two open node_exporter test-suite failures are the only unresolved riscv64 correctness issues identified anywhere in the Prometheus organization’s repositories; all issues against <code class="language-plaintext highlighter-rouge">prometheus/prometheus</code> itself are closed.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1045,107 +1193,106 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
 </h2>
     
 
-<p><strong>“Prometheus is already fully supported on riscv64”</strong></p>
+<p><strong>“Prometheus is already fully supported on riscv64.”</strong> Partially true. Binary tarballs ship since July 2023; Docker images ship (stably, with all workarounds removed) since April 2026; the implementation is pure Go with no architecture-specific gaps. “Fully supported” overstates the case on five points: (1) riscv64 is excluded from the PR-triggered <code class="language-plaintext highlighter-rouge">build</code> CI job; (2) no riscv64 test execution exists anywhere in CI; (3) the shipped binary carries zero upstream quality assurance on the target architecture; (4) the Arch Linux riscv64 port is sv39-blacklisted due to a Node.js OOM condition; (5) TLS-heavy deployments face a real crypto throughput regression vs amd64/arm64.</p>
 
-<p>Partially true. Binary tarballs ship since July 2023. Docker images ship since February 2026. The implementation is pure Go with no architecture-specific gaps. However, “fully supported” overstates the case: (1) riscv64 is excluded from PR CI build jobs; (2) no riscv64 test execution exists anywhere in the CI pipeline; (3) the binary ships with zero upstream quality assurance on the target architecture; (4) the Arch Linux riscv64 port is sv39-blacklisted due to a Node.js OOM condition; (5) TLS-intensive deployments face 3-5x crypto throughput regression vs amd64/arm64.</p>
+<p><strong>“There is no work left to do for riscv64 on Prometheus.”</strong> Incorrect. Specific gaps: riscv64 absent from the PR build job’s <code class="language-plaintext highlighter-rouge">promu_opts</code>; zero riscv64 test coverage on target hardware; crypto throughput regression affecting HTTPS scraping at scale; FIPS-mode PIE builds broken via a Go toolchain issue; a Node.js build limitation blocking native compilation of the web UI binary on common riscv64 hardware; two long-open node_exporter test failures in the companion ecosystem.</p>
 
-<p><strong>“There is no work left to do for riscv64 on Prometheus”</strong></p>
+<p><strong>“Pure Go means performance is identical across architectures.”</strong> Incorrect at the dependency layer. <code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code> uses hardware AES instructions on amd64 and arm64 but falls back to pure Go on riscv64. <code class="language-plaintext highlighter-rouge">cespare/xxhash</code> uses hand-written assembly on amd64 and arm64, pure Go on riscv64. <code class="language-plaintext highlighter-rouge">klauspost/compress</code> uses AVX2 on amd64 and NEON on arm64, pure Go on riscv64. The cumulative throughput impact on a high-cardinality Prometheus instance doing HTTPS scraping and remote-write compression is non-trivial, even though no Prometheus-specific benchmark quantifies it.</p>
 
-<p>Incorrect. Specific gaps: (a) no riscv64 CI test runners (zero test coverage on target); (b) no riscv64 entry in the PR build job <code class="language-plaintext highlighter-rouge">promu_opts</code>; (c) crypto throughput regression affecting HTTPS scraping at scale; (d) FIPS PIE build broken via Go toolchain issue; (e) Node.js build limitation blocking native compilation of the web UI binary.</p>
+<p><strong>“The Arch Linux riscv64 blacklist is a minor packaging issue.”</strong> The sv39 blacklist covers the most common class of currently available RISC-V hardware, including the VisionFive 2 and HiFive Unmatched boards. A developer or user on this hardware cannot obtain Prometheus via the Arch Linux RISC-V package at all. The root cause (Node.js Wasm OOM on sv39 address space) is an upstream Node.js issue, not a Prometheus issue, but the observable effect blocks native full-UI builds of Prometheus on sv39 hardware.</p>
 
-<p><strong>“Pure Go means performance is identical across architectures”</strong></p>
-
-<p>Incorrect at the dependency layer. <code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code> uses hardware AES instructions on amd64 and arm64 but falls back to pure Go on riscv64. <code class="language-plaintext highlighter-rouge">cespare/xxhash</code> uses hand-written assembly on amd64 and arm64, pure Go on riscv64. <code class="language-plaintext highlighter-rouge">klauspost/compress</code> uses AVX2 on amd64 and NEON on arm64, pure Go on riscv64. The cumulative throughput impact on a high-cardinality Prometheus instance with HTTPS scraping and remote-write compression is non-trivial.</p>
-
-<p><strong>“The Arch Linux riscv64 blacklist is a minor packaging issue”</strong></p>
-
-<p>The sv39 blacklist covers the most common class of available RISC-V hardware including the VisionFive 2 and HiFive Unmatched boards. Any developer or user attempting to run Prometheus natively on these boards cannot do so via the Arch Linux RISC-V package. The root cause (Node.js Wasm OOM on sv39 address space) is an upstream Node.js issue, not a Prometheus issue, but the observable effect is that native riscv64 builds of Prometheus with the full web UI are blocked on sv39 hardware.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Organizational posture:</strong> The chain of PRs closing out the Docker rollout (#17508 through #18548) shows an engaged, responsive maintainer group (Pivotto, Kochie/SuperQ, Vernekar, Plotka) that treats riscv64 problems as ordinary release-blocking bugs to be fixed quickly (same-day merges on #18124, #18527, #18548), not as a lower-priority architecture. No maintainer has expressed reluctance to support riscv64. The gap is one of unaddressed scope (CI test coverage, PR-build inclusion) rather than active resistance - no open PR or issue requests riscv64 be added to CI, meaning nobody has yet proposed the fix for the acceptance committee to evaluate.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> yellow (build-only-ci)</li>
+  <li><strong>Release provider:</strong> upstream</li>
+</ul>
+
+<p>Prometheus’s PR-triggered CI job (<code class="language-plaintext highlighter-rouge">build</code> in <a href="https://github.com/prometheus/prometheus/blob/main/.github/workflows/ci.yml">.github/workflows/ci.yml</a>) explicitly excludes riscv64 from its <code class="language-plaintext highlighter-rouge">promu_opts</code> platform list, and the only job that touches riscv64 at all (<code class="language-plaintext highlighter-rouge">build_all</code>, which runs solely on pushes to <code class="language-plaintext highlighter-rouge">main</code>/release tags, not on PRs) does a build-only crossbuild via promu’s default platform list - a repo-wide grep of <code class="language-plaintext highlighter-rouge">.github/workflows/</code> confirmed zero “riscv” matches, and no workflow file runs tests on riscv64 (QEMU or native). Per the skill’s CI evidence rule, build-yes/test-no caps this at yellow regardless of release status. Upstream does publish riscv64 artifacts directly (GitHub Release tarballs since v2.46.0 in 2023; Docker Hub and quay.io images since v3.10.0, via <a href="https://github.com/prometheus/prometheus/pull/17508">PR #17508</a> and <a href="https://github.com/prometheus/prometheus/pull/18527">PR #18527</a>), so <code class="language-plaintext highlighter-rouge">release_provider</code> is upstream, but that release channel alone cannot raise the grade past yellow without test execution in CI. Prometheus is a monitoring/alerting toolkit, not a project whose stated value proposition is RISC-V-specific performance, so the optimization-level modifier does not apply to it.</p>
+
+<p><strong>Pending work that could change the grade:</strong> The Docker-image riscv64 rollout chain (PR #17508 -&gt; issue #18123 -&gt; PR #18124 -&gt; PR #18115/#18110 -&gt; PR #18527 -&gt; PR #18548) closed out in April 2026 with all registry workarounds removed, so riscv64 image/binary publishing is now stable. No open PR or issue was found requesting riscv64 be added to the PR-triggered build job or to test execution; RISE operates native riscv64 CI runners used by other projects, but Prometheus has no known integration with them. Upstream Go toolchain gaps (golang/go#74683 FIPS140+PIE on riscv64, golang/go#77069, golang/go#77328) and lack of riscv64 asm in dependencies like cespare/xxhash and klauspost/compress are noted performance caveats but do not affect the CI-based color.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has not funded or published any Prometheus-specific work (Section 1), so no existing RISE investment needs to be netted out of the sizing below.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>Prometheus on riscv64 is functionally complete as a deployed binary. There are no missing features or broken subsystems. Investment in functional enablement is not warranted.</p>
+<p>Prometheus on riscv64 is functionally complete as a deployed binary; there are no missing features or broken subsystems at the application level. Investment in functional enablement of Prometheus itself is not warranted.</p>
 
-<p>Exception: The Node.js build limitation (sv39 OOM during web UI asset compilation) prevents native builds on common riscv64 hardware. Resolution depends on upstream Node.js fixes for riscv64 Wasm support (<code class="language-plaintext highlighter-rouge">nodejs/build#4099</code>). Contributing to Node.js riscv64 Wasm stability is prerequisite work; this is tracked in separate Node.js ecosystem analysis.</p>
-<h3 id="132-performance-optimization">
+<p>The one functional gap is build-environment, not runtime: the Node.js limitation (sv39 Wasm OOM during web UI asset compilation) prevents native <code class="language-plaintext highlighter-rouge">make build</code> on common riscv64 hardware and causes the Arch Linux RISC-V sv39-blacklist entry. Resolution depends on upstream Node.js fixes for riscv64 Wasm stability; this is Node.js ecosystem work, not Prometheus-repository work.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Three concrete performance gaps exist:</p>
+<p>Three concrete, independently-sized gaps:</p>
 
 <ol>
-  <li>
-    <p><strong>TLS crypto (golang.org/x/crypto):</strong> Pure-Go AES-GCM and ChaCha20-Poly1305 on riscv64 vs hardware intrinsics on amd64/arm64. Fix path: implement RVV-based or Zkne-based crypto intrinsics in <code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code> (upstream Go toolchain work, tracked under <code class="language-plaintext highlighter-rouge">golang/go#77328</code>). This is a Go runtime investment, not a Prometheus investment.</p>
-  </li>
-  <li>
-    <p><strong>xxhash (cespare/xxhash/v2):</strong> No riscv64 asm; ~2x throughput gap for TSDB label hashing. Fix path: contribute riscv64 asm to <code class="language-plaintext highlighter-rouge">cespare/xxhash</code>. Upstream has no stated plan to do this. Effort: low-medium (isolated hash function, well-defined interface).</p>
-  </li>
-  <li>
-    <p><strong>zstd/compression (klauspost/compress):</strong> No riscv64 SIMD acceleration. Fix path: contribute RVV-based zstd decompression to <code class="language-plaintext highlighter-rouge">klauspost/compress</code>. Effort: medium-high (complex codec, RVV expertise required).</p>
-  </li>
+  <li><strong>TLS crypto (<code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code>):</strong> pure-Go AES-GCM/ChaCha20-Poly1305 vs hardware intrinsics on amd64/arm64. Fix path: RVV- or Zkne-based crypto intrinsics in <code class="language-plaintext highlighter-rouge">golang.org/x/crypto</code>/the Go toolchain (tracked under golang/go#77328). This is Go runtime investment, not Prometheus-repository investment.</li>
+  <li><strong>xxhash (<code class="language-plaintext highlighter-rouge">cespare/xxhash/v2</code>):</strong> no riscv64 asm; a real throughput gap for TSDB label hashing with no upstream plan to close it. Fix path: contribute riscv64 asm. Effort: low-medium (isolated hash function, well-defined interface).</li>
+  <li><strong>zstd/compression (<code class="language-plaintext highlighter-rouge">klauspost/compress</code>):</strong> no riscv64 SIMD acceleration. Fix path: contribute RVV-based zstd decompression. Effort: medium-high (complex codec, RVV expertise required).</li>
 </ol>
 
-<p>Data not available: Quantified throughput measurements for any of the above gaps specifically in a Prometheus production workload on riscv64 hardware. Investment in performance optimization should be preceded by profiling to establish that these are actual bottlenecks in the target deployment scenario.</p>
-<h3 id="133-cicd-infrastructure">
+<p>Data not available: quantified throughput measurements for any of the above specifically in a Prometheus production workload on riscv64 hardware. Investment here should be preceded by profiling to confirm these are actual bottlenecks in the target deployment scenario, since no such profiling currently exists.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>This is the highest-value, lowest-friction investment opportunity.</p>
+<p>This is the highest-value, lowest-friction investment opportunity, and the direct driver of the yellow grade.</p>
 
-<p><strong>Current state:</strong> riscv64 ships in every Prometheus release without any test execution on riscv64. This is a correctness risk, not a theoretical one.</p>
-
-<p><strong>Specific gaps:</strong></p>
-<ul>
-  <li>riscv64 is absent from the <code class="language-plaintext highlighter-rouge">build</code> job <code class="language-plaintext highlighter-rouge">promu_opts</code> (PRs do not even cross-compile riscv64).</li>
-  <li>All test jobs run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) with no QEMU or native riscv64 runner.</li>
-  <li>No Prometheus maintainer has opened an issue requesting RISE runner integration.</li>
-</ul>
+<p><strong>Current state:</strong> riscv64 ships in every Prometheus release without any test execution on riscv64 anywhere in CI - a real correctness risk given the Prometheus-org has at least two documented, currently-open riscv64 test failures in the companion node_exporter project (Section 10/11).</p>
 
 <p><strong>Investment options:</strong></p>
 <ul>
-  <li>Add riscv64 to <code class="language-plaintext highlighter-rouge">promu_opts</code> in the <code class="language-plaintext highlighter-rouge">build</code> job: trivial (one-line change, requires PR and maintainer approval).</li>
-  <li>Add QEMU-based riscv64 test execution: low-effort addition to <code class="language-plaintext highlighter-rouge">ci.yml</code> (GitHub Actions supports QEMU cross-platform testing via <code class="language-plaintext highlighter-rouge">setup-qemu-action</code>); performance on ubuntu-latest will be slow but functional.</li>
-  <li>Integrate RISE native riscv64 runners: medium effort (requires agreement with Prometheus maintainers, RISE runner access, workflow modification). RISE runners at 445 jobs/day with 99.78% completion rate are production-quality. The EM-RV1 platform is already used by projects including llama.cpp, PyTorch, k0s, and NumPy.</li>
+  <li>Add riscv64 to the PR-triggered <code class="language-plaintext highlighter-rouge">build</code> job’s <code class="language-plaintext highlighter-rouge">promu_opts</code>: trivial, one-line change, requires a PR and maintainer approval. Directly addresses the CI gap driving the yellow grade’s build-only characterization.</li>
+  <li>Add QEMU-based riscv64 test execution to <code class="language-plaintext highlighter-rouge">ci.yml</code>: low-effort addition using <code class="language-plaintext highlighter-rouge">setup-qemu-action</code>; slow but functional on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>.</li>
+  <li>Integrate RISE native riscv64 runners for Prometheus CI: medium effort, requires agreement with Prometheus maintainers and RISE runner access/workflow integration (no existing integration found).</li>
+  <li>Investigate and resolve the two open node_exporter riscv64 test failures (#3180, #2296) as a prerequisite or parallel track, since they represent known, unaddressed test-suite breakage in the ecosystem closest to Prometheus itself.</li>
 </ul>
-<h3 id="134-ecosystem-enablement">
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
 
-<p>The broader Prometheus ecosystem (node_exporter, alertmanager, pushgateway, and 15+ exporters) already ships riscv64 binaries. The Arch Linux RISC-V mirror has a rich exporter ecosystem. The main gap is that the core <code class="language-plaintext highlighter-rouge">prometheus</code> package is sv39-blacklisted in Arch Linux RISC-V. This is a Node.js upstream dependency; investment in Prometheus itself does not resolve it.</p>
-
-<p>No RISE working group is currently working on Prometheus integration. The Distro Integration working group (lead: Brian Harrington, Red Hat) is the most relevant body for distribution packaging gaps.</p>
-<h3 id="135-summary-table">
+<p>The broader Prometheus ecosystem (node_exporter, alertmanager, pushgateway, and the Arch Linux RISC-V exporter set) already ships riscv64 binaries with generally good coverage. The primary remaining gaps are: the core <code class="language-plaintext highlighter-rouge">prometheus</code> package’s Arch Linux sv39-blacklist status (a Node.js upstream dependency, not resolvable by Prometheus-repository investment), and the two open node_exporter test-suite failures. No RISE working group is currently engaged with Prometheus or its ecosystem.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1184,6 +1331,13 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
       <td>Medium</td>
     </tr>
     <tr>
+      <td>Ecosystem</td>
+      <td>Diagnose and fix node_exporter riscv64 test failures (#3180, #2296)</td>
+      <td>1-3</td>
+      <td>Go/riscv64 engineer</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
       <td>Performance</td>
       <td>Contribute riscv64 asm to <code class="language-plaintext highlighter-rouge">cespare/xxhash/v2</code></td>
       <td>2-4</td>
@@ -1206,30 +1360,20 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
     </tr>
     <tr>
       <td>Toolchain</td>
-      <td>Fix FIPS PIE on riscv64 (<code class="language-plaintext highlighter-rouge">golang/go#74683</code>)</td>
-      <td>upstream Go</td>
+      <td>Fix FIPS PIE on riscv64 (golang/go#74683)</td>
+      <td>Upstream Go</td>
       <td>Go team</td>
       <td>Medium (unblocks RHEL FIPS deployments)</td>
     </tr>
     <tr>
-      <td>Ecosystem</td>
-      <td>Node.js Wasm sv39 fix (unblocks Arch riscv64 and native builds)</td>
-      <td>upstream Node.js</td>
+      <td>Build</td>
+      <td>Node.js Wasm sv39 fix (unblocks Arch riscv64 native builds)</td>
+      <td>Upstream Node.js</td>
       <td>Node.js / RISE</td>
       <td>Medium</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1241,32 +1385,39 @@ All run on <code class="language-plaintext highlighter-rouge">ubuntu-latest</cod
 
 <ul>
   <li><a href="https://github.com/prometheus/prometheus">prometheus/prometheus repository</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/pull/5621">PR #5621 – Riscv support (closed)</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/pull/5625">PR #5625 – pkg/runtime: simplify Utsname string conversion</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/pull/12530">PR #12530 – Update promu (enabled riscv64 releases)</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/pull/17508">PR #17508 – Build riscv64 docker image by default</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/pull/17876">PR #17876 – Add distroless Docker image variant</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/pull/18115">PR #18115 – Cut v3.10.0-rc.1</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/pull/18124">PR #18124 – chore(ci): Add registry-specific architecture exclusions</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/pull/18527">PR #18527 – Fix quay.io riscv64 publishing</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/pull/18548">PR #18548 – build: remove DOCKER_REGISTRY_ARCH_EXCLUSIONS and DOCKERFILE_ARCH_EXCLUSIONS logic</a></li>
-  <li><a href="https://github.com/prometheus/procfs/pull/318">prometheus/procfs PR #318 – Add CPUInfo parsing for RISCV</a></li>
-  <li><a href="https://github.com/prometheus/procfs/pull/325">prometheus/procfs PR #325 – Fix build on RISCV</a></li>
-  <li><a href="https://github.com/prometheus/client_golang/pull/833">prometheus/client_golang PR #833 – Bump procfs to fix riscv64 build</a></li>
-  <li><a href="https://github.com/prometheus/node_exporter/issues/2645">prometheus/node_exporter issue #2645 – riscv64 CI request</a></li>
-  <li><a href="https://github.com/felixonmars/archriscv-packages/pull/4854">felixonmars/archriscv-packages PR #4854 – sv39-blacklist: add prometheus</a></li>
-  <li><a href="https://github.com/golang/go/issues/74683">golang/go#74683 – fips140 broken on RISC-V with -buildmode=pie</a></li>
-  <li><a href="https://github.com/golang/go/issues/77069">golang/go#77069 – crypto P256 mul unoptimized on riscv64</a></li>
-  <li><a href="https://github.com/golang/go/issues/77328">golang/go#77328 – Zvkned assembler support missing</a></li>
-  <li><a href="https://github.com/klauspost/compress/issues/1036">klauspost/compress issue #1036 – Add unsafe little endian loaders (riscv64 fix, closed)</a></li>
-  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners announcement (March 2026)</a></li>
-  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE RISC-V Runners six weeks in (May 2026)</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=prometheus">Debian buildd prometheus status</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/prometheus">Ubuntu 24.04 prometheus package</a></li>
-  <li><a href="https://github.com/nodejs/build/issues/4099">nodejs/build#4099 – Node.js riscv64 open issues</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/blob/main/MAINTAINERS.md">Prometheus MAINTAINERS.md</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/blob/main/.github/workflows/ci.yml">prometheus/prometheus .github/workflows/ci.yml</a></li>
   <li><a href="https://github.com/prometheus/prometheus/blob/main/Makefile.common">Prometheus Makefile.common</a></li>
-  <li><a href="https://github.com/prometheus/prometheus/blob/main/.github/workflows/ci.yml">Prometheus .github/workflows/ci.yml</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/blob/main/MAINTAINERS.md">Prometheus MAINTAINERS.md</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/5621">PR #5621 - Riscv support (closed)</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/5625">PR #5625 - pkg/runtime: simplify Utsname string conversion</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/12530">PR #12530 - Update promu (enabled riscv64 releases)</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/17508">PR #17508 - Build riscv64 docker image by default</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/17876">PR #17876 - Add distroless Docker image variant</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/issues/18123">Issue #18123 - s390x is not pushed to quay.io because quay does not support riscv64</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/18110">PR #18110 - chore: Exclude riscv64 from distroless images</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/18115">PR #18115 - Cut v3.10.0-rc.1</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/18124">PR #18124 - chore(ci): Add registry-specific architecture exclusions</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/18527">PR #18527 - Fix quay.io riscv64 publishing</a></li>
+  <li><a href="https://github.com/prometheus/prometheus/pull/18548">PR #18548 - build: remove DOCKER_REGISTRY_ARCH_EXCLUSIONS and DOCKERFILE_ARCH_EXCLUSIONS logic</a></li>
+  <li><a href="https://github.com/prometheus/procfs/pull/318">prometheus/procfs PR #318 - Add CPUInfo parsing for RISCV</a></li>
+  <li><a href="https://github.com/prometheus/procfs/pull/325">prometheus/procfs PR #325 - Fix build on RISCV</a></li>
+  <li><a href="https://github.com/prometheus/client_golang/pull/833">prometheus/client_golang PR #833 - Bump procfs to fix riscv64 build</a></li>
+  <li><a href="https://github.com/prometheus/node_exporter/issues/2645">prometheus/node_exporter issue #2645 - ci: build riscv64 binaries</a></li>
+  <li><a href="https://github.com/prometheus/node_exporter/issues/3311">prometheus/node_exporter issue #3311 - Provide linux/riscv64 container images</a></li>
+  <li><a href="https://github.com/prometheus/node_exporter/issues/3180">prometheus/node_exporter issue #3180 - end-to-end test fails on riscv64 machine</a></li>
+  <li><a href="https://github.com/prometheus/node_exporter/issues/2296">prometheus/node_exporter issue #2296 - Fail to test with version 1.3.1 under RISC-V</a></li>
+  <li><a href="https://github.com/felixonmars/archriscv-packages/pull/4854">felixonmars/archriscv-packages PR #4854 - sv39-blacklist: add prometheus</a></li>
+  <li><a href="https://github.com/golang/go/issues/74683">golang/go#74683 - fips140 broken on RISC-V with -buildmode=pie</a></li>
+  <li><a href="https://github.com/golang/go/issues/77069">golang/go#77069 - crypto P256 mul unoptimized on riscv64</a></li>
+  <li><a href="https://github.com/golang/go/issues/77328">golang/go#77328 - Zvkned assembler support missing</a></li>
+  <li><a href="https://github.com/klauspost/compress/issues/1036">klauspost/compress issue #1036 - Add unsafe little endian loaders (riscv64 fix, closed)</a></li>
+  <li><a href="https://buildd.debian.org/status/package.php?p=prometheus">Debian buildd prometheus status</a></li>
+  <li><a href="https://tracker.debian.org/pkg/prometheus">Debian package tracker - prometheus</a></li>
+  <li><a href="https://packages.ubuntu.com/noble/prometheus">Ubuntu 24.04 prometheus package</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/prometheus">Ubuntu 26.04 (resolute) prometheus package</a></li>
+  <li><a href="https://github.com/nodejs/build/issues/4099">nodejs/build#4099 - Node.js riscv64 open issues</a></li>
+  <li><a href="https://riseproject.dev/blog">RISE Project blog index</a></li>
+  <li><a href="https://riseproject.dev/2025/04/04/advancing-go-on-risc-v-progress-through-the-rise-project/">RISE Project - Advancing Go on RISC-V: Progress Through the RISE Project</a></li>
 </ul>
 
           
