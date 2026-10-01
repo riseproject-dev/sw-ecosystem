@@ -2,10 +2,6 @@
 title: PyTorch
 parent: Project Reports
 color: yellow
-categories:
-  - python-packages
-  - llm-inference
-  - ai-ml
 dependencies:
   - name: OpenBLAS
     relation: runtime-dependency
@@ -55,6 +51,21 @@ dependencies:
   - name: NumPy
     relation: runtime-dependency
     criticality: critical
+  - name: CMake
+    relation: build-dependency
+    criticality: critical
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
+  - name: Python
+    relation: build-dependency
+    criticality: critical
+  - name: QEMU
+    relation: test-dependency
+    criticality: critical
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="pytorch" %}
@@ -62,192 +73,161 @@ dependencies:
 # PyTorch
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-09-30<br/>
+**Readiness:** yellow<br/>
 **Scope:** RISC-V (riscv64/linux) support status for PyTorch<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
----
-
 ## 1. Project Overview
 
-PyTorch is the dominant open-source deep learning framework for research and production training workloads. It is governed by the [PyTorch Foundation](https://pytorch.org/foundation), a directed fund under the Linux Foundation, with a Governing Board whose Chair is Andrew Wafaa (Arm) and a Technical Advisory Council (TAC) chaired by Thomas Viehmann (Lightning AI). The primary codebase lives at [pytorch/pytorch](https://github.com/pytorch/pytorch) under a BSD license. Meta engineers hold the majority of merge authority; the core maintainer with the highest riscv64-related merge activity is malfet (Meta/Apple).
+PyTorch is the dominant open-source deep learning framework for research and production training workloads. The primary codebase lives at [pytorch/pytorch](https://github.com/pytorch/pytorch), license BSD-3-Clause, homepage [pytorch.org](https://pytorch.org/).
 
-License: BSD-3-Clause. Governance documents: [pytorch-fdn/tac](https://github.com/pytorch-fdn/tac). No GOVERNANCE.md exists in the main pytorch/pytorch repository.
+**Governance.** PyTorch is governed by the PyTorch Foundation, a subsidiary of the Linux Foundation (Meta transferred project governance to it in September 2022). The Foundation now also hosts vLLM, DeepSpeed, Ray, Helion and Safetensors as a "vendor-neutral home." Technical governance (per [docs.pytorch.org governance docs](https://docs.pytorch.org/docs/main/community/governance.html)) is a four-tier structure: Contributors, Module Maintainers, Core Maintainers, Lead Core Maintainer (BDFL, final tie-breaker). Membership and maintainership are explicitly individual-based, not company-based, "to prevent companies buying influence." Uncontroversial PRs merge via CODEOWNERS/core-reviewer approval; controversial changes (semantic/API changes, backwards-incompatible changes, new core functionality, removal of platform support) require an open GitHub issue plus core/module maintainer sign-off. No formal PLATFORMS.md, SUPPORT.md or published platform-tier document exists in the repository; new-architecture acceptance is governed informally through this "controversial change" rule rather than a documented tiering scheme.
+
+**Corporate maintainer affiliation (CODEOWNERS, per backend):**
+
+| Backend/area | Maintainer(s) | Employer (inferred) |
+|---|---|---|
+| CUDA | @eqy, @syed-ahmed, @Aidyn-A | Nvidia |
+| ROCm/HIP | @jeffdaily, @jithunnair-amd | AMD |
+| XPU (Intel GPU) | @EikanWang, @gujinghui | Intel |
+| MPS (Apple Metal) | @malfet, @Isalia20 | Meta |
+| MTIA | @egienvalue | Meta |
+
+CODEOWNERS itself states it is for notification subscription only ("Approvals from people in this file are not required for merges"), consistent with the individual-based governance model.
+
+**Community stance on RISC-V.** RISC-V enablement has been accepted opportunistically, PR by PR, since July 2024, from individual engineers rather than as a foundation-sponsored initiative, though that has visibly changed in 2026 (see Section 2). All five of the earliest RISC-V PRs (#127867, #143979, #160172, #167071, #166602) were approved by the same maintainer, @malfet. Issue [#141550](https://github.com/pytorch/pytorch/issues/141550) ("RISCV CI support," opened 2024-11-26 requesting a revival of RISC-V CI after an earlier PR, [#140816](https://github.com/pytorch/pytorch/pull/140816), was closed) is labeled "triaged" but shows no sustained maintainer discussion in the thread -- acknowledged, not actively driven, at the infra level. The work is a joint effort between Alibaba's XuanTie team and the Institute of Software, Chinese Academy of Sciences (ISCAS) / Ruyi Community, coordinated via the master tracking issue [#180975](https://github.com/pytorch/pytorch/issues/180975) (labeled "proposal accepted"). ISCAS and ZTE Corporation, two of the contributing organizations, are RISE Project General Members; Alibaba (via DAMO Academy / T-Head) is a RISE Premier Member. PyTorch/Meta itself is not a RISE member.
 
 ---
 
 ## 2. Port History and Upstreaming Timeline
 
-The RISC-V port is 23 months old as of this report. All activity originates from Chinese academic and industry contributors; no Meta engineers have committed RISC-V-specific code.
+RISC-V work in pytorch/pytorch spans July 2024 to the present (Sept 2026), currently organized under the four-phase roadmap in tracking issue #180975: (1) CI infrastructure/cross-compilation, (2) a high-performance RISC-V micro-kernel library for ATen ops (analogous to ARM's KleidiAI), (3) torch.compile backend extension via buddy-mlir, (4) Triton/TileLang RISC-V backends. An earlier, separately filed five-phase roadmap, [#171659](https://github.com/pytorch/pytorch/issues/171659) ("[RFC] RISC-V Architecture Support Roadmap for PyTorch," opened 2026-01-04 by Alibaba's XuanTie team, cc'ing @malfet, @seemethere, @ezyang, @ptrblck), effectively feeds into #180975's consolidated plan.
 
-| Date | Event | PR / Issue | Contributor |
+| Date | Event | Source | Contributor |
 |---|---|---|---|
-| Jul 2024 | First RVV kernel merged: DepthwiseConvKernel, ~31% speedup on MobileNet V2, CanMV-K230 | [#127867](https://github.com/pytorch/pytorch/pull/127867) | zhangfeiv0 (ISCAS) |
-| Sep 2024 | First RVV vec sublibrary attempt (closed stale Jan 2025) | [#135570](https://github.com/pytorch/pytorch/pull/135570) | zhangfeiv0 (ISCAS) |
-| Nov 2024 | Feature request for RISC-V CI filed; placed in Cold Storage | [#141550](https://github.com/pytorch/pytorch/issues/141550) | community |
-| Dec 2024 | RISC-V CI (cross-compile on x86) PR opened | [#143979](https://github.com/pytorch/pytorch/pull/143979) | zhangfeiv0 (ISCAS) |
-| Feb 2025 | RFC for community review of RISC-V PRs filed, noted months without maintainer attention | [#147513](https://github.com/pytorch/pytorch/issues/147513) | zhangfeiv0 (ISCAS) |
-| Aug 2025 | Opt-in cross-compilation CI merged (`.github/workflows/riscv64.yml`) | [#143979](https://github.com/pytorch/pytorch/pull/143979) | zhangfeiv0 (ISCAS) |
-| Aug 2025 | lintrunner exclusion for riscv64 merged | [#160172](https://github.com/pytorch/pytorch/pull/160172) | zgat (UltraRisc) |
-| Oct 2025 | GCC 14.2 ICE in DepthwiseConvKernel.cpp fixed | [#165717](https://github.com/pytorch/pytorch/pull/165717) | (maintainer) |
-| Nov 2025 | Inductor cpp_builder `-march=native` crash on riscv fixed | [#167071](https://github.com/pytorch/pytorch/pull/167071) | langc23 (ZTE) |
-| Nov 2025 | oneDNN backend enabled for RISC-V; ~8.85x speedup for mul on SG2044 | [#166602](https://github.com/pytorch/pytorch/pull/166602) | zhangfeiv0 (ISCAS) |
-| Jan 2026 | RFC for structured RISC-V support roadmap (5 phases) filed | [#171659](https://github.com/pytorch/pytorch/issues/171659) | XuanTie team (Alibaba DAMO) |
-| Feb 2026 | lintrunner re-enabled on riscv64 CI | [#173993](https://github.com/pytorch/pytorch/pull/173993) | yuzibo (Debian) |
-| Feb 2026 | RVV vec sublibrary revised and reopened (currently open) | [#175746](https://github.com/pytorch/pytorch/pull/175746) | cltang |
-| Feb 2026 | RVV detection macro fix (`__riscv_v`) opened (currently stale) | [#174275](https://github.com/pytorch/pytorch/pull/174275) | cltang |
-| Apr 2026 | CUDA bindings disabled on riscv64 CI | [#173663](https://github.com/pytorch/pytorch/pull/173663) | yuzibo (Debian) |
-| Apr 2026 | RISE CI relay (native hardware) added | [#181739](https://github.com/pytorch/pytorch/pull/181739) | luhenry (RISE/Rivos) |
-| Apr 2026 | Master tracking issue for full enablement opened | [#180975](https://github.com/pytorch/pytorch/issues/180975) | fernchen (Alibaba/XuanTie) |
-| May 2026 | MKL restricted to x86 only, unblocking riscv64 CI | [#178778](https://github.com/pytorch/pytorch/pull/178778) | yuzibo (Debian) |
-| May 2026 | Inductor `cpp.march` knob added; RISC-V case explicitly handled | [#184297](https://github.com/pytorch/pytorch/pull/184297) | jansel (Meta) |
-| May 2026 | Native fp16 conversion paths for RISC-V opened (blocked by CLA) | [#183254](https://github.com/pytorch/pytorch/pull/183254) | Ag-Cu |
-| May 2026 | OSDC runner migration merged | [#183649](https://github.com/pytorch/pytorch/pull/183649) | huydhn (Meta) |
+| 2024-07-01 | First RVV kernel merged: Winograd depthwise conv (~31% speedup on MobileNet V2) | [PR #127867](https://github.com/pytorch/pytorch/pull/127867) | zhangfeiv0 (ISCAS) |
+| 2024-11-16 | First RISC-V CI attempt, closed/superseded | [PR #140816](https://github.com/pytorch/pytorch/pull/140816) | community |
+| 2024-11-26 | RISC-V CI support issue filed | [#141550](https://github.com/pytorch/pytorch/issues/141550) | jysh1214 |
+| 2025-02-20 | RFC requesting review of bundled RISC-V/RVV PRs (#127867, #135570, #143979) | [#147513](https://github.com/pytorch/pytorch/issues/147513) | zhangfeiv0 (ISCAS) |
+| 2025-02-25 | Doc PR guiding users to build riscv PyTorch from scratch | [PR #141552](https://github.com/pytorch/pytorch/pull/141552) | zhangfeiv0 |
+| 2025-03-23 | RVV ATen `Vec` sub-library support (128-bit min, m2 grouping) | [PR #135570](https://github.com/pytorch/pytorch/pull/135570) | zhangfeiv0 (ISCAS) |
+| 2025-08-13 | First opt-in riscv64 CI job merged (cross-compiled) | [PR #143979](https://github.com/pytorch/pytorch/pull/143979) | zhangfeiv0 (ISCAS) |
+| 2025-08-18 | Build support for RISCV merged | [PR #160172](https://github.com/pytorch/pytorch/pull/160172) | zhaoguoan (UltraRISC) |
+| 2025-10-22 | GCC 14.2 ICE in DepthwiseConvKernel.cpp fixed | [#166057](https://github.com/pytorch/pytorch/issues/166057) / [PR #165717](https://github.com/pytorch/pytorch/pull/165717) | zhangjian29 |
+| 2025-11-07 | Inductor cpp_builder `-march=native` crash on riscv fixed | [PR #167071](https://github.com/pytorch/pytorch/pull/167071) | chenlang (ZTE) |
+| 2025-11-20 | oneDNN backend enabled for RISC-V (reports 8.85x speedup on elementwise mul on SG2044, not yet independently validated in PyTorch CI) | [PR #166602](https://github.com/pytorch/pytorch/pull/166602) | zhangfei (ISCAS) |
+| 2025-12-23 | c7i.2xlarge instance used for riscv64 build | [PR #168094](https://github.com/pytorch/pytorch/pull/168094) | -- |
+| 2026-01-04 | Five-phase RISC-V roadmap RFC filed | [#171659](https://github.com/pytorch/pytorch/issues/171659) | Alibaba XuanTie team |
+| 2026-02-05 | lintrunner enabled on riscv64 build | [PR #173993](https://github.com/pytorch/pytorch/pull/173993) | -- |
+| 2026-02-17 | ZLib reference in riscv CI Dockerfile outdated (build breaks, 404) | [#175193](https://github.com/pytorch/pytorch/issues/175193) | -- |
+| 2026-04-21 | CUDA bindings disabled on riscv64 CI | [PR #173663](https://github.com/pytorch/pytorch/pull/173663) | -- |
+| 2026-04-21 | Master tracking issue for full RISC-V enablement opened | [#180975](https://github.com/pytorch/pytorch/issues/180975) | fernchen (XuanTie/Alibaba) |
+| 2026-04-27 | MKL install restricted to x86 only, unblocking riscv64 | [PR #178778](https://github.com/pytorch/pytorch/pull/178778) | -- |
+| 2026-05-08 | riscv64 manywheel Docker image added | [PR #177722](https://github.com/pytorch/pytorch/pull/177722) | -- |
+| 2026-05-18 | riscv64.yml migrated to OSDC (ARC) runners via dial-up pattern | [PR #183649](https://github.com/pytorch/pytorch/pull/183649) | -- |
+| 2026-05-19 | Inductor `cpp.march` knob added, explicit RISC-V handling | [PR #184297](https://github.com/pytorch/pytorch/pull/184297) | -- |
+| 2026-06-24 | RISC-V cross-compilation image renamed to include "cross" suffix | [PR #187821](https://github.com/pytorch/pytorch/pull/187821) | -- |
+| 2026-07-07 | `getApproximateTime` RISC-V fast path added (rdtime CSR) | [PR #189000](https://github.com/pytorch/pytorch/pull/189000) | -- |
+| 2026-07-20 | Toolchain cross-compile variables forwarded before `project()` | [PR #190003](https://github.com/pytorch/pytorch/pull/190003) | -- |
+| 2026-07-22 | RISC-V CPU pause hint added to atomic-add spin loop | [PR #188999](https://github.com/pytorch/pytorch/pull/188999) | -- |
+| 2026-07-23 to 2026-07-27 | Native (non-cross) build image added for linux-riscv64, 1st and 2nd iterations | [PR #182278](https://github.com/pytorch/pytorch/pull/182278), [PR #190887](https://github.com/pytorch/pytorch/pull/190887) | luhenry (RISE) |
+| 2026-07-27 to 2026-07-28 | manywheel Dockerfile for riscv64 merged, then reverted | [PR #191225](https://github.com/pytorch/pytorch/pull/191225) | -- |
+| 2026-08-09 | RISC-V native fp16 conversion paths | [PR #183254](https://github.com/pytorch/pytorch/pull/183254) | Ag-Cu |
+| 2026-08-12 | cpu-riscv64 support added to manywheel scripts, replacing #191225 | [PR #191657](https://github.com/pytorch/pytorch/pull/191657) | -- |
+| 2026-08-18 | RISE publishes natively-built riscv64 torch 2.13.0 wheels (212,038 tests, 99.998% pass rate) | [riseproject.dev blog](https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/) | RISE Project |
+| 2026-08-26 | Linear cross-entropy ULP tolerance scoped to RISC-V | [PR #194691](https://github.com/pytorch/pytorch/pull/194691) | -- |
+| 2026-08-28 | `Python_SOABI` set when cross-compiling (valid extension suffix) | [PR #189388](https://github.com/pytorch/pytorch/pull/189388) | -- |
+| 2026-08-30 | riscv64 blocklist added to test/run_test.py (open, draft) | [PR #195345](https://github.com/pytorch/pytorch/pull/195345) | -- |
+| 2026-09-23 | RVV vectorized kernel for FusedAdam (float/double) opened | [PR #198351](https://github.com/pytorch/pytorch/pull/198351) | -- |
+| 2026-09-29 | Cross-compilation regression fixed: riscv64 job routed back onto the cross-compile code path | [PR #194880](https://github.com/pytorch/pytorch/pull/194880) | zklaus |
 
-Key observation: the first two years of RISC-V work were entirely from ISCAS/RVSC researchers with no dedicated reviewer assigned. The first force-merge (PR #127867, Jul 2024) was justified by the reviewer (ezyang) as "the very first riscv kernel" with explicit uncertainty about long-term maintenance. All subsequent merges involving RISC-V code paths have continued to use force-merge or rely on malfet as an ad-hoc reviewer with no CODEOWNERS assignment.
+Not fully upstream. The current in-tree state is build-only CI, a single real RVV kernel, and an open roadmap; the performance/vectorization and compiler-backend phases (2-4) of #180975 have not landed any code as of this report. Note on data quality: PR [#195354](https://github.com/pytorch/pytorch/pull/195354) ("[ref-stack][aot_compile] Fix global guards on reloaded nn.Module artifacts," merged 2026-09-02) surfaced in RISC-V search results but its title/content show no apparent RISC-V connection; it is flagged here as likely mislabeled in the source data rather than treated as a verified riscv64 change.
 
 ---
 
 ## 3. Upstream Support Tier
 
-PyTorch has no formally published platform tier policy. In practice, three informal tiers exist based on CI access and reviewer SLAs.
+No formally published platform-tier policy exists (no PLATFORMS.md, no SUPPORT.md, no tier language in governance.html). In practice, RISC-V sits in an informal third tier below x86_64/macOS/Windows (Meta-maintained, full CI, release-blocking) and aarch64/ROCm/XPU (partner-maintained, CI present, dedicated reviewers). RISC-V characteristics:
 
-**Tier 1 (Meta-maintained):** x86_64 Linux, macOS (aarch64 + x86), Windows. Mandatory CI; reviewer SLAs enforced.
+- A single, opt-in (not PR-blocking) cross-compilation CI workflow; no riscv64 runner integrated into the always-on PR gate.
+- No CODEOWNERS entry for `module: risc-v`; reviews are ad hoc, historically concentrated on @malfet.
+- RISC-V code paths are small, additive, and isolated behind `#if defined(__riscv...)` guards rather than integrated as a first-class `CPUCapability`.
 
-**Tier 2 (partner-maintained):** aarch64 Linux, ROCm/AMD, Intel XPU. CI present; AMD, Intel, and Arm provide dedicated reviewers and backend ownership.
-
-**Tier 3 (opt-in, community-maintained):** RISC-V. Characteristics:
-- Cross-compilation CI only; no riscv64 runner in PyTorch's own fleet
-- RISC-V code merged under force-flag ("lint is green, rest is not compiled")
-- No CODEOWNERS entry for RISC-V; malfet handles reviews ad-hoc
-- Core team policy: "we won't block you, but you own maintenance"
-
-The [RISE Project RFC (rfcs#77)](https://github.com/pytorch/rfcs/pull/77), opened July 2025 by luhenry, is the first formal proposal to elevate RISC-V to an officially supported tier. It offers RISE-provided CI hardware and named maintenance ownership. Meta's albanD responded positively but placed all maintenance responsibility on RISE. As of June 2026 the RFC remains open/draft.
+| | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| PR-gating CI | Yes | Yes | No (opt-in tag/manual dispatch only) |
+| Official PyPI wheel | Yes | Yes | No |
+| Dedicated CODEOWNERS | Yes (per-backend) | Partial | No |
+| Native-hardware CI (in-tree) | Yes | Yes | No (RISE's native-hardware CI is out-of-tree) |
 
 ---
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-### 4.1 In-tree code (pytorch/pytorch)
+No `arch/riscv/` directory and no standalone `.S` assembly files exist. All RISC-V code is inline (`#if defined(__riscv...)` / inline `__asm__ __volatile__`) inside existing cross-platform C++ files, plus CI/build-infrastructure plumbing. There is no RISC-V-specific JIT backend; Inductor's C++ codegen treats riscv64 as a scalar target.
 
-**Architecture detection.** `CMakeLists.txt` sets `CPU_RISCV=ON` when `CMAKE_SYSTEM_PROCESSOR` matches `^(riscv64)`. This flag gates the oneDNN build path.
+### 4.1 Core kernel code
 
-**ATen SIMD vector library.** The `aten/src/ATen/cpu/vec/` dispatch layer has zero RISC-V code. The `CPUCapability` enum in `aten/src/ATen/native/DispatchStub.h` lists: DEFAULT, VSX, ZVECTOR, SVE256, SVE128, AVX2, AVX512. No RVV entry exists. No `vec_rvv.h` file exists in the tree.
+| Path | Purpose | ISA extension | Status |
+|---|---|---|---|
+| `aten/src/ATen/native/cpu/DepthwiseConvKernel.cpp` (~220-line RVV branch of 546 total) | Winograd F(2,3) 3x3 depthwise convolution; third branch alongside `__ARM_NEON__` and scalar stub, guarded by `__riscv_v_intrinsic>=12000`, using `<riscv_vector.h>` RVV 1.0 intrinsics | RVV (V/Zve32f-class) | Complete, functional kernel mirroring the NEON path; contains an explicit documented workaround for a GCC 14.2 compiler ICE (see Section 6/11) |
+| `aten/src/ATen/native/Convolution.cpp` (dispatch at line 357) | `use_cpu_depthwise3x3_winograd()` gate, routes eligible 3x3 depthwise convs to the kernel above on RVV-capable builds | RVV (routing only) | Complete |
+| `aten/src/ATen/native/cpu/AtomicAddFloat.h` | Cross-platform atomic float add; RISC-V branch emits the Zihintpause `pause` hint via raw `.insn` encoding (no-op HINT if extension absent) | Zihintpause | Complete, by design small |
+| `c10/util/ApproximateClock.h` | Fast approximate wall-clock timestamp; `C10_RISCVTSC` / `getRiscvApproximateTime()` reads the `time` CSR via inline `rdtime` asm, parallel to x86 `rdtsc` and ARM `cntvct_el0` | Zicsr (`time` CSR) | Complete |
+| `aten/src/ATen/cpu/Utils.cpp` | CPU capability map; `get_cpu_architecture()` returns `"riscv64"` for `__riscv && __riscv_xlen==64` | None detected | Stub-like relative to x86/ARM: architecture is identified via cpuinfo, but no Zba/Zbb/RVV extension-flag probing exists, unlike the detailed SSE/AVX/AVX-512/AMX (x86) and NEON/SVE/SME (ARM) blocks |
 
-**oneDNN/MKLDNN.** `cmake/Modules/FindMKLDNN.cmake` enables oneDNN when `CPU_RISCV` is set and `USE_MKLDNN=ON`, but explicitly disables `DNNL_EXPERIMENTAL_UKERNEL` on RISC-V (`IF(CPU_POWER OR CPU_RISCV) SET(DNNL_EXPERIMENTAL_UKERNEL OFF)`). The CMakeLists.txt option description explicitly lists riscv64 as a supported MKLDNN platform. However, the PyTorch CI `build.sh` sets `USE_MKLDNN=0` for all riscv64 builds, so oneDNN is not exercised in CI. PR [#166602](https://github.com/pytorch/pytorch/pull/166602) (merged Nov 2025) enables `torch.backends.mkldnn.is_available()` to return True on riscv64; the merge is real but CI does not validate it.
+PyTorch's own ATen `Vectorized<>` SIMD dispatch layer has no RVV `CPUCapability` enum entry, and TorchScript's NNC JIT (`torch/csrc/jit/tensorexpr/llvm_jit.cpp`, generic `InitializeAllTargets()`) has no RISC-V-specific LLVM target initialization. These are in-tree gaps, distinct from the dependency-level RVV work in XNNPACK/oneDNN (Section 9), and they gate how much of that dependency-level work is actually reachable from Python today.
 
-**Inductor C++ backend.** PR [#167071](https://github.com/pytorch/pytorch/pull/167071) (merged Nov 2025) fixed a crash where `-march=native` was passed to g++ on RISC-V, which requires ISA strings starting with `rv32`/`rv64`. PR [#184297](https://github.com/pytorch/pytorch/pull/184297) (merged May 2026) adds a `cpp.march` configuration knob, explicitly handling the RISC-V case alongside ppc64le and macOS.
+### 4.2 Build system / dispatch
 
-**TorchScript NNC JIT.** `torch/csrc/jit/tensorexpr/llvm_jit.cpp` uses `InitializeAllTargets()` (generic LLVM initialization). No RISC-V-specific target initialization or RVV code path exists.
+- `CMakeLists.txt`: defines `CPU_RISCV`, set ON when `CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv64)"`; makes `USE_MKLDNN` available on riscv64 via the dependent-option condition (`CPU_INTEL OR CPU_AARCH64 OR CPU_POWER OR CPU_RISCV`).
+- `cmake/Modules/FindMKLDNN.cmake`: disables oneDNN's experimental "ukernel" feature when `CPU_POWER OR CPU_RISCV` (upstream oneDNN lacks ukernel support there).
+- `torch/_inductor/cpp_builder.py` (lines ~1113-1119): Inductor's march-flag selection maps `riscv64 -> -march=rv64gc`, `riscv32 -> -march=rv32gc`. `rv64gc` carries no `v` (vector) suffix, so Inductor-generated C++ on riscv64 compiles scalar-only by default -- there is no RVV-targeted vectorization path in Inductor.
 
-**ATen native CPU kernels.** No `*Kernel.rvv.cpp` files exist. The depthwise conv RVV path from PR #127867 is the only in-tree RVV kernel.
+### 4.3 RVV ATen vectorization status
 
-### 4.2 Third-party submodules
-
-**cpuinfo** (`third_party/cpuinfo`, submodule at commit `bc3c01e`). Full RISC-V topology and ISA extension detection is implemented in `src/riscv/`. Detected extensions: I, M, A, F, D, C, V (RVV), Zfh, Zvfh -- via `getauxval(AT_HWCAP)` and the `sys_riscv_hwprobe` syscall. This is the source of truth for runtime ISA dispatch across XNNPACK and PyTorch. However, `cpuinfo_has_riscv_zvfh()` is missing from the public API, which directly causes XNNPACK issue [#9886](https://github.com/google/XNNPACK/issues/9886) (100+ FP16 test failures).
-
-**XNNPACK** (`third_party/XNNPACK`, submodule at commit `51a0103`). This is the most substantial RISC-V implementation in the PyTorch dependency tree.
-
-- RVV (F32/QS8/QU8) microkernels: 344 total source files (136 production + 208 non-production) covering GEMM, IGEMM, depthwise conv, avgpool, maxpool, SPMM, elementwise ops, reduction, type conversion, transpose, pack. ISA: RVV V extension. Dtypes: f32, qs8, qu8, s8, u8, qd8-f32. Source: `gen/rvv_microkernels.bzl`.
-- RVV FP16 (Zvfh) microkernels: 212 total source files (70 production + 142 non-production) covering the same kernel categories for f16 and f16/f32 mixed dtypes. ISA: RVV + Zvfh (`-march=rv64gcv_zvfh`). Source: `gen/rvvfp16arith_microkernels.bzl`.
-- Compile flags: `-march=rv64gcv -mabi=lp64d` (RVV), `-march=rv64gcv_zvfh -mabi=lp64d` (FP16 RVV).
-- Copyright on generated kernels: SiFive 2024.
-- CI status: **broken**. 100+ RVV FP16 tests failing (issue #9886, open since April 2026). Root cause: `xnn_arch_riscv_vector_fp16_arith` flag is unconditionally enabled (PR #9516), bypassing the cpuinfo Zvfh check. The cpuinfo fix (missing `cpuinfo_has_riscv_zvfh()`) is a cross-project blocker. Operator tests are permanently excluded from CI and not run on merge to master.
-- XNNPACK is not enabled for riscv64 in PyTorch's cmake integration by default. The architecture allowlist in `cmake/Dependencies.cmake` does not include `riscv64`, causing a warning: "Target architecture is not supported in XNNPACK." XNNPACK must be explicitly enabled.
-
-**OpenBLAS.** Default BLAS/LAPACK backend for CPU matrix ops. Cross-compilation works with GCC 14+; GCC 13 falls back silently to scalar. ZVL256B TRSM has a correctness bug (draft PR #5830, unassigned). DGEMM correctness fix merged but not released in v0.3.33. LAPACK correctness unvalidated on riscv64. No native CI hardware upstream.
-
-**SLEEF.** SIMD-optimized transcendentals. RISC-V integrated in v3.6 (Nov 2023). CI with QEMU. No riscv64-specific open blockers. Note: PyTorch only enables SLEEF on ARM via `AT_BUILD_ARM_VEC256_WITH_SLEEF`; the RVV path in PyTorch ATen is separate.
-
-### 4.3 RVV ATen vectorization work-in-progress
-
-PR [#175746](https://github.com/pytorch/pytorch/pull/175746) (open since Feb 2026) is the revised attempt to add RVV support to PyTorch's ATen `Vectorized<>` template library. Key details:
-
-- Internal representation adjusted to compile without fixed-size `-mrvv-vector-bits=`, but still assumes 128x2 = 256-bit vector size.
-- Approved by luhenry (RISE). Blocked by: (1) one lint failure on `vec_common_rvv.h`, (2) unresolved architectural concern about scalable-vector memory copying in `Vectorized<>`, (3) no maintainer (malfet) response to luhenry's five design options for scalable-vector support.
-- The architectural concern is the same one that has blocked SVE support in `Vectorized<>` (PR [#153471](https://github.com/pytorch/pytorch/pull/153471)), where malfet has stated that making `size()` dynamic "will likely result in a significant slowdown" and requires a rigorous test plan against named hardware.
-- If merged, this would enable RVV dispatch for ATen elementwise and vectorizable operations, which is the prerequisite for Phase 2 kernel work in the tracking issue.
+PyTorch itself tracks the vec-library work as PR [#135570](https://github.com/pytorch/pytorch/pull/135570) (opened 2025, RVV support for `Vec`, 128-bit minimum / m2 grouping), referenced by the earlier RFC #147513. The live research did not surface an open, currently-active successor PR continuing this specific `Vectorized<>` scalable-vector work in the September 2026 PR/commit listings; #135570 itself is listed as closed/merged in the commit history is not confirmed -- its final disposition is [NEEDS VERIFICATION]. What is confirmed is that no RVV entry exists in `CPUCapability` as of the current code search, so ATen vectorized dispatch on riscv64 remains scalar-only in the mainline tree, independent of PR status.
 
 ---
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-### 5.1 Compiler requirements
+No standalone build docs exist for riscv64. `BUILDING.md`, `INSTALL`, `docs/building.md`, `docs/cross-compilation.md` do not exist in the repository; `README.md` has zero RISC-V mentions. RISC-V build knowledge is encoded entirely in CI scripts.
 
-- GCC minimum: 11.3 (enforced with fatal CMake error)
-- Clang minimum: 16 (enforced with fatal CMake error)
-- Official RISC-V CI uses GCC 14 (`gcc-14-riscv64-linux-gnu` / `g++-14-riscv64-linux-gnu`)
-- CMake minimum: 3.27; CI pins cmake==4.0.0 via pip
-- Python: 3.12.3 in the CI Docker image
+**Toolchain.** GCC 14 is required and pinned (`ENV GCC_VERSION=14` in the Dockerfile; same value in `.ci/docker/build.sh`'s image-name case block). Packages: `gcc-14-riscv64-linux-gnu`, `g++-14-riscv64-linux-gnu`. No comment states why GCC 14 specifically; it matches PyTorch's general GCC-14 baseline for the Ubuntu Noble (24.04) image family. `.ci/docker/build.sh` verifies the version post-build and fails the image build if the installed cross-gcc doesn't match `$GCC_VERSION`. No Clang path exists for riscv64 anywhere in the repo -- all riscv64 CI compiles with GCC only. CMake is pinned to 4.0.0 via pip inside the crossenv; Python 3.12.3 is built from source into the sysroot.
 
-### 5.2 Required cmake and environment variables for cross-compilation
-
-Set in `.ci/pytorch/build.sh` for the `*riscv64*` build environment:
-
+`.ci/pytorch/build.sh` explicitly re-exports the cross compilers because the generic `*gcc*` branch of `common.sh` would otherwise clobber them with the host toolchain:
 ```
-CMAKE_CROSSCOMPILING=TRUE
-CMAKE_SYSTEM_NAME=Linux
-CMAKE_SYSTEM_PROCESSOR=riscv64
-USE_CUDA=0
-USE_MKLDNN=0
-SLEEF_TARGET_EXEC_USE_QEMU=ON
+export CC="riscv64-linux-gnu-gcc-14"
+export CXX="riscv64-linux-gnu-g++-14"
 ```
 
-Build invoked via: `python -m build --wheel --no-isolation` after activating the crossenv at `/opt/riscv-cross-env/bin/activate`.
-
-### 5.3 Recommended `-DUSE_X=OFF` flags for riscv64
-
-The following features must be disabled explicitly. NNPACK, QNNPACK, and XNNPACK have architecture allowlists that exclude riscv64 and emit warnings rather than hard errors if not explicitly disabled:
-
+**Cross-build invocation** (triggered when `BUILD_ENVIRONMENT` matches `*riscv64*cross*`):
 ```
--DUSE_CUDA=OFF
--DUSE_MKLDNN=OFF
--DUSE_NNPACK=OFF
--DUSE_PYTORCH_QNNPACK=OFF
--DUSE_XNNPACK=OFF
--DUSE_FBGEMM=OFF
+source /opt/riscv-cross-env/bin/activate   # crossenv built in the Dockerfile
+export CMAKE_CROSSCOMPILING=TRUE
+export CMAKE_SYSTEM_NAME=Linux
+export CMAKE_SYSTEM_PROCESSOR=riscv64
+export USE_CUDA=0
+export USE_MKLDNN=0
+export CC="riscv64-linux-gnu-gcc-14"
+export CXX="riscv64-linux-gnu-g++-14"
+export CAFFE2_CUSTOM_PROTOC_EXECUTABLE=/usr/bin/protoc   # host protoc; target protoc can't run on the build host
+# SLEEF code-gen tools built natively (host arch) first, then:
+python -m build --wheel --no-isolation
+python .ci/pytorch/check_wheel_soabi.py dist/*.whl
 ```
+`WERROR` is left unset for riscv64 builds, consistent with riscv64 (alongside rocm/xla/s390x) being excluded from the `WERROR=1` branch because riscv64 builds "currently fail when WERROR=1" per the build-script comment.
 
-FBGEMM is x86/AArch64 only with no architecture guard; it will fail to build on riscv64 if not disabled. NNPACK and psimd are effectively unmaintained (no commits since ~2020; psimd archived May 2024) and have no RISC-V support.
+**Recommended `-DUSE_X=OFF` flags for riscv64:** `USE_CUDA=OFF`, `USE_MKLDNN=OFF` (though CMake's own default would turn MKLDNN ON for `CPU_RISCV`; CI overrides this explicitly), `USE_NNPACK=OFF`, `USE_PYTORCH_QNNPACK=OFF`, `USE_XNNPACK=OFF` (riscv64 is excluded from the XNNPACK architecture allowlist by default and must be explicitly enabled), `USE_FBGEMM=OFF` (FBGEMM is x86/AArch64-only with no architecture guard and fails to build on riscv64 unless disabled).
 
-### 5.4 Cross-compilation Docker image (`.ci/docker/ubuntu-cross-riscv/Dockerfile`)
+**Cross-compilation Docker image** (`.ci/docker/ubuntu-cross-riscv/Dockerfile`, base `--platform=linux/amd64 ubuntu:24.04`). Sysroot (`/opt/sysroot`) cross-built for `riscv64-linux-gnu`: zlib 1.3.2 (pinned via `ARG ZLIB_VERSION`; this pin went stale and 404'd, tracked in issue [#175193](https://github.com/pytorch/pytorch/issues/175193), with a follow-up fetching zlib from GitHub releases instead in [PR #189382](https://github.com/pytorch/pytorch/pull/189382)), libffi 3.4.6, bzip2 1.0.8, xz 5.4.6, OpenSSL 3.2.1 (`./Configure linux64-riscv64`), SQLite3 3.45.2, Python 3.12.3. All built `--host=riscv64-linux-gnu --build=x86_64-linux-gnu --prefix=/opt/sysroot`. Key environment: `CC=riscv64-linux-gnu-gcc-14`, `CXX=riscv64-linux-gnu-g++-14`, `QEMU_LD_PREFIX=/usr/riscv64-linux-gnu/`, `SYSROOT=/opt/sysroot`. A `crossenv` activates a host-built Python that cross-installs packages (`setuptools pyyaml typing_extensions wheel build "scikit-build-core>=1.0" packaging six numpy==1.26.4`) into the riscv64 sysroot; `PIP_EXTRA_INDEX_URL=https://pypi.riseproject.dev/simple` and `PIP_PREFER_BINARY=1` are set for pre-built target-side wheels (NumPy), documented in-image as pointing to `https://riseproject-dev.github.io/python-wheels/`.
 
-Base: `--platform=linux/amd64 ubuntu:noble`
+**QEMU usage.** The Docker image build step (`.ci/docker/build.sh`) adds `platform_flag="--platform linux/riscv64"` and builds the image under QEMU user-mode emulation via buildx when the build host isn't riscv64. The Dockerfile's `QEMU_LD_PREFIX` is the dynamic-linker prefix QEMU uses to resolve riscv64 shared libraries when running riscv64 binaries on the x86_64 host. However, the actual build job in CI specifically avoids QEMU for the two tools that would otherwise need it: protobuf uses the host's `/usr/bin/protoc` directly (`CAFFE2_CUSTOM_PROTOC_EXECUTABLE`) rather than running a cross-built, QEMU-emulated `protoc`, and SLEEF's host code-generation tools are built natively for x86_64 (`sleef-native`) rather than cross-built and QEMU-run. A build-script comment explains the project moved away from registering `qemu-riscv64` with `binfmt_misc` when an older EC2-based build path was removed. **Net effect: the current in-tree `riscv64.yml` workflow has no test-execution step at all, so no riscv64 binary is ever run (under QEMU or otherwise) by in-tree CI today** -- QEMU's only live role in-tree is in the Docker-image-build path, and that is for building the (currently unused-by-workflow) native, non-cross image, not for executing test binaries.
 
-Sysroot (`/opt/sysroot`) cross-compiled for `riscv64-linux-gnu`:
-- zlib 1.3.2
-- libffi 3.4.6
-- bzip2 1.0.8
-- xz 5.4.6
-- OpenSSL 3.2.1 (configure target: `linux64-riscv64`)
-- SQLite3 3.45.2
-- Python 3.12.3 (shared, with `--with-build-python=/usr/bin/python3`, `--with-ensurepip=no`)
-
-All configured with `--host=riscv64-linux-gnu --build=x86_64-linux-gnu --prefix=/opt/sysroot`. OpenSSL uses `./Configure linux64-riscv64 --prefix=/opt/sysroot`.
-
-Key environment variables in the image:
-```
-CC=riscv64-linux-gnu-gcc-14
-CXX=riscv64-linux-gnu-g++-14
-QEMU_LD_PREFIX=/usr/riscv64-linux-gnu/
-SYSROOT=/opt/sysroot
-```
-
-crossenv activates a host-build Python that cross-installs packages into the riscv64 sysroot. CI additionally installs: `setuptools pyyaml typing_extensions wheel`.
-
-### 5.5 QEMU setup in CI runners
-
-`.github/workflows/_linux-build.yml` (lines 297-317) performs the following when `BUILD_ENVIRONMENT` contains `riscv64`:
-
-```bash
-sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc 2>/dev/null || true
-docker run --rm --privileged multiarch/qemu-user-static --reset -p yes || true
-```
-
-Verifies `/proc/sys/fs/binfmt_misc/qemu-riscv64` exists. Passes `--privileged` to the Docker container. The QEMU LD prefix is set to `/usr/riscv64-linux-gnu/` in the Dockerfile.
-
-Note: PR [#182278](https://github.com/pytorch/pytorch/pull/182278) for a native (non-QEMU) build image hit a QEMU availability failure in CI (`exec format error` on QEMU setup step) and has not been resolved because the PyTorch CI runners appear to be inside containers that block QEMU kernel module installation. This remains an open blocker for in-tree native builds.
+Known build failure: issue [#116012](https://github.com/pytorch/pytorch/issues/116012) ("Issue with Protoc while building PyTorch for RISC-V," opened 2023-12-18, stale, 0 comments); issue [#99278](https://github.com/pytorch/pytorch/issues/99278) ("Build error on libstdc++ header stl_algobase.h on riscv," opened 2023-04-16, labeled good-first-issue, still open and unclaimed).
 
 ---
 
@@ -255,17 +235,19 @@ Note: PR [#182278](https://github.com/pytorch/pytorch/pull/182278) for a native 
 
 | Subsystem | amd64 | arm64 | riscv64 | Gap |
 |---|---|---|---|---|
-| ATen SIMD vectorization | AVX2 + AVX512 dispatch | NEON + SVE256/SVE128 dispatch | None -- scalar only (PR #175746 pending) | Full gap; all tensor ops run at scalar speed |
-| ATen native RVV kernels | N/A | N/A | DepthwiseConv only (1 kernel) | Near-total gap; no GEMM, no attention, no normalization, no elementwise |
-| oneDNN backend | Full (primary backend) | Enabled (GEMM, conv) | Enabled in cmake; disabled in CI; INT8 incomplete | Partial; correctness unvalidated in CI; experimental |
-| XNNPACK (mobile/edge) | Supported | Full with NEON microkernels | Compile-disabled by default; FP16 CI broken | Significant; requires explicit enable + cpuinfo fix |
-| FBGEMM (quantized server) | Full | Full | Not supported | Full gap; no INT8/INT4 server quantization path |
-| Inductor C++ backend | Full (`-march=native` on x86) | Supported | `-march=native` fixed (PR #167071); `cpp.march` knob added (PR #184297) | Functional; no RVV autovectorization tuning |
-| torch.compile/Triton | Full | Partial | Not started (Phase 3/4 in tracking issue #180975) | Full gap |
-| CUDA/GPU | Full | Full | Not applicable (USE_CUDA=0) | N/A by architecture |
-| Distributed (NCCL, Gloo) | Full | Full | Gloo may build (architecture-agnostic C++); no riscv64 CI; NCCL not applicable | Unvalidated |
-| fp16 conversion (c10::Half) | Native | Native | Software fallback (PR #183254 pending, blocked by CLA) | Performance gap; all fp16 tensor init and conversion is software |
-| BF16 vector kernels | Full AVX512-BF16 dispatch | Full | None | Full gap |
+| ATen SIMD vectorization (`CPUCapability`) | AVX2 + AVX512 dispatch | NEON + SVE256/SVE128 dispatch | No RVV entry; scalar only | Full; all generic tensor ops run at scalar speed |
+| ATen native RVV kernels | N/A | N/A | DepthwiseConv only (1 kernel) | Near-total; no GEMM, attention, normalization, elementwise RVV kernels in-tree |
+| oneDNN backend | Full (primary backend) | Enabled | Enabled in cmake (PR #166602); forced OFF (`USE_MKLDNN=0`) in CI | Partial; correctness never validated in CI; INT8 conv/matmul missing upstream |
+| XNNPACK (mobile/edge) | Supported | Full, NEON microkernels | Excluded from the default architecture allowlist; must be explicitly enabled; FP16 CI broken (XNNPACK#9886) | Significant; 344 production RVV source files exist but are not reachable from a default build |
+| FBGEMM (quantized server) | Full | Full | Not supported | Full; no INT8/INT4 server quantization path; no quantization backend at all on riscv64 (neither FBGEMM nor QNNPACK) |
+| Inductor C++ backend | Full (`-march=native`) | Supported | `-march=native` crash fixed (PR #167071); `cpp.march` knob added (PR #184297), maps to `-march=rv64gc` (no `v`) | Functional but scalar; no RVV autovectorization |
+| torch.compile / Triton | Full | Partial | Not started (Phase 3/4 of #180975) | Full |
+| CUDA/GPU | Full | Full | N/A (`USE_CUDA=0`) | N/A by architecture |
+| Distributed (Gloo) | Full | Full | Architecture-agnostic C++; no riscv64-specific issues/PRs found; untested | Unvalidated, not a confirmed gap |
+| fp16 conversion (c10::Half) | Native | Native | Native RISC-V fp16 paths opened (PR #183254, open) | In progress |
+| Vectorized FusedAdam optimizer kernel | Full | Full | RVV kernel for float/double opened (PR #198351, open) | In progress |
+
+**Known correctness/float issues shared with RVV-adjacent CPU codegen** (not RISC-V-specific, but affect the same vectorized CPU kernel paths RVV shares): [#198606](https://github.com/pytorch/pytorch/issues/198606) (open) Inductor CPU int64 vector multiply signed overflow on AVX2; [#196681](https://github.com/pytorch/pytorch/issues/196681) (open) Inductor CPU 2D-tiled reduction tail-block overflow (crash or silent wrong results); [#146508](https://github.com/pytorch/pytorch/issues/146508) (open) float16 CPU implementation correctness concerns. None of these were found to have RISC-V-specific reproductions beyond the RVV GCC ICE (#166057, Section 11).
 
 ---
 
@@ -273,49 +255,34 @@ Note: PR [#182278](https://github.com/pytorch/pytorch/pull/182278) for a native 
 
 ### 7.1 In-tree CI (pytorch/pytorch)
 
-One workflow file: [`.github/workflows/riscv64.yml`](https://github.com/pytorch/pytorch/blob/main/.github/workflows/riscv64.yml)
+Exactly one riscv64-specific GitHub Actions workflow exists: [`.github/workflows/riscv64.yml`](https://github.com/pytorch/pytorch/blob/main/.github/workflows/riscv64.yml) (44 lines, `Owner(s): ["module: risc-v"]`). No `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` exist in the repository.
 
-**Trigger:** `push` on tags matching `ciflow/riscv64/*`, or `workflow_dispatch`. Not triggered on `pull_request` or `schedule`. Requires a human to manually apply a `ciflow/riscv64/*` tag to trigger.
+```yaml
+name: riscv64
+on:
+  push:
+    tags:
+      - ciflow/riscv64/*
+  workflow_dispatch:
+```
 
-**Jobs:** One job: `pytorch-linux-noble-riscv64-py3_12-gcc14-cross-build`. No test jobs. No `test-matrix` input is passed. The workflow builds PyTorch for riscv64 and stops.
+- **Trigger:** `push` to tags matching `ciflow/riscv64/*` (registered in `.github/pytorch-probot.yml`'s `ciflow_push_tags` list, invokable via a PR comment such as `/ciflow riscv64`), or manual `workflow_dispatch`. **No `pull_request:` trigger and no `schedule:` trigger.** The job does not gate PRs.
+- **Jobs:** One: `pytorch-linux-noble-riscv64-py3_12-gcc14-cross-build`, calling the reusable `_linux-build.yml` with a runner determined by `_runner-determinator.yml` (standard x86 CI runner pool, migrated to OSDC/ARC via PR #183649) -- not a native riscv64 runner. Docker image: `ci-image:pytorch-linux-noble-riscv64-py3.12-gcc14-cross-build`. **No test job exists in this workflow.**
+- Per the CI evidence rule (build riscv64 = yes, test riscv64 = no), this is a build-only, opt-in CI job.
+- `.github/workflows/docker-builds.yml` builds the matching Docker image (`pytorch-linux-noble-riscv64-py3.12-gcc14-cross-build`) on the default x86 ARC runner pool (`mt-l-x86iavx512-8-64`), on push to main/release/`ciflow/docker/*`, plus a weekly schedule (`1 3 * * 3`).
+- A regression (PR #187821 renamed the Docker image to add a `-cross-build` suffix without updating the matching `BUILD_ENVIRONMENT` string the cross-compile guard checked) caused the riscv64 job to silently stop cross-compiling and instead build against the host toolchain for a period; this was fixed by [PR #194880](https://github.com/pytorch/pytorch/pull/194880) (merged 2026-09-29).
 
-**Runner:** `linux.c7i.2xlarge` -- an Intel x86 EC2 instance (c7i series). RISC-V emulated via QEMU user-static. There is no native riscv64 runner in PyTorch's in-tree CI fleet.
+### 7.2 Out-of-tree CI (RISE Project)
 
-**Build config:** Ubuntu Noble, Python 3.12, GCC 14, CPU only (no CUDA), cross-compilation + QEMU.
+[riseproject-dev/pytorch-ci](https://github.com/riseproject-dev/pytorch-ci) (created 2026-04-29) runs PyTorch's out-of-tree CI on native riscv64 hardware (`ubuntu-24.04-riscv` label, RISE RISC-V Runners, Scaleway EM-RV1 bare-metal) following the PyTorch Out-of-Tree Cross-Repo CI Relay RFC. As of the 2026-05-12 RISE blog post, "six weeks in": 870+ jobs accumulated for pytorch-ci specifically; the broader RISE Runners service logged 13,000+ jobs across 197 repos and 87 orgs (Mar 19-May 6, 2026), 99.78% completion, ~445 jobs/day, with dedicated pools for projects like llama.cpp (RVV 1.0 machines). Goal: reach PyTorch CI Level 3 (non-blocking PR checks) in-tree. RISE funds a dedicated milestone contract (RP013, "Optimizing PyTorch ATen Operators for High-Performance RISC-V Hardware," Linux Foundation Europe, bid window Apr 9-May 23 2025) targeting VLA support in ATen's `vec` library and OpenBLAS `mm`/`addmm` optimization on a BPI-F3 board, benchmarked via torchperf/torchbench; `torch.compile` is explicitly out of scope for that contract.
 
-This CI does not gate PRs. No riscv64 check appears as a required status on pull requests.
+Build performance on RISE hardware: cold-cache build ~20 hours, hot-cache build ~1.5 hours with 99+% cache-hit rate, ~2,300 ninja targets, >40,000 relay events and ~3,900 builds since end of April 2026.
 
-### 7.2 Out-of-tree CI (riseproject-dev/pytorch-ci)
-
-Repository: [riseproject-dev/pytorch-ci](https://github.com/riseproject-dev/pytorch-ci), 41 commits.
-
-**Architecture:** Follows PyTorch RFC-0050 (cross-repo CI relay). The in-tree relay was added by PRs [#181739](https://github.com/pytorch/pytorch/pull/181739) (merged Apr 28, 2026) and [#181977](https://github.com/pytorch/pytorch/pull/181977) (merged May 6, 2026).
-
-**Trigger:** Monitors pytorch/pytorch for `ciflow/riscv64/*` tags; dispatches full native builds via `out-of-tree-ci.yml`.
-
-**Runner:** `ubuntu-24.04-riscv` label on RISE Runners infrastructure (Scaleway EM-RV1 bare-metal servers). Actual riscv64 hardware, no QEMU.
-
-**Build environment:** `pytorch-linux-noble-riscv64-py3.12-gcc14`, GCC 14, Python 3.12, Ubuntu 24.04 Noble.
-
-**sccache:** Custom build (`luhenry/sccache` fork with Redis coordinator support) at `62.210.239.26:6379`, backed by Scaleway S3 (`s3.fr-par.scw.cloud`). Build timeout: 24 hours. Image polling: up to 180 minutes.
-
-**Patches applied to PyTorch source** (via `pytorch-build-sh.patch`):
-- Cross-compilation condition narrowed: `*riscv64*` becomes `*riscv64*cross*`
-- Native riscv64 build variables added: `USE_CUDA=0`, `USE_MKLDNN=0`
-- WERROR disabled (`riscv64 builds currently fail when WERROR=1`) [NEEDS VERIFICATION -- single source, the patch file itself]
-- sccache re-enabled for riscv64 (only s390x now excluded)
-
-**Job volume:** 870 jobs logged for PyTorch as of May 6, 2026, since service launch on March 19, 2026 -- approximately 125 jobs/week.
-
-**Test status:** Testing is ongoing but no public pass-rate data has been published as of June 2026.
-
-**Goal:** Reach PyTorch CI Level 3 (non-blocking checks on labeled PRs in upstream pytorch/pytorch). The RISE blog states this is expected "fairly soon" as of May 2026.
-
-### 7.3 RuyiAI-Stack fork CI
-
-Repository: [RuyiAI-Stack/pytorch](https://github.com/RuyiAI-Stack/pytorch) -- a RISC-V specific fork maintained by ISCAS/Ruyi Community, currently tracking PyTorch 2.13.0a0+git1449fa4.
-
-This fork tracks riscv64-specific correctness failures and maintains a test blocklist (PR [#1](https://github.com/RuyiAI-Stack/pytorch/pull/1)). It runs on THead C920 64-core hardware, Debian 13, GCC 14.2. It is not affiliated with the official pytorch/pytorch CI and its patches are not upstreamed. It serves as the primary tracker for riscv64 correctness failures (see Section 11).
+| | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| In-tree PR-gating CI | Yes | Yes | No |
+| In-tree native-hardware CI | Yes | Yes | No |
+| Out-of-tree native-hardware CI | N/A | N/A | Yes (RISE, 870+ jobs, not yet merged in-tree as a blocking or non-blocking check) |
 
 ---
 
@@ -323,317 +290,256 @@ This fork tracks riscv64-specific correctness failures and maintains a test bloc
 
 ### 8.1 PyPI (pip install torch)
 
-**No riscv64 binary exists.** Confirmed via direct API query of [pypi.org/pypi/torch/json](https://pypi.org/pypi/torch/json). Latest version: 2.12.1. Total files: 24. Platforms present: `macosx_14_0_arm64`, `manylinux_2_28_aarch64`, `manylinux_2_28_x86_64`, `win_amd64`. Zero files contain "riscv64" in any of the 48 torch versions ever published on PyPI.
+No official riscv64 wheel exists. Confirmed via [pypi.org/pypi/torch/json](https://pypi.org/pypi/torch/json): latest version 2.14.1, 24 files, platforms macOS/manylinux-aarch64/manylinux-x86_64/Windows, cp310-cp313 -- zero riscv64 files across all versions. (The PyPI project literally named "pytorch" is an unrelated placeholder/typo-trap package and is not the real distribution.) GitHub releases (pytorch/pytorch) carry only auto-generated source archives, not architecture-specific binaries, for any architecture -- not a riscv64-specific signal.
 
-Installing PyTorch on riscv64 requires a source build. This takes multiple hours on QEMU-emulated builds and approximately 1 hour on bare-metal riscv64 hardware (estimated from CI build timeout of 24 hours and sccache infrastructure being required to make it tractable).
+### 8.2 RISE Project wheel distribution
 
-**RISE wheel builder** ([gitlab.com project 56254198](https://gitlab.com/riseproject/python/wheel_builder)): Provides 80+ pre-built riscv64 wheels including numpy, scipy, pandas, safetensors, tokenizers, sentencepiece, onnx, ml-dtypes, and others. PyTorch is NOT listed. The wheel builder is maintained by Rivos and BayLibre, funded by RISE.
+RISE's GitLab-hosted PyPI index (project 56254198, `https://pypi.riseproject.dev/simple/`) hosts riscv64 wheels for the real package name `torch`: `torch-2.13.0+cpu-cp312-cp312-manylinux_2_39_riscv64.whl`, plus cp313, cp314 and cp314t variants. Per the RISE blog post ["PyTorch is available on riscv64!"](https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/) (2026-08-18, author Ludovic Henry, Qualcomm), these are built **natively on real RISC-V hardware** (Scaleway EM-RV1, `ubuntu-24.04-riscv` RISE Runners), not cross-compiled, and are CPU-only. Install: `pip install torch --extra-index-url https://pypi.riseproject.dev/simple/ --prefer-binary`. Test validation: 212,038 test cases, 165,591 passed, 191 failed, 46,256 skipped (99.998% pass rate on enabled tests), across 550 test files totaling 121.9 hours of serial test time (the single file `inductor/test_torchinductor_opinfo` alone takes 17.6 hours, over 10% of total). Failures were attributed mostly to architectural assumptions (cache-topology detection, quantization-backend absence, x86-specific tests) rather than computational errors. Stated limitations: no RVV acceleration in ATen ops yet (scalar fallback, consistent with Section 4), oneDNN disabled in favor of OpenBLAS, no quantization backend.
 
-### 8.2 Debian
+**Discrepancy to note:** the public RISE wheel-builder listing page ([riseproject.gitlab.io/python/wheel_builder/](https://riseproject.gitlab.io/python/wheel_builder/)), which lists 75 other riscv64 packages (numpy, scipy, pandas, pillow, matplotlib, tokenizers, safetensors, ml-dtypes, onnx, etc.), does **not** list torch/pytorch. The torch wheels exist in the separate GitLab PyPI package registry (project 56254198) referenced by the August 2026 blog post, not on the wheel_builder's own index page. Both are RISE-run surfaces; this is not reconciled by the available research and should be read as "torch wheels exist in RISE's package registry but are not surfaced on RISE's public wheel_builder catalog page" rather than a contradiction about whether the wheels exist. Separately, a related riseproject-dev/python-wheels repo carries riscv64 builds for `pytorch-tokenizers` (v1.4.1, v1.5.0), `executorch` v1.4.1, and `tensordict`.
 
-PyTorch version 2.12.0+dfsg2-4 is packaged in Debian sid (unstable). Declared architectures: amd64, arm64, ppc64el, riscv64, s390x. Build status for riscv64: built and installed, on build server `rv-osuosl-03`. Source: [tracker.debian.org/pkg/pytorch](https://tracker.debian.org/pkg/pytorch).
+### 8.3 Distro packaging
 
-This package is in Debian unstable only. It is not available in Ubuntu 24.04 Noble (PyTorch is not packaged in Ubuntu at all; confirmed via packages.ubuntu.com search returning no results for pytorch or python3-torch).
-
-### 8.3 GitHub releases
-
-PyTorch does not publish pre-built binary wheels via GitHub release assets. Releases (v2.12.0, v2.12.1) attach only source tarballs: `pytorch-vX.Y.Z.tar.gz` and `torch-X.Y.Z.tar.gz`.
+- **Debian:** PyTorch is packaged in Debian sid (unstable); not in Ubuntu 24.04 Noble or Ubuntu 26.04 "resolute" (confirmed via a name search across [packages.ubuntu.com](https://packages.ubuntu.com/search?keywords=pytorch&suite=resolute&searchon=names) for `resolute`, returning no results for `pytorch`/`python3-pytorch`/`libpytorch` in any architecture -- i.e. PyTorch is not packaged in Ubuntu at all yet, not specifically excluded only on riscv64).
+- **Third-party/unofficial riscv64 wheel repos** (not part of pytorch/pytorch or RISE): [KumaTea/pytorch-riscv64](https://github.com/KumaTea/pytorch-riscv64), [gounthar/riscv64-python-wheels](https://github.com/gounthar/riscv64-python-wheels), [xforcevesa/pytorch-riscv64-oe24](https://github.com/xforcevesa/pytorch-riscv64-oe24) (OpenEuler build).
 
 ### 8.4 Summary
 
 | Channel | riscv64 available | Notes |
 |---|---|---|
-| PyPI (pip install torch) | No | x86_64, aarch64 only; 48 versions, zero riscv64 files |
-| GitHub releases | No | Source tarballs only, no binary wheels |
-| RISE wheel builder | No | 80+ packages but not torch |
-| Ubuntu 24.04 Noble | No | Package not in distro |
-| Debian sid (unstable) | Yes | v2.12.0+dfsg2-4, built on rv-osuosl-03 |
-| Arch Linux RISC-V | Unknown | Site did not return parseable data during research |
+| PyPI (`pip install torch`, official) | No | 2.14.1 latest, zero riscv64 files in any version |
+| GitHub releases | No | Source tarballs only, no binary wheels for any architecture |
+| RISE package registry (GitLab project 56254198) | Yes | torch 2.13.0+cpu, cp312/cp313/cp314/cp314t, native build, 99.998% test pass rate |
+| RISE wheel_builder public listing page | No | Not listed, despite 75 other packages present; discrepancy noted above |
+| Ubuntu 24.04 / 26.04 | No | Not packaged in Ubuntu at all (any architecture) |
+| Debian sid (unstable) | Yes | Packaged for riscv64, not in stable |
+| Third-party community repos | Yes (unofficial) | KumaTea, gounthar, xforcevesa builds |
+
+A user who needs upstream-sanctioned riscv64 PyTorch today must either build from source (hours, using the cross-compile toolchain in Section 5) or use RISE's natively-built, heavily-tested but non-upstream wheel.
 
 ---
 
 ## 9. Dependencies
 
-The table below covers dependencies with relevance to SIMD/vectorization, JIT backends, numerics, memory allocation, or serialization. GPU-only stacks and pure-Python dependencies are omitted.
-
-| Dependency | Role | riscv64 Build | riscv64 Test | riscv64 Release | Critical Blockers |
-|---|---|---|---|---|---|
-| OpenBLAS | Default BLAS/LAPACK for CPU matmul | Green (GCC 14+ required; GCC 13 falls back to scalar) | Partial -- BLAS L1/L2/L3 under QEMU; LAPACK disabled in upstream CI (QEMU timeout) | v0.3.33 in Debian sid; Ubuntu 24.04 ships v0.3.26 (missing DYNAMIC_ARCH and ZVL targets) | ZVL256B TRSM correctness bug (draft PR #5830, unassigned); LAPACK correctness unvalidated; no native CI hardware |
-| oneDNN | Deep learning primitives for conv, matmul, pooling | Green (GCC 14 required; JIT via xbyak_riscv compiles and generates RVV code) | Green for SMOKE tests (QEMU, vlen=128/256); no native hardware CI | Debian sid `libdnnl3.6` v3.12.1; no upstream binary; status: Experimental | INT8 quantized conv/matmul missing; f16 reduction overflow bug (PR #5361 open); LLVM libomp build failure on native riscv64 ([llvm-project#87026](https://github.com/llvm/llvm-project/issues/87026)) blocks Clang deployments |
-| XNNPACK | Inference kernels for Mobile/ExecuTorch; quantized and float ops | Green (cross-compile via Clang + QEMU) | Broken -- 100+ RVV FP16 tests failing (issue #9886); operator tests excluded from CI | No binary releases; Debian sid build from Nov 2024 snapshot | FP16 runtime detection bug (PR #9516 unconditionally enables Zvfh flag); missing `cpuinfo_has_riscv_zvfh()` (cross-project root cause); BF16 absent; old cpuinfo syscall build failure (issue #4650) unresolved |
-| cpuinfo | Runtime CPU feature detection (ISA extensions, core topology) | Green -- Linux riscv64 builds; Android riscv64 CI added 2024 | Green for basic functionality (QEMU CI) | No standalone binary release | Missing `cpuinfo_has_riscv_zvfh()` API -- direct root cause of XNNPACK issue #9886; issue #148 ("Improve support for RISC-V on Linux") open since 2023 |
-| SLEEF | SIMD transcendental math (sin, cos, log, exp) | Green -- riscv64 integrated in v3.6 (Nov 2023) | Green -- CI with QEMU; known QEMU flakes resolved (Feb 2025) | v3.9.0 (March 2025); libsleefdft and libsleefquad enabled for riscv64 since v3.6.1 | None. Note: PyTorch only enables SLEEF on ARM; RVV path in ATen is separate |
-| FBGEMM | Quantized 8-bit matrix ops for x86/AArch64 server inference | Not supported (x86/AArch64-only) | N/A | N/A | riscv64 is not a target; PyTorch disables FBGEMM on riscv64 at configure time |
-| NNPACK | Acceleration primitives for feed-forward nets (older, largely superseded by XNNPACK) | Unknown -- no riscv64 issues or PRs; project has had no commits since ~2020 | Unknown | No release | No riscv64 porting effort; psimd (dependency) archived May 2024; superseded by XNNPACK |
-| psimd | Portable SIMD abstraction used by NNPACK | Archived (read-only since May 2024) | N/A | N/A | Archived; no RISC-V support; no future development possible |
-| Gloo | CPU collective communications (AllReduce, distributed training) | Unknown -- no riscv64 issues or PRs found; architecture-agnostic C++ may build | Unknown | No riscv64 binary | No riscv64 porting work tracked; transport-layer untested |
-| pthreadpool | Thread pool for XNNPACK/NNPACK dispatch | Green -- pure C, architecture-agnostic | Green | No standalone binary | No riscv64 blockers |
-| mimalloc | High-performance memory allocator (auto-enabled on AArch64 Linux) | Likely builds (architecture-agnostic C) | Unknown | No riscv64 binary | Not auto-enabled for riscv64 in PyTorch CMake (ARM-specific flag) |
-| protobuf | Serialization for ONNX and Caffe2 | Build works (issues #14549 and #12266 resolved 2023-2024) | Unknown | No official riscv64 `protoc` binary (prebuilt PRs #23206/#23205 abandoned Aug 2025) | No prebuilt `protoc` for riscv64; source build only |
-| ONNX | Model exchange format | Builds (protobuf dependency resolved) | Unknown | No riscv64 binary from upstream | Depends on protobuf riscv64 support; no riscv64-specific ONNX CI known |
-| OpenMP | Pragma-based parallelism (ATen kernels, oneDNN) | Green with GCC libgomp; LLVM libomp fails to build on native riscv64 ([llvm-project#87026](https://github.com/llvm/llvm-project/issues/87026)) | Green with GCC; LLVM path untestable on native hardware | `libgomp` in all distros; libomp available via LLVM packages | LLVM libomp native build failure blocks Clang-toolchain deployments |
-| OpenSSL | Optional TLS for Gloo distributed backend | Green -- full riscv64 support including RVV-accelerated crypto since OpenSSL 3.x | Green (Debian/Ubuntu CI) | Available in all major Linux distributions | No known blockers |
-| NumPy | N-dimensional array library; primary numerical interface for PyTorch interop | Green -- riscv64 CI via QEMU | Green | Official riscv64 wheel on PyPI | No known blockers; cited in PyTorch issue #141550 as the model for PyTorch riscv64 CI approach |
+| Dependency | Role | Relation / Criticality | riscv64 Build | riscv64 Test | riscv64 Release | Blocking issues |
+|---|---|---|---|---|---|---|
+| OpenBLAS | Default BLAS/LAPACK for CPU matmul | runtime, critical | Green (GCC 14+ required) | Partial -- BLAS L1/L2/L3 under QEMU; LAPACK disabled upstream (QEMU timeout) | v0.3.33-0.3.34 range in Debian sid / RISE build; Ubuntu 24.04 ships an older v0.3.26 | ZVL256B TRSM correctness bug (draft PR #5830, unassigned); LAPACK correctness unvalidated |
+| oneDNN | Conv/matmul/pooling primitives; JIT via xbyak_riscv generates RVV code | runtime, critical | Green (GCC 14; JIT compiles and emits RVV) | Green for smoke tests under QEMU only; no native-hardware CI | Debian sid `libdnnl3.6`; status "Experimental"; PyTorch CI forces `USE_MKLDNN=0` despite cmake-level support | INT8 quantized conv/matmul missing; f16 reduction overflow (oneDNN PR #5361, open); LLVM libomp native build fails ([llvm-project#87026](https://github.com/llvm/llvm-project/issues/87026)), blocking Clang-toolchain deployments |
+| XNNPACK | Mobile/edge inference kernels; largest RVV body in the PyTorch dependency tree (344 production RVV source files + 212 RVV-FP16 files) | runtime, critical | Green (cross-compile via Clang+QEMU) but **not enabled by default** (riscv64 missing from the cmake architecture allowlist) | **Broken** -- 100+ RVV FP16 tests failing ([google/XNNPACK#9886](https://github.com/google/XNNPACK/issues/9886)); operator tests permanently excluded from CI | No binary releases; Debian sid build from a Nov-2024 snapshot | Root cause is a missing `cpuinfo_has_riscv_zvfh()` API in cpuinfo (cross-project blocker); the `xnn_arch_riscv_vector_fp16_arith` flag is unconditionally enabled, bypassing the cpuinfo Zvfh check; BF16 absent |
+| cpuinfo | Runtime ISA/topology detection; source of truth for RVV/Zvfh dispatch across XNNPACK and ATen | runtime, critical | Green -- Linux riscv64 builds; Android riscv64 CI added 2024 | Green for basic functionality under QEMU | No standalone binary release | Missing `cpuinfo_has_riscv_zvfh()` API directly causes XNNPACK#9886; [pytorch/cpuinfo#148](https://github.com/pytorch/cpuinfo/pull/148) ("Improve support for RISC-V architecture on Linux") open since 2023 |
+| SLEEF | SIMD transcendental math (sin/cos/log/exp) | runtime, critical | Green -- riscv64 integrated since v3.6 (Nov 2023) | Green -- CI with QEMU, known flakes fixed Feb 2025 | v3.9.0 (Mar 2025); libsleefdft/libsleefquad enabled since v3.6.1 | None known. PyTorch's own build enables SLEEF only on the ARM vec path; the RVV ATen path is separate and does not currently route through SLEEF |
+| FBGEMM | Quantized INT8 server matmul | runtime, optional | **Not supported** (x86/AArch64-only, no architecture guard -- fails to build unless explicitly disabled) | N/A | N/A | riscv64 is not a target; PyTorch disables FBGEMM at configure time on riscv64; combined with no QNNPACK support, there is no quantization backend on riscv64 at all |
+| NNPACK | Legacy inference kernels, superseded by XNNPACK | runtime, optional | Unknown -- no riscv64 issues/PRs found; no commits since ~2020 | Unknown | No release | Unmaintained; no RISC-V porting effort |
+| psimd | Portable SIMD abstraction used by NNPACK | runtime, optional | Archived (read-only since May 2024) | N/A | N/A | Archived, no future development possible |
+| Gloo | CPU collective communications (AllReduce, distributed training) | runtime, optional | Unknown -- no riscv64 issues/PRs found; architecture-agnostic C++ may build | Unknown | No riscv64 binary | No riscv64 porting work tracked; transport layer untested |
+| pthreadpool | Thread pool for XNNPACK/NNPACK dispatch | runtime, critical | Green -- pure C, architecture-agnostic | Green | No standalone binary | None known |
+| mimalloc | High-performance allocator, auto-enabled on AArch64 | runtime, optional | Likely builds (architecture-agnostic C) | Unknown | No riscv64 binary | Not auto-enabled for riscv64 in PyTorch CMake (ARM-specific gate) |
+| Protocol Buffers | Serialization for ONNX/Caffe2 | runtime, critical | Builds (upstream issues #14549/#12266 resolved 2023-2024) | Unknown | No official riscv64 `protoc` binary (prebuilt PRs #23206/#23205 abandoned Aug 2025) | No prebuilt `protoc` for riscv64; PyTorch CI works around this by using the host's `protoc` rather than a cross-built one (Section 5); issue [#116012](https://github.com/pytorch/pytorch/issues/116012) tracks an earlier protoc cross-build failure |
+| ONNX (format/schema) | Model exchange format | runtime, optional | Builds (depends on protobuf) | Unknown | No riscv64 binary upstream | Depends on protobuf riscv64 support; no dedicated ONNX riscv64 CI known |
+| OpenMP | Pragma parallelism for ATen/oneDNN | runtime, critical | Green with GCC `libgomp`; LLVM `libomp` fails to build natively on riscv64 ([llvm-project#87026](https://github.com/llvm/llvm-project/issues/87026)) | Green with GCC path; LLVM path untestable natively | `libgomp` ships in all distros | LLVM libomp native build failure blocks Clang-toolchain deployments |
+| OpenSSL | Optional TLS for Gloo distributed backend | runtime, optional | Green -- full riscv64 support including RVV-accelerated crypto since OpenSSL 3.x | Green (Debian/Ubuntu CI) | Available in all major distros | None known |
+| NumPy | Primary numerical interop array library | runtime, critical | Green -- riscv64 CI via QEMU | Green | Official riscv64 wheel on PyPI | None known; cited in issue #141550 as the CI model PyTorch should follow |
+| CMake | Build system generator | build, critical | Green; CI pins 4.0.0 via pip in the crossenv, minimum enforced 3.27 | N/A | Available for all architectures via pip/distro | None known |
+| GCC | Cross-compiler (riscv64-linux-gnu-gcc) | build, critical | Green; GCC 14 is the pinned, verified version for all riscv64 CI builds (Section 5) | N/A | Ubuntu Noble `gcc-14-riscv64-linux-gnu` cross package | GCC 14.2 has a documented internal-compiler-error on RVV intrinsics in DepthwiseConvKernel.cpp (issue #166057, fixed with a source-level workaround in PR #165717, not a GCC fix); minimum GCC overall is 11.3 but riscv64 CI only exercises GCC 14 |
+| LLVM | Alternate compiler / Inductor's `llvm_jit.cpp` target init | build, optional | No Clang path exists for riscv64 anywhere in the PyTorch build scripts; LLVM's own `libomp` fails to build natively on riscv64 | N/A | N/A | llvm-project#87026 (libomp); no RISC-V-specific LLVM target initialization in PyTorch's NNC JIT |
+| Python | Interpreter / extension-module target | build, critical | Green; cross-built 3.12.3 into the sysroot via crossenv; `Python_SOABI` fix for cross builds merged ([PR #189388](https://github.com/pytorch/pytorch/pull/189388)) | N/A | Official riscv64 CPython builds exist upstream (outside PyTorch's scope) | Dockerfile and `requirements-ci.txt` pin Python 3.12 independently and "must be bumped together" per an in-repo comment |
+| QEMU | User-mode emulation for cross-build tooling and (historically) binfmt_misc execution | test, critical | Green for the one remaining use (Docker image build via buildx `--platform linux/riscv64`) | **Currently unused for test execution** -- the in-tree `riscv64.yml` workflow has no test job at all (Section 7); QEMU's binfmt_misc role for running riscv64 binaries was removed with an older EC2-based build path per a code comment | N/A | Formally the "test-dependency" for riscv64 CI, but the build job specifically routes protoc and SLEEF-tool generation around QEMU to avoid its overhead/flakiness (Section 5) |
 
 ---
 
 ## 10. Ecosystem Status
 
-### 10.1 Corporate contributors
+PyTorch sits at the base of a very large dependent Python-package ecosystem (torchvision, torchaudio, HuggingFace `transformers`/`tokenizers`/`safetensors`, `timm`, ExecuTorch, and thousands of downstream ML packages), each of which needs its own riscv64 wheel or source build once PyTorch itself is available.
 
-| Organization | Affiliation | Active Contributors | Recent Contributions |
-|---|---|---|---|
-| ISCAS (Institute of Software, Chinese Academy of Sciences) | RISE General Member | zhangfeiv0 | First RVV kernel (Jul 2024), first CI PR, oneDNN enablement, multiple RFCs |
-| Alibaba DAMO / XuanTie | RISE Premier Member (as DAMO Academy) | fernchen | RFC #171659, tracking issue #180975 |
-| RISE Project / Rivos | RISE Premier Member (Rivos former; RISE org) | luhenry | Native CI relay PRs, RVV vec review, native build image |
-| ZTE | unknown affiliation | langc23 | Inductor cpp_builder fix (PR #167071) |
-| Debian RISC-V | N/A | yuzibo | lintrunner, CUDA bindings, MKL restriction |
-| UltraRisc | unknown | zgat | lintrunner exclusion (PR #160172) |
-| Meta | N/A | malfet, huydhn, jansel | Maintainer reviews, CI infra, Inductor cpp.march |
+**RISE wheel_builder coverage.** RISE's public wheel_builder catalog ([riseproject.gitlab.io/python/wheel_builder/](https://riseproject.gitlab.io/python/wheel_builder/)) lists 75 riscv64 packages relevant to the ML/scientific stack: numpy, scipy, pandas, pillow, matplotlib, tokenizers, safetensors, ml-dtypes, onnx, among others -- covering much of PyTorch's own runtime dependency surface (Section 9) independently of PyTorch itself. As noted in Section 8, torch/pytorch is not listed on this particular catalog page even though RISE separately hosts torch wheels in its GitLab PyPI package registry (project 56254198); the catalog's omission of torch specifically has not been reconciled by available research.
 
-No contributions from: Qualcomm, SiFive, NVIDIA, Google, Arm, Intel, AMD, Red Hat (all RISE Premier or Governing Board members for PyTorch Foundation). Zero RISC-V contributions from any PyTorch Governing Board member organization's engineering teams, except Alibaba.
+**Known coverage gap:** no quantization backend exists for riscv64 (neither FBGEMM nor QNNPACK supports it -- Section 9), so any downstream package that assumes INT8/INT4 quantized inference will not work out of the box on riscv64 regardless of PyTorch's own build status.
 
-### 10.2 RISE Project involvement
+**Related riscv64 builds found in the RISE ecosystem** (via [riseproject-dev/python-wheels](https://github.com/riseproject-dev/python-wheels)): `pytorch-tokenizers` (releases v1.4.1, v1.5.0), `executorch` v1.4.1, and `tensordict`. These indicate active, if partial, riscv64 coverage of PyTorch's immediate downstream package family, ahead of torch itself appearing on the public wheel_builder catalog.
 
-RISE is the primary organizational driver of riscv64 PyTorch CI infrastructure as of 2026. Key activities:
+**ExecuTorch.** [riseproject-dev/executorch](https://github.com/riseproject-dev/executorch), a fork of [pytorch/executorch](https://github.com/pytorch/executorch) (PyTorch's on-device/edge inference framework, BSD licensed), exists with riscv64-oriented work; a `pytorch-riscv64-oe24` community build and RISC-V International's own coverage of "Ashling and Embecosm Extend PyTorch AI to RISC-V Embedded Devices" (ExecuTorch on RISC-V microcontrollers) point to separate, more mature edge-inference activity than the main PyTorch training/inference framework. [NEEDS VERIFICATION -- fork activity and release details are from a single research pass and were not independently cross-checked against a second source.]
 
-- [RISE RISC-V Runners](https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/) launched March 19, 2026: free native riscv64 CI for any open-source GitHub project, using Scaleway EM-RV1 bare-metal servers, label `ubuntu-24.04-riscv`. As of May 6, 2026: 13,000+ total jobs across 197 repositories; 99.78% completion rate; ~445 jobs/day.
-- [riseproject-dev/pytorch-ci](https://github.com/riseproject-dev/pytorch-ci): PyTorch out-of-tree CI, 870 jobs in 7 weeks (as of May 6, 2026).
-- [riseproject-dev/executorch](https://github.com/riseproject-dev/executorch): Fork of pytorch/executorch for edge/embedded riscv64 inference work.
-- PyTorch is NOT listed on the [RISE wheel builder](https://riseproject.gitlab.io/python/wheel_builder/). The wheel builder provides 80+ other packages for riscv64 (numpy, scipy, safetensors, tokenizers, onnx, etc.) but not torch/torchvision/torchaudio.
-
-RISE Premier members: Andes Technology, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, DAMO Academy (Alibaba/T-Head), Tenstorrent. Former Premier members visible in 2024 slides: Intel, Rivos, Ventana Micro, Samsung, Imagination Technologies.
-
-RISE was restructured into 5 working groups effective June 25, 2026: Enablement/Optimization, Developer Tooling, Platform, AI/ML, Bare Metal. The AI/ML WG is newly consolidated and may drive future PyTorch work.
-
-### 10.3 ExecuTorch
-
-[riseproject-dev/executorch](https://github.com/riseproject-dev/executorch) is an active fork of [pytorch/executorch](https://github.com/pytorch/executorch) (PyTorch's on-device AI inference framework, BSD licensed). 11,998 commits. CI configured. This indicates exploratory work on riscv64 edge inference deployment of LLMs and vision models. No published releases or prebuilt packages from this fork were found. [NEEDS VERIFICATION -- fork activity and CI details from single research source]
+No published, systematic "fraction of the PyTorch-dependent ecosystem that builds/runs on riscv64" figure exists in any source consulted; the picture above is a coverage sample, not a complete census.
 
 ---
 
 ## 11. Known Bugs and Active Issues
 
-### 11.1 Open upstream issues (pytorch/pytorch)
+### 11.1 Open, RISC-V-specific (pytorch/pytorch)
 
-| Issue | Title | Opened | Category |
+| # | Title | Opened | Notes |
 |---|---|---|---|
-| [#180975](https://github.com/pytorch/pytorch/issues/180975) | [Tracking] RISC-V PyTorch enablement | Apr 21, 2026 | Umbrella tracking; 4-phase roadmap |
-| [#175193](https://github.com/pytorch/pytorch/issues/175193) | ZLib Reference outdated in riscv ci dockerfile | Feb 17, 2026 | Infrastructure; partially fixed by PR #175237 |
-| [#147513](https://github.com/pytorch/pytorch/issues/147513) | [RFC] Request for Feedback on PRs Adding RISC-V and RVV Support | Feb 20, 2025 | Stalled feature/performance work |
-| [#141550](https://github.com/pytorch/pytorch/issues/141550) | RISC-V CI support | Nov 26, 2024 | CI infrastructure; in "Cold Storage" on project board |
+| [#180975](https://github.com/pytorch/pytorch/issues/180975) | [Tracking] RISC-V PyTorch enablement | 2026-04-21 | Umbrella roadmap, labeled "proposal accepted"; comment thread not retrievable (client-rendered / 403 on API for this session) |
+| [#171659](https://github.com/pytorch/pytorch/issues/171659) | [RFC] RISC-V Architecture Support Roadmap for PyTorch | 2026-01-04 | Five-phase roadmap predating/feeding #180975; no benchmark numbers in the RFC itself |
+| [#175193](https://github.com/pytorch/pytorch/issues/175193) | ZLib reference outdated in riscv CI dockerfile | 2026-02-17 | Docker builds fail (404 on pinned zlib URL); partially addressed by [PR #189382](https://github.com/pytorch/pytorch/pull/189382) |
+| [#147513](https://github.com/pytorch/pytorch/issues/147513) | [RFC] Request for Feedback and Review on PRs Adding RISC-V and RVV Support | 2025-02-20 | Predates the formal tracking issue; requested review of #127867, #135570, #143979 |
+| [#141550](https://github.com/pytorch/pytorch/issues/141550) | RISC-V CI support | 2024-11-26 | 12 comments; labeled "triaged" with limited sustained maintainer engagement |
+| [#116012](https://github.com/pytorch/pytorch/issues/116012) | Issue with Protoc while building PyTorch for RISC-V | 2023-12-18 | Stale, 0 comments |
+| [#99278](https://github.com/pytorch/pytorch/issues/99278) | Build error on libstdc++ header stl_algobase.h on riscv | 2023-04-16 | Labeled good-first-issue, unclaimed, still open |
 
-### 11.2 Correctness failures tracked in RuyiAI-Stack fork
+### 11.2 Closed, RISC-V-specific (historical / regression context)
 
-Hardware: THead C920 64-core, Debian 13, GCC 14.2, PyTorch 2.13.0a0+git1449fa4.
+| # | Title | Closed | Severity |
+|---|---|---|---|
+| [#166057](https://github.com/pytorch/pytorch/issues/166057) | [RISC-V][RVV][GCC 14.2] GCC ICE when building DepthwiseConvKernel.cpp | 2025-10-22 | Correctness/build (compiler internal-compiler-error on RVV builtin read-modify-write pattern). Exact error: `internal compiler error: in gsi_replace, at gimple-iterator.cc:438`. Reproduces with `-march=rv64gcv` under GCC 14.2; does not reproduce with `-march=rv64gc` (RVV off) or under Clang. Fixed in PyTorch by breaking the read-modify-write chain with a temporary ([PR #165717](https://github.com/pytorch/pytorch/pull/165717)) -- a workaround for a GCC limitation, not a PyTorch semantic bug |
+| [#160171](https://github.com/pytorch/pytorch/issues/160171) | Add `__riscv` macro detection to support the scalar backend for RISCV | 2025-08-11 | Build |
+| [#160170](https://github.com/pytorch/pytorch/issues/160170) | lintrunner not supported on riscv64 | 2025-08-08 | Tooling |
+| [#43359](https://github.com/pytorch/pytorch/issues/43359) | Query regarding support for RISC-V Vector ISA | 2021-01-10 | Early tracking issue |
 
-| Issue | Test | Category |
-|---|---|---|
-| [#34](https://github.com/RuyiAI-Stack/pytorch/issues/34) | [Tracking] core test failures on riscv64 | 32 total failures being tracked |
-| [#30](https://github.com/RuyiAI-Stack/pytorch/issues/30) | test_dispatch_symbolic_meta_outplace_masked_logaddexp_cpu_float16 | Float16 NaN/precision |
-| [#29](https://github.com/RuyiAI-Stack/pytorch/issues/29) | test_dispatch_symbolic_meta_outplace_div_floor_rounding_cpu_int64 | Integer floor rounding correctness |
-| [#28](https://github.com/RuyiAI-Stack/pytorch/issues/28) | test_dispatch_meta_outplace_unique_cpu_float64 | Uniqueness op correctness |
-| [#27](https://github.com/RuyiAI-Stack/pytorch/issues/27) | test_dtypeview_int16_float64_cpu | Dtype view/cast correctness |
-| [#26](https://github.com/RuyiAI-Stack/pytorch/issues/26) | test_cpu_cpp_fallback_foreach_map_clamp_min | foreach op fallback failure |
-| [#25](https://github.com/RuyiAI-Stack/pytorch/issues/25) | test_shutdown_terminates_sidecar_worker_pool | Worker pool instability |
+### 11.3 Related CPU/SIMD correctness bugs (not RISC-V-specific, affect shared vectorized-CPU codegen)
 
-Note: these failures are tracked in a downstream fork, not in upstream pytorch/pytorch. They have not been triaged or acknowledged by Meta maintainers.
+[#198606](https://github.com/pytorch/pytorch/issues/198606) (open) -- Inductor CPU int64 vector multiply signed overflow on AVX2 (silent wrong results when the square wraps). [#196681](https://github.com/pytorch/pytorch/issues/196681) (open) -- Inductor CPU 2D-tiled reduction tail-block heap overflow (SIGABRT) or silent wrong results. [#146508](https://github.com/pytorch/pytorch/issues/146508) (open) -- "Something very wrong with float16 CPU implementation." None of these have a confirmed RISC-V-specific reproduction; they are listed because they touch the same vectorized CPU kernel paths that RVV work shares.
 
-### 11.3 riscv64 test blocklist (RuyiAI-Stack, PR #1)
-
-The following test categories are permanently blocked on riscv64 in the RuyiAI-Stack fork:
-
-- All distributed tests (`inductor/test_distributed_patterns`, `fx/test_dce_pass`, all `export/test_*`)
-- Quantization engine tests (NoQEngine not supported; QNNPACK not supported on riscv64)
-- `test_binary_ufuncs`, `test_decomp` -- blocked with note "TODO precision" (open correctness concern)
-- `profiler/test_profiler` -- "scalar value not equal, need to fix"
-- Inductor CPU algorithm selector tests -- "L1 cache size = 0, need to fix"
-- `test_proxy_tensor` -- z3-solver build failure
-
-### 11.4 Key open PRs with blockers
+### 11.4 Key open PR blockers
 
 | PR | Title | Blocker |
 |---|---|---|
-| [#175746](https://github.com/pytorch/pytorch/pull/175746) | RISC-V Vector Extension (RVV) support for ATen | Lint failure on `vec_common_rvv.h`; unresolved `Vectorized<>` scalable-vector design question; no malfet response to five design options presented by luhenry |
-| [#174275](https://github.com/pytorch/pytorch/pull/174275) | Adjust to use `__riscv_v` macro | Marked Stale June 20, 2026; jgong5 never re-approved after branch reset; unrelated `macos-py3-arm64` CI failure blocked 5 merge attempts; auto-close in 30 days |
-| [#183254](https://github.com/pytorch/pytorch/pull/183254) | Add RISC-V native fp16 conversion paths | EasyCLA failure (author's commit email not linked to GitHub account); missing `topic: not user facing` label; no reviewer assigned |
-| [#182278](https://github.com/pytorch/pytorch/pull/182278) | [CI] Add native build image for linux-riscv64 | malfet has not re-reviewed after luhenry addressed objections; QEMU unavailable on PyTorch CI runners; luhenry has offered to remove the image from in-tree docker-builds.yml to reduce burden |
+| [#195345](https://github.com/pytorch/pytorch/pull/195345) | Add riscv64 blocklist to test/run_test.py | Draft, open since 2026-08-30 |
+| [#189382](https://github.com/pytorch/pytorch/pull/189382) | ubuntu-cross-riscv: fetch zlib from GitHub releases | Open, follow-up to #175237/#175193 |
+| [#198351](https://github.com/pytorch/pytorch/pull/198351) | [CPU] Add RVV vectorized kernel for FusedAdam | Open since 2026-09-23 |
+
+The single sharpest confirmed correctness bug in the RISC-V code path is the GCC 14.2 ICE (#166057), already fixed via a source-level workaround.
 
 ---
 
 ## 12. Objections and Upstream Blockers
 
-### 12.1 Meta's structural position
+**Meta's structural position.** No PyTorch maintainer has formally objected to RISC-V support, but Meta has not committed dedicated resources to it either. Reviews on RISC-V PRs have historically concentrated on a single maintainer, @malfet, with no CODEOWNERS entry or SLA for `module: risc-v`. This lack of a named reviewer has repeatedly been the practical bottleneck: issue #147513 was filed specifically because earlier PRs sat "for months without maintainer attention," and PR #182278 (native, non-QEMU build image) stalled on re-review after revisions were made.
 
-Meta's maintainers (primarily malfet) have not objected to RISC-V work, but they have not committed resources to it. The documented pattern is:
+**No CI gating.** riscv64 CI does not gate any PyTorch PR (Section 7). There is no mechanism by which a riscv64 regression would block a merge; RISC-V code paths can accumulate breakage silently until explicitly exercised. PR #187821's accidental cross-compile-guard regression, undetected until PR #194880 fixed it, is a concrete instance of this.
 
-- RISC-V PRs are merged under force-flag, not standard CI green
-- Reviews are ad-hoc from malfet with no SLA
-- New CI infrastructure for riscv64 requires malfet's explicit approval and is reviewed slowly (PR #182278 has been open 7 weeks without re-review after revisions)
-- The `Vectorized<>` scalable-vector architecture question (PR #175746) mirrors an unresolved SVE question (PR #153471) where malfet's stated concern -- dynamic `size()` causing "significant slowdown" -- has blocked both ARM SVE and RISC-V RVV for over a year
+**XNNPACK excluded from default build.** The architecture allowlist in XNNPACK's cmake integration does not include riscv64, so users who do not know to explicitly set `-DUSE_XNNPACK=ON` silently lose the largest body of RISC-V-optimized code in the dependency tree (344 production RVV microkernel files) with only a build-time warning, not an error.
 
-### 12.2 No CI gating
+**Cross-project blocker.** The single most concrete technical blocker tying multiple dependencies together is the missing `cpuinfo_has_riscv_zvfh()` API in pytorch/cpuinfo (open PR #148 since 2023), which is the direct root cause of XNNPACK's 100+ failing RVV FP16 tests (XNNPACK#9886). Resolving it requires coordinated changes across cpuinfo and XNNPACK, then updating PyTorch's submodule pins.
 
-RISC-V CI does not gate any PyTorch PR. There is no mechanism by which a riscv64 regression would block a merge. This means RISC-V code paths will accumulate breakage silently until explicitly tested.
-
-The macro fix PR [#174275](https://github.com/pytorch/pytorch/pull/174275) is a concrete example: it fixes a correctness issue with Clang 20+ that would cause silent incorrect RVV detection on new toolchains, has been approved by a reviewer, but has been blocked for 5 months by an unrelated CI failure and is now going stale.
-
-### 12.3 No RISC-V CODEOWNERS
-
-There is no `RISC-V` entry in CODEOWNERS. When RISC-V code changes are submitted, there is no automatic reviewer assignment. This means reviews depend on the submitter finding a maintainer willing to review, which has historically been the primary bottleneck (PR #135570 stalled for months before being abandoned; PR #147513 was filed specifically because earlier PRs had been open "for months without maintainer attention").
-
-### 12.4 XNNPACK not in default build for riscv64
-
-The architecture allowlist in `cmake/Dependencies.cmake` does not include `riscv64` for XNNPACK, NNPACK, or QNNPACK. Users who do not know to explicitly set `-DUSE_XNNPACK=ON` will get a silent "Target architecture is not supported in XNNPACK" warning and lose 344 production RVV microkernels (the largest body of RISC-V-optimized code in the entire dependency tree).
-
-### 12.5 Dependency version mismatches in distros
-
-Ubuntu 24.04 (the current LTS, the base for PyTorch CI) ships OpenBLAS v0.3.26, which is missing `DYNAMIC_ARCH` support and ZVL targets added in later versions. The official CI cross-compiles OpenBLAS from source to avoid this. Downstream users on Ubuntu 24.04 using system OpenBLAS will get reduced BLAS performance.
+**Acceptance probability.** Despite the lack of a formal tier policy or dedicated maintainer, the trajectory through 2025-2026 is positive: a growing, labeled (`module: risc-v`), "proposal accepted" tracking issue; steady merges from ISCAS, Alibaba XuanTie, ZTE and RISE-affiliated contributors; CI infrastructure maturing through multiple iterations (manywheel Dockerfiles, native build images, a fixed cross-compile regression); and a concrete, named out-of-tree-to-in-tree CI path (RISE's pytorch-ci relay working toward PyTorch CI Level 3). The blocking factor is not community willingness to contribute but Meta/core-maintainer review bandwidth and the absence of a committed reviewer or CODEOWNERS line for RISC-V.
 
 ---
 
-## 13. Investment Analysis
+## 13. Readiness Assessment
 
-This section identifies the work required to bring riscv64 to each maturity level for PyTorch, and provides effort estimates and priority classifications.
+- **Color:** yellow (build-only-ci)
+- **Release provider:** RISE
+- **Justification:** PyTorch's only in-tree riscv64 CI, [.github/workflows/riscv64.yml](https://github.com/pytorch/pytorch/blob/main/.github/workflows/riscv64.yml), is opt-in (triggered only by a `ciflow/riscv64/*` tag or manual `workflow_dispatch`, never by `pull_request` or `schedule`) and runs a single job that cross-compiles via QEMU on x86 runners with no test-execution step, so per the CI evidence rule (build riscv64 = yes, test riscv64 = no) this is build-only CI and caps the color at yellow. No official riscv64 wheel exists on PyPI ([pypi.org/pypi/torch/json](https://pypi.org/pypi/torch/json) lists zero riscv64 files across all versions); the only riscv64 releases come from third parties -- RISE's natively-built, heavily tested wheels for torch 2.13.0 (212,038 tests, 99.998% pass rate, [riseproject.dev, 2026-08-18](https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/)) and Debian sid -- not upstream, so this is not architecture-independent. PyTorch is a general-purpose ML framework, not a speed-differentiator project per the optimization-purpose test, so no optimization-level modifier applies to this grade.
+- **Pending work that could change the grade:** The open tracking issue [#180975](https://github.com/pytorch/pytorch/issues/180975) lays out a 4-phase enablement roadmap labeled "proposal accepted." RVV ATen `Vectorized<>` work (the PR #135570/#147513-era line of effort) has not produced a confirmed, currently-merged scalar-to-vector dispatch path, and no RVV `CPUCapability` entry exists in the tree as of this report. PR [#182278](https://github.com/pytorch/pytorch/pull/182278) (native, non-QEMU build image) is stalled on maintainer re-review. The most concrete path from build-only to a tested-and-passing upstream CI grade is RISE's out-of-tree CI relay ([riseproject-dev/pytorch-ci](https://github.com/riseproject-dev/pytorch-ci), 870+ jobs, native riscv64 hardware), which is explicitly working toward in-tree PyTorch CI Level 3 (non-blocking PR checks); if that relay is merged in-tree, it would supply the test-execution evidence currently missing from the grade.
 
-Assumptions:
-- "Functional" means: PyTorch installs, runs inference on standard models (ResNet, BERT, LLaMA), and produces correct results on riscv64 hardware.
-- "Performant" means: inference throughput is within 2x of arm64 on equivalent hardware for the same model and batch size.
-- "Supported" means: riscv64 is a Tier 2 platform with in-tree CI gating PRs.
+---
 
-Effort estimates are in engineer-weeks for a senior engineer familiar with both PyTorch internals and RISC-V. They do not include ramp-up time.
+## 14. Investment Analysis
 
-### 13.1 Functional Enablement
+RISE has already funded or produced substantial work that should not be re-sized: native-hardware CI infrastructure (RISE Runners, 13,000+ jobs across 197 repos; the dedicated pytorch-ci relay, 870+ jobs), a natively-built, extensively tested riscv64 wheel for torch 2.13.0 (212,038 tests run), a milestone contract (RP013) specifically targeting ATen operator and OpenBLAS optimization on RISC-V hardware, and riscv64 wheels for immediate downstream packages (pytorch-tokenizers, executorch, tensordict). The items below are scoped against work not already covered by RISE or by a merged, upstream PR.
 
-The following items block basic functional use of PyTorch on riscv64. Most are already partially done by the community; the effort estimate is to complete and upstream them.
+### 14.1 Functional Enablement
 
-**Fix RVV detection macro ([#174275](https://github.com/pytorch/pytorch/pull/174275)).**
-PR exists, approved, blocked by stale status and unrelated CI flake. Needs: re-approval from jgong5; removal of Stale label; or reopen with fresh branch. Risk: if this PR auto-closes, the breakage on Clang 20+ will remain unaddressed.
-Effort: 1 person-week. Priority: Critical (correctness regression on new toolchains).
+- **Resolve the cpuinfo Zvfh gap.** Add `cpuinfo_has_riscv_zvfh()` to pytorch/cpuinfo (open PR #148 since 2023), then update XNNPACK's FP16 arithmetic flag ([XNNPACK#9886](https://github.com/google/XNNPACK/issues/9886)) to use it instead of unconditionally enabling it, then bump the submodule pins in pytorch/pytorch. Two-repo, cross-project coordination. Priority: Critical (FP16 inference is currently broken on all Zvfh-capable riscv64 hardware going through XNNPACK).
+- **Enable XNNPACK for riscv64 by default.** Add riscv64 to the cmake architecture allowlist, contingent on the FP16 fix above landing first. Priority: High (without this, 344 production RVV microkernels are invisible to a default build).
+- **Land a CODEOWNERS / named-reviewer entry for `module: risc-v`.** The single largest recurring bottleneck across the PR history (Section 2, 12) is review latency from a single, unassigned maintainer. Priority: High, low cost (process, not code).
+- **Merge PR #189382 and close out #175193** (zlib pin). Small, already in flight. Priority: Medium.
 
-**Fix XNNPACK FP16 test failures (XNNPACK issue [#9886](https://github.com/google/XNNPACK/issues/9886)).**
-Root cause: missing `cpuinfo_has_riscv_zvfh()` in pytorch/cpuinfo. Two-repo fix: add the API to cpuinfo, update XNNPACK to use it. Requires upstreaming to both pytorch/cpuinfo and google/XNNPACK, then updating the submodule pins in pytorch/pytorch.
-Effort: 2-3 person-weeks. Priority: Critical (FP16 inference broken on all Zvfh hardware).
+### 14.2 Performance Optimization
 
-**Merge fp16 conversion paths ([#183254](https://github.com/pytorch/pytorch/pull/183254)).**
-PR exists. Blocked by EasyCLA email link issue (author action required) and missing label. Once unblocked, needs a reviewer assignment and technical review.
-Effort: 0.5 person-weeks (if author fixes CLA; 1.5 if rebasing and re-review needed). Priority: High (performance gap for all fp16 workloads).
+- **Land RVV support in ATen's `Vectorized<>` dispatch layer.** This is the prerequisite for any RVV-accelerated elementwise/vectorizable op and for the Phase 2 micro-kernel library in #180975; status of the existing line of work (PR #135570 and its successors) is unresolved in current search results and should be re-verified directly against the repository before sizing.
+- **Validate and enable the oneDNN backend in CI.** `USE_MKLDNN=0` is hardcoded in CI despite cmake-level RVV JIT support (PR #166602) and a reported 8.85x speedup on elementwise multiply on SG2044 that has not been independently validated in PyTorch's own CI.
+- **Phase 2 micro-kernel library (tracking issue #180975, Phase 2).** GEMM/Conv/attention/normalization/activation kernels for RVV, analogous to ARM's KleidiAI. Stated intent from XuanTie/ISCAS; no PRs confirmed as filed in the live search. This is the largest single investment item and the actual performance unlock; everything else in this section is a prerequisite for it.
 
-**Merge RVV ATen vec support ([#175746](https://github.com/pytorch/pytorch/pull/175746)).**
-PR exists with one approval. Blocked by lint failure and unresolved `Vectorized<>` scalable-vector architecture question. The architectural question requires a decision from malfet on which of luhenry's five options to pursue. If option 1 (keep suboptimized copy code) is accepted, the lint fix may be sufficient to unblock. If a deeper redesign is required (options 4-5), this becomes a 3-6 month effort.
-Effort: 1-2 person-weeks if option 1 accepted; 12-20 person-weeks for full scalable-vector `Vectorized<>` redesign. Priority: Critical for Phase 2 kernel work; without this, all ATen vectorization remains scalar.
+### 14.3 CI/CD Infrastructure
 
-**Enable XNNPACK for riscv64 by default.**
-Add `riscv64` to the architecture allowlist in `cmake/Dependencies.cmake` for XNNPACK. Requires validating that the build succeeds without errors (not just a warning) and that the XNNPACK FP16 CI issue is resolved first.
-Effort: 1 person-week. Priority: High (without this, 344 production RVV microkernels are invisible to default builds).
+- **Merge PR #182278** (native, non-QEMU build image), pending maintainer re-review.
+- **Add a test-execution job to `riscv64.yml`** using native hardware (RISE can supply runners). This is the single structural change that would move the project's color grade past yellow, since the CI evidence rule requires a passing test step, not just a build step.
+- **Pursue RISE's pytorch-ci relay reaching PyTorch CI Level 3 in-tree** (non-blocking PR checks), which RISE has already stated as its own near-term goal.
 
-**Add riscv64 to CODEOWNERS.**
-Designate named reviewers for `module: risc-v` labeled PRs. Without this, every RISC-V PR requires the submitter to find a willing reviewer. The RISE RFC (rfcs#77) proposes luhenry as the designated reviewer.
-Effort: 0.1 person-weeks (process, not code). Priority: High (structural bottleneck for all future work).
+### 14.4 Ecosystem Enablement
 
-### 13.2 Performance Optimization
+- **torch.compile / Inductor RVV backend (Phase 3, #180975).** No confirmed work has started in the live search; a large, multi-quarter effort (Triton-RISCV, buddy-mlir backend).
+- **Triton / TileLang RISC-V backends (Phase 4, #180975).** Dependent on Phase 3; out of scope to size here.
+- **Close the quantization gap.** Neither FBGEMM nor QNNPACK supports riscv64; any downstream package assuming INT8/INT4 quantized inference needs a separate quantization backend story for riscv64 regardless of the core framework's status.
+- **Reconcile and publicize torch's presence on RISE's wheel_builder catalog**, since the package currently exists in RISE's GitLab PyPI registry but not on the public wheel_builder listing page, creating discoverability friction for users following RISE's documented package list.
 
-**Validate and enable oneDNN backend for riscv64 in CI.**
-`USE_MKLDNN=0` is currently hardcoded in CI despite cmake-level support. Enabling it requires: (1) validating correctness on riscv64 hardware, (2) addressing the INT8 conv/matmul gap, (3) resolving the f16 reduction overflow bug (oneDNN PR #5361). PR [#166602](https://github.com/pytorch/pytorch/pull/166602) reports 8.85x speedup for mul operations with oneDNN+RVV on SG2044; broader validation is needed.
-Effort: 3-5 person-weeks. Priority: High (largest near-term performance lever; oneDNN upstream already has RVV support).
+### 14.5 Summary Table
 
-**Implement Phase 2 ukernel library (tracking issue [#180975](https://github.com/pytorch/pytorch/issues/180975), section 2).**
-This is the full set of optimized ATen operators: GEMM/GEMV (FP32/FP16/BF16/INT8), Conv2d (direct + depthwise), SDPA/attention, RoPE, normalization (LayerNorm, RMSNorm), activation (GELU, SiLU), pooling. Analogous to KleidiAI for ARM.
-Prerequisites: RVV ATen vec merged (PR #175746), cpuinfo Zvfh API, RVV dispatch entry in `CPUCapability` enum.
-This is the work in tracking issue #180975 Phase 2. No PRs exist yet. The XuanTie/ISCAS teams have stated intent but no PRs have been filed.
-Effort: 40-80 person-weeks for production-quality GEMM + attention + normalization. Priority: High for competitive inference throughput.
-
-**OpenBLAS ZVL256B TRSM correctness fix.**
-Draft PR #5830 exists upstream (unassigned). Affects LAPACK triangular solve correctness on VLEN=256 hardware. Effort: 2-3 person-weeks to complete and upstream.
-Priority: Medium (affects LAPACK; most deep learning workloads do not call TRSM directly, but PyTorch's linear algebra module does).
-
-### 13.3 CI/CD Infrastructure
-
-**Merge native build image ([#182278](https://github.com/pytorch/pytorch/pull/182278)).**
-PR exists. Blocked by malfet not re-reviewing after revisions. luhenry has offered to remove the image from in-tree docker-builds.yml to reduce burden on Meta. If this concession is accepted, the path to merge is clear.
-Effort: 0.5 person-weeks (revisions already done; needs follow-up with malfet). Priority: High (prerequisite for moving native CI in-tree).
-
-**Establish in-tree native riscv64 test job.**
-Currently there is no test job in `riscv64.yml`. Adding one requires: (1) native runner access (RISE Runners provide this); (2) a test matrix (subset of pytorch test suite that runs in reasonable time); (3) malfet approval to add the job.
-Effort: 3-5 person-weeks. Priority: High (without tests, regressions are invisible; this is the primary structural gap).
-
-**Reach PyTorch CI Level 3 (non-blocking PR checks).**
-The RISE project states this goal for their out-of-tree CI. In-tree Level 3 requires: (1) in-tree native CI running; (2) sufficient test pass rate that the check is meaningful; (3) official workflow in riscv64.yml with test jobs. The RISE blog estimated this is achievable "fairly soon" as of May 2026 for their out-of-tree infrastructure; in-tree depends on Meta approval.
-Effort: 5-10 person-weeks (in-tree integration), assuming RISE provides hardware. Priority: Medium (nice-to-have for upstreaming confidence; not blocking functionality).
-
-**Produce riscv64 PyPI wheels.**
-No riscv64 torch wheel exists on PyPI. The RISE wheel builder serves 80+ packages but not torch. Producing wheels requires: (1) functional build; (2) manylinux riscv64 base image; (3) CI to build and upload. PR [#177722](https://github.com/pytorch/pytorch/pull/177722) was closed by the author while awaiting review. A new attempt would need to use AlmaLinux Kitten 10 or equivalent manylinux riscv64 base.
-Effort: 5-10 person-weeks. Priority: High (the single highest user-facing friction point; currently requires hours of source build to install PyTorch on riscv64).
-
-### 13.4 Ecosystem Enablement
-
-**torch.compile / Inductor backend for RISC-V (Phase 3 in #180975).**
-No work has started. Requires: Triton or a C++ Inductor backend that generates RVV code; variable-length vector optimization in the code generator; benchmarking and correctness validation. This is a 12-24 month research-and-engineering effort.
-Effort: 60-120 person-weeks. Priority: Low (prerequisite work in Phases 1-2 not yet complete).
-
-**Triton / TileLang RISC-V support (Phase 4 in #180975).**
-No work has started. Dependency on Phase 3. Not scoped here.
-Priority: Low.
-
-**ExecuTorch riscv64 (edge inference).**
-[riseproject-dev/executorch](https://github.com/riseproject-dev/executorch) exists as a fork. No published packages or validated models. Requires separate analysis.
-Priority: Medium (highest near-term relevance for embedded RISC-V deployments where full PyTorch is not appropriate).
-
-### 13.5 Summary Table
-
-| Area | Work Item | Effort (person-weeks) | Owner (current or proposed) | Priority |
+| Area | Work Item | Effort | Owner | Priority |
 |---|---|---|---|---|
-| Functional | Fix RVV detection macro PR #174275 | 1 | cltang / RISE | Critical |
-| Functional | Fix XNNPACK FP16 (cpuinfo Zvfh API + XNNPACK) | 2-3 | RISE / cpuinfo maintainers | Critical |
-| Functional | Merge RVV ATen vec PR #175746 (option 1: accept copy overhead) | 1-2 | cltang / malfet decision needed | Critical |
-| Functional | Add riscv64 to XNNPACK default build | 1 | any | High |
-| Functional | Merge fp16 conversion PR #183254 | 0.5-1.5 | Ag-Cu (CLA fix) | High |
-| Functional | Add riscv64 to CODEOWNERS | 0.1 | luhenry / RISE | High |
-| Performance | Validate + enable oneDNN in CI | 3-5 | ISCAS / XuanTie | High |
-| Performance | Phase 2 ukernel library (GEMM, attention, normalization) | 40-80 | ISCAS / XuanTie (stated intent) | High |
-| Performance | OpenBLAS ZVL256B TRSM fix | 2-3 | unassigned | Medium |
-| CI/CD | Merge native build image PR #182278 | 0.5 | luhenry / malfet re-review | High |
-| CI/CD | In-tree native test job | 3-5 | RISE + Meta | High |
-| CI/CD | riscv64 PyPI wheel production | 5-10 | RISE | High |
-| CI/CD | CI Level 3 (non-blocking PR checks) | 5-10 | RISE + Meta | Medium |
-| Ecosystem | ExecuTorch riscv64 validation | Separate analysis needed | RISE | Medium |
-| Ecosystem | torch.compile / Inductor RISC-V backend | 60-120 | XuanTie / ISCAS (Phase 3) | Low |
-| Ecosystem | Triton / TileLang RISC-V | not scoped | -- | Low |
+| Functional | cpuinfo `cpuinfo_has_riscv_zvfh()` + XNNPACK FP16 fix | Data not available: no person-week estimate found in research; cross-repo coordination (cpuinfo + XNNPACK + submodule bump in pytorch/pytorch) | cpuinfo/XNNPACK maintainers, RISE | Critical |
+| Functional | Enable XNNPACK for riscv64 by default | Data not available: no estimate in research | Any contributor | High |
+| Functional | Named reviewer / CODEOWNERS for `module: risc-v` | Data not available: process change, no estimate in research | RISE / Meta | High |
+| Functional | Close zlib pin issue (#175193 / PR #189382) | Data not available: no estimate in research | Existing PR author | Medium |
+| Performance | RVV ATen `Vectorized<>` dispatch | Data not available: status of existing PR line unresolved in research, re-verify before sizing | ISCAS / malfet decision needed | Critical |
+| Performance | Validate + enable oneDNN in CI | Data not available: no estimate in research | ISCAS / XuanTie | High |
+| Performance | Phase 2 micro-kernel library (GEMM, attention, normalization) | Data not available: no estimate in research; stated intent only, no PRs confirmed | XuanTie / ISCAS (stated intent) | High |
+| CI/CD | Merge native build image PR #182278 | Data not available: no estimate in research; revisions already made, needs re-review | luhenry / malfet re-review | High |
+| CI/CD | Add native-hardware test job to riscv64.yml | Data not available: no estimate in research | RISE + Meta | High (grade-determining) |
+| CI/CD | RISE pytorch-ci relay to in-tree CI Level 3 | Data not available: RISE's own stated goal, no committed date found | RISE | Medium |
+| Ecosystem | torch.compile / Inductor RVV backend (Phase 3) | Data not available: no estimate in research | XuanTie / ISCAS | Low |
+| Ecosystem | Triton / TileLang RISC-V (Phase 4) | Data not available: not scoped in any source | -- | Low |
+| Ecosystem | Quantization backend for riscv64 (FBGEMM/QNNPACK gap) | Data not available: no estimate in research | Unassigned | Medium |
 
-**Critical path to functional production use:** Fix PR #174275, fix cpuinfo Zvfh API, merge PR #175746 (with malfet decision), enable oneDNN in CI. Total: 8-12 person-weeks assuming Meta provides timely reviews. The primary risk is Meta review latency, not engineering capacity.
-
-**Critical path to competitive inference performance:** Complete Phase 2 ukernel library (40-80 person-weeks). This work is stated as intent by XuanTie/ISCAS but no PRs exist. Until Phase 2 is complete, all non-XNNPACK inference paths run at scalar speed.
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
+Note: the research available for this report did not contain person-week or other effort-unit estimates for any of these items (no project planning document or staffing estimate was found in the live findings); each "Data not available" entry above reflects that gap rather than an assumption. Any effort sizing should be produced as a separate engineering estimation exercise before committing resources.
 
 ---
 
 ## 15. References
 
-1. [pytorch/pytorch master tracking issue #180975](https://github.com/pytorch/pytorch/issues/180975) -- RISC-V enablement roadmap, April 2026
-2. [pytorch/pytorch RFC #171659](https://github.com/pytorch/pytorch/issues/171659) -- RISC-V Architecture Support Roadmap, January 2026
-3. [pytorch/pytorch PR #127867](https://github.com/pytorch/pytorch/pull/127867) -- First RVV kernel merged, July 2024
-4. [pytorch/pytorch PR #175746](https://github.com/pytorch/pytorch/pull/175746) -- RVV ATen vec support, open February 2026
-5. [pytorch/pytorch PR #174275](https://github.com/pytorch/pytorch/pull/174275) -- RVV detection macro fix, stale June 2026
-6. [pytorch/pytorch PR #182278](https://github.com/pytorch/pytorch/pull/182278) -- Native build image for riscv64, open May 2026
-7. [pytorch/pytorch PR #183254](https://github.com/pytorch/pytorch/pull/183254) -- Native fp16 conversion, open May 2026
-8. [pytorch/pytorch PR #166602](https://github.com/pytorch/pytorch/pull/166602) -- oneDNN backend for RISC-V, merged November 2025
-9. [pytorch/pytorch PR #181739](https://github.com/pytorch/pytorch/pull/181739) -- RISE CI relay added, merged April 2026
-10. [pytorch/pytorch PR #181977](https://github.com/pytorch/pytorch/pull/181977) -- CI relay redirect, merged May 2026
-11. [pytorch/pytorch PR #184297](https://github.com/pytorch/pytorch/pull/184297) -- Inductor cpp.march knob, merged May 2026
-12. [pytorch/pytorch issue #141550](https://github.com/pytorch/pytorch/issues/141550) -- RISC-V CI support, in Cold Storage
-13. [riseproject-dev/pytorch-ci](https://github.com/riseproject-dev/pytorch-ci) -- RISE out-of-tree CI, 41 commits
-14. [riseproject-dev/executorch](https://github.com/riseproject-dev/executorch) -- ExecuTorch RISC-V fork
-15. [RISE blog: RISE RISC-V Runners six weeks in](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/) -- May 12, 2026
-16. [RISE blog: Easy Installation of Binary Python Packages on riscv64 Devices](https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/) -- May 14, 2025
-17. [RuyiAI-Stack/pytorch issue #34](https://github.com/RuyiAI-Stack/pytorch/issues/34) -- 32 core test failures on riscv64
-18. [RuyiAI-Stack/pytorch PR #1](https://github.com/RuyiAI-Stack/pytorch/pull/1) -- riscv64 test blocklist
-19. [PyPI torch package](https://pypi.org/pypi/torch/json) -- no riscv64 binary in any version
-20. [Debian tracker: pytorch](https://tracker.debian.org/pkg/pytorch) -- v2.12.0+dfsg2-4 built for riscv64 in sid
-21. [XNNPACK issue #9886](https://github.com/google/XNNPACK/issues/9886) -- 100+ RVV FP16 test failures
-22. [PyTorch Foundation governance](https://github.com/pytorch-fdn/tac) -- TAC documents
-23. [llvm-project issue #87026](https://github.com/llvm/llvm-project/issues/87026) -- LLVM libomp native riscv64 build failure
+1. [pytorch/pytorch tracking issue #180975](https://github.com/pytorch/pytorch/issues/180975) -- RISC-V enablement roadmap, opened 2026-04-21
+2. [pytorch/pytorch issue #171659](https://github.com/pytorch/pytorch/issues/171659) -- RISC-V Architecture Support Roadmap RFC, opened 2026-01-04
+3. [pytorch/pytorch issue #147513](https://github.com/pytorch/pytorch/issues/147513) -- RFC requesting review of RISC-V/RVV PRs, opened 2025-02-20
+4. [pytorch/pytorch issue #141550](https://github.com/pytorch/pytorch/issues/141550) -- RISC-V CI support, opened 2024-11-26
+5. [pytorch/pytorch issue #175193](https://github.com/pytorch/pytorch/issues/175193) -- ZLib reference outdated in riscv CI dockerfile
+6. [pytorch/pytorch issue #116012](https://github.com/pytorch/pytorch/issues/116012) -- Protoc build issue for RISC-V
+7. [pytorch/pytorch issue #99278](https://github.com/pytorch/pytorch/issues/99278) -- libstdc++ build error on riscv
+8. [pytorch/pytorch issue #166057](https://github.com/pytorch/pytorch/issues/166057) -- GCC 14.2 ICE in DepthwiseConvKernel.cpp
+9. [pytorch/pytorch PR #127867](https://github.com/pytorch/pytorch/pull/127867) -- First RVV kernel (DepthwiseConvKernel), merged July 2024
+10. [pytorch/pytorch PR #135570](https://github.com/pytorch/pytorch/pull/135570) -- RVV support for ATen `Vec`
+11. [pytorch/pytorch PR #143979](https://github.com/pytorch/pytorch/pull/143979) -- First opt-in riscv CI build, merged Aug 2025
+12. [pytorch/pytorch PR #165717](https://github.com/pytorch/pytorch/pull/165717) -- GCC ICE workaround
+13. [pytorch/pytorch PR #166602](https://github.com/pytorch/pytorch/pull/166602) -- oneDNN backend for RISC-V, merged Nov 2025
+14. [pytorch/pytorch PR #167071](https://github.com/pytorch/pytorch/pull/167071) -- cpp_builder riscv `-march=native` fix
+15. [pytorch/pytorch PR #182278](https://github.com/pytorch/pytorch/pull/182278) -- Native build image for linux-riscv64, 1st iteration
+16. [pytorch/pytorch PR #190887](https://github.com/pytorch/pytorch/pull/190887) -- Native build image for linux-riscv64, 2nd iteration
+17. [pytorch/pytorch PR #183254](https://github.com/pytorch/pytorch/pull/183254) -- RISC-V native fp16 conversion paths
+18. [pytorch/pytorch PR #184297](https://github.com/pytorch/pytorch/pull/184297) -- Inductor `cpp.march` knob
+19. [pytorch/pytorch PR #187821](https://github.com/pytorch/pytorch/pull/187821) -- Rename RISC-V cross-compilation image
+20. [pytorch/pytorch PR #194880](https://github.com/pytorch/pytorch/pull/194880) -- Route riscv64 job back onto cross-compilation path
+21. [pytorch/pytorch PR #191225](https://github.com/pytorch/pytorch/pull/191225) -- manywheel Dockerfile for riscv64 (merged then reverted)
+22. [pytorch/pytorch PR #191657](https://github.com/pytorch/pytorch/pull/191657) -- cpu-riscv64 support in manywheel scripts (replacement)
+23. [pytorch/pytorch PR #189382](https://github.com/pytorch/pytorch/pull/189382) -- zlib fetch fix for ubuntu-cross-riscv
+24. [pytorch/pytorch PR #195345](https://github.com/pytorch/pytorch/pull/195345) -- riscv64 blocklist for test/run_test.py
+25. [pytorch/pytorch PR #198351](https://github.com/pytorch/pytorch/pull/198351) -- RVV vectorized kernel for FusedAdam
+26. [pytorch/pytorch PR #194691](https://github.com/pytorch/pytorch/pull/194691) -- Linear cross entropy ULP tolerance scoped to RISC-V
+27. [pytorch/pytorch PR #189388](https://github.com/pytorch/pytorch/pull/189388) -- `Python_SOABI` fix for cross-compiling
+28. [pytorch/pytorch PR #190003](https://github.com/pytorch/pytorch/pull/190003) -- Forward cross-compilation toolchain variables
+29. [pytorch/pytorch PR #189000](https://github.com/pytorch/pytorch/pull/189000) -- RISC-V `rdtime` fast path for `getApproximateTime`
+30. [pytorch/pytorch PR #188999](https://github.com/pytorch/pytorch/pull/188999) -- RISC-V Zihintpause CPU pause hint
+31. [pytorch/pytorch PR #183649](https://github.com/pytorch/pytorch/pull/183649) -- Migrate riscv64.yml to OSDC (ARC)
+32. [pytorch/pytorch PR #168094](https://github.com/pytorch/pytorch/pull/168094) -- Use c7i.2xlarge for riscv64 build
+33. [pytorch/pytorch PR #177722](https://github.com/pytorch/pytorch/pull/177722) -- riscv64 manywheel Docker image
+34. [pytorch/pytorch PR #178778](https://github.com/pytorch/pytorch/pull/178778) -- Restrict mkl installation to x86 only
+35. [pytorch/pytorch PR #173663](https://github.com/pytorch/pytorch/pull/173663) -- Disable cuda-bindings on riscv64 CI
+36. [pytorch/pytorch PR #173993](https://github.com/pytorch/pytorch/pull/173993) -- Enable lintrunner on riscv64 build
+37. [pytorch/pytorch PR #160172](https://github.com/pytorch/pytorch/pull/160172) -- Add build support for RISCV
+38. [pytorch/pytorch PR #141552](https://github.com/pytorch/pytorch/pull/141552) -- Doc guide for building riscv PyTorch from scratch
+39. [pytorch/pytorch PR #140816](https://github.com/pytorch/pytorch/pull/140816) -- Original RISC-V CI attempt, closed/superseded
+40. [pytorch/pytorch PR #195354](https://github.com/pytorch/pytorch/pull/195354) -- flagged as likely mislabeled / unrelated to RISC-V
+41. [.github/workflows/riscv64.yml](https://github.com/pytorch/pytorch/blob/main/.github/workflows/riscv64.yml) -- dedicated riscv64 CI workflow
+42. [RISE blog: PyTorch is available on riscv64!](https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/) -- 2026-08-18
+43. [RISE blog: RISE RISC-V Runners six weeks in](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/) -- 2026-05-12
+44. [RISE blog: Easy Installation of Binary Python Packages on riscv64 Devices](https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/) -- 2025-05-14
+45. [RISE wheel_builder catalog](https://riseproject.gitlab.io/python/wheel_builder/)
+46. [RISE Project RP013 milestone contract (Confluence)](https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/453148705/)
+47. [riseproject-dev/pytorch-ci](https://github.com/riseproject-dev/pytorch-ci) -- RISE out-of-tree CI
+48. [riseproject-dev/python-wheels](https://github.com/riseproject-dev/python-wheels) -- pytorch-tokenizers, executorch, tensordict riscv64 builds
+49. [riseproject-dev/executorch](https://github.com/riseproject-dev/executorch) -- ExecuTorch RISC-V fork
+50. [PyPI torch package JSON](https://pypi.org/pypi/torch/json) -- no riscv64 binary in any version
+51. [Ubuntu package search, resolute suite](https://packages.ubuntu.com/search?keywords=pytorch&suite=resolute&searchon=names) -- no pytorch package found
+52. [google/XNNPACK issue #9886](https://github.com/google/XNNPACK/issues/9886) -- 100+ RVV FP16 test failures
+53. [pytorch/cpuinfo PR #148](https://github.com/pytorch/cpuinfo/pull/148) -- Improve RISC-V support on Linux
+54. [llvm-project issue #87026](https://github.com/llvm/llvm-project/issues/87026) -- LLVM libomp native riscv64 build failure
+55. [PyTorch Forums: PyTorch RISC-V support](https://discuss.pytorch.org/t/pytorch-risc-v-support/212065)
+56. [Inference performance of large language models on a 64-core RISC-V CPU with silicon-enabled vectors](https://www.sciencedirect.com/science/article/abs/pii/S0167739X25005369) -- ScienceDirect
+57. [Exploring energy consumption of AI frameworks on a 64-core RV64 Server CPU](https://arxiv.org/html/2504.03774v1) -- arXiv
+58. [RISC-V International: Enabling High Performance RISC-V Software for AI in the Real World](https://riscv.org/blog/enabling-high-performance-risc-v-software-for-ai-in-the-real-world/)
+59. [RISC-V International: Ashling and Embecosm Extend PyTorch AI to RISC-V Embedded Devices](https://riscv.org/blog/ashling-and-embecosm-extend-pytorch-ai-to-risc-v-embedded-devices/)
+60. [PyTorch governance (TAC)](https://github.com/pytorch-fdn/tac)
+61. [docs.pytorch.org governance documentation](https://docs.pytorch.org/docs/main/community/governance.html)
+62. [KumaTea/pytorch-riscv64](https://github.com/KumaTea/pytorch-riscv64) -- third-party wheel repo
+63. [gounthar/riscv64-python-wheels](https://github.com/gounthar/riscv64-python-wheels) -- third-party wheel repo
+64. [xforcevesa/pytorch-riscv64-oe24](https://github.com/xforcevesa/pytorch-riscv64-oe24) -- OpenEuler riscv64 build
