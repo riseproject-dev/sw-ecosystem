@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange (downstream-only)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for Redis<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,9 +280,9 @@
 </h2>
     
 
-<p><a href="https://redis.io/">Redis</a> is an in-memory data structure store used as a database, cache, and message broker. The canonical upstream repository is <a href="https://github.com/redis/redis">redis/redis</a>. The active development branch is <code class="language-plaintext highlighter-rouge">unstable</code>; stable releases ship from versioned branches.</p>
+<p><a href="https://redis.io/">Redis</a> is an in-memory data structure store used as a database, cache, and message broker. The canonical upstream repository is <a href="https://github.com/redis/redis">redis/redis</a>. The active development branch is <code class="language-plaintext highlighter-rouge">unstable</code>; stable releases ship from versioned branches. Latest release as of this report is 8.10.2 (2026-09-17).</p>
 
-<p>Redis is controlled by <strong>Redis Ltd.</strong> (formerly Redis Inc.), a private company. There is no independent foundation, no GOVERNANCE.md, no MAINTAINERS file, and no TSC. Feature proposals require acknowledgment from Redis Ltd. employees before community work begins. Contributors must sign a Redis Software Grant and CLA assigning broad rights to Redis Ltd.</p>
+<p>Redis is controlled by <strong>Redis Ltd.</strong> (formerly Redis Labs), a private company. There is no independent foundation, no GOVERNANCE.md, no MAINTAINERS/CODEOWNERS/OWNERS file, and no TSC. Governance is informal: CONTRIBUTING.md states major changes need “an acknowledgment from the project leaders” (Redis Ltd. staff) before community work begins; minor fixes can go straight to PR. Contributors sign a Redis Software Grant and Contributor License Agreement assigning broad rights to Redis Ltd.</p>
 
 <p><strong>License history:</strong></p>
 
@@ -294,12 +295,12 @@
   </thead>
   <tbody>
     <tr>
-      <td>Redis 1.0 - 7.2 (~2009 - early 2024)</td>
+      <td>Redis 1.0 - 7.2 (through early 2024)</td>
       <td>BSD 3-Clause</td>
     </tr>
     <tr>
-      <td>Redis 7.4 - 7.8 (March 2024+)</td>
-      <td>RSALv2 or SSPLv1 (dual; non-OSI)</td>
+      <td>Redis 7.4+ (March 2024)</td>
+      <td>RSALv2 or SSPLv1 (dual, non-OSI)</td>
     </tr>
     <tr>
       <td>Redis 8.0+ (2025+)</td>
@@ -308,9 +309,13 @@
   </tbody>
 </table></div>
 
-<p>The March 2024 relicensing was contentious. Redis Ltd. acknowledged the new licenses are not OSI-approved. Redis 8.0 added AGPLv3 as a third option. The <strong>Valkey</strong> fork (Linux Foundation, 2024) emerged in direct response to the relicensing and now provides a BSD-licensed alternative.</p>
+<p>The March 2024 relicensing was contentious and is why the Linux Foundation-backed <a href="https://github.com/valkey-io/valkey">Valkey</a> fork exists as a separate, foundation-governed, BSD-licensed alternative. Redis itself remains outside any foundation.</p>
 
-<p>Redis is <strong>not</strong> a member of the RISE project (RISC-V Software Ecosystem).</p><hr />
+<p><strong>Corporate maintainers (by commit volume, inferred from email domain since no MAINTAINERS file exists):</strong> Salvatore “antirez” Sanfilippo (creator, 7,188 commits all-time, independent since leaving Redis Ltd. around 2020, returned as outside contributor in 2026); Redis Ltd. employees dominate recent activity (debing.sun@redis.com “sundb”, yuan.wang@redis.com, filipe@redis.com, jonathan.keinan@redis.com, hristo.staykov@redis.com, oran@redislabs.com, guy.benoish@redislabs.com, itamar@redislabs.com); Amazon/AWS (madolson, also a Valkey TSC member); Alibaba (zhaozhao.zz@alibaba-inc.com).</p>
+
+<p><strong>RISE membership:</strong> Redis is confirmed <strong>not</strong> listed among RISE Project members. RISE’s Premier tier (Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent) and General tier (Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE) do not include Redis Ltd.</p>
+
+<p><strong>Community culture on new ports:</strong> No formal platform-tier policy exists (unlike, e.g., Rust’s tiered-platform system). New CPU-architecture support (RISC-V, LoongArch) is accepted organically through ordinary community PRs once functionally justified and reviewed, with no dedicated port-approval process, RFC track, or named port maintainer.</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -320,7 +325,7 @@
 </h2>
     
 
-<p>Redis is portable C. It ran on RISC-V before any RISC-V-specific code was added, because the scalar fallback paths cover all architectures. Architecture-specific optimizations are a separate concern from basic portability.</p>
+<p>Redis is portable ANSI C; it ran on RISC-V via scalar fallback paths before any RISC-V-specific code existed. The timeline below covers architecture-specific optimization and portability work only.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -332,38 +337,66 @@
   </thead>
   <tbody>
     <tr>
+      <td>2023-06-27</td>
+      <td>First RISC-V-specific commit <code class="language-plaintext highlighter-rouge">ef4bb4e</code> (“Add RISC-V debug support”, #12349) by michalbiesek: adds crash-backtrace register access in <code class="language-plaintext highlighter-rouge">src/debug.c</code></td>
+      <td><a href="https://github.com/redis/redis">commit</a></td>
+    </tr>
+    <tr>
       <td>2025-08-14</td>
-      <td><a href="https://github.com/redis/redis/pull/14251">PR #14251</a> merged: RISC-V <code class="language-plaintext highlighter-rouge">mtime</code> CSR monotonic clock support</td>
+      <td><a href="https://github.com/redis/redis/pull/14251">PR #14251</a> merged: <code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> RISC-V <code class="language-plaintext highlighter-rouge">mtime</code> CSR monotonic clock, tested on Sophgo SG2042, ~2.78x faster than POSIX clock</td>
       <td>GitHub PR</td>
     </tr>
     <tr>
+      <td>2025-09-26</td>
+      <td><a href="https://github.com/redis/redis/issues/14383">Issue #14383</a> opened: “Performance improvement plans for Redis under RISC-V?” - still unanswered as of 2026-10-01</td>
+      <td>GitHub issue</td>
+    </tr>
+    <tr>
       <td>2025-10-11</td>
-      <td><a href="https://github.com/redis/redis/pull/14342">PR #14342</a> merged: SipHash unaligned access via Zicclsm</td>
+      <td><a href="https://github.com/redis/redis/pull/14342">PR #14342</a> merged: SipHash unaligned access via Zicclsm, GCC &gt;=14.1.0, +65.5% hashing throughput on SG2044. Supersedes closed <a href="https://github.com/redis/redis/pull/14166">PR #14166</a> (unconditional unaligned access, closed by author 2025-10-15 after maintainer sundb objected that not all RISC-V cores support unaligned access)</td>
       <td>GitHub PR</td>
     </tr>
     <tr>
       <td>2025-11-18</td>
-      <td>Both above optimizations shipped in Redis 8.4.0</td>
-      <td>Release branch analysis</td>
+      <td>#14251 and #14342 ship in Redis 8.4.0 (confirmed by <code class="language-plaintext highlighter-rouge">git merge-base --is-ancestor</code>; neither is an ancestor of the earlier 8.2.0/8.2.1 tags)</td>
+      <td>Release tag ancestry</td>
+    </tr>
+    <tr>
+      <td>2026-01-05</td>
+      <td><a href="https://github.com/redis/redis/pull/14660">PR #14660</a> opened: riscv64 QEMU build+smoke-test CI job. Still open, zero maintainer engagement as of 2026-10-01</td>
+      <td>GitHub PR</td>
     </tr>
     <tr>
       <td>2026-05-14</td>
-      <td><a href="https://github.com/redis/redis/pull/15204">PR #15204</a> opened: BITCOUNT Zbb popcount</td>
+      <td><a href="https://github.com/redis/redis/pull/15204">PR #15204</a> opened: BITCOUNT Zbb <code class="language-plaintext highlighter-rouge">cpop</code> popcount, +288% throughput / -74% latency on SG2044. Still open, no reviewer comments</td>
       <td>GitHub PR</td>
     </tr>
     <tr>
       <td>2026-05-27</td>
-      <td><a href="https://github.com/redis/redis/pull/15273">PR #15273</a> opened: HyperLogLog RVV vectorization</td>
+      <td><a href="https://github.com/redis/redis/pull/15273">PR #15273</a> opened: HyperLogLog RVV vectorization for PFCOUNT/PFMERGE. Still open, no reviewer comments</td>
+      <td>GitHub PR</td>
+    </tr>
+    <tr>
+      <td>2026-08-26</td>
+      <td><a href="https://github.com/redis/redis/pull/15710">PR #15710</a> merged (commit <code class="language-plaintext highlighter-rouge">b1b5c85</code>): routes monotonic-clock fallback diagnostics through <code class="language-plaintext highlighter-rouge">serverLog</code> instead of stderr on the shared x86/aarch64/riscv init path. Merged but <strong>not yet shipped in any tagged release</strong> as of 2026-10-01 (not an ancestor of 8.10.1/8.10.2; next minor, e.g. 8.12.0, not yet cut)</td>
+      <td>GitHub PR / git ancestry</td>
+    </tr>
+    <tr>
+      <td>2026-09-14</td>
+      <td><a href="https://github.com/redis/redis/pull/15785">PR #15785</a> and <a href="https://github.com/redis/redis/pull/15786">PR #15786</a> opened: Zbc and Zvbc accelerated CRC64 for RDB/AOF. Both open, unmerged</td>
+      <td>GitHub PR</td>
+    </tr>
+    <tr>
+      <td>2026-09-24</td>
+      <td><a href="https://github.com/redis/redis/pull/15858">PR #15858</a> (SipHash Zbb build/runtime dispatch) and <a href="https://github.com/redis/redis/pull/15859">PR #15859</a> (monotonic clock mulhu reciprocal) opened. Both open, each blocked by Bugbot-flagged bugs (see Section 11)</td>
       <td>GitHub PR</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No RISC-V-specific commits predate August 2025 in the public commit history. There is no master tracking issue or riscv64 port umbrella issue. Work is incremental, with individual PRs targeting specific subsystems.</p>
+<p><strong>No master tracking issue or riscv64-port umbrella issue exists.</strong> Issue #14383 is the closest candidate but is an unanswered user question, not a roadmap. All RISC-V work is tracked as a series of independent, author-driven PRs.</p>
 
-<p>The primary contributor is <strong>huangzhengx</strong> (4 of 5 RISC-V PRs). Their fork history links to the <code class="language-plaintext highlighter-rouge">zte-riscv</code> org, suggesting a ZTE RISC-V affiliation [NEEDS VERIFICATION]. A second contributor, <strong>Polaris-911</strong>, authored PR #14342; the same fork history links to <code class="language-plaintext highlighter-rouge">zte-riscv</code> [NEEDS VERIFICATION]. All PRs target <code class="language-plaintext highlighter-rouge">unstable</code>.</p>
-
-<p>The core reviewer and merger for all accepted RISC-V work is <strong>sundb</strong> (debing.sun), a Redis organization member based in Fuzhou. <strong>fcostaoliveira</strong> has been requested as reviewer on three PRs (#14342, #15204, #15273) but has not commented on any of them.</p><hr />
+<p><strong>Contributors:</strong> huangzhengx (email domain sanechips.com.cn, Sanechips being ZTE’s semiconductor subsidiary; tested on Sophgo SG2042; authored #14251 and the earlier, closed #14166), Polaris-911 (email domain zte.com.cn, authored the merged #14342), ww8191201-coder (authored the two newest, as-yet-unmerged #15858 and #15859), anuphalarnkar (authored CI PR #14660, validated locally on x86_64 via Docker+QEMU/binfmt), michalbiesek (first-ever riscv commit, 2023, debug support). The primary reviewer and merger for accepted RISC-V work is <strong>sundb</strong> (debing.sun@redis.com), a Redis org member. <strong>fcostaoliveira</strong> has been requested as reviewer on multiple PRs but has not substantively engaged with any of them.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -373,11 +406,52 @@
 </h2>
     
 
-<p>No PLATFORMS.md, SUPPORT.md, or architecture tier policy document exists in the repository. Redis officially documents support for Linux, macOS, OpenBSD, NetBSD, and FreeBSD. Both little- and big-endian are supported. Both 32-bit and 64-bit. No CPU architecture tier list is published.</p>
+<p>No PLATFORMS.md, SUPPORT.md, or architecture-tier policy document exists in the repository. README.md states only: “Redis can be compiled and used on Linux, OSX, OpenBSD, NetBSD, FreeBSD. We support big endian and little endian architectures, and both 32-bit and 64-bit systems,” with Solaris-derived systems marked best-effort only. No CPU-architecture tier list is published.</p>
 
-<p>RISC-V has no formal support tier. It is a community-contributed target with no upstream CI coverage and no Redis Ltd. ownership of the port.</p>
+<p>RISC-V has no formal support tier. It is a community-contributed target with zero upstream CI coverage and zero Redis Ltd. ownership of the port.</p>
 
-<p>The CONTRIBUTING.md states the team is “very overloaded” and PRs may wait significant time. The two open RISC-V PRs (#15204, #15273) have been open since May 2026 with zero reviews and zero maintainer comments, confirming this in practice.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CI build/test</td>
+      <td>Every PR (<code class="language-plaintext highlighter-rouge">ubuntu-latest</code>)</td>
+      <td>Every PR, native (<code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code>)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Official Docker platform</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (image-level, not CI-validated by Redis’s own pipeline)</td>
+    </tr>
+    <tr>
+      <td>Documented minimum toolchain</td>
+      <td>Implicit (GCC/Clang unspecified)</td>
+      <td>Implicit</td>
+      <td>Implicit; GCC &gt;=14.1.0 needed only to activate the Zicclsm SipHash path</td>
+    </tr>
+    <tr>
+      <td>SIMD/vector acceleration</td>
+      <td>AVX2/AVX512 (bitops, HLL)</td>
+      <td>NEON (bitops, HLL)</td>
+      <td>None merged (RVV HLL/popcount PRs open, unmerged)</td>
+    </tr>
+    <tr>
+      <td>Formal tier designation</td>
+      <td>None (de facto primary)</td>
+      <td>None (de facto primary)</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -387,82 +461,126 @@
 </h2>
     
 
-<p>Redis has no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory, no <code class="language-plaintext highlighter-rouge">.S</code> assembly files for RISC-V, and no JIT backends. All RISC-V architecture-specific code is inline guards within shared files. The following table covers every file with architecture-guarded paths.</p>
+<p>Redis has no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory, no <code class="language-plaintext highlighter-rouge">.S</code> assembly files for RISC-V, and no JIT backend (Redis has no JIT at all in core - this is not comparable to V8/LuaJIT). All RISC-V-specific code is inline <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> guards within shared source files, confirmed by direct source reads of commit <code class="language-plaintext highlighter-rouge">b540ca49cba815f3fbe634363c3df68d4f4f127a</code>.</p>
+
+<p><strong>Files touching each architecture (<code class="language-plaintext highlighter-rouge">src/*.c</code>):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>File</th>
-      <th>amd64/x86_64</th>
-      <th>arm64/AArch64</th>
-      <th>riscv64 (current, merged)</th>
+      <th>Arch</th>
+      <th>Files with arch-specific code</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">src/monotonic.c</code></td>
-      <td><code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> + <code class="language-plaintext highlighter-rouge">__x86_64__</code>: reads <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code>, <code class="language-plaintext highlighter-rouge">rdtsc</code></td>
-      <td><code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> + <code class="language-plaintext highlighter-rouge">__aarch64__</code>: <code class="language-plaintext highlighter-rouge">mrs cntvct_el0 / cntfrq_el0</code></td>
-      <td><code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> + <code class="language-plaintext highlighter-rouge">__riscv</code> + <code class="language-plaintext highlighter-rouge">__linux__</code>: reads <code class="language-plaintext highlighter-rouge">/proc/device-tree/cpus/timebase-frequency</code>, <code class="language-plaintext highlighter-rouge">csrr time</code> – merged PR #14251</td>
+      <td>x86_64</td>
+      <td>8: bitops.c, crccombine.c, crcspeed.c, debug.c, hyperloglog.c, lzf_c.c, monotonic.c, siphash.c</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">src/siphash.c</code></td>
-      <td><code class="language-plaintext highlighter-rouge">UNALIGNED_LE_CPU</code>: direct <code class="language-plaintext highlighter-rouge">uint64_t</code> cast via <code class="language-plaintext highlighter-rouge">__x86_64__</code>/<code class="language-plaintext highlighter-rouge">__i386__</code></td>
-      <td><code class="language-plaintext highlighter-rouge">UNALIGNED_LE_CPU</code>: <code class="language-plaintext highlighter-rouge">__aarch64__</code>/<code class="language-plaintext highlighter-rouge">__arm64__</code></td>
-      <td><code class="language-plaintext highlighter-rouge">UNALIGNED_LE_CPU</code>: <code class="language-plaintext highlighter-rouge">__riscv &amp;&amp; __riscv_zicclsm</code> – merged PR #14342</td>
+      <td>aarch64</td>
+      <td>5: bitops.c, debug.c, hyperloglog.c, monotonic.c, siphash.c</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">src/config.h</code></td>
-      <td><code class="language-plaintext highlighter-rouge">HAVE_POPCNT</code>, <code class="language-plaintext highlighter-rouge">HAVE_AVX2</code>, <code class="language-plaintext highlighter-rouge">HAVE_AVX512</code></td>
-      <td><code class="language-plaintext highlighter-rouge">HAVE_AARCH64_NEON</code></td>
-      <td>No guards currently; <code class="language-plaintext highlighter-rouge">HAVE_POPCNT</code> for <code class="language-plaintext highlighter-rouge">__riscv &amp;&amp; __riscv_zbb</code> pending PR #15204; <code class="language-plaintext highlighter-rouge">HAVE_RISCV_RVV</code> for <code class="language-plaintext highlighter-rouge">__riscv &amp;&amp; __riscv_v_intrinsic</code> pending PR #15273</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">src/bitops.c</code></td>
-      <td><code class="language-plaintext highlighter-rouge">HAVE_AVX512</code>: <code class="language-plaintext highlighter-rouge">_mm512_popcnt_epi64</code>; <code class="language-plaintext highlighter-rouge">HAVE_AVX2</code>: 256-bit; <code class="language-plaintext highlighter-rouge">HAVE_POPCNT</code>: <code class="language-plaintext highlighter-rouge">__builtin_cpu_supports("popcnt")</code></td>
-      <td><code class="language-plaintext highlighter-rouge">HAVE_AARCH64_NEON</code>: <code class="language-plaintext highlighter-rouge">vcntq_u8 + vpadalq</code></td>
-      <td>Scalar fallback only currently; <code class="language-plaintext highlighter-rouge">cpop</code>/Zbb integration pending PR #15204</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">src/hyperloglog.c</code></td>
-      <td><code class="language-plaintext highlighter-rouge">HAVE_AVX2</code>: <code class="language-plaintext highlighter-rouge">hllMergeDenseAVX2</code> + <code class="language-plaintext highlighter-rouge">hllDenseCompressAVX2</code>, <code class="language-plaintext highlighter-rouge">__m256i</code></td>
-      <td><code class="language-plaintext highlighter-rouge">HAVE_AARCH64_NEON</code>: <code class="language-plaintext highlighter-rouge">hllMergeDenseAarch64</code> + <code class="language-plaintext highlighter-rouge">hllDenseCompressAarch64</code>, <code class="language-plaintext highlighter-rouge">uint8x16_t</code>/<code class="language-plaintext highlighter-rouge">uint32x4_t</code></td>
-      <td>Scalar fallback only currently; <code class="language-plaintext highlighter-rouge">hllMergeDenseRVV</code> + <code class="language-plaintext highlighter-rouge">hllDenseCompressRVV</code> pending PR #15273</td>
+      <td>riscv64</td>
+      <td>3: debug.c, monotonic.c, siphash.c</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="merged-subsystem-details">
-  
-  
-    <a href="#merged-subsystem-details" class="anchor-heading" aria-labelledby="merged-subsystem-details"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Merged subsystem details
-  
-  
-</h3>
-    
 
-<p><strong>Monotonic clock (PR #14251, merged 2025-08-14)</strong></p>
-
-<p>Adds <code class="language-plaintext highlighter-rouge">monotonicInit_riscv()</code> in <code class="language-plaintext highlighter-rouge">src/monotonic.c</code> gated on <code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK &amp;&amp; __riscv &amp;&amp; __linux__</code>. Reads the RISC-V <code class="language-plaintext highlighter-rouge">mtime</code> CSR via inline assembly (<code class="language-plaintext highlighter-rouge">csrr time</code>), bootstrapping tick rate from <code class="language-plaintext highlighter-rouge">/proc/device-tree/cpus/timebase-frequency</code> (supports both 32-bit and 64-bit big-endian device tree entries). The <code class="language-plaintext highlighter-rouge">__linux__</code> guard was added during review because BSDs support RISC-V but mostly lack procfs. Benchmark on Sophgo SG2042 (10M iterations): RISC-V clock 286,378 us vs. POSIX <code class="language-plaintext highlighter-rouge">clock_gettime</code> 794,999 us – <strong>2.78x faster</strong>. Requires <code class="language-plaintext highlighter-rouge">-DUSE_PROCESSOR_CLOCK</code> at build time. This flag is NOT enabled by default for RISC-V, unlike AArch64 where it is on by default.</p>
-
-<p><strong>SipHash unaligned access (PR #14342, merged 2025-10-11)</strong></p>
-
-<p>Adds <code class="language-plaintext highlighter-rouge">__riscv &amp;&amp; __riscv_zicclsm</code> to the <code class="language-plaintext highlighter-rouge">UNALIGNED_LE_CPU</code> guard in <code class="language-plaintext highlighter-rouge">src/siphash.c</code>. Zicclsm (unaligned memory access) is mandatory per the RVA20U64 profile specification. Detection requires GCC 14.1.0+ which exposes the <code class="language-plaintext highlighter-rouge">__riscv_zicclsm</code> preprocessor macro. Cores without Zicclsm fall back to the safe byte-by-byte path. Benchmark on SG2044 (10 runs x 10M hashes): 6,482,733 hashes/sec (disabled) vs. 10,732,524 hashes/sec (enabled) – <strong>+65.5% SipHash throughput</strong>. This PR superseded the closed PR #14166, which had attempted unconditional enablement. Reviewer sundb correctly rejected the unconditional approach, noting that unlike x86 and arm64, RISC-V does not universally support unaligned access.</p>
-<h3 id="open-subsystem-details">
+<p><code class="language-plaintext highlighter-rouge">src/Makefile</code>’s <code class="language-plaintext highlighter-rouge">uname_M</code> arch-detection block has entries for aarch64/arm/Darwin-arm64 but <strong>no riscv64 entry at all</strong>; riscv64 silently falls through to the generic Linux path. <code class="language-plaintext highlighter-rouge">src/config.h</code> defines <code class="language-plaintext highlighter-rouge">HAVE_AVX2</code>, <code class="language-plaintext highlighter-rouge">HAVE_AVX512</code>, <code class="language-plaintext highlighter-rouge">HAVE_AARCH64_NEON</code> - there is no <code class="language-plaintext highlighter-rouge">HAVE_RISCV_*</code> of any kind on the current default branch.</p>
+<h3 id="component-by-component-detail">
   
   
-    <a href="#open-subsystem-details" class="anchor-heading" aria-labelledby="open-subsystem-details"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Open subsystem details
+    <a href="#component-by-component-detail" class="anchor-heading" aria-labelledby="component-by-component-detail"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Component-by-component detail
   
   
 </h3>
     
 
-<p><strong>BITCOUNT popcount (PR #15204, open since 2026-05-14)</strong></p>
+<p><strong>Monotonic clock (<code class="language-plaintext highlighter-rouge">src/monotonic.c</code>, PR #14251, merged 2025-08-14).</strong> Gated on <code class="language-plaintext highlighter-rouge">defined(USE_PROCESSOR_CLOCK) &amp;&amp; defined(__riscv) &amp;&amp; defined(__linux__)</code>. Reads the RISC-V <code class="language-plaintext highlighter-rouge">time</code> CSR directly via inline assembly (<code class="language-plaintext highlighter-rouge">asm volatile("csrr %0, time" : "=r"(val));</code>), with tick rate computed from <code class="language-plaintext highlighter-rouge">/proc/device-tree/cpus/timebase-frequency</code> (handles both 32-bit big-endian and 64-bit encodings). Benchmark on Sophgo SG2042, 10M iterations: 286,378 us (RISC-V path) vs. 794,999 us (POSIX <code class="language-plaintext highlighter-rouge">clock_gettime</code>) - <strong>~2.78x faster</strong>. No ISA extension beyond base <code class="language-plaintext highlighter-rouge">__riscv</code> CSR read. Complete and functional, but <code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> is <strong>not enabled by default for riscv64</strong>, unlike AArch64 where the equivalent clock path is default-on.</p>
 
-<p>Adds <code class="language-plaintext highlighter-rouge">__riscv &amp;&amp; __riscv_zbb</code> branch to <code class="language-plaintext highlighter-rouge">config.h</code> defining <code class="language-plaintext highlighter-rouge">HAVE_POPCNT</code>. Uses <code class="language-plaintext highlighter-rouge">__builtin_popcountll</code>, which compiles to the <code class="language-plaintext highlighter-rouge">cpop</code> instruction when Zbb is enabled. Unlike x86_64 which requires runtime <code class="language-plaintext highlighter-rouge">CPUID</code> detection, the RISC-V path sets <code class="language-plaintext highlighter-rouge">use_popcnt = 1</code> statically at compile time (Zbb availability is a compile-time flag, not runtime-detectable). Benchmark on SG2044: <strong>+288% throughput, -74% latency</strong>. Targeted for Redis 8.10. No reviewer has commented.</p>
+<p><strong>SipHash unaligned access (<code class="language-plaintext highlighter-rouge">src/siphash.c</code> line 72, PR #14342, merged 2025-10-11).</strong> Extends the <code class="language-plaintext highlighter-rouge">UNALIGNED_LE_CPU</code> fast-path condition to RISC-V when <code class="language-plaintext highlighter-rouge">__riscv_zicclsm</code> is defined (requires GCC &gt;=14.1.0 to expose the macro). Zicclsm (misaligned load/store capability) is mandatory under the RVA20U64 profile. Benchmark on SG2044, 10 runs x 10M hashes: 6,482,733 hashes/sec -&gt; 10,732,524 hashes/sec, <strong>+65.5%</strong>. This is a one-line, complete conditional - nothing further is needed here.</p>
 
-<p><strong>HyperLogLog RVV vectorization (PR #15273, open since 2026-05-27)</strong></p>
+<p><strong>Crash backtraces / register dump (<code class="language-plaintext highlighter-rouge">src/debug.c</code>).</strong> Two <code class="language-plaintext highlighter-rouge">#elif defined(__riscv)</code> branches: PC extraction via <code class="language-plaintext highlighter-rouge">uc_mcontext.__gregs[REG_PC]</code>, and a full 32-register integer dump (ra, gp, tp, t0-t6, s0-s11, a0-a7) logged via <code class="language-plaintext highlighter-rouge">serverLog</code>. No ISA extension used. <strong>Full parity</strong> with x86_64/aarch64 - genuine, complete support, not a stub.</p>
 
-<p>Adds approximately 125 lines implementing <code class="language-plaintext highlighter-rouge">hllMergeDenseRVV</code> and <code class="language-plaintext highlighter-rouge">hllDenseCompressRVV</code> using RVV vector intrinsics (<code class="language-plaintext highlighter-rouge">vrgather</code>, <code class="language-plaintext highlighter-rouge">vand</code>, <code class="language-plaintext highlighter-rouge">vsll</code>, <code class="language-plaintext highlighter-rouge">vmaxu</code>, <code class="language-plaintext highlighter-rouge">vle32</code>, <code class="language-plaintext highlighter-rouge">vsrl</code>, <code class="language-plaintext highlighter-rouge">vse8</code>). Gated on <code class="language-plaintext highlighter-rouge">__riscv_v_intrinsic</code> compile-time detection (requires <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>). Includes a <code class="language-plaintext highlighter-rouge">simd_enabled</code> runtime override toggle, consistent with the AVX2 and NEON paths. Falls back to scalar for the last 16 registers. Mirrors the structure of the existing AArch64 NEON path. No benchmark numbers have been posted. Targeted for Redis 8.10. No reviewer has commented.</p><hr />
+<p><strong>xxHash RVV implementation (<code class="language-plaintext highlighter-rouge">deps/xxhash/xxhash.h</code>, vendored dependency, not Redis-authored).</strong> Direct source inspection of the vendored copy shows a <strong>complete, production RVV 1.0 vector implementation</strong>, not a placeholder: <code class="language-plaintext highlighter-rouge">XXH3_accumulate_512_rvv</code>, <code class="language-plaintext highlighter-rouge">XXH3_scrambleAcc_rvv</code>, and <code class="language-plaintext highlighter-rouge">XXH3_initCustomSecret_rvv</code> using <code class="language-plaintext highlighter-rouge">vsetvl_e64m2</code>, <code class="language-plaintext highlighter-rouge">vle64_v_u64m2</code>, <code class="language-plaintext highlighter-rouge">vxor_vv_u64m2</code>, <code class="language-plaintext highlighter-rouge">vsrl_vx_u64m2</code>, <code class="language-plaintext highlighter-rouge">vand_vx_u64m2</code>, <code class="language-plaintext highlighter-rouge">vrgather_vv_u64m2</code>, <code class="language-plaintext highlighter-rouge">vmacc_vv_u64m2</code>, <code class="language-plaintext highlighter-rouge">vadd_vv_u64m2</code>, <code class="language-plaintext highlighter-rouge">vmul_vx_u64m2</code>, <code class="language-plaintext highlighter-rouge">vse64_v_u64m2</code>, version-gated on <code class="language-plaintext highlighter-rouge">__riscv_v_intrinsic &gt;= 1000000</code> with a compatibility shim for pre/post-1.0 intrinsic naming. This is wired into the dispatch when <code class="language-plaintext highlighter-rouge">__riscv_vector</code> is defined. This full RVV path is auto-selected by compiler predefined macros, with no explicit Redis build flag required.</p>
+
+<p><strong>CRC64 (<code class="language-plaintext highlighter-rouge">src/crc64.c</code>/<code class="language-plaintext highlighter-rouge">src/crcspeed.c</code>).</strong> No <code class="language-plaintext highlighter-rouge">__riscv</code> guard anywhere in these files currently - scalar table-driven only, identical to x86_64/aarch64 (neither of which has hardware CRC acceleration in Redis either). PRs #15785 (Zbc) and #15786 (Zvbc) would add RISC-V-specific acceleration here, which would put riscv64 <strong>ahead</strong> of x86_64/aarch64 on this specific operation if merged, but neither is merged.</p>
+
+<p><strong>Bitops/popcount (<code class="language-plaintext highlighter-rouge">src/bitops.c</code>) and HyperLogLog (<code class="language-plaintext highlighter-rouge">src/hyperloglog.c</code>).</strong> x86_64 has full AVX2 (<code class="language-plaintext highlighter-rouge">__m256i</code>) plus AVX512/VPOPCNTDQ with runtime CPU dispatch; aarch64 has full NEON (<code class="language-plaintext highlighter-rouge">vcntq_u8</code>/<code class="language-plaintext highlighter-rouge">uint8x16_t</code>) dispatch. riscv64 has <strong>zero code in either file today</strong> - falls through to <code class="language-plaintext highlighter-rouge">__builtin_popcountll</code> scalar / scalar HLL merge. PR #15204 (Zbb <code class="language-plaintext highlighter-rouge">cpop</code>) and PR #15273 (RVV) would close these gaps; both open, unmerged.</p>
+
+<p><strong>jemalloc <code class="language-plaintext highlighter-rouge">quantum.h</code> (vendored).</strong> Sets <code class="language-plaintext highlighter-rouge">LG_QUANTUM 4</code> (16-byte allocation quantum) for <code class="language-plaintext highlighter-rouge">__riscv</code>/<code class="language-plaintext highlighter-rouge">__riscv__</code>, matching other 64-bit architectures - one-line allocator-alignment constant, not algorithmic logic.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64 (merged)</th>
+      <th>riscv64 (if open PRs merge)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Monotonic clock</td>
+      <td>Full (TSC), default-on</td>
+      <td>Full (<code class="language-plaintext highlighter-rouge">cntvct_el0</code>), default-on</td>
+      <td>Full (<code class="language-plaintext highlighter-rouge">csrr time</code>), <strong>opt-in only</strong></td>
+      <td>Full, opt-in only</td>
+    </tr>
+    <tr>
+      <td>SipHash unaligned access</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full (Zicclsm, GCC &gt;=14.1.0)</td>
+      <td>Full</td>
+    </tr>
+    <tr>
+      <td>Crash/debug register dump</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full</td>
+    </tr>
+    <tr>
+      <td>CRC64</td>
+      <td>Scalar</td>
+      <td>Scalar</td>
+      <td>Scalar</td>
+      <td>Zbc/Zvbc accelerated (2.2x-9.6x)</td>
+    </tr>
+    <tr>
+      <td>BITCOUNT popcount</td>
+      <td>AVX512/AVX2/scalar dispatch</td>
+      <td>NEON</td>
+      <td>Missing (scalar fallback)</td>
+      <td>Zbb <code class="language-plaintext highlighter-rouge">cpop</code></td>
+    </tr>
+    <tr>
+      <td>HyperLogLog dense merge</td>
+      <td>AVX2</td>
+      <td>NEON</td>
+      <td>Missing (scalar fallback)</td>
+      <td>RVV</td>
+    </tr>
+    <tr>
+      <td>xxHash (vendored dep)</td>
+      <td>SSE2/AVX2/AVX512</td>
+      <td>NEON/SVE</td>
+      <td><strong>RVV, complete</strong></td>
+      <td>(already complete)</td>
+    </tr>
+    <tr>
+      <td>CI verification</td>
+      <td>Every PR</td>
+      <td>Every PR</td>
+      <td>None</td>
+      <td>None (CI PR #14660 separate and stalled)</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -472,7 +590,7 @@
 </h2>
     
 
-<p>Redis uses GNU Make for the core server. CMake is present only for the optional modules build (<code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code>). There are no riscv64-specific CMakeLists.txt files, toolchain files, or Dockerfiles in the repository.</p>
+<p>Redis core builds via GNU Make (<code class="language-plaintext highlighter-rouge">src/Makefile</code>/top-level <code class="language-plaintext highlighter-rouge">Makefile</code>). There is <strong>no root <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code></strong> for core; CMake appears only inside vendored <code class="language-plaintext highlighter-rouge">deps/hiredis</code> (generic, no arch-specific options) and in separately-repositoried bundled modules pulled in via <code class="language-plaintext highlighter-rouge">make modules-update</code>. No <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, no <code class="language-plaintext highlighter-rouge">docs/building.md</code>, no <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> exist - README.md is the only build documentation and does not mention riscv/riscv64 anywhere. No <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code> or <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code> exists; no <code class="language-plaintext highlighter-rouge">cmake/</code> directory exists at all outside <code class="language-plaintext highlighter-rouge">deps/hiredis</code>. <code class="language-plaintext highlighter-rouge">src/Makefile</code> has no <code class="language-plaintext highlighter-rouge">CROSS_COMPILE</code> variable.</p>
 <h3 id="native-build-riscv64-linux">
   
   
@@ -485,7 +603,7 @@
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span> <span class="nv">BUILD_TLS</span><span class="o">=</span><span class="nb">yes</span>
 </code></pre></div></div>
 
-<p>The Makefile auto-detects <code class="language-plaintext highlighter-rouge">uname -m</code> at build time. No <code class="language-plaintext highlighter-rouge">ARCH=</code> flag is required.</p>
+<p>The Makefile auto-detects <code class="language-plaintext highlighter-rouge">uname -m</code> at build time; no <code class="language-plaintext highlighter-rouge">ARCH=</code> flag is required or supported.</p>
 <h3 id="cross-compilation">
   
   
@@ -495,7 +613,7 @@
 </h3>
     
 
-<p>No official cross-compilation documentation exists. The <code class="language-plaintext highlighter-rouge">deps/Makefile</code> has hooks for it via the Debian packaging convention:</p>
+<p>No official cross-compilation documentation exists anywhere in the repository. A side-effect path exists via ordinary Make <code class="language-plaintext highlighter-rouge">CC</code>/<code class="language-plaintext highlighter-rouge">CXX</code> overriding combined with the Debian packaging convention:</p>
 
 <div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">DEB_HOST_GNU_TYPE</span><span class="o">=</span>riscv64-linux-gnu
 make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <span class="se">\</span>
@@ -507,7 +625,7 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
      <span class="nv">BUILD_WITH_MODULES</span><span class="o">=</span>no
 </code></pre></div></div>
 
-<p>When <code class="language-plaintext highlighter-rouge">DEB_HOST_GNU_TYPE</code> is set, <code class="language-plaintext highlighter-rouge">deps/Makefile</code> passes <code class="language-plaintext highlighter-rouge">--host=$(DEB_HOST_GNU_TYPE)</code> to jemalloc’s configure. <code class="language-plaintext highlighter-rouge">MALLOC=libc</code> bypasses jemalloc entirely, which is the safest cross-compile option.</p>
+<p>When <code class="language-plaintext highlighter-rouge">DEB_HOST_GNU_TYPE</code> is set, <code class="language-plaintext highlighter-rouge">deps/Makefile</code> passes <code class="language-plaintext highlighter-rouge">--host=$(DEB_HOST_GNU_TYPE)</code> to jemalloc’s configure script. <code class="language-plaintext highlighter-rouge">MALLOC=libc</code> bypasses jemalloc entirely and is the safer cross-compile option. This path is not documented or maintained by upstream; it is inferred from Makefile mechanics, not a tested/supported riscv64 flow.</p>
 <h3 id="toolchain-requirements">
   
   
@@ -517,74 +635,32 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
 </h3>
     
 
-<p>No minimum GCC or Clang version is documented in the repository. Constraints inferred from source:</p>
+<p>No riscv64-specific minimum compiler version is documented or enforced in code beyond the Zicclsm detection. General (architecture-agnostic) requirements for the full <code class="language-plaintext highlighter-rouge">make bootstrap</code> build per README.md: LLVM 21, CMake 3.25 &lt;= version &lt;= 3.31.6 (CMake 4.x unsupported, used only for bundled modules), Rust 1.94, OpenSSL, Python 3. These apply uniformly regardless of target architecture.</p>
 
 <ul>
-  <li><strong>C11 <code class="language-plaintext highlighter-rouge">_Atomic</code></strong>: Required for the HNSW vector set data structure. The Makefile tests for it at build time. If absent, the build falls back to <code class="language-plaintext highlighter-rouge">-std=c99</code> and disables vector sets (<code class="language-plaintext highlighter-rouge">SKIP_VEC_SETS=yes</code> is set automatically). GCC 4.9+ supports this; in practice GCC 6+ is assumed.</li>
-  <li><strong>GCC 14.1.0+</strong>: Required to use the <code class="language-plaintext highlighter-rouge">__riscv_zicclsm</code> macro for the SipHash optimization (PR #14342). Older toolchains will not activate the Zicclsm path but will build correctly.</li>
-  <li><strong>AlmaLinux/Rocky 8 builds use <code class="language-plaintext highlighter-rouge">gcc-toolset-13</code></strong>, indicating GCC 13 is the tested minimum for full module builds [NEEDS VERIFICATION for exact minimum for core-only builds].</li>
-  <li><strong>Rust 1.94.0</strong>: Required for <code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code>. The <code class="language-plaintext highlighter-rouge">modules/Makefile</code> Rust installer case statement provides binaries only for <code class="language-plaintext highlighter-rouge">x86_64</code> and <code class="language-plaintext highlighter-rouge">aarch64</code>, and exits with error for all other architectures. <strong><code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> cannot be used on riscv64 without patching <code class="language-plaintext highlighter-rouge">modules/Makefile</code>.</strong> This blocks Redis JSON, RediSearch, RedisBloom, and RedisTimeSeries on RISC-V.</li>
+  <li><strong>GCC &gt;=14.1.0</strong> is required only to expose the <code class="language-plaintext highlighter-rouge">__riscv_zicclsm</code> preprocessor macro that activates the SipHash unaligned-access optimization (PR #14342). Older toolchains build correctly but without this optimization.</li>
+  <li><strong>Rust 1.94</strong> is required for <code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code>. <code class="language-plaintext highlighter-rouge">modules/Makefile</code>’s Rust-toolchain installer case statement recognizes only <code class="language-plaintext highlighter-rouge">x86_64</code> and <code class="language-plaintext highlighter-rouge">aarch64</code> and exits with an error for any other architecture. <strong><code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> cannot be used on riscv64 without patching <code class="language-plaintext highlighter-rouge">modules/Makefile</code>.</strong> This blocks RedisJSON, RediSearch, RedisBloom, and RedisTimeSeries on riscv64.</li>
 </ul>
-<h3 id="notable-build-flags-for-riscv64">
+<h3 id="docker">
   
   
-    <a href="#notable-build-flags-for-riscv64" class="anchor-heading" aria-labelledby="notable-build-flags-for-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Notable build flags for riscv64
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Flag</th>
-      <th>Effect</th>
-      <th>riscv64 notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">MALLOC=libc</code></td>
-      <td>Use libc malloc</td>
-      <td>Recommended for cross-compile; avoids jemalloc <code class="language-plaintext highlighter-rouge">--host</code> requirement</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">MALLOC=jemalloc</code></td>
-      <td>Default on Linux</td>
-      <td>Works natively; requires <code class="language-plaintext highlighter-rouge">DEB_HOST_GNU_TYPE</code> for cross-compile</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">SKIP_VEC_SETS=yes</code></td>
-      <td>Disable HNSW vector sets</td>
-      <td>Auto-set if compiler lacks C11 atomics; safe to set explicitly</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code></td>
-      <td>Enable JSON/Search/Bloom/TimeSeries</td>
-      <td><strong>Broken on riscv64</strong> – Rust installer only provides x86_64 and aarch64</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">BUILD_TLS=yes</code></td>
-      <td>Enable TLS</td>
-      <td>Requires <code class="language-plaintext highlighter-rouge">libssl-dev</code>; works on riscv64</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">CFLAGS="-DUSE_PROCESSOR_CLOCK"</code></td>
-      <td>Use hardware clock instead of POSIX clock</td>
-      <td>riscv64 supported (PR #14251); <strong>opt-in only</strong>, unlike AArch64 which is default-on</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="-latomic-note">
-  
-  
-    <a href="#-latomic-note" class="anchor-heading" aria-labelledby="-latomic-note"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> <code class="language-plaintext highlighter-rouge">-latomic</code> note
+    <a href="#docker" class="anchor-heading" aria-labelledby="docker"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Docker
   
   
 </h3>
     
 
-<p>The Makefile adds <code class="language-plaintext highlighter-rouge">-latomic</code> only when <code class="language-plaintext highlighter-rouge">uname -m</code> matches <code class="language-plaintext highlighter-rouge">armv*</code>. riscv64 does not match this pattern. If linking fails with undefined <code class="language-plaintext highlighter-rouge">__atomic_*</code> symbols on an older GCC that does not inline 64-bit atomics, add <code class="language-plaintext highlighter-rouge">LDFLAGS=-latomic</code> manually.</p><hr />
+<p>The only Dockerfile in the repository is <code class="language-plaintext highlighter-rouge">docker/Dockerfile.noble</code> (Ubuntu 24.04), explicitly built as <code class="language-plaintext highlighter-rouge">linux/amd64</code>/<code class="language-plaintext highlighter-rouge">linux/arm64</code> only via <code class="language-plaintext highlighter-rouge">docker buildx build --platform linux/amd64,linux/arm64</code>, because the <code class="language-plaintext highlighter-rouge">ubuntu:24.04</code> base image’s published multi-arch manifest does not include riscv64. This Dockerfile cannot currently target riscv64 without substantial changes. No <code class="language-plaintext highlighter-rouge">.ci/docker/</code> directory and no <code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code> exist.</p>
+<h3 id="cibuild-yaml-sweep">
+  
+  
+    <a href="#cibuild-yaml-sweep" class="anchor-heading" aria-labelledby="cibuild-yaml-sweep"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CI/build YAML sweep
+  
+  
+</h3>
+    
+
+<p>No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, or <code class="language-plaintext highlighter-rouge">.travis.yml</code> exists at the repository root. The only QEMU mentions anywhere in the tree are unrelated to riscv64 build/test: generic jemalloc <code class="language-plaintext highlighter-rouge">pages.c</code>/<code class="language-plaintext highlighter-rouge">ChangeLog</code> comments about QEMU <code class="language-plaintext highlighter-rouge">madvise</code> behavior, a generic xxhash Makefile comment about running <code class="language-plaintext highlighter-rouge">make check</code> under QEMU user-mode for any cross-compiled target, and <code class="language-plaintext highlighter-rouge">deps/hiredis</code>’s own separate CI, which cross-compiles/tests arm/aarch64 under QEMU (<code class="language-plaintext highlighter-rouge">qemu-arm</code>, <code class="language-plaintext highlighter-rouge">qemu-aarch64</code>), not riscv64.</p><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -601,60 +677,74 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
       <th>amd64</th>
       <th>arm64</th>
       <th>riscv64 (merged, current)</th>
-      <th>riscv64 (if both open PRs merge)</th>
+      <th>riscv64 (if open PRs merge)</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Monotonic clock</td>
-      <td>Full (<code class="language-plaintext highlighter-rouge">rdtsc</code>)</td>
-      <td>Full (<code class="language-plaintext highlighter-rouge">cntvct_el0</code>), default-on</td>
-      <td>Full (<code class="language-plaintext highlighter-rouge">csrr time</code>), opt-in only</td>
+      <td>Full, default-on</td>
+      <td>Full, default-on</td>
+      <td>Full, opt-in only</td>
       <td>Full, opt-in only</td>
     </tr>
     <tr>
       <td>SipHash unaligned access</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (Zicclsm, GCC 14.1+)</td>
-      <td>Full</td>
+      <td>Full (Zicclsm)</td>
+      <td>Full, with optional Zbb dispatch</td>
+    </tr>
+    <tr>
+      <td>CRC64 (RDB/AOF checksums)</td>
+      <td>Scalar</td>
+      <td>Scalar</td>
+      <td>Scalar</td>
+      <td>Zbc/Zvbc accelerated, 2.2x-9.6x</td>
     </tr>
     <tr>
       <td>BITCOUNT popcount</td>
       <td>Full (AVX512/AVX2/scalar)</td>
-      <td>Partial (NEON <code class="language-plaintext highlighter-rouge">vcnt</code>)</td>
-      <td>Scalar fallback only</td>
+      <td>Partial (NEON)</td>
+      <td>Scalar only</td>
       <td>Partial (Zbb <code class="language-plaintext highlighter-rouge">cpop</code>)</td>
     </tr>
     <tr>
       <td>HyperLogLog vectorization</td>
-      <td>Full (AVX2 <code class="language-plaintext highlighter-rouge">__m256i</code>)</td>
-      <td>Partial (NEON <code class="language-plaintext highlighter-rouge">uint8x16_t</code>)</td>
-      <td>Scalar fallback only</td>
-      <td>Partial (RVV intrinsics)</td>
+      <td>Full (AVX2)</td>
+      <td>Partial (NEON)</td>
+      <td>Scalar only</td>
+      <td>Partial (RVV)</td>
+    </tr>
+    <tr>
+      <td>xxHash (bundled)</td>
+      <td>SSE2/AVX2/AVX512</td>
+      <td>NEON/SVE</td>
+      <td><strong>Full (RVV, complete)</strong></td>
+      <td>(already complete)</td>
     </tr>
     <tr>
       <td>CI coverage</td>
       <td>Full</td>
       <td>Full</td>
       <td>None</td>
-      <td>None</td>
+      <td>None (gated on separate, stalled CI PR)</td>
     </tr>
     <tr>
-      <td>Modules (JSON, Search, Bloom)</td>
+      <td>Modules (JSON, Search, Bloom, TimeSeries)</td>
       <td>Full</td>
       <td>Full</td>
       <td>Broken (Rust installer gap)</td>
-      <td>Broken (same gap)</td>
+      <td>Broken (same gap, untouched by any open PR)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Assessment:</strong> The two merged PRs are correct and production-quality. Neither is a stub. The riscv64 port is not a skeleton – it has functional equivalents for monotonic timing and SipHash. However, two performance-sensitive paths (BITCOUNT and HyperLogLog) currently fall to scalar on RISC-V. Both optimizations are in-flight PRs with no technical blockers, blocked only on reviewer bandwidth.</p>
+<p><strong>Functional gaps:</strong> <code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> cannot build on riscv64 at all without patching <code class="language-plaintext highlighter-rouge">modules/Makefile</code> - this is a hard functional blocker, not a performance gap.</p>
 
-<p>The modules gap (Rust installer not supporting riscv64 in <code class="language-plaintext highlighter-rouge">modules/Makefile</code>) is a hard blocker for Redis 8.x module functionality on RISC-V and requires an explicit patch to the build system.</p>
+<p><strong>Performance gaps:</strong> BITCOUNT-style operations and HyperLogLog dense-register merge run scalar on riscv64 today versus hand-tuned SIMD on amd64/arm64; both have ready, unmerged PRs. CRC64 is scalar on all three architectures currently (no architecture has hardware CRC acceleration merged), so riscv64 is not behind here, though two PRs (#15785/#15786) would put it ahead if merged.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> asymmetry is a minor usability gap: AArch64 gets hardware clock by default, RISC-V requires an explicit build flag. No tracking issue exists for this discrepancy.</p><hr />
+<p><strong>Security hardening / correctness:</strong> No riscv64-specific NaN/floating-point semantics issues were found in Redis’s own code. The one correctness-relevant item is a Bugbot-flagged critical bug in open PR #15859 (not merged): the reciprocal-multiply monotonic-clock path divides by zero / wraps to zero when <code class="language-plaintext highlighter-rouge">mono_ticksPerMicrosecond == 1</code> (1 MHz mtime timebases, e.g. SiFive boards), which would make <code class="language-plaintext highlighter-rouge">getMonotonicUs_riscv</code> always return 0 and break elapsed-time waits and event-loop timers on that hardware. This has not reached any shipped release.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -664,17 +754,46 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
 </h2>
     
 
-<p>All 9 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> (ci.yml, codecov.yml, codeql-analysis.yml, coverity.yml, daily.yml, external.yml, redis_docs_sync.yaml, reply-schemas-linter.yml, spell-check.yml) were verified. No alternative CI backends (.cirrus.yml, .travis.yml, .gitlab-ci.yml, Jenkinsfile, appveyor.yml) exist at the repository root.</p>
+<p><strong>No riscv64 CI exists in redis/redis, confirmed by multiple independent methods:</strong> GitHub code search (<code class="language-plaintext highlighter-rouge">search_code</code> for “riscv” scoped to <code class="language-plaintext highlighter-rouge">path:.github/workflows</code>: 0 matches) and, more authoritatively, a direct shallow clone (HEAD <code class="language-plaintext highlighter-rouge">b540ca49cba815f3fbe634363c3df68d4f4f127a</code>, branch <code class="language-plaintext highlighter-rouge">unstable</code>) with <code class="language-plaintext highlighter-rouge">grep -rniI "riscv|qemu|rv64|risc-v|risc_v" .github/workflows/</code>: <strong>zero matches</strong> across all 10 workflow files present (<code class="language-plaintext highlighter-rouge">ci.yml</code>, <code class="language-plaintext highlighter-rouge">codecov.yml</code>, <code class="language-plaintext highlighter-rouge">codeql-analysis.yml</code>, <code class="language-plaintext highlighter-rouge">coverity.yml</code>, <code class="language-plaintext highlighter-rouge">daily.yml</code>, <code class="language-plaintext highlighter-rouge">external.yml</code>, <code class="language-plaintext highlighter-rouge">modules-build-flow.yml</code>, <code class="language-plaintext highlighter-rouge">post-release-automation.yml</code>, <code class="language-plaintext highlighter-rouge">reply-schemas-linter.yml</code>, <code class="language-plaintext highlighter-rouge">spell-check.yml</code>). No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, or <code class="language-plaintext highlighter-rouge">.travis.yml</code> exists at the repository root (equivalent files found only inside vendored <code class="language-plaintext highlighter-rouge">deps/jemalloc</code> and <code class="language-plaintext highlighter-rouge">deps/hiredis</code>, which are third-party dependency CI, unrelated to Redis’s own pipeline).</p>
 
-<p><strong>The string “riscv” does not appear in any of the 9 workflow files.</strong></p>
+<p>The CI matrix covers <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64), <code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code> (native ARM64, no emulation), and <code class="language-plaintext highlighter-rouge">macos-latest</code>; <code class="language-plaintext highlighter-rouge">modules-build-flow.yml</code>’s matrix is <code class="language-plaintext highlighter-rouge">arch: [x64, arm64]</code> only. No riscv64 runner and no QEMU step exist anywhere in Redis’s own CI.</p>
 
-<p>The CI matrix covers: ubuntu-latest (x86_64), ubuntu-24.04-arm (ARM64), macOS (multiple versions), FreeBSD, Alpine, CentOS Stream 9, and Debian buster. No RISC-V target, no QEMU riscv64 emulation, and no self-hosted riscv64 runner exist.</p>
+<p><a href="https://github.com/redis/redis/pull/14660">PR #14660</a> (“CI: add riscv64 QEMU build+smoke test job”) would add a GitHub Actions job cross-compiling Redis for riscv64 and running a lightweight smoke test (PING, SET/GET, graceful shutdown) under QEMU user-mode, with the full test suite explicitly excluded to keep the job fast under emulation. It has been open since 2026-01-05 with <strong>zero maintainer review</strong> - only the CLA Assistant and a security-scanning bot have commented. This is the one PR that would most directly change Redis’s riscv64 readiness grade if merged, and it has had no engagement for roughly nine months as of this report.</p>
 
-<p>All RISC-V testing for the merged PRs was performed by contributors on physical hardware (Sophgo SG2042, SG2044). Reviewer ShooterIT explicitly noted on PR #14251: “i don’t have RISC CPU, can’t verify it” – this is the current state for all maintainers.</p>
+<p>All RISC-V testing behind the merged optimization PRs was performed by contributors on physical hardware (Sophgo SG2042, SG2044, Spacemit X100/K3, C920) reported in PR descriptions, not validated by any upstream CI run. Reviewer ShooterIT noted on PR #14251: “i don’t have RISC CPU, can’t verify it” - no Redis maintainer is known to have RISC-V hardware access.</p>
 
-<p>No QEMU integration exists in the Redis test suite (<code class="language-plaintext highlighter-rouge">runtest</code>). There is no documented procedure for running the Redis test suite on riscv64.</p>
+<p>The RISE Project’s free native riscv64 CI runners (Scaleway EM-RV1 hardware) have been available since March 2026. Redis has not adopted them, has no RISE membership, and receives no RISE blog coverage of its own CI/testing needs (see Section 10).</p>
 
-<p>The RISE Project launched free native RISC-V CI runners (Scaleway EM-RV1 hardware) in March 2026. Redis has not adopted them. Redis is not a RISE member project and no RISE blog post mentions Redis.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Build on every PR</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Test on every PR</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Runner type</td>
+      <td>GitHub-hosted</td>
+      <td>GitHub-hosted, native</td>
+      <td>None (proposed: QEMU, PR #14660, stalled)</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -684,66 +803,23 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
 </h2>
     
 
-<p>Redis upstream publishes source-only tarballs. No pre-built binary packages for any architecture are attached to GitHub releases. The download mirror at download.redis.io/releases/ lists source tarballs only.</p>
+<p>Redis upstream publishes <strong>source tarballs only</strong> on GitHub releases, for every architecture. Confirmed directly against the two most recent releases via the GitHub <code class="language-plaintext highlighter-rouge">expanded_assets</code> endpoint: <strong>8.10.2</strong> assets = <code class="language-plaintext highlighter-rouge">redis-full.tar.gz</code>, <code class="language-plaintext highlighter-rouge">Source code (zip)</code>, <code class="language-plaintext highlighter-rouge">Source code (tar.gz)</code>; <strong>8.8.3</strong> assets = <code class="language-plaintext highlighter-rouge">8.8.3.zip</code>, <code class="language-plaintext highlighter-rouge">8.8.3.tar.gz</code>. No “riscv” string in any filename for either release - this is expected and not a negative signal, since no architecture gets prebuilt binaries from upstream GitHub releases.</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Distribution</th>
-      <th>riscv64 Available</th>
-      <th>Version</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>GitHub releases (redis/redis)</td>
-      <td>No (source-only for all arches)</td>
-      <td>N/A</td>
-      <td>Auto-generated source archives only</td>
-    </tr>
-    <tr>
-      <td>Debian sid</td>
-      <td>Yes – installed</td>
-      <td>5:8.0.6-2</td>
-      <td>Built on <code class="language-plaintext highlighter-rouge">rv-osuosl-03</code> (OSUOSL RISC-V hardware)</td>
-    </tr>
-    <tr>
-      <td>Ubuntu Noble (24.04)</td>
-      <td>Yes</td>
-      <td>5:7.0.15-1build2</td>
-      <td>Via Ubuntu ports archive</td>
-    </tr>
-    <tr>
-      <td>Ubuntu Jammy (22.04)</td>
-      <td>Yes</td>
-      <td>5:6.0.16-1ubuntu1</td>
-      <td>Via Ubuntu ports archive</td>
-    </tr>
-    <tr>
-      <td>Arch Linux RISC-V</td>
-      <td>No – not packaged</td>
-      <td>N/A</td>
-      <td>Absent from Arch RISC-V package set; <code class="language-plaintext highlighter-rouge">python-redis</code> is outdated/FTBFS</td>
-    </tr>
-    <tr>
-      <td>Docker (official library)</td>
-      <td>Yes (Alpine-based, all versions; Debian/trixie for 8.x)</td>
-      <td>Varies</td>
-      <td>Bookworm-based 7.x/6.x images do not include riscv64</td>
-    </tr>
-    <tr>
-      <td>PyPI redis-py</td>
-      <td>N/A</td>
-      <td>8.0.0</td>
-      <td>Pure-Python; <code class="language-plaintext highlighter-rouge">py3-none-any</code> wheel installs natively on riscv64</td>
-    </tr>
-  </tbody>
-</table></div>
+<p><strong>Debian/Ubuntu (confirmed via multiple independent, authoritative channels):</strong></p>
+<ul>
+  <li>Launchpad API (<code class="language-plaintext highlighter-rouge">api.launchpad.net</code>, official Canonical JSON API): <code class="language-plaintext highlighter-rouge">redis-server 5:8.0.5-1 in resolute riscv64</code>, status “Published”, published 2025-12-30. This directly confirms Ubuntu 26.04 (“resolute”) ships riscv64 <code class="language-plaintext highlighter-rouge">redis-server</code> via Ubuntu Ports.</li>
+  <li><code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> filtered to <code class="language-plaintext highlighter-rouge">arch=riscv64</code>/<code class="language-plaintext highlighter-rouge">suite=resolute</code> additionally confirms <code class="language-plaintext highlighter-rouge">redis-tools</code> and <code class="language-plaintext highlighter-rouge">redis-sentinel</code> at the same <code class="language-plaintext highlighter-rouge">5:8.0.5-1</code> version (all <code class="language-plaintext highlighter-rouge">[ports]</code>, i.e. built via Ubuntu Ports rather than the primary archive), plus the architecture-independent (<code class="language-plaintext highlighter-rouge">all</code>) <code class="language-plaintext highlighter-rouge">redis</code> metapackage.</li>
+  <li><code class="language-plaintext highlighter-rouge">ports.ubuntu.com/pool/universe/r/redis/</code> (raw package-pool directory listing): riscv64 <code class="language-plaintext highlighter-rouge">.deb</code> builds for <code class="language-plaintext highlighter-rouge">redis-server</code>, <code class="language-plaintext highlighter-rouge">redis-sentinel</code>, <code class="language-plaintext highlighter-rouge">redis-tools</code> exist continuously from version <code class="language-plaintext highlighter-rouge">5.0.7-2</code> (2020) through the current <code class="language-plaintext highlighter-rouge">8.0.6-3</code>.</li>
+  <li>Debian sid ships <code class="language-plaintext highlighter-rouge">5:8.0.6-2</code> for riscv64.</li>
+</ul>
 
-<p>Debian and Ubuntu riscv64 packages are downstream builds maintained by distro packagers, not by Redis Ltd. or upstream contributors. The upstream project does not validate its own releases on riscv64.</p>
+<p><strong>Docker:</strong> The official <code class="language-plaintext highlighter-rouge">redis</code> library image’s manifest list (confirmed via the Docker Hub v2 API against <code class="language-plaintext highlighter-rouge">library/redis:latest</code>) includes a <code class="language-plaintext highlighter-rouge">riscv64</code>/<code class="language-plaintext highlighter-rouge">linux</code> platform entry alongside <code class="language-plaintext highlighter-rouge">amd64</code>, <code class="language-plaintext highlighter-rouge">arm64</code>, <code class="language-plaintext highlighter-rouge">ppc64le</code>, <code class="language-plaintext highlighter-rouge">s390x</code>, <code class="language-plaintext highlighter-rouge">386</code>, <code class="language-plaintext highlighter-rouge">arm/v7</code>, <code class="language-plaintext highlighter-rouge">arm/v5</code>. A community <code class="language-plaintext highlighter-rouge">riscv64/redis</code> Docker Hub image also exists independently.</p>
 
-<p>The Debian riscv64 package (8.0.6-2) lags upstream (8.8.0), which is normal for the Debian packaging pipeline and not a RISC-V-specific gap.</p><hr />
+<p><strong>What determines whether a distro build requires riscv64-specific source patches versus building vanilla upstream source unmodified was not verified in this research</strong> - this is the key open question that governs whether Redis sits at yellow (clean distro build) or orange (downstream-only, patch status unknown) on the readiness scale; see Section 13.</p>
+
+<p><strong>PyPI:</strong> <code class="language-plaintext highlighter-rouge">redis-py</code> (latest 8.1.0) is a pure-Python package (<code class="language-plaintext highlighter-rouge">py3-none-any</code> wheel) - architecture-independent by construction, so it installs natively on riscv64 regardless of upstream RISC-V status. This is not a meaningful riscv64-specific signal either way. The RISE GitLab wheel-builder mirror for <code class="language-plaintext highlighter-rouge">redis</code> returns an HTTP 302 redirect to the real PyPI simple index, indicating RISE has no custom/overriding build for this package and simply proxies upstream.</p>
+
+<p><strong>Arch Linux riscv64:</strong> Prior reporting indicated Redis was absent from the Arch RISC-V package set [NEEDS VERIFICATION - not re-confirmed in this research pass; <code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code> returned no usable content on retry].</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -753,93 +829,88 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
 </h2>
     
 
-<p>The following table covers all bundled and optional dependencies in the Redis build.</p>
+<p>Redis has no CMakeLists.txt/setup.py/go.mod/Cargo.toml/package.json at the top level; it is a GNU-Make C project whose real dependency manifest is the <code class="language-plaintext highlighter-rouge">deps/</code> submodule directory plus a small set of build/test toolchain requirements.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>riscv64 Build</th>
-      <th>riscv64 Test</th>
-      <th>Blocking Issues</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
+      <th>Notes / blocking issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>jemalloc</strong> (bundled)</td>
-      <td>Default memory allocator on Linux</td>
-      <td>Builds; riscv64gc support added Nov 2023 (<a href="https://github.com/jemalloc/jemalloc/issues/2323">#2323</a>). Early atomics/FTBFS issue from 2019 resolved.</td>
-      <td>No dedicated riscv64 CI</td>
-      <td><a href="https://github.com/jemalloc/jemalloc/issues/2399">#2399</a> (open): cross-build for riscv64 undocumented; <code class="language-plaintext highlighter-rouge">riscv64gc</code> target triple recognition fix needed for Rust bindings</td>
+      <td><strong>jemalloc</strong></td>
+      <td>runtime-dependency, critical - default memory allocator on Linux (<code class="language-plaintext highlighter-rouge">MALLOC=jemalloc</code>)</td>
+      <td>Builds cleanly; confirmed via Launchpad that jemalloc 5.3.0-4 builds <code class="language-plaintext highlighter-rouge">libjemalloc2</code>/<code class="language-plaintext highlighter-rouge">libjemalloc-dev</code> for riscv64 in Ubuntu 26.04 “resolute.” Only one arch-specific file in jemalloc itself (<code class="language-plaintext highlighter-rouge">quantum.h</code>’s <code class="language-plaintext highlighter-rouge">LG_QUANTUM</code> branch), no hand-tuned spinwait/VA-width paths</td>
+      <td>Zero riscv64 CI in jemalloc’s own 7 GitHub workflows plus <code class="language-plaintext highlighter-rouge">.travis.yml</code></td>
+      <td>Debian sid, Ubuntu 24.04/26.04 ship <code class="language-plaintext highlighter-rouge">libjemalloc2</code>/<code class="language-plaintext highlighter-rouge">libjemalloc-dev</code> for riscv64</td>
+      <td><a href="https://github.com/jemalloc/jemalloc/issues/2399">jemalloc#2399</a> open 3+ years, no maintainer response (cross-build docs gap); <a href="https://github.com/jemalloc/jemalloc/issues/2323">jemalloc#2323</a> closed “completed” but no traceable fix commit found, contradicted by an August 2026 HPC paper stating jemalloc “does not support RISC-V.” <strong>Not a practical Redis blocker</strong>: Redis’s own cross-compile guidance recommends <code class="language-plaintext highlighter-rouge">MALLOC=libc</code> to sidestep jemalloc’s <code class="language-plaintext highlighter-rouge">--host</code> cross-compile gap entirely.</td>
     </tr>
     <tr>
-      <td><strong>OpenSSL</strong> (optional)</td>
-      <td>TLS transport when <code class="language-plaintext highlighter-rouge">BUILD_TLS=yes</code></td>
-      <td>Builds; <code class="language-plaintext highlighter-rouge">linux-riscv64</code> target exists since May 2022. Crypto assembly (AES/GHASH/ChaCha20) actively merged.</td>
-      <td>CI flakiness on riscv64 runners (<a href="https://github.com/openssl/openssl/issues/30880">#30880</a>, open)</td>
-      <td><a href="https://github.com/openssl/openssl/issues/30330">#30330</a>: <code class="language-plaintext highlighter-rouge">rv64i_zkne_set_encrypt_key</code> null-key logic is backwards (affects branches 3.3-master); <a href="https://github.com/openssl/openssl/issues/31080">#31080</a>/<a href="https://github.com/openssl/openssl/issues/31082">#31082</a>: constant-time hardening for no-extension fallbacks incomplete</td>
+      <td><strong>OpenSSL</strong></td>
+      <td>runtime-dependency, optional - TLS transport when <code class="language-plaintext highlighter-rouge">BUILD_TLS=yes</code></td>
+      <td>Confirmed via Ubuntu 26.04 “resolute”: openssl 3.5.5-1ubuntu3 builds for riscv64. Extensive hand-written riscv64 crypto assembly (AES-Zkn/Zvkned, SHA-256/512-Zbb/Zvk, GHASH, Montgomery multiply, SM2/SM3/SM4) - the most mature riscv64 dependency in this set</td>
+      <td>CI builds <strong>and runs</strong> riscv64 tests on every PR (QEMU, 13-leg extension matrix) plus a nightly native-hardware job (<code class="language-plaintext highlighter-rouge">os-zoo.yml</code>)</td>
+      <td>Debian sid/trixie, Ubuntu 26.04, Arch RISC-V (98.3% built) all ship it</td>
+      <td><a href="https://github.com/openssl/openssl/issues/20980">openssl#20980</a> open, security: AES scalar fallback is not constant-time without Zkn/Zvkned, fix PRs #31080/#31082 unmerged; <a href="https://github.com/openssl/openssl/issues/30330">openssl#30330</a>: <code class="language-plaintext highlighter-rouge">rv64i_zkne_set_encrypt_key</code> null-key logic is backwards, affecting TLS builds on Zkne-capable toolchains - this is the one dependency bug that could reach Redis in production when <code class="language-plaintext highlighter-rouge">BUILD_TLS=yes</code>; <a href="https://github.com/openssl/openssl/issues/28118">openssl#28118</a>: Zbb detection broken under musl.</td>
     </tr>
     <tr>
-      <td><strong>Lua 5.1</strong> (bundled)</td>
-      <td>Scripting engine for <code class="language-plaintext highlighter-rouge">EVAL</code></td>
-      <td>Pure ANSI C; no arch-specific assembly; builds anywhere</td>
-      <td>No riscv64 CI; no failures reported</td>
-      <td>None</td>
+      <td><strong>Lua</strong></td>
+      <td>runtime-dependency, critical - <code class="language-plaintext highlighter-rouge">EVAL</code> scripting engine, bundled in <code class="language-plaintext highlighter-rouge">deps/lua</code> (vanilla PUC-Rio Lua 5.1, not LuaJIT)</td>
+      <td>Pure ISO C99, zero arch-specific code (<code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> = 0 hits in <code class="language-plaintext highlighter-rouge">deps/lua</code>). Debian sid <code class="language-plaintext highlighter-rouge">lua5.4</code> 5.4.8-2 builds for riscv64; Ubuntu 26.04/resolute status for Lua specifically was not independently re-confirmed this session (only 24.04 Noble was checked in prior research)</td>
+      <td>No riscv64 CI anywhere for lua/lua (none exists for any architecture); distro buildd is the only signal, and it is green</td>
+      <td>Debian sid, Ubuntu 24.04 ship it; 26.04 status: data not re-verified</td>
+      <td>None. Critically, Redis deliberately uses vanilla Lua, <strong>not LuaJIT</strong> - LuaJIT itself has zero official RISC-V support (<a href="https://github.com/LuaJIT/LuaJIT/issues/628">LuaJIT#628</a>, open since October 2020; community fork plctlab/LuaJIT PR #1267 unmerged since September 2024). Because Redis never links LuaJIT, this JIT-backend gap is not inherited by Redis.</td>
     </tr>
     <tr>
-      <td><strong>hiredis</strong> (bundled)</td>
-      <td>C client library for CLI and Sentinel</td>
-      <td>No riscv64-specific issues; generic C</td>
-      <td>No dedicated riscv64 CI</td>
-      <td>None</td>
+      <td><strong>xxHash</strong></td>
+      <td>runtime-dependency, optional - non-cryptographic hashing, bundled in <code class="language-plaintext highlighter-rouge">deps/xxhash</code></td>
+      <td>Ubuntu 26.04/resolute universe pocket ships <code class="language-plaintext highlighter-rouge">xxhash</code>/<code class="language-plaintext highlighter-rouge">libxxhash0</code>/<code class="language-plaintext highlighter-rouge">libxxhash-dev</code> 0.8.3-2build1 for riscv64 (scalar only - see discrepancy note below). <strong>Redis’s own vendored copy of <code class="language-plaintext highlighter-rouge">deps/xxhash/xxhash.h</code>, however, already contains a complete RVV 1.0 vector implementation</strong> (see Section 4)</td>
+      <td>xxHash’s own CI runs full <code class="language-plaintext highlighter-rouge">make check</code> for riscv64 scalar and RVV (QEMU) on every push/PR</td>
+      <td>Ubuntu 26.04 riscv64 ships 0.8.3 (scalar); RVV merged upstream via <a href="https://github.com/Cyan4973/xxHash/pull/1043">xxHash PR #1043</a> (2025-06-16) but not yet in a tagged release (v0.8.3, December 2024, predates it)</td>
+      <td><strong>Discrepancy noted</strong>: the standalone xxHash project’s own tagged/distro-packaged releases are scalar-only for riscv64, while Redis’s vendored copy already carries the full RVV path - these are two different code snapshots and the difference is expected, not contradictory, once the vendoring timeline is accounted for. No functionally blocking issues; perf-only concerns include unvectorized XXH32/64 on RVV and a ~300x streaming-unaligned regression (no issue filed), plus <a href="https://github.com/Cyan4973/xxHash/issues/870">xxHash#870</a> (strict-alignment, open since 2023).</td>
     </tr>
     <tr>
-      <td><strong>xxHash</strong> (bundled)</td>
-      <td>Non-cryptographic hashing</td>
-      <td>Builds; no riscv64 build failures reported</td>
-      <td>No dedicated riscv64 CI</td>
-      <td>Minor: <a href="https://github.com/Cyan4973/xxHash/issues/1018">#1018</a> (open, Mar 2025): proposal for riscv64 inline asm optimization for <code class="language-plaintext highlighter-rouge">XXH_mult32to64_add64</code>; not blocking; scalar fallback works. Note: <code class="language-plaintext highlighter-rouge">XXH_RVV = 9</code> constant exists in <code class="language-plaintext highlighter-rouge">xxhash.h</code> as a placeholder; RVV backend is NOT implemented – only scalar portability was validated on RISC-V in v0.8.2.</td>
+      <td><strong>GCC</strong></td>
+      <td>build-dependency, critical</td>
+      <td>No riscv64-specific minimum version is documented anywhere in the repository; general build requirements apply uniformly regardless of architecture. GCC &gt;=14.1.0 is required specifically to expose the <code class="language-plaintext highlighter-rouge">__riscv_zicclsm</code> macro that activates the SipHash unaligned-access optimization (PR #14342); older GCC builds correctly without that optimization</td>
+      <td>N/A (toolchain, not a tested artifact)</td>
+      <td>N/A</td>
+      <td>None blocking; version requirement is optimization-specific, not build-blocking.</td>
     </tr>
     <tr>
-      <td><strong>HdrHistogram_c</strong> (bundled)</td>
-      <td>Latency percentile tracking</td>
-      <td>Pure C; no arch-specific code</td>
-      <td>No dedicated riscv64 CI</td>
-      <td>None</td>
+      <td><strong>GNU make</strong></td>
+      <td>build-dependency, critical</td>
+      <td>Redis core builds via GNU Make exclusively (<code class="language-plaintext highlighter-rouge">src/Makefile</code>/top-level <code class="language-plaintext highlighter-rouge">Makefile</code>); no riscv64-specific build-system documentation exists (confirmed: no BUILDING.md, no docs/cross-compilation.md)</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>None found.</td>
     </tr>
     <tr>
-      <td><strong>linenoise</strong> (bundled)</td>
-      <td>Line-editing for <code class="language-plaintext highlighter-rouge">redis-cli</code></td>
-      <td>Pure C; no arch-specific code</td>
-      <td>No riscv64 CI</td>
-      <td>None</td>
+      <td><strong>Rust</strong></td>
+      <td>build-dependency, optional - required only for <code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> (Redis 8.x modules: JSON, Search, Bloom, TimeSeries)</td>
+      <td><strong>Hard-blocked on riscv64</strong>: <code class="language-plaintext highlighter-rouge">modules/Makefile</code>’s Rust-toolchain installer case statement recognizes only <code class="language-plaintext highlighter-rouge">x86_64</code> and <code class="language-plaintext highlighter-rouge">aarch64</code> and exits with error for any other architecture. Confirmed directly from repository source, re-confirmed in multiple research passes. Rust 1.94 is the general version requirement from README.md</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>This is the single clearest functional blocker for riscv64 module builds; requires a patch to <code class="language-plaintext highlighter-rouge">modules/Makefile</code> to add riscv64 to the installer’s architecture list.</td>
     </tr>
     <tr>
-      <td><strong>fpconv</strong> (bundled)</td>
-      <td>Double-to-string conversion</td>
-      <td>Pure C</td>
-      <td>No dedicated riscv64 CI</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td><strong>tre</strong> (bundled)</td>
-      <td>POSIX regex</td>
-      <td>Pure C</td>
-      <td>No dedicated riscv64 CI</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td><strong>libsystemd</strong> (optional)</td>
-      <td>systemd notify</td>
-      <td>Standard Linux system library; riscv64 packages available in all major distros</td>
-      <td>Tested as part of distro packages</td>
-      <td>None</td>
+      <td><strong>Tcl</strong></td>
+      <td>test-dependency, critical - Redis’s test suite (<code class="language-plaintext highlighter-rouge">runtest</code>) is written in Tcl</td>
+      <td>Data not available: no research into Tcl’s riscv64 build/packaging status was conducted in this research session</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available: this dependency was not independently investigated.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The OpenSSL <code class="language-plaintext highlighter-rouge">rv64i_zkne_set_encrypt_key</code> correctness bug (<a href="https://github.com/openssl/openssl/issues/30330">#30330</a>) is the only dependency issue that could affect Redis in production on riscv64. It affects TLS builds (<code class="language-plaintext highlighter-rouge">BUILD_TLS=yes</code>) on toolchains that activate the Zkne extension. Builds without TLS are unaffected.</p><hr />
+<p><strong>Additional indirect/bundled dependencies found via research</strong> (pure C, no architecture-specific code, no known riscv64 blocking issues): <strong>hiredis</strong> (bundled C client library used by <code class="language-plaintext highlighter-rouge">redis-cli</code>/Sentinel internals; generic portable C; no dedicated riscv64 CI; listed in <code class="language-plaintext highlighter-rouge">projects.yml</code> but has no independent riscv64-readiness report), <strong>HdrHistogram_c</strong> (latency-percentile data structure, pure C, no SIMD), <strong>linenoise</strong> (CLI line-editing), <strong>fpconv</strong> (double-to-string conversion), <strong>tre</strong> (POSIX regex). All five are bundled in <code class="language-plaintext highlighter-rouge">deps/</code> and build as ordinary portable C with no <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> guards found in any of them.</p><hr />
 <h2 id="10-ecosystem-status">
   
   
@@ -849,15 +920,17 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
 </h2>
     
 
-<p><strong>RISE Project:</strong> Redis is not a RISE member project. Zero of 26+ RISE blog posts (May 2024 - June 2026) mention Redis. Redis does not appear in the RISE wheel builder package list (~80 packages). No RISE-funded Redis optimization work exists in the public record.</p>
+<p>Redis carries a dependent-package ecosystem on two fronts that must separately clear riscv64: (a) <strong>official Redis Ltd. modules</strong> (RedisJSON, RediSearch, RedisBloom, RedisTimeSeries), gated behind <code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code>, and (b) <strong>client libraries</strong> across languages (redis-py, hiredis, etc.).</p>
 
-<p><strong>RISE CI infrastructure:</strong> The RISE Project launched free native riscv64 CI runners on Scaleway EM-RV1 hardware in March 2026. These are available to any GitHub-hosted project. Redis has not adopted them.</p>
+<p><strong>Modules ecosystem:</strong> Entirely blocked on riscv64 today due to the <code class="language-plaintext highlighter-rouge">modules/Makefile</code> Rust-installer gap described in Section 9 - none of RedisJSON/RediSearch/RedisBloom/RedisTimeSeries can currently be built for riscv64 through the documented <code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> path. No official riscv64 container image exists for any of these modules.</p>
 
-<p><strong>Test hardware used for Redis RISC-V work:</strong> All benchmarks and on-hardware test results in the Redis PRs were produced on <strong>Sophgo SG2042</strong> (64-core RISC-V server SoC) and <strong>SG2044</strong> hardware. These are consumer/developer-accessible boards, not cloud instances.</p>
+<p><strong>Client library ecosystem:</strong> <code class="language-plaintext highlighter-rouge">redis-py</code> (PyPI <code class="language-plaintext highlighter-rouge">redis</code>, latest 8.1.0) is a pure-Python package shipping a <code class="language-plaintext highlighter-rouge">py3-none-any</code> wheel - architecture-independent, installs on riscv64 with no porting work required. <code class="language-plaintext highlighter-rouge">hiredis</code> (C client, also used internally by Redis itself) has no dedicated riscv64 CI and was not found to have any riscv64-specific build failures reported.</p>
 
-<p><strong>Community:</strong> The active RISC-V contributor base for Redis is effectively one person (huangzhengx), with a single additional contributor (Polaris-911) on one PR. Both appear affiliated with ZTE RISC-V [NEEDS VERIFICATION]. No Redis maintainer currently has access to RISC-V hardware, as confirmed by ShooterIT’s review comment on PR #14251.</p>
+<p><strong>RISE Project engagement:</strong> Redis is not a RISE member, receives no RISE funding, and is not covered by any RISE blog post as a subject in its own right. A systematic search of the RISE blog index found exactly <strong>one</strong> passing mention of Redis across all posts: the 2026-08-18 post <a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">“PyTorch is available on riscv64!”</a>, which describes “a custom sccache Redis-based coordinator to leverage the multiple machines which may rebuild PyTorch concurrently on a cold-cache.” This is Redis used as <strong>internal CI infrastructure</strong> for RISE’s own PyTorch build-cache coordination (endpoint referenced in the <code class="language-plaintext highlighter-rouge">riseproject-dev/pytorch-ci</code> repo README), not a benchmarked workload and not funded porting work. Redis does not appear among the ~80 packages on RISE’s Python wheel-builder page (<code class="language-plaintext highlighter-rouge">riseproject.gitlab.io/python/wheel_builder/</code>). The RISE GitLab wheel mirror for the <code class="language-plaintext highlighter-rouge">redis</code> PyPI package has no custom build and redirects to real PyPI.</p>
 
-<p><strong>Benchmark data availability:</strong> No public Redis riscv64 vs. arm64 performance comparison reports were found on riseproject.dev or anywhere on the public web. The only quantitative data available is from the PR descriptions themselves, measured on SG2042/SG2044.</p><hr />
+<p>The <code class="language-plaintext highlighter-rouge">riseproject-dev/sw-ecosystem</code> repository (RISE’s own community tracking project, not an official RISE deliverable) maintains independent RISC-V-readiness assessment reports covering the broader Redis-family (<code class="language-plaintext highlighter-rouge">redis.md</code>, <code class="language-plaintext highlighter-rouge">redis_exporter.md</code>, <code class="language-plaintext highlighter-rouge">redisbloom.md</code>, <code class="language-plaintext highlighter-rouge">redisjson.md</code>, <code class="language-plaintext highlighter-rouge">redistimeseries.md</code>, <code class="language-plaintext highlighter-rouge">redisearch.md</code>, plus the Valkey/KeyDB forks) as unfunded community tracking, not RISE-sponsored engineering.</p>
+
+<p><strong>Conclusion:</strong> No RISE-funded or RISE-sponsored Redis RISC-V porting work exists. RISE’s only direct relationship with Redis is as a private infrastructure component for its own CI.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -878,45 +951,69 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://github.com/redis/redis/pull/15204">PR #15204</a> – BITCOUNT Zbb popcount</td>
-      <td>Performance gap</td>
-      <td>Open, awaiting review</td>
-      <td>BITCOUNT falls to scalar on riscv64; +288% throughput available pending merge</td>
+      <td><a href="https://github.com/redis/redis/pull/15859">PR #15859</a> - mulhu reciprocal divide-by-zero</td>
+      <td>Correctness bug (Bugbot-flagged, critical)</td>
+      <td>Open, unmerged, unreviewed</td>
+      <td>Reciprocal expression wraps to zero when <code class="language-plaintext highlighter-rouge">mono_ticksPerMicrosecond == 1</code> (1 MHz mtime timebases, e.g. SiFive boards); <code class="language-plaintext highlighter-rouge">getMonotonicUs_riscv</code> would always return 0, breaking elapsed-time waits and event-loop timers on that hardware</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/redis/redis/pull/15273">PR #15273</a> – HyperLogLog RVV</td>
+      <td><a href="https://github.com/redis/redis/pull/15858">PR #15858</a> - SipHash Zbb dispatch, 2 open Bugbot issues</td>
+      <td>Correctness/build bugs</td>
+      <td>Open, unmerged, unreviewed</td>
+      <td>(1) High severity: the dispatch macro is applied only when compiling <code class="language-plaintext highlighter-rouge">siphash.o</code>, so <code class="language-plaintext highlighter-rouge">initServer</code> (compiled separately) never sees it - the Zbb probe call is never compiled into the running binary, making the dispatch dead code; (2) Medium severity: <code class="language-plaintext highlighter-rouge">REDIS_SIPHASH_RUNTIME</code> is not tracked in <code class="language-plaintext highlighter-rouge">.make-settings</code>, so a rebuild without the flag leaves <code class="language-plaintext highlighter-rouge">siphash.o</code> referencing undefined <code class="language-plaintext highlighter-rouge">siphash_zbb</code> symbols, causing a link failure</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/redis/redis/pull/15204">PR #15204</a> - BITCOUNT Zbb popcount</td>
       <td>Performance gap</td>
-      <td>Open, awaiting review</td>
+      <td>Open, awaiting review since 2026-05-14</td>
+      <td>BITCOUNT falls to scalar on riscv64; +288% throughput / -74% latency available pending merge</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/redis/redis/pull/15273">PR #15273</a> - HyperLogLog RVV</td>
+      <td>Performance gap</td>
+      <td>Open, awaiting review since 2026-05-27</td>
       <td>PFCOUNT/PFMERGE fall to scalar on riscv64</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> opt-in only</td>
-      <td>Usability gap</td>
-      <td>No tracking issue</td>
-      <td>AArch64 gets hardware clock by default; riscv64 requires explicit <code class="language-plaintext highlighter-rouge">-DUSE_PROCESSOR_CLOCK</code> build flag</td>
+      <td><a href="https://github.com/redis/redis/pull/15785">PR #15785</a> / <a href="https://github.com/redis/redis/pull/15786">PR #15786</a> - CRC64 Zbc/Zvbc</td>
+      <td>Performance gap</td>
+      <td>Open, unreviewed since 2026-09-14</td>
+      <td>CRC64 (RDB/AOF checksums) scalar on riscv64; 2.2x-9.6x speedup available pending merge</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> broken</td>
+      <td><a href="https://github.com/redis/redis/pull/14660">PR #14660</a> - riscv64 QEMU CI job</td>
+      <td>Infrastructure gap</td>
+      <td>Open, zero maintainer engagement since 2026-01-05</td>
+      <td>Correctness regressions on riscv64 are invisible to upstream CI</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> opt-in only on riscv64</td>
+      <td>Usability gap</td>
+      <td>No tracking issue</td>
+      <td>AArch64 gets the hardware clock by default; riscv64 requires an explicit <code class="language-plaintext highlighter-rouge">-DUSE_PROCESSOR_CLOCK</code> build flag, undocumented in release notes</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> broken on riscv64</td>
       <td>Build blocker</td>
       <td>No tracking issue</td>
-      <td><code class="language-plaintext highlighter-rouge">modules/Makefile</code> Rust installer case statement exits with error for riscv64; JSON, RediSearch, RedisBloom, RedisTimeSeries unavailable</td>
+      <td><code class="language-plaintext highlighter-rouge">modules/Makefile</code>’s Rust installer exits with error for riscv64; JSON, RediSearch, RedisBloom, RedisTimeSeries unavailable</td>
     </tr>
     <tr>
       <td>No riscv64 CI</td>
       <td>Coverage gap</td>
-      <td>No tracking issue</td>
+      <td>No tracking issue (PR #14660 pending)</td>
       <td>Correctness regressions on riscv64 are not caught by upstream CI</td>
     </tr>
     <tr>
-      <td>OpenSSL <a href="https://github.com/openssl/openssl/issues/30330">#30330</a> – <code class="language-plaintext highlighter-rouge">rv64i_zkne_set_encrypt_key</code> correctness</td>
-      <td>Correctness bug (upstream dep)</td>
+      <td><a href="https://github.com/openssl/openssl/issues/30330">openssl#30330</a> - <code class="language-plaintext highlighter-rouge">rv64i_zkne_set_encrypt_key</code> correctness (upstream dependency)</td>
+      <td>Correctness bug</td>
       <td>Open in OpenSSL repo</td>
-      <td>Affects TLS builds with Zkne-capable toolchains; null-key logic reversed</td>
+      <td>Affects TLS builds (<code class="language-plaintext highlighter-rouge">BUILD_TLS=yes</code>) with Zkne-capable toolchains; null-key logic reversed</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No open correctness or crash bugs specific to riscv64 in the redis/redis issue tracker were found as of the search date.</p><hr />
+<p>No open correctness or crash bugs specific to riscv64 were found directly in the redis/redis issue tracker as of this report (targeted searches for “riscv64 bug”, “riscv nan/floating/double”, “riscv crash/segfault/fail” each returned zero additional RISC-V-specific results). All current RISC-V correctness concerns are confined to the two newest, unmerged, Bugbot-flagged PRs above.</p><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -926,71 +1023,103 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
 </h2>
     
 
-<p><strong>Reviewer bandwidth is the primary bottleneck.</strong> Both open PRs (#15204, #15273) have been waiting since May 2026 with zero maintainer engagement. The assigned reviewer (fcostaoliveira) has not responded to any RISC-V PR. sundb has merged past RISC-V work without waiting for fcostaoliveira on at least one occasion (PR #14342). The team’s own documentation warns that PRs may wait significant time.</p>
+<p><strong>Reviewer bandwidth is the primary bottleneck.</strong> Six RISC-V PRs are open simultaneously (#15858, #15859, #15785, #15786, #15273, #15204) with essentially no maintainer engagement; the CI PR (#14660) has had zero maintainer response for roughly nine months. The assigned reviewer fcostaoliveira has been requested on multiple PRs and has not substantively responded to any of them. sundb is the only maintainer who has actively reviewed and merged RISC-V work to date.</p>
 
-<p><strong>No maintainer has RISC-V hardware.</strong> This was stated explicitly during PR #14251 review. All riscv64 correctness validation depends on contributors running tests themselves and reporting results. There is no CI backstop.</p>
+<p><strong>No maintainer has RISC-V hardware.</strong> Stated explicitly by reviewer ShooterIT during PR #14251 review (“i don’t have RISC CPU, can’t verify it”). All riscv64 correctness validation depends on contributor-run benchmarks reported in PR descriptions; there is no CI backstop (Section 7).</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> is an undocumented blocker.</strong> The <code class="language-plaintext highlighter-rouge">modules/Makefile</code> hard-codes an architecture list for the Rust toolchain installer. This is not documented anywhere in the Redis RISC-V contribution history and would be discovered only during a build attempt.</p>
+<p><strong>Established review precedent requires explicit ISA-extension gating.</strong> The closed, unmerged PR #14166 (unconditional unaligned-access enablement) was rejected by sundb specifically because “not all RISC-V supports non-aligned memory access… those that do not support it will raise an exception.” The author could not provide runtime version detection when asked and closed the PR rather than resolve it; the superseding #14342 added the Zicclsm build-time gate sundb required, and that version merged. This precedent is now the implicit review bar for every subsequent RISC-V PR (#15858/#15785/#15786/#15204/#15273), and the newest two PRs (#15858, #15859) are each blocked by a single Bugbot-identified correctness/build bug rather than a design disagreement - they appear mechanically close to mergeable but have no human review yet.</p>
 
-<p><strong>The <code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> asymmetry is a latent performance surprise.</strong> A team deploying Redis 8.4+ on RISC-V expecting the same clock behavior as on AArch64 will get the slower POSIX path unless the build flag is set explicitly. This is not documented in any release notes or build guides.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> is an undocumented blocker.</strong> <code class="language-plaintext highlighter-rouge">modules/Makefile</code>’s hard-coded Rust-toolchain architecture list is not documented anywhere in the Redis RISC-V contribution history and would only be discovered during a build attempt.</p>
 
-<p><strong>No adversarial review process for RISC-V PRs.</strong> The merged PRs were reviewed by a small number of maintainers, none of whom have RISC-V hardware. The review for PR #14251 identified real bugs (redundant check, missing Linux guard, big/little-endian device tree handling), but these were found through code review, not hardware testing. The potential for subtle architecture-specific bugs that only manifest on RISC-V hardware is non-zero and unmitigated by CI.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>The <code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> asymmetry is a latent performance surprise.</strong> A deployment expecting AArch64-equivalent clock behavior on riscv64 silently gets the slower POSIX path unless the build flag is set explicitly; this is undocumented in release notes or build guides.</p>
+
+<p><strong>No master tracking issue or roadmap exists.</strong> Issue #14383 (“Performance improvement plans for Redis under RISC-V?”) has been open and unanswered since 2025-09-26. Nothing in the repository links the six open RISC-V PRs to each other or to any coordinating issue.</p>
+
+<p><strong>No RISE engagement to accelerate review.</strong> Redis is not a RISE member and has not adopted RISE’s free riscv64 CI runners, which would directly address the CI gap (#14660) without requiring Redis Ltd. to purchase or maintain RISC-V hardware.</p><hr />
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p>Redis has zero upstream riscv64 CI: confirmed by both GitHub code search and a direct clone-and-grep of all 10 GitHub Actions workflow files, with no “riscv” string, no QEMU riscv64 step, and no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>/<code class="language-plaintext highlighter-rouge">Jenkinsfile</code>/<code class="language-plaintext highlighter-rouge">.cirrus.yml</code> equivalent anywhere in the repository. The one CI PR that would add riscv64 coverage, <a href="https://github.com/redis/redis/pull/14660">#14660</a>, is open and unmerged, stalled since 2026-01-05 with zero maintainer engagement. The distribution floor applies because Ubuntu 26.04 “resolute” ships <code class="language-plaintext highlighter-rouge">redis-server</code>/<code class="language-plaintext highlighter-rouge">redis-tools</code>/<code class="language-plaintext highlighter-rouge">redis-sentinel</code> 5:8.0.5-1 for riscv64 via Ubuntu Ports (confirmed via both <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> and the Launchpad API), and Debian sid ships 5:8.0.6-2 - but whether these distro builds require riscv64-specific source patches versus building vanilla upstream source unmodified was never verified in this research. Per the readiness methodology’s rule that an unknown patch status upgrades the grade to orange, this lands at <strong>orange/downstream-only</strong> rather than yellow/clean-distro-build. Upstream itself publishes source tarballs only, with no riscv64-specific release assets, so the release provider is the distro, not upstream.</p>
+
+<p>Redis is a general-purpose in-memory data store, cache, and broker, not a speed-differentiated optimization library, so the optimization-purpose modifier does not apply to this grade (optimization_gap: not applicable) even though several RISC-V performance PRs (Zbb/Zbc/RVV for SipHash, CRC64, popcount, HyperLogLog) are currently open and unmerged.</p>
+
+<p><strong>Pending work that could change the grade:</strong></p>
+<ul>
+  <li><a href="https://github.com/redis/redis/pull/15858">#15858</a> (SipHash Zbb) - 2 open Bugbot blockers (dead dispatch code; build-state loss)</li>
+  <li><a href="https://github.com/redis/redis/pull/15859">#15859</a> (monotonic mulhu reciprocal) - Bugbot-flagged critical divide-by-zero at 1 MHz timebases</li>
+  <li><a href="https://github.com/redis/redis/pull/15785">#15785</a> / <a href="https://github.com/redis/redis/pull/15786">#15786</a> (CRC64 Zbc/Zvbc)</li>
+  <li><a href="https://github.com/redis/redis/pull/15273">#15273</a> (HyperLogLog RVV)</li>
+  <li><a href="https://github.com/redis/redis/pull/15204">#15204</a> (BITCOUNT Zbb popcount)</li>
+  <li><a href="https://github.com/redis/redis/pull/14660">#14660</a> (riscv64 QEMU build+smoke CI) is the single PR most likely to directly move the color toward yellow/build-only-CI if merged, but has zero maintainer engagement since 2026-01-05.</li>
+  <li>No master tracking issue exists; <a href="https://github.com/redis/redis/issues/14383">#14383</a> is an unanswered question thread, not a roadmap.</li>
+  <li>Redis is not a RISE member, receives no RISE funding or blog coverage of its own, and has not adopted RISE’s free riscv64 CI runners.</li>
+  <li>Separately (does not affect the CI-based color but matters for module users): <code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code> is hard-blocked on riscv64 because <code class="language-plaintext highlighter-rouge">modules/Makefile</code>’s Rust installer only supports x86_64/aarch64.</li>
+</ul><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing any work: RISE has not funded or engineered any Redis RISC-V work. Its only touchpoint with Redis is using it as internal build-cache infrastructure for its own CI (Section 10). None of the work below is already covered by RISE.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The core Redis server builds and runs correctly on riscv64 today. No functional blockers exist for the non-module build. The one hard functional blocker is <code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code>, which blocks JSON, RediSearch, RedisBloom, and RedisTimeSeries. Fixing this requires patching <code class="language-plaintext highlighter-rouge">modules/Makefile</code> to add riscv64 to the Rust installer case statement, which requires either a pre-installed riscv64 Rust toolchain or upstream contribution to add RISC-V to the modules build support matrix.</p>
-<h3 id="132-performance-optimization">
+<p>The core Redis server builds and runs on riscv64 today via the Make-based build system and distro packaging, with no functional blocker for a non-module build. The one hard functional blocker is <code class="language-plaintext highlighter-rouge">BUILD_WITH_MODULES=yes</code>, which blocks RedisJSON, RediSearch, RedisBloom, and RedisTimeSeries. Fixing this requires patching <code class="language-plaintext highlighter-rouge">modules/Makefile</code> to add riscv64 to the Rust-installer architecture case statement, which in turn requires either a pre-installed riscv64 Rust toolchain or an upstream contribution extending the modules build support matrix.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>Two merged PRs (monotonic clock, SipHash unaligned) provide concrete gains available in Redis 8.4+. Two open PRs (BITCOUNT Zbb, HyperLogLog RVV) are ready for merge pending reviewer action.</p>
-
-<p>The pending PRs represent a concrete engagement opportunity. Both are authored by external contributors, well-structured, and targeted for Redis 8.10. Engaging fcostaoliveira or sundb directly to unblock these reviews would have an outsized impact relative to the reviewer time required.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The absence of any riscv64 CI is the single largest structural gap. Every other gap (missing optimizations, opt-in clock flag) is a performance or usability issue. The absence of CI means correctness regressions on riscv64 are invisible to the project until a downstream user reports them. This is a credibility and sustainability risk for any organization depending on Redis on RISC-V.</p>
-
-<p>The RISE Project’s free native riscv64 runners (Scaleway EM-RV1, launched March 2026) are available to GitHub-hosted projects at no cost. Adding a minimal riscv64 build-and-smoke-test job to <code class="language-plaintext highlighter-rouge">ci.yml</code> (build + PING/SET/GET via <code class="language-plaintext highlighter-rouge">redis-cli</code>) is low-effort and directly addresses the sustainability gap. This does not require Redis Ltd. to purchase hardware.</p>
-<h3 id="134-ecosystem-enablement">
+<p>Two merged PRs (monotonic clock, SipHash unaligned access) provide concrete, measured gains in Redis 8.4+. Six PRs are currently open, representing a substantial, ready-to-engage queue: #15785/#15786 (CRC64, up to 9.58x on 128 KiB buffers), #15204 (BITCOUNT, +288% throughput), #15273 (HyperLogLog RVV), and #15858/#15859 (SipHash Zbb dispatch, monotonic clock reciprocal), the latter two each requiring a small, well-scoped bug fix (dispatch macro propagation; divide-by-zero guard at 1 MHz timebases) before they are mergeable. Engaging sundb or fcostaoliveira directly to review and fix these six PRs would have outsized impact relative to the reviewer time required, since the implementation work is largely already done by external contributors.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>Redis is fully available in Debian and Ubuntu riscv64 package repositories. Docker official images include riscv64 for Alpine-based and Debian/trixie-based builds. The distribution surface is adequate for users building on standard Linux distributions. The gap is upstream project ownership of the port, not user-facing availability.</p>
-<h3 id="135-summary-table">
+<p>The absence of any riscv64 CI is the single largest structural gap and the primary driver of the orange grade. Every other gap is a performance or usability issue; the CI gap means correctness regressions on riscv64 (such as the #15859 divide-by-zero bug) are invisible to the project until a downstream user hits them. PR #14660 already implements a minimal riscv64 QEMU build+smoke-test job; it needs review and merge engagement, not new implementation work. RISE’s free native riscv64 runners (Scaleway EM-RV1, available since March 2026) could host a fuller test job at no hardware cost to Redis Ltd. once the smoke-test job is merged.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Redis itself is adequately distributed on riscv64 through Ubuntu Ports, Debian sid, and official Docker multi-arch images. The gap is upstream project ownership and CI validation of the port, not user-facing binary availability. The modules ecosystem (JSON/Search/Bloom/TimeSeries) is entirely blocked pending the <code class="language-plaintext highlighter-rouge">modules/Makefile</code> Rust-installer fix in 14.1.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1009,10 +1138,31 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Patch <code class="language-plaintext highlighter-rouge">modules/Makefile</code> to support riscv64 Rust toolchain</td>
+      <td>Patch <code class="language-plaintext highlighter-rouge">modules/Makefile</code> to support riscv64 in the Rust toolchain installer</td>
       <td>1</td>
       <td>Qualcomm / upstream PR</td>
       <td>Critical</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Review, fix, and merge PR #14660 (riscv64 QEMU build+smoke CI job)</td>
+      <td>1 (review/fix coordination)</td>
+      <td>Qualcomm (liaison) / upstream</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
+      <td>Fix and unblock PR #15859 (resolve Bugbot divide-by-zero bug)</td>
+      <td>0.5</td>
+      <td>Qualcomm / upstream PR</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
+      <td>Fix and unblock PR #15858 (resolve 2 Bugbot dispatch/build-state bugs)</td>
+      <td>1</td>
+      <td>Qualcomm / upstream PR</td>
+      <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
@@ -1030,6 +1180,13 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
     </tr>
     <tr>
       <td>Performance</td>
+      <td>Unblock PR #15785/#15786 (CRC64 Zbc/Zvbc) via reviewer engagement</td>
+      <td>0.5 (coordination)</td>
+      <td>Qualcomm (liaison)</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
       <td>Make <code class="language-plaintext highlighter-rouge">USE_PROCESSOR_CLOCK</code> default-on for riscv64 (matching AArch64 behavior)</td>
       <td>0.5</td>
       <td>Qualcomm / upstream PR</td>
@@ -1037,44 +1194,27 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add riscv64 build + smoke-test job to <code class="language-plaintext highlighter-rouge">ci.yml</code> using RISE native runners</td>
-      <td>1</td>
-      <td>Qualcomm / upstream PR</td>
-      <td>Critical</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Add full riscv64 test suite execution to CI (requires RISE runner capacity)</td>
+      <td>Extend riscv64 CI beyond smoke test to full suite, using RISE native runners</td>
       <td>3</td>
       <td>Qualcomm + RISE</td>
       <td>High</td>
     </tr>
     <tr>
-      <td>Performance</td>
-      <td>Contribute riscv64 vs arm64 benchmark report to establish baseline</td>
-      <td>2</td>
+      <td>Distribution</td>
+      <td>Verify whether Ubuntu/Debian riscv64 builds carry source patches vs. vanilla upstream, to resolve the orange-vs-yellow grade uncertainty</td>
+      <td>0.5</td>
       <td>Qualcomm</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Document riscv64 build procedure in Redis CONTRIBUTING.md</td>
+      <td>Document riscv64 build procedure in README.md / CONTRIBUTING.md</td>
       <td>1</td>
       <td>Qualcomm / upstream PR</td>
       <td>Low</td>
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
 <h2 id="15-references">
   
   
@@ -1086,20 +1226,38 @@ make <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <sp
 
 <ul>
   <li><a href="https://github.com/redis/redis">redis/redis repository</a></li>
-  <li><a href="https://github.com/redis/redis/pull/14251">PR #14251 – USE_PROCESSOR_CLOCK for RISC-V</a></li>
-  <li><a href="https://github.com/redis/redis/pull/14342">PR #14342 – Unaligned access optimizations for RISC-V with Zicclsm</a></li>
-  <li><a href="https://github.com/redis/redis/pull/14166">PR #14166 – Enable UNALIGNED_LE_CPU for RISC-V (closed, superseded)</a></li>
-  <li><a href="https://github.com/redis/redis/pull/15204">PR #15204 – RISC-V Zbb popcount support (open)</a></li>
-  <li><a href="https://github.com/redis/redis/pull/15273">PR #15273 – HyperLogLog RVV vectorization (open)</a></li>
+  <li><a href="https://github.com/redis/redis/issues/14383">Issue #14383 - Performance improvement plans for Redis under RISC-V?</a></li>
+  <li><a href="https://github.com/redis/redis">PR #12349 - Add RISC-V debug support</a> (first RISC-V commit, 2023-06-27)</li>
+  <li><a href="https://github.com/redis/redis/pull/14251">PR #14251 - USE_PROCESSOR_CLOCK for RISC-V</a></li>
+  <li><a href="https://github.com/redis/redis/pull/14342">PR #14342 - Unaligned access optimizations for RISC-V with Zicclsm</a></li>
+  <li><a href="https://github.com/redis/redis/pull/14166">PR #14166 - Enable UNALIGNED_LE_CPU for RISC-V (closed, superseded)</a></li>
+  <li><a href="https://github.com/redis/redis/pull/14660">PR #14660 - CI: add riscv64 QEMU build+smoke test job</a></li>
+  <li><a href="https://github.com/redis/redis/pull/15204">PR #15204 - RISC-V Zbb popcount support (open)</a></li>
+  <li><a href="https://github.com/redis/redis/pull/15273">PR #15273 - HyperLogLog RVV vectorization (open)</a></li>
+  <li><a href="https://github.com/redis/redis/pull/15710">PR #15710 - Route monotonic clock fallback diagnostics through serverLog (merged, not yet released)</a></li>
+  <li><a href="https://github.com/redis/redis/pull/15785">PR #15785 - RISC-V: add Zbc-accelerated crc64 (open)</a></li>
+  <li><a href="https://github.com/redis/redis/pull/15786">PR #15786 - RISC-V: add Zvbc vector crc64 (open)</a></li>
+  <li><a href="https://github.com/redis/redis/pull/15858">PR #15858 - SipHash RISC-V Zbb build knobs and runtime dispatch (open)</a></li>
+  <li><a href="https://github.com/redis/redis/pull/15859">PR #15859 - monotonic: mulhu reciprocal for RISC-V mtime conversion (open)</a></li>
   <li><a href="https://buildd.debian.org/status/package.php?p=redis">Debian buildd status for redis</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/redis-server">Ubuntu Noble redis-server package</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=Redis&amp;suite=resolute&amp;searchon=names&amp;section=all&amp;arch=riscv64">Ubuntu package search - Redis, resolute, riscv64</a></li>
+  <li><a href="https://ports.ubuntu.com/pool/universe/r/redis/">Ubuntu Ports package pool - redis</a></li>
+  <li><a href="https://launchpad.net/ubuntu/resolute/riscv64/redis-server">Launchpad - redis-server in resolute riscv64</a></li>
+  <li><a href="https://hub.docker.com/_/redis">Docker Hub - official redis image</a></li>
+  <li><a href="https://hub.docker.com/r/riscv64/redis/">riscv64/redis - community Docker image</a></li>
   <li><a href="https://archriscv.felixc.at/.status/status.htm">Arch Linux RISC-V status</a></li>
-  <li><a href="https://github.com/jemalloc/jemalloc/issues/2323">jemalloc issue #2323 – riscv64gc support</a></li>
-  <li><a href="https://github.com/jemalloc/jemalloc/issues/2399">jemalloc issue #2399 – riscv64 cross-build</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/30330">OpenSSL issue #30330 – rv64i_zkne_set_encrypt_key correctness bug</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/30880">OpenSSL issue #30880 – riscv64 CI flakiness</a></li>
-  <li><a href="https://github.com/Cyan4973/xxHash/issues/1018">xxHash issue #1018 – riscv64 inline asm optimization proposal</a></li>
-  <li><a href="https://riseproject.dev/blog">RISE Project – RISC-V Runners announcement (March 2026)</a></li>
+  <li><a href="https://github.com/jemalloc/jemalloc/issues/2323">jemalloc issue #2323 - riscv64gc support</a></li>
+  <li><a href="https://github.com/jemalloc/jemalloc/issues/2399">jemalloc issue #2399 - riscv64 cross-build</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/20980">OpenSSL issue #20980 - AES scalar fallback not constant-time</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/30330">OpenSSL issue #30330 - rv64i_zkne_set_encrypt_key correctness bug</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/28118">OpenSSL issue #28118 - Zbb detection broken under musl</a></li>
+  <li><a href="https://github.com/Cyan4973/xxHash/pull/1043">xxHash PR #1043 - RVV 1.0 vector implementation</a></li>
+  <li><a href="https://github.com/Cyan4973/xxHash/issues/870">xxHash issue #870 - strict-alignment</a></li>
+  <li><a href="https://github.com/LuaJIT/LuaJIT/issues/628">LuaJIT issue #628 - no official RISC-V support</a></li>
+  <li><a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE Project - PyTorch is available on riscv64!</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
+  <li><a href="https://riscv.org/blog/risc-v-public-beta-platform-release-%C2%B7-database-adaptation-evaluation-on-risc-v-server/">RISC-V International / PerfXLab - Database Adaptation Evaluation On RISC-V Server</a></li>
   <li><a href="https://github.com/valkey-io/valkey">Valkey fork (Linux Foundation)</a></li>
 </ul>
 
