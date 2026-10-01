@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-10-01<br />
+<strong>Readiness:</strong> orange (downstream-only)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for MySQL<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,9 +280,11 @@
 </h2>
     
 
-<p>MySQL is a relational database management system owned and operated solely by Oracle Corporation, which acquired it through the 2010 purchase of Sun Microsystems. There is no independent foundation, no community steering committee, and no public RFC or governance process. The project operates under a dual-license model: GPLv2 for MySQL Community Edition and a commercial license for MySQL Enterprise Edition. The authoritative source repository is <a href="https://github.com/mysql/mysql-server">mysql/mysql-server</a>, which functions primarily as a read-only source mirror: it has no CI configuration files, has only 6 open issues as of mid-2026, and all development occurs on Oracle-internal infrastructure.</p>
+<p>MySQL is a relational database management system owned and operated solely by Oracle Corporation, which acquired it through the 2010 purchase of Sun Microsystems. There is no independent foundation, no community steering committee, and no public RFC process for platform support decisions. Oracle runs a self-branded “MySQL Community Governance Model” initiative (Contributor Summit, Community Early Access program) described on <a href="https://www.mysql.com/">mysql.com</a> as “expanding open collaboration, transparent processes, and community participation,” but release and platform-support control remain Oracle-centric, not delegated to a foundation with an independent board or membership tiers. The project is dual-licensed: GPLv2 for MySQL Community Edition, commercial licensing for Enterprise/Standard/Classic editions.</p>
 
-<p>All external contributions are gated by the Oracle Contributor Agreement (OCA), available at <a href="https://oca.opensource.oracle.com">oca.opensource.oracle.com</a>. Oracle’s automated bot closes pull requests after 31 days if OCA compliance is not confirmed. No named external maintainers, MAINTAINERS file, OWNERS file, or CODEOWNERS file exists in the repository. MySQL is not a member or tracked project of the RISE Project. Oracle’s official supported platforms for MySQL 8.4 LTS and 9.x are: x86_64 on Oracle Linux/RHEL/Rocky, Ubuntu, SUSE, and Debian; arm64 on Oracle Linux/RHEL/Rocky and macOS; and SPARC_64 on Oracle Solaris. RISC-V is not on this list.</p><hr />
+<p>The authoritative source repository, <a href="https://github.com/mysql/mysql-server">mysql/mysql-server</a>, does carry a substantial public GitHub Actions CI setup (13 workflow files under <code class="language-plaintext highlighter-rouge">.github/workflows/</code>, covering PR builds, the MTR test suite, daily MTR runs, clang-format checks, stale-issue management, and a CODEOWNERS auto-assignment workflow), all running on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> GitHub-hosted x86 runners or self-hosted labels for the internal MTR suites. All external contributions are gated by the Oracle Contributor Agreement (OCA, <a href="https://oca.opensource.oracle.com">oca.opensource.oracle.com</a>); an automated <code class="language-plaintext highlighter-rouge">mysql-oca-bot</code> closes pull requests after roughly 31 days without OCA confirmation. A CODEOWNERS file exists in the repository (referenced by the <code class="language-plaintext highlighter-rouge">assign-codeowners.yml</code> workflow) but contains no riscv64-specific entries. MySQL is not a member or tracked project of the RISE Project; RISE’s own member roster (8 Premier members, 12 General members, as of the most recent fetch of <a href="https://riseproject.dev">riseproject.dev/members</a>) consists entirely of semiconductor/chip organizations, with no database vendor present. Total open-issue counts for the repository were not independently reverified in this research pass; what is confirmed is that repeated searches for every riscv-related keyword variant (“riscv”, “riscv64”, “RISC-V”, “rv64”) returned zero GitHub Issues results.</p>
+
+<p>Oracle’s official supported-platforms page (<a href="https://www.mysql.com/support/supportedplatforms/database.html">mysql.com/support/supportedplatforms/database.html</a>) lists only <strong>x86_64</strong> and <strong>arm64</strong> as supported CPU architectures, across Oracle Linux, RHEL, Rocky, Ubuntu, SUSE, Debian, Windows, and macOS. RISC-V does not appear on this list. There is no visible community or corporate push toward an official RISC-V port: platform support is unilaterally set by Oracle, with no open process for community-maintained architecture ports (in contrast to foundation-governed projects).</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -291,17 +294,58 @@
 </h2>
     
 
-<p>There is no Oracle-driven RISC-V port history. The complete public record of RISC-V engagement in <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> consists of one item:</p>
+<p>There is no Oracle-driven RISC-V port effort. The public record of RISC-V engagement with <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> consists of one pull request plus a handful of downstream/third-party bug reports.</p>
 
-<p><strong>2025-12-18:</strong> Community contributor PeterPtroc opened <a href="https://github.com/mysql/mysql-server/pull/639">PR #639</a>, “Add RISC-V hardware acceleration for Abseil CRC32C.” The PR was co-authored with gong-flying (gongxiaofei24@iscas.ac.cn, Institute of Software, Chinese Academy of Sciences / ISCAS). It proposed adding hardware CRC32C acceleration for RISC-V using the Zbc/Zbkc carry-less multiplication extensions, targeting the vendored Abseil library at <code class="language-plaintext highlighter-rouge">extra/abseil/abseil-cpp-20230802.1/</code>. The implementation used runtime detection via the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall and a new <code class="language-plaintext highlighter-rouge">crc_riscv.cc</code> file implementing carry-less multiply via <code class="language-plaintext highlighter-rouge">clmul</code>/<code class="language-plaintext highlighter-rouge">clmulh</code> instructions.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Event</th>
+      <th>Source</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2020-07-27</td>
+      <td>Sergio Durigan Junior (Canonical) authors Debian’s <code class="language-plaintext highlighter-rouge">use-largest-lock-free-type-selector-on-riscv.patch</code>, fixing a <code class="language-plaintext highlighter-rouge">static_assert</code> failure in <code class="language-plaintext highlighter-rouge">storage/temptable/include/temptable/lock_free_type.h</code> on RISC-V (the “always-lock-free” atomics assertion added in MySQL 8.0.21+ cannot be satisfied on RISC-V). Never upstreamed to <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> trunk.</td>
+      <td>Debian <code class="language-plaintext highlighter-rouge">mysql-8.0</code> packaging</td>
+    </tr>
+    <tr>
+      <td>~2021</td>
+      <td><a href="https://bugs.mysql.com/search.php?search_for=riscv&amp;status=All">bugs.mysql.com #100356</a>, “MySQL server fails to build on RISC-V 64,” filed against Oracle’s own bug tracker; closed by Oracle as <strong>Unsupported</strong> (RISC-V not officially supported), not fixed upstream.</td>
+      <td>bugs.mysql.com</td>
+    </tr>
+    <tr>
+      <td>~2020-2021</td>
+      <td>Gentoo Bug #761715, “MySQL &gt;=8.0.22 fails to build on PPC and RISC-V.” Status: CONFIRMED. Same root cause as #100356. Three community patches (libatomic linking, a RISC-V cycle-timer implementation, the lock-free type selector fix) landed for RISC-V in MySQL 8.0.27; PPC remains unsupported in Gentoo.</td>
+      <td>Gentoo Bugzilla</td>
+    </tr>
+    <tr>
+      <td>~2021</td>
+      <td>Launchpad Bug #1915275 (Ubuntu glibc package): <code class="language-plaintext highlighter-rouge">mysql-8.0</code> regressed on riscv64 after a glibc change made <code class="language-plaintext highlighter-rouge">sysconf(_SC_LEVEL1_DCACHE_LINESIZE)</code> return -1 instead of 0, which MySQL’s aligned-atomic allocation code cast to an unsigned 64-bit value (~18 exabytes), crashing with <code class="language-plaintext highlighter-rouge">std::bad_alloc</code> at startup and cascading to break dependent packages (php7.4, BOINC). Fixed in MySQL packaging 8.0.23-3ubuntu1 by validating the <code class="language-plaintext highlighter-rouge">sysconf</code> return value. Status: Fix Released.</td>
+      <td>Launchpad</td>
+    </tr>
+    <tr>
+      <td>2025-12-18</td>
+      <td>External contributor PeterPtroc opens <a href="https://github.com/mysql/mysql-server/pull/639">PR #639</a>, “Add RISC-V hardware acceleration for Abseil CRC32C,” targeting the vendored Abseil library. Author association: NONE (first-time/external contributor).</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2025-12-18 (same day)</td>
+      <td><code class="language-plaintext highlighter-rouge">mysql-oca-bot</code> posts a request for OCA sign-off, asking the contributor to link their bugs.mysql.com account email to the OCA signature.</td>
+      <td>GitHub PR #639</td>
+    </tr>
+    <tr>
+      <td>2026-01-18</td>
+      <td><code class="language-plaintext highlighter-rouge">mysql-oca-bot</code> auto-closes PR #639 after no response to the OCA request within the ~31-day window. <code class="language-plaintext highlighter-rouge">merged_at: null</code>. No Oracle engineer, reviewer, or other human ever commented on the PR; the only two comments on the thread are both from the bot.</td>
+      <td>GitHub PR #639</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>2025-12-18 (same day):</strong> The <code class="language-plaintext highlighter-rouge">mysql-oca-bot</code> posted a request for the contributor to sign the OCA. No Oracle engineer reviewed the technical content. No reviewer was assigned. No labels were applied.</p>
+<p><strong>On the ISCAS co-author claim:</strong> An earlier record of this project associated PR #639 with a co-author at the Institute of Software, Chinese Academy of Sciences (ISCAS, <code class="language-plaintext highlighter-rouge">gongxiaofei24@iscas.ac.cn</code>). A direct, full re-read of the PR body (via GitHub search) and the live comment thread (via WebFetch) in this research pass found a single author, PeterPtroc, with <code class="language-plaintext highlighter-rouge">author_association: NONE</code>, and exactly two comments, both automated and from <code class="language-plaintext highlighter-rouge">mysql-oca-bot</code>. No ISCAS co-author or any human reviewer appears anywhere in the verified PR content. This is a direct contradiction with the earlier claim; absent independent reconfirmation, the co-author claim should be treated as <strong>[NEEDS VERIFICATION]</strong> and is not relied on elsewhere in this report.</p>
 
-<p><strong>2026-01-18:</strong> The <code class="language-plaintext highlighter-rouge">mysql-oca-bot</code> auto-closed the PR after 31 days with no response from the author. The PR was closed unmerged (<code class="language-plaintext highlighter-rouge">merged_at: null</code> per GitHub API). This is the first and only upstream RISC-V attempt on record.</p>
-
-<p>There is no tracking issue, no master port issue, and no upstream discussion thread for a MySQL RISC-V port in <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code>, the MySQL bug tracker at <a href="https://bugs.mysql.com">bugs.mysql.com</a>, or GitHub Discussions. The bug tracker recognizes “RISC-V” as a CPU architecture filter but returns zero results against it.</p>
-
-<p>Separately, in the downstream ecosystem: a Debian patch (<code class="language-plaintext highlighter-rouge">use-largest-lock-free-type-selector-on-riscv.patch</code>) was authored by Sergio Durigan Junior (Canonical) on 2020-07-27 to fix a <code class="language-plaintext highlighter-rouge">static_assert</code> failure in <code class="language-plaintext highlighter-rouge">storage/temptable/include/temptable/lock_free_type.h</code> on RISC-V. This patch has never been upstreamed to <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> trunk.</p><hr />
+<p>There is no tracking issue, no master port issue, and no upstream discussion thread for a MySQL RISC-V port anywhere in <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code>, bugs.mysql.com, or GitHub Discussions. PR #639 is the complete inventory of RISC-V-specific GitHub artifacts on the upstream repository: repeated searches with every keyword variant (“riscv”, “riscv64”, “risc-v”, “rv64”, “rv64gc”, “zbkc”) return exactly one PR and zero issues.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -311,16 +355,54 @@
 </h2>
     
 
-<p>Oracle does not publish a tiered platform support policy document. The implicit model is: Oracle-tested and Oracle-released binary = supported; everything else is unsupported community effort. Under this model, RISC-V is unsupported at every level:</p>
+<p>Oracle publishes no tiered platform-support policy document (no Tier 1/Tier 2 classification). The implicit model is binary: Oracle-tested-and-released = supported, everything else is unsupported community effort. Under this model RISC-V is unsupported at every level:</p>
 
 <ul>
   <li>No Oracle binary release for riscv64 exists on <a href="https://dev.mysql.com/downloads/">dev.mysql.com/downloads</a>.</li>
-  <li>No GitHub Release asset for riscv64 exists (the <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> repository publishes zero GitHub Releases via the API).</li>
-  <li>No CI run for riscv64 is visible in any public configuration.</li>
-  <li>No Oracle engineer has publicly commented on any riscv64 question.</li>
+  <li>No GitHub Release asset exists: a direct fetch of <a href="https://github.com/mysql/mysql-server/releases">github.com/mysql/mysql-server/releases</a> returns “There aren’t any releases here” (MySQL does not use GitHub Releases for distribution at all, for any architecture; this applies equally to x86_64/arm64, not a riscv64-specific gap).</li>
+  <li>No GitHub Actions CI run targets riscv64: all 13 workflow files under <code class="language-plaintext highlighter-rouge">.github/workflows/</code> use <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> GitHub-hosted x86 runners or self-hosted labels for the <code class="language-plaintext highlighter-rouge">mtr.yml</code>/<code class="language-plaintext highlighter-rouge">daily-mtr.yml</code> suites; zero riscv string matches anywhere under <code class="language-plaintext highlighter-rouge">.github/</code> (workflows, CODEOWNERS, issue/PR templates, dependabot config), confirmed independently via both a local sparse-clone grep and GitHub’s server-side <code class="language-plaintext highlighter-rouge">search_code</code> index (<code class="language-plaintext highlighter-rouge">total_count: 0</code> for <code class="language-plaintext highlighter-rouge">riscv repo:mysql/mysql-server path:.github</code>).</li>
+  <li><code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> and <code class="language-plaintext highlighter-rouge">Jenkinsfile</code> do not exist anywhere in the repository. The only two <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> files in the tree belong to vendored third-party source drops (<code class="language-plaintext highlighter-rouge">extra/json/json-3.12.0/</code>, <code class="language-plaintext highlighter-rouge">extra/libcbor/libcbor-0.11.0/</code>), not to MySQL’s own CI.</li>
+  <li>No Oracle engineer has publicly commented on any riscv64-related question, issue, or pull request.</li>
 </ul>
 
-<p>Downstream distributions (Debian, Ubuntu) independently build and ship MySQL for riscv64 as a community effort, without any formal Oracle coordination. These are not Oracle-supported tiers.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Oracle-listed supported CPU architecture</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Oracle official binary release</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>GitHub Actions CI coverage</td>
+      <td>Yes (ubuntu-latest)</td>
+      <td>Data not available: arm64-specific CI coverage was not independently verified in this pass</td>
+      <td>No (0 of 13 workflow files reference riscv)</td>
+    </tr>
+    <tr>
+      <td>Architecture-specific source code</td>
+      <td>Yes (10+ non-vendored files)</td>
+      <td>Yes (6+ non-vendored files)</td>
+      <td>No (0 non-vendored files)</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Downstream distributions (Debian, Ubuntu) independently build and ship MySQL for riscv64 as a community effort, with no formal Oracle coordination; these do not constitute an Oracle-supported tier.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -330,67 +412,52 @@
 </h2>
     
 
-<p><strong>Summary verdict:</strong> MySQL compiles and runs correctly on riscv64. All architecture-sensitive hotpaths fall to scalar/software fallbacks. There is zero RISC-V-specific code in the upstream source tree.</p>
-<h3 id="41-innodb-crc32">
-  
-  
-    <a href="#41-innodb-crc32" class="anchor-heading" aria-labelledby="41-innodb-crc32"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 InnoDB CRC32
-  
-  
-</h3>
-    
+<p><strong>Summary verdict:</strong> MySQL compiles and runs correctly on riscv64 via generic, portable C/C++ code paths. Every architecture-sensitive hotpath examined falls to a scalar or generic fallback on riscv64; there is zero RISC-V-specific (hand-tuned, intrinsic, or inline-asm) code anywhere in MySQL’s own, non-vendored source tree. This was independently confirmed via <code class="language-plaintext highlighter-rouge">search_code</code> queries restricted to <code class="language-plaintext highlighter-rouge">NOT path:extra</code> (i.e., excluding bundled third-party sources): <code class="language-plaintext highlighter-rouge">__x86_64__</code> appears in 10 non-vendored files, <code class="language-plaintext highlighter-rouge">__aarch64__</code> in 6, and <code class="language-plaintext highlighter-rouge">riscv</code>/<code class="language-plaintext highlighter-rouge">__riscv</code>/<code class="language-plaintext highlighter-rouge">riscv64</code> in <strong>0</strong> files (two independent zero-result queries).</p>
 
-<p>File: <code class="language-plaintext highlighter-rouge">storage/innobase/ut/crc32.cc</code> and <code class="language-plaintext highlighter-rouge">storage/innobase/include/ut0crc32.h</code>.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>InnoDB CRC32 (<code class="language-plaintext highlighter-rouge">storage/innobase/ut/crc32.cc</code>, <code class="language-plaintext highlighter-rouge">ut0crc32.h</code>)</td>
+      <td>Full: SSE4.2 <code class="language-plaintext highlighter-rouge">_mm_crc32_u64</code> + PCLMUL <code class="language-plaintext highlighter-rouge">_mm_clmulepi64_si128</code>, runtime <code class="language-plaintext highlighter-rouge">cpuid</code> dispatch</td>
+      <td>Full: <code class="language-plaintext highlighter-rouge">__crc32cd</code>/<code class="language-plaintext highlighter-rouge">vmull_p64</code> ACLE intrinsics, runtime <code class="language-plaintext highlighter-rouge">getauxval(HWCAP_CRC32/PMULL)</code> dispatch, separate Apple-ARM branch</td>
+      <td>Scalar: no riscv branch exists; falls into <code class="language-plaintext highlighter-rouge">CRC32_DEFAULT</code>, a generic slice-by-8 software table (polynomial 0x82f63b78). Header comment: “we don’t even know how to ask if the hardware supports crc32” for this default case.</td>
+    </tr>
+    <tr>
+      <td>MySQL checksum (<code class="language-plaintext highlighter-rouge">include/my_checksum.h</code>)</td>
+      <td>zlib <code class="language-plaintext highlighter-rouge">crc32_z()</code> fallback (no dedicated x86 path in this file)</td>
+      <td>ARMv8 hardware CRC via <code class="language-plaintext highlighter-rouge">HAVE_ARMV8_CRC32_INTRINSIC</code>, runtime <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP) &amp; HWCAP_CRC32</code></td>
+      <td>zlib <code class="language-plaintext highlighter-rouge">crc32_z()</code> generic fallback</td>
+    </tr>
+    <tr>
+      <td>Cycle counter (<code class="language-plaintext highlighter-rouge">mysys/my_rdtsc.cc</code>, ~950 lines)</td>
+      <td>Full: inline RDTSC asm (i386 and x86_64 variants)</td>
+      <td>Full: inline <code class="language-plaintext highlighter-rouge">mrs %[rt],cntvct_el0</code> asm</td>
+      <td>Missing: no riscv branch among the 9 enumerated architectures (i386, x86_64, Win64, ia64, ppc64, ppc32, sparcv9, sparc32, aarch64, s390x); falls through every <code class="language-plaintext highlighter-rouge">#elif</code> to the final <code class="language-plaintext highlighter-rouge">#else return 0;</code>. Genuine functional degradation for cycle-accurate profiling, though correctness is unaffected since millisecond/microsecond timers use portable <code class="language-plaintext highlighter-rouge">gettimeofday()</code>.</td>
+    </tr>
+    <tr>
+      <td>Bundled Abseil CRC32C (<code class="language-plaintext highlighter-rouge">extra/abseil/abseil-cpp-20250814.1/absl/crc/internal/cpu_detect.cc</code>)</td>
+      <td>Full: CPUID with per-model tuning (Skylake, Haswell, Naples, Milan, Turin, etc.)</td>
+      <td>Full: MIDR_EL1-based detection (Neoverse N1/V1/N2/V2/N3, Ampere Siryn), separate Apple path</td>
+      <td><code class="language-plaintext highlighter-rouge">CpuType::kUnknown</code>, generic software fallback; <code class="language-plaintext highlighter-rouge">SupportsArmCRC32PMULL()</code> not applicable. No <code class="language-plaintext highlighter-rouge">__riscv</code> guard anywhere in this directory.</td>
+    </tr>
+    <tr>
+      <td>Spin-lock yield (<code class="language-plaintext highlighter-rouge">libs/mysql/concurrency/spin_lock_mutex.h</code>)</td>
+      <td>Full: <code class="language-plaintext highlighter-rouge">_mm_pause()</code></td>
+      <td>Full: inline <code class="language-plaintext highlighter-rouge">yield</code> asm</td>
+      <td>Missing: falls to generic <code class="language-plaintext highlighter-rouge">std::this_thread::yield()</code>; RISC-V’s own <code class="language-plaintext highlighter-rouge">Zihintpause</code>/fence hint is unused.</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>Architecture paths present: x86_64 (CPUID detection, HW SSE4.2/PCLMULQDQ intrinsics), ARM64 Linux (getauxval AT_HWCAP, HWCAP_CRC32 + HWCAP_PMULL intrinsics), ARM64 Apple (separate variant). All other architectures fall to <code class="language-plaintext highlighter-rouge">CRC32_DEFAULT</code>, which assigns <code class="language-plaintext highlighter-rouge">ut_crc32 = software::crc32</code> – a slice-8 software table implementation using polynomial 0x82f63b78. The header comment explicitly states: “we don’t even know how to ask if the hardware supports crc32” for the default case.</p>
-
-<p>RISC-V status: software slice-8 table only. No hardware path.</p>
-<h3 id="42-mysql-checksum-my_checksumh">
-  
-  
-    <a href="#42-mysql-checksum-my_checksumh" class="anchor-heading" aria-labelledby="42-mysql-checksum-my_checksumh"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 MySQL Checksum (<code class="language-plaintext highlighter-rouge">my_checksum.h</code>)
-  
-  
-</h3>
-    
-
-<p>File: <code class="language-plaintext highlighter-rouge">include/my_checksum.h</code>.</p>
-
-<p>Architecture paths present: ARMv8 hardware CRC intrinsics via <code class="language-plaintext highlighter-rouge">HAVE_ARMV8_CRC32_INTRINSIC</code> with runtime detection via <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP) &amp; HWCAP_CRC32</code>. All other architectures use zlib’s <code class="language-plaintext highlighter-rouge">crc32_z()</code>.</p>
-
-<p>RISC-V status: generic zlib <code class="language-plaintext highlighter-rouge">crc32_z()</code> fallback. No hardware path.</p>
-<h3 id="43-cycle-counter--rdtsc">
-  
-  
-    <a href="#43-cycle-counter--rdtsc" class="anchor-heading" aria-labelledby="43-cycle-counter--rdtsc"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Cycle Counter / rdtsc
-  
-  
-</h3>
-    
-
-<p>Files: <code class="language-plaintext highlighter-rouge">mysys/my_rdtsc.cc</code> and <code class="language-plaintext highlighter-rouge">include/my_rdtsc.h</code>.</p>
-
-<p>Architecture paths with dedicated hardware timers: x86 (i386 RDTSC), x86_64 (RDTSC), Windows x64, IA-64, PowerPC 32/64, SPARC v9 64-bit, SPARC 32-bit, AArch64 (cntvct_el0), s390x, Apple/Mach. The header defines <code class="language-plaintext highlighter-rouge">MY_TIMER_ROUTINE_ASM_*</code> constants for: ASM_X86, ASM_X86_64, RDTSC, ASM_IA64, ASM_PPC, ASM_PPC64, ASM_GCC_SPARC64, ASM_AARCH64, ASM_S390X. No <code class="language-plaintext highlighter-rouge">MY_TIMER_ROUTINE_ASM_RISCV</code> constant is defined.</p>
-
-<p>RISC-V status: cycle counter returns 0. This affects performance profiling, query timing, and any code path that relies on the cycle counter for sub-microsecond timing.</p>
-<h3 id="44-bundled-abseil-crc32c">
-  
-  
-    <a href="#44-bundled-abseil-crc32c" class="anchor-heading" aria-labelledby="44-bundled-abseil-crc32c"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Bundled Abseil CRC32C
-  
-  
-</h3>
-    
-
-<p>Directory: <code class="language-plaintext highlighter-rouge">extra/abseil/abseil-cpp-20250814.1/absl/crc/internal/</code>.</p>
-
-<p>Files present: <code class="language-plaintext highlighter-rouge">cpu_detect.cc</code>, <code class="language-plaintext highlighter-rouge">crc32_x86_arm_combined_simd.h</code>, <code class="language-plaintext highlighter-rouge">crc_memcpy_x86_arm_combined.cc</code>, <code class="language-plaintext highlighter-rouge">crc_x86_arm_combined.cc</code>, <code class="language-plaintext highlighter-rouge">non_temporal_arm_intrinsics.h</code>, <code class="language-plaintext highlighter-rouge">crc_memcpy_fallback.cc</code>.</p>
-
-<p>Architecture paths in <code class="language-plaintext highlighter-rouge">cpu_detect.cc</code>: x86_64 (CPUID with per-model detection: Skylake, Haswell, Naples, Milan, Turin, etc.), AArch64 Linux (reads MIDR_EL1, detects Neoverse N1/V1/N2/V2/N3, Ampere Siryn), AArch64 Apple (sysctlbyname). All other architectures fall to <code class="language-plaintext highlighter-rouge">CpuType::kUnknown</code> and <code class="language-plaintext highlighter-rouge">SupportsArmCRC32PMULL() = false</code>.</p>
-
-<p>RISC-V status: <code class="language-plaintext highlighter-rouge">kUnknown</code>, generic software fallback. No <code class="language-plaintext highlighter-rouge">__riscv</code> guard appears anywhere in this directory. The abandoned PR #639 proposed adding <code class="language-plaintext highlighter-rouge">SupportsRiscvCrc32()</code> via <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> and a new <code class="language-plaintext highlighter-rouge">crc_riscv.cc</code>. That patch was blocked by Oracle’s OCA process, not by technical objection.</p>
-
-<p>Performance impact: PR #639 documented the cost of this gap on a 64-core SG2044 server at 2.6 GHz running openEuler Linux:</p>
+<p><strong>Quantified performance gap (Abseil CRC32C):</strong> PR #639 proposed <code class="language-plaintext highlighter-rouge">SupportsRiscvCrc32()</code> via the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall to detect <code class="language-plaintext highlighter-rouge">Zbc</code>/<code class="language-plaintext highlighter-rouge">Zbkc</code> extensions, a build-time check for <code class="language-plaintext highlighter-rouge">-march=rv64gc_zbc</code>/<code class="language-plaintext highlighter-rouge">-march=rv64gc_zbkc</code>, and a carry-less-multiplication CRC32C algorithm in a new <code class="language-plaintext highlighter-rouge">crc_riscv.cc</code>. Benchmarks were run on a 64-core SG2044 server at 2.6 GHz, openEuler/Linux:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -423,54 +490,9 @@
   </tbody>
 </table></div>
 
-<p>Throughput (BM_Memcpy, 500 KB): ~60.7 MiB/s baseline vs. ~171.7 MiB/s with Zbc/Zbkc hardware acceleration. MySQL currently ships at the baseline figure on riscv64.</p>
-<h3 id="45-atomic--spin-wait">
-  
-  
-    <a href="#45-atomic--spin-wait" class="anchor-heading" aria-labelledby="45-atomic--spin-wait"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Atomic / Spin-wait
-  
-  
-</h3>
-    
+<p>BM_Memcpy (500 KB) throughput: ~60.7 MiB/s baseline vs. ~171.7 MiB/s accelerated. All 11 existing CRC32C unit tests passed against the accelerated implementation. This patch was closed unmerged (Section 2) and independently confirmed absent from trunk: <code class="language-plaintext highlighter-rouge">search_code</code> for <code class="language-plaintext highlighter-rouge">crc_riscv</code> and for <code class="language-plaintext highlighter-rouge">Zbkc</code> across the entire current repository returns zero matches (the only “Zbkc” hits found were false positives inside unrelated PEM test certificates). Even had it merged, it would only have accelerated Abseil’s internal CRC usage path, not InnoDB’s own <code class="language-plaintext highlighter-rouge">crc32.cc</code> hot path (page/redo-log checksums), which no PR has touched for RISC-V.</p>
 
-<p>File: <code class="language-plaintext highlighter-rouge">include/my_atomic.h</code>.</p>
-
-<p>The <code class="language-plaintext highlighter-rouge">LF_BACKOFF</code> spin-wait macro is a no-op (<code class="language-plaintext highlighter-rouge">#define LF_BACKOFF (1)</code>) for all non-Windows platforms. There is no <code class="language-plaintext highlighter-rouge">pause</code>/<code class="language-plaintext highlighter-rouge">wrs.nto</code> or architecture-specific yield instruction inserted for any ISA including riscv64.</p>
-
-<p>RISC-V status: same as all non-Windows platforms – no spin-wait optimization, but this is not a RISC-V-specific regression.</p>
-<h3 id="46-architecture-file-count-summary">
-  
-  
-    <a href="#46-architecture-file-count-summary" class="anchor-heading" aria-labelledby="46-architecture-file-count-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.6 Architecture File Count Summary
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Architecture</th>
-      <th>Files with dedicated code in mysql-server trunk</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>x86_64</td>
-      <td>4+ (InnoDB CRC32, my_rdtsc, Abseil crc_x86_arm_combined.cc, crc_memcpy_x86_arm_combined.cc, abseil SIMD header)</td>
-    </tr>
-    <tr>
-      <td>ARM64</td>
-      <td>4+ (InnoDB CRC32, my_rdtsc, Abseil ARM intrinsics, my_checksum.h ARMv8 path)</td>
-    </tr>
-    <tr>
-      <td>RISC-V</td>
-      <td>0</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>Two files in the source tree contain the string “riscv”: <code class="language-plaintext highlighter-rouge">extra/abseil/abseil-cpp-20250814.1/absl/debugging/internal/stacktrace_riscv-inl.inc</code> (vendored Abseil, not MySQL code) and <code class="language-plaintext highlighter-rouge">extra/boost/boost_1_87_0/boost/predef/architecture/riscv.h</code> (vendored Boost platform detection header). Neither is MySQL-authored code.</p><hr />
+<p>No <code class="language-plaintext highlighter-rouge">.S</code> assembly files, no JIT backend, no SIMD dispatch table, and no <code class="language-plaintext highlighter-rouge">arch/riscv/</code>-style directory exist for RISC-V anywhere in the repository. Searches for RVV intrinsics (<code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>: 0 hits) and Zba/Zbb bitmanip (<code class="language-plaintext highlighter-rouge">zbb OR zba</code>: 2 raw hits, both false positives inside unrelated base64 test data) found nothing. The ~37 repo-wide “riscv” string matches are entirely inside vendored third-party source trees (<code class="language-plaintext highlighter-rouge">extra/boost</code>, <code class="language-plaintext highlighter-rouge">extra/abseil</code>, <code class="language-plaintext highlighter-rouge">extra/gperftools</code>, <code class="language-plaintext highlighter-rouge">extra/rapidyaml</code>, <code class="language-plaintext highlighter-rouge">extra/zstd</code>, <code class="language-plaintext highlighter-rouge">extra/icu</code>, <code class="language-plaintext highlighter-rouge">extra/libtirpc</code>) as generic <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> portability guards written by those upstream projects, handling basic build/portability concerns (stack unwinding, cache-line size, endianness, autoconf triplets), not MySQL-authored or performance-tuned code.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -479,90 +501,41 @@
   
 </h2>
     
-<h3 id="51-cmake-architecture-detection">
-  
-  
-    <a href="#51-cmake-architecture-detection" class="anchor-heading" aria-labelledby="51-cmake-architecture-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 cmake Architecture Detection
-  
-  
-</h3>
-    
 
-<p>The <code class="language-plaintext highlighter-rouge">cmake/os/</code> directory contains: Darwin.cmake, FreeBSD.cmake, Linux.cmake, SunOS.cmake, Windows.cmake, WindowsCache.cmake. No riscv-specific cmake file exists. The variable <code class="language-plaintext highlighter-rouge">LINUX_RISCV</code> is not defined anywhere in the cmake tree.</p>
+<p>No <code class="language-plaintext highlighter-rouge">BUILDING.md</code> exists. <code class="language-plaintext highlighter-rouge">INSTALL</code> is a 9-line pointer to <a href="https://dev.mysql.com/doc/refman/en/source-installation.html">dev.mysql.com/doc/refman/en/source-installation.html</a> and the downloads page, with no build commands. There is no <code class="language-plaintext highlighter-rouge">docs/</code> directory, no riscv64 cmake toolchain file, no <code class="language-plaintext highlighter-rouge">.ci/</code> or top-level <code class="language-plaintext highlighter-rouge">docker/</code> directory, and a code search for <code class="language-plaintext highlighter-rouge">riscv64 repo:mysql/mysql-server filename:Dockerfile</code> returns zero results (the only Dockerfiles in the repo are unrelated telemetry test containers and ones bundled inside vendored third-party sources such as <code class="language-plaintext highlighter-rouge">extra/curl</code> and <code class="language-plaintext highlighter-rouge">extra/opentelemetry-cpp</code>).</p>
 
-<p><code class="language-plaintext highlighter-rouge">cmake/os/Linux.cmake</code> contains one architecture check: a guard for <code class="language-plaintext highlighter-rouge">aarch64</code> that sets <code class="language-plaintext highlighter-rouge">LINUX_ARM</code>. No equivalent check for riscv64 exists.</p>
-<h3 id="52-compiler-requirements">
-  
-  
-    <a href="#52-compiler-requirements" class="anchor-heading" aria-labelledby="52-compiler-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Compiler Requirements
-  
-  
-</h3>
-    
+<p><strong>cmake architecture detection:</strong> <code class="language-plaintext highlighter-rouge">cmake/os/</code> contains Darwin.cmake, FreeBSD.cmake, Linux.cmake, SunOS.cmake, Windows.cmake, WindowsCache.cmake; no riscv-specific file exists, and <code class="language-plaintext highlighter-rouge">LINUX_RISCV</code> is not defined anywhere in the cmake tree. <code class="language-plaintext highlighter-rouge">cmake/os/Linux.cmake</code> contains exactly one architecture-specific guard, for <code class="language-plaintext highlighter-rouge">aarch64</code> (sets <code class="language-plaintext highlighter-rouge">LINUX_ARM</code>); no riscv64 equivalent exists.</p>
 
-<p>Enforced by cmake guards in <code class="language-plaintext highlighter-rouge">cmake/os/Linux.cmake</code>:</p>
-<ul>
-  <li>GCC minimum: 11 (GCC 10 is documented as known to fail)</li>
-  <li>Clang minimum: 14 (described as “lowest version tested”)</li>
-  <li>C++17 is required</li>
-</ul>
-
-<p>These produce fatal cmake errors unless <code class="language-plaintext highlighter-rouge">-DFORCE_UNSUPPORTED_COMPILER=ON</code> is set. Both GCC 11 and Clang 14 are well above the versions currently shipping in Debian sid and Ubuntu 24.04, so this is not a blocking issue on current distributions.</p>
-<h3 id="53-downstream-riscv64-build-debian-reference">
-  
-  
-    <a href="#53-downstream-riscv64-build-debian-reference" class="anchor-heading" aria-labelledby="53-downstream-riscv64-build-debian-reference"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Downstream riscv64 Build (Debian Reference)
-  
-  
-</h3>
-    
-
-<p>Debian’s <code class="language-plaintext highlighter-rouge">mysql-8.0</code> package version 8.0.46-1 builds natively on riscv64 buildd <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code> (Oregon State University Open Source Lab). Build duration: approximately 29 hours. The Debian <code class="language-plaintext highlighter-rouge">debian/rules</code> cmake invocation uses:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-DWITH_SYSTEM_LIBS=ON -DWITH_ZLIB=system -DWITH_BOOST=../boost
--DWITH_FIDO=bundled -DWITH_LIBWRAP=OFF
+<p><strong>KNOWN_64BIT_ARCHITECTURES (<code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> lines ~664-671):</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SET(KNOWN_64BIT_ARCHITECTURES
+  arm64
+  aarch64
+  ppc64
+  ppc64le
+  s390x
+  x86_64
+)
 </code></pre></div></div>
+<p>riscv64 is absent from this list, which governs RPM packaging install paths (<code class="language-plaintext highlighter-rouge">lib64</code> vs <code class="language-plaintext highlighter-rouge">lib</code>); it is not a hard build gate but confirms riscv64 has never been added for packaging purposes.</p>
 
-<p>Standard Debian build flags. No riscv64-specific cmake flags are required.</p>
+<p><strong>Compiler requirements</strong> (<code class="language-plaintext highlighter-rouge">cmake/os/Linux.cmake</code>, blanket Linux-wide, no architecture branch, so it applies identically to riscv64): GCC 11 minimum (“gcc10 is known to fail”; code comment references GCC 10 but the enforced check is <code class="language-plaintext highlighter-rouge">VERSION_LESS 11</code>, an internal inconsistency in the comment vs. the actual check), Clang 14 minimum (“lowest version tested”), C++17 required. An escape hatch, <code class="language-plaintext highlighter-rouge">-DFORCE_UNSUPPORTED_COMPILER=ON</code>, disables this check entirely (undocumented risk). CMake minimum: 3.17.5 (<code class="language-plaintext highlighter-rouge">CMAKE_MINIMUM_REQUIRED(VERSION 3.17.5)</code>, Unix path).</p>
 
-<p>Debian’s build rules include a test-suite failure handling guard:</p>
+<p><strong>No riscv64-specific <code class="language-plaintext highlighter-rouge">-DUSE_X=OFF</code> flags exist.</strong> The nearest architecture-conditional build option is <code class="language-plaintext highlighter-rouge">WITH_NUMA</code> (<code class="language-plaintext highlighter-rouge">configure.cmake</code> ~line 679), which is Linux-generic (ON if libnuma is found) and not gated by processor type.</p>
 
+<p><strong>No QEMU usage is documented</strong> anywhere in the build system or official build documentation.</p>
+
+<p><strong>Downstream riscv64 build (Debian reference):</strong> Debian’s <code class="language-plaintext highlighter-rouge">mysql-8.0</code> package (version 8.0.46-1) builds natively on riscv64 buildd <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code> (Oregon State University Open Source Lab), taking approximately 29 hours. <code class="language-plaintext highlighter-rouge">debian/rules</code> invokes cmake with standard flags (<code class="language-plaintext highlighter-rouge">-DWITH_SYSTEM_LIBS=ON -DWITH_ZLIB=system -DWITH_BOOST=../boost -DWITH_FIDO=bundled -DWITH_LIBWRAP=OFF</code>), none riscv64-specific. Debian’s build rules discard test-suite failures on riscv64:</p>
 <div class="language-makefile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">ifneq</span> <span class="nv">(,$(filter $(ARCH), amd64 i386 armhf))</span>
     <span class="nv">TESTSUITE_FAIL_CMD</span><span class="o">:=</span><span class="nb">exit </span>1
 <span class="k">else</span>
     <span class="nv">TESTSUITE_FAIL_CMD</span><span class="o">:=</span><span class="nb">true</span>   <span class="c"># riscv64 lands here; failures are ignored</span>
 <span class="k">endif</span>
 </code></pre></div></div>
+<p>This means the Debian riscv64 build is “maybe-successful”: it compiles and installs, but test-suite failures on riscv64 do not block the package.</p>
 
-<p>This means the Debian riscv64 build is classified as “Maybe-Successful” – it compiles and installs, but test suite failures on riscv64 do not block the package.</p>
-<h3 id="54-required-downstream-patch-not-upstreamed">
-  
-  
-    <a href="#54-required-downstream-patch-not-upstreamed" class="anchor-heading" aria-labelledby="54-required-downstream-patch-not-upstreamed"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Required Downstream Patch (Not Upstreamed)
-  
-  
-</h3>
-    
+<p><strong>Required downstream patch, not upstreamed:</strong> <code class="language-plaintext highlighter-rouge">use-largest-lock-free-type-selector-on-riscv.patch</code> (Debian <code class="language-plaintext highlighter-rouge">mysql-8.0</code> packaging, Sergio Durigan Junior, 2020-07-27) patches <code class="language-plaintext highlighter-rouge">storage/temptable/include/temptable/lock_free_type.h</code>. Root cause: on RISC-V, <code class="language-plaintext highlighter-rouge">ATOMIC_BOOL_LOCK_FREE</code> returns 1 (“sometimes lock-free”), triggering a <code class="language-plaintext highlighter-rouge">static_assert</code> failure inside <code class="language-plaintext highlighter-rouge">Lock_free_type_selector</code>. The patch wraps the selector in <code class="language-plaintext highlighter-rouge">#ifndef __riscv</code> and substitutes <code class="language-plaintext highlighter-rouge">Largest_lock_free_type_selector</code> on RISC-V. This patch is present in Debian and Ubuntu packaging and has not been submitted to or merged into <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> trunk as of this research pass (unsubmitted since 2020). Building directly from unpatched upstream source will fail on riscv64. [NEEDS VERIFICATION: the exact unpatched-trunk failure was not directly reproduced in this session, though the Gentoo #761715 and bugs.mysql.com #100356 reports independently corroborate the same root cause.]</p>
 
-<p>Patch: <code class="language-plaintext highlighter-rouge">use-largest-lock-free-type-selector-on-riscv.patch</code> (Debian <code class="language-plaintext highlighter-rouge">mysql-8.0</code> packaging, authored by Sergio Durigan Junior, 2020-07-27)</p>
-
-<p>File patched: <code class="language-plaintext highlighter-rouge">storage/temptable/include/temptable/lock_free_type.h</code></p>
-
-<p>Root cause: On RISC-V, <code class="language-plaintext highlighter-rouge">ATOMIC_BOOL_LOCK_FREE</code> returns 1 (lock-free “sometimes” semantics), triggering <code class="language-plaintext highlighter-rouge">static_assert</code> failures inside <code class="language-plaintext highlighter-rouge">Lock_free_type_selector</code>. The patch wraps the selector in <code class="language-plaintext highlighter-rouge">#ifndef __riscv</code> and substitutes <code class="language-plaintext highlighter-rouge">Largest_lock_free_type_selector</code> on RISC-V.</p>
-
-<p>This patch is present in Debian and Ubuntu packaging. It has not been submitted to or merged into <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> trunk. Any build directly from the upstream source tree without this patch will fail to compile on riscv64. [NEEDS VERIFICATION for exact upstream trunk behavior – the patch existence is confirmed from Debian sources but the exact build failure on unpatched trunk was not directly reproduced.]</p>
-<h3 id="55-cross-compilation">
-  
-  
-    <a href="#55-cross-compilation" class="anchor-heading" aria-labelledby="55-cross-compilation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Cross-Compilation
-  
-  
-</h3>
-    
-
-<p>No cmake toolchain file for riscv64 exists in <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code>. Standard cmake cross-compilation applies. <code class="language-plaintext highlighter-rouge">-DFORCE_UNSUPPORTED_COMPILER=ON</code> may be required if the cross-compiler version string does not satisfy the cmake version guards. MySQL’s official documentation contains no cross-compilation instructions for riscv64.</p>
-
-<p>No QEMU usage is documented in the mysql-server repository or official build documentation. Debian performs native builds on riscv64 hardware.</p><hr />
+<p><strong>Cross-compilation:</strong> No cmake toolchain file for riscv64 exists. Standard cmake cross-compilation applies; <code class="language-plaintext highlighter-rouge">-DFORCE_UNSUPPORTED_COMPILER=ON</code> may be needed if the cross-compiler’s version string fails the guard above. No cross-compilation instructions for riscv64 exist in official documentation. Debian performs native builds on riscv64 hardware; no QEMU usage was found.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -598,7 +571,7 @@
       <td>Abseil CRC32C</td>
       <td>PCLMULQDQ, per-CPU-model tuning</td>
       <td>PMULL, per-CPU-model tuning</td>
-      <td>Generic software fallback</td>
+      <td>Generic software fallback (<code class="language-plaintext highlighter-rouge">kUnknown</code>)</td>
     </tr>
     <tr>
       <td>Cycle counter</td>
@@ -607,15 +580,21 @@
       <td>Returns 0</td>
     </tr>
     <tr>
+      <td>Spin-lock yield</td>
+      <td><code class="language-plaintext highlighter-rouge">_mm_pause()</code></td>
+      <td>inline <code class="language-plaintext highlighter-rouge">yield</code> asm</td>
+      <td>generic <code class="language-plaintext highlighter-rouge">std::this_thread::yield()</code></td>
+    </tr>
+    <tr>
       <td>cmake arch detection</td>
       <td>Full</td>
-      <td>LINUX_ARM defined</td>
-      <td>Not detected</td>
+      <td><code class="language-plaintext highlighter-rouge">LINUX_ARM</code> defined</td>
+      <td>Not detected (absent from <code class="language-plaintext highlighter-rouge">KNOWN_64BIT_ARCHITECTURES</code>)</td>
     </tr>
     <tr>
       <td>Oracle official support</td>
       <td>Yes</td>
-      <td>Yes (aarch64)</td>
+      <td>Yes</td>
       <td>No</td>
     </tr>
     <tr>
@@ -625,10 +604,10 @@
       <td>No</td>
     </tr>
     <tr>
-      <td>Upstream CI</td>
-      <td>Internal (not public)</td>
-      <td>Internal (not public)</td>
-      <td>None</td>
+      <td>Upstream GitHub Actions CI</td>
+      <td>Yes (ubuntu-latest)</td>
+      <td>Data not available (not independently checked)</td>
+      <td>No</td>
     </tr>
     <tr>
       <td>Downstream CI</td>
@@ -637,27 +616,31 @@
       <td>Debian buildd (rv-osuosl-02)</td>
     </tr>
     <tr>
-      <td>Test suite gating</td>
+      <td>Test-suite gating</td>
       <td>Pass required</td>
       <td>Pass required</td>
-      <td>Failures ignored</td>
+      <td>Failures ignored (<code class="language-plaintext highlighter-rouge">TESTSUITE_FAIL_CMD:=true</code>)</td>
     </tr>
     <tr>
-      <td>Architecture-specific patches</td>
-      <td>None required</td>
-      <td>None required</td>
-      <td>1 required (TempTable lock-free types)</td>
+      <td>Architecture-specific patches required</td>
+      <td>None</td>
+      <td>None</td>
+      <td>1 (TempTable lock-free type selector, Debian-only)</td>
     </tr>
     <tr>
-      <td>Arch-specific source files</td>
-      <td>4+</td>
-      <td>4+</td>
+      <td>Non-vendored arch-specific source files</td>
+      <td>10+</td>
+      <td>6+</td>
       <td>0</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 implementation is functionally complete (the database starts, queries execute, data persists) but carries no architecture-specific optimizations. The most quantified gap is Abseil CRC32C: approximately 2.6-2.8x throughput reduction relative to what Zbc/Zbkc hardware would deliver, documented by the unmerged PR #639 on a production-grade SG2044 server. The cycle counter returning 0 affects all timing and profiling infrastructure, and has unknown secondary effects on performance-adaptive code paths.</p><hr />
+<p>The riscv64 build is functionally complete at a basic level (the database starts, queries execute, data persists via Ubuntu/Debian packages) but carries no architecture-specific optimizations. The most quantified gap is Abseil CRC32C: a measured 2.6-2.8x throughput reduction relative to Zbc/Zbkc hardware acceleration, documented on a production-grade SG2044 server by the unmerged PR #639 (Section 4). The cycle counter returning 0 affects all timing/profiling infrastructure; its effect on performance-adaptive code paths is undocumented.</p>
+
+<p><strong>NaN/floating-point semantics:</strong> No MySQL-specific NaN or floating-point correctness bug on RISC-V was found. General web search surfaced only adjacent, non-MySQL items: RISC-V’s canonical-NaN encoding (zero-payload, matching the ARM/JVM model), NaN-boxing bugs in specific RISC-V CPU implementations (e.g., openhwfoundation/cva6 #2449), and an LLVM issue (<code class="language-plaintext highlighter-rouge">llvm/llvm-project</code> #225455) on inconsistent NaN canonicalization on 64-bit RISC-V, a compiler-level concern that could theoretically affect clang-built riscv64 binaries but has no report tying it to MySQL specifically. Treat as a watch-item, not a confirmed MySQL defect.</p>
+
+<p><strong>Quantitative end-to-end benchmarks:</strong> No published sysbench, TPC-C, TPC-H, or oltp_read_write riscv64 results for MySQL were found. The RISC-V International blog’s “Database Adaptation Evaluation On RISC-V Server” (2023, SG2042 64-core, Ubuntu 22.10, Linux 6.1.31 riscv64) tested MySQL, MariaDB, PostgreSQL, Redis, MongoDB, and TiDB, but MySQL <strong>failed to compile from source</strong> (the atomics issue above) and was excluded from the actual stress-test benchmarking; only PostgreSQL (pgbench) and Redis (redis-benchmark) received quantitative throughput figures. OpenBenchmarking.org’s “MySQL Benchmark” test profile is currently marked “Broken,” with no usable riscv64 results. Percona’s “2026 MySQL Ecosystem Performance Benchmark Report” (700+ data points across 10 InnoDB-compatible engines) is x86/ARM-focused with no RISC-V dimension. The only published riscv64 MySQL performance data of any kind is the CRC32C sub-component benchmark from PR #639 (Section 4).</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -667,15 +650,46 @@
 </h2>
     
 
-<p><strong>MySQL upstream CI:</strong> The <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> GitHub repository contains no CI configuration files at any level. There is no <code class="language-plaintext highlighter-rouge">.github/workflows/</code> directory, no <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, no <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>. MySQL’s CI is run entirely on Oracle’s internal infrastructure and is not publicly visible. This applies to all architectures, not just riscv64. The two files in the tree that match “riscv” are vendored third-party source files (Abseil stacktrace, Boost predef header) – not CI configurations.</p>
+<p><strong>MySQL upstream CI exists and is public, but has zero riscv64 coverage.</strong> <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> carries 13 GitHub Actions workflow files (<code class="language-plaintext highlighter-rouge">pr-build.yml</code>, <code class="language-plaintext highlighter-rouge">mtr.yml</code>, <code class="language-plaintext highlighter-rouge">daily-mtr.yml</code>, <code class="language-plaintext highlighter-rouge">clang-format.yml</code>, <code class="language-plaintext highlighter-rouge">cache-warmer.yml</code>, <code class="language-plaintext highlighter-rouge">labeler.yml</code>, <code class="language-plaintext highlighter-rouge">stale.yml</code>, <code class="language-plaintext highlighter-rouge">mark-integrate.yml</code>, <code class="language-plaintext highlighter-rouge">assign-codeowners.yml</code>, <code class="language-plaintext highlighter-rouge">codex-pr-review.lock.yml</code>, <code class="language-plaintext highlighter-rouge">codex-pr-review.md</code>, <code class="language-plaintext highlighter-rouge">pr-ci-report.yml</code>, <code class="language-plaintext highlighter-rouge">reset-pr-head-state.yml</code>). This was confirmed two independent ways: a full local sparse-clone grep of every file under <code class="language-plaintext highlighter-rouge">.github/</code> and a GitHub server-side <code class="language-plaintext highlighter-rouge">search_code</code> query for <code class="language-plaintext highlighter-rouge">riscv repo:mysql/mysql-server path:.github</code>, which returned <code class="language-plaintext highlighter-rouge">total_count: 0</code>. A direct raw-content fetch of <code class="language-plaintext highlighter-rouge">pr-build.yml</code> confirms <code class="language-plaintext highlighter-rouge">runs-on: ubuntu-latest</code> and a <code class="language-plaintext highlighter-rouge">pull_request</code>-targeting-<code class="language-plaintext highlighter-rouge">trunk</code> trigger, with no riscv mention. All workflows use <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> GitHub-hosted x86 runners or self-hosted labels for the internal <code class="language-plaintext highlighter-rouge">mtr.yml</code>/<code class="language-plaintext highlighter-rouge">daily-mtr.yml</code> test suites; there is no riscv64 runner label, no QEMU or cross-arch emulation step, and no riscv64 entry in any build matrix. <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> and <code class="language-plaintext highlighter-rouge">Jenkinsfile</code> do not exist in the repository; the two <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> files present belong to vendored third-party source drops (<code class="language-plaintext highlighter-rouge">extra/json</code>, <code class="language-plaintext highlighter-rouge">extra/libcbor</code>), not MySQL’s own CI.</p>
 
-<p><strong>RISC-V upstream CI:</strong> None. No riscv64 CI job exists for MySQL in any public or known private configuration.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GitHub Actions presence</td>
+      <td>Yes (13 workflows)</td>
+      <td>Data not available (no arm64-specific runner label confirmed either way)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>CI runner type</td>
+      <td><code class="language-plaintext highlighter-rouge">ubuntu-latest</code> / self-hosted</td>
+      <td>Not determined</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>QEMU/cross-arch emulation</td>
+      <td>N/A</td>
+      <td>Not determined</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>Downstream CI</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Debian buildd <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code> (OSU OSL), native build, ~29 hours</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>Downstream CI (Debian):</strong> Debian’s <code class="language-plaintext highlighter-rouge">buildd</code> infrastructure natively builds and installs <code class="language-plaintext highlighter-rouge">mysql-8.0_8.0.46-1</code> on riscv64 hardware (<code class="language-plaintext highlighter-rouge">rv-osuosl-02</code> at OSU OSL). As of approximately 2026-05-23, the package status is “Installed” (up-to-date in the archive). The Debian autopkgtest result for riscv64 shows Pass in the testing migration tracker. However, the package is currently “Not considered” for migration from unstable to testing due to unrelated failures on amd64 and loong64, not riscv64.</p>
-
-<p><strong>Ubuntu CI:</strong> Ubuntu Ports independently builds MySQL 8.0 for riscv64. Physical <code class="language-plaintext highlighter-rouge">.deb</code> files are present on <code class="language-plaintext highlighter-rouge">ports.ubuntu.com</code> as of 2026-06-02, version 8.0.46-0ubuntu0.24.04.2. Ubuntu’s CI infrastructure for ports is not publicly documented in detail.</p>
-
-<p><strong>RISE Project:</strong> MySQL is not a RISE Project-tracked workload. A complete enumeration of all 27 RISE blog posts from May 2024 through June 2026 contains zero MySQL references. The RISE Python wheel builder does not include MySQL packages. No RISE repository, RFP, or funding record related to MySQL was found.</p><hr />
+<p><strong>RISE Project runners:</strong> No evidence of RISE involvement with MySQL was found anywhere. This was checked across the RISE blog (9 individually dated posts identified via WebSearch site-scoping, 2 fetched in full; the two “RISC-V Runners” posts explicitly list ~17 projects using RISE runners - llama.cpp, PyTorch, k0s, Kairos, k3s/Kubernetes/containerd, mldsa/mlkem-native, NumPy, alibaba/zvec, kubetail, Home Assistant, armbian/os, wazero, pyca/cryptography, Portable-Network-Archive, mullvadvpn-app-riscv, uiua - none database-related), the <a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a> (82 packages listed, no MySQL/mysqlclient/PyMySQL/mysql-connector), a GitHub <code class="language-plaintext highlighter-rouge">search_repositories("MySQL org:riseproject-dev")</code> (0 results), and a full listing of all 26 <code class="language-plaintext highlighter-rouge">riseproject-dev</code> org repositories (none MySQL-related; the closest hit, <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> issue #82 “sqlalchemy riscv64 support,” concerns generic SQLAlchemy core wheel support, not MySQL or a MySQL driver). Separately, RISE’s own <code class="language-plaintext highlighter-rouge">riscv-runners.riseproject.dev</code> infrastructure documentation indicates the project uses PostgreSQL, not MySQL, for its own persistence layer.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -689,7 +703,7 @@
   <thead>
     <tr>
       <th>Distribution</th>
-      <th>riscv64 Status</th>
+      <th>riscv64 status</th>
       <th>Version</th>
       <th>Binary location</th>
       <th>Notes</th>
@@ -699,58 +713,77 @@
     <tr>
       <td>Oracle official</td>
       <td>Not available</td>
-      <td>–</td>
-      <td>dev.mysql.com/downloads</td>
+      <td>-</td>
+      <td><a href="https://dev.mysql.com/downloads/">dev.mysql.com/downloads</a></td>
       <td>Zero riscv64 assets</td>
     </tr>
     <tr>
       <td>GitHub Releases</td>
       <td>Not available</td>
-      <td>–</td>
-      <td>github.com/mysql/mysql-server</td>
-      <td>0 GitHub Releases published</td>
+      <td>-</td>
+      <td><a href="https://github.com/mysql/mysql-server/releases">github.com/mysql/mysql-server/releases</a></td>
+      <td>Page states “There aren’t any releases here”; MySQL does not use GitHub Releases for distribution at all (any architecture)</td>
+    </tr>
+    <tr>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td><strong>Available (confirmed, authoritative)</strong></td>
+      <td>8.4.8-0ubuntu1</td>
+      <td><a href="https://packages.ubuntu.com/resolute/riscv64/mysql-server">packages.ubuntu.com/resolute/riscv64/mysql-server</a></td>
+      <td>Source package <code class="language-plaintext highlighter-rouge">mysql-8.4</code>, archive tag <code class="language-plaintext highlighter-rouge">[ports]</code> (Ubuntu’s secondary-architecture archive, not primary <code class="language-plaintext highlighter-rouge">main</code>). The <code class="language-plaintext highlighter-rouge">.deb</code> resolves to a concrete, checksummed artifact (<code class="language-plaintext highlighter-rouge">mysql-server_8.4.8-0ubuntu1_riscv64.deb</code>, exact size 1,377,740 bytes, with MD5/SHA1/SHA256 published), independently re-verified in this research pass via direct fetch.</td>
     </tr>
     <tr>
       <td>Debian sid</td>
       <td>Available</td>
       <td>8.0.46-1</td>
       <td><a href="https://buildd.debian.org/status/package.php?p=mysql-8.0&amp;suite=sid">Debian buildd</a></td>
-      <td>Native build, rv-osuosl-02, status: Installed</td>
+      <td>Native build on <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code>; status “Installed”; currently blocked from migrating sid to testing by unrelated amd64/loong64 failures, not riscv64</td>
     </tr>
     <tr>
       <td>Ubuntu 24.04 (Noble)</td>
       <td>Available</td>
       <td>8.0.46-0ubuntu0.24.04.2</td>
-      <td><a href="https://ports.ubuntu.com">ports.ubuntu.com</a></td>
-      <td>.deb files confirmed 2026-06-02</td>
+      <td>ports.ubuntu.com</td>
+      <td>.deb files confirmed</td>
     </tr>
     <tr>
       <td>Ubuntu 22.04 (Jammy)</td>
       <td>Available</td>
       <td>8.0.46-0ubuntu0.22.04.x</td>
       <td>ports.ubuntu.com</td>
-      <td>.deb files confirmed 2026-06-02</td>
+      <td>.deb files confirmed; related glibc regression (Launchpad #1915275, Section 2) affected this release line</td>
+    </tr>
+    <tr>
+      <td>AlmaLinux</td>
+      <td>Downstream enablement present</td>
+      <td>mysql8.4 RPM</td>
+      <td>AlmaLinux packaging git</td>
+      <td>Separate commits titled “Add riscv64 support” in AlmaLinux’s own RPM packaging repo, independent of mysql-server upstream</td>
     </tr>
     <tr>
       <td>Arch Linux RISC-V</td>
-      <td>Server: not available</td>
-      <td>–</td>
-      <td>archriscv.felixc.at</td>
-      <td>MySQL server is AUR-only, no prebuilt riscv64 binary</td>
+      <td>No evidence found</td>
+      <td>-</td>
+      <td><a href="https://archriscv.felixc.at">archriscv.felixc.at</a></td>
+      <td>MySQL server appears to be AUR-only with no prebuilt riscv64 binary; note the site’s <code class="language-plaintext highlighter-rouge">?q=</code> query parameter does not actually filter results (static page, no client-side search logic), so this should be read as “no evidence found via a flawed query method,” not a clean confirmed absence</td>
     </tr>
     <tr>
-      <td>Arch Linux RISC-V</td>
-      <td>Workbench: available</td>
-      <td>8.0.41-1</td>
-      <td>mirror.iscas.ac.cn</td>
-      <td>GUI client only, not server</td>
+      <td>PyPI <code class="language-plaintext highlighter-rouge">mysql</code></td>
+      <td>Not relevant</td>
+      <td>0.0.3</td>
+      <td><a href="https://pypi.org/pypi/mysql/json">pypi.org/project/mysql</a></td>
+      <td>A pure-Python stub/virtual package pointing to <code class="language-plaintext highlighter-rouge">mysqlclient</code>; architecture-independent, not actual server binaries. No riscv64 signal either way.</td>
+    </tr>
+    <tr>
+      <td>RISE wheel builder</td>
+      <td>No custom build</td>
+      <td>-</td>
+      <td><code class="language-plaintext highlighter-rouge">gitlab.com/.../packages/pypi/simple/mysql/</code></td>
+      <td>Proxies through to upstream PyPI (same stub package, no riscv wheel)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 Debian and Ubuntu packages include the full MySQL server (<code class="language-plaintext highlighter-rouge">mysql-server-8.0</code>), client (<code class="language-plaintext highlighter-rouge">mysql-client-8.0</code>), router (<code class="language-plaintext highlighter-rouge">mysql-router</code>), shell (<code class="language-plaintext highlighter-rouge">mysql-shell</code>), and test suite (<code class="language-plaintext highlighter-rouge">mysql-testsuite-8.0</code>). These are independently maintained by Debian/Canonical package maintainers and are not coordinated with or endorsed by Oracle.</p>
-
-<p>The packages apply the <code class="language-plaintext highlighter-rouge">use-largest-lock-free-type-selector-on-riscv.patch</code> that is absent from the Oracle upstream tree.</p><hr />
+<p>The riscv64 Debian and Ubuntu packages include the full MySQL server, client, router, shell, and test suite. These are independently maintained by Debian/Canonical package maintainers, not coordinated with or endorsed by Oracle, and incorporate the <code class="language-plaintext highlighter-rouge">use-largest-lock-free-type-selector-on-riscv.patch</code> that is absent from the Oracle upstream tree.</p>
 <h2 id="9-dependencies">
   
   
@@ -760,152 +793,158 @@
 </h2>
     
 
-<p>The following table covers MySQL’s critical build dependencies and their riscv64 status. The Debian <code class="language-plaintext highlighter-rouge">mysql-8.0_8.0.46-1</code> successful build on <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code> confirms that all required-path dependencies resolve correctly for a functional binary.</p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role in MySQL</th>
       <th>riscv64 Build</th>
-      <th>riscv64 Tests</th>
+      <th>riscv64 Test</th>
       <th>riscv64 Release</th>
-      <th>Blocking Issues</th>
+      <th>Notes / Blocking Issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>OpenSSL</td>
-      <td>TLS, all crypto (AES, SHA, RSA, EC, ChaCha20, SM2/3/4)</td>
-      <td>Builds – <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> target in <code class="language-plaintext highlighter-rouge">Configurations/10-main.conf</code>; 33 riscv-specific asm files</td>
-      <td>Passes – Debian <code class="language-plaintext highlighter-rouge">openssl</code> Installed</td>
-      <td>Released (4.0.1, 2026-06-09)</td>
-      <td>16 open riscv issues, all performance/optimization (SHA3, ChaCha20-Poly1305, SM4-XTS). No build blockers.</td>
+      <td>TLS and all crypto (AES, SHA, RSA, EC, ChaCha20, SM2/3/4)</td>
+      <td>Builds: dedicated <code class="language-plaintext highlighter-rouge">linux64-riscv64</code> cmake target, 33 riscv asm files</td>
+      <td>Passes (Debian)</td>
+      <td>Released 4.0.1 (2026-06-09)</td>
+      <td>Open, non-blocking: <a href="https://github.com/openssl/openssl/issues/28118">#28118</a> riscv extension detection broken on musl, <a href="https://github.com/openssl/openssl/issues/30880">#30880</a> flaky <code class="language-plaintext highlighter-rouge">test_lhash</code> on linux-riscv64 CI, <a href="https://github.com/openssl/openssl/issues/29453">#29453</a> intrinsics-vs-inline-asm request, <a href="https://github.com/openssl/openssl/issues/25334">#25334</a> AES zknd/zkne capability bug. None block build or correctness. (An unverified-this-pass figure of “16 open riscv issues” appears in an earlier version of this assessment; the 4 issues above are the ones independently cited with URLs this pass, and the discrepancy is noted rather than resolved.)</td>
     </tr>
     <tr>
       <td>zlib</td>
-      <td>Wire protocol compression, InnoDB page compression</td>
-      <td>Builds – pure C, no riscv asm</td>
+      <td>Wire-protocol compression, InnoDB page compression</td>
+      <td>Builds: pure C, no riscv asm</td>
       <td>Passes (scalar path)</td>
-      <td>Released (1.3.2)</td>
-      <td>0 riscv issues. No blocker.</td>
+      <td>Released 1.3.2</td>
+      <td>Live search against <code class="language-plaintext highlighter-rouge">madler/zlib</code> found 0 riscv-related issues, open or closed. No blocker.</td>
     </tr>
     <tr>
       <td>zstd</td>
       <td>InnoDB page compression, binlog compression</td>
-      <td>Builds – scalar path</td>
-      <td>Passes with caveats – unaligned access and HUF_FAST_DEC_LOOP not enabled</td>
-      <td>Released (1.5.7)</td>
-      <td>8 open riscv optimization issues (RVV vectorization, prefetch). No correctness blocker.</td>
+      <td>Builds: scalar path</td>
+      <td>Passes with caveats: unaligned-access handling, <code class="language-plaintext highlighter-rouge">HUF_FAST_DEC_LOOP</code> not enabled</td>
+      <td>Released 1.5.7</td>
+      <td>Open, performance-only: <a href="https://github.com/facebook/zstd/issues/4471">#4471</a> add RVV support for XXH3, <a href="https://github.com/facebook/zstd/issues/4546">#4546</a> RISC-V unaligned access. Closed: #3134 (contrib build fix), #4069 (weak-symbol support). No correctness blocker. (An earlier figure of “8 open riscv optimization issues” could not be reconfirmed this pass; discrepancy noted.)</td>
     </tr>
     <tr>
       <td>LZ4</td>
-      <td>InnoDB redo log compression</td>
-      <td>Builds – scalar path</td>
-      <td>Passes – LZ4_FAST_DEC_LOOP not enabled</td>
-      <td>Released (1.10.0)</td>
-      <td>6 open riscv optimization issues. LZ4_FAST_DEC_LOOP blocked (<a href="https://github.com/lz4/lz4/issues/1739">lz4#1739</a>). No correctness blocker.</td>
+      <td>InnoDB redo-log compression</td>
+      <td>Builds: scalar path</td>
+      <td>Passes (<code class="language-plaintext highlighter-rouge">LZ4_FAST_DEC_LOOP</code> not enabled)</td>
+      <td>Released 1.10.0</td>
+      <td><a href="https://github.com/lz4/lz4/issues/1635">#1635</a>, “RISC-V Architecture Optimizations” proposal, closed. Separately tracked and still open: <a href="https://github.com/lz4/lz4/issues/1739">lz4#1739</a>, <code class="language-plaintext highlighter-rouge">LZ4_FAST_DEC_LOOP</code> not enabled on riscv64. No correctness blocker. (An earlier figure of “6 open riscv optimization issues” could not be reconfirmed this pass; discrepancy noted.)</td>
     </tr>
     <tr>
       <td>ICU</td>
-      <td>RLIKE/REGEXP, charset conversion</td>
-      <td>Builds – pure C/C++</td>
+      <td>RLIKE/REGEXP, charset/collation conversion</td>
+      <td>Builds: pure C/C++</td>
       <td>Passes</td>
-      <td>Released (77.1)</td>
-      <td>0 riscv issues. No blocker.</td>
+      <td>Released 77.1</td>
+      <td>Not independently re-queried this pass; carried forward as 0 riscv issues / no blocker from the prior assessment.</td>
     </tr>
     <tr>
-      <td>Protobuf</td>
+      <td>Protocol Buffers</td>
       <td>Group Replication wire protocol, NDB Cluster</td>
-      <td>Builds – all 4 riscv issues closed</td>
+      <td>Builds</td>
       <td>Passes</td>
-      <td>Released (35.1, 2026-06-11)</td>
-      <td>0 open riscv issues. No blocker.</td>
+      <td>Released 35.1 (2026-06-11)</td>
+      <td>Closed only: <a href="https://github.com/protocolbuffers/protobuf/issues/12266">#12266</a> “Add riscv64 support” (merged), <a href="https://github.com/protocolbuffers/protobuf/issues/14549">#14549</a> “Build fails on RISCV” (fixed). No open riscv issues. No blocker.</td>
     </tr>
     <tr>
       <td>RapidJSON</td>
       <td>JSON functions</td>
-      <td>Builds – header-only</td>
+      <td>Builds: header-only</td>
       <td>Passes</td>
       <td>Released</td>
-      <td>1 open issue (<a href="https://github.com/Tencent/rapidjson/issues/2386">#2386</a>): <code class="language-plaintext highlighter-rouge">__riscv</code> missing from <code class="language-plaintext highlighter-rouge">RAPIDJSON_ENDIAN</code> detection. Cosmetic, fallback works. Low priority.</td>
+      <td>1 open issue, <a href="https://github.com/Tencent/rapidjson/issues/2386">#2386</a>: <code class="language-plaintext highlighter-rouge">__riscv</code> missing from <code class="language-plaintext highlighter-rouge">RAPIDJSON_ENDIAN</code> detection. Cosmetic; fallback works. Low priority. Not independently re-queried this pass.</td>
     </tr>
     <tr>
       <td>Boost</td>
-      <td>Router async I/O (headers only)</td>
-      <td>Builds – header-only</td>
+      <td>MySQL Router async I/O (headers only)</td>
+      <td>Builds: header-only</td>
       <td>Passes</td>
-      <td>Released (1.87.0)</td>
-      <td>0 riscv issues relevant to MySQL usage. No blocker.</td>
+      <td>Released 1.87.0</td>
+      <td>No riscv issues found relevant to MySQL’s header-only usage.</td>
     </tr>
     <tr>
-      <td>Abseil-cpp (bundled)</td>
-      <td>CRC32C checksums (InnoDB), base libraries</td>
-      <td>Builds – software fallback</td>
+      <td>Abseil</td>
+      <td>InnoDB CRC32C checksums (via bundled copy), base libraries</td>
+      <td>Builds: software fallback (<code class="language-plaintext highlighter-rouge">CpuType::kUnknown</code>, no <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> path)</td>
       <td>Passes (software path)</td>
-      <td>Shipped in MySQL</td>
-      <td><a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil#1986</a> open: RISC-V HW CRC32C via Zbc/Zbkc not in abseil upstream. MySQL-local PR #639 (closed, blocked by Oracle OCA). Performance gap: ~2.6x slower CRC throughput. Not a functional blocker.</td>
+      <td>Vendored <code class="language-plaintext highlighter-rouge">abseil-cpp-20250814.1</code> shipped in MySQL source</td>
+      <td>Open: <a href="https://github.com/abseil/abseil-cpp/issues/1702">#1702</a> cannot link with riscv64 toolchain, <a href="https://github.com/abseil/abseil-cpp/issues/1236">#1236</a> ILP32E stack-alignment, and critically, upstream <a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil#1986</a>, RISC-V HW CRC32C (Zbc/Zbkc), still open and unmerged, which is the same capability MySQL’s own PR #639 attempted (Section 4) and abandoned. Closed: #1684 (NaN test fail on riscv64, fixed), #1561 (protobuf-via-abseil riscv build fail, fixed). Highest-impact open gap in the whole dependency set: ~2.6-2.8x InnoDB checksum throughput loss.</td>
     </tr>
     <tr>
       <td>libevent</td>
       <td>MySQL Router async event loop</td>
-      <td>Builds – pure C</td>
+      <td>Builds: pure C</td>
       <td>Passes</td>
       <td>Released</td>
-      <td>0 riscv issues. No blocker.</td>
+      <td>0 riscv issues found. No blocker.</td>
     </tr>
     <tr>
       <td>libcurl</td>
       <td>MySQL Shell, component services</td>
-      <td>Builds – pure C</td>
+      <td>Builds: pure C</td>
       <td>Passes</td>
       <td>Released</td>
-      <td>2 riscv issues in curl/curl, both closed. No blocker.</td>
+      <td>2 riscv issues in <code class="language-plaintext highlighter-rouge">curl/curl</code>, both closed. No blocker.</td>
     </tr>
     <tr>
-      <td>SASL (cyrus-sasl)</td>
+      <td>Cyrus SASL</td>
       <td>LDAP authentication (optional)</td>
       <td>Builds</td>
       <td>Passes</td>
       <td>Released</td>
-      <td>0 riscv issues. Optional plugin. No blocker.</td>
+      <td>0 riscv issues found. Optional plugin, not a blocker.</td>
     </tr>
     <tr>
-      <td>tcmalloc (gperftools)</td>
+      <td>gperftools</td>
       <td>Optional memory allocator (OFF by default)</td>
-      <td>Partial – gperftools 2.18.1 includes <code class="language-plaintext highlighter-rouge">__riscv</code> stacktrace guard; prior versions failed</td>
-      <td>Limited – no riscv-native frame unwinding</td>
-      <td>Released (2.18.1)</td>
-      <td>Stacktrace accuracy degraded. Not a blocker (OFF by default).</td>
+      <td>Partial: <code class="language-plaintext highlighter-rouge">__riscv</code> stacktrace guard added in 2.18.1</td>
+      <td>Limited: no native frame unwinding on riscv64</td>
+      <td>Released 2.18.1</td>
+      <td>Closed: <a href="https://github.com/gperftools/gperftools/issues/1359">#1359</a>, “Broken on riscv64: Cannot calculate stack trace,” fixed in 2.18.1. Stacktrace accuracy still degraded. Not a MySQL blocker since OFF by default.</td>
     </tr>
     <tr>
       <td>jemalloc</td>
       <td>Optional memory allocator (OFF by default)</td>
-      <td>Unknown – basic riscv code present in 5.3.1</td>
-      <td>Unknown – <a href="https://github.com/jemalloc/jemalloc/issues/2399">#2399</a> open (unanswered)</td>
-      <td>Released (5.3.1)</td>
-      <td>Unclear riscv64 validation status. Not a blocker (OFF by default).</td>
+      <td>Basic riscv code present since 5.3.1</td>
+      <td>Unclear: weakest-validated dependency in the set</td>
+      <td>Released 5.3.1</td>
+      <td>Open, unanswered since 2023: <a href="https://github.com/jemalloc/jemalloc/issues/2399">#2399</a>, “Does jemalloc support cross build for RISCV64?” Closed: #2323 (added riscv64gc support), #1401 (riscv64 FTBFS due to atomics, fixed 2019). Not a MySQL blocker since OFF by default.</td>
+    </tr>
+    <tr>
+      <td>GNU bison</td>
+      <td>Build-dependency (parser generator), critical</td>
+      <td>Data not available: no riscv64-specific research was performed on GNU bison in this pass</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available: searched findings contain no riscv64-specific bison data; bison is widely packaged for riscv64 in Debian/Ubuntu generally, but this was not independently confirmed as part of this research.</td>
+    </tr>
+    <tr>
+      <td>CMake</td>
+      <td>Build-dependency, critical (minimum 3.17.5 for Unix per <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>)</td>
+      <td>Data not available: no riscv64-specific research was performed on CMake in this pass</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available: no riscv64 build/test/release status for CMake itself was researched in this pass.</td>
+    </tr>
+    <tr>
+      <td>googletest</td>
+      <td>Test-dependency, critical</td>
+      <td>Data not available: no riscv64-specific research was performed on googletest in this pass</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Data not available: no riscv64 build/test/release status for googletest was researched in this pass.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>No hard dependency blockers exist.</strong> All critical-path dependencies build and produce functionally correct output on riscv64. The primary dependency-level gap is the Abseil CRC32C hardware acceleration path, which causes a measurable performance regression on InnoDB checksum operations.</p><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-
-<p><strong>RISE Project:</strong> No involvement. MySQL is not tracked, funded, or discussed by the RISE Project. This was confirmed by a complete enumeration of all 27 RISE blog posts (May 2024 to June 2026), the RISE Python wheel builder package list (80+ packages, no database servers), and the full inventory of repositories under the <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub organization.</p>
-
-<p><strong>ISCAS involvement:</strong> The only known external RISC-V contribution to MySQL (PR #639) included a co-author at the Institute of Software, Chinese Academy of Sciences (ISCAS, gongxiaofei24@iscas.ac.cn). ISCAS is a General Member of the RISE Project and operates the <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code> buildd referenced in Debian’s riscv64 build records. The institutional connection exists but did not produce a merged upstream contribution.</p>
-
-<p><strong>Benchmarks:</strong> No published end-to-end MySQL benchmark data for riscv64 (sysbench, TPC-C, TPC-H, oltp_read_write, or equivalent) is publicly available as of June 2026. Phoronix, RISC-V International, RISE, and all general search results returned zero results for full-workload MySQL riscv64 benchmarks. The only published riscv64 MySQL performance data is the CRC32C sub-component benchmark from the unmerged PR #639, detailed in Section 4.4.</p>
-
-<p><strong>Hardware tested (known):</strong> SG2044, 64-core @ 2.6 GHz, openEuler Linux – from PR #639. This is a production-grade server, not a development board. The Debian buildd (<code class="language-plaintext highlighter-rouge">rv-osuosl-02</code>) is also a riscv64 server-class machine at OSU OSL.</p><hr />
+<p>No hard build-blocking dependency issue exists for any dependency on riscv64, consistent across all live searches performed. The weakest link by test-signal clarity is jemalloc, which carries an unanswered 2023 issue questioning riscv64 cross-build support and is the only dependency with no clear “passes” test signal, though it is optional and OFF by default in MySQL. The highest-impact open gap is Abseil CRC32C hardware acceleration: not a build or test blocker, but a measured ~2.6-2.8x InnoDB checksum throughput regression, tracked upstream at abseil#1986 rather than as a MySQL-specific issue.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -915,15 +954,74 @@
 </h2>
     
 
-<p><strong>mysql/mysql-server (GitHub):</strong> Zero open or closed RISC-V issues. The GitHub search <code class="language-plaintext highlighter-rouge">riscv OR riscv64 OR risc-v repo:mysql/mysql-server</code> returns only PR #639 (closed). No correctness bugs, build failures, or performance reports exist in the public issue tracker.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID / Source</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/mysql/mysql-server/pull/639">mysql/mysql-server PR #639</a></td>
+      <td>Add RISC-V hardware acceleration for Abseil CRC32C</td>
+      <td>Closed, unmerged</td>
+      <td>Auto-closed by <code class="language-plaintext highlighter-rouge">mysql-oca-bot</code> for lack of OCA response; no human code review ever occurred. See Section 2.</td>
+    </tr>
+    <tr>
+      <td><a href="https://bugs.mysql.com/search.php?search_for=riscv&amp;status=All">bugs.mysql.com #100356</a></td>
+      <td>MySQL server fails to build on RISC-V 64</td>
+      <td>Closed as Unsupported</td>
+      <td>Oracle declined to patch upstream; fix carried only as a downstream Ubuntu/Debian patch. Root cause: “always-lock-free” atomics <code class="language-plaintext highlighter-rouge">static_assert</code> added in MySQL 8.0.21+.</td>
+    </tr>
+    <tr>
+      <td>Gentoo Bug #761715</td>
+      <td>MySQL &gt;=8.0.22 fails to build on PPC and RISC-V</td>
+      <td>CONFIRMED</td>
+      <td>Same root cause as #100356; three community patches landed for RISC-V in MySQL 8.0.27 (community packaging, not upstream trunk). PPC remains unsupported in Gentoo.</td>
+    </tr>
+    <tr>
+      <td>Launchpad Bug #1915275</td>
+      <td>mysql-8.0 regressed on riscv64 due to new glibc</td>
+      <td>Fix Released</td>
+      <td><code class="language-plaintext highlighter-rouge">sysconf</code> cache-line-size regression caused <code class="language-plaintext highlighter-rouge">std::bad_alloc</code> crash at startup; fixed in packaging 8.0.23-3ubuntu1. This is a correctness/availability bug, not merely a build issue: MySQL became completely non-functional on riscv64 until fixed, and the breakage cascaded to dependent packages (php7.4, BOINC).</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">my_rdtsc</code> cycle counter</td>
+      <td>Returns 0 on riscv64</td>
+      <td>Open (architectural gap, not tracked as a bug)</td>
+      <td>No riscv branch exists among the 9 enumerated architectures in <code class="language-plaintext highlighter-rouge">mysys/my_rdtsc.cc</code>; impact on production workloads beyond profiling accuracy is undocumented.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil#1986</a></td>
+      <td>RISC-V HW CRC32C (Zbc/Zbkc) not merged upstream in Abseil</td>
+      <td>Open</td>
+      <td>Would close the ~2.6-2.8x InnoDB checksum throughput gap if merged and MySQL’s vendored Abseil snapshot were subsequently updated. See Sections 4, 9, 13.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/lz4/lz4/issues/1739">lz4#1739</a></td>
+      <td><code class="language-plaintext highlighter-rouge">LZ4_FAST_DEC_LOOP</code> not enabled on riscv64</td>
+      <td>Open</td>
+      <td>Performance-only; not a correctness blocker.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/Tencent/rapidjson/issues/2386">RapidJSON #2386</a></td>
+      <td><code class="language-plaintext highlighter-rouge">__riscv</code> missing from <code class="language-plaintext highlighter-rouge">RAPIDJSON_ENDIAN</code> detection</td>
+      <td>Open</td>
+      <td>Cosmetic; generic fallback already works.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/jemalloc/jemalloc/issues/2399">jemalloc #2399</a></td>
+      <td>Does jemalloc support cross build for RISCV64?</td>
+      <td>Open, unanswered since 2023</td>
+      <td>Not a MySQL blocker (jemalloc OFF by default), but the weakest-validated optional dependency in the set.</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>bugs.mysql.com:</strong> The tracker supports RISC-V as a CPU architecture filter. Zero bugs exist under that filter. A MySQL bug #102926 (a sysconf error-checking issue, closed 2021) is the only result for a broad riscv search, and it is not riscv-specific.</p>
-
-<p><strong>Upstream patch not applied (functional issue):</strong> The <code class="language-plaintext highlighter-rouge">use-largest-lock-free-type-selector-on-riscv.patch</code> (Debian, 2020) fixes a <code class="language-plaintext highlighter-rouge">static_assert</code> failure in TempTable on riscv64. It is required for a successful build from unpatched upstream source. It has not been submitted upstream after approximately 6 years.</p>
-
-<p><strong>Cycle counter returning 0:</strong> The <code class="language-plaintext highlighter-rouge">my_rdtsc</code> cycle counter has no riscv64 implementation. The read instruction available (<code class="language-plaintext highlighter-rouge">rdcycle</code>) is standard in RISC-V base ISA but has not been implemented in MySQL’s rdtsc layer. Impact on production workloads is not documented.</p>
-
-<p><strong>MariaDB historical reference (for context):</strong> MariaDB/server had a riscv64 build failure (MDEV-23051) in 2020 due to missing <code class="language-plaintext highlighter-rouge">-latomic</code> for <code class="language-plaintext highlighter-rouge">#include &lt;atomic&gt;</code> on riscv64. This was fixed 2020-07-28. This issue does not apply to MySQL directly but indicates a similar class of issue was present in MySQL-compatible code around the same period when the Debian TempTable patch was authored.</p><hr />
+<p><strong>bugs.mysql.com</strong> supports a RISC-V CPU-architecture filter but returns essentially no results against it beyond #100356 above; the public GitHub issue tracker for <code class="language-plaintext highlighter-rouge">mysql/mysql-server</code> returns zero issues for every riscv-related search term tried, across all query variants.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -933,39 +1031,64 @@
 </h2>
     
 
-<p><strong>Oracle Contributor Agreement (OCA):</strong> The single biggest structural barrier for external riscv64 contributions to MySQL. All code must be signed over to Oracle. The OCA bot closes PRs after 31 days without a response. No Oracle engineer has ever reviewed the technical content of any riscv64 contribution. This was the sole reason PR #639 was rejected. There is no technical objection on record.</p>
+<p><strong>Oracle Contributor Agreement (OCA):</strong> The single largest structural barrier to external riscv64 contributions. All code must be signed over to Oracle via the OCA before any human review occurs; the <code class="language-plaintext highlighter-rouge">mysql-oca-bot</code> auto-closes PRs after roughly 31 days without a response. This is the sole, confirmed reason PR #639 was rejected: no Oracle engineer reviewed its technical content at any point, and there is no record of a technical objection anywhere in the thread. The blocker is procedural and legal, not technical.</p>
 
-<p><strong>No upstream RISC-V CI:</strong> Any merged contribution would have no CI coverage on riscv64. Oracle’s internal CI does not target riscv64. A contribution accepted today would have no automated regression detection.</p>
+<p><strong>No upstream RISC-V CI:</strong> Even a merged riscv64 contribution would have no automated regression coverage, since none of MySQL’s 13 public GitHub Actions workflows run on riscv64, and Oracle’s broader internal CI (not publicly visible) is not known to target riscv64 either.</p>
 
-<p><strong>Vendored library staleness:</strong> PR #639 targeted the vendored Abseil at <code class="language-plaintext highlighter-rouge">extra/abseil/abseil-cpp-20230802.1</code>. The repository now ships <code class="language-plaintext highlighter-rouge">abseil-cpp-20250814.1</code>. Abseil upstream has an open issue for RISC-V HW CRC32C support (<a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil#1986</a>). If abseil upstream merges riscv64 CRC32C support, MySQL could pick it up by updating its vendored snapshot rather than requiring a MySQL-internal patch – avoiding the OCA issue entirely for that specific optimization.</p>
+<p><strong>Vendored library staleness:</strong> PR #639 targeted the vendored Abseil at <code class="language-plaintext highlighter-rouge">extra/abseil/abseil-cpp-20230802.1</code>; the repository now ships <code class="language-plaintext highlighter-rouge">abseil-cpp-20250814.1</code>. Abseil upstream itself has an open issue for RISC-V HW CRC32C support (<a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil#1986</a>). If Abseil upstream merges riscv64 CRC32C support, MySQL could inherit it automatically the next time its vendored snapshot is bumped, without touching Oracle’s OCA process at all for that specific optimization.</p>
 
-<p><strong>Test suite failures silently ignored:</strong> Debian’s build rules explicitly discard test suite failures on riscv64 (<code class="language-plaintext highlighter-rouge">TESTSUITE_FAIL_CMD:=true</code>). The actual test pass rate on riscv64 is not documented. Any upstream submission claiming riscv64 compatibility cannot cite Debian’s “Maybe-Successful” build status as validation.</p>
+<p><strong>Test-suite failures silently ignored downstream:</strong> Debian’s build rules explicitly discard test-suite failures on riscv64 (<code class="language-plaintext highlighter-rouge">TESTSUITE_FAIL_CMD:=true</code>). The actual riscv64 test pass rate is therefore not documented anywhere; an upstream submission citing Debian’s “Installed”/”maybe-successful” build status cannot be treated as evidence of full test-suite correctness.</p>
 
-<p><strong>No Oracle business case:</strong> Oracle has not publicly indicated any riscv64 support roadmap for MySQL. RISC-V is absent from all Oracle MySQL product pages. External contributions face an inherently passive review posture.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>RISE Project:</strong> No involvement of any kind was found (Section 7). RISE’s member roster is composed entirely of semiconductor/chip organizations with no database vendor present, and RISE’s own infrastructure uses PostgreSQL rather than MySQL. There is no RISE-funded RFP, blog post, repository, or wheel-builder entry tied to MySQL.</p>
+
+<p><strong>No Oracle business case:</strong> RISC-V is absent from every Oracle MySQL product and supported-platforms page. External contributions face an inherently passive, slow review posture (the 31-day OCA auto-close window being the clearest evidence of this).</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p><strong>Justification:</strong> MySQL has zero riscv64 CI upstream (no GitHub Actions/GitLab/Jenkins/Cirrus riscv references, confirmed via repeated workflow-file reads across all 13 workflow files plus CODEOWNERS, templates and dependabot config) and ships no official Oracle riscv64 release. It falls to the distribution floor: Ubuntu (<a href="https://packages.ubuntu.com/resolute/riscv64/mysql-server">packages.ubuntu.com/resolute/riscv64/mysql-server</a>, 8.4.8-0ubuntu1) and Debian build and ship riscv64 packages, but only via a riscv64-specific downstream patch (Debian’s <code class="language-plaintext highlighter-rouge">use-largest-lock-free-type-selector-on-riscv.patch</code>, fixing a TempTable <code class="language-plaintext highlighter-rouge">static_assert</code> failure) that has never been upstreamed, and Debian’s own build rules explicitly discard riscv64 test-suite failures (<code class="language-plaintext highlighter-rouge">TESTSUITE_FAIL_CMD:=true</code>). Per the distribution-floor rule, a distro build requiring riscv64-specific patches against unmodified upstream source caps at orange, sub-type downstream-only, with release provider = distro rather than upstream.</p>
+
+<p><strong>Pending work that could change the grade:</strong></p>
+<ul>
+  <li><a href="https://github.com/mysql/mysql-server/pull/639">PR #639</a> (Abseil CRC32C RISC-V hardware acceleration via Zbc/Zbkc) was closed unmerged after the author did not respond to Oracle’s OCA bot within 31 days, a procedural, not technical, blocker; no Oracle engineer ever reviewed it.</li>
+  <li>The TempTable lock-free-type patch required for riscv64 builds has sat in Debian-only packaging since 2020 with no upstream submission.</li>
+  <li>Upstream Abseil issue <a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil#1986</a> (RISC-V HW CRC32C) remains open and unmerged; MySQL could inherit this fix by bumping its vendored Abseil snapshot without touching Oracle’s OCA process at all.</li>
+  <li>No RISE Project involvement with MySQL was found anywhere (blog, wheel builder, org repositories).</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has not funded or touched any MySQL-related work (Section 7, Section 12); none of the sizing below overlaps with existing RISE investment.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>MySQL builds and runs on riscv64 today via Debian/Ubuntu packages. The one required patch (TempTable lock-free types) is a small, well-understood fix. Functional enablement is effectively done at the distribution level. The gap is: this patch is not upstream, and there is no Oracle binary release.</p>
-
-<p>Upstreaming the TempTable patch: Low effort, low Oracle engagement required. The fix is a one-file <code class="language-plaintext highlighter-rouge">#ifndef __riscv</code> guard with a trivial substitute type. The contributor would need to sign the OCA. Oracle review timeline is unpredictable.</p>
-<h3 id="132-performance-optimization">
+<p>MySQL already builds and runs on riscv64 today via Debian/Ubuntu packages. The one required patch (TempTable lock-free types) is small and well understood. Functional enablement is effectively complete at the distribution level; the gap is that this patch is not upstream and no Oracle binary release exists. Upstreaming it is low-effort, low-Oracle-engagement work: a one-file <code class="language-plaintext highlighter-rouge">#ifndef __riscv</code> guard with a trivial substitute type. The contributor would need to sign the OCA, and Oracle’s review timeline is unpredictable (PR #639’s 31-day auto-close is the only data point available).</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
@@ -974,50 +1097,39 @@
 <p>Three performance gaps are quantified or documented:</p>
 
 <ol>
-  <li>
-    <p><strong>Abseil CRC32C (highest impact):</strong> A 2.6-2.8x throughput gap on InnoDB checksum operations, measured on SG2044. The implementation exists (PR #639 code). Two paths to resolution: (a) upstream the patch to <code class="language-plaintext highlighter-rouge">google/abseil-cpp</code> directly (avoids Oracle OCA), then wait for MySQL to update its vendored Abseil snapshot; or (b) re-submit PR #639 to MySQL with OCA compliance. Path (a) is lower-friction and bypasses Oracle’s contribution process.</p>
-  </li>
-  <li>
-    <p><strong>Cycle counter (<code class="language-plaintext highlighter-rouge">my_rdtsc</code>):</strong> Adding <code class="language-plaintext highlighter-rouge">rdcycle</code> support for riscv64 requires a 2-5 line change in <code class="language-plaintext highlighter-rouge">mysys/my_rdtsc.cc</code>. Impact on production workloads beyond profiling accuracy is undocumented.</p>
-  </li>
-  <li>
-    <p><strong>LZ4/zstd optimization:</strong> These are upstream issues in <code class="language-plaintext highlighter-rouge">lz4/lz4</code> and <code class="language-plaintext highlighter-rouge">facebook/zstd</code> respectively, not MySQL-specific. Investment here benefits all riscv64 software using these libraries, not MySQL specifically.</p>
-  </li>
+  <li><strong>Abseil CRC32C (highest impact):</strong> A 2.6-2.8x throughput gap on InnoDB checksum operations, measured on SG2044. The implementation already exists (PR #639’s code). Two resolution paths: (a) upstream the patch directly to <code class="language-plaintext highlighter-rouge">google/abseil-cpp</code> (bypasses Oracle’s OCA entirely), then wait for MySQL to bump its vendored Abseil snapshot; or (b) resubmit a MySQL-side PR with OCA compliance. Path (a) is lower-friction and benefits every Abseil consumer on riscv64, not just MySQL.</li>
+  <li><strong>Cycle counter (<code class="language-plaintext highlighter-rouge">my_rdtsc</code>):</strong> Adding <code class="language-plaintext highlighter-rouge">rdcycle</code> support for riscv64 is a small (2-5 line) change in <code class="language-plaintext highlighter-rouge">mysys/my_rdtsc.cc</code>. Impact on production workloads beyond profiling accuracy is undocumented, so the business case rests mainly on restoring observability parity with x86_64/arm64.</li>
+  <li><strong>LZ4/zstd optimization:</strong> These are upstream issues in <code class="language-plaintext highlighter-rouge">lz4/lz4</code> and <code class="language-plaintext highlighter-rouge">facebook/zstd</code> respectively (<a href="https://github.com/lz4/lz4/issues/1739">lz4#1739</a>, <a href="https://github.com/facebook/zstd/issues/4471">zstd#4471</a>/<a href="https://github.com/facebook/zstd/issues/4546">#4546</a>), not MySQL-specific; investment here benefits all riscv64 software using these libraries.</li>
 </ol>
-<h3 id="133-cicd-infrastructure">
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>MySQL has no public CI. Oracle’s internal CI does not target riscv64. Options:</p>
-
+<p>MySQL’s public CI exists but has no riscv64 coverage, and Oracle’s internal CI does not target riscv64 either. Options:</p>
 <ul>
-  <li>Contribute riscv64 CI configuration to the public repository: requires Oracle to accept a <code class="language-plaintext highlighter-rouge">.github/workflows/</code> PR. Oracle has shown no interest in adding public CI of any kind.</li>
-  <li>Operate a downstream CI (e.g., building and testing against the upstream source mirror on riscv64 hardware): achievable without Oracle cooperation, but results are not integrated into the official release process.</li>
-  <li>Partner with Debian’s riscv64 buildd infrastructure: already happening organically. The Debian build at rv-osuosl-02 serves as de facto CI, but with failures silently ignored.</li>
+  <li>Contribute riscv64 CI to <code class="language-plaintext highlighter-rouge">.github/workflows/</code>: requires Oracle to accept such a PR into the already-public, Oracle-maintained workflow set; Oracle has shown no evidence of interest in extending its CI to new architectures.</li>
+  <li>Operate a downstream CI building/testing against the upstream source mirror on riscv64 hardware: achievable without Oracle cooperation, but results stay outside the official release process.</li>
+  <li>Partner with Debian’s <code class="language-plaintext highlighter-rouge">rv-osuosl-02</code> buildd infrastructure: already happening organically, serving as de facto CI, but with test failures silently ignored.</li>
 </ul>
-
-<p>Upstream CI integration is blocked by Oracle’s posture on the public repository. Downstream CI is feasible but has no upstream feedback loop.</p>
-<h3 id="134-ecosystem-enablement">
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
 
-<p>MySQL’s riscv64 footprint is already adequate for most use cases: both Debian sid and Ubuntu 24.04 LTS ship current 8.0.46 riscv64 packages. The gaps are: no Oracle official support, no Oracle binary release, and test failures silently ignored. For engineering organizations deploying on riscv64, the Ubuntu Ports packages are the practical path today.</p>
-
-<p>Workloads that depend on Oracle’s official MySQL support tier (enterprise customers, regulated environments) have no path on riscv64 without Oracle’s explicit commitment to support the architecture. No external party can change this.</p>
-<h3 id="135-summary-table">
+<p>MySQL’s riscv64 footprint is already adequate for most non-enterprise use cases: Debian sid and Ubuntu (24.04 LTS and 26.04) ship current riscv64 packages. The remaining gaps are the absence of Oracle official support, the absence of an Oracle binary release, and silently-discarded test failures in the one downstream build pipeline that exists. For organizations deploying on riscv64 today, the Ubuntu Ports / Debian packages are the practical path. Workloads that require Oracle’s official support tier (enterprise customers, regulated environments) have no path on riscv64 without an explicit Oracle commitment, which no external party can produce.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1036,63 +1148,63 @@
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Upstream TempTable lock-free type patch to mysql/mysql-server</td>
+      <td>Upstream the TempTable lock-free-type-selector patch to mysql/mysql-server trunk</td>
       <td>1-2 (including OCA process time)</td>
       <td>External contributor + Oracle review</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Upstream RISC-V Zbc/Zbkc CRC32C to abseil-cpp upstream (google/abseil-cpp)</td>
+      <td>Upstream RISC-V Zbc/Zbkc CRC32C to <code class="language-plaintext highlighter-rouge">google/abseil-cpp</code> directly</td>
       <td>2-4</td>
-      <td>External contributor (no OCA needed for abseil)</td>
+      <td>External contributor (no OCA needed for Abseil)</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Upstream RISC-V rdcycle to my_rdtsc.cc</td>
+      <td>Upstream RISC-V <code class="language-plaintext highlighter-rouge">rdcycle</code> support to <code class="language-plaintext highlighter-rouge">my_rdtsc.cc</code></td>
       <td>1 (including OCA)</td>
       <td>External contributor + Oracle review</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>LZ4 LZ4_FAST_DEC_LOOP enablement for riscv64</td>
+      <td>LZ4 <code class="language-plaintext highlighter-rouge">LZ4_FAST_DEC_LOOP</code> enablement for riscv64</td>
       <td>2-4 (in lz4 upstream)</td>
       <td>External contributor to lz4/lz4</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>zstd RVV vectorization / unaligned access enablement</td>
+      <td>zstd RVV vectorization / unaligned-access enablement</td>
       <td>4-8 (in zstd upstream)</td>
       <td>External contributor to facebook/zstd</td>
       <td>Low</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Downstream riscv64 CI operating against mysql/mysql-server source mirror</td>
+      <td>Downstream riscv64 CI operating against the mysql/mysql-server source mirror</td>
       <td>4-6 (infrastructure setup)</td>
       <td>Any org with riscv64 hardware</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Upstream CI contribution to mysql/mysql-server</td>
+      <td>Upstream CI contribution to mysql/mysql-server’s existing GitHub Actions set</td>
       <td>Not feasible without Oracle cooperation</td>
       <td>Oracle</td>
       <td>Low</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Coordinate with Debian/Canonical to upgrade test suite failure handling on riscv64</td>
+      <td>Coordinate with Debian/Canonical to stop discarding riscv64 test-suite failures</td>
       <td>1-2</td>
       <td>Debian/Ubuntu package maintainers</td>
       <td>Low</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Oracle formal riscv64 support tier</td>
+      <td>Oracle formal riscv64 support tier and official binary release</td>
       <td>Not achievable externally</td>
       <td>Oracle</td>
       <td>N/A</td>
@@ -1100,17 +1212,7 @@
   </tbody>
 </table></div>
 
-<p>The highest-leverage single action is upstreaming the CRC32C patch to <code class="language-plaintext highlighter-rouge">google/abseil-cpp</code> rather than to MySQL directly. This avoids Oracle’s OCA entirely, benefits all abseil consumers on riscv64, and MySQL would pick up the fix when it updates its vendored copy. The TempTable patch should be submitted to MySQL trunk with OCA compliance to eliminate the downstream-only divergence.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p>The highest-leverage single action is upstreaming the CRC32C acceleration to <code class="language-plaintext highlighter-rouge">google/abseil-cpp</code> directly rather than resubmitting to MySQL: it avoids Oracle’s OCA entirely, benefits every Abseil consumer on riscv64, and MySQL would pick up the fix automatically on its next vendored-Abseil bump. The TempTable patch should still be submitted to MySQL trunk with OCA compliance, since it is the one true upstream-vs-downstream divergence blocking a clean build from unpatched source.</p>
 <h2 id="15-references">
   
   
@@ -1124,17 +1226,38 @@
   <li><a href="https://github.com/mysql/mysql-server">mysql/mysql-server repository</a></li>
   <li><a href="https://www.mysql.com/">MySQL official site</a></li>
   <li><a href="https://www.mysql.com/support/supportedplatforms/database.html">MySQL supported platforms</a></li>
-  <li><a href="https://github.com/mysql/mysql-server/blob/trunk/CONTRIBUTING.md">MySQL CONTRIBUTING.md</a></li>
   <li><a href="https://oca.opensource.oracle.com">Oracle Contributor Agreement portal</a></li>
-  <li><a href="https://github.com/mysql/mysql-server/pull/639">PR #639 – Add RISC-V hardware acceleration for Abseil CRC32C</a></li>
-  <li><a href="https://bugs.mysql.com/search.php?search_for=riscv&amp;status=All">MySQL bug tracker – riscv search</a></li>
-  <li><a href="https://github.com/abseil/abseil-cpp/issues/1986">Abseil issue #1986 – RISC-V HW CRC32C support</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=mysql-8.0&amp;suite=sid">Debian buildd – mysql-8.0 riscv64 status</a></li>
-  <li><a href="https://packages.debian.org/sid/mysql-server">Debian packages – mysql-8.0</a></li>
-  <li><a href="https://ports.ubuntu.com/pool/main/m/mysql-8.0/">Ubuntu Ports – mysql-server 8.0 riscv64</a></li>
-  <li><a href="https://github.com/lz4/lz4/issues/1739">LZ4 issue #1739 – LZ4_FAST_DEC_LOOP not enabled on riscv64</a></li>
-  <li><a href="https://riseproject.dev">RISE Project member list</a></li>
-  <li><a href="https://github.com/Tencent/rapidjson/issues/2386">RapidJSON issue #2386 – riscv endian detection</a></li>
+  <li><a href="https://github.com/mysql/mysql-server/pull/639">PR #639 - Add RISC-V hardware acceleration for Abseil CRC32C</a></li>
+  <li><a href="https://bugs.mysql.com/search.php?search_for=riscv&amp;status=All">MySQL bug tracker - riscv search</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/1986">Abseil issue #1986 - RISC-V HW CRC32C support</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/1702">Abseil issue #1702 - cannot link with riscv64 toolchain</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/1236">Abseil issue #1236 - ILP32E stack alignment</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/28118">OpenSSL issue #28118 - riscv extension detection broken on musl</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/30880">OpenSSL issue #30880 - flaky test_lhash on linux-riscv64 CI</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/29453">OpenSSL issue #29453 - intrinsics vs inline asm request</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/25334">OpenSSL issue #25334 - AES zknd/zkne capability bug</a></li>
+  <li><a href="https://github.com/facebook/zstd/issues/4471">zstd issue #4471 - add RVV support for XXH3</a></li>
+  <li><a href="https://github.com/facebook/zstd/issues/4546">zstd issue #4546 - RISC-V unaligned access</a></li>
+  <li><a href="https://github.com/lz4/lz4/issues/1739">LZ4 issue #1739 - LZ4_FAST_DEC_LOOP not enabled on riscv64</a></li>
+  <li><a href="https://github.com/lz4/lz4/issues/1635">LZ4 issue #1635 - RISC-V Architecture Optimizations proposal</a></li>
+  <li><a href="https://github.com/protocolbuffers/protobuf/issues/12266">Protocol Buffers issue #12266 - Add riscv64 support</a></li>
+  <li><a href="https://github.com/protocolbuffers/protobuf/issues/14549">Protocol Buffers issue #14549 - Build fails on RISCV</a></li>
+  <li><a href="https://github.com/Tencent/rapidjson/issues/2386">RapidJSON issue #2386 - riscv endian detection</a></li>
+  <li><a href="https://github.com/gperftools/gperftools/issues/1359">gperftools issue #1359 - broken on riscv64: cannot calculate stack trace</a></li>
+  <li><a href="https://github.com/jemalloc/jemalloc/issues/2399">jemalloc issue #2399 - does jemalloc support cross build for RISCV64</a></li>
+  <li><a href="https://buildd.debian.org/status/package.php?p=mysql-8.0&amp;suite=sid">Debian buildd - mysql-8.0 riscv64 status</a></li>
+  <li><a href="https://packages.debian.org/sid/mysql-server">Debian packages - mysql-8.0</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/riscv64/mysql-server">Ubuntu packages - mysql-server riscv64 (26.04 resolute)</a></li>
+  <li><a href="https://ports.ubuntu.com/pool/main/m/mysql-8.0/">Ubuntu Ports - mysql-8.0</a></li>
+  <li><a href="https://archriscv.felixc.at">Arch Linux RISC-V package status</a></li>
+  <li><a href="https://pypi.org/pypi/mysql/json">PyPI - mysql package</a></li>
+  <li><a href="https://riseproject.dev">RISE Project</a></li>
+  <li><a href="https://riseproject.dev">RISE Project members</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Project Python wheel builder</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE RISC-V Runners announcement</a></li>
+  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE RISC-V Runners: six weeks in</a></li>
+  <li><a href="https://github.com/MariaDB/server/pull/5746">MariaDB PR #5746 - RISC-V Zvbc-accelerated CRC-32C (sibling fork effort)</a></li>
+  <li><a href="https://github.com/llvm/llvm-project/issues/225455">LLVM issue #225455 - inconsistent NaN canonicalization on 64-bit RISC-V</a></li>
 </ul>
 
           
