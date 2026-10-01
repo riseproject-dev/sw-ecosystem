@@ -2,15 +2,25 @@
 title: runc
 parent: Project Reports
 color: yellow
-categories:
-  - containers
 dependencies:
+  - name: Go
+    relation: build-dependency
+    criticality: critical
+  - name: GNU make
+    relation: build-dependency
+    criticality: critical
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: Rust
+    relation: build-dependency
+    criticality: optional
   - name: libseccomp
     relation: runtime-dependency
     criticality: critical
   - name: libseccomp-golang
     relation: runtime-dependency
-    criticality: optional
+    criticality: critical
   - name: opencontainers/runtime-spec
     relation: runtime-dependency
     criticality: critical
@@ -20,16 +30,19 @@ dependencies:
   - name: opencontainers/selinux
     relation: runtime-dependency
     criticality: optional
+  - name: libpathrs
+    relation: runtime-dependency
+    criticality: optional
   - name: CRIU
     relation: runtime-dependency
     criticality: optional
+  - name: golang.org/x/sys
+    relation: runtime-dependency
+    criticality: critical
   - name: vishvananda/netlink
     relation: runtime-dependency
     criticality: optional
   - name: vishvananda/netns
-    relation: runtime-dependency
-    criticality: optional
-  - name: libpathrs
     relation: runtime-dependency
     criticality: optional
   - name: moby/sys
@@ -38,366 +51,366 @@ dependencies:
   - name: coreos/go-systemd
     relation: runtime-dependency
     criticality: optional
+  - name: busybox
+    relation: test-dependency
+    criticality: critical
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="runc" %}
 
 # runc
-**Author:** Ludovic HENRY \<ludovic.henry@qti.qualcomm.com\><br/>
-**Date:** 2026-07-20<br/>
+
+**Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
+**Date:** 2026-09-30<br/>
+**Readiness:** yellow (build-only-ci)<br/>
 **Scope:** RISC-V (riscv64/linux) support status for runc<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
----
-
 ## 1. Project Overview
 
-runc is the OCI reference implementation of the container Runtime Specification. It is the low-level container runtime that underlies Docker, containerd, Podman, and Kubernetes (via the Container Runtime Interface). It is written primarily in Go with a thin C shim (`nsexec.c`) for namespace setup and CGo for seccomp (libseccomp) and safe path resolution (libpathrs).
+runc is the OCI reference implementation of the container Runtime Specification. It is the low-level container runtime underlying Docker, containerd, Podman, and Kubernetes (via CRI). It is written primarily in Go, with CGo bindings to libseccomp (syscall filtering) and, optionally, libpathrs (a Rust library for safe path resolution via `openat2`). It has no JIT, no SIMD, and no cryptography or numeric-compute code of its own.
 
-**Governance:** The [Open Container Initiative (OCI)](https://opencontainers.org/) under The Linux Foundation. A Technical Oversight Board of 8 members on staggered 2-year terms governs cross-project decisions (2/3 supermajority required). runc is the reference implementation of the OCI Runtime Spec.
+**Governance:** The [Open Container Initiative (OCI)](https://opencontainers.org/), under The Linux Foundation. A Technical Oversight Board (TOB) governs cross-project decisions under a formal charter. Member organizations listed on opencontainers.org include AWS, Google, Microsoft, Alibaba Cloud, Huawei, Docker, Red Hat, IBM, Cisco, OpenStack, Chainguard, Sysdig, and Weaveworks. **License:** Apache License 2.0 (confirmed from the repo's `LICENSE` file).
 
-**Corporate sponsors:** Alibaba Cloud, AWS, Google, Microsoft, IBM, Cisco, Huawei, Red Hat, Docker, Chainguard, Sysdig, Goldman Sachs, EasyStack. TOB Chair is Samuel Karp (Google).
+**Maintainers (from the `MAINTAINERS` file), with affiliation signal inferred from commit-email domain:**
 
-**Maintainers (from MAINTAINERS file):**
-
-| Maintainer | GitHub | Company |
+| Maintainer | GitHub | Affiliation signal |
 |---|---|---|
-| Mrunal Patel | @mrunalp | Red Hat |
-| Aleksa Sarai | @cyphar | Amutable Systems |
-| Akihiro Suda | @AkihiroSuda | NTT |
-| Kir Kolyshkin | @kolyshkin | Red Hat |
-| Sebastiaan van Stijn | @thaJeztah | Docker |
-| Li Fu Bang | @lifubang | ACMCoder |
-| Rodrigo Campos | @rata | Amutable Systems |
+| Mrunal Patel | @mrunalp | Red Hat (`mpatel@redhat.com`) |
+| Aleksa Sarai | @cyphar | SUSE historically (`asarai@suse.de` commits) [NEEDS VERIFICATION - current employer not independently confirmed] |
+| Akihiro Suda | @AkihiroSuda | NTT (`@hco.ntt.co.jp`) |
+| Kir Kolyshkin | @kolyshkin | gmail.com domain only; by far the top all-time committer, no corporate domain evident |
+| Sebastiaan van Stijn | @thaJeztah | Docker Inc. (publicly known; email obscured in git history) |
+| Li Fu Bang | @lifubang | independent/unclear |
+| Rodrigo Campos | @rata | unclear from commit email |
 
-**Culture on new ports:** The project accepts architecture-enabling patches passively. The initial RISC-V syscall stub (2019) was accompanied by an explicit disclaimer that riscv64 was not a supported build target. The April 2022 Makefile fix carried a similar disclaimer. No dedicated RISC-V tracking issue was ever opened by maintainers; the riscv64 features landed via three separate focused PRs from three separate contributors over four years. No formal platform tier policy document exists.
+**Top historical contributors** (`git shortlog -sn --all`): Kir Kolyshkin (1824 commits), Michael Crosby/Docker (~950 combined), Mrunal Patel/Red Hat (~850 combined), Aleksa Sarai/SUSE (~680 combined), Akihiro Suda/NTT (465), Qiang Huang/Huawei (302), Victor Marmol/Google (140).
 
-**RISE membership:** runc and OCI are not listed as RISE Project members. RISE uses runc as a standard Ubuntu apt dependency in its RISC-V GitHub Actions runner Dockerfile but has no funded work, blog posts, or contribution activity targeting runc itself.
+**Culture on new ports:** Informal and contribution-driven, not roadmap-gated. There is no formal architecture-tier policy document anywhere in the repo - `README.md`, `CONTRIBUTING.md`, `MAINTAINERS_GUIDE.md`, `RELEASES.md`, and `PRINCIPLES.md` were all checked and none mention platform tiers, and no `PLATFORMS.md` or `SUPPORT.md` exists (confirmed 404 and absent in a fresh clone). riscv64 support entered through an outside contributor's PR in 2019 and was incrementally hardened by maintainers over several years until the changelog called it "supported" in v1.1.8 (2023). New-port acceptance follows ordinary PR review (maintainer approval), with no dedicated port-acceptance governance process.
 
----
+**RISE membership:** opencontainers/runc is not listed as a RISE Project member (checked [riseproject.dev/members](https://riseproject.dev/members/)). RISE's Premier Members include Google, NVIDIA, Qualcomm, Red Hat, SiFive, and Tenstorrent, among others - notably Red Hat (Mrunal Patel's employer) and Google (past contributor Victor Marmol's employer) are RISE members, but this gives runc itself no direct RISE affiliation. RISE's RISC-V GitHub Actions runners (Scaleway EM-RV1 bare-metal nodes) advertise "full Docker support" with Docker-in-Docker, but no public documentation confirms runc specifically as the container engine behind that support - this is not confirmed either way.
 
 ## 2. Port History and Upstreaming Timeline
 
-All RISC-V work is fully upstream in the main `opencontainers/runc` repository on GitHub.
+All RISC-V work is fully upstream in the main `opencontainers/runc` repository. There is no single master/umbrella tracking issue for the riscv64 port; support shipped as a sequence of independent, focused PRs.
 
 | Date | Event | Source |
 |---|---|---|
-| 2019-09-04 | First riscv64 commit: bumped `golang.org/x/sys`, added syscall stubs enabling downstream Go builds (Kubernetes, K3s). Author noted runc itself "still can't be built" on riscv64 due to CGo. | [PR #2123](https://github.com/opencontainers/runc/pull/2123) |
-| 2022-04-01 | Makefile: added `linux/riscv64` to the `-buildmode=pie` supported-platform allowlist (Go 1.16+). Commit message note: "this does not mean we support these architectures." | [PR #3446](https://github.com/opencontainers/runc/pull/3446) commit ab5c60d |
-| 2022-04-30 | Prototype PR to build `runc.riscv64` and bump libseccomp-golang for `SCMP_ARCH_RISCV64`. Tested on QEMU and HiFive Unmatched real hardware. Closed as superseded. | [PR #3463](https://github.com/opencontainers/runc/pull/3463) |
-| 2022-05-19 | Foundational enablement merged (milestone 1.2.0): riscv64 added to release binaries, seccomp `AUDIT_ARCH_RISCV64` constant added, `-buildmode=pie` allowlist confirmed. Co-authored by kolyshkin and AkihiroSuda. | [PR #3446](https://github.com/opencontainers/runc/pull/3446) |
-| 2023-06-28 | riscv64 support backported to `release-1.1` (milestone v1.1.8) via cherry-pick. Verified by author on QEMU riscv64 running K3s with Pod creation confirmed. | [PR #3905](https://github.com/opencontainers/runc/pull/3905) |
-| 2023-09-26 | `libct/dmz` binary replaced libc with kernel nolibc headers (shrinks runc-dmz from 636K to 8K). riscv64 listed as a supported arch for Linux 6.6 nolibc. | [PR #4024](https://github.com/opencontainers/runc/pull/4024) |
-| 2025-09-27 | Integration test image (busybox:glibc 1.37.0) updated; riscv64 added to test image matrix, mips64le dropped. | [PR #4842](https://github.com/opencontainers/runc/pull/4842) |
-| 2026-03-12 | Issue requesting riscv64 added to CI and release artifacts, citing 117+ community releases. Closed without a linked PR and without maintainer engagement. | [Issue #5166](https://github.com/opencontainers/runc/issues/5166) |
-| 2026-05-27 | Test image updated to BusyBox 1.38.0; riscv64 remains in matrix. | [PR #5295](https://github.com/opencontainers/runc/pull/5295) |
-| 2026-06-19 | runc v1.5.0 released with `runc.riscv64` and `runc.riscv64.asc` in official release assets. | [v1.5.0 release](https://github.com/opencontainers/runc/releases/tag/v1.5.0) |
+| 2019-08-26/2019-09-04 | First riscv64-related commit (Carlos de Paula, independent contributor): bumped `golang.org/x/sys` and updated syscall usage so downstream Go projects (Kubernetes, K3s) could compile against runc on riscv64. Explicitly noted runc itself still could not build due to CGo, citing `golang/go#27532` as the real blocker. Merged by Mrunal Patel. | [PR #2123](https://github.com/opencontainers/runc/pull/2123) |
+| 2022-03-31 | Makefile fix adding riscv64 to the dynamic-PIE-buildmode-supported GOARCH list (Go 1.16+). | commit `ab5c60d`, part of [PR #3446](https://github.com/opencontainers/runc/pull/3446) |
+| 2022-04-28/2022-04-30 | Prototype PR bumping libseccomp-golang for `SCMP_ARCH_RISCV64` and producing a `runc.riscv64` binary, tested live on QEMU riscv64 with a real container run and seccomp filter. Closed without merging, content folded into #3446. | [PR #3463](https://github.com/opencontainers/runc/pull/3463) |
+| 2022-05-19 | Foundational enablement merged by Kir Kolyshkin (Red Hat), reviewed by AkihiroSuda (NTT), crazy-max, and thaJeztah: Dockerfile/Makefile fixes, static PIE for arm64/amd64, riscv64 release binary enabled, `AUDIT_ARCH_RISCV64` seccomp constant added (with a CentOS 7 compile-break workaround). This merge commit (`8093c54d`) did not actually ship in a tagged release until v1.2.0-rc.1 (2024-04-03), since runc's 1.1.x line is maintained via separate cherry-picks rather than merges from main. | [PR #3446](https://github.com/opencontainers/runc/pull/3446) |
+| 2023-06-16/2023-06-28 | Backport of the #3446 riscv64/PIE infrastructure to the older, widely-pinned 1.1.x branch (merge commit `1cdfa95f`), explicitly to unblock K3s on RISC-V hardware. The PR itself states: "RISC-V64 support does not necessarily indicate full architectural support; rather, it reflects the capability to use the `-buildmode=pie` compiler flag." First shipped in v1.1.8 (2023-07-19). | [PR #3905](https://github.com/opencontainers/runc/pull/3905) |
+| 2023-09-25/2023-09-26 | `runc-dmz` helper binary rewritten to use Linux kernel `nolibc` headers instead of full libc (636K to 8K on x86_64), with riscv64 explicitly confirmed covered by nolibc's `arch-riscv.h`. This subsystem has since been deleted and replaced (see Section 4). | [PR #4024](https://github.com/opencontainers/runc/pull/4024) |
+| 2025-08-07/2025-09-27 | Busybox integration-test image updated to `1.37.0`, adding a riscv64 image entry in `tests/integration/get-images.sh` (dropping mips64le). This updates the test fixture, not the CI execution matrix (see Sections 7 and 9). First shipped v1.5.0-rc.1 (2026-03-13). | [PR #4842](https://github.com/opencontainers/runc/pull/4842) |
+| 2026-03-12 | Issue asking runc to add `linux/riscv64` to its CI matrix and release artifacts, citing 117+ releases of working riscv64 builds from the `docker-for-riscv64` project on real hardware. Opened and closed the same day: the author discovered and confirmed that runc already ships a `runc.riscv64` release binary (since v1.1.8, still present in 1.4.0 at the time), and closed the issue as moot. **The CI-testing request itself was not addressed** - no riscv64 CI job was added. | [Issue #5166](https://github.com/opencontainers/runc/issues/5166) |
+| 2026-05-22/2026-05-27 | Busybox image bumped again to `1.38.0` (merge commit `3cb21b92`). Merged to `main` but not yet included in any tagged release as of the current HEAD/latest tag v1.5.2 (2026-09-25) - the 1.5.x maintenance line is cherry-pick based and did not pick this commit up. | [PR #5295](https://github.com/opencontainers/runc/pull/5295) |
+| 2026-09-25 | v1.5.2 (latest tagged release) ships `runc.riscv64` as a distinct, verifiable 8.4MB binary asset (confirmed via direct HTTP headers: `Content-Length: 8478016`, `Content-Disposition: filename=runc.riscv64`). | [v1.5.2 release](https://github.com/opencontainers/runc/releases/tag/v1.5.2) |
 
 **Key contributors to RISC-V work:**
 
 | Contributor | Affiliation | Contribution |
 |---|---|---|
-| carlosedp (Carlos de Paula) | Independent | First syscall stubs (PR #2123, 2019) |
-| kolyshkin (Kir Kolyshkin) | Red Hat | Foundational riscv64 release enablement (PR #3446, 2022) |
-| AkihiroSuda | NTT | Co-author and merger of PR #3446; merger of backport |
-| crazy-max | Independent | Confirmed `-buildmode=pie` valid on riscv64; real-hardware seccomp test on HiFive Unmatched |
-| chazapis | Independent | 1.1.x backport motivated by K3s on RISC-V (PR #3905, 2023) |
-| rata (Rodrigo Campos) | Amutable Systems/Microsoft | nolibc dmz optimization supporting riscv64 (PR #4024, 2023) |
-| tianon | Independent | Test image riscv64 matrix addition (PR #4842, 2025) |
-
----
+| carlosedp (Carlos de Paula) | Independent | First syscall stubs, 2019 (PR #2123) |
+| kolyshkin (Kir Kolyshkin) | Red Hat | Foundational riscv64 release enablement, 2022 (PR #3446) |
+| AkihiroSuda | NTT | Co-review/merge of #3446; seccomp wiring; backport review |
+| crazy-max | Independent | Confirmed riscv64 dynamic-PIE support matched Go's arch matrix |
+| chazapis | Independent | 1.1.x backport for K3s, 2023 (PR #3905) |
+| rata (Rodrigo Campos) | Unclear | `runc-dmz` nolibc rewrite preserving riscv64 buildability, 2023 (PR #4024; subsystem since replaced) |
+| gounthar | Independent (docker-for-riscv64 maintainer) | Raised and closed Issue #5166, 2026 |
 
 ## 3. Upstream Support Tier
 
-No formal platform tier policy document (e.g., PLATFORMS.md) exists for runc. The following table is derived from CI configuration and release artifact evidence.
+No formal platform-tier policy document exists for runc (confirmed absent). Tier status is inferred entirely from CI configuration and release-artifact evidence, verified by directly reading the four workflow files in `.github/workflows/` (`test.yml`, `scheduled.yml`, `validate.yml`, `actionlint.yml`) against commit `97f76a9b` (HEAD, 2026-09-28).
 
 | Criterion | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| Native CI runner | Yes (`ubuntu-24.04`) | Yes (`ubuntu-24.04-arm`) | No |
-| QEMU CI emulation | No | No | No |
-| Cross-compile CI | Yes (i386 only as proxy) | N/A (native) | No |
-| Release binary | Yes (`runc.amd64`) | Yes (`runc.arm64`) | Yes (`runc.riscv64`) since v1.2.0 (2022) |
-| Release binary signed | Yes | Yes | Yes |
-| Static PIE supported | Yes | Yes | No (only dynamic PIE) |
-| Integration test image | Yes | Yes | Yes (busybox image exists; never executed in CI) |
-| Debian package | Yes | Yes | Yes (sid/trixie) |
-| Ubuntu package | Yes | Yes | Yes (ports) |
+| Native CI test runner | Yes (`ubuntu-24.04`/`ubuntu-26.04`) | Yes (`ubuntu-24.04-arm`/`ubuntu-26.04-arm`) | No |
+| QEMU CI emulation | No | No | No (not used for any architecture) |
+| Riscv64 appears in CI at all | n/a | n/a | Yes, only as `-a riscv64` in a `make releaseall` cross-build step in `validate.yml`'s `release` job |
+| Unit/integration test execution | Yes | Yes | No |
+| Release binary produced | Yes (`runc.amd64`) | Yes (`runc.arm64`) | Yes (`runc.riscv64`), cross-compiled on an x86_64 runner |
+| Release binary executed/tested before shipping | Yes | Yes | No |
+| Static PIE build mode | Yes | Yes | No (dynamic PIE only; libc toolchain gap) |
+| Ubuntu package | Yes | Yes | Yes - confirmed, `runc` 1.4.0-0ubuntu1 in Ubuntu 26.04 "resolute," architectures `amd64 arm64 armhf ppc64el riscv64 s390x` |
 
-**Summary:** riscv64 is a release target with first-class binary artifacts but a second-class CI posture. Release binaries are cross-compiled and shipped but never tested in the upstream CI pipeline before release.
-
----
+**Summary:** riscv64 is a genuine release target with an official, upstream-published binary artifact, produced every release via runc's own cross-compilation pipeline. It has zero CI test execution: the riscv64 binary is built (never run) on an x86_64 runner inside the same `make releaseall` job that builds every other architecture's binary. This is the "build step exists, no test execution" pattern underlying the yellow/build-only-ci grade (Section 13).
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-runc contains no JIT, no SIMD, no cryptography, and no numeric compute code. It is pure Go with a thin C shim. Architecture-specific work is limited to three areas: seccomp BPF filter constants, PIE build mode, and the `nsexec.c` C shim.
+runc contains no JIT, no SIMD, no cryptography, and no numeric compute code for any architecture. Architecture-specific code is limited to seccomp BPF constants, PIE build-mode gating, and (historically) a now-removed `runc-dmz` helper.
 
-**Seccomp BPF filter constants**
+**Seccomp architecture mapping** (full support, riscv64 treated identically to every other architecture):
+- `libcontainer/seccomp/config.go`: `archs` map includes `"SCMP_ARCH_RISCV64": "riscv64"`, listed alongside amd64/arm64/ppc64le/s390x/mips*/loong64, no special-casing.
+- `libcontainer/seccomp/patchbpf/enosys_linux.go` (759 lines): defines `AUDIT_ARCH_RISCV64` (`EM_RISCV = 243`) with a `#ifndef` fallback guard for older kernel headers, structurally identical to the adjacent `AUDIT_ARCH_LOONGARCH64` fallback; a `scmpArchToAuditArch` switch case maps `libseccomp.ArchRISCV64` to `C.C_AUDIT_ARCH_RISCV64`. A repo-wide grep for "riscv" combined with "todo|fixme|stub|not implement|unsupported" returns zero matches.
 
-`libcontainer/seccomp/patchbpf/enosys_linux.go` maps libseccomp architecture enums to Linux audit architecture constants used in BPF bytecode generation. riscv64 is handled identically to all other supported architectures:
-
-- `#define AUDIT_ARCH_RISCV64 (EM_RISCV|__AUDIT_ARCH_64BIT|__AUDIT_ARCH_LE)` with `EM_RISCV = 243`, with a `#ifndef` guard for older kernel headers.
-- CGo export: `const uint32_t C_AUDIT_ARCH_RISCV64 = AUDIT_ARCH_RISCV64;`
-- Go case: `case libseccomp.ArchRISCV64: return linuxAuditArch(C.C_AUDIT_ARCH_RISCV64), nil`
-
-`libcontainer/seccomp/config.go` maps the OCI spec string `SCMP_ARCH_RISCV64` to the Go arch string `riscv64`. No special-case logic beyond the standard map entry.
-
-**PIE build mode**
-
-riscv64 is in the dynamic PIE allowlist in the `Makefile`:
-```makefile
-ifneq (,$(filter $(GOARCH),386 amd64 arm arm64 loong64 ppc64le riscv64 s390x))
-  GO_BUILDMODE := "-buildmode=pie"
+**Self-exe sealing - correction to the historical record:** The `libct/dmz` subsystem (the nolibc-based "runc-dmz" helper binary discussed in PR #4024, which the earlier record of this report treated as an ongoing riscv64 risk area) has since been **deleted and replaced**:
 ```
+f07d92db drop runc-dmz solution according to overlay solution
+559bd4eb libct/system: rename dmz -> exeseal
+e67725c0 contrib: remove deprecated memfd-bind binary
+```
+The replacement, `libcontainer/exeseal/` (`cloned_binary_linux.go`, `overlayfs_linux.go`), is pure Go using an overlayfs trick and has zero architecture-specific code - a grep for "arch|riscv|amd64|arm64" in that package returns nothing. The nolibc/riscv64-header-compatibility concern from PR #4024 is therefore obsolete; the current implementation needs no per-architecture handling at all.
 
-Static PIE (`-buildmode=pie -static-pie`) is supported only for amd64 and arm64 due to `rcrt1.o` availability in libc. riscv64 uses non-PIE static linkage (`-extldflags -static`) for static builds. This is a libc gap, not a runc gap.
+**PIE build mode:** riscv64 is in the dynamic-PIE allowlist in the Makefile (`386 amd64 arm arm64 loong64 ppc64le riscv64 s390x`). Static PIE (`-linkmode external -extldflags -static-pie`) is gated to only `arm64`/`amd64` (`ifneq (,$(filter $(GOARCH),arm64 amd64))`); riscv64 cross builds fall back to non-static-PIE linking. This is a toolchain/libc limitation (`rcrt1.o` availability), not a runc code gap.
 
-**nsexec.c C shim**
+**nsexec.c C shim:** Standard POSIX/Linux syscalls (`clone`, `setns`, `unshare`, `fork`), architecture-agnostic by design, no `#ifdef __riscv` guards anywhere.
 
-`libcontainer/nsenter/nsexec.c` uses standard POSIX and Linux syscalls (`clone`, `setns`, `unshare`, `fork`). It contains zero `#ifdef __riscv` guards. It is architecture-agnostic by design.
+**Vendored dependency layer (not stubbed):** `vendor/github.com/seccomp/libseccomp-golang` has `ArchRISCV64` fully wired into `StringToArch`/`ArchToString`/the cgo `C_ARCH_RISCV64` mapping. `vendor/golang.org/x/sys/unix` ships the complete riscv64 Linux syscall table set (`syscall_linux_riscv64.go`, `zerrors_linux_riscv64.go`, `zsyscall_linux_riscv64.go`, `zsysnum_linux_riscv64.go`, `ztypes_linux_riscv64.go`, `asm_linux_riscv64.s`). A line-count comparison of Linux-only files shows riscv64 (2821 lines) within about 3 percent of amd64 (2906) and larger than arm64 (2751) - no sign of a thin or partial port.
 
 **Component table:**
 
-| Component | amd64 | arm64 | riscv64 | ISA extensions |
+| Component | amd64 | arm64 | riscv64 | ISA extensions involved |
 |---|---|---|---|---|
-| Seccomp arch mapping | Full | Full | Full | None |
-| Seccomp ENOSYS BPF stub | Full | Full | Full | None |
+| Seccomp architecture mapping | Full | Full | Full | None (audit-arch constant only) |
+| `exeseal` self-exe sealing | Full (n/a per-arch) | Full (n/a per-arch) | Full (n/a per-arch) | None - pure Go/overlayfs |
 | Dynamic PIE build | Full | Full | Full | None |
-| Static PIE build | Full | Full | Missing (libc gap) | None |
-| nsexec.c C shim | Full | Full | Full | None |
-| Release binary | Full | Full | Full | None |
-| CI test coverage | Full | Full | Missing | N/A |
+| Static PIE build | Full | Full | Missing (libc toolchain gap) | None |
+| `nsexec.c` C shim | Full | Full | Full | None |
+| Release binary (cross-compiled) | Full | Full | Full | None |
+| CI test execution | Full | Full | Missing | N/A |
 
-There is no JIT, SIMD, crypto, GC barrier, or assembly code in runc for any architecture.
-
----
+There is no JIT, SIMD, cryptography, GC barrier, or hand-written assembly in runc for any architecture, so there is no "partial (C intrinsics)" or "scalar fallback" tier applicable here.
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-**Build system:** Go + GNU Make. No CMake, no Meson, no autoconf.
+**Build system:** Go + GNU Make. No CMake, Meson, or autoconf anywhere in the repo.
 
-**Minimum Go version:** 1.25.0 (specified in `go.mod`).
+**Minimum Go version:** `go.mod` at current HEAD (`97f76a9b`, VERSION `1.5.0-rc.1+dev`) requires **Go 1.26.0**.
 
-**CGo requirement:** `CGO_ENABLED=1` is enforced for the `runc`, `static`, and `localunittest` Makefile targets. CGo is required for libseccomp integration (with the `seccomp` build tag) and for libpathrs integration (with the `libpathrs` build tag).
+**CGo requirement:** `CGO_ENABLED=1` is enforced for the `runc`, `static`, and `localunittest` Makefile targets, required for the `seccomp` build tag (libseccomp) and `libpathrs` build tag. Default build tags are `seccomp libpathrs`.
 
-**Cross-compilation toolchain for riscv64 (from `Dockerfile` and `script/lib.sh`):**
+**Build tags (the Make-based equivalent of CMake `-DUSE_X=OFF`):**
 
+| Build Tag | Feature | Default | Dependency |
+|---|---|---|---|
+| `seccomp` | syscall filtering | on | libseccomp |
+| `libpathrs` | path-safety via Rust lib | on | libpathrs >=0.2.5 |
+| `runc_nocriu` | disables checkpoint/restore | off (CRIU support included by default) | CRIU |
+
+**Cross-compilation toolchain for riscv64** (from `Dockerfile` and `script/lib.sh::set_cross_vars()`):
 ```
-C compiler:    gcc-riscv64-linux-gnu (Debian/Ubuntu)
-Host triple:   riscv64-linux-gnu
+C compiler:    gcc-riscv64-linux-gnu  (Debian/Ubuntu cross package)
+Host triple:   riscv64-linux-gnu  (HOST=riscv64-${PLATFORM})
+CC:            riscv64-linux-gnu-gcc
+STRIP:         riscv64-linux-gnu-strip
 Rust target:   riscv64gc-unknown-linux-gnu
+Rust linker:   riscv64-linux-gnu-gcc
 Rust stdlib:   libstd-rust-dev:riscv64
 ```
+No minimum GCC/Clang version is pinned specifically for riscv64; it uses whatever `gcc-riscv64-linux-gnu` ships in the Dockerfile's base image, `golang:1.26-trixie` (Debian 13).
 
-**Required Debian/Ubuntu packages for riscv64 cross-build:**
-```
-gcc-riscv64-linux-gnu
-libc-dev-riscv64-cross
-libstd-rust-dev:riscv64
-```
+**Dockerfile (root, the only Docker build file, used for dev/CI/release across all 8 release architectures):** adds `riscv64` via `dpkg --add-architecture riscv64`, installs `gcc-riscv64-linux-gnu libc-dev-riscv64-cross libstd-rust-dev:riscv64`, and cross-builds `libseccomp` (pinned 2.6.1) and `libpathrs` (pinned 0.2.6) for riscv64 among `RELEASE_ARCHES="386 amd64 arm64 armel armhf ppc64le riscv64 s390x"` via `script/build-seccomp.sh` / `script/build-libpathrs.sh`.
 
-**Dependencies that must be cross-compiled from source:**
-
-- **libseccomp** (v2.6.0, LGPL requires source inclusion): cross-built with `./configure --host riscv64-linux-gnu` via `script/build-seccomp.sh`.
-- **libpathrs** (v0.2.5, Rust): cross-built with `cargo` targeting `riscv64gc-unknown-linux-gnu`, linker set to `riscv64-linux-gnu-gcc`.
-
-**Cross-compile static release binary (from x86_64 host):**
+**Release build commands:**
 ```bash
-export GOARCH=riscv64
-export CC=riscv64-linux-gnu-gcc
-export CGO_ENABLED=1
-make static
+make releaseall   # RELEASE_ARGS = "-a 386 -a amd64 -a arm64 -a armel -a armhf -a ppc64le -a riscv64 -a s390x"
+# per-arch: script/release_build.sh -a riscv64
+#   -> set_cross_vars riscv64
+#   -> make PKG_CONFIG_PATH=... CC=riscv64-linux-gnu-gcc static
+```
+Native (on-device) build:
+```bash
+apt update && apt install -y make gcc linux-libc-dev libseccomp-dev pkg-config git
+make
+sudo make install
 ```
 
-**QEMU:** Not used anywhere in the build system or CI. The release pipeline is cross-compile only.
+**QEMU usage:** None anywhere in the build system or CI (`grep -i qemu .github/workflows/` returns zero matches). The release pipeline is cross-compile only, with no execution step.
 
-**Known build issue:** PR #3905 introduced a typo in `LDFLAGS_STATIC` (`--static-pie` with double-dash instead of `-static-pie` with single-dash). This caused broken static linking on musl hosts. Fixed in PR #3746 on main but the fix was not included in the 1.1.x backport at merge time. Fixed separately. See also Issue #3950 (Section 11).
-
----
+**Known build issues:**
+- Static PIE is unavailable for riscv64 due to the `GO_BUILDMODE_STATIC` Makefile gate (`arm64`/`amd64` only) - riscv64 uses non-static-PIE linking for `make static`.
+- [Issue #3950](https://github.com/opencontainers/runc/issues/3950): `make static` does not produce a statically linked binary on musl hosts since v1.1.8; a 2023-09-26 comment names the riscv64 1.1.x backport (PR #3905) as a probable contributing factor via an `LDFLAGS_STATIC` flag typo (`--static-pie` vs `-static-pie`); fixed on main (PR #3746) but not folded back into the 1.1.x backport at merge time. Does not affect official release binaries, which are built in a controlled glibc environment. Still open as of its last recorded update.
+- Commit `6b757b6` (2026-02-03): "dockerfile: switch to Debian 13 (needed for riscv64 repo access to build libpathrs)" - a concrete, riscv64-specific build fix confirming the toolchain required active maintenance to keep riscv64 cross-building libpathrs successfully.
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
-runc is a narrow-purpose binary: spawn and manage Linux containers. Its feature set is defined by the OCI Runtime Spec, not by architecture-specific optimizations. The gap analysis is therefore short.
+runc is a narrow-purpose binary (spawn/manage Linux containers per the OCI Runtime Spec), so the gap analysis is short.
 
 | Feature | amd64 | arm64 | riscv64 | Notes |
 |---|---|---|---|---|
 | Container run/exec/kill | Full | Full | Full | Core Go path, arch-agnostic |
-| Seccomp filtering | Full | Full | Full | SCMP_ARCH_RISCV64 + AUDIT_ARCH_RISCV64 present |
+| Seccomp filtering | Full | Full | Full | `SCMP_ARCH_RISCV64` + `AUDIT_ARCH_RISCV64` fully wired |
 | cgroup v1/v2 | Full | Full | Full | Pure Go + kernel syscalls |
-| Namespace creation | Full | Full | Full | nsexec.c is arch-agnostic |
-| SELinux labeling | Full | Full | Full | opencontainers/selinux cross-builds riscv64 |
-| Checkpoint/restore (CRIU) | Full | Full | Partial | CRIU C library riscv64 port merged Oct 2024 (v4.2); CI Dockerfile missing `libnftables-dev` (Issue #2714 open); tracking issue #1702 open |
-| Static PIE binary | Full | Full | Missing | rcrt1.o unavailable on riscv64 libc; dynamic PIE available |
-| CI-gated release | Full | Full | Missing | riscv64 binary cross-compiled, not CI-tested before release |
-| Integration test execution | Full | Full | Missing | busybox test image exists for riscv64 but no CI runner to execute it |
+| Namespace creation | Full | Full | Full | `nsexec.c` is arch-agnostic |
+| SELinux labeling | Full | Full | Full | `opencontainers/selinux` cross-builds for riscv64 |
+| Checkpoint/restore (CRIU) | Full | Full | Blocked (optional feature) | CRIU C library riscv64 port merged Oct 2024 (v4.2), but CRIU's own riscv64 CI is blocked on a missing `libnftables-dev` package ([criu#2714](https://github.com/checkpoint-restore/criu/issues/2714), open) |
+| Static PIE binary | Full | Full | Missing | libc toolchain gap (`rcrt1.o`), not a runc code gap; dynamic PIE is available |
+| CI-validated release | Yes | Yes | No | riscv64 binary cross-compiled, never executed/tested in CI before release |
+| Integration test execution | Yes | Yes | No | riscv64 busybox test image exists in the test fixture but no CI job runs it |
 
-**Performance gaps:** No SIMD, JIT, or cryptographic code exists in runc. No performance gap is possible from missing ISA extensions.
+**Performance gaps:** No SIMD, JIT, or cryptographic code exists in runc, so no performance gap from missing ISA extensions is possible by construction.
 
-**Security hardening:** Static PIE is unavailable for riscv64 (dynamic PIE is available). For deployments requiring a fully position-independent static binary, riscv64 is weaker than amd64/arm64. This is a libc toolchain limitation, not a runc limitation.
+**Security hardening:** Dynamic PIE is available on riscv64; static PIE is not. For deployments specifically requiring a fully static, position-independent binary, riscv64 is weaker than amd64/arm64 - a libc/toolchain limitation, not a runc-code limitation.
 
----
+**Floating-point/NaN semantics:** Not applicable - runc has no numeric compute code.
 
 ## 7. CI/CD Infrastructure
 
-All three GitHub Actions workflow files in `.github/workflows/` were read directly. No `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` exists (all return 404).
+All four GitHub Actions workflow files were read in full against commit `97f76a9b` (2026-09-28): `test.yml`, `scheduled.yml`, `validate.yml`, `actionlint.yml`. No `.gitlab-ci.yml`, `Jenkinsfile`, or `.cirrus.yml` exists in the repository.
+
+```
+$ grep -rni "riscv" .github/workflows/*.yml
+(zero matches in all four files)
+```
+
+**What does exist:** `validate.yml`'s `release` job (triggered on `push` to `main`/`release-*`/tags, `pull_request`, `merge_group`, and `workflow_dispatch` - essentially every PR and push) runs `make releaseall`, which passes `-a riscv64` (among seven other architectures) to `script/release_build.sh` inside a Docker container on an `ubuntu-24.04` (x86_64) runner, cross-compiling a static `runc.riscv64` binary that is uploaded as a build artifact. **This step contains no `run`/`exec`/test invocation of the binaries it produces** - riscv64 enters CI only as one flag in a Makefile variable, never as a runner, a QEMU job, or a test-matrix entry.
+
+- **`test.yml`** (the actual unit/integration test workflow): `os` matrix is `[ubuntu-24.04, ubuntu-24.04-arm, ubuntu-26.04, ubuntu-26.04-arm]`. The only non-native cross-arch job is `cross-i386` (native multilib gcc, not QEMU; a comment in the file states "we do not have 32-bit ARM CI"). There is no riscv64 job and no `busybox` string anywhere in this file - the riscv64 busybox integration-test image added by PR #4842/#5295 lives only in `tests/integration/get-images.sh`, a fixture that is not invoked by any riscv64-executing CI job.
+- **`scheduled.yml`:** cron dispatcher for `validate.yml`/`test.yml` on `main` and release branches; zero riscv references.
+- **`actionlint.yml`:** lints the workflow YAML itself; zero riscv references.
+
+**RISE runners:** RISE provides RISC-V GitHub Actions runners (Scaleway EM-RV1 bare-metal nodes, Kubernetes-orchestrated, Docker-in-Docker support, announced March 2026, ~13,000 jobs/197 repos/87 orgs by its "six weeks in" report in May 2026). runc's CI does not use them, and no public detail confirms RISE runner infrastructure uses runc specifically as its container engine. No RISE blog post mentions runc by name.
+
+**Contextual note:** Issue #5166 (opened/closed 2026-03-12) asked specifically for a riscv64 CI job. It was closed the same day once the reporter confirmed release binaries already existed - the closure resolved the (mistaken) concern about missing binaries, but the stated CI-testing request itself was never implemented and remains open in substance.
 
 | Aspect | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| Native CI runner | `ubuntu-24.04` | `ubuntu-24.04-arm` | None |
+| Native CI runner | `ubuntu-24.04`/`-26.04` | `ubuntu-24.04-arm`/`-26.04-arm` | None |
 | QEMU emulation in CI | No | No | No |
-| Cross-compile test in CI | i386 (GOARCH=386) | N/A | No |
-| Integration tests in CI | Yes | Yes | No |
-| Unit tests in CI | Yes | Yes | No |
-| Release binary CI-gated | Yes | Yes | No |
+| Cross-compile-only CI presence | n/a | n/a | Yes, inside `make releaseall` |
+| Integration/unit tests executed | Yes | Yes | No |
+| Release binary CI-built | Yes | Yes | Yes (never tested) |
 | Scheduled CI run | Yes | Yes | No |
-
-**`test.yml`:** Runs on `ubuntu-24.04` and `ubuntu-24.04-arm`. Cross-compilation target: i386 only (`GOARCH=386`). Zero occurrences of "riscv" in the file.
-
-**`validate.yml`:** Runs on `ubuntu-24.04` only. Zero occurrences of "riscv".
-
-**`scheduled.yml`:** Cron-triggered dispatcher for `test.yml` and `validate.yml` on main and `release-1.3`. Zero occurrences of "riscv".
-
-**RISE runners:** RISE provides RISC-V GitHub Actions runners (announced March 2026, "Six Weeks In" report May 2026). runc's CI does not use them. No RISE blog post mentions runc specifically. RISE uses runc as a dependency in its own runner infrastructure (installed via apt) but has no contributions to runc's CI.
-
-**Contextual note:** Issue #5166 (opened March 12, 2026, closed without resolution) explicitly requested adding riscv64 to CI. The issue was closed with no linked PR and no maintainer engagement visible on the page. The closure is unexplained. The busybox riscv64 test image added by PR #4842 (September 2025) has no effect without a riscv64 CI runner.
-
----
 
 ## 8. Distribution and Release Status
 
-**Official upstream release binaries:**
-
-riscv64 is a first-class target in the `Makefile` `releaseall` target (`-a riscv64` alongside 386, amd64, arm64, armel, armhf, ppc64le, s390x). Release assets for v1.5.0 (2026-06-19, latest) include `runc.riscv64` and `runc.riscv64.asc` (GPG signature). Binary confirmed downloadable at approximately 9.1 MB (ELF). This has been true since v1.2.0 (May 2022) and through v1.3.x (June 2023, after backport) and every subsequent release.
-
-v1.1.0 did NOT include riscv64. Support was added to the 1.1.x branch via PR #3905, first appearing in v1.1.8 (July 2023).
+**Official upstream GitHub release binaries:** riscv64 is a first-class target in the `Makefile`'s `releaseall` target (`-a riscv64` among 8 architectures). Recent tags: v1.5.2 (latest, 2026-09-25), v1.5.1, v1.5.0, 1.5.0-rc.3, 1.4.3, 1.3.6, v1.5.0-rc.2, v1.4.2, v1.3.5, v1.5.0-rc.1. **Directly verified via HTTP** at v1.5.2: `https://github.com/opencontainers/runc/releases/download/v1.5.2/runc.riscv64` returns a 302 redirect to a signed Azure blob, then `200 OK`, `Content-Length: 8478016` (8.4MB), `Content-Disposition: attachment; filename=runc.riscv64`, `Last-Modified` consistent with the release date; a negative-control request for a nonexistent asset name at the same tag cleanly returned `404`, confirming the check is not a false positive. This has been continuously true release after release since v1.2.0/v1.1.8 (2022-2023).
 
 **Linux distribution packages:**
 
 | Distro | Suite | Version | riscv64 available |
 |---|---|---|---|
-| Debian | bookworm (stable) | 1.1.5+ds1-1+deb12u1 | No |
-| Debian | trixie (testing) | 1.1.15+ds1-2+b4 | Yes |
-| Debian | sid (unstable) | 1.3.5+ds1-1 | Yes -- built on `rv-manda-04`, status Installed |
-| Ubuntu | jammy-updates | 1.3.4-0ubuntu1~22.04.1 | Yes |
-| Ubuntu | noble-updates | 1.3.4-0ubuntu1~24.04.1 | Yes |
-| Ubuntu | noble (ports) | 1.1.12-0ubuntu3 | Yes (older version than amd64 security stream) |
-| Alpine | edge | 1.4.2-r2 | Yes (built 2026-05-13) |
-| Arch Linux | extra | 1.5.0-1 | Not confirmed (page not fetchable via automated check) |
+| Ubuntu | resolute (26.04 LTS) | 1.4.0-0ubuntu1 | Yes - confirmed live via [packages.ubuntu.com](https://packages.ubuntu.com/resolute/runc), architecture list `amd64 arm64 armhf ppc64el riscv64 s390x`; a `runc-stable` variant also exists |
+| Debian | trixie / sid | 1.1.15+ds1-2+b4 / 1.3.5+ds1-1 | Yes [NEEDS VERIFICATION - not reconfirmed this research cycle] |
+| Ubuntu | jammy-updates / noble-updates | 1.3.4-0ubuntu1 variants | Yes [NEEDS VERIFICATION - not reconfirmed this research cycle] |
+| Alpine | edge | 1.4.2-r2 | Yes [NEEDS VERIFICATION - not reconfirmed this research cycle] |
+| Arch Linux RISC-V mirror | - | - | Inconclusive - the mirror's homepage appears to be a static page with no live package-search endpoint found; neither confirmed nor refuted |
 
-**What a user must do to get a working riscv64 binary:**
+**PyPI / RISE GitLab PyPI proxy:** No PyPI package named `runc` exists at all (`https://pypi.org/pypi/runc/json` and `https://pypi.org/simple/runc/` both return `404`). This is expected - runc is a Go binary, not a Python package - and the riscv64 question does not apply to this channel. The RISE GitLab wheel-builder proxy simply redirects to the same (empty) upstream PyPI result, and `runc` is not among the 86 packages listed at the [RISE wheel builder](https://riseproject.gitlab.io/python/wheel_builder/).
 
-The simplest path is to download `runc.riscv64` from the [GitHub releases page](https://github.com/opencontainers/runc/releases), set execute permission, and place it in `$PATH`. No compilation required. Alternatively, install via the distribution package manager on Debian trixie/sid, Ubuntu 22.04+, or Alpine edge.
-
----
+**What a user must do to get a working riscv64 binary:** Download `runc.riscv64` from the [GitHub releases page](https://github.com/opencontainers/runc/releases), `chmod +x`, and place it in `$PATH` - no compilation required. Alternatively, install via `apt` on Ubuntu 26.04 "resolute" (confirmed) or Debian trixie+/Alpine edge [NEEDS VERIFICATION].
 
 ## 9. Dependencies
 
-runc is pure Go except for CGo bindings to libseccomp and libpathrs. Its dependency tree has no JIT, SIMD, or numeric-compute components.
+runc is pure Go apart from CGo bindings to libseccomp and (optionally) libpathrs. Its dependency tree has no JIT, SIMD, or numeric-compute components - the dependency-risk surface is almost entirely about whether each dependency's own toolchain and CI cross-compile cleanly for riscv64.
 
-| Dependency | Role | riscv64 build | riscv64 test | riscv64 release | Blocking issues |
-|---|---|---|---|---|---|
-| Go runtime | Entire build toolchain | Yes, since Go 1.16 | CI covers amd64/arm64 only | Yes (GOARCH=riscv64) | None -- see `project-reports/go.md` |
-| libseccomp (v2.6.0, C) | Syscall filtering via CGo | Yes, since v2.5.0 (2021) | Partial (issue #290 notes skipped tests) | v2.6.0 (2025-01-24) | #327 is riscv32 only; riscv64 fully supported |
-| libseccomp-golang (v0.11.1) | Go bindings for libseccomp | Yes, since v0.9.2 | Yes | v0.11.1 (2025-08-05) | None; all riscv64 issues closed |
-| opencontainers/runtime-spec (v1.3.0) | OCI runtime spec; seccomp arch table | Yes | Yes | v1.3.0 (2025-11-04) | None; SCMP_ARCH_RISCV64 added, issues #1059 and #1217 closed |
-| opencontainers/cgroups (v0.0.6) | cgroup v1/v2 management | Yes (pure Go) | Unknown (no riscv64 CI found) | Yes | 0 open riscv64 issues |
-| opencontainers/selinux (v1.15.1) | SELinux label management | Yes | Unknown | Yes (issue #201 closed) | None |
-| checkpoint-restore/go-criu (v8.3.0) | Checkpoint/restore (optional) | Yes (Go bindings) | Blocked by CRIU C library | v8.3.0 (2026-06-15) | CRIU C library riscv64 port merged Oct 2024 (PR #2234, v4.2); CI Dockerfile missing `libnftables-dev` (issue #2714 open); tracking issue #1702 open |
-| cilium/ebpf (v0.17.3, indirect) | eBPF program loading | Yes (issue #1110 closed 2023-08) | Unknown riscv64 CI | Yes | Minor: no riscv64 hardware CI runner |
-| golang.org/x/sys (v0.46.0) | Linux syscall wrappers | Yes (issues #38, #40 closed) | Yes | Yes | None |
-| vishvananda/netlink (v1.3.1) | Network interface/route | Yes (pure Go) | Unknown | Yes | 0 riscv64 issues |
-| vishvananda/netns (v0.0.5) | Network namespaces | Yes (pure Go) | Unknown | Yes | 0 riscv64 issues |
-| cyphar.com/go-pathrs (v0.2.5, Rust) | Safe path resolution via `openat2` | Yes | Unknown | Yes | 0 riscv64 issues; `openat2` available in Linux 5.6+ |
-| moby/sys (multiple) | Capability/mount/user NS helpers | Yes (pure Go) | Unknown | Yes | 0 riscv64 issues |
-| coreos/go-systemd (v22.7.0) | systemd D-Bus integration | Yes (pure Go) | Unknown | Yes | 0 riscv64 issues |
+| Dependency | Relation / criticality | Role | riscv64 status |
+|---|---|---|---|
+| Go | build-dependency, critical | Entire build toolchain; `go.mod` currently requires Go 1.26.0 | Full - `GOARCH=riscv64` supported since Go 1.16; foundational to every riscv64 enablement step since 2019 |
+| GNU make | build-dependency, critical | Orchestrates all build/release targets (`make`, `make static`, `make releaseall`) | Full - arch-agnostic, no riscv64-specific issue |
+| GCC | build-dependency, critical | CGo C compiler; riscv64 cross builds use the `gcc-riscv64-linux-gnu` Debian/Ubuntu cross package | Full - confirmed present and used in the official `Dockerfile` |
+| Rust | build-dependency, optional | Only needed to build `libpathrs` (on by default via the `libpathrs` build tag); Rust 1.63+ required | Full - riscv64 target `riscv64gc-unknown-linux-gnu` via `libstd-rust-dev:riscv64`, confirmed in `Dockerfile` and `script/build-libpathrs.sh` |
+| libseccomp | runtime-dependency, critical | C library for syscall filtering, linked via CGo | Full since v2.5.0 (2021); CI Dockerfile cross-builds libseccomp 2.6.1 for riscv64 via `script/build-seccomp.sh`. riscv64 testing only partial upstream (libseccomp issue #290 notes some skipped tests); issue #327 is riscv32-only, not riscv64 |
+| libseccomp-golang | runtime-dependency, critical | Go/CGo bindings to libseccomp | Full - `ArchRISCV64` fully wired into `StringToArch`/`ArchToString`/`C_ARCH_RISCV64` in the vendored source, same shape as every other architecture constant; riscv64-related upstream issues closed |
+| opencontainers/runtime-spec | runtime-dependency, critical | OCI runtime spec definitions, including the seccomp architecture table | Full - vendored; `docs/spec-conformance.md` lists `riscv64` to `SCMP_ARCH_RISCV64` |
+| opencontainers/cgroups | runtime-dependency, critical | cgroup v1/v2 management | Full (pure Go, arch-agnostic); no known riscv64 issues |
+| opencontainers/selinux | runtime-dependency, optional | SELinux label management | Full (pure Go cross-build); no riscv64-specific issues. Unrelated open bug [#5048](https://github.com/opencontainers/runc/issues/5048) ("runc selinux library use 100% cpu," opened 2025-11-27, references [opencontainers/selinux#247](https://github.com/opencontainers/selinux/issues/247)) affects all architectures, not riscv64 specifically |
+| libpathrs | runtime-dependency, optional | Rust library providing safe path resolution via `openat2` (Linux 5.6+) | Full - cross-built with cargo targeting `riscv64gc-unknown-linux-gnu`; pinned at v0.2.6 in the current Dockerfile; zero riscv64 issues found |
+| CRIU | runtime-dependency, optional | Checkpoint/restore support (Go bindings `checkpoint-restore/go-criu`, feature on by default unless `runc_nocriu` build tag is set) | Blocked for CI only: CRIU's C library riscv64 port merged October 2024 (v4.2), but CRIU's own riscv64 CI Dockerfile is missing `libnftables-dev` ([criu#2714](https://github.com/checkpoint-restore/criu/issues/2714), open), and CRIU tracking issue #1702 ("Support for RISC-V") remains open. This affects only the optional checkpoint/restore feature, not core run/exec/kill |
+| golang.org/x/sys | runtime-dependency, critical | Linux syscall wrapper layer | Full - complete riscv64 syscall table (`syscall_linux_riscv64.go`, `zerrors`, `zsyscall`, `zsysnum`, `ztypes`, `asm_linux_riscv64.s`), line count on par with tier-1 architectures (2821 lines vs. amd64's 2906); foundational since the 2019 PR |
+| vishvananda/netlink | runtime-dependency, optional | Network interface/route management | Full (pure Go); no known riscv64 issues |
+| vishvananda/netns | runtime-dependency, optional | Network namespace handling | Full (pure Go); no known riscv64 issues |
+| moby/sys | runtime-dependency, optional | Capability/mount/userns helper packages | Full (pure Go); no known riscv64 issues |
+| coreos/go-systemd | runtime-dependency, optional | systemd D-Bus integration | Full (pure Go); no known riscv64 issues |
+| busybox | test-dependency, critical | Integration-test rootfs image | Image updated for riscv64 in `tests/integration/get-images.sh` by PR #4842 (merged 2025-09-27, shipped v1.5.0-rc.1) and PR #5295 (merged 2026-05-27, not yet in a tagged release as of v1.5.2). Exists as a test fixture only - not exercised by any CI job, since no riscv64 runner or QEMU step runs integration tests for that architecture |
 
-**CRIU deep-dive (only dependency with a material open issue):**
+**Additional indirect dependency found via research (not in the direct-dependency list but surfaced in `go.mod` and cgroups' dependency chain):** `cilium/ebpf` - eBPF program loading; riscv64 support issue (#1110) closed in 2023; no material open riscv64 issues.
 
-The CRIU C library riscv64 port was merged upstream in October 2024 (PR #2234) and tagged as v4.2. However, the riscv64 CI Dockerfile is missing the `libnftables-dev` package (issue #2714, open as of research date), preventing the riscv64 CI environment from building. Tracking issue #1702 ("Support for RISC-V") remains formally open. This affects only the optional `--checkpoint` feature of runc. Normal container run/exec/kill are unaffected.
-
----
+**Note on verification path:** the project's graph database (`project-graph` MCP) could not be queried in this research cycle due to a persistent connection failure (`CONNECTION_CLOSED`); the Ubuntu 26.04/PyPI checks above were instead performed via direct live HTTP fetches as a fallback. This should be retried against the graph database once that server is reachable.
 
 ## 11. Known Bugs and Active Issues
 
 | ID | Title | Status | Severity | Notes |
 |---|---|---|---|---|
-| [Issue #3950](https://github.com/opencontainers/runc/issues/3950) | Build does not produce statically linked binary on musl hosts | Open | Medium | Affects `make static` since v1.1.8. A comment (2023-09-26) names PR #3905 (riscv64 1.1.x backport) as a probable contributing cause via the nsexec C code CGo linking change. No fix merged as of last update 2025-07-04. Does not affect official release binaries (built in a controlled glibc environment). |
-| [Issue #5166](https://github.com/opencontainers/runc/issues/5166) | Add linux/riscv64 to CI and release artifacts | Closed, unresolved | Medium | Opened March 12, 2026. Requested riscv64 in CI and release pipeline. Release pipeline was already complete (releases since v1.2.0). CI gap was not addressed. Closed with no linked PR and no maintainer engagement. |
-| CRIU [Issue #2714](https://github.com/criu/criu/issues/2714) | riscv64 CI Dockerfile missing libnftables-dev | Open (upstream CRIU) | Low | Affects runc only for the optional checkpoint/restore feature. CRIU v4.2 has riscv64 support; CI infrastructure is incomplete. |
+| [Issue #3950](https://github.com/opencontainers/runc/issues/3950) | Build does not produce statically linked binary on musl hosts | Open | Medium | Affects `make static` since v1.1.8; a 2023-09-26 comment names the riscv64 1.1.x backport (PR #3905) as a probable contributing cause via an `LDFLAGS_STATIC` flag typo. Does not affect official release binaries (built in a controlled glibc environment) |
+| [Issue #5166](https://github.com/opencontainers/runc/issues/5166) | Add linux/riscv64 to CI and release artifacts | Closed, CI gap unaddressed | Medium | Opened and closed same day, 2026-03-12. Closed once the reporter confirmed release binaries already exist; the CI-testing request itself was never implemented |
+| [CRIU Issue #2714](https://github.com/checkpoint-restore/criu/issues/2714) | riscv64 CI Dockerfile missing `libnftables-dev` | Open (upstream CRIU, not runc) | Low | Affects runc only for the optional checkpoint/restore feature |
 
-No correctness bugs specific to riscv64 container execution (run/exec/kill) are open. The static-linking regression (#3950) is a build-system issue, not a runtime correctness issue.
+**Generic (non-riscv-specific) open issues surfaced by targeted riscv64-bug searches, included for completeness since they affect every architecture including riscv64:**
 
----
+| Issue | Title | State | Opened | Detail |
+|---|---|---|---|---|
+| [#3181](https://github.com/opencontainers/runc/issues/3181) | runc exec is 5x slower than crun exec | Open | 2021-08-25 | 1000x `runc exec` loop: real 20.726s (user 11.635s, sys 14.094s) vs. 1000x `crun exec`: real 4.802s (user 2.634s, sys 2.283s) |
+| [#1430](https://github.com/opencontainers/runc/issues/1430) | Extremely slow `runc exec` performance and hanging | Open | 2017-05-02 | Zombie processes, hangs under concurrent `runc exec` |
+| [#5048](https://github.com/opencontainers/runc/issues/5048) | runc selinux library use 100% cpu | Open | 2025-11-27 | References [opencontainers/selinux#247](https://github.com/opencontainers/selinux/issues/247) |
+
+Targeted searches specifically for open riscv64 bugs (`riscv64 repo:opencontainers/runc is:open`, `riscv nan floating repo:opencontainers/runc`) both returned **zero results**. There is no open riscv64-specific correctness or performance bug in the tracker.
 
 ## 12. Objections and Upstream Blockers
 
-**No stated technical objections** to riscv64 support exist in the upstream issue tracker or PR review history. The maintainers merged riscv64 enablement work (PR #3446, PR #3905) without objection. The codebase is sufficiently architecture-agnostic (pure Go + thin C shim) that riscv64 required fewer than 10 lines of architecture-specific code.
+**No stated technical objections** to riscv64 support exist anywhere in the upstream issue tracker or PR review history. Maintainers merged riscv64 enablement work (PR #3446, PR #3905) without pushback; the only review friction found in any riscv64-adjacent PR was a licensing objection on PR #4024 (fuweid flagged importing GPL-2.0-licensed kernel `nolibc` header code into the Apache-2.0 project; resolved by dropping the GPL-2.0 Makefile component and keeping MIT-licensed headers verbatim) - and that entire subsystem (`runc-dmz`) has since been deleted and replaced by the architecture-agnostic `exeseal` package (Section 4), so even that friction point no longer exists in the current codebase.
 
-**Organizational gap -- CI:** Issue #5166 was closed without resolution in March 2026. The maintainer response was silence. This is not an active objection but an absence of prioritization. The project's CI is limited to amd64 and arm64 with native GitHub-hosted runners. Adding riscv64 requires either: (a) a riscv64 GitHub Actions runner (RISE now provides these), or (b) QEMU emulation. Neither requires maintainer objection to be unblocked -- it requires a PR with a passing test run.
+**Organizational gap - CI:** Issue #5166 was closed same-day in March 2026 once its stated concern (missing release binaries) turned out to be false; the CI-testing request it also contained was never acted on. This is an absence of prioritization, not an active objection.
 
-**Acceptance probability for a CI PR:** High. The work is well-defined (add a riscv64 job to `test.yml` using a RISE runner or QEMU), the code already compiles cleanly, and maintainers have demonstrated willingness to accept riscv64 patches. The primary risk is QEMU performance making test jobs too slow for maintainer tolerance.
+**Acceptance probability for a dedicated riscv64 CI PR:** Likely high. The codebase is already architecture-agnostic enough that riscv64 required fewer than a dozen lines of architecture-specific code; maintainers have repeatedly and readily merged outside contributors' architecture-enabling patches (carlosedp in 2019, chazapis in 2023); and the #5166 exchange was friendly and fast. The practical obstacle is availability of an actual riscv64 execution environment in CI - either a riscv64 GitHub Actions runner (RISE has offered these publicly since March 2026, though no evidence runc maintainers have evaluated them) or an acceptably fast QEMU path, which the project has never used for any architecture.
 
----
+## 13. Readiness Assessment
 
-## 13. Investment Analysis
+- **Color:** yellow (build-only-ci)
+- **Release provider:** upstream
+- **Justification:** All four upstream GitHub Actions workflow files ([test.yml](https://raw.githubusercontent.com/opencontainers/runc/main/.github/workflows/test.yml), [scheduled.yml](https://raw.githubusercontent.com/opencontainers/runc/main/.github/workflows/scheduled.yml), [validate.yml](https://raw.githubusercontent.com/opencontainers/runc/main/.github/workflows/validate.yml), actionlint.yml) were confirmed to contain zero riscv/riscv64 references - no native runner, no QEMU step, no riscv64 build/test job - so there is no CI build or test execution for riscv64. However, upstream itself (not a distro or RISE) ships a `runc.riscv64` release binary with every release via its own Dockerfile/Makefile cross-compilation pipeline (`releaseall` target), confirmed continuously present since v1.2.0/v1.1.8 through the current v1.5.2, and reaffirmed when [Issue #5166](https://github.com/opencontainers/runc/issues/5166) (asking for riscv64 CI/release artifacts) was closed as moot because the binaries already ship. This is a "build step exists (upstream's own release pipeline), no test execution" pattern: yellow, not orange, because the artifact is upstream-published and reliably produced release after release, not merely a downstream/distro repackaging.
+- **Pending work that could change the grade:** Issue #5166 (opened 2026-03-12, closed same day) asked for a dedicated riscv64 CI job; it was closed as moot (release artifacts already exist) without adding CI test coverage, so the CI gap remains open and unaddressed. No RISE involvement with runc was found (not a RISE member, no RISE blog posts, no RISE-funded work). The optional CRIU checkpoint/restore feature on riscv64 is blocked by an open upstream CRIU CI issue (missing `libnftables-dev`, [criu#2714](https://github.com/checkpoint-restore/criu/issues/2714)), which affects only that optional feature, not core run/exec/kill.
 
-RISE has not funded any runc work. All riscv64 work to date was contributed by individual developers (carlosedp, chazapis) and Red Hat/NTT maintainers during normal project maintenance.
+## 14. Investment Analysis
 
-### 13.1 Functional Enablement
+RISE has not funded any runc work (confirmed: not a RISE member, no RISE blog content mentions runc, no `riseproject-dev` GitHub org repo relates to runc, `runc` is absent from the RISE Python wheel-builder's 86-package list - not directly relevant to a Go project in any case). All riscv64 work to date was contributed by individual developers (carlosedp, chazapis, gounthar) and by Red Hat/NTT maintainers during ordinary project maintenance.
 
-The core runc runtime (run/exec/kill/pause/resume) is fully functional on riscv64. No functional gaps exist for standard container workloads. The only functional gap is CRIU checkpoint/restore, which is blocked on a missing `libnftables-dev` in the CRIU riscv64 CI Dockerfile (upstream CRIU issue #2714) -- that work belongs to the CRIU project, not runc.
+### 14.1 Functional Enablement
 
-### 13.2 Performance Optimization
+The core runc runtime (run/exec/kill/pause/resume) is fully functional on riscv64 with no identified functional gaps for standard container workloads. The only functional gap is CRIU checkpoint/restore, blocked by CRIU's own CI issue (missing `libnftables-dev`) - that work item belongs to the CRIU project, not runc.
 
-runc has no architecture-specific performance code. There is no JIT, no SIMD, no cryptographic primitive, and no hot numeric path. Container startup latency is dominated by kernel namespace and cgroup operations, which are architecture-agnostic. No performance investment is warranted or possible within runc itself.
+### 14.2 Performance Optimization
 
-### 13.3 CI/CD Infrastructure
+runc has no architecture-specific performance code - no JIT, SIMD, or cryptographic primitive, and no hot numeric path. Container startup latency is dominated by kernel namespace/cgroup operations, which are architecture-agnostic. No performance investment is possible or warranted within runc itself. One academic data point exists - Lumpp et al., "On the Containerization and Orchestration of RISC-V architectures for Edge-Cloud computing" (ESAAM 2023), using a SiFive U740-based cluster vs. a power-matched ARM64 Jetson Xavier - which found riscv64 containerization overhead comparable to or smaller than ARM64 on CPU/memory/application benchmarks, but a notably larger relative overhead on OS/syscall-heavy operations (context-switching overhead measured at 21.4% on riscv64 vs. 0.26-0.3% on ARM64, root-caused via `perf` to syscalls taking up to 40% longer under containerization). This is attributed to immature riscv64 syscall/context-switch performance generally, not to any specific runc code gap, and is a single academic source [NEEDS VERIFICATION] rather than a vendor- or RISE-produced benchmark.
 
-This is the only material gap. The work is well-scoped: add a riscv64 job to `.github/workflows/test.yml` using either a RISE RISC-V runner or QEMU via `docker buildx`/`binfmt_misc`. The busybox test image for riscv64 already exists (added PR #4842, September 2025). The integration test harness already supports riscv64 images. The delta is one CI YAML change and a runner.
+### 14.3 CI/CD Infrastructure
 
-### 13.4 Ecosystem Enablement
+This is the only material gap and the only area where investment changes the readiness grade. The work is well-scoped: add a riscv64 execution job to `.github/workflows/test.yml` using either a RISE RISC-V runner or QEMU-based emulation, and formally close the gap Issue #5166 identified but did not resolve. The riscv64 busybox integration-test fixture already exists in `tests/integration/get-images.sh` (PR #4842/#5295); the delta is a CI YAML job plus a runner/emulation choice.
 
-Not applicable. runc has no dependent package ecosystem that requires separate riscv64 enablement.
+### 14.4 Ecosystem Enablement
 
-### 13.5 Summary Table
+Not applicable. runc has no dependent package ecosystem (no PyPI, npm, or Maven consumers of "runc" itself) that would require separate riscv64 enablement; confirmed no PyPI package named `runc` exists at all.
+
+### 14.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
-| CI/CD | Add riscv64 job to test.yml (RISE runner or QEMU binfmt) | 1 | runc maintainers or RISE | High |
-| CI/CD | Resolve Issue #5166 (reopen or submit PR directly) | 0.5 | Any contributor | High |
-| Functional | CRIU riscv64 CI fix (missing libnftables-dev, CRIU issue #2714) | 0.5 | CRIU project | Medium |
-| Build | Static PIE for riscv64 (requires rcrt1.o in riscv64 libc toolchain) | 2-4 (toolchain work, not runc) | glibc/musl upstream | Low |
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
-
----
+| CI/CD | Add a riscv64 execution job to `test.yml` (RISE runner or QEMU binfmt) | 1 | runc maintainers or RISE | High |
+| CI/CD | Reopen or re-file a PR against Issue #5166's unaddressed CI request | 0.5 | Any contributor | High |
+| Functional | CRIU riscv64 CI fix (missing `libnftables-dev`, criu#2714) | 0.5 | CRIU project, not runc | Medium |
+| Build | Static PIE for riscv64 (requires `rcrt1.o` in the riscv64 libc toolchain) | 2-4 (toolchain work, not runc) | glibc/musl upstream | Low |
 
 ## 15. References
 
-- [PR #2123 -- Bump x/sys: initial Risc-V support (2019-09-04)](https://github.com/opencontainers/runc/pull/2123)
-- [PR #3446 -- release: build riscv64 binary, build static PIE if supported (2022-05-19)](https://github.com/opencontainers/runc/pull/3446)
-- [PR #3463 -- Build runc.riscv64 (closed 2022-04-30, superseded by #3446)](https://github.com/opencontainers/runc/pull/3463)
-- [PR #3905 -- [1.1] Backport riscv64 support into 1.1.x (2023-06-28)](https://github.com/opencontainers/runc/pull/3905)
-- [PR #4024 -- libct/dmz: Reduce the binary size using nolibc (2023-09-26)](https://github.com/opencontainers/runc/pull/4024)
-- [PR #4063 -- Bump golang.org/x/sys from 0.12.0 to 0.13.0 (2023-10-06)](https://github.com/opencontainers/runc/pull/4063)
-- [PR #4842 -- Update busybox:glibc integration tests to 1.37.0 (2025-09-27)](https://github.com/opencontainers/runc/pull/4842)
-- [PR #5295 -- Update busybox:glibc integration tests to 1.38.0 (2026-05-27)](https://github.com/opencontainers/runc/pull/5295)
-- [Issue #3950 -- Build does not produce statically linked binary on musl hosts](https://github.com/opencontainers/runc/issues/3950)
-- [Issue #5166 -- Add linux/riscv64 to CI and release artifacts (2026-03-12)](https://github.com/opencontainers/runc/issues/5166)
-- [runc v1.5.0 release assets](https://github.com/opencontainers/runc/releases/tag/v1.5.0)
+- [PR #2123 - Bump x/sys and update syscall for initial Risc-V support (merged 2019-09-04)](https://github.com/opencontainers/runc/pull/2123)
+- [PR #3446 - release: build riscv64 binary, build static PIE if supported (merged 2022-05-19)](https://github.com/opencontainers/runc/pull/3446)
+- [PR #3463 - Build runc.riscv64 (closed 2022-04-30, superseded by #3446)](https://github.com/opencontainers/runc/pull/3463)
+- [PR #3905 - [1.1] Backport riscv64 support into 1.1.x (merged 2023-06-28)](https://github.com/opencontainers/runc/pull/3905)
+- [PR #4024 - libct/dmz: Reduce the binary size using nolibc (merged 2023-09-26)](https://github.com/opencontainers/runc/pull/4024)
+- [PR #4026 - libct/dmz: Reduce the binary size by removing libc dependency (closed, unmerged)](https://github.com/opencontainers/runc/pull/4026)
+- [PR #4063 - Bump golang.org/x/sys from 0.12.0 to 0.13.0 (merged 2023-10-06)](https://github.com/opencontainers/runc/pull/4063)
+- [PR #4842 - Update busybox:glibc integration tests to latest builds (merged 2025-09-27)](https://github.com/opencontainers/runc/pull/4842)
+- [PR #5295 - Update busybox:glibc integration tests to latest (1.38.0) builds (merged 2026-05-27)](https://github.com/opencontainers/runc/pull/5295)
+- [Issue #3950 - Build does not produce statically linked binary on musl hosts](https://github.com/opencontainers/runc/issues/3950)
+- [Issue #4037 - Support compiling on MIPS](https://github.com/opencontainers/runc/issues/4037)
+- [Issue #5166 - Add linux/riscv64 to CI and release artifacts (2026-03-12)](https://github.com/opencontainers/runc/issues/5166)
+- [Issue #3181 - runc exec is 5x slower than crun exec](https://github.com/opencontainers/runc/issues/3181)
+- [Issue #1430 - Extremely slow runc exec performance and hanging](https://github.com/opencontainers/runc/issues/1430)
+- [Issue #5048 - runc selinux library use 100% cpu](https://github.com/opencontainers/runc/issues/5048)
+- [runc v1.5.2 release](https://github.com/opencontainers/runc/releases/tag/v1.5.2)
 - [opencontainers/runc Makefile](https://raw.githubusercontent.com/opencontainers/runc/main/Makefile)
 - [opencontainers/runc Dockerfile](https://raw.githubusercontent.com/opencontainers/runc/main/Dockerfile)
 - [opencontainers/runc script/lib.sh](https://raw.githubusercontent.com/opencontainers/runc/main/script/lib.sh)
+- [opencontainers/runc script/build-libpathrs.sh](https://raw.githubusercontent.com/opencontainers/runc/main/script/build-libpathrs.sh)
 - [opencontainers/runc .github/workflows/test.yml](https://raw.githubusercontent.com/opencontainers/runc/main/.github/workflows/test.yml)
 - [opencontainers/runc .github/workflows/validate.yml](https://raw.githubusercontent.com/opencontainers/runc/main/.github/workflows/validate.yml)
 - [opencontainers/runc .github/workflows/scheduled.yml](https://raw.githubusercontent.com/opencontainers/runc/main/.github/workflows/scheduled.yml)
-- [Debian sid runc buildd status](https://buildd.debian.org/status/package.php?p=runc&suite=sid)
-- [Ubuntu noble runc package](https://packages.ubuntu.com/search?keywords=runc&suite=noble)
-- [CRIU issue #2714 -- riscv64 CI Dockerfile missing libnftables-dev](https://github.com/checkpoint-restore/criu/issues/2714)
-- [CRIU PR #2234 -- riscv64 C library port merged Oct 2024](https://github.com/checkpoint-restore/criu/pull/2234)
-- [RISE Project blog](https://riseproject.dev/blog/)
+- [Ubuntu resolute runc package](https://packages.ubuntu.com/resolute/runc)
+- [CRIU Issue #2714 - riscv64 CI Dockerfile missing libnftables-dev](https://github.com/checkpoint-restore/criu/issues/2714)
+- [RISE Project members](https://riseproject.dev/members/)
+- [RISE RISC-V Runners: six weeks in (2026-05-12)](https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/)
+- [RISE Python wheel builder](https://riseproject.gitlab.io/python/wheel_builder/)
+- [On the Containerization and Orchestration of RISC-V architectures for Edge-Cloud computing (ESAAM 2023)](https://cris.unibo.it/retrieve/976f8d03-98e3-4565-b2c4-a921e6561322/3624486.3624490.pdf)
 - [Open Container Initiative](https://opencontainers.org/)
