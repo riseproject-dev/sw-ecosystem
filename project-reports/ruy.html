@@ -266,10 +266,12 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange<br />
+<strong>Optimization level:</strong> absent<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for ruy<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,21 +281,26 @@
 </h2>
     
 
-<p>ruy is a dense matrix multiplication library optimized for neural network inference, developed at Google and open-sourced under the <code class="language-plaintext highlighter-rouge">google/</code> GitHub organization. The library’s primary design goal is high-throughput integer (Int8) and floating-point matrix-matrix multiply on ARM and x86 hardware, serving as the backend for TensorFlow Lite (now LiteRT) on mobile and edge devices.</p>
+<p>ruy is a dense matrix multiplication library optimized for neural network inference, developed and published by Google under the <a href="https://github.com/google/ruy">google/ruy</a> GitHub repository. Its design goal is high-throughput Int8 and Float32 matrix-matrix multiply on ARM and x86 hardware, historically serving as a GEMM backend for TensorFlow Lite / LiteRT. The repository carries the disclaimer “This is not an officially supported Google product.”</p>
 
-<p>The project carries the disclaimer “This is not an officially supported Google product.” It has no foundation affiliation, no formal governance document, and is not a member of the RISE project. The license is Apache-2.0. Contributions require a Google CLA. Most commits appear externally as authored by “Ruy Contributors” via the copybara-github bot, which syncs from an internal Google repository.</p>
+<p>Per public knowledge, ruy was archived by Google in 2023 in favor of XNNPACK [NEEDS VERIFICATION - not independently confirmed via the GitHub API’s archived-repository flag this session, but consistent with the complete absence of any architecture-port activity, CI additions, or new-platform discussion in the commit/issue/PR history through 2026]. There is no foundation affiliation and ruy is not a RISE Project member; Google LLC does hold a RISE Premier Membership, but that is a corporate membership unrelated to ruy specifically, and ruy is not named anywhere on <a href="https://riseproject.dev">riseproject.dev</a>.</p>
 
-<p><strong>Corporate maintainers:</strong></p>
+<p>Governance: no <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, or <code class="language-plaintext highlighter-rouge">CODEOWNERS</code> file exists in the repo, no governance charter, no technical steering committee. Contributions require a signed Google CLA and code review, under <a href="https://opensource.google/conduct/">Google’s Open Source Community Guidelines</a>. License: Apache-2.0.</p>
+
+<p><strong>Top contributors</strong> (full 571-commit history, 2019-04-08 through 2026-07-22, per <code class="language-plaintext highlighter-rouge">git log --all</code> on the local clone):</p>
 
 <ul>
-  <li>bjacob (Benoit Jacob) – primary reviewer and author, now at AMD, formerly Google; handles the majority of substantive reviews.</li>
-  <li>talumbau – reviewer/approver, Google affiliation implied by the copybara pipeline.</li>
-  <li>silvasean – contributor, appears Google-affiliated.</li>
-  <li>petrhosek – contributor, cpuinfo dependency updates.</li>
-  <li>oToToT – added Android x86-64 support (November 2025), likely Google-affiliated based on copybara bot usage.</li>
+  <li>Benoit Jacob - 307 commits - Google</li>
+  <li>Alex Stark - 75 commits - Google</li>
+  <li>T.J. Alumbaugh - 53 commits - Google</li>
+  <li>“Ruy Contributors” (ruy-eng@google.com, squashed/automated commits) - 47 commits - Google</li>
+  <li>Sean Silva - 19 commits - Google</li>
+  <li>Renjie Liu, Dayeong Lee, Petr Hosek, Chao Mei, Jared Duke, Geoffrey Martin-Noble, Ben Vanik - Google, single-digit commits each</li>
+  <li>Nishidha, Kazuaki Ishizaki - IBM, minor contributions (consistent with PPC support)</li>
+  <li>Keichi Takahashi, stha09 - independent/unaffiliated, minor contributions</li>
 </ul>
 
-<p>The project is ARM-centric and is primarily driven by Google’s TFLite/LiteRT deployment needs on mobile silicon. New architecture ports require adding a platform detection macro in <code class="language-plaintext highlighter-rouge">platform.h</code> and contributing optimized kernel pack routines. There is no stated policy on accepting third-party architecture backends, and no community discussion of RISC-V porting has occurred.</p><hr />
+<p>This is effectively a single-vendor (Google) project with occasional outside patches; there is no multi-company maintainer structure. New architecture ports require adding a platform-detection macro in <code class="language-plaintext highlighter-rouge">platform.h</code> and contributing optimized kernel/pack routines. There is no stated policy on accepting third-party architecture backends, and no community discussion of a RISC-V port has occurred at any point in the project’s history.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -313,19 +320,19 @@
   </thead>
   <tbody>
     <tr>
-      <td>February 2021</td>
-      <td>PR #227 (closed) contains a passing comment from contributor Tombana noting that single-rounding multiplier semantics had been validated on “Cortex-M and RiscV microcontrollers” in TFLite Micro context – not a ruy platform port</td>
+      <td>2021-02-09</td>
+      <td>PR #227 (“Simplify quantized multiplier”) merged, authored by GeorgeARM. This PR matches a lexical search for “riscv” but is unrelated to RISC-V - it concerns NEON quantized-multiplier rounding behavior only</td>
       <td><a href="https://github.com/google/ruy/pull/227">PR #227</a></td>
     </tr>
     <tr>
-      <td>June 2026</td>
-      <td>No RISC-V port exists; no tracking issue, no PR, no commit, no architecture-specific source file</td>
+      <td>2026-10-01</td>
+      <td>No RISC-V port exists. Full-history searches of commit messages, diffs, issues, and PRs for “riscv”, “risc-v”, “rv64”, “rvv” return zero matches. <code class="language-plaintext highlighter-rouge">ruy/platform.h</code> defines no <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_RISCV</code> macro</td>
       <td>This report</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No RISC-V porting effort has ever been initiated for ruy. The single tangential mention in PR #227 refers to a TFLite Micro single-rounding validation on RISC-V microcontrollers, not to any ruy backend work. There are no first-riscv-commit date or author to report.</p><hr />
+<p>No RISC-V porting effort has ever been initiated, proposed, or discussed for ruy. There is no first-riscv-commit date or author to report, and no master/tracking issue for a riscv64 port exists in the repository. ruy is not fully upstream on RISC-V in any sense - it builds and runs correctly via its generic scalar fallback, but has zero RISC-V-specific engineering.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -335,7 +342,7 @@
 </h2>
     
 
-<p>ruy has no formal tier or support-level policy document. ARM is the primary and highest-supported architecture, with dedicated NEON kernels for arm32 and arm64. x86/x86-64 has AVX2+FMA and AVX-512 paths. All other architectures, including RISC-V, use a generic scalar fallback path.</p>
+<p>ruy has no formal tier or support-level policy document; no <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> exist. ARM is the primary and highest-supported architecture (dedicated NEON kernels for arm32 and arm64), x86/x86-64 has AVX, AVX2+FMA, and AVX-512 paths. All other architectures, including RISC-V and PPC, use the generic scalar fallback (<code class="language-plaintext highlighter-rouge">Path::kStandardCpp</code>).</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -349,7 +356,7 @@
   <tbody>
     <tr>
       <td>Upstream CI</td>
-      <td>None (org-level CodeQL only)</td>
+      <td>None (no CI config exists in the repo at all)</td>
       <td>None</td>
       <td>None</td>
     </tr>
@@ -357,11 +364,11 @@
       <td>Optimized path</td>
       <td>kAvx, kAvx2Fma, kAvx512</td>
       <td>kNeon, kNeonDotprod</td>
-      <td>None – kStandardCpp only</td>
+      <td>None - kStandardCpp only</td>
     </tr>
     <tr>
       <td>Official binary from upstream</td>
-      <td>None (source-only)</td>
+      <td>None (source-only, no GitHub releases)</td>
       <td>None (source-only)</td>
       <td>None (source-only)</td>
     </tr>
@@ -369,18 +376,18 @@
       <td>Distro binary package</td>
       <td>libruy-dev (Ubuntu, Debian)</td>
       <td>libruy-dev (Ubuntu, Debian)</td>
-      <td>libruy-dev (Ubuntu noble, Debian sid)</td>
+      <td>libruy-dev (Ubuntu 26.04 resolute, Debian sid)</td>
     </tr>
     <tr>
       <td>Release-blocking status</td>
-      <td>Not applicable</td>
+      <td>Not applicable (no release mechanism)</td>
       <td>Not applicable</td>
       <td>Not applicable</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The upstream project publishes no binary releases for any architecture. There are no GitHub releases at all (<a href="https://github.com/google/ruy/releases">confirmed empty releases page</a>). All distribution is source-only from upstream; binary packages come from Debian/Ubuntu maintainers.</p><hr />
+<p>The upstream project publishes no binary releases for any architecture: the <a href="https://github.com/google/ruy/releases">GitHub releases page</a> is confirmed empty (“There aren’t any releases here”). All distribution is source-only from upstream; binary packages are produced entirely by Debian/Ubuntu maintainers.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -390,56 +397,54 @@
 </h2>
     
 
-<p>ruy’s architecture-specific code is organized into three categories: platform detection macros (<code class="language-plaintext highlighter-rouge">platform.h</code>), execution path selection (<code class="language-plaintext highlighter-rouge">path.h</code>), and kernel plus pack files (<code class="language-plaintext highlighter-rouge">kernel_*.cc</code>, <code class="language-plaintext highlighter-rouge">pack_*.cc</code>).</p>
+<p>ruy’s architecture-specific code is organized into three layers: platform-detection macros (<code class="language-plaintext highlighter-rouge">platform.h</code>), execution-path selection (<code class="language-plaintext highlighter-rouge">path.h</code>), and kernel/pack implementation files (<code class="language-plaintext highlighter-rouge">kernel_*.cc</code>, <code class="language-plaintext highlighter-rouge">pack_*.cc</code>).</p>
 
-<p><strong>Platform detection (<code class="language-plaintext highlighter-rouge">platform.h</code>):</strong></p>
+<p><strong>Platform detection (<code class="language-plaintext highlighter-rouge">ruy/platform.h</code>):</strong> defines macros for <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_X86</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_ARM_32</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_ARM_64</code>/<code class="language-plaintext highlighter-rouge">RUY_PLATFORM_ARM</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_NEON</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_PPC</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_APPLE</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_FUCHSIA</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_EMSCRIPTEN</code>, plus x86 feature flags (<code class="language-plaintext highlighter-rouge">AVX</code>, <code class="language-plaintext highlighter-rouge">AVX2_FMA</code>, <code class="language-plaintext highlighter-rouge">AVX512</code>). There is no <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_RISCV</code> macro and no <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> anywhere in the repository, verified by a case-insensitive recursive grep across the full source tree (zero matches for “riscv”, “rv32”, “rv64”, “rvv”, “__riscv”).</p>
 
-<p>Defines macros for: <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_X86</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_ARM_32</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_ARM_64</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_ARM</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_NEON</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_PPC</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_APPLE</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_FUCHSIA</code>, <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_EMSCRIPTEN</code>. There is no <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_RISCV</code> macro and no <code class="language-plaintext highlighter-rouge">__riscv</code> or <code class="language-plaintext highlighter-rouge">__riscv_xlen</code> detection anywhere in the file.</p>
+<p><strong>Execution path selection (<code class="language-plaintext highlighter-rouge">ruy/path.h</code>):</strong> the <code class="language-plaintext highlighter-rouge">Path</code> enum adds optimized values only inside <code class="language-plaintext highlighter-rouge">#if RUY_PLATFORM_ARM</code> (<code class="language-plaintext highlighter-rouge">kNeon</code>, <code class="language-plaintext highlighter-rouge">kNeonDotprod</code>) and <code class="language-plaintext highlighter-rouge">#if RUY_PLATFORM_X86</code> (<code class="language-plaintext highlighter-rouge">kAvx</code>, <code class="language-plaintext highlighter-rouge">kAvx2Fma</code>, <code class="language-plaintext highlighter-rouge">kAvx512</code>). No equivalent block exists for RISC-V. Notably, PPC is also <em>detected</em> in <code class="language-plaintext highlighter-rouge">platform.h</code> but gets no dedicated <code class="language-plaintext highlighter-rouge">Path</code> either - PPC and riscv64 both fall through to the same generic <code class="language-plaintext highlighter-rouge">Path::kStandardCpp</code>.</p>
 
-<p><strong>Execution path selection (<code class="language-plaintext highlighter-rouge">path.h</code>):</strong></p>
-
-<p>Defines a <code class="language-plaintext highlighter-rouge">Path</code> enum. Optimized values exist only for ARM (<code class="language-plaintext highlighter-rouge">kNeon</code>, <code class="language-plaintext highlighter-rouge">kNeonDotprod</code>) and x86 (<code class="language-plaintext highlighter-rouge">kAvx</code>, <code class="language-plaintext highlighter-rouge">kAvx2Fma</code>, <code class="language-plaintext highlighter-rouge">kAvx512</code>). For all unrecognized architectures, <code class="language-plaintext highlighter-rouge">kDefaultArchPaths = Path::kNone</code> and <code class="language-plaintext highlighter-rouge">kExtraArchPaths = Path::kNone</code>. On riscv64, only <code class="language-plaintext highlighter-rouge">kStandardCpp</code> executes.</p>
-
-<p><strong>Kernel and pack files:</strong></p>
+<p><strong>Kernel/pack file inventory</strong> (<code class="language-plaintext highlighter-rouge">ruy/</code> directory, measured on HEAD <code class="language-plaintext highlighter-rouge">2264753777198e4393fb83c44c693462d57a2be1</code>):</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Architecture</th>
-      <th>Kernel files</th>
-      <th>Pack files</th>
-      <th>Total optimized files</th>
+      <th>Files</th>
+      <th>Notable size</th>
+      <th>Count</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>ARM 32/64</td>
-      <td>kernel_arm.h, kernel_arm32.cc, kernel_arm64.cc</td>
-      <td>pack_arm.cc, pack_arm.h</td>
-      <td>5</td>
+      <td>x86 (SSE/AVX/AVX2+FMA/AVX512)</td>
+      <td>kernel_avx.cc (67,572 B), kernel_avx2_fma.cc (48,673 B), kernel_avx512.cc (61,121 B), kernel_x86.h (35,219 B), pack_avx.cc (35,718 B), pack_avx2_fma.cc (30,381 B), pack_avx512.cc (45,231 B), pack_x86.h (30,192 B), plus 3 have_built_path_for_avx* runtime-detection shims</td>
+      <td>-</td>
+      <td>11 files</td>
     </tr>
     <tr>
-      <td>x86 (AVX/AVX2/AVX512)</td>
-      <td>kernel_x86.h, kernel_avx.cc, kernel_avx2_fma.cc, kernel_avx512.cc</td>
-      <td>pack_x86.h, pack_avx.cc, pack_avx2_fma.cc, pack_avx512.cc + 3 have_built_path probes</td>
-      <td>11</td>
+      <td>ARM (32/64-bit NEON)</td>
+      <td>kernel_arm.h (8,785 B), kernel_arm32.cc (96,802 B), kernel_arm64.cc (390,730 B), pack_arm.h (26,003 B), pack_arm.cc (98,840 B)</td>
+      <td>kernel_arm64.cc is the single largest source file in the repository, hand-written NEON/NeonDotprod intrinsics and inline assembly tuned for multiple microarchitectures (A55-class in-order, A73/A75 out-of-order)</td>
+      <td>5 files</td>
     </tr>
     <tr>
-      <td>RISC-V</td>
+      <td>PPC</td>
       <td>none</td>
+      <td>falls back to scalar despite being detected in platform.h</td>
+      <td>0 files</td>
+    </tr>
+    <tr>
+      <td>riscv64</td>
       <td>none</td>
-      <td>0</td>
+      <td>no kernel_riscv<em>, pack_riscv</em>, kernel_rvv*, or any analog</td>
+      <td>0 files</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>ARM SIMD quality:</strong> Hand-tuned inline assembly for arm64 (<code class="language-plaintext highlighter-rouge">#if RUY_PLATFORM_NEON_64 &amp;&amp; RUY_OPT(ASM)</code>), with multiple microarchitecture-tuned variants (A55-class in-order, A73/A75 out-of-order pipelines).</p>
+<p>The generic fallback itself (<code class="language-plaintext highlighter-rouge">kernel_common.h</code>, 303 lines; <code class="language-plaintext highlighter-rouge">pack_common.h</code>, 143 lines, implementing <code class="language-plaintext highlighter-rouge">Path::kStandardCpp</code>) is a complete, correct scalar C++ reference implementation with no stub markers - this is why distro builds of <code class="language-plaintext highlighter-rouge">libruy-dev</code> succeed on riscv64 even with zero architecture-specific code. On riscv64, <code class="language-plaintext highlighter-rouge">kernel_common.h</code>’s optimized parameter structs compile only as the generic path, since all ARM/x86-gated structs are excluded by their <code class="language-plaintext highlighter-rouge">#if RUY_PLATFORM_NEON_64 || RUY_PLATFORM_NEON_32 || RUY_PLATFORM_X86</code> guards.</p>
 
-<p><strong>x86 SIMD quality:</strong> Intel intrinsics (AVX/AVX2+FMA/AVX-512) with runtime detection via <code class="language-plaintext highlighter-rouge">have_built_path_for_*</code> probe objects.</p>
-
-<p><strong>RISC-V quality: missing.</strong> No RVV (RISC-V Vector) kernel, no scalar intrinsics path, no C++ SIMD wrapper, no <code class="language-plaintext highlighter-rouge">.S</code> assembly file. On riscv64, <code class="language-plaintext highlighter-rouge">kernel_common.h</code> compiles only empty stub structs because all optimized parameter structs are gated behind <code class="language-plaintext highlighter-rouge">#if RUY_PLATFORM_NEON_64 || RUY_PLATFORM_NEON_32 || RUY_PLATFORM_X86</code>. The library runs entirely via the triple-loop C++ fallback.</p>
-
-<p>There is no JIT compiler in ruy, no crypto subsystem, no compression, and no GC barriers. The only subsystem requiring architecture-specific code is the SIMD matrix multiply kernel.</p><hr />
+<p>There is no JIT compiler, crypto subsystem, compression, or GC-barrier code in ruy. The SIMD matrix-multiply kernel is the only subsystem requiring architecture-specific implementation.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -449,19 +454,16 @@
 </h2>
     
 
-<p>ruy supports both CMake and Bazel. The CMakeLists.txt requires CMake &gt;= 3.13 and C++14.</p>
+<p>ruy supports both CMake (&gt;=3.13, requires C++14) and Bazel.</p>
 
 <p><strong>Architecture conditionals in the build system:</strong></p>
-
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>: architecture conditionals for <code class="language-plaintext highlighter-rouge">arm</code> and <code class="language-plaintext highlighter-rouge">x86_64</code>/<code class="language-plaintext highlighter-rouge">amd64</code> only. No <code class="language-plaintext highlighter-rouge">riscv64</code> branch.</li>
-  <li><code class="language-plaintext highlighter-rouge">BUILD</code> (Bazel): <code class="language-plaintext highlighter-rouge">select()</code> clauses for <code class="language-plaintext highlighter-rouge">armv7</code>, <code class="language-plaintext highlighter-rouge">x86_64</code>, <code class="language-plaintext highlighter-rouge">ppc</code>, <code class="language-plaintext highlighter-rouge">s390x</code>, <code class="language-plaintext highlighter-rouge">fuchsia</code>. No <code class="language-plaintext highlighter-rouge">riscv64</code> select clause.</li>
-  <li>No cmake/riscv64.cmake, no cmake/toolchain-riscv64.cmake, no Dockerfiles, no QEMU scripts.</li>
+  <li><code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> (root, 4.6 KB): grepped for “riscv” - zero matches. No riscv64-specific flags anywhere in <code class="language-plaintext highlighter-rouge">cmake/ruy_cc_library.cmake</code>, <code class="language-plaintext highlighter-rouge">ruy_cc_binary.cmake</code>, <code class="language-plaintext highlighter-rouge">ruy_cc_test.cmake</code>, <code class="language-plaintext highlighter-rouge">ruy_add_all_subdirs.cmake</code>, <code class="language-plaintext highlighter-rouge">ruy_include_directories.cmake</code>, <code class="language-plaintext highlighter-rouge">bazel_to_cmake.py</code>/<code class="language-plaintext highlighter-rouge">.sh</code>, or <code class="language-plaintext highlighter-rouge">ruyConfig.cmake.in</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">BUILD</code> (Bazel): <code class="language-plaintext highlighter-rouge">select()</code> clauses exist for <code class="language-plaintext highlighter-rouge">armv7</code>, <code class="language-plaintext highlighter-rouge">x86_64</code>, <code class="language-plaintext highlighter-rouge">ppc</code>, <code class="language-plaintext highlighter-rouge">s390x</code>, <code class="language-plaintext highlighter-rouge">fuchsia</code>. No <code class="language-plaintext highlighter-rouge">riscv64</code> select clause.</li>
+  <li>No <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, no <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code>, no <code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code>, no <code class="language-plaintext highlighter-rouge">.ci/</code> directory, no QEMU scripts anywhere in the repo.</li>
 </ul>
 
-<p><strong>Cross-compilation for riscv64:</strong></p>
-
-<p>No ruy-provided toolchain files exist. A standard riscv64-linux-gnu cross-compiler is sufficient. Minimal CMake invocation:</p>
+<p><strong>Cross-compilation for riscv64:</strong> no ruy-provided toolchain file exists; a standard <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> cross-compiler is sufficient since no riscv64 SIMD intrinsics are required:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake -DCMAKE_TOOLCHAIN_FILE=&lt;riscv64-linux-gnu.cmake&gt; \
       -DRUY_MINIMAL_BUILD=ON \
@@ -473,13 +475,11 @@
 cmake --build build-riscv64
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">RUY_MINIMAL_BUILD=ON</code> is required for cross-compilation to disable googletest download logic. <code class="language-plaintext highlighter-rouge">third_party/cpuinfo</code> submodule must be initialized before building (<code class="language-plaintext highlighter-rouge">git submodule update --init</code>).</p>
+<p><code class="language-plaintext highlighter-rouge">RUY_MINIMAL_BUILD=ON</code> disables googletest-download logic for cross-compilation. The <code class="language-plaintext highlighter-rouge">third_party/cpuinfo</code> submodule must be initialized before building (<code class="language-plaintext highlighter-rouge">git submodule update --init</code>). The only build options ruy itself exposes (<code class="language-plaintext highlighter-rouge">RUY_MINIMAL_BUILD</code>, <code class="language-plaintext highlighter-rouge">RUY_PROFILER</code>, <code class="language-plaintext highlighter-rouge">RUY_ENABLE_INSTALL</code>, <code class="language-plaintext highlighter-rouge">RUY_FIND_CPUINFO</code>) are architecture-agnostic; none are riscv-specific. The <code class="language-plaintext highlighter-rouge">RUY_OPT_SET</code> compile-time bitmask controlling intrinsics/ASM/tuning has no effect on riscv64 since no architecture-specific path compiles there.</p>
 
-<p><strong>Toolchain version requirements:</strong></p>
+<p><strong>Toolchain version requirements:</strong> none stated for riscv64 specifically. Any GCC or Clang supporting C++14 and the <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> target suffices, because there is no riscv64 intrinsics surface to require a minimum compiler version.</p>
 
-<p>No explicit minimum is stated for riscv64. Any GCC or Clang supporting C++14 and the riscv64-linux-gnu target is sufficient, because there are no riscv64 SIMD paths to require specific compiler intrinsics support. The <code class="language-plaintext highlighter-rouge">RUY_OPT_SET</code> bitmask (compile-time, not a CMake option) controlling intrinsics/ASM/tuning opt bits has no effect on riscv64 since no arch-specific paths compile.</p>
-
-<p><strong>Known build failures on riscv64:</strong> None reported. Debian sid successfully builds <code class="language-plaintext highlighter-rouge">libruy-dev</code> on riscv64 (host <code class="language-plaintext highlighter-rouge">rv-osuosl-03</code>, status: Installed), confirming that the CMake build completes without errors on riscv64.</p><hr />
+<p><strong>Known build failures on riscv64:</strong> none reported in google/ruy’s own tracker. Ubuntu 26.04 “resolute” successfully builds and ships <code class="language-plaintext highlighter-rouge">libruy-dev</code> for riscv64 (see Section 8), confirming the CMake build completes cleanly. Separately, when ruy is vendored as a statically-linked dependency inside CTranslate2’s riscv64 build (RISE’s <code class="language-plaintext highlighter-rouge">python-wheels</code> PR #873), the <em>pinned cpuinfo submodule</em> (not ruy itself) required a downstream patch for a missing <code class="language-plaintext highlighter-rouge">syscall()</code> declaration on riscv64, since cpuinfo’s pinned commit predates riscv64 recognition - this is a cpuinfo-side issue, not a ruy build defect (see Section 9). A separately-circulated web-search claim describing a “cpuinfo/_GNU_SOURCE/syscall/GCC 14” issue specifically inside google/ruy’s own issue tracker was checked directly against GitHub’s search API (scoped <code class="language-plaintext highlighter-rouge">repo:google/ruy</code>, terms <code class="language-plaintext highlighter-rouge">GNU_SOURCE</code>, <code class="language-plaintext highlighter-rouge">cpuinfo</code>, <code class="language-plaintext highlighter-rouge">syscall</code>, <code class="language-plaintext highlighter-rouge">GCC 14</code>) and found to be fabricated - no such issue, PR, or commit exists in google/ruy; this claim is disregarded.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -503,19 +503,19 @@ cmake --build build-riscv64
       <td>Optimized Int8 matmul kernel</td>
       <td>Yes (AVX2+FMA, AVX-512)</td>
       <td>Yes (NEON, NEON dotprod)</td>
-      <td>No – scalar fallback only</td>
+      <td>No - scalar fallback only</td>
     </tr>
     <tr>
       <td>Optimized Float32 matmul kernel</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No – scalar fallback only</td>
+      <td>No - scalar fallback only</td>
     </tr>
     <tr>
       <td>Runtime SIMD path detection</td>
       <td>Yes (cpuinfo + have_built_path probes)</td>
       <td>Yes</td>
-      <td>No – kNone returned by cpuinfo on riscv64</td>
+      <td>No - cpuinfo reports no ARM/x86 path available, so kStandardCpp is selected</td>
     </tr>
     <tr>
       <td>Platform detection macro</td>
@@ -538,13 +538,15 @@ cmake --build build-riscv64
   </tbody>
 </table></div>
 
-<p><strong>Functional gaps:</strong> None. The <code class="language-plaintext highlighter-rouge">kStandardCpp</code> path is complete and correct for all operations ruy supports. ruy will function correctly on riscv64.</p>
+<p><strong>Functional gaps:</strong> none. <code class="language-plaintext highlighter-rouge">Path::kStandardCpp</code> is a complete and correct implementation for every operation ruy supports; it produces correct results on riscv64.</p>
 
-<p><strong>Performance gaps:</strong> Severe. The <code class="language-plaintext highlighter-rouge">kStandardCpp</code> path is a scalar triple-loop C++ fallback with no SIMD acceleration. The only published benchmark data in the repository (issue #323, November 2022) shows ARM NEON throughput at approximately 10 GOPs (Raspberry Pi 4, aarch64, 1.5 GHz) and approximately 40 GOPs (Pixel 4, aarch64, 2.84 GHz) for 512x512x512 Int8 matmul. No riscv64 benchmark data exists anywhere. Data not available: quantitative throughput comparison between riscv64 kStandardCpp and arm64 kNeon on equivalent silicon.</p>
+<p><strong>Performance gaps:</strong> severe. <code class="language-plaintext highlighter-rouge">kStandardCpp</code> is an unvectorized scalar triple-loop C++ fallback. The only ARM performance data published in ruy’s own tracker (<a href="https://github.com/google/ruy/issues/323">issue #323</a>, still open, one comment) reports approximately 10 GOPs (Raspberry Pi 4, aarch64 NEON, 1.5 GHz) and approximately 40 GOPs (Pixel 4, aarch64 NEON, 2.84 GHz) for a 512x512x512 Int8 matmul. Data not available: a quantitative riscv64-kStandardCpp-vs-arm64-kNeon throughput comparison on equivalent silicon - no such figure exists in google/ruy’s tracker or elsewhere found in this research.</p>
 
-<p><strong>Security hardening gaps:</strong> Data not available: no security hardening analysis for any architecture was found in the research.</p>
+<p>The only concrete RISC-V performance numbers found trace to third-party, non-ruy-upstream work: a RISC-V porting-contest repository (<code class="language-plaintext highlighter-rouge">rv2036/rvspoc-S2602-litert</code>) ports LiteRT (TFLite’s successor) to RISC-V by bypassing or minimizing ruy’s GEMM path with custom RVV 1.0 kernels, not by modifying ruy itself. Submission #1 (QEMU, RVV vlen=256 vs scalar RV64GC baseline) reports: MobileNetV1 FP32 2.35x, MobileNetV1 INT8 2.87x, MobileNetV2 FP32 1.95x, MobileNetV2 INT8 3.58x, EfficientDet-Lite0 INT8 3.39x (average ~2.8x across 5 models), with ruy retained only as a correctness fallback on layout mismatch, not as the hot path. Submission #6 reports MobileNetV1 FP32 1.17x/uint8 5.48x, MobileNetV2 FP32 1.40x/uint8 5.96x, EfficientDet-Lite0 25.89x. Both are QEMU-emulated (the authors explicitly caveat QEMU is “~30-100x slower than real hardware,” so absolute timings are not meaningful) and neither includes an arm64 comparison point. These numbers characterize downstream LiteRT RVV kernels replacing ruy, not an improvement to ruy itself [NEEDS VERIFICATION - single-source hackathon submission, not independently reproduced].</p>
 
-<p><strong>NaN / floating-point semantics:</strong> No riscv64-specific floating-point correctness issues are reported. The kStandardCpp path uses portable C++ arithmetic.</p><hr />
+<p><strong>Security hardening gaps:</strong> data not available - no security hardening analysis for any architecture was found in this research.</p>
+
+<p><strong>NaN / floating-point semantics:</strong> no riscv64-specific floating-point correctness issues are reported anywhere (ruy’s own tracker, or general web search for RISC-V NaN-boxing bugs, which surfaced only unrelated bugs in other projects such as XiangShan, CVA6, and the riscv-v-spec repo). The <code class="language-plaintext highlighter-rouge">kStandardCpp</code> path uses portable C++ arithmetic.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -554,15 +556,9 @@ cmake --build build-riscv64
 </h2>
     
 
-<p>The google/ruy repository has no <code class="language-plaintext highlighter-rouge">.github/workflows/</code> directory. Three workflows appear on the GitHub Actions page, but all are Google organization-level mandatory workflows injected at the org level, not repo-defined YAML files:</p>
+<p>google/ruy has <strong>no CI configuration of any kind</strong> for any architecture, confirmed by direct repository-tree inspection (not search summaries): the repository contains no <code class="language-plaintext highlighter-rouge">.github</code> directory at all (<code class="language-plaintext highlighter-rouge">ls .github</code> returns “No such file or directory”), hence no <code class="language-plaintext highlighter-rouge">.github/workflows/</code> and zero GitHub Actions workflow files. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, or <code class="language-plaintext highlighter-rouge">azure-pipelines*</code> exists anywhere in the tree. This was independently re-verified via an adversarial pass and corroborated by GitHub’s code-search API (<code class="language-plaintext highlighter-rouge">search_code("repo:google/ruy path:.github/workflows")</code> returns <code class="language-plaintext highlighter-rouge">total_count: 0</code>).</p>
 
-<ol>
-  <li><strong>CodeQL</strong> – GitHub-managed default, runs <code class="language-plaintext highlighter-rouge">Analyze (python)</code> on standard ubuntu-latest (x86_64) runner; no architecture matrix; duration approximately 56 seconds.</li>
-  <li><strong>GitHub Actions Scan</strong> – Google internal security scan on PRs; org-level injection.</li>
-  <li><strong>Google GitHub Admin: Actions Workflow Security Scan</strong> – Google internal security scan; org-level injection.</li>
-</ol>
-
-<p>None of these three workflows reference riscv64, arm runners, QEMU, cross-compilation, or any architecture matrix.</p>
+<p>This directly contradicts an earlier characterization of the project as running three Google org-level injected workflows (CodeQL, GitHub Actions Scan, Google GitHub Admin Security Scan) visible only on the GitHub Actions tab rather than committed to the repo tree [NEEDS VERIFICATION - that claim comes from a single source and was not re-confirmed this session by fetching the live Actions tab; it is not necessarily inconsistent with “no <code class="language-plaintext highlighter-rouge">.github/workflows</code> files,” since org-mandated scans can run without being defined in the repository’s own tree, but it could not be independently corroborated here]. What is certain, confirmed by repo-tree inspection, is that there is no riscv64 (or any architecture) build-and-test CI committed to google/ruy.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -576,7 +572,7 @@ cmake --build build-riscv64
   <tbody>
     <tr>
       <td>Build CI</td>
-      <td>No (CodeQL only, not a build)</td>
+      <td>No</td>
       <td>No</td>
       <td>No</td>
     </tr>
@@ -596,7 +592,7 @@ cmake --build build-riscv64
       <td>RISE runner</td>
       <td>No</td>
       <td>No</td>
-      <td>No</td>
+      <td>No (indirectly: see below)</td>
     </tr>
     <tr>
       <td>Hardware CI</td>
@@ -607,7 +603,9 @@ cmake --build build-riscv64
   </tbody>
 </table></div>
 
-<p>The only riscv64 build that exists is the Debian autobuilder infrastructure build of <code class="language-plaintext highlighter-rouge">libruy-dev</code>, which is a downstream distribution build not controlled by google/ruy.</p><hr />
+<p>The only riscv64 build pipeline touching ruy’s code at all is downstream and external to google/ruy: RISE’s <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> repository builds a riscv64 wheel for CTranslate2 (PR #873, “ctranslate2: add build-ctranslate2.yml for riscv64 wheels,” merged 2026-09-06, author luhenry) in which ruy is statically linked as the CPU GEMM backend (“Ruy only, no OpenBLAS,” covering both float32 and int8). This build does run on RISE’s native riscv64 CI infrastructure (job timeout raised to 480 minutes to accommodate the full C++ compile plus three Python interpreter test passes) and exercises ruy’s scalar kernel path during CTranslate2’s own test suite (160 passed, 7 skipped, 4 deselected - two deselections specifically due to numeric precision divergence in ruy’s scalar kernels exceeding tolerance by ~0.004). This is CI for CTranslate2, not for ruy itself, and it is not reflected anywhere in google/ruy’s own repository or issue tracker (<a href="https://github.com/riseproject-dev/python-wheels/issues/1155">Issue #1155</a> tracks it on the CTranslate2 side).</p>
+
+<p>Separately, the only riscv64 build of ruy proper that exists is the Debian/Ubuntu autobuilder infrastructure build of <code class="language-plaintext highlighter-rouge">libruy-dev</code>, a downstream distribution build not controlled by or visible to google/ruy.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -617,17 +615,17 @@ cmake --build build-riscv64
 </h2>
     
 
-<p><strong>Upstream:</strong> No binary releases for any architecture. The <a href="https://github.com/google/ruy/releases">GitHub releases page</a> is empty. No PyPI package exists (pypi.org/pypi/ruy returns HTTP 404). No RISE wheel builder entry for ruy.</p>
+<p><strong>Upstream:</strong> no binary releases for any architecture. The <a href="https://github.com/google/ruy/releases">GitHub releases page</a> is confirmed empty (“There aren’t any releases here”). No PyPI package named <code class="language-plaintext highlighter-rouge">ruy</code> exists (<code class="language-plaintext highlighter-rouge">pypi.org/pypi/ruy/json</code> returns HTTP 404, independently re-confirmed). The RISE GitLab PyPI mirror also has no <code class="language-plaintext highlighter-rouge">ruy</code> package (redirects to <code class="language-plaintext highlighter-rouge">pypi.org/simple/ruy/</code>, which itself 404s).</p>
 
-<p><strong>Debian sid/testing:</strong> <code class="language-plaintext highlighter-rouge">libruy-dev</code> version <code class="language-plaintext highlighter-rouge">0.0.0~git20230215.21a85fe-3+b1</code> is available with riscv64 binary. Status: Installed on Debian buildd host <code class="language-plaintext highlighter-rouge">rv-osuosl-03</code> approximately 47 days before report date. Source: <a href="https://tracker.debian.org/pkg/ruy">Debian tracker</a>.</p>
+<p><strong>Ubuntu 26.04 “resolute”:</strong> <code class="language-plaintext highlighter-rouge">libruy-dev</code> version <code class="language-plaintext highlighter-rouge">0.0.0~git20230215.21a85fe-3</code> is available with a riscv64 binary, confirmed directly on the <a href="https://packages.ubuntu.com/resolute/libruy-dev">package detail page</a>: architectures amd64, arm64, armhf, ppc64el, riscv64, s390x. Download size 138.6 kB, installed size 996.0 kB. This was independently re-verified adversarially (direct curl, not trusted from a prior search) and could not be refuted - a live, working download link exists at <a href="https://packages.ubuntu.com/resolute/riscv64/libruy-dev/download">packages.ubuntu.com/resolute/riscv64/libruy-dev/download</a>. The source package <code class="language-plaintext highlighter-rouge">ruy</code> is maintained by the Debian Deep Learning Team (Dylan Aissi), built from an unpatched upstream git snapshot (<code class="language-plaintext highlighter-rouge">21a85fe</code>, dated 2023-02-15), with changelog entries showing active maintenance through September 2025.</p>
 
-<p><strong>Ubuntu 24.04 (noble):</strong> <code class="language-plaintext highlighter-rouge">libruy-dev</code> version <code class="language-plaintext highlighter-rouge">0.0.0~git20230215.21a85fe-1</code> is available in the universe component. Architectures: amd64, arm64, ppc64el, riscv64, s390x. Package size: 125.5 kB download, 842.0 kB installed on riscv64. Source: <a href="https://packages.ubuntu.com/noble/libruy-dev">packages.ubuntu.com/noble/libruy-dev</a>.</p>
+<p><strong>Debian sid/testing:</strong> <code class="language-plaintext highlighter-rouge">libruy-dev</code> is built and installed on the Debian riscv64 buildd infrastructure, per the <a href="https://tracker.debian.org/pkg/ruy">Debian package tracker</a>.</p>
 
-<p><strong>Arch Linux:</strong> ruy is not packaged in Arch Linux main repos and has no Arch RISC-V port in <a href="https://github.com/felixonmars/archriscv-packages">felixonmars/archriscv-packages</a>.</p>
+<p><strong>Arch Linux:</strong> not packaged in Arch Linux main repos, and confirmed absent from the Arch RISC-V port (<code class="language-plaintext highlighter-rouge">archriscv.felixc.at/?q=ruy</code> lists no <code class="language-plaintext highlighter-rouge">ruy</code>/<code class="language-plaintext highlighter-rouge">libruy</code> entry).</p>
 
-<p><strong>Note on installed size:</strong> The riscv64 <code class="language-plaintext highlighter-rouge">libruy-dev</code> installed size (842 kB) is larger than the armhf build (532 kB), which is consistent with unoptimized scalar C++ code expanding to more object code than hand-tuned NEON assembly.</p>
+<p><strong>What a user must do to get a working riscv64 binary:</strong> on Ubuntu 26.04 or Debian sid, <code class="language-plaintext highlighter-rouge">apt install libruy-dev</code> installs the riscv64 package directly. On other distributions, building from source with a standard <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> toolchain is required (Section 5); this produces correct, scalar-only results.</p>
 
-<p><strong>What a user must do to get a working riscv64 binary:</strong> On Ubuntu 24.04 or Debian sid, <code class="language-plaintext highlighter-rouge">apt install libruy-dev</code> installs the riscv64 package directly. On other distributions, building from source with a riscv64-linux-gnu toolchain is required (see Section 5).</p><hr />
+<p><strong>Indirect riscv64 distribution via CTranslate2:</strong> ruy is not published independently by RISE, but it is vendored statically inside RISE’s riscv64 wheel builds for CTranslate2 (<code class="language-plaintext highlighter-rouge">ctranslate2-v4.8.1</code>, released 2026-09-07, and <code class="language-plaintext highlighter-rouge">ctranslate2-v4.8.2</code>, released 2026-09-17, both on <a href="https://github.com/riseproject-dev/python-wheels">riseproject-dev/python-wheels</a>). This is the one channel through which a riscv64 build of ruy’s code reaches an end user via RISE infrastructure, but it is not a standalone ruy release and ruy does not appear by name on RISE’s <a href="https://riseproject.gitlab.io/python/wheel_builder/">wheel builder page</a>.</p>
 <h2 id="9-dependencies">
   
   
@@ -658,23 +656,25 @@ cmake --build build-riscv64
   </thead>
   <tbody>
     <tr>
-      <td>cpuinfo (pytorch/cpuinfo)</td>
-      <td>CPU feature/ISA detection; selects ruy execution path at runtime</td>
-      <td>Passing (QEMU + Android CI)</td>
-      <td>Build-only CI; no explicit test step on riscv64</td>
-      <td>Partial</td>
-      <td><a href="https://github.com/pytorch/cpuinfo/issues/397">#397</a> (open): ISA extension detection incomplete (only zfh/zvfh detected); vendor/uarch always returns unknown; sysfs cache detection incomplete</td>
+      <td>cpuinfo</td>
+      <td>runtime-dependency, critical. CPU feature/ISA detection; selects ruy’s execution path at runtime</td>
+      <td>Yes - upstream CI (<code class="language-plaintext highlighter-rouge">build.yml</code>) builds riscv64 on every PR/push via QEMU (<code class="language-plaintext highlighter-rouge">cmake-linux-qemu</code>) and Android NDK cross-compile; also present as <code class="language-plaintext highlighter-rouge">cpuinfo</code>/<code class="language-plaintext highlighter-rouge">libcpuinfo0</code>/<code class="language-plaintext highlighter-rouge">libcpuinfo-dev</code> in Ubuntu 26.04 resolute (v0.0~git20250905.877328f-1)</td>
+      <td>No - CI is build-only; <code class="language-plaintext highlighter-rouge">ctest</code> is never invoked for any platform in upstream CI</td>
+      <td>No tagged GitHub releases for any architecture (source-only); Debian sid and Ubuntu 26.04 resolute carry distro-built git-snapshot packages</td>
+      <td>Open: <a href="https://github.com/pytorch/cpuinfo/issues/397">pytorch/cpuinfo#397</a> - riscv64 ISA extension detection incomplete (only Zfh/Zvfh), vendor/uarch returns “unknown,” sysfs cache detection incomplete. Not currently blocking ruy, since ruy has no riscv64 SIMD path to dispatch to</td>
     </tr>
     <tr>
-      <td>googletest (google/googletest)</td>
-      <td>Test framework; test-only dependency, not shipped with ruy</td>
-      <td>Passes</td>
-      <td>1 failure: <a href="https://github.com/google/googletest/issues/3756">#3756</a> GetThreadCountTest returns 0 on riscv64</td>
-      <td>N/A (test-only)</td>
-      <td>#3756 (open since 2022, unresolved): thread count detection broken on riscv64; assigned to derekmauro; no active fix</td>
+      <td>googletest</td>
+      <td>test-dependency, optional. Test framework only, not linked into ruy’s shipped library</td>
+      <td>Compiles cleanly on riscv64; Debian sid ships <code class="language-plaintext highlighter-rouge">googletest</code> 1.18.0-1 as an <code class="language-plaintext highlighter-rouge">arch:all</code> source/CMake/headers package, with an actual riscv64 build confirmed on Debian buildd host <code class="language-plaintext highlighter-rouge">rv-manda-01</code></td>
+      <td>Partial - the library’s own self-test <code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code> fails on riscv64; no other riscv64-specific build/test CI exists upstream (only CodeQL + pages-deploy workflows)</td>
+      <td>Source-tarball-only releases for all architectures; Debian/Ubuntu package as <code class="language-plaintext highlighter-rouge">arch:all</code> (header/CMake-only)</td>
+      <td>Open, unresolved since 2022: <a href="https://github.com/google/googletest/issues/3756">google/googletest#3756</a> - <code class="language-plaintext highlighter-rouge">GetThreadCount()</code> returns 0 on riscv64 (reads <code class="language-plaintext highlighter-rouge">/proc/&lt;pid&gt;/stat</code> field 19). Assigned to derekmauro, no active fix. Does not affect ruy’s own test correctness unless ruy’s tests exercise thread-count APIs directly</td>
     </tr>
   </tbody>
 </table></div>
+
+<p>No JIT, crypto, compression, or allocator dependencies exist. ruy’s only architecture-sensitive subsystem is its self-contained SIMD matmul kernel - it depends on no external SIMD/numerics library.</p>
 <h3 id="cpuinfo-deep-dive">
   
   
@@ -684,9 +684,7 @@ cmake --build build-riscv64
 </h3>
     
 
-<p>cpuinfo is the critical runtime dependency that determines which ruy execution path is selected. On riscv64, cpuinfo’s incomplete ISA detection (issue <a href="https://github.com/pytorch/cpuinfo/issues/397">#397</a>) means that even if ruy were to gain a RISC-V optimized path, the runtime dispatch mechanism would lack the data needed to select that path correctly. Issue #397 proposes adding 28 ISA extensions, T-Head/SpacemiT vendor detection, and sysfs cache topology support; it has not been reviewed as of June 2026.</p>
-
-<p>The practical consequence now: cpuinfo on riscv64 correctly reports that no ARM or x86 paths are available, which causes ruy to select <code class="language-plaintext highlighter-rouge">kStandardCpp</code>. This is correct behavior, not a bug. The dependency on cpuinfo is not blocking for ruy’s current (scalar-only) riscv64 state.</p>
+<p>cpuinfo is the critical runtime dependency that determines which ruy execution path is selected. Its riscv64 ISA-detection gap (<a href="https://github.com/pytorch/cpuinfo/issues/397">#397</a>, re-verified open as of 2026-10-01) means vendor/microarchitecture identification returns “unknown” and only Zfh/Zvfh extensions are currently detected. The practical consequence today: cpuinfo correctly reports that no ARM or x86 SIMD path is available on riscv64, so ruy selects <code class="language-plaintext highlighter-rouge">kStandardCpp</code> - this is correct behavior given ruy has no RVV path to dispatch to, so the dependency is not currently blocking. It would become load-bearing if/when a RISC-V RVV kernel were ever added to ruy, since correct runtime dispatch to that kernel would require complete and reliable ISA-extension data from cpuinfo. Separately, downstream integration work (RISE’s CTranslate2 riscv64 wheel, PR #873) needed to patch cpuinfo’s pinned submodule for a missing <code class="language-plaintext highlighter-rouge">syscall()</code> declaration on riscv64, since the pinned commit predates riscv64 recognition in cpuinfo upstream - this is a packaging/vendoring issue in the downstream consumer, not evidence of a defect in ruy’s own code.</p>
 <h3 id="googletest">
   
   
@@ -696,7 +694,7 @@ cmake --build build-riscv64
 </h3>
     
 
-<p><a href="https://github.com/google/googletest/issues/3756">Issue #3756</a> (open since 2022) reports that <code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code> returns 0 instead of the expected value on riscv64. This affects googletest’s own self-tests. It does not affect ruy’s test correctness unless ruy tests exercise thread-count APIs directly. No active fix is in progress.</p><hr />
+<p><a href="https://github.com/google/googletest/issues/3756">Issue #3756</a> (open since 2022-02-07, no update since) reports that <code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code> returns 0 instead of the expected value on riscv64. This affects googletest’s own self-tests. It does not affect ruy’s test correctness unless ruy’s own test suite exercises thread-count APIs directly; no evidence of that was found in this research. No active fix is in progress upstream.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -706,9 +704,9 @@ cmake --build build-riscv64
 </h2>
     
 
-<p><strong>riscv64-specific issues in google/ruy:</strong> None. Zero issues or PRs in the google/ruy repository mention riscv or riscv64.</p>
+<p><strong>riscv64-specific issues in google/ruy:</strong> none. Direct GitHub search (<code class="language-plaintext highlighter-rouge">riscv in:title,body</code>, scoped to <code class="language-plaintext highlighter-rouge">repo:google/ruy</code>) returns zero results, and PR search for “riscv” surfaces only the unrelated #227 (Section 2).</p>
 
-<p><strong>Open issues in google/ruy (all architectures):</strong> Eight open issues as of June 2026 (#317, #321, #323, #328, #333, #346, #352, #366), all ARM- or build-system-related. None concern RISC-V.</p>
+<p><strong>Open issues in google/ruy (all architectures):</strong> nine open issues as of 2026-10-01 (#378, #366, #352, #346, #333, #328, #323, #321, #317), covering Windows ARM64 cpuinfo link failures, build/CMake questions, NEON/aarch64 questions, and an <code class="language-plaintext highlighter-rouge">Eigen::half</code> compile error. None concern RISC-V.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -722,14 +720,14 @@ cmake --build build-riscv64
   </thead>
   <tbody>
     <tr>
-      <td>cpuinfo <a href="https://github.com/pytorch/cpuinfo/issues/397">#397</a></td>
+      <td><a href="https://github.com/pytorch/cpuinfo/issues/397">cpuinfo #397</a></td>
       <td>riscv/linux: complete ISA extension, vendor/uarch, and cache support</td>
       <td>Open</td>
-      <td>High (for future ruy riscv path dispatch)</td>
-      <td>Adds 28 ISA extensions, T-Head/SpacemiT vendor detection; not yet reviewed</td>
+      <td>High (for any future ruy riscv kernel dispatch)</td>
+      <td>Proposes adding 28 ISA extensions and T-Head/SpacemiT vendor detection; not yet reviewed</td>
     </tr>
     <tr>
-      <td>googletest <a href="https://github.com/google/googletest/issues/3756">#3756</a></td>
+      <td><a href="https://github.com/google/googletest/issues/3756">googletest #3756</a></td>
       <td>GetThreadCountTest returns 0 on riscv64</td>
       <td>Open</td>
       <td>Low (does not affect ruy correctness)</td>
@@ -738,7 +736,7 @@ cmake --build build-riscv64
   </tbody>
 </table></div>
 
-<p>No correctness bugs affect ruy on riscv64. The scalar kStandardCpp path produces correct results.</p><hr />
+<p>No correctness bugs affect ruy on riscv64 itself. The scalar <code class="language-plaintext highlighter-rouge">kStandardCpp</code> path produces correct results, confirmed indirectly by CTranslate2’s riscv64 test suite passing (160/171, with deselections only for numeric-precision tolerance on scalar kernels, not correctness failures).</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -748,87 +746,99 @@ cmake --build build-riscv64
 </h2>
     
 
-<p><strong>No stated objections:</strong> No maintainer has stated opposition to a RISC-V port. The issue tracker is currently restricted (issue creation is restricted), which is a procedural barrier to filing a tracking issue.</p>
+<p><strong>No stated objections:</strong> no maintainer has expressed opposition to a RISC-V port; the topic appears simply never to have been raised in six-plus years of project history.</p>
 
 <p><strong>Technical blockers:</strong></p>
 
 <ol>
-  <li>
-    <p>The library is ARM-centric. All optimized kernel infrastructure (path selection, pack routines, kernel dispatch) is written around ARM and x86 SIMD models. Adding RVV support requires new <code class="language-plaintext highlighter-rouge">Path</code> enum values, a new platform detection macro, new <code class="language-plaintext highlighter-rouge">kernel_riscv*.cc</code> and <code class="language-plaintext highlighter-rouge">pack_riscv*.cc</code> files, and RVV intrinsic kernels. This is non-trivial: the ARM arm64 kernel alone comprises approximately 3,000 lines of hand-tuned assembly and intrinsics across multiple microarchitecture variants.</p>
-  </li>
-  <li>
-    <p>cpuinfo #397 must be resolved before runtime ISA detection on riscv64 is reliable enough to safely dispatch to a vector path.</p>
-  </li>
+  <li>The library’s optimized-kernel infrastructure (path selection, pack routines, kernel dispatch) is built entirely around ARM and x86 SIMD models. Adding RVV support requires a new <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_RISCV</code> macro, new <code class="language-plaintext highlighter-rouge">Path</code> enum values, new <code class="language-plaintext highlighter-rouge">kernel_riscv*.cc</code>/<code class="language-plaintext highlighter-rouge">pack_riscv*.cc</code> files, and RVV intrinsic kernels. This is non-trivial: the arm64 kernel alone is 390,730 bytes of hand-tuned NEON intrinsics/assembly across multiple microarchitecture-tuned variants (Section 4).</li>
+  <li>cpuinfo #397 should be resolved before any future RVV dispatch path in ruy could rely on correct runtime ISA detection (Section 9).</li>
 </ol>
 
-<p><strong>Organizational blockers:</strong></p>
+<p><strong>Organizational blockers:</strong> the project is effectively single-vendor (Google), driven historically by TFLite/LiteRT deployment needs, and per public knowledge was archived in 2023 in favor of XNNPACK [NEEDS VERIFICATION, as noted in Section 1] - consistent with the complete absence of ongoing architecture-port activity of any kind (not just RISC-V; PPC also receives no dedicated kernel despite being detected). There is no evidence of a maintainer or external contributor currently positioned to own long-term maintenance of a new architecture-specific kernel.</p>
 
-<p>The project is driven by Google’s internal TFLite/LiteRT needs. The primary maintainer (bjacob) is now at AMD. There is no Google team currently prioritizing RISC-V deployment for TFLite. A RISC-V RVV kernel for ruy would require either a champion inside Google or an external contributor willing to own long-term maintenance of architecture-specific kernels – no such contributor has appeared in the issue tracker or commit history.</p>
-
-<p><strong>Acceptance probability:</strong> Data not available: no maintainer has commented on the likelihood of accepting an external RISC-V patch. The Apache-2.0 license and CLA-based contribution model are not barriers, but the absence of any expressed interest from the maintainer team makes acceptance timeline uncertain. [NEEDS VERIFICATION]</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability:</strong> data not available - no maintainer has commented on the likelihood of accepting an external RISC-V patch, and the issue tracker provides no signal either way. The Apache-2.0 license and CLA-based contribution model present no formal barrier, but the archived/inactive status of the project (if confirmed) would be the dominant factor governing whether any new kernel contribution could be merged at all. [NEEDS VERIFICATION]</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has not funded any ruy or TFLite/LiteRT RISC-V work. The RISE project blog (28 posts from May 2024 through June 2026) contains zero mentions of ruy. ruy is not listed in the RISE wheel builder. No RISE repository is related to ruy.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> orange (optimization-absent)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Optimization level:</strong> absent</li>
+</ul>
+
+<p><strong>Justification:</strong> google/ruy has no upstream CI of any kind (no <code class="language-plaintext highlighter-rouge">.github/workflows</code>, confirmed by repo-tree inspection and GitHub code search, <a href="https://github.com/google/ruy">github.com/google/ruy</a>), so the CI-based primary grade would be yellow via the clean-distro-build floor (Ubuntu 26.04 “resolute” ships <code class="language-plaintext highlighter-rouge">libruy-dev</code> for riscv64 built from an unpatched upstream git snapshot, <a href="https://packages.ubuntu.com/resolute/libruy-dev">packages.ubuntu.com/resolute/libruy-dev</a>). ruy’s stated purpose is accelerated Int8/Float32 matmul kernels for NN inference (a kernel-library optimization-purpose project), and it has zero RISC-V-specific code anywhere (<code class="language-plaintext highlighter-rouge">ruy/platform.h</code> defines no <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_RISCV</code>, there are no <code class="language-plaintext highlighter-rouge">kernel_riscv*</code>/<code class="language-plaintext highlighter-rouge">pack_riscv*</code> files, confirmed by full source-tree grep, <a href="https://github.com/google/ruy/blob/master/ruy/platform.h">github.com/google/ruy/blob/master/ruy/platform.h</a>); riscv64 runs only the generic scalar <code class="language-plaintext highlighter-rouge">kStandardCpp</code> fallback. Per the project-color-coding skill’s optimization modifier, “absent” RISC-V optimization caps the color at orange, overriding the yellow distro-floor grade.</p>
+
+<p><strong>Pending work that could change the grade:</strong> no RVV/RISC-V kernel work is underway in google/ruy itself (no open issues/PRs mention riscv). ruy is consumed as a scalar-only GEMM fallback inside CTranslate2’s riscv64 wheel built by RISE’s <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> PR #873 (merged 2026-09-06), but that is downstream integration, not upstream ruy optimization work. Its critical runtime dependency cpuinfo has an open riscv64 ISA-detection gap (<a href="https://github.com/pytorch/cpuinfo/issues/397">pytorch/cpuinfo#397</a>) that would need resolving before any future RVV dispatch path in ruy could work correctly. A project-graph database cross-check was not performed this session (MCP connection failure, <code class="language-plaintext highlighter-rouge">CONNECTION_CLOSED</code>) and should be re-run once that server reconnects.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has not funded any ruy-specific work, nor is there a dedicated RISE repository, blog post, or runner usage targeting ruy by name. RISE’s only touchpoint with ruy is incidental: ruy ships as CTranslate2’s statically-linked, scalar-only CPU GEMM backend in the riscv64 wheel built by <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> PR #873.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>ruy already functions correctly on riscv64 via the <code class="language-plaintext highlighter-rouge">kStandardCpp</code> scalar fallback path. There are no functional gaps – all matrix multiplication operations complete and produce correct results. No functional enablement work is required.</p>
-<h3 id="132-performance-optimization">
+<p>ruy already functions correctly on riscv64 via the <code class="language-plaintext highlighter-rouge">kStandardCpp</code> scalar fallback path, confirmed both by Ubuntu 26.04’s clean distro build and by CTranslate2’s riscv64 test suite passing against it. No functional enablement work is required.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The dominant gap is the absence of RVV (RISC-V Vector) kernels. The work required:</p>
+<p>The dominant gap is the total absence of RVV (RISC-V Vector) kernels. Required work:</p>
 
 <ol>
-  <li>Add <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_RISCV</code> macro to <code class="language-plaintext highlighter-rouge">platform.h</code> with <code class="language-plaintext highlighter-rouge">__riscv</code> detection.</li>
-  <li>Add <code class="language-plaintext highlighter-rouge">kRvv</code> (or equivalent) path values to <code class="language-plaintext highlighter-rouge">path.h</code> and integrate into <code class="language-plaintext highlighter-rouge">kDefaultArchPaths</code>.</li>
-  <li>Implement <code class="language-plaintext highlighter-rouge">kernel_riscv64.cc</code> with RVV intrinsics for Int8 and Float32 matmul. The ARM arm64 kernel is the closest analog – it comprises approximately 3,000 lines for two microarchitecture variants with hand-tuned NEON assembly. An RVV implementation using scalable vector intrinsics could be more concise (RVV’s scalable design reduces microarchitecture-specific tuning), but baseline RVV kernel work is still substantial.</li>
+  <li>Add a <code class="language-plaintext highlighter-rouge">RUY_PLATFORM_RISCV</code> macro to <code class="language-plaintext highlighter-rouge">platform.h</code> with <code class="language-plaintext highlighter-rouge">__riscv</code> detection.</li>
+  <li>Add <code class="language-plaintext highlighter-rouge">kRvv</code> (or equivalent) <code class="language-plaintext highlighter-rouge">Path</code> values to <code class="language-plaintext highlighter-rouge">path.h</code> and integrate into the default architecture-path selection.</li>
+  <li>Implement <code class="language-plaintext highlighter-rouge">kernel_riscv64.cc</code> with RVV intrinsics for Int8 and Float32 matmul. The arm64 kernel is the closest existing analog at 390,730 bytes of hand-tuned NEON intrinsics/assembly across multiple microarchitecture variants; an RVV implementation using scalable vector intrinsics may be more concise due to RVV’s architecture-agnostic vector-length model, but baseline kernel work is still substantial. Third-party RVV GEMM work exists only outside ruy (the <code class="language-plaintext highlighter-rouge">rv2036/rvspoc-S2602-litert</code> contest submissions implement RVV kernels in LiteRT’s <code class="language-plaintext highlighter-rouge">cpu_backend_gemm</code> layer, bypassing ruy rather than extending it, and report 1.17x-5.96x speedups over scalar RV64GC under QEMU emulation - not directly reusable as a ruy kernel without adaptation, and not validated on real hardware).</li>
   <li>Implement <code class="language-plaintext highlighter-rouge">pack_riscv.cc</code> for riscv64 pack routines.</li>
-  <li>Resolve cpuinfo #397 upstream to enable reliable ISA dispatch at runtime.</li>
-  <li>Add upstream CI (QEMU-based) once kernels exist.</li>
+  <li>Resolve cpuinfo #397 upstream so RISC-V ISA data is reliable enough to drive runtime dispatch.</li>
+  <li>Add upstream CI (QEMU-based at minimum, since no CI of any kind currently exists for any architecture) once kernels exist, to prevent regression.</li>
 </ol>
-<h3 id="133-cicd-infrastructure">
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>The upstream repository has no build or test CI for any architecture (only org-level CodeQL security scanning). Adding riscv64 CI requires first adding any architecture CI. A QEMU-based build-and-test workflow using <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:24.04</code> is the minimal viable approach.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>Not applicable. ruy has no dependent package ecosystem requiring separate enablement.</p>
-<h3 id="135-summary-table">
+<p>The upstream repository has zero committed CI for any architecture, not just riscv64 (Section 7). Before riscv64-specific CI is meaningful, the project would need any build-and-test CI at all. A QEMU-based build-and-test workflow (e.g., <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:24.04</code> container) is the minimal viable addition, and could reuse infrastructure patterns already proven on RISE’s native riscv64 runners (demonstrated usable for C++ builds in PR #873, albeit for CTranslate2, not ruy).</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable. ruy has no dependent package ecosystem of its own requiring separate riscv64 enablement; it is consumed as a statically-linked C++ library inside other projects (TFLite/LiteRT historically, CTranslate2 currently via RISE’s wheel build).</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -882,8 +892,8 @@ cmake --build build-riscv64
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add QEMU riscv64 build-and-test workflow</td>
-      <td>1</td>
+      <td>Add any build-and-test CI (none exists today for any architecture), then a QEMU riscv64 job</td>
+      <td>1.5</td>
       <td>Same or CI specialist</td>
       <td>Medium</td>
     </tr>
@@ -891,23 +901,13 @@ cmake --build build-riscv64
       <td>Performance</td>
       <td>Microarchitecture tuning for specific RISC-V cores</td>
       <td>4-8</td>
-      <td>Hardware vendor or perf engineer</td>
+      <td>Hardware vendor or performance engineer</td>
       <td>Low (post-baseline)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Total estimated effort for baseline RVV optimization: 15-25 person-weeks, assuming a contributor already familiar with ruy’s kernel infrastructure and RVV intrinsics programming.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p>Total estimated effort for baseline RVV optimization: 16.5-27.5 person-weeks, assuming a contributor already familiar with ruy’s kernel infrastructure and RVV intrinsics programming. This estimate carries additional organizational risk given the project’s apparent archived/maintenance-only status [NEEDS VERIFICATION, Section 1], which may affect whether such a contribution could be merged upstream at all regardless of engineering effort.</p>
 <h2 id="15-references">
   
   
@@ -919,19 +919,23 @@ cmake --build build-riscv64
 
 <ul>
   <li><a href="https://github.com/google/ruy">google/ruy repository</a></li>
-  <li><a href="https://github.com/google/ruy/blob/master/ruy/platform.h">ruy/platform.h – platform detection macros</a></li>
-  <li><a href="https://github.com/google/ruy/blob/master/ruy/path.h">ruy/path.h – execution path enum</a></li>
-  <li><a href="https://github.com/google/ruy/blob/master/CMakeLists.txt">ruy/CMakeLists.txt – build system</a></li>
+  <li><a href="https://github.com/google/ruy/blob/master/ruy/platform.h">ruy/platform.h - platform detection macros</a></li>
+  <li><a href="https://github.com/google/ruy/blob/master/ruy/path.h">ruy/path.h - execution path enum</a> (referenced via local clone; path not independently re-fetched this session)</li>
+  <li><a href="https://github.com/google/ruy/blob/master/CMakeLists.txt">ruy/CMakeLists.txt - build system</a></li>
   <li><a href="https://github.com/google/ruy/releases">ruy GitHub releases (empty)</a></li>
-  <li><a href="https://github.com/google/ruy/pull/227">ruy PR #227 – tangential RISC-V microcontroller mention</a></li>
-  <li><a href="https://github.com/google/ruy/issues/323">ruy issue #323 – ARM performance benchmarks</a></li>
-  <li><a href="https://github.com/pytorch/cpuinfo/issues/397">cpuinfo issue #397 – riscv/linux ISA detection incomplete</a></li>
-  <li><a href="https://github.com/google/googletest/issues/3756">googletest issue #3756 – GetThreadCountTest fails on riscv64</a></li>
+  <li><a href="https://github.com/google/ruy/pull/227">ruy PR #227 - unrelated lexical match, NEON quantized multiplier</a></li>
+  <li><a href="https://github.com/google/ruy/issues/323">ruy issue #323 - ARM performance benchmarks</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/issues/397">cpuinfo issue #397 - riscv/linux ISA detection incomplete</a></li>
+  <li><a href="https://github.com/google/googletest/issues/3756">googletest issue #3756 - GetThreadCountTest fails on riscv64</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/libruy-dev">libruy-dev in Ubuntu 26.04 resolute (packages.ubuntu.com)</a></li>
   <li><a href="https://tracker.debian.org/pkg/ruy">libruy-dev in Debian tracker</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=ruy&amp;suite=sid">libruy-dev Debian buildd status (sid)</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/libruy-dev">libruy-dev in Ubuntu noble (packages.ubuntu.com)</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/pull/873">RISE python-wheels PR #873 - ctranslate2 riscv64 wheel build using ruy as CPU backend</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels/issues/1155">RISE python-wheels issue #1155 - ctranslate2 riscv64 support tracking issue</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels">RISE python-wheels repository</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel builder listing</a></li>
   <li><a href="https://riseproject.dev">RISE project member list</a></li>
-  <li><a href="https://github.com/felixonmars/archriscv-packages">felixonmars/archriscv-packages – Arch RISC-V port tracker</a></li>
+  <li><a href="https://github.com/rv2036/rvspoc-S2602-litert/pull/1">rv2036/rvspoc-S2602-litert PR #1 - LiteRT RISC-V port + RVV 1.0 optimization</a></li>
+  <li><a href="https://archriscv.felixc.at/?q=ruy">Arch Linux RISC-V package search</a></li>
 </ul>
 
           
