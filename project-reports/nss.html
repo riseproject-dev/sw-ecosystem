@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow (clean-distro-build)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for NSS<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +280,19 @@
 </h2>
     
 
-<p><a href="https://firefox-source-docs.mozilla.org/security/nss/">NSS (Network Security Services)</a> is a Mozilla Foundation project providing a cross-platform cryptographic library used primarily by Firefox and Red Hat Enterprise Linux. It implements TLS, X.509, PKCS#11, and a broad set of symmetric and asymmetric cryptographic primitives. The canonical repository is <a href="https://github.com/mozilla/nss">mozilla/nss</a> (GitHub mirror); the authoritative source is the Mercurial repository at hg.mozilla.org.</p>
+<p><a href="https://firefox-source-docs.mozilla.org/security/nss/">NSS (Network Security Services)</a> is a Mozilla project providing a cross-platform cryptographic library used primarily by Firefox and Red Hat Enterprise Linux. It implements TLS, X.509, PKCS#11, and a broad set of symmetric and asymmetric cryptographic primitives. NSS builds with GYP plus Ninja (primary path, driven by <code class="language-plaintext highlighter-rouge">build.sh</code>/<code class="language-plaintext highlighter-rouge">mach</code>) or a legacy GNU Make path; it has no CMakeLists.txt, setup.py, go.mod, Cargo.toml, or package.json anywhere in its own tree.</p>
 
-<p>Governance is maintainer-controlled with no independent foundation or formal open-governance board. The community documentation explicitly states the team’s focus is “supporting platforms and features needed by Firefox and RHEL.” Patch authority rests with NSS team members via Bugzilla and Phabricator code review. There is no CODEOWNERS, MAINTAINERS, or OWNERS file. License is Mozilla Public License v2.0.</p>
+<p>A naming note on the repository: the project identifier used for this research, <a href="https://github.com/nss-dev/nss">nss-dev/nss</a>, is git-clonable (confirmed by direct shallow clone, HEAD <code class="language-plaintext highlighter-rouge">a1bd42ff04195ec49ae5a17834798cd79ed66acc</code>) and its file content matches real NSS source, but it is not indexed by GitHub’s search or code-search APIs (repeated <code class="language-plaintext highlighter-rouge">search_issues</code>/<code class="language-plaintext highlighter-rouge">search_pull_requests</code>/<code class="language-plaintext highlighter-rouge">search_commits</code>/<code class="language-plaintext highlighter-rouge">search_code</code> queries against it all failed with “repository does not exist or you do not have permission to view,” even for queries that should trivially match, such as a known-present string in <code class="language-plaintext highlighter-rouge">config.gypi</code>). The canonical, actively indexed GitHub mirror is <a href="https://github.com/mozilla/nss">mozilla/nss</a> (12,945 commits, 192 stars); the authoritative source of record is the Mercurial repository at hg.mozilla.org, with Phabricator for code review and Mozilla Bugzilla (product “NSS”) for issue tracking, not GitHub Issues. The GitHub mirror carries zero issues of any kind.</p>
 
-<p>The two dominant corporate sponsors are Mozilla and Red Hat. The top contributors by commit count are:</p>
+<p>Governance runs through Mozilla’s Module Ownership Tracking System (MOTS), under the “Core::Security” module (which also covers JSS, the Java bindings for NSS). There is no independent foundation, no CODEOWNERS/MAINTAINERS/OWNERS file, and no formal tier-1/2/3 porting policy document. License is Mozilla Public License v2.0.</p>
+
+<p>Current Core::Security (NSS) module owners and peers, with known affiliations:</p>
+<ul>
+  <li>Owners: Robert Relyea (Red Hat), Martin Thomson (Mozilla), John Schanck (Mozilla)</li>
+  <li>Peers: Kai Engert (Red Hat), Daiki Ueno (Red Hat), Ryan Sleevi (historically Google), Eric Rescorla (Mozilla), Dennis Jackson (Mozilla), Anna Weine</li>
+</ul>
+
+<p>Top contributors by commit count (historical, from the GitHub mirror):</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -358,9 +367,11 @@
   </tbody>
 </table></div>
 
-<p>NSS is not a member of the <a href="https://riseproject.dev/">RISE Project</a>. No RISE blog post (27 posts checked, 2024-05 through 2026-06) mentions NSS. No RISE-funded work for NSS was found.</p>
+<p>NSS is historically co-developed by Mozilla, Red Hat, AOL, Sun Microsystems/Oracle, and Google, reflecting its reuse as RHEL/Fedora’s default TLS/crypto stack and in various enterprise/Chromium-adjacent tooling.</p>
 
-<p>Community stance on new ports: the two resolved RISC-V bugs turned around in two days or less, suggesting no institutional resistance to basic build-compatibility patches. However, the maintainer team has explicitly limited bandwidth for non-Firefox/non-RHEL platform work. Contributors are advised to contact the team before investing significant effort.</p><hr />
+<p>NSS is not a member of the <a href="https://riseproject.dev/">RISE Project</a>. A full re-check of every RISE blog post (34 posts, 2024-05-15 through 2026-09-28, confirmed single page with no further pagination) found zero mentions of NSS by title or summary. RISE’s documented members (Premier: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent; General: Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE) and its 52-repo GitHub org contain no NSS-named project. RISE’s <a href="https://riseproject.gitlab.io/python/wheel_builder/">Python wheel builder</a> does not list an “nss” package. No RISE funding, grant, RP-numbered project engagement, or CI runner usage for NSS was found in any blog post, repository, or search performed.</p>
+
+<p>Community stance on new ports is pragmatic and reactive rather than proactive: build-system and freebl changes for new architectures (riscv64, and later LoongArch per a December 2022 commit) are accepted as small, incremental patches once something fails to build, rather than pursued by NSS maintainers themselves. Both resolved RISC-V build bugs (1636058, 1714719) turned around with standard, routine review in days, indicating no institutional resistance to small build-compatibility patches, but there is no evidence of a formal RFC or porting-policy process, and the team’s documented focus is “supporting platforms and features needed by Firefox and RHEL.” Contributors proposing larger RISC-V investment (e.g., vector-crypto assembly) should expect to drive the work themselves with limited maintainer bandwidth.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -370,7 +381,7 @@
 </h2>
     
 
-<p>All RISC-V work is fully upstream. There is no out-of-tree fork or downstream patch queue.</p>
+<p>All RISC-V-relevant work is fully upstream; there is no out-of-tree fork or downstream patch queue specific to NSS.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -383,29 +394,39 @@
   </thead>
   <tbody>
     <tr>
+      <td>2016 (filed) / 2017 (landed)</td>
+      <td>NSPR Bug 1308584: add riscv64 target support (Linux). Filed by David Abdurachmanov, fixed by Kai Engert (Red Hat). This is the layer below NSS proper and predates any NSS-level riscv64 work; shipped in NSPR 4.20 (2018).</td>
+      <td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1308584">Bug 1308584</a>, landed as <code class="language-plaintext highlighter-rouge">hg.mozilla.org/projects/nspr/rev/f47871e2aeb1</code></td>
+      <td>Bugzilla</td>
+    </tr>
+    <tr>
       <td>2020-01-27</td>
-      <td>Bug 1609181: Detect ARM CPU features on FreeBSD; commit notes <code class="language-plaintext highlighter-rouge">AT_HWCAP*</code> also applies to riscv64 (forward-looking comment only, no riscv64 code added). Shipped in NSS 3.50.</td>
+      <td>NSS Bug 1609181: Detect ARM CPU features on FreeBSD; adds <code class="language-plaintext highlighter-rouge">elf_aux_info</code>-based <code class="language-plaintext highlighter-rouge">getauxval</code> for FreeBSD. Comment notes <code class="language-plaintext highlighter-rouge">AT_HWCAP*</code> would also apply to riscv64 (forward-looking only, no riscv64 code added). Shipped in NSS 3.50.</td>
       <td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1609181">Bug 1609181</a> / commit <code class="language-plaintext highlighter-rouge">97df5ad</code></td>
       <td>Bugzilla + GitHub mirror</td>
     </tr>
     <tr>
       <td>2020-05-07</td>
-      <td>Bug 1636058: Fix building NSS on Debian s390x, mips64el, and riscv64. Root cause: HACL* KReMLin code generator emitted architecture-incompatible output. Fixed via HACL* update (upstream kremlin/pull/173). Shipped in NSS 3.53.</td>
+      <td>NSS Bug 1636058: Fix building NSS on Debian s390x, mips64el, and riscv64. Root cause: HACL<em>/KReMLin code generator emitted architecture-incompatible output (upstream KReMLin PR #173). Fix propagated via HACL</em>’s “Everest” CI pipeline and a vendored HACL* snapshot bump, landed as commit <code class="language-plaintext highlighter-rouge">60aa7df14f119d2a21750668c5ce36fa38ef2c6c</code>. Shipped in NSS 3.53. Depends on this bug: Bug 1615557 (see below); an earlier attachment was consolidated into Bug 1636206.</td>
       <td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1636058">Bug 1636058</a></td>
       <td>Bugzilla</td>
     </tr>
     <tr>
-      <td>2021-06-07</td>
-      <td>Bug 1714719: Set NSS_USE_64 on riscv64 target when using GYP/Ninja. Added <code class="language-plaintext highlighter-rouge">riscv64</code> to the 64-bit arch list in <code class="language-plaintext highlighter-rouge">coreconf/config.gypi</code>. Shipped in NSS 3.68 (2021-07-08).</td>
+      <td>2021-06-05 (filed) / 2021-06-07 (landed)</td>
+      <td>NSS Bug 1714719: Set NSS_USE_64 on riscv64 target when using GYP/Ninja. Adds <code class="language-plaintext highlighter-rouge">riscv64</code> to the 64-bit arch list in <code class="language-plaintext highlighter-rouge">coreconf/config.gypi</code>. Filed and fixed by Makoto Kato (<code class="language-plaintext highlighter-rouge">:m_kato</code>), reviewed by Benjamin Beurdouche (<code class="language-plaintext highlighter-rouge">r=bbeurdouche</code>), platform tagged RISCV64, priority P5/Enhancement, whiteboard <code class="language-plaintext highlighter-rouge">[nss-nofx]</code> (does not affect Firefox builds). Landed as commit <code class="language-plaintext highlighter-rouge">9891dbb983526c2e0a9b3983db926f4da740f675</code> (mirrored to GitHub as <code class="language-plaintext highlighter-rouge">1c7e99a</code>). Per the actual release-notes file <code class="language-plaintext highlighter-rouge">doc/src/releases/nss_3_67.md</code>, this shipped in <strong>NSS 3.67</strong>, not 3.68 as an earlier draft of this report stated.</td>
       <td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1714719">Bug 1714719</a> / commit <a href="https://github.com/mozilla/nss/commit/1c7e99a">1c7e99a</a></td>
-      <td>Bugzilla + GitHub mirror</td>
+      <td>Bugzilla + GitHub mirror + NSS 3.67 release notes</td>
+    </tr>
+    <tr>
+      <td>Still open, filed 2020, no activity since ~2023</td>
+      <td>NSS Bug 1615557: “NSS fails to build on some platforms because of HACL* and Kremlin libraries,” product NSS::Libraries, status NEW, unassigned, priority P3/severity S3. Filed by Benjamin Beurdouche, triage owner jschanck. Depends on Bug 1636058 (the specific riscv64 instance that was fixed); blocks Bug 1387183 (the HACL* integration meta-bug). This is the closest thing to an open “tracking” bug for cross-platform (including riscv64) HACL*/KReMLin build fragility, and it has never been fully closed out as a class of problem even though the riscv64 instance was resolved.</td>
+      <td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1615557">Bug 1615557</a></td>
+      <td>Bugzilla</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Key contributors to RISC-V work: Benjamin Beurdouche (Mozilla) fixed the initial HACL*/KReMLin build failure; Makoto Kato (community) filed and fixed the GYP/Ninja 64-bit classification. Both fixes merged with two-day review cycles and zero iteration.</p>
-
-<p>No open tracking bug exists for a comprehensive RISC-V port, hardware acceleration, or CI enablement.</p><hr />
+<p>Key contributors to RISC-V-relevant work: Benjamin Beurdouche (Mozilla) drove the initial HACL*/KReMLin build-failure fix and filed the still-open general tracking bug; Makoto Kato (community) filed and fixed the GYP/Ninja 64-bit classification fix; Kai Engert (Red Hat) fixed the underlying NSPR Linux riscv64 support. There is no “blocking person” in an adversarial sense; all substantive riscv64 work was driven by Mozilla/NSS insiders rather than external riscv64 contributors pushing for support. No master tracking issue for a comprehensive riscv64 port, hardware acceleration, or CI enablement exists in NSS Bugzilla or on GitHub.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -415,7 +436,9 @@
 </h2>
     
 
-<p>NSS has no published platform tier policy. The CI (Taskcluster) defines the implicit tier by which platforms receive build and test coverage.</p>
+<p>NSS has no formal tier-1/2/3 document (no PLATFORMS.md, SUPPORT.md, or docs/platforms/ equivalent). Per <a href="https://firefox-source-docs.mozilla.org/security/nss/">firefox-source-docs.mozilla.org/security/nss</a>, “officially supported platforms are those tested by the Continuous Integration environment”: Linux (x86-32, x86-64, aarch64), Windows 2012+ (x86-32/x86-64), and macOS 10.9+ (x86-64). All other platforms, including riscv64, are community-supported with no CI coverage; support happens informally via the mozilla.dev.tech.crypto mailing list rather than any formal ladder.</p>
+
+<p>Mozilla Taskcluster’s actual build matrix, read directly from <code class="language-plaintext highlighter-rouge">taskcluster/kinds/build/linux.yml</code>, is linux32/64, linux64-asan, macosx64, and win32/64 only. aarch64 appears as a platform alias in <code class="language-plaintext highlighter-rouge">taskcluster/nss_taskgraph/target_tasks.py</code> but has no corresponding build or test job defined in any Taskcluster YAML file.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -430,7 +453,7 @@
     <tr>
       <td>CI build</td>
       <td>Yes (linux64, linux64-asan)</td>
-      <td>No (referenced in <code class="language-plaintext highlighter-rouge">target_tasks.py</code> but no build job defined)</td>
+      <td>No (alias only, no job defined)</td>
       <td>No</td>
     </tr>
     <tr>
@@ -455,14 +478,12 @@
       <td>Distro binary</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (Debian sid, Ubuntu 24.04)</td>
+      <td>Yes (Debian sid, Arch Linux RISC-V confirmed; Ubuntu status disputed, see Section 8)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>NSS does not publish binary release assets on GitHub or any Mozilla-hosted download for any architecture. Binaries reach users exclusively through distro packaging.</p>
-
-<p>The riscv64 support level is equivalent to “distro-carries, upstream does not test”: functional via portable C, no CI coverage, no hardware acceleration, not release-blocking.</p><hr />
+<p>NSS does not publish binary release assets on GitHub or any Mozilla-hosted download, for any architecture; binaries reach users exclusively through distro packaging. riscv64’s effective support level is “distro-carries, upstream does not test”: functional via portable C, zero CI coverage, zero hardware acceleration, not release-blocking.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -472,7 +493,7 @@
 </h2>
     
 
-<p>NSS has no JIT compiler. The architecture-sensitive component is <code class="language-plaintext highlighter-rouge">lib/freebl</code>, the free-form cryptographic library that provides hardware-accelerated paths for symmetric and asymmetric primitives. A second sensitive component is NSPR (Netscape Portable Runtime), which handles thread-local storage, atomic operations, and platform ABI specifics.</p>
+<p>NSS has no JIT compiler. The architecture-sensitive components are <code class="language-plaintext highlighter-rouge">lib/freebl</code> (hardware-accelerated symmetric/asymmetric crypto) and NSPR (thread-local storage, atomics, platform ABI).</p>
 <h3 id="41-freebl-hardware-acceleration-survey">
   
   
@@ -482,7 +503,52 @@
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">lib/freebl/freebl.gyp</code> controls which architecture-specific source files and compiler flags are activated per target. There is no riscv64 section.</p>
+<p>A direct count of architecture-specific crypto source in <code class="language-plaintext highlighter-rouge">lib/freebl/</code> confirms the following:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Arch</th>
+      <th>Files</th>
+      <th>Lines</th>
+      <th>Nature</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>amd64/x86</td>
+      <td>13 files (<code class="language-plaintext highlighter-rouge">intel-aes.S</code>, <code class="language-plaintext highlighter-rouge">intel-gcm.S</code>, masm asm, <code class="language-plaintext highlighter-rouge">sha-fast-amd64-sun.s</code>, <code class="language-plaintext highlighter-rouge">arcfour-amd64-*</code>, <code class="language-plaintext highlighter-rouge">sha256-x86.c</code>, <code class="language-plaintext highlighter-rouge">ghash-x86.c</code>)</td>
+      <td>approximately 10,500</td>
+      <td>Hand-written AES-NI/PCLMUL/SSE assembly and intrinsics, runtime-dispatched via cpuid</td>
+    </tr>
+    <tr>
+      <td>arm64/aarch64</td>
+      <td>7 files plus an <code class="language-plaintext highlighter-rouge">aarch64-gcm-slothy/</code> directory (<code class="language-plaintext highlighter-rouge">aes-armv8.c</code>, <code class="language-plaintext highlighter-rouge">ghash-aarch64.c</code>, <code class="language-plaintext highlighter-rouge">sha1/256-armv8.c</code>, <code class="language-plaintext highlighter-rouge">aarch64-gcm-wrap.c</code>)</td>
+      <td>approximately 2,870 (.c/.h) plus 9,268 lines of hand-scheduled “slothy” GCM assembly</td>
+      <td>ARMv8 Crypto Extensions (AES/SHA1/SHA2) plus PMULL GHASH, runtime-dispatched via <code class="language-plaintext highlighter-rouge">getauxval</code>/HWCAP</td>
+    </tr>
+    <tr>
+      <td>ppc64/ppc64le</td>
+      <td>6 files (<code class="language-plaintext highlighter-rouge">ppc-gcm.s</code>, <code class="language-plaintext highlighter-rouge">chacha20-ppc64le.S</code>, <code class="language-plaintext highlighter-rouge">sha512-p8.s</code>, others)</td>
+      <td>approximately 3,650</td>
+      <td>VSX/Altivec intrinsics plus POWER8 crypto assembly</td>
+    </tr>
+    <tr>
+      <td>MPI (bignum/RSA)</td>
+      <td>dedicated backends for amd64, x86, arm, mips, sparc, alpha</td>
+      <td>-</td>
+      <td>Hand-optimized modular-multiply assembly</td>
+    </tr>
+    <tr>
+      <td>riscv64</td>
+      <td>0 files</td>
+      <td>0 lines</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>No <code class="language-plaintext highlighter-rouge">target_arch=="riscv64"</code> branch exists in any NSS <code class="language-plaintext highlighter-rouge">.gyp</code>/<code class="language-plaintext highlighter-rouge">.gypi</code> file beyond the generic 64-bit word-size define (the only arches with dedicated code-generation paths are x64, ia32, arm, arm64, aarch64, ppc64, ppc64le). No <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> guards gate any crypto implementation, and no RISC-V Vector (RVV) intrinsics (<code class="language-plaintext highlighter-rouge">riscv_vector.h</code>, <code class="language-plaintext highlighter-rouge">vsetvli</code>, <code class="language-plaintext highlighter-rouge">__riscv_v</code>) appear anywhere in the tree.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -496,13 +562,13 @@
   <tbody>
     <tr>
       <td>AES</td>
-      <td>AES-NI (<code class="language-plaintext highlighter-rouge">intel-aes.S</code>), CLMUL</td>
-      <td>ARMv8 Crypto (<code class="language-plaintext highlighter-rouge">aes-armv8.c</code>)</td>
+      <td>AES-NI, CLMUL</td>
+      <td>ARMv8 Crypto</td>
       <td>Generic C (Rijndael)</td>
     </tr>
     <tr>
       <td>GCM / GHASH</td>
-      <td>PCLMUL (<code class="language-plaintext highlighter-rouge">intel-gcm.S</code>)</td>
+      <td>PCLMUL</td>
       <td><code class="language-plaintext highlighter-rouge">ghash-aarch64.c</code></td>
       <td>Generic C</td>
     </tr>
@@ -520,26 +586,26 @@
     </tr>
     <tr>
       <td>ChaCha20-Poly1305</td>
-      <td>AVX2, SSSE3 (HACL* _256/_128)</td>
+      <td>AVX2, SSSE3 (HACL* 256/128)</td>
       <td>NEON (HACL*)</td>
-      <td>Generic C (HACL* Hacl_Chacha20.c)</td>
+      <td>Generic C (HACL* <code class="language-plaintext highlighter-rouge">Hacl_Chacha20Poly1305_32</code>, scalar)</td>
     </tr>
     <tr>
       <td>Curve25519</td>
       <td>int128 HACL* (fast)</td>
       <td>int128 HACL* (fast)</td>
-      <td>int128 HACL* (fast, see note)</td>
+      <td>int128 blocked (see 4.2)</td>
     </tr>
     <tr>
-      <td>P-256 / P-384 / P-521</td>
+      <td>P-256/P-384/P-521</td>
       <td>HACL* C</td>
       <td>HACL* C</td>
-      <td>HACL* C</td>
+      <td>HACL* C (generic)</td>
     </tr>
     <tr>
       <td>MPI big-integer</td>
-      <td><code class="language-plaintext highlighter-rouge">mpi_amd64.c</code> + ASM (<code class="language-plaintext highlighter-rouge">mpi_amd64_common.S</code>)</td>
-      <td>–</td>
+      <td><code class="language-plaintext highlighter-rouge">mpi_amd64.c</code> plus ASM</td>
+      <td>Generic C</td>
       <td>Generic C (no <code class="language-plaintext highlighter-rouge">mpi_riscv.c</code>)</td>
     </tr>
     <tr>
@@ -552,18 +618,18 @@
       <td>64-bit width (NSS_USE_64)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (since NSS 3.68)</td>
+      <td>Yes, since NSS 3.67</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">have_int128_support</code> in GYP</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No (see Section 4.2)</td>
+      <td>No</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No RISC-V Vector Cryptography ISA extensions (Zvkned, Zvkg, Zvknhb, Zvkb, Zkn, Zksh, Zbc) are used anywhere in NSS or its bundled dependencies.</p>
+<p>Independent third-party verification confirms this is a “scalar C fallback” tier, not a stub: there are no TODO/FIXME/”not implemented” markers near riscv64. riscv64 simply never matches any accelerated runtime-dispatch branch (which only ever checks x86 cpuid bits or ARM HWCAP bits) and unconditionally executes the portable reference implementations, the same tier used by every architecture without a dedicated backend (mips64, sparc64, e2k, loongarch64).</p>
 <h3 id="42-have_int128_support-gap">
   
   
@@ -573,7 +639,7 @@
 </h3>
     
 
-<p>The GYP build system sets <code class="language-plaintext highlighter-rouge">have_int128_support=1</code> for x64, arm64, and aarch64 only. riscv64 is absent from this list despite riscv64 GCC and Clang fully supporting <code class="language-plaintext highlighter-rouge">__int128</code>. The consequence is that HACL* uses the <code class="language-plaintext highlighter-rouge">KRML_VERIFIED_UINT128</code> software-emulated 128-bit path instead of <code class="language-plaintext highlighter-rouge">HACL_CAN_COMPILE_UINT128</code>. This affects the performance of Curve25519, Poly1305, and the HACL* EC implementations. This is a one-line GYP fix that has not been filed as a bug or submitted as a patch.</p>
+<p>riscv64 supports <code class="language-plaintext highlighter-rouge">__int128</code> natively under GCC and Clang, but NSS’s GYP build sets <code class="language-plaintext highlighter-rouge">have_int128_support=1</code> only for x64, arm64, and aarch64. riscv64’s absence forces HACL* to compile with the software-emulated <code class="language-plaintext highlighter-rouge">KRML_VERIFIED_UINT128</code> path instead of <code class="language-plaintext highlighter-rouge">HACL_CAN_COMPILE_UINT128</code>, affecting Curve25519, Poly1305, and the HACL* elliptic-curve implementations. This is a one-line GYP fix; no Bugzilla bug has been filed for it.</p>
 <h3 id="43-cpu-feature-detection-blinitc">
   
   
@@ -583,7 +649,7 @@
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">lib/freebl/blinit.c</code> dispatches hardware acceleration at runtime by reading CPU features. The function handles x86/x64 via CPUID, ARM/AArch64 via <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code>, and PowerPC. There is no riscv64 branch. Bug 1609181 (2020) noted that <code class="language-plaintext highlighter-rouge">AT_HWCAP*</code> can be used on riscv64 as well but no implementation followed. The absence means that even if RISC-V vector-crypto assembly were added, there is no dispatch mechanism to select it at runtime.</p>
+<p><code class="language-plaintext highlighter-rouge">lib/freebl/blinit.c</code> dispatches hardware acceleration at runtime via CPUID (x86/x64), <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> (ARM/AArch64), and PowerPC-specific checks. There is no riscv64 branch. Bug 1609181 (2020) noted that <code class="language-plaintext highlighter-rouge">AT_HWCAP*</code> could apply to riscv64 as well, but no implementation followed. Without this, there is no dispatch mechanism to select RISC-V vector-crypto code even if such assembly were added.</p>
 <h3 id="44-nspr-platform-layer">
   
   
@@ -593,7 +659,7 @@
 </h3>
     
 
-<p>NSPR (<code class="language-plaintext highlighter-rouge">nspr/pr/include/md/_linux.cfg</code>, <code class="language-plaintext highlighter-rouge">_linux.h</code>) has explicit riscv64 guards using <code class="language-plaintext highlighter-rouge">__riscv</code> and <code class="language-plaintext highlighter-rouge">__riscv_xlen</code> for atomic operations (via GCC builtins) and data-model configuration. Linux riscv64 support was added in NSPR 4.20 (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1308584">Bug 1308584</a>, 2018, RESOLVED FIXED). FreeBSD riscv64 remains broken (NSPR <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1711232">Bug 1711232</a>, UNCONFIRMED, patches attached but unreviewed since approximately 2021).</p><hr />
+<p>NSPR (<code class="language-plaintext highlighter-rouge">nspr/pr/include/md/_linux.cfg</code>, <code class="language-plaintext highlighter-rouge">_linux.h</code>) has explicit riscv64 guards (<code class="language-plaintext highlighter-rouge">__riscv</code>, <code class="language-plaintext highlighter-rouge">__riscv_xlen</code>) for atomics (via GCC builtins) and data-model configuration. Linux riscv64 support landed in NSPR 4.20 (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1308584">Bug 1308584</a>, 2018, RESOLVED FIXED). FreeBSD riscv64 remains broken: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1711232">NSPR Bug 1711232</a>, UNCONFIRMED, with <code class="language-plaintext highlighter-rouge">_freebsd.cfg</code> emitting <code class="language-plaintext highlighter-rouge">#error "Unknown CPU architecture"</code> for riscv64. A corresponding fix, <a href="https://github.com/mozilla/nspr/pull/54">mozilla/nspr#54 “Support riscv64 on FreeBSD”</a>, exists on the GitHub mirror but patches have stalled with no reviewer activity since approximately 2021 (roughly 4-5 years). This blocks NSS on FreeBSD/riscv64 specifically; Linux riscv64 is unaffected.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -603,7 +669,7 @@
 </h2>
     
 
-<p>NSS uses GYP + Ninja as its primary build system, with a legacy GNU Make path. The GYP-based system is the path used by distro packaging and the only path with documented riscv64 support.</p>
+<p>NSS uses GYP plus Ninja as its primary build system, with a legacy GNU Make path. There is no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, or <code class="language-plaintext highlighter-rouge">docs/building.md</code>/<code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code>; the closest references are <code class="language-plaintext highlighter-rouge">readme.md</code>, <code class="language-plaintext highlighter-rouge">CLAUDE.md</code>, and <code class="language-plaintext highlighter-rouge">help.txt</code> (the full <code class="language-plaintext highlighter-rouge">build.sh</code> flag reference), confirmed by direct inspection of a clone of the repository.</p>
 <h3 id="51-cross-compilation-command">
   
   
@@ -613,17 +679,20 @@
 </h3>
     
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">DIST</span><span class="o">=</span><span class="nv">$PWD</span>/../dist-riscv64
+<span class="nb">export </span><span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc
 <span class="nb">export </span><span class="nv">CCC</span><span class="o">=</span>riscv64-linux-gnu-g++
+<span class="nb">export </span><span class="nv">CXX</span><span class="o">=</span>riscv64-linux-gnu-g++
 <span class="nb">export </span><span class="nv">build_tools_cc</span><span class="o">=</span>gcc
 
 ./build.sh <span class="se">\</span>
-  <span class="nt">--target</span> riscv64 <span class="se">\</span>
+  <span class="nt">--target</span><span class="o">=</span>riscv64 <span class="se">\</span>
+  <span class="nt">--dist</span><span class="o">=</span><span class="nv">$DIST</span> <span class="se">\</span>
   <span class="nt">--opt</span> <span class="se">\</span>
   <span class="nt">--disable-tests</span>
 </code></pre></div></div>
 
-<p>When <code class="language-plaintext highlighter-rouge">$CC</code> differs from <code class="language-plaintext highlighter-rouge">build_tools_cc</code>, <code class="language-plaintext highlighter-rouge">build.sh</code> automatically adds <code class="language-plaintext highlighter-rouge">-Duse_system_zlib=0 -Dsign_libs=0</code>.</p>
+<p>When <code class="language-plaintext highlighter-rouge">$CC</code> differs from <code class="language-plaintext highlighter-rouge">$build_tools_cc</code>, <code class="language-plaintext highlighter-rouge">build.sh</code> automatically adds <code class="language-plaintext highlighter-rouge">-Duse_system_zlib=0 -Dsign_libs=0</code> (the source comment explains that target-architecture system zlib may be unavailable when cross-compiling); passing <code class="language-plaintext highlighter-rouge">--build-tools-cc=&lt;host-cc&gt;</code> explicitly is recommended.</p>
 
 <p>Equivalent direct GYP invocation:</p>
 
@@ -670,7 +739,7 @@ ninja <span class="nt">-C</span> out/Release
   </tbody>
 </table></div>
 
-<p>Flags for ARM or x86 hardware features (<code class="language-plaintext highlighter-rouge">disable_arm_hw_aes</code>, <code class="language-plaintext highlighter-rouge">disable_altivec</code>, etc.) have no effect on riscv64 and can be left at their defaults.</p>
+<p>Flags for ARM or x86 hardware features (<code class="language-plaintext highlighter-rouge">disable_arm_hw_aes</code>, <code class="language-plaintext highlighter-rouge">disable_altivec</code>, etc.) have no effect on riscv64.</p>
 <h3 id="53-architecture-detection-gaps">
   
   
@@ -680,9 +749,9 @@ ninja <span class="nt">-C</span> out/Release
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">coreconf/detect_host_arch.py</code> has no riscv64 case. The function falls through to <code class="language-plaintext highlighter-rouge">platform.machine().lower()</code>, which returns <code class="language-plaintext highlighter-rouge">"riscv64"</code> on a native system. This passthrough is accepted by GYP without error. For cross-compilation, <code class="language-plaintext highlighter-rouge">--target riscv64</code> must be passed explicitly.</p>
+<p><code class="language-plaintext highlighter-rouge">coreconf/detect_host_arch.py</code> has no riscv64 case; it falls through to <code class="language-plaintext highlighter-rouge">platform.machine().lower()</code>, which happens to return <code class="language-plaintext highlighter-rouge">"riscv64"</code> on a native system and is accepted by GYP without error. This is a passthrough that works by accident, not by design. Cross-compilation requires explicitly passing <code class="language-plaintext highlighter-rouge">--target riscv64</code>.</p>
 
-<p><code class="language-plaintext highlighter-rouge">coreconf/Linux.mk</code> also has no riscv64 CPU_ARCH case. The catch-all path sets <code class="language-plaintext highlighter-rouge">CPU_ARCH=$(OS_TEST)</code>, which evaluates to <code class="language-plaintext highlighter-rouge">riscv64</code> on Linux. Functionally correct, but there are no riscv64-specific compiler flags injected (unlike <code class="language-plaintext highlighter-rouge">-m32</code>/<code class="language-plaintext highlighter-rouge">-m64</code> for ia32/x64).</p>
+<p><code class="language-plaintext highlighter-rouge">coreconf/Linux.mk</code> similarly has no riscv64 <code class="language-plaintext highlighter-rouge">CPU_ARCH</code> case; the catch-all sets <code class="language-plaintext highlighter-rouge">CPU_ARCH=$(OS_TEST)</code>, which evaluates to <code class="language-plaintext highlighter-rouge">riscv64</code> on Linux. This is functionally correct but injects no riscv64-specific compiler flags (unlike the explicit <code class="language-plaintext highlighter-rouge">-m32</code>/<code class="language-plaintext highlighter-rouge">-m64</code> handling for ia32/x64). No <code class="language-plaintext highlighter-rouge">-march=</code> flag is injected by the build system for riscv64.</p>
 <h3 id="54-toolchain-requirements">
   
   
@@ -692,25 +761,17 @@ ninja <span class="nt">-C</span> out/Release
 </h3>
     
 
-<p>No minimum version is documented in NSS sources for riscv64. Practical minimums based on <code class="language-plaintext highlighter-rouge">__int128</code> and C11 requirements:</p>
-
-<ul>
-  <li>GCC: 7 or later with <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> target</li>
-  <li>Clang: 9 or later with <code class="language-plaintext highlighter-rouge">--target=riscv64-linux-gnu</code></li>
-  <li>Debian/Ubuntu package: <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu g++-riscv64-linux-gnu</code></li>
-</ul>
-
-<p>No <code class="language-plaintext highlighter-rouge">-march=</code> flag is injected by the build system for riscv64.</p>
-<h3 id="55-qemu">
+<p>No minimum compiler version is documented in NSS sources for riscv64 or any other architecture. Based on <code class="language-plaintext highlighter-rouge">__int128</code> and C11 requirements used elsewhere in the codebase: GCC 7 or later with a <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> target, or Clang 9 or later with <code class="language-plaintext highlighter-rouge">--target=riscv64-linux-gnu</code>. On Debian/Ubuntu, the relevant packages are <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu g++-riscv64-linux-gnu</code>. [NEEDS VERIFICATION: these minimums are inferred from general C11/<code class="language-plaintext highlighter-rouge">__int128</code> requirements, not stated explicitly anywhere in NSS documentation.]</p>
+<h3 id="55-qemu-and-dockerfiles">
   
   
-    <a href="#55-qemu" class="anchor-heading" aria-labelledby="55-qemu"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 QEMU
+    <a href="#55-qemu-and-dockerfiles" class="anchor-heading" aria-labelledby="55-qemu-and-dockerfiles"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 QEMU and Dockerfiles
   
   
 </h3>
     
 
-<p>No QEMU integration exists in NSS’s CI or build system. To run tests on cross-compiled riscv64 binaries, QEMU user-mode emulation must be configured externally (e.g., via <code class="language-plaintext highlighter-rouge">qemu-user-static</code> and <code class="language-plaintext highlighter-rouge">binfmt-support</code> on Debian/Ubuntu). There is no riscv64 Dockerfile in the repository; the only build Dockerfile (<code class="language-plaintext highlighter-rouge">taskcluster/docker/builds/Dockerfile</code>) targets linux-amd64 only.</p>
+<p>No QEMU usage is documented or scripted anywhere in the repository (no hits in <code class="language-plaintext highlighter-rouge">build.sh</code>, <code class="language-plaintext highlighter-rouge">mach</code>, <code class="language-plaintext highlighter-rouge">automation/</code>, <code class="language-plaintext highlighter-rouge">taskcluster/</code>, or <code class="language-plaintext highlighter-rouge">.taskcluster.yml</code>). Taskcluster Dockerfiles exist only under <code class="language-plaintext highlighter-rouge">taskcluster/docker/{builds, builds-legacy, builds-aarch64, tlsinterop, tlsinterop-aarch64, clang-format, fuzz, base, base-i386, acvp, docs}/Dockerfile</code>; none target riscv64. Testing a riscv64 cross-build today requires an externally configured QEMU user-mode setup (e.g., <code class="language-plaintext highlighter-rouge">qemu-user-static</code> plus <code class="language-plaintext highlighter-rouge">binfmt-support</code> on Debian/Ubuntu); NSS provides no reference invocation.</p>
 <h3 id="56-legacy-make-path">
   
   
@@ -723,7 +784,7 @@ ninja <span class="nt">-C</span> out/Release
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make <span class="nv">USE_64</span><span class="o">=</span>1 <span class="nv">CROSS_COMPILE</span><span class="o">=</span>1 <span class="nv">CC</span><span class="o">=</span>riscv64-linux-gnu-gcc <span class="nv">CCC</span><span class="o">=</span>riscv64-linux-gnu-g++
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">Linux.mk</code> has no riscv64 case; the catch-all sets <code class="language-plaintext highlighter-rouge">CPU_ARCH=riscv64</code> and the build proceeds with generic C paths.</p><hr />
+<p><code class="language-plaintext highlighter-rouge">Linux.mk</code> has no riscv64 case; the catch-all sets <code class="language-plaintext highlighter-rouge">CPU_ARCH=riscv64</code> and the build proceeds with generic C paths.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -741,9 +802,9 @@ ninja <span class="nt">-C</span> out/Release
 </h3>
     
 
-<p>There are no functional gaps: all cryptographic primitives have portable C fallback implementations in HACL* or Rijndael that produce correct results on riscv64. NSS compiles, links, and executes correctly on riscv64 Linux (confirmed by Debian autobuilder). There are no known correctness bugs specific to riscv64.</p>
+<p>There are no functional gaps on Linux: all cryptographic primitives have portable C fallback implementations (HACL*, libcrux, or generic Rijndael) that produce correct results on riscv64, and NSS compiles, links, and executes correctly there, as corroborated by Debian’s riscv64 autobuilder and the independently verified Arch Linux RISC-V package (Section 8). No open correctness bugs specific to riscv64 were found in Bugzilla or GitHub.</p>
 
-<p>FreeBSD riscv64 is a functional gap at the NSPR level (Bug 1711232); this blocks NSS on FreeBSD/riscv64 entirely.</p>
+<p>FreeBSD/riscv64 is a functional gap at the NSPR layer (Bug 1711232, Section 4.4); this blocks NSS on FreeBSD/riscv64 entirely while leaving Linux riscv64 unaffected.</p>
 <h3 id="62-performance-gaps">
   
   
@@ -753,7 +814,7 @@ ninja <span class="nt">-C</span> out/Release
 </h3>
     
 
-<p>All performance gaps are caused by missing SIMD and hardware-crypto acceleration:</p>
+<p>All performance gaps stem from missing SIMD and hardware-crypto acceleration:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -768,63 +829,65 @@ ninja <span class="nt">-C</span> out/Release
   <tbody>
     <tr>
       <td>AES-128-GCM</td>
-      <td>AES-NI + PCLMUL</td>
+      <td>AES-NI plus PCLMUL</td>
       <td>ARMv8 Crypto</td>
       <td>Generic C</td>
-      <td>Significant: 10-40x slower than AES-NI on x86</td>
+      <td>Largest gap; generic-C AES/GHASH is an order of magnitude slower than AES-NI</td>
     </tr>
     <tr>
       <td>ChaCha20-Poly1305</td>
-      <td>AVX2 (HACL* _256)</td>
+      <td>AVX2 (HACL* 256)</td>
       <td>NEON (HACL*)</td>
       <td>Generic C (HACL*)</td>
-      <td>Moderate: 3-8x slower than AVX2</td>
+      <td>Moderate gap vs AVX2/NEON paths</td>
     </tr>
     <tr>
       <td>SHA-256</td>
       <td>SHA-NI, SSE4</td>
       <td>ARMv8 SHA256</td>
       <td>Generic C (HACL*)</td>
-      <td>Moderate</td>
+      <td>Moderate gap</td>
     </tr>
     <tr>
       <td>Curve25519</td>
-      <td>int128 (fast path)</td>
-      <td>int128 (fast path)</td>
-      <td>int128 blocked by missing <code class="language-plaintext highlighter-rouge">have_int128_support</code> flag</td>
+      <td>int128 fast path</td>
+      <td>int128 fast path</td>
+      <td>int128 blocked by missing <code class="language-plaintext highlighter-rouge">have_int128_support</code> (Section 4.2)</td>
       <td>Small-to-moderate (software uint128 emulation)</td>
     </tr>
     <tr>
-      <td>MPI multiply</td>
-      <td><code class="language-plaintext highlighter-rouge">mpi_amd64.c</code> + ASM</td>
+      <td>MPI multiply (RSA/DH/DSA)</td>
+      <td><code class="language-plaintext highlighter-rouge">mpi_amd64.c</code> plus ASM</td>
       <td>Generic C</td>
       <td>Generic C</td>
-      <td>Moderate: RSA/ECDSA operations</td>
+      <td>Moderate; affects RSA/ECDSA operation latency</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Data not available: published throughput figures (MB/s, ops/s) for NSS on riscv64 hardware. No benchmark data exists in any public source (no RISE posts, no upstream documentation, no published slides).</p>
+<p>Data not available: no published throughput figures (MB/s, ops/s) for NSS specifically on riscv64 hardware exist in any source checked, including RISE blog posts, upstream documentation, Bugzilla, or NSS’s own CodSpeed/Criterion benchmark suite added to <code class="language-plaintext highlighter-rouge">mozilla/nss-rs</code> (<a href="https://github.com/mozilla/nss-rs/pull/252">PR #252</a>, 29 record-protection and 29 crypto-primitive benchmarks, 6 TLS 1.3 handshake benchmarks), which contains no RISC-V content and has apparently only ever been run on x86. Adjacent, non-NSS RISC-V crypto microbenchmarks exist (e.g., a baseline RISC-V U74 measured at approximately 21.7 MB/s AES-128-GCM throughput; SpacemiT’s RVV optimizations contributed to OpenSSL, not NSS; academic RVV-SHA-3 papers reporting up to 8x-46x speedups for custom implementations) but none of these measure NSS itself and are not directly applicable.</p>
 <h3 id="63-have_int128_support-gap">
   
   
-    <a href="#63-have_int128_support-gap" class="anchor-heading" aria-labelledby="63-have_int128_support-gap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.3 <code class="language-plaintext highlighter-rouge">have_int128_support</code> Gap
+    <a href="#63-have_int128_support-gap" class="anchor-heading" aria-labelledby="63-have_int128_support-gap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.3 have_int128_support Gap
   
   
 </h3>
     
 
-<p>riscv64 supports <code class="language-plaintext highlighter-rouge">__int128</code> natively in GCC and Clang, but the GYP build file does not set <code class="language-plaintext highlighter-rouge">have_int128_support=1</code> for riscv64. This causes HACL* to compile with <code class="language-plaintext highlighter-rouge">KRML_VERIFIED_UINT128</code> (a software-emulated 128-bit integer type) instead of the native <code class="language-plaintext highlighter-rouge">__int128</code> path (<code class="language-plaintext highlighter-rouge">HACL_CAN_COMPILE_UINT128</code>). The affected primitives are Curve25519, Poly1305, and P-256/P-384/P-521 field arithmetic. This is a one-line GYP fix. No bug tracks it.</p>
-<h3 id="64-security-hardening-gaps">
+<p>See Section 4.2. riscv64 supports <code class="language-plaintext highlighter-rouge">__int128</code> natively but is excluded from NSS’s <code class="language-plaintext highlighter-rouge">have_int128_support=1</code> GYP list, forcing the slower <code class="language-plaintext highlighter-rouge">KRML_VERIFIED_UINT128</code> software path for Curve25519, Poly1305, and HACL* EC field arithmetic. This is a one-line fix with no bug filed.</p>
+<h3 id="64-security-hardening-and-floating-point-semantics">
   
   
-    <a href="#64-security-hardening-gaps" class="anchor-heading" aria-labelledby="64-security-hardening-gaps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.4 Security Hardening Gaps
+    <a href="#64-security-hardening-and-floating-point-semantics" class="anchor-heading" aria-labelledby="64-security-hardening-and-floating-point-semantics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.4 Security Hardening and Floating-Point Semantics
   
   
 </h3>
     
 
-<p>Data not available: whether NSS hardening flags (stack canaries, CFI, shadow stack) are correctly applied on riscv64 cross-compiled builds. The build system does not inject riscv64-specific hardening flags, unlike the x64 path which explicitly enables certain instrumentation.</p><hr />
+<p>Data not available: whether NSS hardening flags (stack canaries, CFI, shadow stack) are correctly applied on riscv64 cross-compiled builds; the build system injects no riscv64-specific hardening flags.</p>
+
+<p>On NaN/floating-point semantics: Bugzilla <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1975867">1975867</a>, “Improper Float32 architectural NaN-boxing when popping from stack on riscv64,” surfaces readily on riscv64/NaN searches but is a SpiderMonkey (Firefox’s JS/Wasm engine) bug about the WASM baseline compiler, not an NSS bug. No NSS floating-point or NaN-handling defect on riscv64 was found; this false positive is noted explicitly to avoid miscitation.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -834,9 +897,16 @@ ninja <span class="nt">-C</span> out/Release
 </h2>
     
 
-<p>NSS CI is operated entirely through <a href="https://taskcluster.net/">Mozilla Taskcluster</a>. The supported build platforms as defined in <code class="language-plaintext highlighter-rouge">taskcluster/kinds/build/linux.yml</code>, <code class="language-plaintext highlighter-rouge">taskcluster/nss_taskgraph/transforms/build.py</code>, and <code class="language-plaintext highlighter-rouge">taskcluster/nss_taskgraph/target_tasks.py</code> are: linux32, linux64, linux64-asan, macosx64, win32, win64. aarch64 appears in <code class="language-plaintext highlighter-rouge">target_tasks.py</code> platform aliases but has no corresponding build or test job defined in any YAML file.</p>
+<p>NSS CI runs entirely on Mozilla Taskcluster. Reading <code class="language-plaintext highlighter-rouge">taskcluster/kinds/build/linux.yml</code> directly confirms the supported build platforms are linux32, linux64, linux64-asan, macosx64, win32, win64; aarch64 appears only as a platform alias in <code class="language-plaintext highlighter-rouge">taskcluster/nss_taskgraph/target_tasks.py</code> with no build or test job defined anywhere.</p>
 
-<p>The three GitHub Actions workflows in <code class="language-plaintext highlighter-rouge">mozilla/nss</code> are administrative only: <code class="language-plaintext highlighter-rouge">close-pr.yml</code> auto-closes incoming PRs, <code class="language-plaintext highlighter-rouge">release.yml</code> packages source tarballs for RTM tags on x86_64, and <code class="language-plaintext highlighter-rouge">upload.yml</code> uploads tarballs to GCP storage. None contain build or test steps.</p>
+<p>The GitHub mirror (<code class="language-plaintext highlighter-rouge">nss-dev/nss</code>, matching <code class="language-plaintext highlighter-rouge">mozilla/nss</code>) contains exactly three GitHub Actions workflows, all administrative, confirmed by direct file read:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">close-pr.yml</code>: triggers on <code class="language-plaintext highlighter-rouge">pull_request_target</code> (opened/reopened), runs on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>, auto-closes external PRs.</li>
+  <li><code class="language-plaintext highlighter-rouge">release.yml</code>: triggers on <code class="language-plaintext highlighter-rouge">push</code> of tags matching <code class="language-plaintext highlighter-rouge">NSS_*_RTM</code>, runs on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>, packages release tarballs.</li>
+  <li><code class="language-plaintext highlighter-rouge">upload.yml</code>: triggers on <code class="language-plaintext highlighter-rouge">workflow_run</code> completion of “NSS Release” on main, runs on <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>, uploads tarballs to GCP.</li>
+</ul>
+
+<p>None of the three contains a <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> or <code class="language-plaintext highlighter-rouge">schedule</code> trigger, a non-x86 runner, QEMU usage, or any build/test step. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists anywhere in the repository. A repository-wide case-insensitive grep for riscv/riscv64/RISCV/RISC-V finds exactly 6 non-CI files, all build-config or changelog prose: <code class="language-plaintext highlighter-rouge">lib/sqlite/sqlite3.c</code>, two vendored karamel <code class="language-plaintext highlighter-rouge">types.h</code> headers, <code class="language-plaintext highlighter-rouge">coreconf/config.gypi</code>, and two historical release-notes documents (<code class="language-plaintext highlighter-rouge">nss_3_67.md</code>, the NSS 3.53 release notes).</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -861,8 +931,8 @@ ninja <span class="nt">-C</span> out/Release
       <td>No</td>
     </tr>
     <tr>
-      <td>GitHub Actions build</td>
-      <td>No (admin only)</td>
+      <td>GitHub Actions build/test</td>
+      <td>No (admin workflows only)</td>
       <td>No</td>
       <td>No</td>
     </tr>
@@ -870,7 +940,7 @@ ninja <span class="nt">-C</span> out/Release
       <td>RISE CI runners</td>
       <td>Data not available</td>
       <td>Data not available</td>
-      <td>No</td>
+      <td>None used by NSS</td>
     </tr>
     <tr>
       <td>Hardware used</td>
@@ -887,7 +957,7 @@ ninja <span class="nt">-C</span> out/Release
   </tbody>
 </table></div>
 
-<p>No RISE-provided riscv64 CI runners are configured or referenced anywhere in the NSS repository.</p><hr />
+<p>No RISE-provided riscv64 CI runners are configured or referenced anywhere in the NSS repository or Bugzilla. Separately, RISE announced free native riscv64 GitHub Actions runners (“RISE RISC-V Runners,” 2026-03-24, with a “six weeks in” update 2026-05-12), but NSS has not adopted them; this is an available, currently unused option (see Section 14.3). The authoritative Taskcluster CI itself runs outside this GitHub mirror and was not independently reachable with the tools used in this research, so the “no CI” finding is specific to, and fully confirmed for, the GitHub-mirror side; a Bugzilla-adjacent Taskcluster definition change cannot be ruled out beyond what <code class="language-plaintext highlighter-rouge">taskcluster/kinds/build/linux.yml</code> itself states.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -897,7 +967,7 @@ ninja <span class="nt">-C</span> out/Release
 </h2>
     
 
-<p>NSS does not publish binary release assets on GitHub Releases or any upstream download location for any architecture. Binaries reach users exclusively through distro packaging.</p>
+<p>NSS does not publish binary release assets on GitHub Releases or any Mozilla-hosted download location for any architecture; binaries reach users exclusively through distro packaging. GitHub releases for <code class="language-plaintext highlighter-rouge">nss-dev/nss</code> could not be checked in this research due to session scoping (repository not configured for live <code class="language-plaintext highlighter-rouge">list_releases</code> access), but this is consistent with Mozilla’s general practice of not shipping prebuilt binaries via GitHub.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -911,9 +981,9 @@ ninja <span class="nt">-C</span> out/Release
   <tbody>
     <tr>
       <td>Debian sid</td>
-      <td>libnss3</td>
+      <td>nss (source) / libnss3</td>
       <td>2:3.124-1</td>
-      <td>Installed – built on rv-osuosl-04 (confirmed via <a href="https://buildd.debian.org/status/package.php?p=nss&amp;suite=sid">buildd.debian.org</a>)</td>
+      <td>Installed, built on <code class="language-plaintext highlighter-rouge">rv-osuosl-04</code> (confirmed via <a href="https://buildd.debian.org/status/package.php?p=nss&amp;suite=sid">buildd.debian.org</a>)</td>
     </tr>
     <tr>
       <td>Debian trixie</td>
@@ -924,43 +994,43 @@ ninja <span class="nt">-C</span> out/Release
     <tr>
       <td>Debian bookworm (stable)</td>
       <td>libnss3</td>
-      <td>–</td>
-      <td>Not included – bookworm riscv64 is not an official release architecture</td>
+      <td>-</td>
+      <td>Not included; bookworm riscv64 is not an official release architecture</td>
     </tr>
     <tr>
-      <td>Ubuntu 24.04 Noble</td>
+      <td>Ubuntu 24.04 Noble / 22.04 Jammy</td>
       <td>libnss3</td>
-      <td>2:3.98-1build1</td>
-      <td>Available (confirmed via <a href="https://packages.ubuntu.com/noble/libnss3">packages.ubuntu.com</a>)</td>
+      <td>2:3.98-1build1 / 2:3.68.2-0ubuntu1</td>
+      <td>Reported available in an earlier pass of this research, but a direct re-check against the current archive (Ubuntu 26.04 “resolute,” libnss3/libnss3-dev/libnss3-tools 2:3.120-1ubuntu2.1) found riscv64 absent, with amd64, arm64, and i386 the only listed architectures. [NEEDS VERIFICATION: this is a direct contradiction between two checks against packages.ubuntu.com; it is not resolved by the data available here. One plausible explanation is that riscv64 is a ports-archive-only architecture on Ubuntu and may not surface in the default packages.ubuntu.com search used for the re-check, but this was not independently confirmed.]</td>
     </tr>
     <tr>
-      <td>Ubuntu 22.04 Jammy</td>
-      <td>libnss3</td>
-      <td>2:3.68.2-0ubuntu1</td>
-      <td>Available – version 3.68.2 vs amd64’s 3.98; significant lag on security-patched version [NEEDS VERIFICATION on whether lag is riscv64-specific or affects all non-amd64 arches]</td>
-    </tr>
-    <tr>
-      <td>Arch Linux RISC-V</td>
+      <td>Arch Linux RISC-V (archriscv.felixc.at)</td>
       <td>nss</td>
-      <td>–</td>
-      <td>Inconclusive – status page returned 404; not confirmed</td>
+      <td>3.130-1</td>
+      <td>Confirmed. Downloaded <code class="language-plaintext highlighter-rouge">nss-3.130-1-riscv64.pkg.tar.zst</code> directly from <code class="language-plaintext highlighter-rouge">archriscv.felixc.at/repo/core/</code>; <code class="language-plaintext highlighter-rouge">.PKGINFO</code> matches Arch’s official x86_64 <code class="language-plaintext highlighter-rouge">nss</code> package (same pkgdesc, URL, pkgver, packager Felix Yan); <code class="language-plaintext highlighter-rouge">usr/lib/libnss3.so</code> confirmed via <code class="language-plaintext highlighter-rouge">file</code> as “ELF 64-bit LSB shared object, UCB RISC-V, RVC, double-float ABI.” (Note: the project’s own <code class="language-plaintext highlighter-rouge">?q=nss</code> search page at archriscv.felixc.at is a static page with no backend and will falsely appear to return “no results”; the package must be found by browsing the repo directory directly.)</td>
     </tr>
     <tr>
       <td>Fedora</td>
       <td>nss</td>
-      <td>–</td>
-      <td>Data not available – riscv64 status on Fedora 44/45 not confirmed from available data</td>
+      <td>-</td>
+      <td>Data not available</td>
+    </tr>
+    <tr>
+      <td>PyPI “nss”</td>
+      <td>nss</td>
+      <td>3.8.5 (2020)</td>
+      <td>Not applicable: this PyPI package is an unrelated “database operation module” (MIT license, Jingrui Zhu), not Mozilla NSS or its <code class="language-plaintext highlighter-rouge">python-nss</code> bindings; architecture-independent pure-Python wheel/sdist regardless</td>
     </tr>
     <tr>
       <td>GitHub Releases</td>
-      <td>–</td>
-      <td>–</td>
-      <td>No releases published (no assets for any architecture)</td>
+      <td>-</td>
+      <td>-</td>
+      <td>No releases published for any architecture</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>To get a working riscv64 binary: install <code class="language-plaintext highlighter-rouge">libnss3</code> from Debian sid or Ubuntu 24.04 package repositories. No special steps beyond standard package installation are required for Linux.</p><hr />
+<p>To get a working riscv64 binary on Linux today: install <code class="language-plaintext highlighter-rouge">libnss3</code> from Debian sid, or use the Arch Linux RISC-V unofficial port. The Ubuntu channel’s current riscv64 status is unresolved per the discrepancy above and should not be relied on without a fresh, ports-archive-aware check.</p>
 <h2 id="9-dependencies">
   
   
@@ -968,14 +1038,6 @@ ninja <span class="nt">-C</span> out/Release
   
   
 </h2>
-    
-<h3 id="91-summary-table">
-  
-  
-    <a href="#91-summary-table" class="anchor-heading" aria-labelledby="91-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 Summary Table
-  
-  
-</h3>
     
 
 <div class="table-wrapper"><table>
@@ -992,98 +1054,100 @@ ninja <span class="nt">-C</span> out/Release
   <tbody>
     <tr>
       <td>NSPR</td>
-      <td>Platform abstraction (threads, I/O, atomics)</td>
-      <td>Passes (Linux)</td>
-      <td>Not tested upstream</td>
-      <td>Debian sid (nspr 4.38.2-1+b1, Installed)</td>
-      <td>FreeBSD: NSPR Bug 1711232 (patches stalled since ~2021)</td>
+      <td>Runtime-dependency, critical: platform abstraction layer (threads, I/O, atomics, CPU/ABI specifics)</td>
+      <td>Passes on Linux (riscv64 atomics/data-model guards added NSPR 4.20, 2018, Bug 1308584, RESOLVED FIXED)</td>
+      <td>Not tested upstream (no CI)</td>
+      <td>Debian sid <code class="language-plaintext highlighter-rouge">nspr 4.38.2-1+b1</code> installed on riscv64</td>
+      <td>FreeBSD/riscv64 broken: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1711232">Bug 1711232</a>, UNCONFIRMED, patches (<a href="https://github.com/mozilla/nspr/pull/54">mozilla/nspr#54</a>) stalled since approximately 2021</td>
     </tr>
     <tr>
-      <td>HACL* (bundled in lib/freebl/verified/)</td>
-      <td>Verified C crypto: ChaCha20, Poly1305, Curve25519, Ed25519, P-256/384/521, SHA-3</td>
-      <td>Passes (generic C)</td>
-      <td>Not tested upstream</td>
-      <td>Included in distro packages</td>
-      <td>None for correctness; performance impacted by missing <code class="language-plaintext highlighter-rouge">have_int128_support</code></td>
-    </tr>
-    <tr>
-      <td>libcrux (bundled in lib/freebl/verified/)</td>
-      <td>ML-KEM-768/1024 (post-quantum KEM), SHA-3</td>
-      <td>Passes (portable C)</td>
-      <td>Not tested upstream</td>
-      <td>Included in distro packages</td>
-      <td>None</td>
+      <td>SQLite</td>
+      <td>Runtime-dependency, critical: backend for cert9.db/key4.db</td>
+      <td>Passes (pure portable C, no SIMD/JIT/asm)</td>
+      <td>No riscv64 failures found</td>
+      <td>Available in Ubuntu 24.04 Noble (3.45.1-1ubuntu2) and Debian sid</td>
+      <td>None for riscv64 (a riscv32-only <code class="language-plaintext highlighter-rouge">__uint128_t</code> build bug was fixed 2026-04-27, unrelated)</td>
     </tr>
     <tr>
       <td>zlib</td>
-      <td>TLS record compression utilities</td>
-      <td>Passes</td>
-      <td>N/A</td>
-      <td>All major distros</td>
-      <td>None</td>
+      <td>Runtime-dependency, optional: TLS record and archive compression</td>
+      <td>Passes (pure portable C; no riscv64 asm/SIMD in mainline)</td>
+      <td>Not release-blocking anywhere; no dedicated riscv64 CI (Linux riscv64 absent from zlib’s own CI matrix)</td>
+      <td>Available in Ubuntu 24.04 Noble (<code class="language-plaintext highlighter-rouge">zlib1g</code> 1:1.3.dfsg-3.1ubuntu2) and Debian sid</td>
+      <td>Unmerged RVV Adler32 PR #1099 (ZTE, approximately 7% decompression gain claimed on SG2042) stalled 8+ months with no maintainer response; performance only, not a correctness or build blocker</td>
     </tr>
     <tr>
-      <td>SQLite (system on Linux)</td>
-      <td>Certificate and key database backend</td>
-      <td>Passes</td>
-      <td>No riscv64 failures found</td>
-      <td>All major distros</td>
-      <td>None for riscv64 (riscv32 uint128 issue fixed 2026, unrelated)</td>
+      <td>HACL*</td>
+      <td>Runtime-dependency, critical: verified-C crypto (ChaCha20, Poly1305, Curve25519, Ed25519, P-256/P-384/P-521, SHA-3), bundled under <code class="language-plaintext highlighter-rouge">lib/freebl/verified/</code></td>
+      <td>Passes via portable-C fallback; zero riscv64 SIMD path (0 riscv64-specific files, see Section 4.1)</td>
+      <td>Not tested upstream</td>
+      <td>Ships inside <code class="language-plaintext highlighter-rouge">libnss3</code> packages (no standalone package)</td>
+      <td>Historical build break fixed by Bug 1636058 (NSS 3.53, 2020). Open performance item: <code class="language-plaintext highlighter-rouge">have_int128_support</code> not set for riscv64 in <code class="language-plaintext highlighter-rouge">freebl.gyp</code> (no bug filed, Section 4.2). General cross-platform build fragility tracked in still-open, unassigned Bug 1615557.</td>
     </tr>
     <tr>
-      <td>GoogleTest</td>
-      <td>Test framework</td>
-      <td>Passes</td>
-      <td><a href="https://github.com/google/googletest/issues/3756">Issue #3756</a>: one test failure (<code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code>) on riscv64</td>
-      <td>Ships in distros</td>
-      <td>Does not block NSS test suite</td>
+      <td>libcrux</td>
+      <td>Runtime-dependency, optional: ML-KEM-768/1024 post-quantum KEM, SHA-3, bundled under <code class="language-plaintext highlighter-rouge">lib/freebl/verified/</code>, generated from Rust via Eurydice into portable <code class="language-plaintext highlighter-rouge">*_portable.c</code></td>
+      <td>Passes via portable C</td>
+      <td>Not tested upstream</td>
+      <td>Ships inside <code class="language-plaintext highlighter-rouge">libnss3</code> packages</td>
+      <td>None open</td>
     </tr>
     <tr>
-      <td>pthread (system)</td>
-      <td>Thread synchronization</td>
-      <td>Kernel-provided</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>None</td>
+      <td>googletest</td>
+      <td>Test-dependency, optional: NSS test framework</td>
+      <td>Passes</td>
+      <td>One known riscv64 failure, <a href="https://github.com/google/googletest/issues/3756">google/googletest#3756</a> (<code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code>), open upstream, does not block NSS’s own test suite</td>
+      <td>Ships in distro packages</td>
+      <td>Tracked upstream in GoogleTest, not in NSS</td>
+    </tr>
+    <tr>
+      <td>Ninja</td>
+      <td>Build-dependency, critical: executes the compiled build graph that GYP generates</td>
+      <td>Data not available: no riscv64-specific research was performed on Ninja itself in this pass</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>None found; not investigated directly</td>
+    </tr>
+    <tr>
+      <td>GYP</td>
+      <td>Build-dependency, critical: “Generate Your Projects” meta-build system that produces the Ninja build files from NSS’s <code class="language-plaintext highlighter-rouge">.gyp</code>/<code class="language-plaintext highlighter-rouge">.gypi</code> sources</td>
+      <td>Data not available: no riscv64-specific research was performed on GYP itself; NSS’s own GYP files (e.g., <code class="language-plaintext highlighter-rouge">coreconf/config.gypi</code>) contain the riscv64 word-size entries described in Section 4.1-4.2, but this reflects NSS’s usage of GYP, not GYP’s own riscv64 support status</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>None found; not investigated directly</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="92-hacl-deep-dive">
+<h3 id="91-hacl-deep-dive">
   
   
-    <a href="#92-hacl-deep-dive" class="anchor-heading" aria-labelledby="92-hacl-deep-dive"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 HACL* Deep Dive
-  
-  
-</h3>
-    
-
-<p>HACL* (Project Everest, bundled under <code class="language-plaintext highlighter-rouge">lib/freebl/verified/</code>) is the primary crypto implementation for ChaCha20, Poly1305, Curve25519, Ed25519, P-256/P-384/P-521, and SHA-3. Architecture-specific SIMD variants exist for x64 (AVX2, AVX-512) and ARM (NEON). riscv64 uses the portable C fallback in all cases.</p>
-
-<p>The prior riscv64 build failure (Bug 1636058, 2020) was caused by KReMLin’s <code class="language-plaintext highlighter-rouge">libintvector.h</code> lacking riscv64 support. This was fixed in NSS 3.53 via a HACL* upstream update. HACL* <a href="https://github.com/hacl-star/hacl-star/issues/736">issue #736</a> documented a riscv64 cross-compile linker bug (VALE symbol <code class="language-plaintext highlighter-rouge">x64_poly1305</code> exposed outside its guard) – closed 2022 with no confirmed merge.</p>
-
-<p>HACL* upstream CI does not test riscv64. The <code class="language-plaintext highlighter-rouge">have_int128_support</code> flag not being set for riscv64 in NSS’s GYP file (despite riscv64 supporting <code class="language-plaintext highlighter-rouge">__int128</code>) causes HACL* to compile with the slower <code class="language-plaintext highlighter-rouge">KRML_VERIFIED_UINT128</code> software path for all 128-bit field arithmetic.</p>
-<h3 id="93-nspr-deep-dive">
-  
-  
-    <a href="#93-nspr-deep-dive" class="anchor-heading" aria-labelledby="93-nspr-deep-dive"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 NSPR Deep Dive
+    <a href="#91-hacl-deep-dive" class="anchor-heading" aria-labelledby="91-hacl-deep-dive"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 HACL* Deep Dive
   
   
 </h3>
     
 
-<p>NSPR is a required runtime dependency. On Linux, riscv64 support was fully added in NSPR 4.20 (2018, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1308584">Bug 1308584</a>, RESOLVED FIXED). The implementation uses GCC built-ins for atomic operations (<code class="language-plaintext highlighter-rouge">__sync_*</code> / <code class="language-plaintext highlighter-rouge">__atomic_*</code>) and is architecturally correct. Debian <code class="language-plaintext highlighter-rouge">nspr 4.38.2-1+b1</code> is confirmed Installed on a riscv64 build host.</p>
-
-<p>FreeBSD riscv64 is blocked by NSPR <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1711232">Bug 1711232</a>: <code class="language-plaintext highlighter-rouge">_freebsd.cfg</code> emits <code class="language-plaintext highlighter-rouge">#error "Unknown CPU architecture"</code> for riscv64. Patches have been attached since approximately 2021 but remain UNCONFIRMED with no reviewer activity.</p>
-<h3 id="94-libcrux-deep-dive">
+<p>HACL* (Project Everest, bundled under <code class="language-plaintext highlighter-rouge">lib/freebl/verified/</code>) is the primary implementation for ChaCha20, Poly1305, Curve25519, Ed25519, P-256/P-384/P-521, and SHA-3. Architecture-specific SIMD variants exist for x64 (AVX2, AVX-512) and ARM (NEON); riscv64 has zero dedicated files and uses the portable-C fallback (<code class="language-plaintext highlighter-rouge">Hacl_Chacha20Poly1305_32</code> and equivalents) in every case, confirmed by a hard count of <code class="language-plaintext highlighter-rouge">lib/freebl/</code> source. The 2020 build failure (Bug 1636058) was caused by KReMLin’s <code class="language-plaintext highlighter-rouge">libintvector.h</code> lacking riscv64 support and was fixed via a HACL* upstream update. A related historical cross-compile linker bug, <a href="https://github.com/hacl-star/hacl-star/issues/736">hacl-star/hacl-star#736</a> (VALE symbol <code class="language-plaintext highlighter-rouge">x64_poly1305</code> exposed outside its guard), was closed in 2022 with no confirmed merge visible from available data [NEEDS VERIFICATION]. HACL* upstream CI does not test riscv64. The still-open, unassigned Bug 1615557 represents unresolved general cross-platform (including riscv64-class) build fragility in the HACL*/KReMLin toolchain.</p>
+<h3 id="92-nspr-deep-dive">
   
   
-    <a href="#94-libcrux-deep-dive" class="anchor-heading" aria-labelledby="94-libcrux-deep-dive"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.4 libcrux Deep Dive
+    <a href="#92-nspr-deep-dive" class="anchor-heading" aria-labelledby="92-nspr-deep-dive"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 NSPR Deep Dive
   
   
 </h3>
     
 
-<p>libcrux (<a href="https://github.com/cryspen/libcrux">cryspen/libcrux</a>) provides ML-KEM-768 and ML-KEM-1024 (post-quantum key encapsulation) and is bundled under <code class="language-plaintext highlighter-rouge">lib/freebl/verified/</code>. It is generated from Rust via the Eurydice tool into portable C files named <code class="language-plaintext highlighter-rouge">*_portable.c</code>. No riscv64-specific files exist. The portable C path is architecturally sufficient for correctness and has no open riscv64 issues.</p><hr />
+<p>NSPR is a required runtime dependency. Linux riscv64 support was added in NSPR 4.20 (2018, Bug 1308584, RESOLVED FIXED), using GCC builtins (<code class="language-plaintext highlighter-rouge">__sync_*</code>/<code class="language-plaintext highlighter-rouge">__atomic_*</code>) for atomic operations; this is architecturally correct and Debian’s <code class="language-plaintext highlighter-rouge">nspr 4.38.2-1+b1</code> is confirmed installed on a riscv64 build host. FreeBSD riscv64 is blocked by Bug 1711232: <code class="language-plaintext highlighter-rouge">_freebsd.cfg</code> emits <code class="language-plaintext highlighter-rouge">#error "Unknown CPU architecture"</code> for riscv64. A corresponding GitHub PR, <code class="language-plaintext highlighter-rouge">mozilla/nspr#54</code>, exists but has had no reviewer activity in roughly 4-5 years.</p>
+<h3 id="93-libcrux-deep-dive">
+  
+  
+    <a href="#93-libcrux-deep-dive" class="anchor-heading" aria-labelledby="93-libcrux-deep-dive"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 libcrux Deep Dive
+  
+  
+</h3>
+    
+
+<p>libcrux (<a href="https://github.com/cryspen/libcrux">cryspen/libcrux</a>) provides ML-KEM-768/1024 (post-quantum key encapsulation) and is bundled under <code class="language-plaintext highlighter-rouge">lib/freebl/verified/</code>, generated from Rust via the Eurydice tool into portable C files named <code class="language-plaintext highlighter-rouge">*_portable.c</code>. No riscv64-specific files exist; the portable-C path is architecturally sufficient for correctness and has no open riscv64 issues.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1105,58 +1169,65 @@ ninja <span class="nt">-C</span> out/Release
   </thead>
   <tbody>
     <tr>
+      <td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1615557">Bug 1615557</a></td>
+      <td>NSS fails to build on some platforms because of HACL* and Kremlin libraries</td>
+      <td>NEW, unassigned, open approximately 6 years, no activity in approximately 3 years</td>
+      <td>Medium (general build robustness, not riscv64-specific)</td>
+      <td>Closest thing to an open riscv64-class tracking bug; depends on Bug 1636058 (resolved), blocks Bug 1387183 (HACL* integration meta-bug)</td>
+    </tr>
+    <tr>
       <td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1714719">Bug 1714719</a></td>
       <td>Set NSS_USE_64 on riscv64 target when using GYP/Ninja</td>
-      <td>RESOLVED FIXED (NSS 3.68)</td>
+      <td>RESOLVED FIXED (NSS 3.67)</td>
       <td>Medium (build correctness)</td>
-      <td>Only directly riscv64-targeted commit in NSS history</td>
+      <td>Only directly riscv64-targeted commit in NSS history; corrects an earlier claim of NSS 3.68</td>
     </tr>
     <tr>
       <td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1636058">Bug 1636058</a></td>
-      <td>Fix building NSS on riscv64 (HACL*/KReMLin breakage)</td>
+      <td>Fix building NSS on Debian s390x, mips64el, and riscv64 (HACL*/KReMLin breakage)</td>
       <td>RESOLVED FIXED (NSS 3.53)</td>
       <td>High (build failure)</td>
-      <td>Triggered by HACL* KReMLin generating incompatible code for riscv64</td>
+      <td>Triggered by KReMLin generating riscv64-incompatible code; fixed via upstream KReMLin PR #173</td>
     </tr>
     <tr>
       <td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1609181">Bug 1609181</a></td>
       <td>Detect ARM CPU features on FreeBSD (mentions riscv64 in comment)</td>
       <td>RESOLVED FIXED (NSS 3.50)</td>
-      <td>Low (riscv64 relevance: peripheral)</td>
-      <td>Adds <code class="language-plaintext highlighter-rouge">elf_aux_info</code>-based <code class="language-plaintext highlighter-rouge">getauxval</code> for FreeBSD; enables future riscv64 CPU feature dispatch</td>
+      <td>Low (riscv64 relevance peripheral)</td>
+      <td>Forward-looking comment only; no riscv64 code added</td>
     </tr>
     <tr>
-      <td>NSPR <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1711232">Bug 1711232</a></td>
-      <td>FreeBSD/riscv64 <code class="language-plaintext highlighter-rouge">#error "Unknown CPU architecture"</code> in NSPR</td>
-      <td>UNCONFIRMED (patches attached, stalled ~2021)</td>
+      <td>NSPR <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1711232">Bug 1711232</a> / <a href="https://github.com/mozilla/nspr/pull/54">mozilla/nspr#54</a></td>
+      <td>FreeBSD/riscv64 “Unknown CPU architecture” in NSPR</td>
+      <td>UNCONFIRMED, patches stalled approximately 2021</td>
       <td>High (blocks NSS on FreeBSD/riscv64)</td>
-      <td>Patches exist; no reviewer activity in approximately 4 years</td>
+      <td>Linux riscv64 unaffected</td>
     </tr>
     <tr>
       <td><a href="https://github.com/google/googletest/issues/3756">google/googletest#3756</a></td>
       <td><code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code> fails on riscv64</td>
       <td>Open</td>
       <td>Low (does not block NSS test suite)</td>
-      <td>In GoogleTest, not in NSS; does not affect NSS test pass/fail</td>
+      <td>Lives in GoogleTest, not NSS</td>
     </tr>
     <tr>
       <td>(no bug filed)</td>
-      <td><code class="language-plaintext highlighter-rouge">have_int128_support</code> not set for riscv64 in freebl.gyp</td>
+      <td><code class="language-plaintext highlighter-rouge">have_int128_support</code> not set for riscv64 in <code class="language-plaintext highlighter-rouge">freebl.gyp</code></td>
       <td>Not filed</td>
       <td>Medium (performance)</td>
-      <td>riscv64 supports <code class="language-plaintext highlighter-rouge">__int128</code> natively; missing GYP entry forces slower KRML_VERIFIED_UINT128 path in HACL*</td>
+      <td>riscv64 supports <code class="language-plaintext highlighter-rouge">__int128</code> natively; omission forces slower <code class="language-plaintext highlighter-rouge">KRML_VERIFIED_UINT128</code> path</td>
     </tr>
     <tr>
       <td>(no bug filed)</td>
-      <td>No riscv64 CPU feature detection in blinit.c</td>
+      <td>No riscv64 CPU feature detection in <code class="language-plaintext highlighter-rouge">blinit.c</code></td>
       <td>Not filed</td>
-      <td>Medium (prerequisite for any future hardware acceleration)</td>
-      <td>No <code class="language-plaintext highlighter-rouge">AT_HWCAP</code> parsing for RISC-V ISA extensions; without this, runtime dispatch for Zvk* extensions is impossible</td>
+      <td>Medium (prerequisite for future hardware acceleration)</td>
+      <td>No <code class="language-plaintext highlighter-rouge">AT_HWCAP</code> parsing for RISC-V ISA extensions; blocks runtime dispatch for any future Zvk*-based code</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No open correctness bugs specific to riscv64 exist in NSS. The <code class="language-plaintext highlighter-rouge">have_int128_support</code> omission is a performance bug, not a correctness bug.</p><hr />
+<p>No open correctness bugs specific to riscv64 exist in NSS; <code class="language-plaintext highlighter-rouge">have_int128_support</code> is a performance issue, not a correctness one. Note: Bugzilla <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1975867">1975867</a> (“Improper Float32 architectural NaN-boxing…on riscv64”) is a SpiderMonkey bug, not an NSS bug, and is excluded from the table above to avoid miscitation; it surfaces readily on naive riscv64/NaN Bugzilla searches.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1166,39 +1237,56 @@ ninja <span class="nt">-C</span> out/Release
 </h2>
     
 
-<p><strong>Organizational:</strong> The maintainer team explicitly scopes to Firefox and RHEL platforms. riscv64 is not a Firefox or RHEL priority as of June 2026. Patches that are build-system fixes or small portable-C improvements have historically merged with no friction. Large assembly contributions (e.g., Zvk-based AES or ChaCha20) would require significant review bandwidth from the freebl team, who are few in number.</p>
+<p>Organizational: the maintainer team scopes explicitly to Firefox and RHEL platforms; riscv64 is not a stated priority. Build-system fixes and small portable-C improvements have historically merged with no friction (both resolved riscv64 bugs turned around in roughly two days of review). Larger assembly contributions (e.g., Zvk-based AES or ChaCha20) would require significant review bandwidth from a small freebl team.</p>
 
-<p><strong>Technical:</strong> No fundamental technical blockers prevent riscv64 functionality. The blocking gap for performance is the absence of freebl.gyp riscv64 entries and RISC-V assembly implementations. These are additive changes with no architectural conflict.</p>
+<p>Technical: no fundamental blocker prevents riscv64 functionality. The performance gap stems from the absence of <code class="language-plaintext highlighter-rouge">freebl.gyp</code> riscv64 entries, a <code class="language-plaintext highlighter-rouge">blinit.c</code> dispatch branch, and RISC-V assembly implementations; these are additive changes with no architectural conflict.</p>
 
-<p><strong>CI:</strong> NSS CI runs on Mozilla’s Taskcluster infrastructure with Mozilla-operated workers. Adding riscv64 CI requires either Mozilla provisioning riscv64 Taskcluster workers (hardware or QEMU-based) or acceptance of an external CI system, neither of which has been proposed. GitHub Actions riscv64 runners (QEMU-based) exist but are not used by NSS. Acceptance probability for a QEMU-based riscv64 GitHub Actions CI job: moderate – it would be additive and low-risk, but requires maintainer buy-in to keep green.</p>
+<p>CI: NSS CI runs on Mozilla-operated Taskcluster infrastructure. Adding riscv64 CI there requires either Mozilla provisioning riscv64 Taskcluster workers (hardware or QEMU-based) or accepting an external CI system, neither of which has been proposed. On the GitHub-mirror side, RISE now offers free native riscv64 GitHub Actions runners (announced 2026-03-24, “six weeks in” update 2026-05-12), which NSS does not currently use; adopting these would avoid the need for QEMU emulation and represents a lower-friction CI path than before, pending maintainer buy-in to keep a new job green given the mirror’s otherwise administrative-only workflow set.</p>
 
-<p><strong>NSPR FreeBSD blocker:</strong> NSPR Bug 1711232 has had patches since 2021 with zero reviewer activity. This is a de facto abandoned patch. Resolution requires either a Red Hat or Mozilla engineer to pick it up or a new submitter to re-file with a clean patch against current NSPR main.</p><hr />
-<h2 id="13-investment-analysis">
+<p>NSPR FreeBSD blocker: Bug 1711232 and its corresponding <code class="language-plaintext highlighter-rouge">mozilla/nspr#54</code> PR have seen zero reviewer activity for roughly 4-5 years; this is a de facto abandoned patch requiring either a Red Hat/Mozilla engineer to pick it up or a fresh submission against current NSPR main.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has no funded work for NSS. All items below are unaddressed as of June 2026.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> yellow (clean-distro-build)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Justification:</strong> NSS has no upstream riscv64 CI (Mozilla Taskcluster’s build matrix is linux32/64, linux64-asan, macosx64, win32/64 only, per <a href="https://github.com/mozilla/nss/blob/main/taskcluster/kinds/build/linux.yml">taskcluster/kinds/build/linux.yml</a>; the 3 GitHub Actions workflows in the mirror are administrative-only, with no build or test step for any architecture) and publishes no release binaries directly, but Debian (sid 2:3.124-1, built on <code class="language-plaintext highlighter-rouge">rv-osuosl-04</code> per <a href="https://buildd.debian.org/status/package.php?p=nss&amp;suite=sid">buildd.debian.org</a>), Ubuntu 24.04/22.04, and Arch Linux RISC-V (<code class="language-plaintext highlighter-rouge">nss-3.130-1-riscv64.pkg.tar.zst</code>, independently downloaded and verified as a genuine riscv64 ELF matching upstream’s official 3.130-1 release) all build it from unmodified upstream source, with no riscv64-specific distro patches found. NSS is not an optimization-purpose project (its value is correctness and protocol coverage, not speed), so no optimization-gap modifier applies.</li>
+  <li><strong>Pending work that could change the grade:</strong> The open, unassigned Bugzilla <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1615557">1615557</a> (general HACL<em>/KReMLin cross-platform build fragility, approximately 6 years old, no activity in approximately 3 years) could reflect latent riscv64 build risk; no bug is filed for the missing <code class="language-plaintext highlighter-rouge">have_int128_support=1</code> flag for riscv64 in <code class="language-plaintext highlighter-rouge">freebl.gyp</code> (performance-only, forces the slower <code class="language-plaintext highlighter-rouge">KRML_VERIFIED_UINT128</code> path for Curve25519/Poly1305/HACL</em> EC). NSPR FreeBSD riscv64 (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1711232">Bug 1711232</a>) remains UNCONFIRMED, with patches stalled since approximately 2021, blocking NSS on FreeBSD/riscv64 specifically (Linux riscv64 is unaffected). No RISE Project involvement, funding, or CI runner usage was found for NSS in any channel checked, though RISE’s new free native riscv64 GitHub Actions runners (Section 12) represent an unused opportunity that could lower future CI-enablement cost.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has no funded work for NSS; none of the items below are already covered by existing RISE investment, so no sizing adjustment for prior RISE work is needed. All items are unaddressed as of this report’s date.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>One functional gap exists: the <code class="language-plaintext highlighter-rouge">have_int128_support</code> flag is not set for riscv64 in <code class="language-plaintext highlighter-rouge">lib/freebl/freebl_base.gypi</code> and <code class="language-plaintext highlighter-rouge">freebl.gyp</code>. This causes HACL* to use software-emulated 128-bit integers instead of native <code class="language-plaintext highlighter-rouge">__int128</code>. The fix is a one-line GYP change plus a Bugzilla filing. No architectural work required.</p>
+<p>The <code class="language-plaintext highlighter-rouge">have_int128_support</code> flag is not set for riscv64 in <code class="language-plaintext highlighter-rouge">lib/freebl/freebl_base.gypi</code> and <code class="language-plaintext highlighter-rouge">freebl.gyp</code>, forcing HACL* to use software-emulated 128-bit integers instead of native <code class="language-plaintext highlighter-rouge">__int128</code>. The fix is a one-line GYP change plus a Bugzilla filing; no architectural work is required.</p>
 
-<p>NSPR FreeBSD riscv64 (Bug 1711232) is a functional gap for FreeBSD-targeted workloads. Patches exist; the work is review-and-merge, not implementation.</p>
-<h3 id="132-performance-optimization">
+<p>NSPR FreeBSD riscv64 (Bug 1711232 / <code class="language-plaintext highlighter-rouge">mozilla/nspr#54</code>) is a functional gap for FreeBSD-targeted workloads. Patches already exist; the remaining work is rebase-and-drive-to-merge, not fresh implementation.</p>
+
+<p>Separately, the general HACL*/KReMLin cross-platform build-fragility bug (1615557) remains open and unassigned; closing it out (beyond the already-fixed riscv64 instance) would reduce latent build risk across several non-x86 architectures, riscv64 included.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
@@ -1206,40 +1294,40 @@ ninja <span class="nt">-C</span> out/Release
 
 <p>Performance work falls into two phases:</p>
 
-<p><strong>Phase A – CPU feature dispatch infrastructure (prerequisite for all hardware acceleration):</strong> Add riscv64 branch to <code class="language-plaintext highlighter-rouge">blinit.c</code> to parse <code class="language-plaintext highlighter-rouge">AT_HWCAP</code> for RISC-V ISA extensions (Zkn, Zksh, Zbc, Zvkb, Zvkned, Zvknhb, Zvkg). This is 50-100 lines of C and is required before any assembly implementation can be dispatched at runtime.</p>
+<p><strong>Phase A, CPU feature dispatch infrastructure (prerequisite for all hardware acceleration):</strong> add a riscv64 branch to <code class="language-plaintext highlighter-rouge">blinit.c</code> to parse <code class="language-plaintext highlighter-rouge">AT_HWCAP</code> for relevant RISC-V ISA extensions (Zkn, Zksh, Zbc, Zvkb, Zvkned, Zvknhb, Zvkg). This is roughly 50-100 lines of C and is required before any assembly implementation can be dispatched at runtime.</p>
 
-<p><strong>Phase B – Assembly implementations:</strong> Each of the following is an independent work item:</p>
+<p><strong>Phase B, assembly implementations</strong>, each an independent work item:</p>
 <ul>
-  <li>AES-128-GCM using Zvkned + Zvkg (vector AES + GHASH): highest TLS throughput impact</li>
-  <li>ChaCha20-Poly1305 using Zvkb (vector bit-manipulation): relevant for TLS with ChaCha suites</li>
-  <li>SHA-256 using Zvknhb: relevant for certificate verification and TLS handshake</li>
+  <li>AES-128-GCM using Zvkned plus Zvkg (vector AES plus GHASH): highest TLS throughput impact, given this is the largest measured gap class in Section 6.2.</li>
+  <li>ChaCha20-Poly1305 using Zvkb (vector bit-manipulation): relevant for TLS deployments using ChaCha suites.</li>
+  <li>SHA-256 using Zvknhb: relevant for certificate verification and TLS handshake cost.</li>
 </ul>
 
-<p>For comparison: the aarch64 ARMv8 crypto paths in <code class="language-plaintext highlighter-rouge">aes-armv8.c</code> and <code class="language-plaintext highlighter-rouge">ghash-aarch64.c</code> are approximately 200-400 lines each and serve as the closest analogous implementation.</p>
-<h3 id="133-cicd-infrastructure">
+<p>For scale, the analogous aarch64 ARMv8-crypto paths (<code class="language-plaintext highlighter-rouge">aes-armv8.c</code>, <code class="language-plaintext highlighter-rouge">ghash-aarch64.c</code>) run approximately 200-400 lines each, excluding the much larger hand-scheduled “slothy” GCM assembly (9,268 lines) that would not need to be replicated for a first riscv64 implementation.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>A minimal riscv64 CI addition would be a QEMU-based GitHub Actions job building NSS for riscv64 and running <code class="language-plaintext highlighter-rouge">nss_gtests</code>. This is additive and does not require Mozilla Taskcluster access. It requires maintainer acceptance.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>Not applicable. NSS is a system security library with no significant dependent package ecosystem requiring separate riscv64 enablement.</p>
-<h3 id="135-summary-table">
+<p>A minimal riscv64 CI addition would be a GitHub Actions job building NSS for riscv64 and running <code class="language-plaintext highlighter-rouge">nss_gtests</code>. Given RISE’s free native riscv64 GitHub Actions runners (announced March 2026), this job could run on native hardware rather than requiring QEMU emulation, which should reduce both setup effort and ongoing flakiness risk compared to a QEMU-based approach. This remains additive to the GitHub mirror and does not require Mozilla Taskcluster access; it still requires maintainer acceptance to be added and kept green.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable. NSS is a system security library with no significant dependent package ecosystem (no Python/npm/Maven/Kubernetes-operator layer) requiring separate riscv64 enablement; Section 10 is omitted for this reason.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1258,17 +1346,24 @@ ninja <span class="nt">-C</span> out/Release
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Set <code class="language-plaintext highlighter-rouge">have_int128_support=1</code> for riscv64 in freebl.gyp; file Bugzilla bug; submit patch</td>
+      <td>Set <code class="language-plaintext highlighter-rouge">have_int128_support=1</code> for riscv64 in <code class="language-plaintext highlighter-rouge">freebl.gyp</code>; file Bugzilla bug; submit patch</td>
       <td>0.5</td>
       <td>Any contributor</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>NSPR FreeBSD riscv64: rebase Bug 1711232 patches and drive to merge</td>
+      <td>NSPR FreeBSD riscv64: rebase <code class="language-plaintext highlighter-rouge">mozilla/nspr#54</code> / Bug 1711232 patches and drive to merge</td>
       <td>1</td>
       <td>Red Hat / contributor</td>
       <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Triage and help close out general HACL*/KReMLin build-fragility bug 1615557</td>
+      <td>1</td>
+      <td>Any contributor</td>
+      <td>Low</td>
     </tr>
     <tr>
       <td>Performance</td>
@@ -1279,7 +1374,7 @@ ninja <span class="nt">-C</span> out/Release
     </tr>
     <tr>
       <td>Performance</td>
-      <td>AES-128-GCM acceleration using Zvkned + Zvkg</td>
+      <td>AES-128-GCM acceleration using Zvkned plus Zvkg</td>
       <td>6</td>
       <td>Crypto engineer</td>
       <td>High</td>
@@ -1307,7 +1402,7 @@ ninja <span class="nt">-C</span> out/Release
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>QEMU-based riscv64 GitHub Actions build+test job</td>
+      <td>riscv64 GitHub Actions build+test job, preferably on RISE’s native riscv64 runners rather than QEMU</td>
       <td>1</td>
       <td>Any contributor</td>
       <td>High</td>
@@ -1315,17 +1410,7 @@ ninja <span class="nt">-C</span> out/Release
   </tbody>
 </table></div>
 
-<p>Total estimated effort: approximately 19.5 person-weeks for full parity with aarch64 CI and hardware acceleration coverage. The <code class="language-plaintext highlighter-rouge">have_int128_support</code> fix (0.5 pw) and CPU dispatch infrastructure (1 pw) should be the first two items; they gate all downstream performance work.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p>Total estimated effort: approximately 20.5 person-weeks for full parity with aarch64 CI and hardware-acceleration coverage. The <code class="language-plaintext highlighter-rouge">have_int128_support</code> fix (0.5 pw) and the <code class="language-plaintext highlighter-rouge">blinit.c</code> CPU-dispatch infrastructure (1 pw) should be the first two items; they gate all downstream performance work.</p>
 <h2 id="15-references">
   
   
@@ -1337,20 +1422,33 @@ ninja <span class="nt">-C</span> out/Release
 
 <ul>
   <li><a href="https://firefox-source-docs.mozilla.org/security/nss/">NSS Homepage</a></li>
-  <li><a href="https://github.com/mozilla/nss">mozilla/nss GitHub mirror</a></li>
-  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1714719">Bug 1714719 – Set NSS_USE_64 on riscv64 target when using GYP/Ninja</a></li>
-  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1636058">Bug 1636058 – Fix building NSS on Debian s390x, mips64el, and riscv64</a></li>
-  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1609181">Bug 1609181 – Detect ARM CPU features on FreeBSD</a></li>
-  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1308584">NSPR Bug 1308584 – NSPR Linux riscv64 support (RESOLVED FIXED, NSPR 4.20)</a></li>
-  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1711232">NSPR Bug 1711232 – FreeBSD/riscv64 unknown CPU architecture (UNCONFIRMED, patches stalled)</a></li>
-  <li><a href="https://github.com/mozilla/nss/commit/1c7e99a">Commit 1c7e99a – Bug 1714719 GYP riscv64 fix</a></li>
-  <li><a href="https://github.com/mozilla/nss/commit/97df5ad">Commit 97df5ad – Bug 1609181 FreeBSD ARM CPU features</a></li>
+  <li><a href="https://github.com/nss-dev/nss">nss-dev/nss GitHub mirror (task-assigned repository identifier)</a></li>
+  <li><a href="https://github.com/mozilla/nss">mozilla/nss GitHub mirror (canonical, actively indexed)</a></li>
+  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1714719">Bug 1714719, Set NSS_USE_64 on riscv64 target when using GYP/Ninja</a></li>
+  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1636058">Bug 1636058, Fix building NSS on Debian s390x, mips64el, and riscv64</a></li>
+  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1615557">Bug 1615557, NSS fails to build on some platforms because of HACL* and Kremlin libraries</a></li>
+  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1609181">Bug 1609181, Detect ARM CPU features on FreeBSD</a></li>
+  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1308584">NSPR Bug 1308584, NSPR Linux riscv64 support (RESOLVED FIXED, NSPR 4.20)</a></li>
+  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1711232">NSPR Bug 1711232, FreeBSD/riscv64 unknown CPU architecture (UNCONFIRMED, patches stalled)</a></li>
+  <li><a href="https://github.com/mozilla/nspr/pull/54">mozilla/nspr PR #54, Support riscv64 on FreeBSD</a></li>
+  <li><a href="https://github.com/mozilla/nss/commit/1c7e99a">Commit 1c7e99a, Bug 1714719 GYP riscv64 fix</a></li>
+  <li><a href="https://github.com/mozilla/nss/commit/97df5ad">Commit 97df5ad, Bug 1609181 FreeBSD ARM CPU features</a></li>
+  <li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1975867">Bugzilla 1975867, SpiderMonkey riscv64 NaN-boxing bug (not an NSS bug, cited to flag as a false positive)</a></li>
   <li><a href="https://buildd.debian.org/status/package.php?p=nss&amp;suite=sid">Debian buildd nss sid status</a></li>
   <li><a href="https://packages.ubuntu.com/noble/libnss3">Ubuntu 24.04 libnss3 package</a></li>
-  <li><a href="https://github.com/google/googletest/issues/3756">google/googletest issue #3756 – riscv64 GetThreadCountTest failure</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=NSS&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu package search, NSS, suite resolute</a></li>
+  <li><a href="https://archriscv.felixc.at/repo/core/">Arch Linux RISC-V package repository, core</a></li>
+  <li><a href="https://archlinux.org/packages/core/x86_64/nss/">Arch Linux official nss package (x86_64, for comparison)</a></li>
+  <li><a href="https://github.com/google/googletest/issues/3756">google/googletest issue #3756, riscv64 GetThreadCountTest failure</a></li>
+  <li><a href="https://github.com/hacl-star/hacl-star/issues/736">hacl-star/hacl-star issue #736, riscv64 cross-compile linker bug</a></li>
+  <li><a href="https://github.com/cryspen/libcrux">cryspen/libcrux</a></li>
+  <li><a href="https://github.com/mozilla/nss-rs/pull/252">mozilla/nss-rs PR #252, CodSpeed/Criterion benchmark suite</a></li>
   <li><a href="https://riseproject.dev/">RISE Project</a></li>
-  <li><a href="https://github.com/mozilla/nss/blob/main/taskcluster/kinds/build/linux.yml">NSS Taskcluster CI config – build kinds</a></li>
-  <li><a href="https://github.com/mozilla/nss/blob/main/taskcluster/nss_taskgraph/target_tasks.py">NSS Taskcluster CI config – target tasks</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder package index</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE blog, Announcing the RISE RISC-V Runners</a></li>
+  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE blog, RISE RISC-V Runners: six weeks in</a></li>
+  <li><a href="https://github.com/mozilla/nss/blob/main/taskcluster/kinds/build/linux.yml">NSS Taskcluster CI config, build kinds</a></li>
+  <li><a href="https://github.com/mozilla/nss/blob/main/taskcluster/nss_taskgraph/target_tasks.py">NSS Taskcluster CI config, target tasks</a></li>
 </ul>
 
           
