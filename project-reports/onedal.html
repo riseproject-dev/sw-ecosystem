@@ -265,11 +265,13 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<p><strong>Author:</strong> Ludovic Henry <a href="mailto:mail@ludovic.dev">mail@ludovic.dev</a><br />
+<strong>Date:</strong> 2026-10-01<br />
+<strong>Readiness:</strong> yellow<br />
+<strong>Optimization level:</strong> minimal<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for oneDAL<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,9 +281,15 @@
 </h2>
     
 
-<p>oneDAL (oneAPI Data Analytics Library) is a machine learning and data analytics library implementing the oneAPI specification. The repository was previously hosted at <code class="language-plaintext highlighter-rouge">oneapi-src/oneDAL</code> and has been migrated to <a href="https://github.com/uxlfoundation/oneDAL">uxlfoundation/oneDAL</a> under the UXL Foundation, a Joint Development Foundation Project. UXL Foundation Steering Members include Arm, Fujitsu, Google Cloud, Imagination Technologies, Intel, Qualcomm, and Samsung.</p>
+<p>oneDAL (oneAPI Data Analytics Library) is a C++ library implementing the oneAPI specification for classical machine learning and data analytics algorithms (decision forests, PCA, covariance, Gaussian naive Bayes, DBSCAN, SVM, and related primitives). The repository has moved from <code class="language-plaintext highlighter-rouge">oneapi-src/oneDAL</code> to <a href="https://github.com/uxlfoundation/oneDAL">uxlfoundation/oneDAL</a>; the old location returns “resource does not exist” and all current development happens under the new org.</p>
 
-<p>The library provides algorithm implementations for classical ML workloads (decision forests, PCA, covariance, Gaussian naive Bayes, DBSCAN, etc.) with a tiered compute backend: Intel MKL as the primary production backend on x86, and OpenBLAS as the fallback for non-x86 architectures.</p><hr />
+<p>The project is governed by the UXL Foundation, a Joint Development Foundation project (“The oneDAL project is governed by the UXL Foundation,” per the repository’s own description, with participation through the AI Special Interest Group and Open Source/Specification Working Groups). Governance is a three-tier merit model defined in <a href="https://github.com/uxlfoundation/oneDAL/blob/main/MAINTAINERS.md">MAINTAINERS.md</a>: Contributor to Code Owner (6+ months as contributor) to Maintainer (12+ months as Code Owner). <code class="language-plaintext highlighter-rouge">.github/CODEOWNERS</code> enforces this with dedicated GitHub teams per architecture, including <code class="language-plaintext highlighter-rouge">@uxlfoundation/onedal-cpu-risc-v</code> for all riscv64 paths and <code class="language-plaintext highlighter-rouge">@uxlfoundation/onedal-cpu-aarch64</code> for AArch64 paths, plus <code class="language-plaintext highlighter-rouge">@uxlfoundation/oneDAL-maintain</code> owning the governance documents themselves.</p>
+
+<p>Intel dominates both governance and commit volume: of the eight named roles in MAINTAINERS.md, six are Intel employees. The only non-Intel Code Owner seats are architecture-scoped: Fujitsu for AArch64, Rivos Inc for RISC-V. Commit activity over the last 12 months (since 2025-10-01) shows 139 commits from <code class="language-plaintext highlighter-rouge">@intel.com</code> addresses versus 25 from <code class="language-plaintext highlighter-rouge">@gmail.com</code> and 1 from <code class="language-plaintext highlighter-rouge">@multicorewareinc.com</code>.</p>
+
+<p>The compute backend is tiered by design: Intel MKL is the primary, production backend on x86; OpenBLAS is the explicit, documented fallback for every non-x86 architecture (both AArch64 and riscv64), selected via a <code class="language-plaintext highlighter-rouge">ref</code> (reference/generic) backend configuration since MKL has no non-x86 build.</p>
+
+<p>Community culture toward new architecture ports is CI- and merit-driven rather than bureaucratic. The foundational RISC-V port (PR #2737) was proposed and merged in about 4 days with only implementation-level review comments and no governance debate. New architectures are expected to plug into the existing CPU Features Dispatching mechanism and are formalized purely by adding a CODEOWNERS block and nominating a Code Owner, the same path both AArch64 (Fujitsu) and RISC-V (Rivos) took. Continued 2026 investment (Bazel RISC-V64 cross-compile and OpenRNG backend support, merged September 2026) shows sustained rather than one-off attention.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -296,47 +304,86 @@
     <tr>
       <th>Date</th>
       <th>Event</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>April 22, 2024</td>
-      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/2737">PR #2737</a> opened by Keeran Rothenfusser (Rivosinc)</td>
+      <td>2023-01-24</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/2257">Issue #2257</a> opened by amgrigoriev: “Support for RISC-V architecture,” the root tracking request, zero comments across its lifetime</td>
+      <td>Issue #2257</td>
     </tr>
     <tr>
-      <td>April 26, 2024</td>
-      <td>PR #2737 merged by Nikolay Petrov (Intel); foundational riscv64 port complete</td>
+      <td>2024-04-22</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/2737">PR #2737</a> “Add RISC-V clang build” opened by Keeran Rothenfusser (Rivos Inc)</td>
+      <td>PR #2737</td>
     </tr>
     <tr>
-      <td>April 30, 2024</td>
-      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/2758">Issue #2758</a>: riscv64 CI (<code class="language-plaintext highlighter-rouge">LinuxMakeLLVM_OpenBLAS_rv64</code>) reported failing on Azure Pipelines</td>
+      <td>2024-04-26</td>
+      <td>PR #2737 merged by Nikolay Petrov (Intel), approved by luhenry, napetrov (Intel), Alexandr-Solovev (Intel); first release containing it is 2024.5.0</td>
+      <td>PR #2737, git tag verification</td>
     </tr>
     <tr>
-      <td>May 2, 2024</td>
-      <td>Issue #2758 closed; CI restored</td>
+      <td>2024-05-02</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/2762">PR #2762</a> “CI fixes in OpenBLAS builds” merged (QEMU Debian package URL fix); first release 2024.5.0</td>
+      <td>PR #2762</td>
     </tr>
     <tr>
-      <td>November 5, 2025</td>
-      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3431">Issue #3431</a>: Random forest vectorized mean/variance missing for riscv64 and aarch64</td>
+      <td>2024-05-17</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/2776">PR #2776</a> merged: fixes <code class="language-plaintext highlighter-rouge">getIndexNumType&lt;unsigned long&gt;</code>, previously gated to x86_64-only, unblocking 13 example programs on aarch64/riscv64; first release 2024.6.0</td>
+      <td>PR #2776</td>
     </tr>
     <tr>
-      <td>January 21, 2026</td>
-      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/3304">PR #3304</a> merged: CPU topology initialization bug fix (all platforms)</td>
+      <td>2025-03-24</td>
+      <td>Issue #2257 closed as completed</td>
+      <td>Issue #2257</td>
     </tr>
     <tr>
-      <td>February 13, 2026</td>
-      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3510">Issue #3510</a>: Special math functions (ErfInv, CdfNormInv) return NaN on non-x86</td>
+      <td>2025-07-10</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/3170">PR #3170</a> merged: more granular x86 CPU feature detection, with incidental RISC-V/ARM <code class="language-plaintext highlighter-rouge">cpu_info</code> build-error fixes; first release 2025.8.0</td>
+      <td>PR #3170</td>
     </tr>
     <tr>
-      <td>February 23, 2026</td>
-      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3526">Issue #3526</a>: Bazel RISC-V support opened then immediately closed as not planned</td>
+      <td>2025-11-05</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3431">Issue #3431</a> opened: forest mean/variance vectorization missing for aarch64/riscv, labeled <code class="language-plaintext highlighter-rouge">good first issue</code>/<code class="language-plaintext highlighter-rouge">help wanted</code>, open and unassigned</td>
+      <td>Issue #3431</td>
+    </tr>
+    <tr>
+      <td>2026-02-13</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3510">Issue #3510</a> opened: ErfInv/CdfNormInv return NaN on non-x86, open and unassigned, blocked on Apache-2.0-compatible license for a fix</td>
+      <td>Issue #3510</td>
+    </tr>
+    <tr>
+      <td>2026-02-23</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3526">Issue #3526</a> “[Bazel Migration] RISC-V support with OpenBLAS fallback” opened and closed the same day as not planned; the same author (napetrov) delivered the work directly via PR #3719 five months later instead of tracking it incrementally</td>
+      <td>Issue #3526</td>
+    </tr>
+    <tr>
+      <td>2026-07-26</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/3719">PR #3719</a> “Bazel: add AArch64/RISC-V64 cross-compile and OpenRNG backend support” opened by napetrov (Intel)</td>
+      <td>PR #3719</td>
+    </tr>
+    <tr>
+      <td>2026-09-17</td>
+      <td>PR #3719 merged; not yet in any tagged release (latest tag 2026.1.0 predates the merge)</td>
+      <td>PR #3719, git tag verification</td>
+    </tr>
+    <tr>
+      <td>2026-09-23</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/3786">PR #3786</a> merged: bumps OpenBLAS dependency to v0.3.34, whose release notes include riscv64-specific SGEMM/DGEMM and STRSM kernel fixes; not yet in a tagged release</td>
+      <td>PR #3786</td>
+    </tr>
+    <tr>
+      <td>2026-09-28</td>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/3817">PR #3817</a> opened: build-system cleanup shrinking release libraries and deduplicating flag definitions, incidentally touching <code class="language-plaintext highlighter-rouge">clang.ref.riscv64.mk</code>; open, unmerged as of research date</td>
+      <td>PR #3817</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The port was authored entirely by one contributor from Rivosinc (keeranroth). PR #2737 received three approvals: luhenry, napetrov (Intel), and Alexandr-Solovev (Intel). The 4-day review-to-merge cycle indicates no governance friction for the initial port.</p>
+<p>Key contributors: Keeran Rothenfusser (@keeranroth, Rivos Inc) authored the foundational riscv64 port and holds the formal RISC-V Code Owner seat in MAINTAINERS.md. Nikolay Petrov (@napetrov, Intel) authored the major Bazel riscv64 extension (PR #3719) and most subsequent riscv64-touching work. No master tracking issue links all RISC-V PRs together; #2257 functioned as a silent umbrella request that was closed once functional support existed, with #2737, #2776, #3719 fulfilling it incrementally without formal cross-linking.</p>
 
-<p>There is no master tracking issue for the riscv64 port. <a href="https://github.com/uxlfoundation/oneDAL/issues/3530">Issue #3530</a> (Bazel master tracking) lists riscv64 as a “Secondary Issues (Post-Blocker)” item but is not a riscv64-specific tracking issue.</p><hr />
+<p>The port is fully upstream on the Make build system since 2024.5.0, and the Bazel build system gained equivalent riscv64 support with PR #3719 (merged 2026-09-17), which postdates the most recent tagged release (2026.1.0, 2026-05-26) and is therefore not yet present in any shipped release.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -346,63 +393,58 @@
 </h2>
     
 
-<p>CONTRIBUTING.md and MAINTAINERS.md contain no formal tier or support-level classification. The project uses a code-owner model. The MAINTAINERS.md file (confirmed raw content) lists:</p>
+<p>No <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, or <code class="language-plaintext highlighter-rouge">docs/platforms/</code> exists, and no formal written policy ranks architectures by support tier. The de facto mechanism is CODEOWNERS: a new architecture gets its own path-scoped rule block (deliberately placed last so it is not shadowed by broader rules) pointing at an architecture-specific GitHub team, which exists only once a Code Owner has been nominated and approved through the standard merit process. riscv64 has a named Code Owner (Rivos) and a dedicated CODEOWNERS team, conferring the same formal standing as AArch64 (Fujitsu). There is no written distinction between a “primary” x86 tier and “secondary” non-x86 tiers in any governance document.</p>
+
+<p>In practice, support depth differs sharply by axis:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Person</th>
-      <th>Employer</th>
-      <th>Role</th>
+      <th>Axis</th>
+      <th>amd64</th>
+      <th>aarch64</th>
+      <th>riscv64</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Victoriya Fedotova (@Vika-F)</td>
-      <td>Intel</td>
-      <td>Maintainer (oneDAL Architecture)</td>
+      <td>Build system - Make</td>
+      <td>Full, MKL backend</td>
+      <td>Full, ref/OpenBLAS backend</td>
+      <td>Full, ref/OpenBLAS backend, clang-only</td>
     </tr>
     <tr>
-      <td>Aleksandr Solovev (@Alexandr-Solovev)</td>
-      <td>Intel</td>
-      <td>Maintainer (oneDAL Architecture)</td>
+      <td>Build system - Bazel</td>
+      <td>Full, MKL backend</td>
+      <td>Full, ref backend (merged PR #3719)</td>
+      <td>Full, ref backend (merged PR #3719, 2026-09-17)</td>
     </tr>
     <tr>
-      <td>Alexander Andreev (@Alexsandruss)</td>
-      <td>Intel</td>
-      <td>Maintainer (oneDAL Architecture)</td>
+      <td>CI</td>
+      <td>GitHub Actions + Azure Pipelines</td>
+      <td>GitHub Actions (native <code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code>) + Azure Pipelines</td>
+      <td>Azure Pipelines only, QEMU-emulated, no GitHub Actions</td>
     </tr>
     <tr>
-      <td>Rakshith G B (@rakshithgb-fujitsu)</td>
+      <td>Code Owner</td>
+      <td>Intel (Maintainer tier)</td>
       <td>Fujitsu</td>
-      <td>Code Owner (AArch64)</td>
+      <td>Rivos Inc</td>
     </tr>
     <tr>
-      <td>Keeran Rothenfusser (@keeranroth)</td>
-      <td>Rivosinc</td>
-      <td>Code Owner (RISC-V)</td>
+      <td>Release artifacts</td>
+      <td>None published in GitHub Releases for any arch (see Section 8)</td>
+      <td>None</td>
+      <td>None</td>
     </tr>
     <tr>
-      <td>Nikolay Petrov (@napetrov)</td>
-      <td>Intel</td>
-      <td>Maintainer (Release Management)</td>
-    </tr>
-    <tr>
-      <td>Sergey Yakovlev (@syakov-intel)</td>
-      <td>Intel</td>
-      <td>Maintainer (Release Management)</td>
-    </tr>
-    <tr>
-      <td>Maria Petrova (@maria-Petrova)</td>
-      <td>Intel</td>
-      <td>Maintainer (Release Management)</td>
+      <td>CPU dispatch tiers</td>
+      <td>3 (SSE2, AVX2, AVX512)</td>
+      <td>1 (SVE)</td>
+      <td>1 (rv64)</td>
     </tr>
   </tbody>
 </table></div>
-
-<p>Intel holds 6 of 8 roles. riscv64 has a named code owner (Rivosinc/keeranroth), which confers the same formal standing as aarch64. There is no documented tier distinction between primary (x86) and secondary (aarch64, riscv64) architectures in governance documents.</p>
-
-<p>In practice, riscv64 and aarch64 share the same depth of implementation: scalar C fallback kernels, OpenBLAS BLAS backend, and no hand-written SIMD algorithm kernels – with one exception: aarch64 has one hand-coded Sleef SVE vectorized exp path that riscv64 lacks.</p><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -414,80 +456,115 @@
 <h3 id="cpu-detection-and-dispatch">
   
   
-    <a href="#cpu-detection-and-dispatch" class="anchor-heading" aria-labelledby="cpu-detection-and-dispatch"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CPU Detection and Dispatch
+    <a href="#cpu-detection-and-dispatch" class="anchor-heading" aria-labelledby="cpu-detection-and-dispatch"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CPU detection and dispatch
   
   
 </h3>
     
 
-<p>riscv64 is detected at compile time via <code class="language-plaintext highlighter-rouge">#if defined(__riscv) &amp;&amp; (__riscv_xlen == 64)</code> in <code class="language-plaintext highlighter-rouge">cpp/daal/include/services/daal_defines.h</code>, which sets <code class="language-plaintext highlighter-rouge">TARGET_RISCV64</code>. The runtime CPU dispatch system (<code class="language-plaintext highlighter-rouge">cpp/oneapi/dal/backend/dispatcher.hpp</code>) defines a single dispatch tag <code class="language-plaintext highlighter-rouge">cpu_dispatch_rv64</code> with no sub-variants (no RVV vs. base split). The <code class="language-plaintext highlighter-rouge">CpuType</code> enum defines <code class="language-plaintext highlighter-rouge">rv64 = 0, firstCpuType = rv64, lastCpuType = rv64</code> – one tier.</p>
+<p>riscv64 is detected at compile time via <code class="language-plaintext highlighter-rouge">#if defined(__riscv) &amp;&amp; (__riscv_xlen == 64)</code>, setting <code class="language-plaintext highlighter-rouge">TARGET_RISCV64</code> in <code class="language-plaintext highlighter-rouge">cpp/daal/include/services/daal_defines.h</code>, <code class="language-plaintext highlighter-rouge">cpp/oneapi/dal/common.hpp</code>, and <code class="language-plaintext highlighter-rouge">dev/bazel/config/cpudetect.cpp</code>. The dispatcher machinery (<code class="language-plaintext highlighter-rouge">cpu.hpp</code>, <code class="language-plaintext highlighter-rouge">cpu.cpp</code>, <code class="language-plaintext highlighter-rouge">cpu_info.cpp</code>, <code class="language-plaintext highlighter-rouge">dispatcher.hpp</code>, <code class="language-plaintext highlighter-rouge">env_detect.h/.cpp</code>, <code class="language-plaintext highlighter-rouge">algorithm_dispatch_container_*.h</code>) registers <code class="language-plaintext highlighter-rouge">rv64</code> as a <code class="language-plaintext highlighter-rouge">CpuType</code>/<code class="language-plaintext highlighter-rouge">CPU_EXTENSION</code> value through the exact same macro pattern used for x86 tiers and ARM SVE. Dedicated files exist and are structurally identical in size and pattern to their ARM counterparts: <code class="language-plaintext highlighter-rouge">cpp/daal/src/algorithms/kernel_inst_riscv64.h</code> (48 lines, matches <code class="language-plaintext highlighter-rouge">kernel_inst_arm.h</code>), <code class="language-plaintext highlighter-rouge">cpp/daal/src/services/internal/riscv64/riscv64_kernel_defines.h</code> (40 lines, matches <code class="language-plaintext highlighter-rouge">aarch64_kernel_defines.h</code>), <code class="language-plaintext highlighter-rouge">cpp/oneapi/dal/detail/cpu_info_riscv64_impl.hpp</code> (43 lines, matches <code class="language-plaintext highlighter-rouge">cpu_info_arm_impl.hpp</code>).</p>
 
-<p>The cpuid implementation in <code class="language-plaintext highlighter-rouge">cpp/daal/src/services/compiler/generic/env_detect_features.cpp</code> is a stub: <code class="language-plaintext highlighter-rouge">run_cpuid()</code> contains only a comment <code class="language-plaintext highlighter-rouge">// TODO: riscv64 implementation for cpuid</code>. <code class="language-plaintext highlighter-rouge">daal_serv_cpu_feature_detect()</code> returns <code class="language-plaintext highlighter-rouge">CpuFeature::unknown</code>. No runtime ISA probing exists; the dispatcher unconditionally selects <code class="language-plaintext highlighter-rouge">rv64</code>.</p>
-
-<p>CPU topology is disabled for all non-x86 targets via <code class="language-plaintext highlighter-rouge">DAAL_CPU_TOPO_DISABLED</code>. The TBB scheduler handle initialization (<code class="language-plaintext highlighter-rouge">daal::setSchedulerHandle</code>) is x86-only and is skipped on riscv64.</p>
+<p>Runtime CPU-feature probing (<code class="language-plaintext highlighter-rouge">run_cpuid()</code> in <code class="language-plaintext highlighter-rouge">cpp/daal/src/services/compiler/generic/env_detect_features.cpp</code>) is a literal stub for riscv64: <code class="language-plaintext highlighter-rouge">// TODO: riscv64 implementation for cpuid</code>, with <code class="language-plaintext highlighter-rouge">__daal_serv_cpu_detect</code> returning a fixed <code class="language-plaintext highlighter-rouge">rv64</code> value. This mirrors ARM’s identical <code class="language-plaintext highlighter-rouge">// TODO: ARM implementation for cpuid</code> stub and reflects that both architectures currently expose exactly one dispatch tier each, so fine-grained probing isn’t yet load-bearing - not RISC-V-specific neglect.</p>
 <h3 id="math-backend">
   
   
-    <a href="#math-backend" class="anchor-heading" aria-labelledby="math-backend"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Math Backend
+    <a href="#math-backend" class="anchor-heading" aria-labelledby="math-backend"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Math backend
   
   
 </h3>
     
 
-<p>riscv64 builds use <code class="language-plaintext highlighter-rouge">-DDAAL_REF -DONEDAL_REF</code>, selecting <code class="language-plaintext highlighter-rouge">service_math_ref.h</code>. Status by function:</p>
+<p>riscv64 builds use <code class="language-plaintext highlighter-rouge">-DDAAL_REF -DONEDAL_REF</code>, selecting the scalar reference math path. Confirmed status:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Function</th>
+      <th>Function family</th>
       <th>riscv64 behavior</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>sFabs, sMin, sMax, sSqrt, sCeil, sLog, sErf</td>
-      <td>Standard C <code class="language-plaintext highlighter-rouge">&lt;cmath&gt;</code> scalar – correct</td>
+      <td>Standard C <code class="language-plaintext highlighter-rouge">&lt;cmath&gt;</code> scalar, correct</td>
     </tr>
     <tr>
       <td>vAdd, vSub, vExp, vTanh, vSqrt, vLog, vLog1p, vErf</td>
-      <td><code class="language-plaintext highlighter-rouge">#pragma omp simd</code> loop – compiler auto-vectorized</td>
+      <td><code class="language-plaintext highlighter-rouge">#pragma omp simd</code> loop, compiler auto-vectorized only</td>
     </tr>
     <tr>
       <td>sErfInv / vErfInv</td>
-      <td>Returns <code class="language-plaintext highlighter-rouge">std::numeric_limits&lt;float&gt;::quiet_NaN()</code> – silent correctness failure</td>
+      <td>Returns <code class="language-plaintext highlighter-rouge">quiet_NaN()</code>, unimplemented (issue #3510)</td>
     </tr>
     <tr>
       <td>sCdfNormInv / vCdfNormInv</td>
-      <td>Returns <code class="language-plaintext highlighter-rouge">std::numeric_limits&lt;float&gt;::quiet_NaN()</code> – silent correctness failure</td>
+      <td>Returns <code class="language-plaintext highlighter-rouge">quiet_NaN()</code>, unimplemented (issue #3510)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The NaN stubs are explicitly marked <code class="language-plaintext highlighter-rouge">// Not implemented</code> in <code class="language-plaintext highlighter-rouge">service_math_ref.h</code>. This affects all algorithms that use normal distribution CDF, inverse CDF, or inverse error functions (Gaussian naive Bayes, quantile regression, normal distribution sampling). Issue #3510 is the tracking issue; the proposed fix (cephes/SciPy) is blocked on Apache 2.0 license compatibility.</p>
-
-<p>For comparison: aarch64 has the same NaN stubs for ErfInv/CdfNormInv but has one additional hand-coded path – Sleef SVE intrinsics for vectorized exp. riscv64 lacks that path and relies entirely on compiler auto-vectorization.</p>
-<h3 id="blaslapack">
+<p>The ErfInv/CdfNormInv NaN stubs affect any algorithm that samples from or inverts a normal distribution (Gaussian naive Bayes, quantile regression). The fix is blocked on finding an Apache-2.0-compatible implementation (the natural candidate, a cephes-style routine as used by SciPy, has unclear licensing); the issue is open and unassigned.</p>
+<h3 id="vectorized-kernel-coverage-verified-by-direct-source-read">
   
   
-    <a href="#blaslapack" class="anchor-heading" aria-labelledby="blaslapack"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> BLAS/LAPACK
-  
-  
-</h3>
-    
-
-<p><code class="language-plaintext highlighter-rouge">service_blas_ref.h</code> and <code class="language-plaintext highlighter-rouge">service_lapack_ref.h</code> delegate to OpenBLAS, cross-compiled with <code class="language-plaintext highlighter-rouge">--target RISCV64_ZVL128B</code>. OpenBLAS’s own RVV kernels are active. This is the most performant layer in the riscv64 stack; GEMM, SYRK, and LAPACK operations use OpenBLAS RVV code, not scalar fallback.</p>
-<h3 id="algorithm-kernels">
-  
-  
-    <a href="#algorithm-kernels" class="anchor-heading" aria-labelledby="algorithm-kernels"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Algorithm Kernels
+    <a href="#vectorized-kernel-coverage-verified-by-direct-source-read" class="anchor-heading" aria-labelledby="vectorized-kernel-coverage-verified-by-direct-source-read"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Vectorized kernel coverage (verified by direct source read)
   
   
 </h3>
     
 
-<p>No riscv64-specific algorithm files exist. There are no <code class="language-plaintext highlighter-rouge">*_rv64.cpp</code> analogs to <code class="language-plaintext highlighter-rouge">*_avx512.cpp</code>. The changes introduced by PR #2737 to algorithm files were exclusively 2-line preprocessor additions (<code class="language-plaintext highlighter-rouge">#elif defined(TARGET_RISCV64)</code>) to define <code class="language-plaintext highlighter-rouge">CPU_EXTENSION</code>. All algorithm computations run on the scalar C path with compiler auto-vectorization where <code class="language-plaintext highlighter-rouge">#pragma omp simd</code> is present.</p>
+<p>A repo-wide search for hand-written RVV vector intrinsics (<code class="language-plaintext highlighter-rouge">__riscv_v*</code>, <code class="language-plaintext highlighter-rouge">riscv_vector.h</code>, <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, <code class="language-plaintext highlighter-rouge">__riscv_vsetvl</code>) returned zero hits anywhere in oneDAL’s own code. Comparing hand-tuned SIMD-intrinsic kernel files by architecture, for the same algorithms (<code class="language-plaintext highlighter-rouge">finiteness_checker</code>, <code class="language-plaintext highlighter-rouge">svm_train_common</code>):</p>
 
-<p>Known gap: the random forest mean/variance vectorization added in PR #3362 is gated behind <code class="language-plaintext highlighter-rouge">#if (__CPUID__(DAAL_CPU) == __avx512__)</code> in <code class="language-plaintext highlighter-rouge">cpp/daal/src/algorithms/dtrees/forest/regression/df_regression_train_dense_default_impl.i</code> line 180. riscv64 and aarch64 both use the unvectorized scalar path. Issue #3431 is open, labeled <code class="language-plaintext highlighter-rouge">good first issue, help wanted, perf</code>, with no assignee.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Architecture</th>
+      <th>Hand-tuned intrinsic files</th>
+      <th>Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>x86_64</td>
+      <td>4 dedicated AVX-512/AVX2 files, plus ~21 more files using <code class="language-plaintext highlighter-rouge">immintrin.h</code></td>
+      <td><code class="language-plaintext highlighter-rouge">finiteness_checker_avx512_impl.i</code>, <code class="language-plaintext highlighter-rouge">svm_train_common_avx512_impl.i</code>, <code class="language-plaintext highlighter-rouge">tsne_gradient_descent_avx512_impl.i</code></td>
+    </tr>
+    <tr>
+      <td>aarch64 (SVE)</td>
+      <td>2 dedicated SVE files using <code class="language-plaintext highlighter-rouge">arm_sve.h</code></td>
+      <td><code class="language-plaintext highlighter-rouge">finiteness_checker_sve_impl.i</code>, <code class="language-plaintext highlighter-rouge">svm_train_common_sve_impl.i</code></td>
+    </tr>
+    <tr>
+      <td>riscv64</td>
+      <td>0</td>
+      <td>none; no <code class="language-plaintext highlighter-rouge">_rv64_impl.i</code> or <code class="language-plaintext highlighter-rouge">_riscv64_impl.i</code> files exist anywhere</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>No <code class="language-plaintext highlighter-rouge">*_rv64.cpp</code> analog to <code class="language-plaintext highlighter-rouge">*_avx512.cpp</code> exists; PR #2737’s changes to algorithm files were exclusively 2-line preprocessor additions (<code class="language-plaintext highlighter-rouge">#elif defined(TARGET_RISCV64)</code>) to set <code class="language-plaintext highlighter-rouge">CPU_EXTENSION</code>. The random forest mean/variance kernel, gated behind an AVX-512 check in <code class="language-plaintext highlighter-rouge">df_regression_train_dense_default_impl.i</code>, falls through to the unvectorized scalar path on both riscv64 and aarch64 (issue #3431, open, unassigned, <code class="language-plaintext highlighter-rouge">good first issue</code>).</p>
+
+<p><code class="language-plaintext highlighter-rouge">subgraph_isomorphism/backend/cpu/compiler_adapt.hpp</code> has rv64 specializations of <code class="language-plaintext highlighter-rouge">lzcnt</code>/<code class="language-plaintext highlighter-rouge">popcnt</code>, but these use portable <code class="language-plaintext highlighter-rouge">__builtin_clz</code>/<code class="language-plaintext highlighter-rouge">__builtin_clzl</code>/<code class="language-plaintext highlighter-rouge">__builtin_popcountl</code>, not RISC-V Zbb bit-manipulation intrinsics; no Zba/Zbb flags are used anywhere in the repo.</p>
+<h3 id="isa-extension-flags">
+  
+  
+    <a href="#isa-extension-flags" class="anchor-heading" aria-labelledby="isa-extension-flags"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ISA extension flags
+  
+  
+</h3>
+    
+
+<p>Both Make and Bazel compile riscv64 with <code class="language-plaintext highlighter-rouge">-march=rv64gc_v1p0_zvl128b</code>: base RV64GC plus the Vector extension v1.0, with a minimum guaranteed 128-bit vector register length (<code class="language-plaintext highlighter-rouge">zvl128b</code>). This flag only enables the compiler’s auto-vectorizer; it does not correspond to any hand-written RVV code in oneDAL itself. The real vectorized GEMM/LAPACK performance on riscv64 comes entirely from OpenBLAS’s own RVV kernels (a third-party dependency), not from any code oneDAL authored.</p>
+<h3 id="summary">
+  
+  
+    <a href="#summary" class="anchor-heading" aria-labelledby="summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Summary
+  
+  
+</h3>
+    
+
+<p>The dispatch and build infrastructure for riscv64 is complete and functional, structurally on par with AArch64 (same macro pattern, same file sizes, CI-tested cross-compilation that actually runs under QEMU). It is not a stub in the “does not build” sense. But at the algorithm-kernel level, riscv64 is a pure scalar C fallback with zero hand-written RVV intrinsic code, while x86 has 25+ hand-tuned AVX2/AVX-512 files and ARM has at least 2 hand-tuned SVE files for the identical algorithms.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -496,72 +573,100 @@
   
 </h2>
     
-<h3 id="make-based-build-supported">
+
+<p>There is no root <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>; oneDAL’s two build systems are Make and Bazel. No <code class="language-plaintext highlighter-rouge">BUILDING.md</code> or <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> exists, and no riscv64-specific Dockerfile exists anywhere (the only Dockerfile, <code class="language-plaintext highlighter-rouge">dev/docker/onedal-dev.Dockerfile</code>, targets amd64 only). All riscv64 build logic lives in <code class="language-plaintext highlighter-rouge">.ci/pipeline/ci.yml</code> (Azure Pipelines), <code class="language-plaintext highlighter-rouge">.ci/env/*.sh</code>, <code class="language-plaintext highlighter-rouge">.ci/scripts/*.sh</code>, <code class="language-plaintext highlighter-rouge">dev/make/*</code>, and <code class="language-plaintext highlighter-rouge">dev/bazel/*</code>.</p>
+<h3 id="toolchain-requirement-and-the-reason-for-it">
   
   
-    <a href="#make-based-build-supported" class="anchor-heading" aria-labelledby="make-based-build-supported"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Make-based Build (supported)
-  
-  
-</h3>
-    
-
-<p>The Make build system fully supports riscv64 via:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">dev/make/function_definitions/riscv64.mk</code>: defines <code class="language-plaintext highlighter-rouge">BACKEND_CONFIG=ref</code> (only valid value – any other backend errors), compiler defaults to <code class="language-plaintext highlighter-rouge">clang</code>, <code class="language-plaintext highlighter-rouge">OPTFLAG=O2</code></li>
-  <li><code class="language-plaintext highlighter-rouge">dev/make/function_definitions/lnxriscv64.mk</code>: defines <code class="language-plaintext highlighter-rouge">ARCH=riscv64</code>, <code class="language-plaintext highlighter-rouge">_OS=lnx</code>, <code class="language-plaintext highlighter-rouge">_IA=riscv64</code>, TBB/pthread link flags, references export def file <code class="language-plaintext highlighter-rouge">export_lnxriscv64.ref.def</code></li>
-  <li><code class="language-plaintext highlighter-rouge">dev/make/compiler_definitions/clang.ref.riscv64.mk</code>: sets <code class="language-plaintext highlighter-rouge">PLATs.clang = lnxriscv64</code>, cross-compile target <code class="language-plaintext highlighter-rouge">--target=riscv64-linux-gnu</code>, flags <code class="language-plaintext highlighter-rouge">-DDAAL_CPU=rv64 -DDAAL_REF -DONEDAL_REF</code>, and <code class="language-plaintext highlighter-rouge">rv64_OPT.clang = $(-Q)march=rv64gc_v1p0_zvl128b</code></li>
-  <li><code class="language-plaintext highlighter-rouge">.ci/env/riscv64-clang-crosscompile-toolchain.cmake</code>: CMake toolchain file setting <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR=riscv64</code>, using <code class="language-plaintext highlighter-rouge">clang</code>/<code class="language-plaintext highlighter-rouge">clang++</code> with <code class="language-plaintext highlighter-rouge">CMAKE_C_COMPILER_TARGET=riscv64-linux-gnu</code>, sysroot from <code class="language-plaintext highlighter-rouge">$ONEDAL_SYSROOT</code></li>
-</ul>
-
-<p>ISA extension flags: <code class="language-plaintext highlighter-rouge">rv64gc_v1p0_zvl128b</code> – RVV 1.0 with minimum 128-bit vector length. These flags are compile-time only; no RVV intrinsics are written in oneDAL source code.</p>
-
-<p>GCC cross-compilation is not supported. There is no <code class="language-plaintext highlighter-rouge">gnu.ref.riscv64.mk</code> file. Clang is the only supported compiler for riscv64.</p>
-
-<p>The build installs a debootstrap Ubuntu noble (24.04) sysroot via <code class="language-plaintext highlighter-rouge">.ci/env/apt.sh</code>. Pinned dependency versions in CI:</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Component</th>
-      <th>Version</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>OpenBLAS</td>
-      <td>v0.3.27</td>
-    </tr>
-    <tr>
-      <td>oneTBB</td>
-      <td>v2023.0.0</td>
-    </tr>
-    <tr>
-      <td>Ubuntu sysroot</td>
-      <td>noble (24.04)</td>
-    </tr>
-    <tr>
-      <td>OpenBLAS target</td>
-      <td>RISCV64_ZVL128B</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>OpenBLAS is built with <code class="language-plaintext highlighter-rouge">NO_FORTRAN=1</code>, <code class="language-plaintext highlighter-rouge">USE_OPENMP=0 USE_THREAD=0 USE_LOCKING=1</code>, <code class="language-plaintext highlighter-rouge">BINARY=64 INTERFACE64=1</code> (ILP64 interface, single-threaded, threading delegated to oneTBB).</p>
-
-<p>Clang minimum version: the toolchain cmake file does not pin a version. <code class="language-plaintext highlighter-rouge">rv64gc_v1p0_zvl128b</code> march string support requires Clang 16+. The CI resolves to Ubuntu 24.04 default clang (18.x).</p>
-<h3 id="bazel-build-not-supported">
-  
-  
-    <a href="#bazel-build-not-supported" class="anchor-heading" aria-labelledby="bazel-build-not-supported"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Bazel Build (not supported)
+    <a href="#toolchain-requirement-and-the-reason-for-it" class="anchor-heading" aria-labelledby="toolchain-requirement-and-the-reason-for-it"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Toolchain requirement and the reason for it
   
   
 </h3>
     
 
-<p><a href="https://github.com/uxlfoundation/oneDAL/issues/3526">Issue #3526</a> tracked Bazel riscv64 support and was closed as not planned on February 23, 2026 with no comments and no assignee. The master Bazel tracking issue <a href="https://github.com/uxlfoundation/oneDAL/issues/3530">#3530</a> lists riscv64 as “Secondary Issues (Post-Blocker)” with no owner and no timeline. The existing Make-based riscv64 support is described in the Bazel tracking issue as “experimental.”</p>
+<p><strong>Make build: clang-only.</strong> There is no <code class="language-plaintext highlighter-rouge">gnu.ref.riscv64.mk</code>; only <code class="language-plaintext highlighter-rouge">clang.ref.riscv64.mk</code> exists. The exact minimum pinned is LLVM/Clang 18 (<code class="language-plaintext highlighter-rouge">apt.llvm.org/llvm.sh 18</code>, aliased via <code class="language-plaintext highlighter-rouge">update-alternatives</code>). GNU cross-gcc is installed in CI but used only as OpenBLAS’s <code class="language-plaintext highlighter-rouge">--host-compiler</code> for build-time host tools, not to compile oneDAL.</p>
 
-<p>There is no Dockerfile for riscv64. The development container (<code class="language-plaintext highlighter-rouge">dev/docker/onedal-dev.Dockerfile</code>) targets amd64 only.</p><hr />
+<p><strong>Why GCC cannot build the riscv64 OpenBLAS kernels</strong>, per an explicit code comment at <code class="language-plaintext highlighter-rouge">.ci/pipeline/ci.yml:712-716</code>: the GNU riscv64 cross-gcc shipped with Ubuntu 24.04 is gcc-13, which lacks the RVV segment-load intrinsics (<code class="language-plaintext highlighter-rouge">vfloat32m4x2_t</code>, <code class="language-plaintext highlighter-rouge">__riscv_vlseg2e32_v_f32m4x2</code>) that OpenBLAS’s <code class="language-plaintext highlighter-rouge">RISCV64_ZVL128B</code> kernels require. Clang 18 is used instead for all RISC-V compilation in the Make path.</p>
+
+<p><strong>Bazel build: GCC for oneDAL itself, clang for OpenBLAS.</strong> PR #3719 brings Bazel to parity using <code class="language-plaintext highlighter-rouge">CC=riscv64-linux-gnu-gcc</code>/<code class="language-plaintext highlighter-rouge">CXX=riscv64-linux-gnu-g++</code> to compile oneDAL’s own Bazel targets, while still building OpenBLAS with clang specifically to work around the same gcc-13 RVV segment-intrinsic gap. This is a new capability versus Make, where gcc could not be used for oneDAL at all.</p>
+
+<p>Target flag: <code class="language-plaintext highlighter-rouge">-march=rv64gc_v1p0_zvl128b</code> (single fixed ISA variant; no runtime CPU dispatch, same documented pattern as AArch64 SVE). Pinned dependency versions in CI: <code class="language-plaintext highlighter-rouge">OPENBLAS_VERSION: v0.3.34</code>, <code class="language-plaintext highlighter-rouge">TBB_VERSION: v2023.1.0</code> (the OpenBLAS pin was bumped from an earlier version by PR #3786, merged 2026-09-23). CI host: <code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> (noble), sysroot built via debootstrap for <code class="language-plaintext highlighter-rouge">noble</code>.</p>
+<h3 id="exact-build-commands-make">
+  
+  
+    <a href="#exact-build-commands-make" class="anchor-heading" aria-labelledby="exact-build-commands-make"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Exact build commands (Make)
+  
+  
+</h3>
+    
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>.ci/env/apt.sh dev-base
+.ci/env/apt.sh gnu-cross-compilers riscv64
+.ci/env/apt.sh llvm-version 18
+.ci/env/apt.sh qemu-apt
+.ci/env/apt.sh build-sysroot &lt;workspace&gt; riscv64 noble sysroot-riscv64
+
+.ci/env/openblas.sh --target RISCV64_ZVL128B --host-compiler gcc --compiler clang \
+  --target-arch riscv64 --cross-compile --prefix &lt;OPENBLAS_CACHE_DIR&gt; \
+  --sysroot &lt;SYSROOT_CACHE_DIR&gt; --version v0.3.34
+
+.ci/env/tbb.sh --cross-compile \
+  --toolchain-file .ci/env/riscv64-clang-crosscompile-toolchain.cmake \
+  --target-arch riscv64 --prefix &lt;TBB_CACHE_DIR&gt; --version v2023.1.0
+
+.ci/scripts/build.sh --compiler clang --optimizations rv64 --target daal \
+  --backend-config ref --cross-compile --plat lnxriscv64 \
+  --sysroot &lt;SYSROOT_CACHE_DIR&gt; --blas-dir &lt;OPENBLAS_CACHE_DIR&gt; --tbb-dir &lt;TBB_CACHE_DIR&gt;
+</code></pre></div></div>
+
+<p>This resolves to <code class="language-plaintext highlighter-rouge">make daal PLAT=lnxriscv64 COMPILER=clang REQCPU=rv64 BACKEND_CONFIG=ref</code>. The makefile hard-errors if <code class="language-plaintext highlighter-rouge">BACKEND_CONFIG</code> is anything other than <code class="language-plaintext highlighter-rouge">ref</code> for <code class="language-plaintext highlighter-rouge">lnxriscv64</code>.</p>
+<h3 id="exact-build-commands-bazel">
+  
+  
+    <a href="#exact-build-commands-bazel" class="anchor-heading" aria-labelledby="exact-build-commands-bazel"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Exact build commands (Bazel)
+  
+  
+</h3>
+    
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>export CC=riscv64-linux-gnu-gcc
+export CXX=riscv64-linux-gnu-g++
+export OPENBLASROOT=&lt;OPENBLAS_CACHE_DIR&gt;
+bazel build --platforms=@config//:linux_riscv64 --backend_config=ref \
+  //cpp/daal:core_dynamic //cpp/oneapi/dal:dynamic
+</code></pre></div></div>
+
+<p>The Bazel README states explicitly: “AArch64 and RISC-V64 are only supported with the ref backend… Both ship a single fixed ISA variant (SVE / RVGC), there is no runtime CPU dispatch like on x86.” OpenRNG (<code class="language-plaintext highlighter-rouge">--rng_backend=openrng</code>) is wired but currently validated on ARM only, not riscv64.</p>
+<h3 id="qemu-usage">
+  
+  
+    <a href="#qemu-usage" class="anchor-heading" aria-labelledby="qemu-usage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> QEMU usage
+  
+  
+</h3>
+    
+
+<p>Install: <code class="language-plaintext highlighter-rouge">qemu-user-static</code>, <code class="language-plaintext highlighter-rouge">qemu-user</code>, <code class="language-plaintext highlighter-rouge">binfmt-support</code>. The Make-path CI job sets <code class="language-plaintext highlighter-rouge">QEMU_LD_PREFIX=&lt;sysroot&gt;</code>, <code class="language-plaintext highlighter-rouge">QEMU_CPU="max"</code>, <code class="language-plaintext highlighter-rouge">ARCH_ONEDAL=riscv64</code>, then runs <code class="language-plaintext highlighter-rouge">daal/cpp</code> and <code class="language-plaintext highlighter-rouge">oneapi/cpp</code> example binaries through <code class="language-plaintext highlighter-rouge">qemu-riscv64</code> via binfmt transparently. The Bazel-path CI job does not run QEMU; it only verifies the output ELF header with <code class="language-plaintext highlighter-rouge">readelf -h ... | grep "RISC-V"</code>. A reviewer on PR #3719 (Alexandr-Solovev) explicitly asked whether the RISC-V Bazel job should validate the build with examples/tests; napetrov’s response was that QEMU execution on the Bazel path was deferred as follow-up work, not implemented in that PR.</p>
+<h3 id="known-build-issue-found-and-fixed-during-pr-3719-review">
+  
+  
+    <a href="#known-build-issue-found-and-fixed-during-pr-3719-review" class="anchor-heading" aria-labelledby="known-build-issue-found-and-fixed-during-pr-3719-review"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Known build issue (found and fixed during PR #3719 review)
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">dal_generate_cpu_dispatcher</code> initially omitted <code class="language-plaintext highlighter-rouge">ONEDAL_CPU_DISPATCH_A8SVE</code> and <code class="language-plaintext highlighter-rouge">ONEDAL_CPU_DISPATCH_RV64</code> macro definitions, which caused 58 of 63 oneAPI examples to throw <code class="language-plaintext highlighter-rouge">unsupported_device</code> exceptions at the Bazel build stage. This was caught in review and fixed within the same PR (commit <code class="language-plaintext highlighter-rouge">f078186b</code>) before merge; it did not ship.</p>
+<h3 id="example-exclusions">
+  
+  
+    <a href="#example-exclusions" class="anchor-heading" aria-labelledby="example-exclusions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Example exclusions
+  
+  
+</h3>
+    
+
+<p>23 DAAL examples and 1 oneAPI example (<code class="language-plaintext highlighter-rouge">basic_statistics_dense_online</code>) are explicitly excluded from the riscv64+clang example build via <code class="language-plaintext highlighter-rouge">examples/daal/cpp/target_excludes.cmake</code> and <code class="language-plaintext highlighter-rouge">examples/oneapi/cpp/target_excludes.cmake</code> (matched on <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR STREQUAL "riscv64"</code>). Excluded examples include <code class="language-plaintext highlighter-rouge">assoc_rules_apriori_batch</code>, <code class="language-plaintext highlighter-rouge">cholesky_dense_batch</code>, correlation/covariance distributed and online variants, <code class="language-plaintext highlighter-rouge">elastic_net_dense_batch</code>, <code class="language-plaintext highlighter-rouge">lasso_reg_dense_batch</code>, several <code class="language-plaintext highlighter-rouge">low_order_moms</code> variants, <code class="language-plaintext highlighter-rouge">pivoted_qr_dense_batch</code>, and others.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -582,28 +687,28 @@
   </thead>
   <tbody>
     <tr>
-      <td>Build system – Make</td>
+      <td>Build system - Make</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full</td>
+      <td>Full (clang-only)</td>
     </tr>
     <tr>
-      <td>Build system – Bazel</td>
+      <td>Build system - Bazel</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Not supported (closed as not planned)</td>
+      <td>Full (merged PR #3719, 2026-09-17; GCC for oneDAL, clang for OpenBLAS)</td>
     </tr>
     <tr>
-      <td>CI – GitHub Actions</td>
+      <td>CI - GitHub Actions</td>
       <td>Yes</td>
-      <td>Yes (ubuntu-24.04-arm)</td>
-      <td>No</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code> native)</td>
+      <td>No (zero riscv references in any of 17 workflow files, confirmed by direct grep)</td>
     </tr>
     <tr>
-      <td>CI – Azure Pipelines</td>
+      <td>CI - Azure Pipelines</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (QEMU emulation)</td>
+      <td>Yes, two jobs: Make+QEMU execution, Bazel build-only</td>
     </tr>
     <tr>
       <td>CPU dispatch tiers</td>
@@ -614,38 +719,38 @@
     <tr>
       <td>Runtime ISA probing</td>
       <td>Yes</td>
-      <td>Yes</td>
-      <td>No (TODO stub)</td>
+      <td>TODO stub</td>
+      <td>TODO stub</td>
     </tr>
     <tr>
-      <td>Math – basic ops</td>
-      <td>MKL vExp, vLog, etc.</td>
-      <td>Sleef SVE for float exp; scalar for others</td>
-      <td>omp simd auto-vectorization</td>
-    </tr>
-    <tr>
-      <td>Math – ErfInv, CdfNormInv</td>
+      <td>Math - basic ops</td>
       <td>MKL</td>
-      <td>NaN stub</td>
-      <td>NaN stub</td>
+      <td><code class="language-plaintext highlighter-rouge">#pragma omp simd</code> auto-vectorized</td>
+      <td><code class="language-plaintext highlighter-rouge">#pragma omp simd</code> auto-vectorized</td>
+    </tr>
+    <tr>
+      <td>Math - ErfInv, CdfNormInv</td>
+      <td>MKL</td>
+      <td>NaN stub (#3510)</td>
+      <td>NaN stub (#3510)</td>
     </tr>
     <tr>
       <td>BLAS/LAPACK</td>
       <td>MKL</td>
       <td>OpenBLAS</td>
-      <td>OpenBLAS (RVV-enabled)</td>
+      <td>OpenBLAS (RVV-enabled kernels, third-party)</td>
     </tr>
     <tr>
-      <td>Algorithm kernels – hand-tuned SIMD</td>
-      <td>Yes (AVX2 + AVX512 paths)</td>
-      <td>No</td>
-      <td>No</td>
+      <td>Hand-tuned SIMD intrinsic kernel files</td>
+      <td>25+ (AVX2/AVX512)</td>
+      <td>2 (SVE)</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>Forest mean/variance vectorization</td>
-      <td>Yes (AVX2 + AVX512)</td>
-      <td>No</td>
-      <td>No</td>
+      <td>Yes (AVX2/AVX512)</td>
+      <td>No (#3431)</td>
+      <td>No (#3431)</td>
     </tr>
     <tr>
       <td>GPU/DPC++ target</td>
@@ -654,15 +759,15 @@
       <td>No</td>
     </tr>
     <tr>
-      <td>Binary packages</td>
-      <td>Yes (conda-forge, PyPI)</td>
-      <td>No</td>
-      <td>No</td>
+      <td>Binary release packages</td>
+      <td>None (see Section 8)</td>
+      <td>None</td>
+      <td>None</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>riscv64 and aarch64 are at equivalent depth except: (1) aarch64 has one Sleef SVE exp path that riscv64 lacks; (2) aarch64 has GitHub Actions CI with native ARM runners while riscv64 is QEMU-only.</p><hr />
+<p>Functional gaps: ErfInv/CdfNormInv return NaN silently on riscv64, with no diagnostic signal, affecting any algorithm using normal-distribution CDF/inverse-CDF or inverse error function. Performance gaps: zero hand-written RVV code anywhere in oneDAL’s own kernels; all vectorized speed on riscv64 comes from OpenBLAS, a dependency, not from oneDAL. Security hardening: no riscv64-specific hardening gaps were identified or searched for in the research findings; data not available beyond what is covered above.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -671,40 +776,62 @@
   
 </h2>
     
-<h3 id="azure-pipelines-active">
-  
-  
-    <a href="#azure-pipelines-active" class="anchor-heading" aria-labelledby="azure-pipelines-active"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Azure Pipelines (active)
-  
-  
-</h3>
-    
 
-<p>The riscv64 CI job is defined in <code class="language-plaintext highlighter-rouge">.ci/pipeline/ci.yml</code> as <code class="language-plaintext highlighter-rouge">LinuxMakeLLVM_OpenBLAS_rv64</code>. It triggers on every push to <code class="language-plaintext highlighter-rouge">main</code> and every PR against <code class="language-plaintext highlighter-rouge">main</code>. It runs on an <code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> x86_64 hosted runner and uses QEMU for test execution (<code class="language-plaintext highlighter-rouge">QEMU_CPU="max"</code>, <code class="language-plaintext highlighter-rouge">QEMU_LD_PREFIX</code> set to the sysroot).</p>
+<p><strong>GitHub Actions: no riscv64 coverage.</strong> All 17 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> (<code class="language-plaintext highlighter-rouge">check-intel-urls.yml</code>, <code class="language-plaintext highlighter-rouge">ci-aarch64.yml</code>, <code class="language-plaintext highlighter-rouge">ci-conda-recipe.yml</code>, <code class="language-plaintext highlighter-rouge">ci-win.yml</code>, <code class="language-plaintext highlighter-rouge">ci.yml</code>, <code class="language-plaintext highlighter-rouge">coverity.yml</code>, <code class="language-plaintext highlighter-rouge">docker-validation-ci.yml</code>, <code class="language-plaintext highlighter-rouge">docker-validation-nightly.yml</code>, <code class="language-plaintext highlighter-rouge">docs-release.yml</code>, <code class="language-plaintext highlighter-rouge">label-enforcement.yml</code>, <code class="language-plaintext highlighter-rouge">nightly-build.yml</code>, <code class="language-plaintext highlighter-rouge">nightly-test.yml</code>, <code class="language-plaintext highlighter-rouge">openssf-scorecard.yml</code>, <code class="language-plaintext highlighter-rouge">pr-checklist.yml</code>, <code class="language-plaintext highlighter-rouge">renovate-validation.yml</code>, <code class="language-plaintext highlighter-rouge">skywalking-eyes.yml</code>, <code class="language-plaintext highlighter-rouge">slack-pr-notification.yml</code>) were read directly and case-insensitively grepped for “riscv”/”rv64”/”RISC-V”: zero matches in any file. <code class="language-plaintext highlighter-rouge">ci-aarch64.yml</code> covers AArch64 only, on GitHub-hosted <code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code> runners.</p>
 
-<p>Confirmed active: Azure Pipelines build ID 60530 ran on <a href="https://github.com/uxlfoundation/oneDAL/pull/3660">PR #3660</a> (merged 2026-06-16) and completed with status <code class="language-plaintext highlighter-rouge">success</code>. [NEEDS VERIFICATION – the build ID and PR number come from a single source in the research findings.]</p>
+<p><strong>Azure Pipelines: riscv64 CI is real.</strong> Defined in <code class="language-plaintext highlighter-rouge">.ci/pipeline/ci.yml</code>, confirmed as the project’s main CI config by <code class="language-plaintext highlighter-rouge">.ci/AGENTS.md</code>. Trigger: every push to <code class="language-plaintext highlighter-rouge">main</code>/<code class="language-plaintext highlighter-rouge">rls/*</code> and every PR targeting those branches (<code class="language-plaintext highlighter-rouge">.github</code> paths are explicitly excluded from the PR path filter, since GitHub Actions workflows reference this file indirectly rather than containing the riscv64 jobs themselves).</p>
 
-<p>Build steps in the CI job:</p>
+<p>Two jobs, both on <code class="language-plaintext highlighter-rouge">pool: vmImage: 'ubuntu-24.04'</code> (x86_64 hosted, cross-compiled and QEMU-emulated, not native RISC-V hardware):</p>
+
 <ol>
-  <li>Install GNU riscv64 cross-compilers (<code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>, <code class="language-plaintext highlighter-rouge">g++-riscv64-linux-gnu</code>, <code class="language-plaintext highlighter-rouge">gfortran-riscv64-linux-gnu</code>)</li>
-  <li>Build Ubuntu noble sysroot via debootstrap</li>
-  <li>Cross-compile OpenBLAS v0.3.27 with <code class="language-plaintext highlighter-rouge">--target RISCV64_ZVL128B</code></li>
-  <li>Cross-compile oneTBB v2023.0.0 using the CMake toolchain file</li>
-  <li>Build oneDAL <code class="language-plaintext highlighter-rouge">daal</code> and <code class="language-plaintext highlighter-rouge">onedal_c</code> targets with <code class="language-plaintext highlighter-rouge">--plat lnxriscv64 --backend-config ref --optimizations rv64</code></li>
-  <li>Run <code class="language-plaintext highlighter-rouge">daal/cpp examples</code> and <code class="language-plaintext highlighter-rouge">oneapi/cpp examples</code> under QEMU</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">LinuxMakeLLVM_OpenBLAS_rv64</code></strong>: installs GNU riscv64 cross-compilers, LLVM 18, QEMU; builds a riscv64 sysroot; cross-compiles OpenBLAS and oneTBB; builds <code class="language-plaintext highlighter-rouge">daal</code> and <code class="language-plaintext highlighter-rouge">onedal_c</code>; then actually runs the built <code class="language-plaintext highlighter-rouge">daal/cpp</code> and <code class="language-plaintext highlighter-rouge">oneapi/cpp</code> examples under QEMU user-mode emulation. This is build and execute/test.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">LinuxBazelGNU_OpenBLAS_rv64</code></strong> (added by PR #3719, merged 2026-09-17): cross-compiles OpenBLAS with clang, then <code class="language-plaintext highlighter-rouge">bazel build --platforms=@config//:linux_riscv64 --backend_config=ref //cpp/daal:core_dynamic //cpp/oneapi/dal:dynamic</code>, verified only via <code class="language-plaintext highlighter-rouge">readelf -h ... | grep "RISC-V"</code>. Build-only, no QEMU execution; running examples under QEMU on this path was explicitly deferred as follow-up work per PR #3719’s review discussion.</li>
 </ol>
 
-<p>No performance benchmarking steps exist in the CI job.</p>
-<h3 id="github-actions-riscv64-absent">
-  
-  
-    <a href="#github-actions-riscv64-absent" class="anchor-heading" aria-labelledby="github-actions-riscv64-absent"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> GitHub Actions (riscv64 absent)
-  
-  
-</h3>
-    
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Axis</th>
+      <th>amd64</th>
+      <th>aarch64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GitHub Actions</td>
+      <td>Yes</td>
+      <td>Yes, native ARM runner</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Azure Pipelines</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes, QEMU-emulated on x86_64 host</td>
+    </tr>
+    <tr>
+      <td>Native hardware runner</td>
+      <td>Yes</td>
+      <td>Yes (GitHub-hosted <code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code>)</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Test execution (not just build)</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes, via QEMU, Make path only; Bazel path is build-check only</td>
+    </tr>
+    <tr>
+      <td>Performance benchmarking in CI</td>
+      <td>Not confirmed</td>
+      <td>Not confirmed</td>
+      <td>None; CI validates functional correctness only</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>All 16 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> were read. None contain any reference to “riscv”, “riscv64”, or “RISCV”. The only non-x86 GitHub Actions CI is <code class="language-plaintext highlighter-rouge">ci-aarch64.yml</code>, which uses GitHub-hosted <code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code> runners. riscv64 has no GitHub Actions workflow.</p><hr />
+<p>No RISE Project runner or board-farm infrastructure is used anywhere in oneDAL’s CI. Both riscv64 jobs run on standard Azure-hosted x86_64 agents.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -714,7 +841,7 @@
 </h2>
     
 
-<p>No riscv64 binary packages exist through any distribution channel. The following were checked directly:</p>
+<p>No riscv64 (or any-architecture) binary release artifacts exist for oneDAL through any channel checked:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -725,39 +852,41 @@
   </thead>
   <tbody>
     <tr>
-      <td>GitHub Releases (uxlfoundation/oneDAL 2026.1.0, 2026.0.0, 2025.11.0)</td>
-      <td>Zero binary assets attached; API returns <code class="language-plaintext highlighter-rouge">assets: []</code> for all three releases</td>
-    </tr>
-    <tr>
-      <td>PyPI (<code class="language-plaintext highlighter-rouge">scikit-learn-intelex</code> 2026.1.0, 10 wheels)</td>
-      <td>All wheels are <code class="language-plaintext highlighter-rouge">manylinux_2_28_x86_64</code> or <code class="language-plaintext highlighter-rouge">win_amd64</code>; no riscv64</td>
+      <td>GitHub Releases (uxlfoundation/oneDAL: 2026.1.0, 2026.0.0, 2025.11.0, 2025.10.1, 2025.10.0)</td>
+      <td>All 5 most recent releases have empty asset arrays; source tarball/zipball only, no binaries at all, any architecture</td>
     </tr>
     <tr>
       <td>PyPI (<code class="language-plaintext highlighter-rouge">onedal</code>)</td>
-      <td>Package does not exist (404)</td>
+      <td>HTTP 404, package does not exist, confirmed via both <code class="language-plaintext highlighter-rouge">pypi.org/pypi/onedal/json</code> and <code class="language-plaintext highlighter-rouge">pypi.org/simple/onedal/</code></td>
     </tr>
     <tr>
-      <td>conda-forge linux-riscv64</td>
-      <td>oneDAL absent from channel repodata entirely</td>
+      <td>PyPI (<code class="language-plaintext highlighter-rouge">scikit-learn-intelex</code>, the actual downstream package bundling oneDAL’s Python bindings)</td>
+      <td>Exists, latest 2026.1.0, 10 wheels, all <code class="language-plaintext highlighter-rouge">manylinux_2_28_x86_64</code> or <code class="language-plaintext highlighter-rouge">win_amd64</code>; zero riscv64 wheels</td>
+    </tr>
+    <tr>
+      <td>RISE GitLab wheel mirror (<code class="language-plaintext highlighter-rouge">gitlab.com/.../packages/pypi/simple/onedal/</code>)</td>
+      <td>HTTP 302 redirect to the same 404ing PyPI page; no riscv64 package via this route</td>
+    </tr>
+    <tr>
+      <td>Ubuntu (all suites, including resolute/26.04)</td>
+      <td>“Sorry, your search gave no results” for <code class="language-plaintext highlighter-rouge">onedal</code>, <code class="language-plaintext highlighter-rouge">python3-onedal</code>, <code class="language-plaintext highlighter-rouge">libonedal</code>, <code class="language-plaintext highlighter-rouge">libdaal</code>; no oneDAL-named package in any suite, any architecture</td>
+    </tr>
+    <tr>
+      <td>conda-forge</td>
+      <td>Absent from the channel entirely</td>
     </tr>
     <tr>
       <td>Debian</td>
-      <td>Package does not exist in the Debian archive</td>
+      <td>Package does not exist</td>
     </tr>
     <tr>
-      <td>Ubuntu</td>
-      <td>Package does not exist in Ubuntu noble</td>
-    </tr>
-    <tr>
-      <td>Arch Linux / archriscv</td>
-      <td>Not in upstream Arch packages; not in archriscv status list</td>
+      <td>Arch Linux / archriscv.felixc.at</td>
+      <td>No “onedal” string found anywhere on the status page</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The build-from-source workflow introduced by PR #2737 produces functional riscv64 binaries but no pre-built artifacts are distributed through any registry.</p>
-
-<p>Release notes for 2025.5.0 through 2026.1.0 contain no RISC-V mentions. Performance improvements in release notes target x86 SIMD and ARM SVE only.</p><hr />
+<p>To obtain a working riscv64 binary today, a user must perform the full cross-compilation workflow described in Section 5: install the GNU and Clang riscv64 cross-toolchains, build a debootstrap sysroot, cross-compile OpenBLAS and oneTBB from source, then cross-compile oneDAL itself with the <code class="language-plaintext highlighter-rouge">ref</code> backend. No pre-built artifact is distributed through any registry.</p>
 <h2 id="9-dependencies">
   
   
@@ -773,60 +902,68 @@
       <th>Dependency</th>
       <th>Role</th>
       <th>riscv64 Status</th>
-      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Intel MKL</td>
-      <td>Primary numeric backend (BLAS, LAPACK, RNG, FFT, special math)</td>
-      <td>Hard blocker – x86-only closed-source binary</td>
-      <td>The riscv64 build uses <code class="language-plaintext highlighter-rouge">--backend-config ref</code> which excludes MKL entirely. Special math functions that delegate to MKL return NaN on riscv64 (issue #3510).</td>
-    </tr>
-    <tr>
       <td>OpenBLAS</td>
-      <td>Alternate BLAS/LAPACK backend; sole backend on riscv64</td>
-      <td>Functional – cross-compiled with <code class="language-plaintext highlighter-rouge">RISCV64_ZVL128B</code></td>
-      <td>OpenBLAS v0.3.27 pinned in CI. Multithreading disabled in OpenBLAS; threading provided by oneTBB. Race condition bug between oneTBB and OpenBLAS threading is tracked in issue #3329 (open, Aug 2025) – applies to all non-MKL platforms including riscv64.</td>
+      <td>Runtime dependency, critical. Sole BLAS/LAPACK backend on riscv64 (MKL substitute)</td>
+      <td>Builds via cross-compile with <code class="language-plaintext highlighter-rouge">--target RISCV64_ZVL128B</code>; pinned v0.3.34 (bumped from an earlier version by PR #3786, merged 2026-09-23, whose release notes include riscv64-specific SGEMM/DGEMM and STRSM kernel fixes). Ubuntu resolute ships <code class="language-plaintext highlighter-rouge">libopenblas-dev</code> 0.3.32+ds-5 for riscv64. Exercised in oneDAL’s own QEMU CI. Known gaps: ZVL256B TRSM has no RVV kernel plus a correctness bug (upstream OpenBLAS PR #5830, draft); an OpenBLAS/oneTBB threading race affects all OpenBLAS-backed platforms including riscv64 (oneDAL issue #3329, open).</td>
     </tr>
     <tr>
       <td>oneTBB</td>
-      <td>Thread parallelism runtime</td>
-      <td>Builds from source – toolchain file present</td>
-      <td>oneTBB v2023.0.0. PyPI/conda-forge binary packages are x86-only; riscv64 requires source build. oneDAL’s MODULE.bazel hardcodes x86 PyPI URLs; riscv64 uses the <code class="language-plaintext highlighter-rouge">TBBROOT</code> env-var override path.</td>
+      <td>Runtime dependency, critical. Thread-parallel runtime and scalable allocator underpinning oneDAL’s parallelism</td>
+      <td>Builds from source via a dedicated CMake cross-toolchain file; pinned v2023.1.0. Ubuntu resolute ships <code class="language-plaintext highlighter-rouge">libtbb-dev</code> 2022.3.0-2 for riscv64. Zero upstream oneTBB CI coverage for riscv64 confirmed separately (see project-reports/onetbb.md); oneTBB’s own PR #987 (libatomic auto-link) has been open since December 2022.</td>
     </tr>
     <tr>
-      <td>Intel MPI / oneCCL</td>
-      <td>Distributed multi-node compute</td>
-      <td>Not functional on riscv64</td>
-      <td>Both are x86-only binaries. No open-source MPI validation confirmed for riscv64. Blocks distributed oneDAL workloads. [NEEDS VERIFICATION – oneCCL riscv64 status is based on zero search results; no positive confirmation of incompatibility from a primary source.]</td>
+      <td>LLVM</td>
+      <td>Build dependency, critical. Clang 18 is the only compiler that can build oneDAL itself on the Make path, and is used for OpenBLAS’s build on both the Make and Bazel paths</td>
+      <td>Pinned to version 18, installed via apt.llvm.org. Required because the Ubuntu 24.04 default GNU cross-gcc (gcc-13) lacks RVV segment intrinsics (<code class="language-plaintext highlighter-rouge">vfloat32m4x2_t</code>, <code class="language-plaintext highlighter-rouge">__riscv_vlseg2e32_v_f32m4x2</code>) that OpenBLAS’s riscv64 kernels need.</td>
     </tr>
     <tr>
-      <td>OpenMP (libgomp)</td>
-      <td>Secondary parallelism</td>
-      <td>Functional via system cross-toolchain</td>
-      <td>oneDAL MODULE.bazel fetches x86-only conda-forge libgomp; riscv64 builds use the system cross-toolchain libgomp instead. No hard blocker.</td>
+      <td>GNU make</td>
+      <td>Build dependency, critical. The original and still-primary build system; defines <code class="language-plaintext highlighter-rouge">PLAT=lnxriscv64</code>, <code class="language-plaintext highlighter-rouge">BACKEND_CONFIG=ref</code></td>
+      <td>Fully functional for riscv64 since PR #2737 (2024-04-26); clang-only, no <code class="language-plaintext highlighter-rouge">gnu.ref.riscv64.mk</code> exists.</td>
+    </tr>
+    <tr>
+      <td>CMake</td>
+      <td>Build dependency, critical. Used for oneTBB’s cross-compiled build (via a dedicated toolchain file) and for building the example suite against an installed oneDAL package</td>
+      <td>Functional; riscv64 toolchain file at <code class="language-plaintext highlighter-rouge">.ci/env/riscv64-clang-crosscompile-toolchain.cmake</code>.</td>
+    </tr>
+    <tr>
+      <td>QEMU</td>
+      <td>Test dependency, critical. Emulates riscv64 binaries on the x86_64 Azure CI hosts (<code class="language-plaintext highlighter-rouge">qemu-user-static</code>, <code class="language-plaintext highlighter-rouge">qemu-user</code>, <code class="language-plaintext highlighter-rouge">binfmt-support</code>)</td>
+      <td>Used by the <code class="language-plaintext highlighter-rouge">LinuxMakeLLVM_OpenBLAS_rv64</code> job to actually execute built example binaries (<code class="language-plaintext highlighter-rouge">QEMU_CPU="max"</code>, <code class="language-plaintext highlighter-rouge">QEMU_LD_PREFIX</code> set to the sysroot). Not used by the Bazel job, which only inspects the ELF header.</td>
+    </tr>
+    <tr>
+      <td>Bazel</td>
+      <td>Build dependency, optional. The newer, parallel build system</td>
+      <td>riscv64 support merged via PR #3719 on 2026-09-17, bringing Bazel to functional parity with Make for build (not yet for QEMU test execution, which is deferred follow-up work). Not in any tagged release yet.</td>
+    </tr>
+    <tr>
+      <td>OpenMP</td>
+      <td>Runtime dependency, optional. Secondary threading backend via <code class="language-plaintext highlighter-rouge">libgomp</code></td>
+      <td>Ships with any riscv64 GNU cross-toolchain (GCC itself has mature riscv64 support); oneDAL’s riscv64 build uses the system cross-toolchain’s libgomp rather than the x86-only conda-forge package pinned elsewhere in <code class="language-plaintext highlighter-rouge">MODULE.bazel</code>. No blocker identified.</td>
     </tr>
     <tr>
       <td>oneDPL</td>
-      <td>Parallel STL for some algorithm implementations</td>
-      <td>Unknown</td>
-      <td>No riscv64 issues or CI found in uxlfoundation/oneDPL. Data not available: riscv64-specific build or test status for oneDPL. Not a hard blocker for the ref backend path.</td>
+      <td>Runtime dependency, optional. Parallel STL / SIMD execution policies used by some algorithm implementations</td>
+      <td>Header-only and architecture-independent in principle; <code class="language-plaintext highlighter-rouge">onedpl-headers</code> exists in the Ubuntu archive starting with resolute (26.04) as part of oneAPI Base Toolkit packaging, but is not riscv64-functionally-validated. Data not available: no riscv64-specific issues found in <code class="language-plaintext highlighter-rouge">uxlfoundation/oneDPL</code>. Not a hard blocker for oneDAL’s <code class="language-plaintext highlighter-rouge">ref</code> backend path.</td>
     </tr>
     <tr>
       <td>Catch2</td>
-      <td>C++ test framework (dev only)</td>
-      <td>Builds with workaround</td>
-      <td><a href="https://github.com/catchorg/Catch2/issues/2808">Issue #2808</a> reports <code class="language-plaintext highlighter-rouge">Werror=cast-align</code> on riscv; filed Feb 2024, status open. Requires <code class="language-plaintext highlighter-rouge">-Wno-cast-align</code> workaround. Low severity.</td>
+      <td>Test dependency, optional. C++ test framework, dev-only, not shipped in releases</td>
+      <td>Ubuntu resolute ships <code class="language-plaintext highlighter-rouge">libcatch2-dev</code> 3.7.1-0.6 for riscv64; builds with a workaround. Upstream Catch2 issue #2808 (<code class="language-plaintext highlighter-rouge">Werror=cast-align</code> failure on riscv, opened February 2024, open) requires <code class="language-plaintext highlighter-rouge">-Wno-cast-align</code>; low severity.</td>
     </tr>
     <tr>
-      <td>Intel VTune SDK</td>
-      <td>Optional profiling</td>
-      <td>Not available on riscv64</td>
-      <td>x86-only binary. Optional; not a blocker.</td>
+      <td>OpenRNG</td>
+      <td>Runtime dependency, optional. Arm-developed VSL-ABI-compatible RNG backend, newly wired as an alternative to OpenBLAS’s RNG path</td>
+      <td>Added by PR #3719; GitLab-hosted by Arm (<code class="language-plaintext highlighter-rouge">gitlab.arm.com/libraries/openrng</code>), not GitHub. Exercised in the new <code class="language-plaintext highlighter-rouge">LinuxBazelGNU_OpenBLAS_rv64</code> CI lane, but validated primarily on AArch64; decision-forest segfaults under <code class="language-plaintext highlighter-rouge">ref+OpenRNG</code> were excluded from CI on AArch64 rather than fixed, per PR #3719’s review discussion, and no riscv64 binary package for OpenRNG was found via web search.</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p>Dependencies referenced in research but excluded from oneDAL’s riscv64 path by design (not in the direct-dependency list above, included for completeness): <strong>Intel MKL</strong> is a hard blocker by design on riscv64, a closed-source, x86-only binary with no riscv64 build anywhere; oneDAL’s riscv64 build uses <code class="language-plaintext highlighter-rouge">--backend-config ref</code> specifically to exclude it, with the direct consequence that MKL-backed special-math functions (ErfInv, CdfNormInv) are NaN stubs on riscv64 (issue #3510). <strong>oneCCL</strong> and <strong>Intel MPI (impi)</strong>, used for distributed multi-node compute, are pinned in <code class="language-plaintext highlighter-rouge">MODULE.bazel</code> as x86-only <code class="language-plaintext highlighter-rouge">manylinux_2_28_x86_64</code> wheels with no riscv64 build evidence found anywhere; this blocks distributed oneDAL workloads on riscv64 [NEEDS VERIFICATION, based on absence of positive evidence rather than an explicit incompatibility statement from a primary source].</p>
 <h2 id="10-ecosystem-status">
   
   
@@ -835,48 +972,8 @@
   
 </h2>
     
-<h3 id="rise-project">
-  
-  
-    <a href="#rise-project" class="anchor-heading" aria-labelledby="rise-project"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> RISE Project
-  
-  
-</h3>
-    
 
-<p>oneDAL is listed as one of four focus areas in the RISE System Libraries Working Group, confirmed from the RISE Webinar December 2024 slide deck PDF. RISE Premier Members as of December 2024 include Google, Intel, Qualcomm, Rivos, Ventana, SiFive, Red Hat, T-Head (Alibaba), Andes, MediaTek, Samsung, and Nvidia.</p>
-
-<p>Despite the listing, no concrete RISE deliverables for oneDAL were found:</p>
-
-<ul>
-  <li>The RISE 2024 System Libraries achievements list bionic, dav1d, zlib-ng, and XNNPACK vector optimizations. oneDAL is not cited in the achievements.</li>
-  <li>27 RISE blog posts from May 2024 through June 2026 contain zero mentions of oneDAL.</li>
-  <li>The RISE Python wheel builder (riseproject.gitlab.io) does not list oneDAL (80+ packages enumerated).</li>
-  <li>The riseproject-dev GitHub organization (30 repos enumerated) contains no oneDAL repository.</li>
-  <li>GitHub API search <code class="language-plaintext highlighter-rouge">oneDAL org:riseproject-dev</code> returns 0 results.</li>
-</ul>
-
-<p>Keeran Rothenfusser (Rivosinc), the oneDAL RISC-V code owner, is a RISE-adjacent contributor; Rivosinc is not listed as a RISE Premier Member in the December 2024 PDF [NEEDS VERIFICATION – Rivosinc membership status may have changed; the PDF is from December 2024].</p>
-<h3 id="intel-involvement">
-  
-  
-    <a href="#intel-involvement" class="anchor-heading" aria-labelledby="intel-involvement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Intel Involvement
-  
-  
-</h3>
-    
-
-<p>Intel holds 6 of 8 MAINTAINERS.md roles. Two open issues (November 2025 and February 2026) originate from an Intel engineer (david-cortes-intel) and explicitly tag the riscv64 code owner. This indicates Intel is treating riscv64 as a first-class target for new algorithm coverage – not a maintenance-only inclusion.</p>
-<h3 id="qualcomm-involvement">
-  
-  
-    <a href="#qualcomm-involvement" class="anchor-heading" aria-labelledby="qualcomm-involvement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Qualcomm Involvement
-  
-  
-</h3>
-    
-
-<p>Data not available: no Qualcomm-authored contributions to the oneDAL riscv64 port were identified in the research findings.</p><hr />
+<p>Not applicable. oneDAL is a standalone C++ library consumed through its own API and, for Python users, through a single downstream wrapper package (scikit-learn-intelex). It has no dependent ecosystem of plugins, extensions, or third-party packages that would themselves need separate riscv64 enablement.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -885,56 +982,71 @@
   
 </h2>
     
-<h3 id="critical--silent-correctness-failure">
-  
-  
-    <a href="#critical--silent-correctness-failure" class="anchor-heading" aria-labelledby="critical--silent-correctness-failure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Critical – Silent Correctness Failure
-  
-  
-</h3>
-    
 
-<p><strong><a href="https://github.com/uxlfoundation/oneDAL/issues/3510">Issue #3510</a></strong> – “Add non-x86 versions of special functions” (open, Feb 13, 2026)</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3510">#3510</a></td>
+      <td>ErfInv/CdfNormInv return NaN on non-x86</td>
+      <td>Open, unassigned</td>
+      <td>Critical, silent correctness failure</td>
+      <td>No exception is raised; affected algorithms (Gaussian naive Bayes, quantile regression, normal-distribution sampling) silently produce NaN. Blocked on finding an Apache-2.0-compatible replacement for the MKL-backed implementation.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3431">#3431</a></td>
+      <td>Vectorized forest mean/variance for aarch64/riscv</td>
+      <td>Open, unassigned, <code class="language-plaintext highlighter-rouge">good first issue</code>/<code class="language-plaintext highlighter-rouge">help wanted</code>/<code class="language-plaintext highlighter-rouge">perf</code></td>
+      <td>Performance gap, not correctness</td>
+      <td>Random forest mean/variance reduction is vectorized for x86 (AVX2/AVX512) only; riscv64 and aarch64 use the scalar fallback. No quantitative slowdown figure is cited in the issue.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3329">#3329</a></td>
+      <td>OpenBLAS/oneTBB threading race condition</td>
+      <td>Open, unassigned</td>
+      <td>Latent correctness risk, multi-threaded contexts</td>
+      <td><code class="language-plaintext highlighter-rouge">openblas_set_num_threads()</code> modifies global state; affects every OpenBLAS-backed platform. riscv64 is exclusively OpenBLAS-backed (MKL unavailable), so this applies directly.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/pull/3817">#3817</a></td>
+      <td>Build-system cleanup touching <code class="language-plaintext highlighter-rouge">clang.ref.riscv64.mk</code></td>
+      <td>Open PR, unmerged as of 2026-09-28/30</td>
+      <td>Infrastructure, not correctness</td>
+      <td>Primarily a binary-size/flag-deduplication cleanup across Make and Bazel; incidentally modifies riscv64 flag definition files.</td>
+    </tr>
+    <tr>
+      <td>(fixed pre-merge)</td>
+      <td>Missing <code class="language-plaintext highlighter-rouge">ONEDAL_CPU_DISPATCH_RV64</code>/<code class="language-plaintext highlighter-rouge">ONEDAL_CPU_DISPATCH_A8SVE</code> macros</td>
+      <td>Resolved within PR #3719 before merge (commit <code class="language-plaintext highlighter-rouge">f078186b</code>)</td>
+      <td>Was critical (58/63 oneAPI examples threw <code class="language-plaintext highlighter-rouge">unsupported_device</code>)</td>
+      <td>Did not ship; documented here as evidence of active, careful review on the riscv64/aarch64 Bazel work.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/2257">#2257</a></td>
+      <td>Support for RISC-V architecture (root tracking issue)</td>
+      <td>Closed, completed, 2025-03-24</td>
+      <td>N/A</td>
+      <td>Superseded by incremental delivery (PR #2737, #2776, #3719).</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/uxlfoundation/oneDAL/issues/3526">#3526</a></td>
+      <td>Bazel RISC-V support with OpenBLAS fallback</td>
+      <td>Closed, not planned, 2026-02-23 (same day opened)</td>
+      <td>N/A</td>
+      <td>Work was delivered directly via PR #3719 instead of being tracked incrementally through this issue.</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><code class="language-plaintext highlighter-rouge">sErfInv()</code>, <code class="language-plaintext highlighter-rouge">vErfInv()</code>, <code class="language-plaintext highlighter-rouge">sCdfNormInv()</code>, and <code class="language-plaintext highlighter-rouge">vCdfNormInv()</code> in <code class="language-plaintext highlighter-rouge">service_math_ref.h</code> return <code class="language-plaintext highlighter-rouge">std::numeric_limits&lt;float&gt;::quiet_NaN()</code> on all non-x86 builds. There is no exception or error; affected algorithms silently produce NaN output. Algorithms impacted include Gaussian naive Bayes, quantile regression, and any algorithm sampling from a normal distribution.</p>
-
-<p>Active blocker for the fix: the cephes library (proposed replacement, used by SciPy) has unclear licensing that may not be compatible with oneDAL’s Apache 2.0 license. No alternative has been identified and approved. Issue has no assignee.</p>
-<h3 id="performance--vectorization-gap">
-  
-  
-    <a href="#performance--vectorization-gap" class="anchor-heading" aria-labelledby="performance--vectorization-gap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Performance – Vectorization Gap
-  
-  
-</h3>
-    
-
-<p><strong><a href="https://github.com/uxlfoundation/oneDAL/issues/3431">Issue #3431</a></strong> – “Add vectorized algorithm for forest mean/variance in aarch64/riscv” (open, Nov 5, 2025)</p>
-
-<p>Random forest regression mean/variance computation is gated behind <code class="language-plaintext highlighter-rouge">#if (__CPUID__(DAAL_CPU) == __avx512__)</code>. Both aarch64 and riscv64 use the unvectorized scalar fallback. No quantitative slowdown figure is cited in the issue. Tagged <code class="language-plaintext highlighter-rouge">good first issue, help wanted, perf</code>. No assignee.</p>
-<h3 id="latent--threading-race-condition">
-  
-  
-    <a href="#latent--threading-race-condition" class="anchor-heading" aria-labelledby="latent--threading-race-condition"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Latent – Threading Race Condition
-  
-  
-</h3>
-    
-
-<p><strong><a href="https://github.com/uxlfoundation/oneDAL/issues/3329">Issue #3329</a></strong> – “Single-threaded BLAS/LAPACK calls create race conditions with OpenBLAS” (open, Aug 22, 2025)</p>
-
-<p><code class="language-plaintext highlighter-rouge">openblas_set_num_threads()</code> modifies global state, causing thread-count corruption in multi-threaded contexts. This applies to all OpenBLAS-backed platforms. riscv64 is exclusively OpenBLAS-backed (MKL is unavailable), so this bug applies directly. Issue has no assignee.</p>
-<h3 id="infrastructure--bazel-not-supported">
-  
-  
-    <a href="#infrastructure--bazel-not-supported" class="anchor-heading" aria-labelledby="infrastructure--bazel-not-supported"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Infrastructure – Bazel Not Supported
-  
-  
-</h3>
-    
-
-<p><strong><a href="https://github.com/uxlfoundation/oneDAL/issues/3526">Issue #3526</a></strong> – “[Bazel Migration] RISC-V support with OpenBLAS fallback” (closed as not planned, Feb 23, 2026)</p>
-
-<p>Closed with no comments and no timeline. The Bazel migration for x86 is itself incomplete (toolchain consolidation between ICX and DPC++ is unresolved). riscv64 is explicitly categorized as a post-blocker secondary item in the Bazel migration roadmap.</p><hr />
+<p>No open NaN/floating-point correctness bug beyond #3510 was found specific to RISC-V; a targeted search for “riscv nan floating” surfaced no additional matches.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -944,122 +1056,104 @@
 </h2>
     
 
-<p><strong>Objection 1: The riscv64 CI pipeline is QEMU-only and not in GitHub Actions.</strong></p>
+<p><strong>Objection 1: riscv64 CI is QEMU-emulated on an x86_64 host, not native hardware, and the Bazel lane does not even execute the binaries it builds.</strong> Confirmed directly by reading <code class="language-plaintext highlighter-rouge">.ci/pipeline/ci.yml</code>: both riscv64 jobs run on <code class="language-plaintext highlighter-rouge">vmImage: 'ubuntu-24.04'</code>. The Make-path job does run examples under QEMU; the Bazel-path job only checks the ELF header with <code class="language-plaintext highlighter-rouge">readelf</code>. CI correctness on the Bazel path therefore depends entirely on cross-compilation succeeding, not on any runtime behavior.</p>
 
-<p>Confirmed. The <code class="language-plaintext highlighter-rouge">LinuxMakeLLVM_OpenBLAS_rv64</code> Azure Pipelines job runs on an x86_64 runner with QEMU emulation. No native riscv64 runner is used. This means CI correctness depends on QEMU fidelity. Performance data from CI is meaningless for hardware characterization. The CI validates build and functional correctness only.</p>
+<p><strong>Objection 2: the special-math NaN bug has no resolution timeline.</strong> Confirmed. Issue #3510 is open, unassigned, and blocked on an unresolved license-compatibility question. Algorithms depending on ErfInv or CdfNormInv silently produce incorrect output on riscv64 with no diagnostic.</p>
 
-<p><strong>Objection 2: The special math NaN bug has no timeline for resolution.</strong></p>
+<p><strong>Objection 3: no riscv64 binary package exists anywhere, for any oneDAL-named artifact.</strong> Confirmed across every channel checked (GitHub Releases, PyPI, Ubuntu, conda-forge, Debian, Arch). GitHub Releases for the project carry no binary assets at all, for any architecture; this is not a riscv64-specific gap but reflects that oneDAL does not publish release binaries through GitHub at all. Building from source is the only path.</p>
 
-<p>Confirmed. Issue #3510 is open, unassigned, and blocked on a license compatibility question that has not been resolved. Algorithms depending on ErfInv or CdfNormInv produce incorrect results on riscv64 without any diagnostic signal. The issue was opened February 2026 and has no comments.</p>
+<p><strong>Objection 4: no published performance data exists for oneDAL on riscv64.</strong> Confirmed. PR #3719 (the main riscv64/AArch64 Bazel enablement) contains only build/compile/link/run correctness checks under QEMU, no benchmark numbers. No arXiv paper, RISE blog post, or conference slide deck with oneDAL-on-riscv64 performance figures was found. The closest adjacent data point, arXiv 2504.04241 (“oneDAL Optimization for ARM Scalable Vector Extension”), is ARM-only and not transferable.</p>
 
-<p><strong>Objection 3: No riscv64 binary packages exist anywhere.</strong></p>
+<p><strong>Objection 5: there is no RISE Project sponsorship or infrastructure behind this work.</strong> Checked directly: riseproject.dev’s Premier members (Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent) and General members (Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT, ZTE) do not include Intel, oneAPI, the UXL Foundation, or Rivos. 27 RISE blog posts (May 2024 through June 2026) contain zero mentions of oneDAL. The RISE Python wheel builder (80 packages enumerated) does not list oneDAL or scikit-learn-intelex. The riseproject-dev GitHub org (26 repos) has no oneDAL repository, and <code class="language-plaintext highlighter-rouge">search_repositories</code>/<code class="language-plaintext highlighter-rouge">search_issues</code> for “oneDAL” across that org return zero results. The one nuance: oneDAL is nominally named as one of four focus areas in a RISE System Libraries Working Group webinar slide deck from December 2024, but RISE’s own 2024 achievements list (bionic, dav1d, zlib-ng, XNNPACK) does not include it, meaning that listing produced no traceable deliverable. RISC-V enablement is entirely vendor-driven, by Rivos under UXL Foundation governance, not RISE-sponsored or RISE-resourced.</p>
 
-<p>Confirmed. Building oneDAL for riscv64 requires the complete cross-compilation workflow: install GNU cross-compilers, build a debootstrap sysroot, cross-compile OpenBLAS and oneTBB from source, then cross-compile oneDAL. No distribution packages exist in conda-forge, PyPI, Debian, Ubuntu, or Arch Linux for riscv64.</p>
-
-<p><strong>Objection 4: Performance on riscv64 has no published data.</strong></p>
-
-<p>Confirmed. No benchmark numbers for oneDAL on riscv64 exist in any public source. The RISE 2024 PDF does not include oneDAL performance data. The CI runs functional examples under QEMU but does not measure throughput or latency.</p>
-
-<p><strong>Objection 5: The Bazel migration blockers also block riscv64 integration.</strong></p>
-
-<p>Confirmed. Issue #3526 was closed as not planned because the Bazel migration for x86 is itself incomplete. riscv64 Bazel support cannot be unblocked independently of the x86 migration completing its own prerequisite work (ICX/DPC++ toolchain unification, Windows and ARM platform verification).</p><hr />
-<h2 id="13-investment-analysis">
+<p>Acceptance probability for further riscv64 contributions is high: the governance model is CI-merit-driven with no gatekeeping beyond standard code review (PR #2737 merged in 4 days; PR #3719’s review consisted of implementation-level feedback, not architectural pushback), and Intel’s own engineers (napetrov) are actively extending riscv64 coverage as of two weeks before the research date.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> yellow (optimization-minimal-cap: the primary CI grade is blue, capped to yellow because Section 4’s optimization level is “minimal”)</li>
+  <li><strong>Release provider:</strong> none</li>
+  <li><strong>Optimization-purpose project:</strong> yes</li>
+  <li><strong>Optimization level:</strong> minimal</li>
+</ul>
+
+<p>oneDAL’s primary grade, before the optimization-purpose modifier, is blue: upstream Azure Pipelines CI (<code class="language-plaintext highlighter-rouge">.ci/pipeline/ci.yml</code>, not GitHub Actions) builds riscv64 and actually runs the built examples under QEMU (<code class="language-plaintext highlighter-rouge">LinuxMakeLLVM_OpenBLAS_rv64</code>), with a second Bazel job (<code class="language-plaintext highlighter-rouge">LinuxBazelGNU_OpenBLAS_rv64</code>) build-only; no upstream riscv64 binaries are published anywhere (GitHub Releases have empty asset arrays, and no PyPI/conda-forge/Debian/Ubuntu package exists), giving build=yes, test=yes (via QEMU execution), release=no. See <a href="https://github.com/uxlfoundation/oneDAL/pull/3719">PR #3719</a> and <a href="https://github.com/uxlfoundation/oneDAL/blob/main/MAINTAINERS.md">MAINTAINERS.md</a>.</p>
+
+<p>Because oneDAL’s stated value proposition is “highly optimized algorithmic building blocks” for data analytics, the optimization-purpose modifier applies. Research found zero RVV intrinsics anywhere in oneDAL’s own code (<code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>/<code class="language-plaintext highlighter-rouge">__riscv_vsetvl</code>/<code class="language-plaintext highlighter-rouge">riscv_vector.h</code> all absent); algorithm kernels (decision-forest mean/variance and others) fall back to scalar C with only <code class="language-plaintext highlighter-rouge">#pragma omp simd</code> auto-vectorization; ErfInv/CdfNormInv are unimplemented NaN stubs on riscv64 (<a href="https://github.com/uxlfoundation/oneDAL/issues/3510">issue #3510</a>); and the only real vectorized speed on riscv64 (OpenBLAS’s RVV GEMM/LAPACK kernels) comes from a third-party dependency, not oneDAL’s own code. This is a “minimal” optimization level per the grading rubric, which caps the color down from blue to yellow.</p>
+
+<p><strong>Pending work that could change the grade:</strong> Open <a href="https://github.com/uxlfoundation/oneDAL/pull/3817">PR #3817</a> (build-system cleanup touching riscv64 flag files, unmerged as of 2026-09-28/30); <a href="https://github.com/uxlfoundation/oneDAL/issues/3431">issue #3431</a> (forest mean/variance vectorization for riscv64/aarch64, labeled “good first issue”/”help wanted”, unassigned); <a href="https://github.com/uxlfoundation/oneDAL/issues/3510">issue #3510</a> (ErfInv/CdfNormInv NaN on non-x86, blocked on an Apache-2.0-compatible license for a cephes-style fix, unassigned); <a href="https://github.com/uxlfoundation/oneDAL/issues/3329">issue #3329</a> (OpenBLAS/oneTBB threading race, affects riscv64 since it is OpenBLAS-only). Active, ongoing investment: <a href="https://github.com/uxlfoundation/oneDAL/pull/3719">PR #3719</a> (Bazel AArch64/RISC-V64 + OpenRNG support) merged 2026-09-17, within the last two weeks of the research date, by Intel’s napetrov, with Rivos (keeranroth) holding the formal RISC-V Code Owner seat. No RISE involvement was found: oneDAL is not a RISE member, has zero RISE blog mentions, is absent from RISE’s Python wheel builder, and has no riseproject-dev repo or issue references. RISC-V enablement is vendor-driven (Rivos) under UXL Foundation governance, not RISE-sponsored.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
   
   
-</h3>
+</h2>
     
 
-<p>The riscv64 build produces a functionally correct library for most algorithms. The two functional gaps are:</p>
-
-<ol>
-  <li>
-    <p><strong>ErfInv / CdfNormInv NaN bug (issue #3510)</strong>: requires identifying an Apache 2.0-compatible implementation of inverse error function and normal distribution inverse CDF, integrating it as a conditional dependency for non-x86 builds, and adding test coverage. Estimated effort: 2-3 person-weeks (implementation 1 week, license review 0.5 week, integration and test 1 week). The blocker is legal review, not engineering complexity.</p>
-  </li>
-  <li>
-    <p><strong>OpenBLAS threading race condition (issue #3329)</strong>: a latent bug in multi-threaded workloads on any OpenBLAS-backed platform. The fix requires coordinating thread count management between the TBB scheduler and OpenBLAS. Estimated effort: 1-2 person-weeks. This is shared infrastructure for all non-x86 platforms; aarch64 benefits equally.</p>
-  </li>
-</ol>
-<h3 id="132-performance-optimization">
+<p>RISE has not funded, sponsored, or otherwise resourced any riscv64 work on oneDAL (Section 12, Objection 5); all sizing below assumes a project-funded or Qualcomm-funded contributor pool, not RISE credit.</p>
+<h3 id="141-functional-enablement">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>Three layers of performance work are available with distinct cost/impact profiles:</p>
-
-<ol>
-  <li>
-    <p><strong>Vectorized forest mean/variance (issue #3431)</strong>: requires adding <code class="language-plaintext highlighter-rouge">#ifdef TARGET_RISCV64</code> blocks with architecture-specific SIMD lane constants in <code class="language-plaintext highlighter-rouge">df_regression_train_dense_default_impl.i</code>. The issue is labeled <code class="language-plaintext highlighter-rouge">good first issue</code> because the x86 reference implementation is directly portable. No quantitative speedup estimate is available from the research findings. Estimated effort: 1-2 person-weeks.</p>
-  </li>
-  <li>
-    <p><strong>RVV intrinsic math functions</strong>: replacing the <code class="language-plaintext highlighter-rouge">#pragma omp simd</code> auto-vectorization in <code class="language-plaintext highlighter-rouge">service_math_ref.h</code> (vExp, vLog, vTanh, etc.) with hand-written RVV intrinsics or a Sleef-based path (mirroring the aarch64 Sleef SVE approach). This is the highest-complexity, highest-impact path. Estimated effort: 4-8 person-weeks per function family. No existing RISC-V Sleef integration exists in the codebase to reference; Sleef does have RVV support upstream [NEEDS VERIFICATION – Sleef RVV status not confirmed in research findings].</p>
-  </li>
-  <li>
-    <p><strong>Runtime ISA probing (TODO stub in <code class="language-plaintext highlighter-rouge">env_detect_features.cpp</code>)</strong>: implementing the <code class="language-plaintext highlighter-rouge">run_cpuid()</code> stub to enable runtime dispatch between RVV-enabled and base riscv64 paths. Prerequisite for any multi-tier dispatch. Estimated effort: 1-2 person-weeks. Low priority until a second dispatch tier (RVV kernel set) exists to dispatch to.</p>
-  </li>
-</ol>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>Current state: Azure Pipelines job on x86_64 + QEMU, no native runner, no GitHub Actions coverage, no performance CI.</p>
-
-<p>Options in increasing investment order:</p>
-
-<ol>
-  <li>
-    <p><strong>Migrate riscv64 CI to GitHub Actions</strong>: create a <code class="language-plaintext highlighter-rouge">.github/workflows/ci-riscv64.yml</code> mirroring the structure of <code class="language-plaintext highlighter-rouge">ci-aarch64.yml</code>, using QEMU. Estimated effort: 1 person-week. No native runner required. Closes the gap vs. aarch64 in CI infrastructure parity.</p>
-  </li>
-  <li>
-    <p><strong>Add native riscv64 CI runner</strong>: requires either a RISE board-farm runner (riseproject-dev runner infrastructure exists for other projects) or a Qualcomm-hosted riscv64 machine. Estimated effort: 2-4 person-weeks (runner provisioning, CI integration, validation). This is a prerequisite for any meaningful hardware performance benchmarking.</p>
-  </li>
-  <li>
-    <p><strong>Add performance benchmarking to CI</strong>: add a benchmark suite (GEMM throughput, algorithm latency for Decision Forest, PCA, covariance) to the riscv64 CI job. Estimated effort: 2-3 person-weeks. Requires native runner to produce useful data; meaningless on QEMU.</p>
-  </li>
-</ol>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
 <ol>
-  <li>
-    <p><strong>conda-forge riscv64 packaging</strong>: oneDAL is absent from conda-forge entirely. Packaging for riscv64 requires: adding a conda-forge feedstock, configuring cross-compilation in the feedstock, and handling the OpenBLAS dependency. Estimated effort: 2-3 person-weeks. Enables downstream Python users (scikit-learn-intelex, daal4py) on riscv64.</p>
-  </li>
-  <li>
-    <p><strong>Bazel build support</strong>: blocked by the upstream Bazel migration state. Not actionable until the x86 Bazel migration completes its prerequisite work. Estimated effort when unblocked: 1 week (issue #3526 estimated internally at 1 week).</p>
-  </li>
-  <li>
-    <p><strong>RISE engagement</strong>: oneDAL is listed in the RISE System Libraries WG but has produced no 2024 achievements. Formal engagement with the RISE AI/ML WG (created Q1 2026, led by Leye Wang/BOSC) could provide resources (runner access, co-contributors, blog visibility). No effort estimate; this is relationship and coordination work, not engineering.</p>
-  </li>
+  <li><strong>Fix ErfInv/CdfNormInv NaN (issue #3510), pending license resolution.</strong> Requires identifying an Apache-2.0-compatible implementation of the inverse error function and normal-distribution inverse CDF, integrating it as a conditional dependency for non-x86 builds, and adding test coverage. Estimated effort: 2-3 person-weeks (implementation about 1 week, license review about 0.5 week, integration and test about 1 week). The blocker is legal review, not engineering complexity.</li>
+  <li><strong>Fix the OpenBLAS/oneTBB threading race (issue #3329).</strong> Requires coordinating thread-count management between the TBB scheduler and OpenBLAS’s global thread-count state. Estimated effort: 1-2 person-weeks. Shared infrastructure for every non-x86 platform; aarch64 benefits equally.</li>
+  <li><strong>Bring QEMU test execution to the Bazel riscv64 lane</strong>, closing the gap PR #3719’s own reviewer flagged (deferred as follow-up). Estimated effort: 1 person-week, mirroring the Make path’s existing QEMU invocation.</li>
 </ol>
-<h3 id="135-summary-table">
+<h3 id="142-performance-optimization">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Vectorized forest mean/variance (issue #3431).</strong> Add <code class="language-plaintext highlighter-rouge">#ifdef TARGET_RISCV64</code> SIMD-lane blocks to <code class="language-plaintext highlighter-rouge">df_regression_train_dense_default_impl.i</code>, directly portable from the existing x86 reference implementation. Labeled <code class="language-plaintext highlighter-rouge">good first issue</code>. No quantitative speedup estimate is available from any source checked. Estimated effort: 1-2 person-weeks.</li>
+  <li><strong>Hand-written RVV intrinsic math kernels</strong>, replacing <code class="language-plaintext highlighter-rouge">#pragma omp simd</code> auto-vectorization in the scalar reference math path (vExp, vLog, vTanh, and related functions) with explicit RVV intrinsics. This is the highest-complexity, highest-impact item identified: it is the only path that would move oneDAL off “minimal” optimization level, since currently zero RVV intrinsic code exists anywhere in the project. No existing reference implementation to port from exists in the codebase (ARM’s SVE path covers only 2 files, <code class="language-plaintext highlighter-rouge">finiteness_checker</code> and <code class="language-plaintext highlighter-rouge">svm_train_common</code>, so even that is not a template for the broader math library). Estimated effort: 4-8 person-weeks per function family, requiring dedicated RVV expertise.</li>
+  <li><strong>Implement the <code class="language-plaintext highlighter-rouge">run_cpuid()</code> stub</strong> in <code class="language-plaintext highlighter-rouge">env_detect_features.cpp</code> to enable runtime dispatch, a prerequisite for having more than one riscv64 dispatch tier to dispatch to. Estimated effort: 1-2 person-weeks. Low priority until a second (RVV-optimized) kernel tier actually exists.</li>
+</ol>
+<h3 id="143-cicd-infrastructure">
+  
+  
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+
+<ol>
+  <li><strong>Mirror <code class="language-plaintext highlighter-rouge">ci-aarch64.yml</code> as a GitHub Actions riscv64 workflow using QEMU.</strong> Estimated effort: 1 person-week. No native hardware required; closes the GitHub Actions parity gap with AArch64.</li>
+  <li><strong>Add a native riscv64 CI runner</strong> (RISE board-farm style infrastructure, or project-funded hardware). Estimated effort: 2-4 person-weeks for provisioning, CI integration, and validation. Prerequisite for any meaningful hardware performance benchmarking; current QEMU-only coverage cannot characterize real silicon.</li>
+  <li><strong>Add performance benchmarking to CI</strong> (GEMM throughput, per-algorithm latency for decision forest, PCA, covariance) once native hardware is available. Estimated effort: 2-3 person-weeks. Meaningless on QEMU; requires item 2 first.</li>
+</ol>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable in the package/plugin sense (Section 10). The closest adjacent opportunity is downstream Python packaging: <code class="language-plaintext highlighter-rouge">scikit-learn-intelex</code> ships no riscv64 wheels today. Adding a riscv64 wheel build for that downstream package, which is outside oneDAL’s own repository, would require a conda-forge feedstock or equivalent cross-compilation pipeline. Estimated effort: 2-3 person-weeks, owned by the scikit-learn-intelex maintainers rather than oneDAL’s own riscv64 code owner.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1078,44 +1172,58 @@
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Fix ErfInv / CdfNormInv NaN (issue #3510) – pending license resolution</td>
+      <td>Fix ErfInv/CdfNormInv NaN (issue #3510), pending license resolution</td>
       <td>2-3</td>
-      <td>Qualcomm or Rivosinc contributor</td>
+      <td>Qualcomm or Rivos contributor</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix OpenBLAS threading race (issue #3329)</td>
+      <td>Fix OpenBLAS/oneTBB threading race (issue #3329)</td>
       <td>1-2</td>
-      <td>Qualcomm or shared with aarch64 owner</td>
+      <td>Qualcomm or shared with AArch64 owner</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Add QEMU test execution to the Bazel riscv64 CI lane</td>
+      <td>1</td>
+      <td>Intel (napetrov) or Rivos</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
       <td>Vectorized forest mean/variance for riscv64 (issue #3431)</td>
       <td>1-2</td>
-      <td>keeranroth (Rivosinc) tagged; open for contribution</td>
+      <td>Open for contribution, tagged <code class="language-plaintext highlighter-rouge">good first issue</code></td>
       <td>High</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>RVV intrinsic math (vExp, vLog, vTanh) via Sleef or direct intrinsics</td>
+      <td>Hand-written RVV intrinsic math kernels (vExp, vLog, vTanh)</td>
       <td>4-8</td>
-      <td>Requires riscv64 SIMD expertise</td>
+      <td>Requires dedicated RVV expertise</td>
       <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
+      <td>Implement <code class="language-plaintext highlighter-rouge">run_cpuid</code>/ISA-probing stub</td>
+      <td>1-2</td>
+      <td>Prerequisite for multi-tier dispatch</td>
+      <td>Low</td>
     </tr>
     <tr>
       <td>CI/CD</td>
       <td>Migrate riscv64 CI to GitHub Actions (QEMU)</td>
       <td>1</td>
-      <td>Qualcomm infra or Rivosinc</td>
+      <td>Qualcomm infra or Rivos</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI/CD</td>
       <td>Add native riscv64 CI runner</td>
       <td>2-4</td>
-      <td>Qualcomm hardware or RISE board farm</td>
+      <td>Qualcomm hardware or project-funded farm (not RISE)</td>
       <td>Medium</td>
     </tr>
     <tr>
@@ -1127,37 +1235,13 @@
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>conda-forge riscv64 packaging</td>
+      <td>riscv64 wheels for scikit-learn-intelex</td>
       <td>2-3</td>
-      <td>Qualcomm or community</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Ecosystem</td>
-      <td>Bazel riscv64 support (issue #3526)</td>
-      <td>1 (when unblocked)</td>
-      <td>Intel Bazel migration team must unblock</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>Runtime</td>
-      <td>Implement cpuid / ISA probing stub</td>
-      <td>1-2</td>
-      <td>Prerequisite for multi-tier dispatch</td>
+      <td>scikit-learn-intelex maintainers, outside oneDAL’s own repo</td>
       <td>Low</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1168,18 +1252,28 @@
     
 
 <ul>
-  <li><a href="https://github.com/uxlfoundation/oneDAL/pull/2737">PR #2737 – Add RISC-V clang build</a></li>
-  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/2758">Issue #2758 – rv64 CI failing</a></li>
-  <li><a href="https://github.com/uxlfoundation/oneDAL/pull/3304">PR #3304 – Fix incorrect CPU topology initialization</a></li>
-  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/3329">Issue #3329 – OpenBLAS threading race condition</a></li>
-  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/3431">Issue #3431 – Vectorized forest mean/variance aarch64/riscv</a></li>
-  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/3510">Issue #3510 – Non-x86 special functions return NaN</a></li>
-  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/3526">Issue #3526 – Bazel RISC-V support (closed as not planned)</a></li>
-  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/3530">Issue #3530 – Bazel master tracking issue</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/2257">Issue #2257 - Support for RISC-V architecture</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/pull/2737">PR #2737 - Add RISC-V clang build</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/pull/2762">PR #2762 - CI fixes in OpenBLAS builds</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/pull/2776">PR #2776 - Bugfix in getIndexNumType function</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/pull/3170">PR #3170 - More granular CPU features detection</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/3329">Issue #3329 - Single-threaded BLAS/LAPACK calls create race conditions with OpenBLAS</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/3431">Issue #3431 - Add vectorized algorithm for forest mean/variance in aarch64/riscv</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/3510">Issue #3510 - Add non-x86 versions of special functions</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/issues/3526">Issue #3526 - Bazel Migration RISC-V support with OpenBLAS fallback</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/pull/3719">PR #3719 - Bazel: add AArch64/RISC-V64 cross-compile and OpenRNG backend support</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/pull/3786">PR #3786 - chore(deps): update dependency openmathlib/openblas to v0.3.34</a></li>
+  <li><a href="https://github.com/uxlfoundation/oneDAL/pull/3817">PR #3817 - build: shrink release libraries and clean up flag definitions</a></li>
   <li><a href="https://github.com/uxlfoundation/oneDAL/blob/main/MAINTAINERS.md">MAINTAINERS.md</a></li>
   <li><a href="https://uxlfoundation.org">UXL Foundation</a></li>
   <li><a href="https://riseproject.dev">RISE Project</a></li>
-</ul>
+  <li><a href="https://riseproject.dev/blog/">RISE Project blog</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
+  <li><a href="https://github.com/catchorg/Catch2/issues/2808">Catch2 issue #2808 - Werror=cast-align on riscv</a></li>
+  <li><a href="https://arxiv.org/pdf/2504.04241">arXiv 2504.04241 - oneDAL Optimization for ARM Scalable Vector Extension</a></li>
+</ul><hr />
+
+<p>This report (<code class="language-plaintext highlighter-rouge">/home/user/sw-ecosystem/project-reports/onedal.md</code> in the working repository) is the complete standalone deliverable; no files outside the chat response were produced for this task.</p>
 
           
 
