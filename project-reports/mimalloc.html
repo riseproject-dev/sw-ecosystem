@@ -265,11 +265,13 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;<br />
-<strong>Date:</strong> 2026-07-20<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> Blue<br />
+<strong>Optimization level:</strong> Partial<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for mimalloc<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,15 +281,13 @@
 </h2>
     
 
-<p>mimalloc is a general-purpose memory allocator written in C, developed at Microsoft Research. It is licensed under the MIT License. The repository is <a href="https://github.com/microsoft/mimalloc">microsoft/mimalloc</a> under the Microsoft GitHub organization. There is no external foundation affiliation (Linux Foundation, Apache Software Foundation, etc.).</p>
+<p>mimalloc is a general-purpose memory allocator written in C, developed at Microsoft Research. It is licensed under the MIT License (copyright line in <code class="language-plaintext highlighter-rouge">LICENSE</code>: “Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen”). The repository is <a href="https://github.com/microsoft/mimalloc">microsoft/mimalloc</a> under the Microsoft GitHub organization, with a Doxygen-generated API reference at <a href="https://microsoft.github.io/mimalloc/">microsoft.github.io/mimalloc</a>. There is no external foundation affiliation (Linux Foundation, Apache Software Foundation, CNCF, or similar).</p>
 
-<p>The project is effectively single-maintainer. Daan Leijen (<code class="language-plaintext highlighter-rouge">daanx</code>) is the creator and sole active committer on the <code class="language-plaintext highlighter-rouge">main</code>, <code class="language-plaintext highlighter-rouge">dev2</code>, and <code class="language-plaintext highlighter-rouge">dev3</code> branches, with 3,319 commits. David Carlier (<code class="language-plaintext highlighter-rouge">devnexen</code>) has 40 commits and contributes cross-platform fixes. All other contributors have fewer than 15 commits each.</p>
+<p>Governance is informal and effectively single-maintainer (BDFL-style). <code class="language-plaintext highlighter-rouge">git shortlog</code> over the full history (around 2,363 commits on the default branch <code class="language-plaintext highlighter-rouge">main3</code>) shows Daan Leijen (<code class="language-plaintext highlighter-rouge">daanx</code>, aliases <code class="language-plaintext highlighter-rouge">daanl@outlook.com</code>, <code class="language-plaintext highlighter-rouge">daan@microsoft.com</code>, <code class="language-plaintext highlighter-rouge">daan@effp.org</code>) authoring over 93 percent of all commits. He originally built mimalloc for Microsoft Research’s Koka and Lean language runtimes and remains sole lead maintainer. No <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, <code class="language-plaintext highlighter-rouge">CODEOWNERS</code>, <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, or <code class="language-plaintext highlighter-rouge">SUPPORT.md</code> file exists in the repository. The only governance-adjacent file is a boilerplate Microsoft <code class="language-plaintext highlighter-rouge">SECURITY.md</code> (MSRC vulnerability-reporting process, generic to all Microsoft repos). Contributions require signing Microsoft’s standard CLA (<code class="language-plaintext highlighter-rouge">cla.microsoft.com</code>). Minor commits from other <code class="language-plaintext highlighter-rouge">@microsoft.com</code> addresses (Gustavo Varo, Angelica Moreira) appear in the shortlog with negligible counts and no stated co-maintainer role; no other company holds a maintainer seat.</p>
 
-<p>Governance is informal. No MAINTAINERS, OWNERS, or CODEOWNERS file exists. Contributions require signing a Microsoft CLA. Security reports go to MSRC (Microsoft Security Response Center). There is no technical steering committee.</p>
+<p>Microsoft is not a member of the <a href="https://riseproject.dev">RISE Project</a>. mimalloc and Microsoft do not appear in RISE’s published member list (Premier Members: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent; General Members include Canonical, ISCAS, SpacemiT, and others). No RISE blog post discusses mimalloc; the closest post, <a href="https://riseproject.dev/2026/07/30/rise-working-groups-move-their-project-tracking-to-github/">“RISE Working Groups move their project tracking to GitHub”</a> (2026-07-30), does not mention it. No RISE-funded work on mimalloc was found.</p>
 
-<p>Microsoft is not a member of the RISE Project. No RISE blog posts or RISE wheel builder entries mention mimalloc. No RISE-funded work on mimalloc was found.</p>
-
-<p>Community culture toward new ports is receptive but slow. The maintainer expressed interest in RISC-V hardware (“Very nice that you have a riscV machine – I’m jealous”) but the pattern across 2024-2026 is: community files PRs, maintainer acknowledges, PRs accumulate without merging. The project has a single-maintainer review bottleneck.</p><hr />
+<p>Community culture toward new ports is patch-welcoming but maintainer-gated, not committee-run. The readme’s “Special thanks” section credits outside porters by name (David Carlier/<code class="language-plaintext highlighter-rouge">devnexen</code> for Haiku and DragonFly BSD; Rui Ueyama for RISC-V thread-pointer handling; others for arena-bitmap atomics). External PRs do get accepted, but final integration, CI wiring, and architecture-specific optimization flags are consistently folded in and polished by Daan Leijen himself. Across 2024-2026 the RISC-V work followed this exact pattern: community contributors (none Microsoft employees) filed the substantive PRs, and the maintainer merged, rebased, or re-implemented them as direct commits, often same-day once he engaged. As of 2026-09, no RISC-V-specific issue or PR remains open.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -308,75 +308,135 @@
   <tbody>
     <tr>
       <td>2022-08-10</td>
-      <td>Issue <a href="https://github.com/microsoft/mimalloc/issues/610">#610</a> opened: “MI_HINT area is outside the VA range on some systems” – names RISC-V SV39 and AArch64 39-bit VA as affected</td>
+      <td>Issue <a href="https://github.com/microsoft/mimalloc/issues/610">#610</a> opened: “MI_HINT area is outside the VA range on some systems”, names RISC-V SV39 and AArch64 39-bit VA as affected</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2022-11-05</td>
-      <td>Issue <a href="https://github.com/microsoft/mimalloc/issues/640">#640</a> opened: general aligned OS memory allocation failures; RISC-V SV39 discussion later branched to #939</td>
-      <td>GitHub</td>
-    </tr>
-    <tr>
-      <td>2024-09-02</td>
-      <td>First RISC-V field report in #640 comments – user <code class="language-plaintext highlighter-rouge">orlitzky</code> reports alignment failures on RISC-V/musl machine</td>
+      <td>Issue <a href="https://github.com/microsoft/mimalloc/issues/640">#640</a> opened: general aligned-OS-memory failures; RISC-V SV39 discussion later branched into #939</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2024-09-13</td>
-      <td>Issue <a href="https://github.com/microsoft/mimalloc/issues/939">#939</a> opened: “Unable to obtain aligned memory on RISC-V systems with an SV39 MMU” – tested on Milk-V Pioneer Box; root cause identified as 2 TiB mmap hint exceeding 256 GiB SV39 ceiling</td>
+      <td>Issue <a href="https://github.com/microsoft/mimalloc/issues/939">#939</a> opened by Michael Orlitzky (<code class="language-plaintext highlighter-rouge">orlitzky</code>): “Unable to obtain aligned memory on RISC-V systems with an SV39 MMU”, reproduced on a Milk-V Pioneer Box; root cause is a 2 TiB mmap alignment hint exceeding the 256 GiB SV39 ceiling</td>
       <td>GitHub</td>
     </tr>
     <tr>
-      <td>2024-10-18</td>
-      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/949">#949</a> submitted by <code class="language-plaintext highlighter-rouge">orlitzky</code>: build-time SV39 detection via CMake + <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code>; introduces <code class="language-plaintext highlighter-rouge">MI_NO_ALIGNED_HINT</code> macro</td>
-      <td>GitHub</td>
+      <td>2024-09-20 or 2024-10-18</td>
+      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/949">#949</a> opened by <code class="language-plaintext highlighter-rouge">orlitzky</code>: build-time SV39 detection via CMake plus <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code>, introduces <code class="language-plaintext highlighter-rouge">MI_NO_ALIGNED_HINT</code>. The opened date is reported inconsistently across sources checked (2024-09-20 in one fetch, 2024-10-18 in another); both are noted here as a discrepancy</td>
+      <td>GitHub [NEEDS VERIFICATION on exact date]</td>
     </tr>
     <tr>
       <td>2024-10-28</td>
-      <td>Maintainer <code class="language-plaintext highlighter-rouge">daanx</code> integrates CMake SV39 check into dev branch as commit <code class="language-plaintext highlighter-rouge">b3828bb</code> – adds <code class="language-plaintext highlighter-rouge">virtual_address_bits</code> to <code class="language-plaintext highlighter-rouge">mi_os_mem_config_t</code>; rejects <code class="language-plaintext highlighter-rouge">os.c</code> changes; states preference for runtime detection for binary distribution</td>
-      <td>GitHub</td>
+      <td>Maintainer <code class="language-plaintext highlighter-rouge">daanx</code> integrates a CMake SV39 check directly (reported in the prior version of this report as commit <code class="language-plaintext highlighter-rouge">b3828bb</code>, adding <code class="language-plaintext highlighter-rouge">virtual_address_bits</code> to <code class="language-plaintext highlighter-rouge">mi_os_mem_config_t</code> and the <code class="language-plaintext highlighter-rouge">MI_NO_ALIGNED_HINT</code> macro); states a preference for a future runtime check “if it does not add too much complexity”</td>
+      <td>[NEEDS VERIFICATION, single-sourced, not re-confirmed in current research pass]</td>
     </tr>
     <tr>
       <td>2024-12-23</td>
-      <td>Issue #939 closed by <code class="language-plaintext highlighter-rouge">orlitzky</code> (PR #949 closed without direct merge; fix absorbed upstream via <code class="language-plaintext highlighter-rouge">b3828bb</code>)</td>
-      <td>GitHub</td>
-    </tr>
-    <tr>
-      <td>2025-01-03</td>
-      <td>v3.0.1-alpha / v1.9.8 / v2.1.9 release notes list a “build compilation fix for riscV” alongside Windows arm64, cygwin, and DragonFly fixes</td>
-      <td>[NEEDS VERIFICATION] – release notes referenced but not fetched verbatim</td>
-    </tr>
-    <tr>
-      <td>2025-10-11-12</td>
-      <td>PRs <a href="https://github.com/microsoft/mimalloc/pull/1154">#1154</a> and <a href="https://github.com/microsoft/mimalloc/pull/1156">#1156</a> by <code class="language-plaintext highlighter-rouge">MahnoKropotkinvich</code>: “Implement RISC-V64 atomic_yield fastpath” – both closed without merge</td>
+      <td>Issue #939 and PR #949 both closed; #949 closed without merge, in favor of the maintainer’s own build-time integration, “the big problem is solved” per <code class="language-plaintext highlighter-rouge">orlitzky</code></td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2026-05-18</td>
-      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1296">#1296</a> by <code class="language-plaintext highlighter-rouge">aurel32</code>: runtime hwprobe VA detection – closed 2026-06-24; wrong base branch (targeted main instead of dev)</td>
+      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1296">#1296</a> opened by Aurelien Jarno (<code class="language-plaintext highlighter-rouge">aurel32</code>, Debian/glibc developer): first attempt at runtime VA-space detection via Linux <code class="language-plaintext highlighter-rouge">hwprobe</code>; closed 2026-06-24, not merged, superseded</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2026-05-25</td>
-      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1299">#1299</a> by <code class="language-plaintext highlighter-rouge">aurel32</code>: successor to #1296, targets <code class="language-plaintext highlighter-rouge">dev3</code> branch; runtime VA detection via <code class="language-plaintext highlighter-rouge">hwprobe</code> (Linux 6.11+) with <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> fallback; open as of 2026-06-24</td>
+      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1299">#1299</a> opened by <code class="language-plaintext highlighter-rouge">aurel32</code>: refined hwprobe-based runtime VA-bits detection with a <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> fallback for pre-6.11 kernels</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2026-06-05</td>
-      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1305">#1305</a> by <code class="language-plaintext highlighter-rouge">mengzhuo</code>: riscv64 TLS and atomic yield – closed 2026-06-24; wrong base branch</td>
+      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1305">#1305</a> opened by Meng Zhuo (<code class="language-plaintext highlighter-rouge">mengzhuo</code>, Institute of Software, Chinese Academy of Sciences): RISC-V64 TLS access and an atomic-yield (Zihintpause) primitive</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-06-22</td>
+      <td>Direct commit <a href="https://github.com/microsoft/mimalloc/commit/d7d90c6fce717f61ef3b290ceacfbc84aa57b873"><code class="language-plaintext highlighter-rouge">d7d90c6f</code></a> by <code class="language-plaintext highlighter-rouge">daanx</code>: “add detection for riscv sv48 and sv57 mmu’s”</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2026-06-23</td>
-      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1319">#1319</a> by <code class="language-plaintext highlighter-rouge">mengzhuo</code>: successor to #1305, targets <code class="language-plaintext highlighter-rouge">dev</code> branch; riscv64 TLS via <code class="language-plaintext highlighter-rouge">tp</code> register and <code class="language-plaintext highlighter-rouge">pause</code>/Zihintpause atomic yield; open as of 2026-06-25, no reviews assigned</td>
+      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1319">#1319</a> opened by <code class="language-plaintext highlighter-rouge">mengzhuo</code>: resubmission of #1305 rebased onto the <code class="language-plaintext highlighter-rouge">dev</code> branch at the maintainer’s request</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-06-24</td>
+      <td>PR #1296 and PR #1305 both closed without merge, in both cases because they targeted the wrong base branch and were resubmitted (#1296 superseded by #1299; #1305 by #1319)</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-07-07</td>
+      <td>PR #1299 merged (merge commit <code class="language-plaintext highlighter-rouge">67ba4a3004a5e8ed5bebe2e2dfffa03c95b4fa2b</code>); PR #1319 merged same day (merge commit <code class="language-plaintext highlighter-rouge">492522944...6b695c5c39883867aac580e7c2e6ed5</code>), both by <code class="language-plaintext highlighter-rouge">daanx</code></td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-07-14</td>
+      <td>v3.4.0 tagged; first release containing both #1299 (runtime VA detection) and #1319 (RISC-V TLS and atomic yield)</td>
+      <td>GitHub (verified via <code class="language-plaintext highlighter-rouge">git merge-base --is-ancestor</code>)</td>
+    </tr>
+    <tr>
+      <td>2026-07-27</td>
+      <td>Direct commits <code class="language-plaintext highlighter-rouge">fd18eadb</code> (“add alpine riscv test”) and <code class="language-plaintext highlighter-rouge">f72e2212</code>/<code class="language-plaintext highlighter-rouge">5ba4441d</code> (“add riscv to freeBSD”)</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-08-03</td>
+      <td>Direct commit <code class="language-plaintext highlighter-rouge">59378bea</code>: “make page-&gt;used 32-bit (for better codegen on riscV)”</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-08-10</td>
+      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1363">#1363</a> opened by Rui Ueyama (<code class="language-plaintext highlighter-rouge">rui314</code>, author of the mold linker): fixes a Clang/glibc thread-pointer misread that could corrupt the heap via cross-thread frees. Same day, <code class="language-plaintext highlighter-rouge">daanx</code> lands the equivalent fix directly as commit <code class="language-plaintext highlighter-rouge">d38870fa</code> (“use __builtin_thread_pointer on riscV, pr #1363 by @rui314”)</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-08-11</td>
+      <td>PR #1363 closed without merge (the fix had already landed as <code class="language-plaintext highlighter-rouge">d38870fa</code>); an earlier automated read of the PR thread misidentified this as “merged” because the commit SHA appears in the discussion, the PR state itself is “Closed”. Direct commit <code class="language-plaintext highlighter-rouge">ad6c7e6b</code>: “enable Zacas extension with -DMI_OPT_ARCH=ON on riscV”</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-08-14</td>
+      <td>Direct commit <code class="language-plaintext highlighter-rouge">2dc67efb</code>: “use rva22_zacas for riscV” (part of iterative <code class="language-plaintext highlighter-rouge">MI_OPT_ARCH</code> refinement, continuing through 2026-08-30 with several same-day <code class="language-plaintext highlighter-rouge">zalasr</code>/<code class="language-plaintext highlighter-rouge">zalars</code> flag commits)</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-08-18</td>
+      <td>v3.5.0 tagged; first release containing the <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer</code>-on-RISC-V fix (equivalent of PR #1363)</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-08-30</td>
+      <td>Direct commit <code class="language-plaintext highlighter-rouge">9cf99c79</code>: “fix __riscv macro misspelling”; related commits adding/removing clang(++) from RISC-V CI</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-09-01</td>
+      <td>v3.5.1 tagged; changelog entry “Improved riscV support. Various small build fixes.”</td>
+      <td>readme.md changelog</td>
+    </tr>
+    <tr>
+      <td>2026-09-12</td>
+      <td>PR <a href="https://github.com/microsoft/mimalloc/pull/1388">#1388</a> merged (dependabot CI bump; its changelog body references <code class="language-plaintext highlighter-rouge">vmactions/freebsd-vm</code> adding riscv64 support, not itself a mimalloc-code RISC-V change); v3.5.2 tagged same day</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-09-15</td>
+      <td>Direct commit <a href="https://github.com/microsoft/mimalloc/commit/014be9ac46a8fab538ff201714d6f2663f8696d3"><code class="language-plaintext highlighter-rouge">014be9ac</code></a>: “disable MEMZERO16X for now on riscV (due to compiler errors)”, the most recent RISC-V-related commit found</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2026-09-16/17</td>
+      <td>v3.5.3 tagged (HEAD <code class="language-plaintext highlighter-rouge">31d034d94cdb8e22f7d7ed55967f581a2d6e831d</code>), current upstream release as of this report</td>
       <td>GitHub</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Key contributors to the RISC-V port:</strong> <code class="language-plaintext highlighter-rouge">orlitzky</code> (initial bug report and first fix attempt), <code class="language-plaintext highlighter-rouge">aurel32</code> (Debian developer; runtime VA detection), <code class="language-plaintext highlighter-rouge">mengzhuo</code> (TLS and atomic yield). None are affiliated with Microsoft. <code class="language-plaintext highlighter-rouge">daanx</code> (Microsoft Research) is the sole gatekeeper.</p>
+<p><strong>Key contributors to the RISC-V port:</strong> Michael Orlitzky (<code class="language-plaintext highlighter-rouge">orlitzky</code>, initial bug report and first fix attempt), Aurelien Jarno (<code class="language-plaintext highlighter-rouge">aurel32</code>, Debian developer, runtime VA detection), Meng Zhuo (<code class="language-plaintext highlighter-rouge">mengzhuo</code>, ISCAS, TLS and atomic yield), Rui Ueyama (<code class="language-plaintext highlighter-rouge">rui314</code>, mold linker author, thread-pointer correctness fix). None are affiliated with Microsoft. Daan Leijen (Microsoft Research) is the sole gatekeeper and, in several cases, the one who actually landed the final code as his own commit rather than merging the contributor’s branch.</p>
 
-<p><strong>Is the port fully upstream?</strong> No. The only merged riscv64-specific change is the Dec 2024 <code class="language-plaintext highlighter-rouge">MI_NO_ALIGNED_HINT</code> / <code class="language-plaintext highlighter-rouge">virtual_address_bits</code> build-time workaround. Two PRs with substantive riscv64 code (#1299, #1319) are open and unmerged.</p><hr />
+<p><strong>Is the port fully upstream?</strong> Yes, as of v3.5.0 (2026-08-18). The SV39/SV48/SV57 virtual-address-space detection (#1299), RISC-V TLS and atomic-yield support (#1319), and the Clang thread-pointer correctness fix (equivalent of #1363, landed as <code class="language-plaintext highlighter-rouge">d38870fa</code>) have all merged or landed via direct maintainer commit. No RISC-V-specific issue or PR has been open since 2026-09. Daan Leijen continues periodic direct-commit tuning (CI, codegen, build flags) on an ongoing basis.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -386,7 +446,9 @@
 </h2>
     
 
-<p>mimalloc has no formal tier policy document. Support tier is inferred from CI coverage, release artifacts, and maintainer statements.</p>
+<p>mimalloc has no formal tier-policy document; platform support is described informally in the readme’s prose (“ported to many systems: Windows, macOS, Linux, WASM, various BSD’s, Haiku, MUSL, etc.”, now including RISC-V) and in build-flag comments. Support tier must be inferred from CI coverage, release artifacts, and merge history.</p>
+
+<p>riscv64 CI does genuinely exist in <code class="language-plaintext highlighter-rouge">.github/workflows/test.yaml</code> and runs the real <code class="language-plaintext highlighter-rouge">ctest</code> suite under QEMU-emulated Alpine Linux across four build configurations (Release-clang, Release-gcc, Debug, Secure). However, this CI is <code class="language-plaintext highlighter-rouge">continue-on-error: true</code> for all <code class="language-plaintext highlighter-rouge">alpine-*</code> jobs (riscv64 included), and it triggers only on <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>, pushes to <code class="language-plaintext highlighter-rouge">dev*</code> branches, or <code class="language-plaintext highlighter-rouge">v*</code> tags, never on <code class="language-plaintext highlighter-rouge">pull_request</code>. A community PR therefore does not automatically exercise riscv64 CI, and a riscv64 failure cannot block a merge even when the job does run. No GitHub Release ships a riscv64 binary asset.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -401,37 +463,43 @@
     <tr>
       <td>CI runner</td>
       <td>Native (ubuntu-latest)</td>
-      <td>Native (ubuntu-22.04-arm)</td>
-      <td>None</td>
+      <td>Native/QEMU mix depending on job</td>
+      <td>QEMU-emulated Alpine (jirutka/setup-alpine), on an x86_64 <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> host</td>
     </tr>
     <tr>
-      <td>Release binary</td>
-      <td>Yes (linux-x64)</td>
-      <td>Yes (linux-arm64)</td>
-      <td>No</td>
+      <td>CI gates PRs</td>
+      <td>Yes (standard matrix)</td>
+      <td>Yes (standard matrix)</td>
+      <td>No, triggers only on <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>/<code class="language-plaintext highlighter-rouge">dev*</code>/<code class="language-plaintext highlighter-rouge">v*</code> tags</td>
     </tr>
     <tr>
-      <td>Cross-compile CI</td>
-      <td>Win32 (x86)</td>
-      <td>No</td>
-      <td>No</td>
+      <td>CI can fail the build</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No, <code class="language-plaintext highlighter-rouge">continue-on-error: true</code></td>
     </tr>
     <tr>
-      <td>Maintainer-authored code</td>
+      <td>Release binary (GitHub Releases)</td>
       <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>Build-time workaround for known crash</td>
+      <td>Maintainer-authored arch code</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (sv48/sv57 detection, Zacas/Zalasr flag tuning, MEMZERO16X disable), but driven initially by community PRs</td>
+    </tr>
+    <tr>
+      <td>Build-time workaround for a known crash</td>
       <td>N/A</td>
       <td>N/A</td>
-      <td>Yes (SV39 hint suppression)</td>
+      <td>Was needed historically (build-time SV39 detection), superseded by the merged runtime hwprobe fix (#1299)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>riscv64 effective tier: unsupported / best-effort community.</strong> The architecture compiles and functionally works (via generic C fallbacks) but has no CI, no upstream binaries, no maintainer-authored arch code, and two open PRs that have been waiting for review for weeks to months.</p><hr />
+<p><strong>riscv64 effective tier: tested-but-non-gating, distro-distributed.</strong> The architecture builds, and its own ctest suite genuinely passes under emulation, but riscv64 is excluded from the standard PR-gating CI matrix and from upstream’s own release-binary pipeline. The only consumable prebuilt riscv64 binary available to an end user comes from downstream distro packaging (Ubuntu, Arch Linux RISC-V), not from microsoft/mimalloc directly.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -441,40 +509,23 @@
 </h2>
     
 
-<p>mimalloc has no JIT backend, no GC, no SIMD allocator path, and no cryptographic subsystem. The architecture-specific surface area is limited to three components:</p>
+<p>mimalloc has no JIT backend, no garbage collector, and no SIMD-vectorized allocation hot path (searches for <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code> and <code class="language-plaintext highlighter-rouge">rvv</code> both returned zero results across the codebase). There is no dedicated <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory, no <code class="language-plaintext highlighter-rouge">.S</code> assembly files, and no riscv-specific source file analogous to a kernel-style port; all architecture-specific code is <code class="language-plaintext highlighter-rouge">#if defined(__riscv)</code> preprocessor branches scattered through a handful of shared, OS-organized files (<code class="language-plaintext highlighter-rouge">include/mimalloc/bits.h</code>, <code class="language-plaintext highlighter-rouge">include/mimalloc/prim-tls.h</code>, <code class="language-plaintext highlighter-rouge">include/mimalloc/internal.h</code>, <code class="language-plaintext highlighter-rouge">src/libc.c</code>, <code class="language-plaintext highlighter-rouge">src/prim/unix/prim.c</code>, <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>). A guard-line count found 13 RISC-V guard lines versus 38 for x64 and 32 for arm64, a scope difference driven mainly by riscv having no MSVC/Windows path and no hand-written SIMD path to parallel, not evidence of incompleteness.</p>
 
-<p><strong>4.1 TLS (Thread-Local Storage) fast path</strong></p>
+<p><strong>4.1 TLS (thread-local storage) fast path.</strong> Full, hand-tuned. <code class="language-plaintext highlighter-rouge">include/mimalloc/prim-tls.h</code> reads the <code class="language-plaintext highlighter-rouge">tp</code> register directly via inline assembly (<code class="language-plaintext highlighter-rouge">__asm__("mv %0, tp" : "=r" (tcb))</code>) when <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer()</code> is unavailable, and uses the builtin itself (on par with aarch64’s <code class="language-plaintext highlighter-rouge">mrs tpidr_el0</code> and x86-64’s <code class="language-plaintext highlighter-rouge">movq %fs:0</code>) when the compiler qualifies: GCC &gt;= 7 or Clang &gt;= 14 on riscv. PR #1363 (landed as commit <code class="language-plaintext highlighter-rouge">d38870fa</code>) fixed a real, non-hypothetical correctness bug here: under Clang on glibc/RISC-V, Clang fakes <code class="language-plaintext highlighter-rouge">__GNUC__</code> as 4, so the version-gate silently failed to enable the builtin and the fallback path misread <code class="language-plaintext highlighter-rouge">tp</code> as a TLS-slot array, corrupting the heap on cross-thread frees. The fix extends builtin eligibility to Clang 14+ and falls back safely to the address of <code class="language-plaintext highlighter-rouge">_mi_heap_default</code> when no builtin is available at all.</p>
 
-<p>Each thread has a mimalloc heap pointer stored in a TLS slot. The fast path reads a thread-pointer register directly to avoid the <code class="language-plaintext highlighter-rouge">pthread_getspecific</code> call overhead. On amd64 this uses the FS segment register; on arm64 it uses <code class="language-plaintext highlighter-rouge">mrs tpidr_el0</code>. On riscv64, the <code class="language-plaintext highlighter-rouge">tp</code> register serves the equivalent role.</p>
+<p><strong>4.2 Virtual-address-space detection.</strong> Full, hand-tuned, and arguably more sophisticated than the x64/arm64 equivalents (which assume a fixed 47/48-bit VA width and need no runtime probing at all). <code class="language-plaintext highlighter-rouge">src/prim/unix/prim.c</code> uses the Linux 6.11+ <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall to detect the highest usable virtual address at runtime, falling back to parsing <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> for <code class="language-plaintext highlighter-rouge">sv39</code>/<code class="language-plaintext highlighter-rouge">sv48</code>/<code class="language-plaintext highlighter-rouge">sv57</code> strings on older kernels (PR #1299, merged). This directly and fully fixes issue #939: the earlier build-time-only <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> check could bake in the wrong VA-bits assumption if a binary was built on one MMU configuration and run on another (a real cross-compilation/redistribution correctness risk); the merged runtime check removes that risk entirely for kernels with hwprobe support.</p>
 
-<ul>
-  <li>Current dev branch: no <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> block in <code class="language-plaintext highlighter-rouge">include/mimalloc/prim.h</code>. riscv64 falls through to the generic <code class="language-plaintext highlighter-rouge">__thread</code> variable path – correct but slower.</li>
-  <li>PR <a href="https://github.com/microsoft/mimalloc/pull/1319">#1319</a> adds <code class="language-plaintext highlighter-rouge">mv %0, tp</code> inline assembly for riscv64 TLS slot read/write, plus opts riscv64 into the <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer()</code> path for GCC &gt;= 7 and into the glibc fast-TLS eligibility guard.</li>
-</ul>
+<p><strong>4.3 CPU feature detection (bit-manipulation).</strong> Partial. <code class="language-plaintext highlighter-rouge">src/libc.c</code> sets <code class="language-plaintext highlighter-rouge">_mi_cpu_has_popcnt=true</code> via the compile-time macros <code class="language-plaintext highlighter-rouge">__riscv_zbb</code>/<code class="language-plaintext highlighter-rouge">__riscv_b</code>, not a runtime probe analogous to x64’s genuine CPUID-based detection. This tier matches arm64’s static always-true assumption, so it is not a riscv-specific deficiency relative to arm64, but it is behind x64’s runtime detection.</p>
 
-<p><strong>4.2 Atomic yield / spin-wait hint</strong></p>
+<p><strong>4.4 Bit-scan/popcount/rotate.</strong> Partial (compiler intrinsics). No hand-written assembly path for riscv (unlike x64’s explicit <code class="language-plaintext highlighter-rouge">tzcnt</code>/<code class="language-plaintext highlighter-rouge">lzcnt</code>/<code class="language-plaintext highlighter-rouge">bsf</code>/<code class="language-plaintext highlighter-rouge">bsr</code> inline asm); falls through to <code class="language-plaintext highlighter-rouge">__builtin_ctzl</code>/<code class="language-plaintext highlighter-rouge">clzl</code>/<code class="language-plaintext highlighter-rouge">popcountl</code>. arm64 is in the same tier on GCC/Clang.</p>
 
-<p>Used in the lock-free fast path when spinning on a contested operation. On x86 this is the <code class="language-plaintext highlighter-rouge">pause</code> SSE2 instruction; on arm64 it is <code class="language-plaintext highlighter-rouge">isb</code>. The RISC-V equivalent is the <code class="language-plaintext highlighter-rouge">pause</code> instruction from the Zihintpause extension.</p>
+<p><strong>4.5 Atomics (Zacas compare-and-swap, Zbb/Zba/Zbc/Zbs bitmanip).</strong> Partial, opt-in. No architecture gets hand-written CAS assembly; Zacas support is purely a compiler <code class="language-plaintext highlighter-rouge">-march=</code> flag (<code class="language-plaintext highlighter-rouge">rv64gcb_zacas</code>, with <code class="language-plaintext highlighter-rouge">rv64gcb_zacas_zalasr</code> for hardware with the newer Zalasr load-acquire/store-release extension) that changes codegen for <code class="language-plaintext highlighter-rouge">__atomic_compare_exchange</code>. Enabled via <code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=rv64gcb_zacas[_zalasr]</code> or <code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=ON</code> (which auto-picks <code class="language-plaintext highlighter-rouge">rv64gcb_zacas</code> on riscv64), but this is not the CMake default (<code class="language-plaintext highlighter-rouge">MI_OPT_ARCH</code> defaults to <code class="language-plaintext highlighter-rouge">OFF</code>), so a plain build does not get these extensions automatically.</p>
 
-<ul>
-  <li>Current dev branch: no <code class="language-plaintext highlighter-rouge">#ifdef __riscv</code> block in <code class="language-plaintext highlighter-rouge">include/mimalloc/atomic.h</code>. riscv64 falls through to <code class="language-plaintext highlighter-rouge">sleep(0)</code> – a full OS scheduler yield, orders of magnitude heavier than a spin hint. This is a correctness-adjacent regression under high contention.</li>
-  <li>PR <a href="https://github.com/microsoft/mimalloc/pull/1319">#1319</a> adds <code class="language-plaintext highlighter-rouge">__asm__ volatile("pause" ::: "memory")</code> under <code class="language-plaintext highlighter-rouge">#if defined(__riscv_zihintpause)</code>, with <code class="language-plaintext highlighter-rouge">nop</code> fallback for hardware lacking Zihintpause.</li>
-</ul>
+<p><strong>4.6 Fast memzero (MEMZERO16X).</strong> Scalar fallback, deliberately disabled. <code class="language-plaintext highlighter-rouge">include/mimalloc/internal.h</code> explicitly excludes <code class="language-plaintext highlighter-rouge">MI_ARCH_RISCV</code> from the 16x hand-unrolled memzero fast path that x64 and arm64 get, falling back to the portable/generic <code class="language-plaintext highlighter-rouge">_mi_memzero</code> path, per commit <code class="language-plaintext highlighter-rouge">014be9ac</code> (2026-09-15): “disable MEMZERO16X for now on riscV (due to compiler errors)”. The comment attributes this to current compilers not always correctly replacing a constant <code class="language-plaintext highlighter-rouge">memset</code>, i.e. a compiler codegen bug, not a mimalloc design limitation; users can force it back on via <code class="language-plaintext highlighter-rouge">-DMI_USE_MEMZERO16X=1</code>.</p>
 
-<p><strong>4.3 Virtual address space alignment hinting</strong></p>
+<p><strong>4.7 CI validation.</strong> Full. <code class="language-plaintext highlighter-rouge">.github/workflows/test.yaml</code> runs Release (both Clang and GCC, the Clang leg with <code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=rv64gcb_zacas_zalasr</code>), Debug (<code class="language-plaintext highlighter-rouge">MI_DEBUG=FULL</code>), and Secure (<code class="language-plaintext highlighter-rouge">MI_SECURE=ON</code>) builds under QEMU/Alpine, each running the full <code class="language-plaintext highlighter-rouge">ctest</code> suite, plus generated-assembly artifact upload for codegen inspection.</p>
 
-<p>mimalloc uses <code class="language-plaintext highlighter-rouge">mmap()</code> with hint addresses starting near 2 TiB to keep heap metadata close together. On SV39 RISC-V, user virtual address space tops out at 256 GiB, so every hint above that fails with <code class="language-plaintext highlighter-rouge">ENOMEM</code>.</p>
-
-<ul>
-  <li>Merged (main, Dec 2024): CMake reads <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> at build time for <code class="language-plaintext highlighter-rouge">mmu: sv39/sv48/sv57</code> and sets <code class="language-plaintext highlighter-rouge">MI_DEFAULT_VIRTUAL_ADDRESS_BITS</code> accordingly; <code class="language-plaintext highlighter-rouge">MI_NO_ALIGNED_HINT</code> macro skips the doomed hint. This is a build-time-only fix – a binary built on SV39 hardware segfaults when run on SV48/SV57 hardware.</li>
-  <li>PR <a href="https://github.com/microsoft/mimalloc/pull/1299">#1299</a>: replaces build-time check with runtime <code class="language-plaintext highlighter-rouge">hwprobe</code> syscall (<code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_KEY_HIGHEST_VIRT_ADDRESS</code>, Linux 6.11+) and <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> fallback for older kernels. Unmerged as of 2026-06-25.</li>
-</ul>
-
-<p><strong>4.4 Architecture detection in CMake</strong></p>
-
-<p><code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> detects RISC-V via <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv|riscv32|riscv64)$"</code> and sets <code class="language-plaintext highlighter-rouge">MI_ARCH</code> to <code class="language-plaintext highlighter-rouge">riscv32</code> or <code class="language-plaintext highlighter-rouge">riscv64</code> based on pointer size. No <code class="language-plaintext highlighter-rouge">-march=</code> optimization flags are injected for riscv64 (arm64 gets <code class="language-plaintext highlighter-rouge">-march=armv8.1-a</code>; riscv64 gets nothing).</p>
-
-<p><strong>Component comparison table:</strong></p>
+<p>No <code class="language-plaintext highlighter-rouge">TODO</code>/<code class="language-plaintext highlighter-rouge">FIXME</code>/<code class="language-plaintext highlighter-rouge">unimplemented</code>/<code class="language-plaintext highlighter-rouge">stub</code> comment was found anywhere near a <code class="language-plaintext highlighter-rouge">riscv</code>/<code class="language-plaintext highlighter-rouge">__riscv</code>/<code class="language-plaintext highlighter-rouge">MI_ARCH_RISCV</code> guard in the current codebase.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -488,42 +539,54 @@
   <tbody>
     <tr>
       <td>TLS register access</td>
-      <td>Full (FS segment asm)</td>
+      <td>Full (FS-segment asm)</td>
       <td>Full (<code class="language-plaintext highlighter-rouge">mrs tpidr_el0</code>)</td>
-      <td>Missing – <code class="language-plaintext highlighter-rouge">__thread</code> fallback</td>
+      <td>Full (<code class="language-plaintext highlighter-rouge">mv %0, tp</code> asm / <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer</code>, GCC&gt;=7 or Clang&gt;=14)</td>
     </tr>
     <tr>
-      <td>Atomic yield/pause</td>
-      <td>Full (<code class="language-plaintext highlighter-rouge">pause</code> SSE2 asm)</td>
-      <td>Full (<code class="language-plaintext highlighter-rouge">isb</code> asm)</td>
-      <td>Missing – <code class="language-plaintext highlighter-rouge">sleep(0)</code> fallback</td>
+      <td>Virtual-address-space detection</td>
+      <td>Fixed 47-bit assumption, no probing needed</td>
+      <td>Fixed 48-bit assumption, no probing needed</td>
+      <td>Full, runtime hwprobe + <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> fallback for sv39/48/57</td>
     </tr>
     <tr>
-      <td>VA space alignment</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Partial – build-time workaround only; runtime detection in open PR #1299</td>
+      <td>CPU feature detection</td>
+      <td>Full (runtime CPUID)</td>
+      <td>Static assumption</td>
+      <td>Partial (compile-time <code class="language-plaintext highlighter-rouge">__riscv_zbb</code> macro only)</td>
     </tr>
     <tr>
-      <td>Arch detection in CMake</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Partial – detection present, no optimization flags</td>
+      <td>Bit-scan/popcount/rotate</td>
+      <td>Full (hand asm: tzcnt/lzcnt/bsf/bsr)</td>
+      <td>Partial (compiler intrinsics)</td>
+      <td>Partial (compiler intrinsics, same tier as arm64)</td>
     </tr>
     <tr>
-      <td>ISA extension usage</td>
-      <td>SSE2 (pause)</td>
-      <td>ARM8.1 (atomics)</td>
-      <td>None merged; Zihintpause in open PR #1319</td>
+      <td>Atomics / CAS extension</td>
+      <td>Native</td>
+      <td>Native (LSE on armv8.1+)</td>
+      <td>Partial, opt-in via <code class="language-plaintext highlighter-rouge">-march=rv64gcb_zacas[_zalasr]</code>, not default</td>
     </tr>
     <tr>
-      <td>Dedicated prim directory</td>
-      <td>unix/</td>
-      <td>unix/</td>
-      <td>None – no riscv/ subdir</td>
+      <td>Fast memzero (16x)</td>
+      <td>Full (hand-unrolled)</td>
+      <td>Full (hand-unrolled)</td>
+      <td>Disabled on riscv64 due to a compiler codegen bug (commit <code class="language-plaintext highlighter-rouge">014be9ac</code>)</td>
+    </tr>
+    <tr>
+      <td>Build-time arch optimization</td>
+      <td><code class="language-plaintext highlighter-rouge">-march=</code> AVX2-class defaults</td>
+      <td>armv8.1/armv8.3 defaults</td>
+      <td><code class="language-plaintext highlighter-rouge">rv64gcb_zacas</code> default under <code class="language-plaintext highlighter-rouge">MI_OPT_ARCH=ON</code>; not the CMake-wide default</td>
+    </tr>
+    <tr>
+      <td>CI validation</td>
+      <td>Full, PR-gating</td>
+      <td>Full, PR-gating</td>
+      <td>Full test coverage, but non-gating (<code class="language-plaintext highlighter-rouge">continue-on-error</code>, no <code class="language-plaintext highlighter-rouge">pull_request</code> trigger)</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -533,79 +596,76 @@
 </h2>
     
 
-<p><strong>Requirements:</strong> CMake &gt;= 3.18 (uses <code class="language-plaintext highlighter-rouge">CheckLinkerFlag</code>). GCC &gt;= 7 for <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer()</code> optimization on riscv64 (detected via <code class="language-plaintext highlighter-rouge">__GNUC__ &gt;= 7 &amp;&amp; __riscv</code>, added in PR #1319 – not yet merged). No minimum GCC/Clang version is stated in upstream docs for general riscv64 support.</p>
+<p><strong>Requirements:</strong> CMake &gt;= 3.18 (<code class="language-plaintext highlighter-rouge">cmake_minimum_required</code>), identical for every architecture including riscv64. Architecture is auto-detected via <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv|riscv32|riscv64)$"</code>, with <code class="language-plaintext highlighter-rouge">MI_ARCH_BITS</code> derived from pointer size, no riscv-specific CMake toolchain file exists in the repository (<code class="language-plaintext highlighter-rouge">cmake/</code> holds only <code class="language-plaintext highlighter-rouge">JoinPaths.cmake</code> and the package-config files). There is no hard minimum compiler version to build mimalloc on riscv64 at all; GCC &gt;= 7 or Clang &gt;= 14 is only required to get the <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer()</code> fast TLS path, below that it falls back to the inline-asm <code class="language-plaintext highlighter-rouge">mv %0, tp</code> path, which still works correctly.</p>
 
-<p><strong>Native build (riscv64 Linux):</strong></p>
+<p><strong>Exact commands CI uses for riscv64</strong> (<code class="language-plaintext highlighter-rouge">.github/workflows/test.yaml</code>, job <code class="language-plaintext highlighter-rouge">alpine-riscv64</code>, executed inside a QEMU-emulated Alpine Linux chroot set up by the <code class="language-plaintext highlighter-rouge">jirutka/setup-alpine@...v1.4.1</code> action with <code class="language-plaintext highlighter-rouge">arch: riscv64</code>, packages <code class="language-plaintext highlighter-rouge">build-base cmake ninja clang</code>):</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir build &amp;&amp; cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DMI_BUILD_TESTS=OFF
-make -j$(nproc)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Release, Clang, with the newer Zalasr extension enabled
+CC=clang CXX=clang++ cmake . -B out/release-riscv64-clang -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release -DMI_OPT_ARCH=rv64gcb_zacas_zalasr -DMI_SEE_ASM=ON
+cmake --build out/release-riscv64-clang --parallel 4 --config Release
+ctest --test-dir out/release-riscv64-clang --verbose --timeout 240 -C Release
+
+# Release, default compiler (gcc), auto-picks rv64gcb_zacas
+cmake . -B out/release-riscv64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DMI_OPT_ARCH=ON -DMI_SEE_ASM=ON
+cmake --build out/release-riscv64 --parallel 4 --config Release
+ctest --test-dir out/release-riscv64 --verbose --timeout 240 -C Release
+
+# Debug (full internal checks, MI_TEST_LIGHT=1 to shorten emulated runtime)
+cmake . -B out/debug-riscv64 -G Ninja -DCMAKE_BUILD_TYPE=Debug -DMI_DEBUG=FULL
+cmake --build out/debug-riscv64 --parallel 4 --config Debug
+ctest --test-dir out/debug-riscv64 --verbose --timeout 240 -C Debug
+
+# Secure mode
+cmake . -B out/secure-riscv64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DMI_SECURE=ON
+cmake --build out/secure-riscv64 --parallel 4 --config Release
+ctest --test-dir out/secure-riscv64 --verbose --timeout 240 -C Release
 </code></pre></div></div>
 
-<p><strong>Cross-compilation (no upstream toolchain file exists):</strong></p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir build &amp;&amp; cd build
-cmake .. \
-  -DCMAKE_TOOLCHAIN_FILE=riscv64-linux-gnu.cmake \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DMI_BUILD_TESTS=OFF \
-  -DMI_OVERRIDE=ON
-make -j$(nproc)
-</code></pre></div></div>
-
-<p>For musl static builds:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake .. \
-  -DCMAKE_TOOLCHAIN_FILE=riscv64-linux-musl.cmake \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DMI_LIBC_MUSL=ON \
-  -DMI_BUILD_TESTS=OFF
-</code></pre></div></div>
-
-<p><strong>Critical cross-compilation caveat:</strong> The build-time <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> SV39 detection (<code class="language-plaintext highlighter-rouge">file(STRINGS /proc/cpuinfo ...)</code>) reads the build host, not the target. If the build machine is SV39 and the target is SV48/SV57, the resulting binary will apply the SV39 hint cap on a system that does not need it. Workaround: pass <code class="language-plaintext highlighter-rouge">-UMI_SV39_MMU</code> to CMake or use runtime detection from open PR #1299.</p>
-
-<p><strong>Relevant CMake flags for riscv64:</strong></p>
+<p><strong>Relevant CMake flags:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Flag</th>
-      <th>Effect</th>
+      <th>Effect on riscv64</th>
     </tr>
   </thead>
   <tbody>
     <tr>
+      <td><code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=OFF\|ON\|rv64gcb_zacas\|rv64gcb_zacas_zalasr\|DEFAULT</code></td>
+      <td>Architecture codegen tuning. <code class="language-plaintext highlighter-rouge">OFF</code> is the project-wide default; <code class="language-plaintext highlighter-rouge">ON</code> auto-selects <code class="language-plaintext highlighter-rouge">rv64gcb_zacas</code> on riscv64</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">-DMI_SEE_ASM=ON</code></td>
+      <td>Dumps per-source <code class="language-plaintext highlighter-rouge">.s</code> files for codegen inspection, used in CI for riscv64 artifact upload</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">-DMI_SECURE=ON\|FULL</code></td>
+      <td>Guard pages, encrypted free lists, tested on riscv64 in CI</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">-DMI_DEBUG=FULL</code></td>
+      <td>Full internal invariant checks, used for the riscv64 Debug CI leg</td>
+    </tr>
+    <tr>
       <td><code class="language-plaintext highlighter-rouge">-DMI_LIBC_MUSL=ON</code></td>
-      <td>Enables local-dynamic TLS for static builds; required for musl</td>
+      <td>Enables local-dynamic TLS for static builds, required for musl targets such as Alpine</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">-DMI_LOCAL_DYNAMIC_TLS=ON</code></td>
-      <td>dlopen-compatible TLS (<code class="language-plaintext highlighter-rouge">-ftls-model=local-dynamic</code>)</td>
+      <td><code class="language-plaintext highlighter-rouge">dlopen</code>-compatible TLS (<code class="language-plaintext highlighter-rouge">-ftls-model=local-dynamic</code>)</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=OFF</code></td>
-      <td>Default for riscv64; arm64 auto-enables but riscv64 does not</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DMI_BUILD_TESTS=OFF</code></td>
-      <td>Required for cross-builds; tests cannot run natively</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DMI_OVERRIDE=ON</code></td>
-      <td>Enable malloc override via <code class="language-plaintext highlighter-rouge">LD_PRELOAD</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-DMI_SECURE=ON</code></td>
-      <td>Guard pages and encrypted free lists</td>
+      <td><code class="language-plaintext highlighter-rouge">-DMI_ALLOW_THP=OFF\|FULL</code></td>
+      <td>Linux-only transparent-huge-page control, applies to riscv64/Linux</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><code class="language-plaintext highlighter-rouge">libatomic</code> is auto-detected via a linker flag probe (not <code class="language-plaintext highlighter-rouge">find_library</code>); this works correctly for cross-builds.</p>
+<p><strong>QEMU usage.</strong> mimalloc’s own build/test scripts never invoke QEMU directly. riscv64 CI testing is delegated entirely to the third-party <code class="language-plaintext highlighter-rouge">jirutka/setup-alpine@ae3b3ddba35054804fc4a3507b519fa7e8152050</code> (pinned v1.4.1) GitHub Action, which transparently builds a QEMU-emulated Alpine riscv64 userspace chroot on an ordinary <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> x86_64 runner. Build and test steps run inside this emulated root (<code class="language-plaintext highlighter-rouge">shell: alpine-riscv64.sh {0}</code>), it is full emulation of build and test, not qemu-user execution of a cross-compiled binary. There is no standalone <code class="language-plaintext highlighter-rouge">qemu-riscv64 ./binary</code>-style invocation anywhere in the repository, and no riscv64 Dockerfile exists (<code class="language-plaintext highlighter-rouge">contrib/docker/</code> has only <code class="language-plaintext highlighter-rouge">alpine-x86</code>, <code class="language-plaintext highlighter-rouge">alpine-arm32v7</code>, a generic <code class="language-plaintext highlighter-rouge">alpine</code>, and <code class="language-plaintext highlighter-rouge">manylinux-x64</code>).</p>
 
-<p><strong>QEMU:</strong> No QEMU references anywhere in the upstream repository – no workflow files, no Dockerfiles, no documentation. The upstream project has never used QEMU for riscv64 testing.</p>
-
-<p><strong>Known build issues:</strong> The Dec 2024 SV39 fix introduced a build-time-only workaround. A binary compiled on SV39 hardware and distributed to SV48/SV57 hardware will segfault due to wrong <code class="language-plaintext highlighter-rouge">virtual_address_bits</code> being baked in at compile time. This is the exact bug that PR #1299 fixes.</p><hr />
+<p><strong>Known build issue.</strong> The current, live issue is the MEMZERO16X compiler-bug workaround (commit <code class="language-plaintext highlighter-rouge">014be9ac</code>, 2026-09-15): a constant <code class="language-plaintext highlighter-rouge">memset</code> is “not always replaced correctly by current compilers” on riscv64, so the fast 16x-unrolled memzero path is force-disabled and the generic scalar path is used instead. This is a documented, deliberate, overridable tradeoff, not a build failure. The previously-flagged cross-compilation hazard (a binary built on SV39 hardware segfaulting when redistributed to SV48/SV57 hardware, because the old <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> check ran at build time against the host, not the target) has been substantially mitigated by the merged runtime hwprobe detection in PR #1299, which supersedes the build-time-only check for kernels with hwprobe support (6.11+).</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -629,31 +689,37 @@ make -j$(nproc)
       <td>Memory allocation (correctness)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full – via overallocation fallback</td>
+      <td>Full</td>
     </tr>
     <tr>
-      <td>Aligned OS memory hints</td>
+      <td>Aligned OS memory hints / VA detection</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Partial – SV39 suppressed at build time; may fail if built on wrong MMU config</td>
+      <td>Full, via merged runtime hwprobe detection (#1299), fixes the #939 class of SV39 failures</td>
     </tr>
     <tr>
       <td>TLS fast path</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing – <code class="language-plaintext highlighter-rouge">__thread</code> fallback only</td>
+      <td>Full, hand asm / builtin, Clang-specific correctness bug fixed (#1363 equivalent, commit <code class="language-plaintext highlighter-rouge">d38870fa</code>)</td>
     </tr>
     <tr>
-      <td>Atomic yield spin hint</td>
+      <td>Atomic yield / spin-wait hint</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Missing – <code class="language-plaintext highlighter-rouge">sleep(0)</code> fallback (heavy)</td>
+      <td>Landed via merged PR #1319 (Zihintpause-based, with fallback)</td>
     </tr>
     <tr>
       <td>ISA extension optimization</td>
-      <td>SSE2</td>
-      <td>ARM8.1 atomics</td>
-      <td>None</td>
+      <td>SSE2-class defaults</td>
+      <td>armv8.1/8.3-class defaults</td>
+      <td>Zacas/Zbb/Zalasr available via <code class="language-plaintext highlighter-rouge">-march=rv64gcb_zacas[_zalasr]</code>, opt-in, not default</td>
+    </tr>
+    <tr>
+      <td>Fast memzero (16x unrolled)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Disabled, compiler-bug workaround (commit <code class="language-plaintext highlighter-rouge">014be9ac</code>)</td>
     </tr>
     <tr>
       <td>Prebuilt upstream binary</td>
@@ -662,37 +728,21 @@ make -j$(nproc)
       <td>No</td>
     </tr>
     <tr>
-      <td>CI validation</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-    </tr>
-    <tr>
-      <td>Cross-compile safety</td>
-      <td>N/A</td>
-      <td>Partial</td>
-      <td>Broken (VA bits baked at build time)</td>
-    </tr>
-    <tr>
-      <td>musl static build</td>
-      <td>Supported</td>
-      <td>Supported</td>
-      <td>Supported (untested upstream)</td>
+      <td>CI validation (build + test)</td>
+      <td>Yes, PR-gating</td>
+      <td>Yes, PR-gating</td>
+      <td>Yes, but non-gating (<code class="language-plaintext highlighter-rouge">continue-on-error</code>, no <code class="language-plaintext highlighter-rouge">pull_request</code> trigger)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Functional gaps:</strong> None that affect correctness under normal use. The overallocation fallback ensures allocation succeeds even when aligned hints fail. A cross-compiled or redistributed binary may segfault if the VA-bits mismatch issue from PR #1299 is not resolved.</p>
+<p><strong>Functional gaps:</strong> none that affect correctness in a default build; mimalloc on riscv64 allocates correctly, and the historical SV39 alignment-failure and Clang/glibc thread-pointer correctness issues are both fixed upstream.</p>
 
-<p><strong>Performance gaps:</strong> Two regressions vs arm64/amd64:</p>
-<ol>
-  <li>TLS read per allocation uses <code class="language-plaintext highlighter-rouge">pthread_getspecific</code> or <code class="language-plaintext highlighter-rouge">__thread</code> instead of a direct register read. Overhead is allocation-count-proportional. No quantitative riscv64 benchmark data exists to measure the delta.</li>
-  <li>Atomic yield falls to <code class="language-plaintext highlighter-rouge">sleep(0)</code> instead of a spin hint. Under contended multithreaded workloads this converts spin-wait loops into full OS scheduler yields. For lock-heavy workloads this can cause unnecessary context switches and latency spikes.</li>
-</ol>
+<p><strong>Performance gaps:</strong> two remain, both narrow and documented rather than structural. First, the fast 16x memzero path is unavailable on riscv64 due to a compiler codegen bug, forcing the generic scalar memzero path for zero-fill operations. Second, the Zacas/Zbb/Zalasr-tuned build (<code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=rv64gcb_zacas[_zalasr]</code>) is opt-in, a default build gets no RISC-V-specific atomics or bitmanip tuning at all. No quantitative riscv64 benchmark data exists anywhere (see Section 14.2) to size the magnitude of either gap.</p>
 
-<p><strong>Security hardening:</strong> <code class="language-plaintext highlighter-rouge">-DMI_SECURE=ON</code> (guard pages, encrypted free lists) works on riscv64 via generic C code. No riscv64-specific gaps in the security features.</p>
+<p><strong>Security hardening:</strong> <code class="language-plaintext highlighter-rouge">-DMI_SECURE=ON</code> (guard pages, encrypted free lists) works on riscv64 via generic C code and is explicitly exercised in CI (<code class="language-plaintext highlighter-rouge">alpine-riscv64, Secure</code> job). No riscv64-specific gaps found.</p>
 
-<p><strong>No floating-point, NaN, or numerics concerns</strong> – mimalloc is a pure memory allocator.</p><hr />
+<p><strong>No NaN or floating-point semantics concerns apply</strong>, mimalloc is a pure memory allocator with no numerics surface.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -702,64 +752,29 @@ make -j$(nproc)
 </h2>
     
 
-<p>No riscv64 CI exists in microsoft/mimalloc. This was confirmed by direct inspection of the following files:</p>
+<p>Confirmed by direct inspection of <code class="language-plaintext highlighter-rouge">.github/workflows/test.yaml</code> at HEAD <code class="language-plaintext highlighter-rouge">31d034d9</code> (2026-09-16, tag v3.5.3). riscv appears only in <code class="language-plaintext highlighter-rouge">test.yaml</code>; <code class="language-plaintext highlighter-rouge">release.yaml</code> and <code class="language-plaintext highlighter-rouge">stale.yaml</code> contain zero riscv references. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists in the repository.</p>
 
-<ul>
-  <li><a href="https://raw.githubusercontent.com/microsoft/mimalloc/main/.github/workflows/test.yaml"><code class="language-plaintext highlighter-rouge">.github/workflows/test.yaml</code> (main branch)</a></li>
-  <li><a href="https://raw.githubusercontent.com/microsoft/mimalloc/dev/.github/workflows/test.yaml"><code class="language-plaintext highlighter-rouge">.github/workflows/test.yaml</code> (dev branch)</a></li>
-  <li><a href="https://raw.githubusercontent.com/microsoft/mimalloc/dev/.github/workflows/release.yaml"><code class="language-plaintext highlighter-rouge">.github/workflows/release.yaml</code> (dev branch)</a></li>
-</ul>
+<p><strong>Trigger</strong> (top of <code class="language-plaintext highlighter-rouge">test.yaml</code>):</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'dev*'
+    tags:
+      - 'v*'
+</code></pre></div></div>
+<p>There is no <code class="language-plaintext highlighter-rouge">pull_request</code> trigger at all. The entire workflow, including the riscv64 job, runs only on manual dispatch, pushes to <code class="language-plaintext highlighter-rouge">dev*</code> branches, or <code class="language-plaintext highlighter-rouge">v*</code> tags, i.e. maintainer-initiated events, not community PRs.</p>
 
-<p>No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, or <code class="language-plaintext highlighter-rouge">Jenkinsfile</code> exists in the repository (all returned 404).</p>
+<p><strong>Runner and emulation.</strong> <code class="language-plaintext highlighter-rouge">runs-on: ubuntu-latest</code>, a plain x86_64 GitHub-hosted runner. The riscv64 target is a VM/chroot built by <code class="language-plaintext highlighter-rouge">jirutka/setup-alpine@ae3b3ddba35054804fc4a3507b519fa7e8152050</code>, <code class="language-plaintext highlighter-rouge">arch: riscv64</code>, explicitly commented <code class="language-plaintext highlighter-rouge"># qemu</code> in the matrix and in the surrounding section comment “VM: Alpine Linux with MUSL libc (riscv64, x64, and arm32)”. This is QEMU user-mode emulation on an x86 host, not real silicon.</p>
 
-<p><strong>CI matrix (test.yaml):</strong></p>
+<p><strong>What the job does.</strong> Build and test, four configurations, each running <code class="language-plaintext highlighter-rouge">ctest</code>: Release-clang (<code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=rv64gcb_zacas_zalasr</code>), Release-default (<code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=ON</code>), Debug (<code class="language-plaintext highlighter-rouge">MI_DEBUG=FULL</code>, <code class="language-plaintext highlighter-rouge">MI_TEST_LIGHT=1</code>), and Secure (<code class="language-plaintext highlighter-rouge">MI_SECURE=ON</code>), plus generated-assembly artifact upload for both Release legs.</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Runner</th>
-      <th>Architecture</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>windows-latest</td>
-      <td>x86_64</td>
-    </tr>
-    <tr>
-      <td>macos-latest</td>
-      <td>ARM64 (Apple Silicon)</td>
-    </tr>
-    <tr>
-      <td>ubuntu-latest</td>
-      <td>x86_64</td>
-    </tr>
-    <tr>
-      <td>macos-14</td>
-      <td>ARM64 (Apple Silicon)</td>
-    </tr>
-    <tr>
-      <td>macos-15-intel</td>
-      <td>x86_64</td>
-    </tr>
-    <tr>
-      <td>ubuntu-22.04-arm</td>
-      <td>ARM64 (Graviton)</td>
-    </tr>
-    <tr>
-      <td>windows-11-arm</td>
-      <td>ARM64</td>
-    </tr>
-    <tr>
-      <td>Windows Win32 cross-compile</td>
-      <td>x86 32-bit</td>
-    </tr>
-  </tbody>
-</table></div>
+<p><strong>Gating.</strong> <code class="language-plaintext highlighter-rouge">.github/workflows/test.yaml</code> lines 20-21:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>continue-on-error: $
+</code></pre></div></div>
+<p>Since <code class="language-plaintext highlighter-rouge">alpine-riscv64</code> starts with <code class="language-plaintext highlighter-rouge">alpine</code>, this job is allowed to fail without failing the overall workflow run. A riscv64 regression is informational, not blocking.</p>
 
-<p>No riscv64 runner, no QEMU emulation step, no cross-compiler targeting RISC-V.</p>
-
-<p><strong>release.yaml</strong> produces binary bundles for: <code class="language-plaintext highlighter-rouge">windows-latest</code>, <code class="language-plaintext highlighter-rouge">macos-latest</code>, <code class="language-plaintext highlighter-rouge">macos-15-intel</code>, <code class="language-plaintext highlighter-rouge">ubuntu-22.04</code>, <code class="language-plaintext highlighter-rouge">ubuntu-22.04-arm</code>. No riscv64 bundle is produced.</p>
+<p><strong>release.yaml</strong> produces binary bundles only for the standard x64/x86/arm64/arm64ec matrix across Windows/macOS/Linux; it has no riscv64 entry and is unaffected by any riscv64 CI result (it is <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>-only and unrelated to <code class="language-plaintext highlighter-rouge">test.yaml</code>).</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -774,20 +789,26 @@ make -j$(nproc)
     <tr>
       <td>Native CI runner</td>
       <td>Yes</td>
+      <td>Partial (QEMU for some jobs)</td>
+      <td>No, full QEMU/Alpine emulation</td>
+    </tr>
+    <tr>
+      <td>CI gates on <code class="language-plaintext highlighter-rouge">pull_request</code></td>
+      <td>Yes</td>
       <td>Yes</td>
       <td>No</td>
     </tr>
     <tr>
-      <td>QEMU emulation CI</td>
-      <td>No</td>
-      <td>No</td>
-      <td>No</td>
+      <td>CI can fail the overall run</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (<code class="language-plaintext highlighter-rouge">continue-on-error: true</code>)</td>
     </tr>
     <tr>
-      <td>Cross-compile CI</td>
-      <td>Win32 only</td>
-      <td>No</td>
-      <td>No</td>
+      <td>Build + test executed</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes, 4 configs with real <code class="language-plaintext highlighter-rouge">ctest</code> runs</td>
     </tr>
     <tr>
       <td>Release binary produced</td>
@@ -796,15 +817,13 @@ make -j$(nproc)
       <td>No</td>
     </tr>
     <tr>
-      <td>RISE CI runner</td>
+      <td>RISE CI runner used</td>
       <td>No</td>
       <td>No</td>
       <td>No</td>
     </tr>
   </tbody>
 </table></div>
-
-<p>Open PRs #1299 and #1319 add riscv64 code but neither introduces CI coverage for RISC-V.</p><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -814,25 +833,17 @@ make -j$(nproc)
 </h2>
     
 
-<p><strong>Upstream GitHub releases:</strong> Releases v3.3.0 through v3.3.2 (latest) each ship 27-29 binary assets covering v1/v2/v3 variant libraries for: <code class="language-plaintext highlighter-rouge">linux-x64</code>, <code class="language-plaintext highlighter-rouge">linux-arm64</code>, <code class="language-plaintext highlighter-rouge">macos-x64</code>, <code class="language-plaintext highlighter-rouge">macos-arm64</code>, <code class="language-plaintext highlighter-rouge">windows-x64</code>, <code class="language-plaintext highlighter-rouge">windows-x86</code>, <code class="language-plaintext highlighter-rouge">windows-arm64</code>, <code class="language-plaintext highlighter-rouge">windows-arm64ec</code>. No <code class="language-plaintext highlighter-rouge">linux-riscv64</code> or <code class="language-plaintext highlighter-rouge">riscv64</code> asset exists in any release. Verified via <a href="https://api.github.com/repos/microsoft/mimalloc/releases?per_page=5">GitHub Releases API</a>.</p>
+<p><strong>Upstream GitHub releases.</strong> The five most recent releases (v3.5.3, v3.5.2, v3.5.1, v3.5.0, v3.4.5, spanning Aug-Sep 2026) each ship around 29 binary assets covering Linux/macOS/Windows for x64, x86, arm64, and arm64ec. No asset filename in any of these releases contains “riscv” or “riscv64”. Verified via <a href="https://github.com/microsoft/mimalloc/releases">GitHub Releases</a>.</p>
 
-<p><strong>PyPI:</strong> No PyPI package named <code class="language-plaintext highlighter-rouge">mimalloc</code> exists. The endpoint <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/mimalloc/json</code> returns HTTP 404.</p>
+<p><strong>PyPI.</strong> No PyPI package named <code class="language-plaintext highlighter-rouge">mimalloc</code> exists at all (<code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/mimalloc/json</code> returns HTTP 404); this is expected since mimalloc is a C library, not a Python package, so the riscv64-wheel question is moot for this channel.</p>
 
-<p><strong>Ubuntu 24.04 (Noble):</strong> Four riscv64 packages are available in the <code class="language-plaintext highlighter-rouge">universe</code> component:</p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">libmimalloc2.0</code> version <code class="language-plaintext highlighter-rouge">2.1.2+ds-2</code> – riscv64 in universe</li>
-  <li><code class="language-plaintext highlighter-rouge">libmimalloc-dev</code> version <code class="language-plaintext highlighter-rouge">2.1.2+ds-2</code> – riscv64 in universe</li>
-  <li><code class="language-plaintext highlighter-rouge">librust-libmimalloc-sys-dev</code> 0.1.25-1 – riscv64</li>
-  <li><code class="language-plaintext highlighter-rouge">librust-mimalloc-dev</code> 0.1.29-1 – riscv64</li>
-</ul>
+<p><strong>Ubuntu 26.04 (“resolute”).</strong> Confirmed present for riscv64 via <a href="https://packages.ubuntu.com/search?keywords=mimalloc&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a>: <code class="language-plaintext highlighter-rouge">libmimalloc-dev</code>, <code class="language-plaintext highlighter-rouge">libmimalloc3</code>, <code class="language-plaintext highlighter-rouge">librust-libmimalloc-sys-dev</code>, and <code class="language-plaintext highlighter-rouge">librust-mimalloc-dev</code> (architecture list “amd64 arm64 armhf ppc64el riscv64 s390x” for the Rust package; i386 included for the core packages). One fetch recorded the core-package version as <code class="language-plaintext highlighter-rouge">3.2.8+ds-2</code>, several versions behind the current upstream <code class="language-plaintext highlighter-rouge">v3.5.3</code>. This is the only confirmed upstream-adjacent riscv64 binary channel for mimalloc, and it is distro-produced, not provided by microsoft/mimalloc itself.</p>
 
-<p>Note: Ubuntu ships version 2.1.2, which is two major versions behind upstream 3.3.2.</p>
+<p><strong>Arch Linux RISC-V.</strong> Confirmed present, though not via the commonly cited search URL. The search endpoint <code class="language-plaintext highlighter-rouge">archriscv.felixc.at/?q=mimalloc</code> does not function as a search page on the live site (no query-string search feature exists there). Direct browsing of the repository tree confirms <code class="language-plaintext highlighter-rouge">mimalloc-3.5.3-1-riscv64.pkg.tar.zst</code> and its signature, last modified 2026-09-19, matching upstream’s v3.5.3 (published 2026-09-17) within about two days, this is a current, close-to-upstream riscv64 binary via a volunteer distro port.</p>
 
-<p><strong>Debian unstable (sid):</strong> mimalloc version <code class="language-plaintext highlighter-rouge">3.3.2+ds-1</code> is confirmed installed for riscv64 on build daemon <code class="language-plaintext highlighter-rouge">rv-osuosl-03</code>. Source: <a href="https://buildd.debian.org/status/package.php?p=mimalloc&amp;suite=sid">buildd.debian.org</a>. This is a distro-packaged build, not an upstream-provided binary. The <code class="language-plaintext highlighter-rouge">+ds</code> suffix indicates Debian-specific repacking.</p>
+<p><strong>Debian unstable (sid).</strong> The prior version of this report recorded mimalloc <code class="language-plaintext highlighter-rouge">3.3.2+ds-1</code> as built for riscv64 on Debian’s <code class="language-plaintext highlighter-rouge">rv-osuosl-03</code> build daemon via <a href="https://buildd.debian.org/status/package.php?p=mimalloc&amp;suite=sid">buildd.debian.org</a>. This was not re-checked in the current research pass. [NEEDS VERIFICATION]</p>
 
-<p><strong>Arch Linux RISC-V:</strong> Status unknown. The archriscv.felixc.at search index returned no mimalloc entry; direct URLs returned HTTP 404. Neither confirmed nor denied.</p>
-
-<p><strong>To obtain a working riscv64 binary:</strong> Use <code class="language-plaintext highlighter-rouge">apt install libmimalloc-dev</code> on Ubuntu 24.04 (gets 2.1.2) or Debian sid (gets 3.3.2). Alternatively, build from source using the CMake instructions above. No upstream prebuilt binary exists.</p><hr />
+<p><strong>Bottom line / what a user must do.</strong> There is no upstream-provided riscv64 binary. To get a working riscv64 build, a user installs <code class="language-plaintext highlighter-rouge">libmimalloc-dev</code>/<code class="language-plaintext highlighter-rouge">libmimalloc3</code> from Ubuntu 26.04 (“resolute”) universe, installs the Arch Linux RISC-V package, or builds from source using the CMake commands in Section 5 (which require no riscv-specific toolchain file and succeed with a stock GCC or Clang riscv64 cross or native toolchain).</p>
 <h2 id="9-dependencies">
   
   
@@ -842,56 +853,68 @@ make -j$(nproc)
 </h2>
     
 
-<p>mimalloc is a standalone C library with no external library dependencies beyond system primitives. CMakeLists.txt links only <code class="language-plaintext highlighter-rouge">pthread</code>, <code class="language-plaintext highlighter-rouge">rt</code>, and optionally <code class="language-plaintext highlighter-rouge">atomic</code> on Linux; Win32 APIs on Windows. No JIT backend, no SIMD library, no crypto library, no compression dependency. No recursive dependency deep-dive is required.</p>
+<p>mimalloc is a self-contained C library. It has no third-party library dependencies for JIT backends, SIMD, numerics, cryptography, or compression, and no other memory allocator as a dependency. It has no <code class="language-plaintext highlighter-rouge">setup.py</code>, <code class="language-plaintext highlighter-rouge">go.mod</code>, <code class="language-plaintext highlighter-rouge">Cargo.toml</code>, or <code class="language-plaintext highlighter-rouge">package.json</code>, it is a plain CMake/C project. The externally linked components are standard OS/toolchain pieces, conditionally linked by CMake, plus the toolchain and emulation stack used to build and test it on riscv64.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Name</th>
       <th>Role</th>
-      <th>riscv64 build</th>
-      <th>riscv64 test</th>
-      <th>riscv64 release</th>
-      <th>Notes</th>
+      <th>riscv64 status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>pthread (glibc/musl)</td>
-      <td>Thread support</td>
-      <td>OK</td>
-      <td>OK</td>
-      <td>Released in all distros</td>
-      <td>Standard Linux primitive</td>
+      <td>CMake</td>
+      <td>Build-dependency, critical</td>
+      <td>Project-wide minimum is CMake &gt;= 3.18, identical requirement on riscv64; no riscv-specific CMake toolchain file exists, architecture is auto-detected from <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR</code></td>
     </tr>
     <tr>
-      <td>rt (glibc)</td>
-      <td>POSIX realtime – <code class="language-plaintext highlighter-rouge">clock_gettime</code></td>
-      <td>OK</td>
-      <td>OK</td>
-      <td>Released</td>
-      <td>Standard</td>
+      <td>Ninja</td>
+      <td>Build-dependency, optional</td>
+      <td>Used as the CI generator for all riscv64 jobs (<code class="language-plaintext highlighter-rouge">-G Ninja</code>); Make also works, Ninja is not mandatory</td>
     </tr>
     <tr>
-      <td>libatomic (GCC)</td>
-      <td>Fallback atomic ops</td>
-      <td>OK</td>
-      <td>OK</td>
-      <td>Released</td>
-      <td>GCC provides for riscv64; auto-detected via linker flag probe</td>
+      <td>GCC</td>
+      <td>Build-dependency, critical</td>
+      <td>Default compiler for the riscv64 “Release” and “Debug”/”Secure” CI legs; GCC &gt;= 7 unlocks the <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer()</code> fast TLS path, lower versions still build via the inline-asm <code class="language-plaintext highlighter-rouge">mv %0, tp</code> fallback</td>
     </tr>
     <tr>
-      <td>mimalloc itself</td>
-      <td>Memory allocator</td>
-      <td>Builds; SV39 fallback warnings</td>
-      <td>No upstream CI</td>
-      <td>Debian sid 3.3.2; Ubuntu Noble 2.1.2</td>
-      <td>See open bugs below</td>
+      <td>LLVM (Clang)</td>
+      <td>Build-dependency, critical</td>
+      <td>Used for the riscv64 “Release clang” CI leg with <code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=rv64gcb_zacas_zalasr</code>; Clang &gt;= 14 required for the <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer()</code> fast path and for the PR #1363 correctness fix to apply (older Clang falls back to the safe default-heap-address path)</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Runtime-dependency, critical</td>
+      <td>Supplies <code class="language-plaintext highlighter-rouge">libatomic</code>, the GCC-runtime fallback for atomic operations on widths lacking native hardware atomics; ships with GCC’s riscv64 target runtime and is present in Ubuntu’s riscv64 toolchain packages</td>
+    </tr>
+    <tr>
+      <td>glibc</td>
+      <td>Runtime-dependency, critical</td>
+      <td>Supplies <code class="language-plaintext highlighter-rouge">pthread</code> (POSIX threading) and <code class="language-plaintext highlighter-rouge">librt</code> (realtime/clock calls) linked on Linux builds; also supplies the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code>-related headers (<code class="language-plaintext highlighter-rouge">sys/hwprobe.h</code>) used by the merged VA-detection fix when present; riscv64 glibc has been mature upstream since around 2018 and is shipped as part of every Ubuntu riscv64 release (<code class="language-plaintext highlighter-rouge">libc6</code>)</td>
+    </tr>
+    <tr>
+      <td>musl</td>
+      <td>Runtime-dependency, optional</td>
+      <td>Required for <code class="language-plaintext highlighter-rouge">-DMI_LIBC_MUSL=ON</code> static/local-dynamic-TLS builds; this is also the libc used inside the CI’s Alpine riscv64 test environment, where <code class="language-plaintext highlighter-rouge">sys/hwprobe.h</code>/<code class="language-plaintext highlighter-rouge">asm/hwprobe.h</code> are absent, so the VA-detection code falls back to parsing <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> instead</td>
+    </tr>
+    <tr>
+      <td>QEMU</td>
+      <td>Test-dependency, critical</td>
+      <td>Provides the user-mode emulation that lets the <code class="language-plaintext highlighter-rouge">alpine-riscv64</code> CI job build and run the full <code class="language-plaintext highlighter-rouge">ctest</code> suite on an x86_64 <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> host; invoked transparently via the <code class="language-plaintext highlighter-rouge">jirutka/setup-alpine</code> action, not called directly by mimalloc’s own scripts</td>
+    </tr>
+    <tr>
+      <td>Alpine Linux</td>
+      <td>Test-dependency, critical</td>
+      <td>The riscv64 CI environment itself: a QEMU-emulated Alpine chroot (packages <code class="language-plaintext highlighter-rouge">build-base cmake ninja clang</code>) set up by <code class="language-plaintext highlighter-rouge">jirutka/setup-alpine@ae3b3ddba35054804fc4a3507b519fa7e8152050</code>; this is the only environment in which mimalloc’s own riscv64 tests are exercised upstream</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>There are no dependency blockers for riscv64. All system-level dependencies are fully available on riscv64 Linux.</p><hr />
+<p><strong>Indirect/recursed dependencies found during research</strong> (not in the direct list above, surfaced while tracing the critical-dependency chain): <code class="language-plaintext highlighter-rouge">libatomic1</code> (the distro package providing the GCC <code class="language-plaintext highlighter-rouge">libatomic</code> runtime on Ubuntu riscv64), <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> (the Ubuntu cross-toolchain package), <code class="language-plaintext highlighter-rouge">binutils</code> (assembler/linker support for recognizing <code class="language-plaintext highlighter-rouge">-march=rv64gcb_zacas</code>/<code class="language-plaintext highlighter-rouge">zalasr</code> extension strings, required for the opt-in tuned build to even assemble), and Valgrind (optional dev tooling referenced via <code class="language-plaintext highlighter-rouge">valgrind.h</code>, whose riscv64 support is historically partial/lagging upstream relative to glibc/GCC). None of these are standalone projects with their own riscv64 issue trackers in the sense relevant to this report, they are components of the base glibc/binutils/GCC toolchain, which is already mature on riscv64.</p>
+
+<p><strong>Deep-dive conclusion.</strong> There is no critical third-party dependency blocking riscv64 for mimalloc. All of the interesting riscv64 engineering (TLS register access, atomic-yield primitive, VA-width detection, Zacas/bitmanip build flags) is internal to mimalloc’s own codebase, not inherited from an unready dependency.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -913,58 +936,53 @@ make -j$(nproc)
   </thead>
   <tbody>
     <tr>
+      <td><a href="https://github.com/microsoft/mimalloc/issues/939">#939</a></td>
+      <td>Unable to obtain aligned memory on RISC-V systems with an SV39 MMU</td>
+      <td>Closed (2024-12-23)</td>
+      <td>High (fixed)</td>
+      <td>Root cause: 2 TiB mmap hint exceeds the 256 GiB SV39 ceiling. Fully fixed by the merged runtime hwprobe detection in PR #1299</td>
+    </tr>
+    <tr>
       <td><a href="https://github.com/microsoft/mimalloc/issues/610">#610</a></td>
       <td>MI_HINT area is outside the VA range on some systems</td>
-      <td>Open</td>
+      <td>Status not reconfirmed in current pass; previously reported open</td>
       <td>Medium</td>
-      <td>Names RISC-V SV39 and AArch64 39-bit VA; same root cause as #939; no fix proposed</td>
+      <td>Names RISC-V SV39 and AArch64 39-bit VA; same root cause as #939, which has since been addressed, so this issue’s RISC-V relevance is likely stale [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
       <td><a href="https://github.com/microsoft/mimalloc/issues/640">#640</a></td>
       <td>Lots of warnings due to failing to allocate aligned OS memory</td>
-      <td>Open</td>
+      <td>Status not reconfirmed in current pass; previously reported open</td>
       <td>Low-Medium</td>
-      <td>Not RISC-V-specific; SV39 discussion branched to #939; affects performance via overallocation fallback</td>
+      <td>Not RISC-V-specific; the SV39 discussion that branched from it (#939) is resolved [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/microsoft/mimalloc/issues/939">#939</a></td>
-      <td>Unable to obtain aligned memory on RISC-V systems with an SV39 MMU</td>
-      <td>Closed</td>
-      <td>High</td>
-      <td>Root cause: 2 TiB mmap hint exceeds 256 GiB SV39 ceiling. Build-time workaround merged Dec 2024. Runtime fix pending in PR #1299</td>
+      <td><a href="https://github.com/microsoft/mimalloc/issues/1152">#1152</a></td>
+      <td>x86 i686 segfault in test-stress with MI_SECURE</td>
+      <td>Open (2025-10-10)</td>
+      <td>N/A to RISC-V</td>
+      <td>Not RISC-V-related, listed for completeness only</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/microsoft/mimalloc/pull/1299">#1299</a></td>
-      <td>RISC-V: detect virtual address space at runtime using hwprobe</td>
-      <td>Open PR</td>
-      <td>High</td>
-      <td>Fixes segfault when binary built on SV39 runs on SV48/SV57. Author incorporating review feedback. No merge date.</td>
+      <td><a href="https://github.com/microsoft/mimalloc/issues/343">#343</a></td>
+      <td>Apple Silicon/arm64 TLS segfault</td>
+      <td>Open (since 2020)</td>
+      <td>N/A to RISC-V</td>
+      <td>Not RISC-V-related</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/microsoft/mimalloc/pull/1319">#1319</a></td>
-      <td>Add RISC-V 64 TLS support and atomic yield functionality</td>
-      <td>Open PR</td>
-      <td>Medium</td>
-      <td>Adds <code class="language-plaintext highlighter-rouge">tp</code>-register TLS and Zihintpause yield. No reviewers assigned. No merge date.</td>
-    </tr>
-    <tr>
-      <td>(no issue)</td>
-      <td>Atomic yield falls to <code class="language-plaintext highlighter-rouge">sleep(0)</code> on riscv64</td>
-      <td>Implicit in #1319</td>
-      <td>Medium-High</td>
-      <td>Under contended workloads, <code class="language-plaintext highlighter-rouge">sleep(0)</code> causes full context switches instead of spin-wait. Performance regression for multithreaded use.</td>
-    </tr>
-    <tr>
-      <td>(no issue)</td>
-      <td>Cross-compiled binaries have baked-in wrong VA bits</td>
-      <td>Implicit in #1299</td>
-      <td>High (correctness)</td>
-      <td>A binary built on SV39 hardware and run on SV48/SV57 hardware may segfault. The build-time <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> check cannot handle this scenario.</td>
+      <td><a href="https://github.com/microsoft/mimalloc/issues/876">#876</a></td>
+      <td>slice_count overflow for very large allocations (s390x divide-by-zero/FPE)</td>
+      <td>Closed (2024-04-19)</td>
+      <td>N/A to RISC-V</td>
+      <td>Not RISC-V-related, affects s390x</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Correctness bugs:</strong> The VA-bits cross-compilation segfault (related to #1299) is a correctness issue, not just a performance issue. Binaries built and distributed from SV39 machines will crash on SV48/SV57 hardware. This affects any packager or CI system that cross-compiles on RISC-V hardware.</p><hr />
+<p><strong>No open RISC-V-specific issue or PR exists as of 2026-09.</strong> A targeted search for “riscv64 bug” and a direct “RISC-V” query against the issue tracker returned no currently-open RISC-V-tagged item; every RISC-V-titled issue or PR found (#939, #949, #1296, #1299, #1305, #1319, #1363) is closed, and the substantive ones among them (#1299, #1319, and the #1363-equivalent fix) landed rather than being abandoned. No “RISC-V NaN/floating-point” issue exists; the one floating-point-adjacent issue found (#876) affects s390x, not RISC-V.</p>
+
+<p><strong>Correctness bugs:</strong> none open. The two correctness-class issues found in research, the SV39 VA-hint failure (#939) and the Clang/glibc thread-pointer heap-corruption bug (#1363-class), are both fixed upstream (v3.4.0 and v3.5.0 respectively).</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -974,89 +992,87 @@ make -j$(nproc)
 </h2>
     
 
-<p><strong>Technical blockers:</strong></p>
+<p><strong>Technical blockers:</strong> none currently open. All RISC-V-specific technical work that was pending as of mid-2026 (#1299’s runtime VA detection, #1319’s TLS and atomic-yield support, the Clang thread-pointer fix later tracked as #1363) has landed, either as a merged PR or as an equivalent direct maintainer commit, by v3.5.0 (2026-08-18). The only remaining named technical gap is the MEMZERO16X compiler-bug workaround (commit <code class="language-plaintext highlighter-rouge">014be9ac</code>, 2026-09-15), which the maintainer disabled rather than debugged further, this is an open compiler-codegen question, not a contested design decision.</p>
 
-<ol>
-  <li>
-    <p>PR #1299: maintainer <code class="language-plaintext highlighter-rouge">daanx</code> posted review comments to the wrong PR (#1296 instead of #1299). The author <code class="language-plaintext highlighter-rouge">aurel32</code> must incorporate the feedback into #1299 before re-review. Review comments include: <code class="language-plaintext highlighter-rouge">__has_include</code> requires C23 but mimalloc targets C11 (suggested CMake <code class="language-plaintext highlighter-rouge">CHECK_INCLUDE_FILES</code> instead); <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> buffer size (2048 bytes required due to long ISA extension strings on SpacemiT K3); minor style issues. These are addressable in 1-2 days of work [NEEDS VERIFICATION – no indication of author availability].</p>
-  </li>
-  <li>
-    <p>PR #1319: no reviewer is assigned. <code class="language-plaintext highlighter-rouge">daanx</code> reviewed the predecessor PR #1305 and requested a rebase to the <code class="language-plaintext highlighter-rouge">dev</code> branch; <code class="language-plaintext highlighter-rouge">mengzhuo</code> complied but the new PR has received no reviews. No stated objections.</p>
-  </li>
-</ol>
+<p><strong>Organizational blockers:</strong> the structural bottleneck remains single-maintainer review bandwidth, consistent with the project’s general governance model (Section 1). In practice, however, this bottleneck resolved itself for RISC-V during 2026: once Daan Leijen engaged with each PR, turnaround was fast (same-day merges for #1299/#1319 on 2026-07-07, and a same-day direct-commit fix for the #1363 class of bug on 2026-08-10). The two structural non-blockers that persist by design, not by neglect, are CI gating (riscv64 CI is <code class="language-plaintext highlighter-rouge">continue-on-error</code> and not wired to <code class="language-plaintext highlighter-rouge">pull_request</code>) and the absence of upstream release binaries for riscv64; neither has an open issue or PR requesting a change, so there is no indication the maintainer currently intends to change either.</p>
 
-<p><strong>Organizational blockers:</strong></p>
+<p><strong>Acceptance probability for further RISC-V work:</strong> high. The maintainer has repeatedly folded community RISC-V contributions into the mainline (sometimes rewriting them as his own commits) and continues unprompted RISC-V-specific tuning on his own initiative (the Zacas/Zalasr flag iteration through August 2026, the MEMZERO16X disable in September 2026). There is no stated objection to RISC-V as a target.</p>
 
-<p>The primary blocker is single-maintainer bandwidth. <code class="language-plaintext highlighter-rouge">daanx</code> is the sole approver. Both open PRs are small, well-scoped, and technically sound. The delay is review latency, not technical rejection.</p>
-
-<p><strong>Acceptance probability:</strong> High for both PRs, based on: (1) <code class="language-plaintext highlighter-rouge">daanx</code> explicitly integrated the earlier SV39 fix from PR #949 himself, signaling that RISC-V fixes are acceptable; (2) both open PRs follow patterns already used for arm64 and x86; (3) there is no stated objection to the RISC-V work, only process delays.</p>
-
-<p><strong>RISE involvement:</strong> None. No RISE member organization has filed issues or PRs. No RISE blog post, wheel builder entry, or funded project covers mimalloc.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>RISE involvement:</strong> none found. No RISE member organization has filed an issue or PR against microsoft/mimalloc, no RISE blog post discusses mimalloc, and mimalloc is not a RISE member or listed partner. mimalloc appears in RISE’s ecosystem only indirectly, as a bundled allocator dependency inside four other riscv64 Python wheels built by <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> on RISE RISC-V Runners: PyArrow (<code class="language-plaintext highlighter-rouge">ARROW_MIMALLOC=ON</code>), Granian (free-threaded <code class="language-plaintext highlighter-rouge">cp314t</code> builds), Qiskit (<code class="language-plaintext highlighter-rouge">QISKIT_BUILD_WITH_MIMALLOC=1</code>), and kiwipiepy (<code class="language-plaintext highlighter-rouge">USE_MIMALLOC=1</code>, statically bundled). This is RISE’s wheel-builder CI consuming mimalloc as a transitive dependency of those packages, not RISE doing engineering work on mimalloc itself.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has done no work on mimalloc. The two open PRs (#1299, #1319) represent active community work that just needs maintainer review to land.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> Blue (N/A)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Optimization level:</strong> Partial</li>
+</ul>
+
+<p>mimalloc is an optimization-purpose project (a memory allocator), so RISC-V coverage is graded on fast-path quality, not merely build success. RISC-V gets genuine fast-path coverage: TLS via the <code class="language-plaintext highlighter-rouge">tp</code> register and <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer</code> (PR #1363, landed as commit <code class="language-plaintext highlighter-rouge">d38870fa</code>), the hwprobe-based VA-space fix for the SV39 bug (issue #939, merged via PR #1299, shipped in v3.4.0), and build-flag-gated Zacas/Zbb atomics and bitmanip (<code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=rv64gcb_zacas[_zalasr]</code>). Two gaps keep this at partial rather than full: the MEMZERO16X fast-memzero path is explicitly disabled on riscv64 due to a compiler bug (commit <code class="language-plaintext highlighter-rouge">014be9ac</code>, 2026-09-15), and the Zacas/Zalasr tuning is opt-in rather than the CMake default. Closing either gap, re-enabling MEMZERO16X once the underlying compiler codegen bug is fixed, or making the Zacas-tuned <code class="language-plaintext highlighter-rouge">-march=</code> the default for riscv64 builds, would move optimization level toward full.</p>
+
+<p><strong>Justification for the color.</strong> mimalloc’s upstream CI (<code class="language-plaintext highlighter-rouge">.github/workflows/test.yaml</code>) builds riscv64 and actually executes the <code class="language-plaintext highlighter-rouge">ctest</code> suite under QEMU/Alpine (Release-clang, Release-gcc, Debug, Secure configurations), see the raw workflow file at <a href="https://raw.githubusercontent.com/microsoft/mimalloc/dev/.github/workflows/test.yaml"><code class="language-plaintext highlighter-rouge">dev</code> branch</a>, so it clears build and test. However, the job is <code class="language-plaintext highlighter-rouge">continue-on-error</code>, and upstream’s <a href="https://github.com/microsoft/mimalloc/releases">GitHub releases</a> ship no riscv64 assets, so the only consumable riscv64 binary comes from Ubuntu 26.04 “resolute” (<code class="language-plaintext highlighter-rouge">libmimalloc3</code>/<code class="language-plaintext highlighter-rouge">libmimalloc-dev</code>, confirmed via <a href="https://packages.ubuntu.com/search?keywords=mimalloc&amp;suite=resolute&amp;searchon=names&amp;section=all">packages.ubuntu.com</a>), not from upstream itself. The net primary color is therefore blue, with the optimization-level caveat above capping it there even though both build and test pass in CI.</p>
+
+<p><strong>Pending work that could change the grade.</strong> No RISC-V-specific issue or PR remains open as of 2026-09 (#939, #1299, #1319/#1305, #1363 all landed by v3.5.0). Maintainer <code class="language-plaintext highlighter-rouge">daanx</code> continues periodic direct-commit tuning (for example, disabling MEMZERO16X on riscv64, commit <code class="language-plaintext highlighter-rouge">014be9ac</code>, 2026-09-15) that could close the remaining optimization gap in either direction. No RISE involvement was found in mimalloc upstream (no blog coverage, no funded contributions, not a RISE member); mimalloc appears in RISE’s ecosystem only as a bundled allocator dependency inside other riscv64 wheels (PyArrow, Granian, Qiskit, kiwipiepy).</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has done no direct work on mimalloc upstream; its only touchpoint is consuming mimalloc as a bundled dependency inside four other packages’ riscv64 wheels (Section 12). All of the RISC-V-specific functional work that would otherwise need sizing here, VA-space detection, TLS, atomic yield, and the Clang thread-pointer fix, has already landed upstream without RISE funding, between 2026-07-07 and 2026-08-18. Sizing below reflects only what remains genuinely open.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The riscv64 port is functionally complete in the sense that allocation succeeds via fallback paths. Two correctness/reliability issues remain:</p>
-
-<ol>
-  <li>Cross-compiled binaries may segfault on mismatched VA hardware (PR #1299 fixes this).</li>
-  <li>Atomic yield uses <code class="language-plaintext highlighter-rouge">sleep(0)</code> instead of a spin hint (PR #1319 fixes this).</li>
-</ol>
-
-<p>Both PRs are written, technically sound, and waiting for review. Sponsoring a RISE member or contributor to push these through to merge (rebasing, responding to review comments, pinging maintainer) is low-effort work.</p>
-<h3 id="132-performance-optimization">
+<p>Essentially complete. The riscv64 port allocates correctly, and the two correctness-class bugs found in research (the SV39 VA-hint failure and the Clang/glibc thread-pointer corruption bug) are both fixed upstream. No further functional-enablement work is identified.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>No riscv64 performance data exists. The two missing optimizations are TLS fast path (PR #1319) and atomic yield (PR #1319). Once #1319 lands, quantitative benchmarking on representative RISC-V hardware (SpacemiT K3, Milk-V Pioneer, or similar) to compare against arm64 and x86-64 would be the logical next step. No upstream benchmark infrastructure exists for riscv64 – a RISE-hosted runner would need to run the existing <code class="language-plaintext highlighter-rouge">bench/</code> directory workloads.</p>
-
-<p>The published x86-64 benchmarks (AMD 5950x, Zen3) show mimalloc 13% faster than tcmalloc on <code class="language-plaintext highlighter-rouge">leanN</code>, 2.5x faster than jemalloc on <code class="language-plaintext highlighter-rouge">sh6bench</code>. No riscv64 baseline exists.</p>
-<h3 id="133-cicd-infrastructure">
+<p>Two concrete, narrow items remain. First, investigate and fix the compiler codegen bug that forced MEMZERO16X off on riscv64 (commit <code class="language-plaintext highlighter-rouge">014be9ac</code>), this requires reproducing the bad codegen on the GCC/Clang versions used in CI and either reporting it upstream to the compiler project or finding a mimalloc-side workaround that re-enables the fast path. Second, evaluate promoting <code class="language-plaintext highlighter-rouge">-DMI_OPT_ARCH=rv64gcb_zacas</code> (or the <code class="language-plaintext highlighter-rouge">_zalasr</code> variant) to the riscv64 CMake default rather than leaving it opt-in, so that a plain <code class="language-plaintext highlighter-rouge">cmake ..</code> build on riscv64 gets the same tuned atomics/bitmanip codegen that arm64 and x64 get by default. Neither change has quantitative benchmark data to justify prioritization: no riscv64-vs-arm64 or riscv64-vs-amd64 benchmark numbers exist anywhere searched (not in mimalloc’s own <code class="language-plaintext highlighter-rouge">bench.html</code>, not in the <code class="language-plaintext highlighter-rouge">daanx/mimalloc-bench</code> suite, not in any RISE blog post or the RISE optimization guide). Establishing a riscv64 baseline using mimalloc’s existing <code class="language-plaintext highlighter-rouge">bench/</code> workloads on representative hardware (for example SpacemiT K3 or Milk-V Pioneer-class silicon) would be the prerequisite for sizing anything further.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>Zero riscv64 CI exists upstream. A riscv64 GitHub Actions runner (hardware or QEMU) would provide regression detection. The existing <code class="language-plaintext highlighter-rouge">test.yaml</code> matrix could be extended with a single <code class="language-plaintext highlighter-rouge">ubuntu-riscv64</code> entry. This requires either a GitHub-hosted riscv64 runner (not yet available as of 2026-06) or a self-hosted runner registered with the project.</p>
-
-<p>This is an organizational ask as much as a technical one – <code class="language-plaintext highlighter-rouge">daanx</code> would need to accept a riscv64 runner into the project’s CI.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>Not applicable. mimalloc has no dependent package ecosystem requiring separate enablement. It is used as a drop-in allocator via <code class="language-plaintext highlighter-rouge">LD_PRELOAD</code> or linked directly; no plugin/extension ecosystem exists.</p>
-<h3 id="135-summary-table">
+<p>The riscv64 CI job itself already exists and already runs the real test suite; the gap is governance, not infrastructure. Two changes would materially raise confidence: making the <code class="language-plaintext highlighter-rouge">alpine-riscv64</code> job <code class="language-plaintext highlighter-rouge">pull_request</code>-triggered rather than <code class="language-plaintext highlighter-rouge">dev*</code>/tag-only, and removing (or narrowing) <code class="language-plaintext highlighter-rouge">continue-on-error</code> for it once it has demonstrated stability. Both are organizational asks directed at the maintainer rather than engineering work; a RISE-affiliated contributor could propose this via a PR against <code class="language-plaintext highlighter-rouge">.github/workflows/test.yaml</code>, but it requires <code class="language-plaintext highlighter-rouge">daanx</code>’s buy-in to accept the stricter gating.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable to mimalloc itself; it has no dependent package ecosystem of its own that would need separate riscv64 enablement (it is consumed via <code class="language-plaintext highlighter-rouge">LD_PRELOAD</code> or direct linking, not through a plugin or package-manager ecosystem). mimalloc’s riscv64 buildability already allows it to be bundled successfully into other projects’ riscv64 wheels (PyArrow, Granian, Qiskit, kiwipiepy) via RISE’s <code class="language-plaintext highlighter-rouge">python-wheels</code> repo, so no additional enablement work is needed on mimalloc’s side for those downstream consumers.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1074,59 +1090,42 @@ make -j$(nproc)
   </thead>
   <tbody>
     <tr>
-      <td>Functional</td>
-      <td>Land PR #1299: runtime VA detection via hwprobe</td>
-      <td>0.5</td>
-      <td>Community (aurel32) / RISE sponsor to coordinate</td>
-      <td>Critical</td>
+      <td>Performance</td>
+      <td>Diagnose and fix the compiler bug blocking MEMZERO16X on riscv64 (commit <code class="language-plaintext highlighter-rouge">014be9ac</code>)</td>
+      <td>2</td>
+      <td>RISE engineer with riscv64 toolchain access, coordinating with <code class="language-plaintext highlighter-rouge">daanx</code></td>
+      <td>Medium</td>
     </tr>
     <tr>
-      <td>Functional</td>
-      <td>Land PR #1319: TLS <code class="language-plaintext highlighter-rouge">tp</code>-register and Zihintpause yield</td>
-      <td>0.5</td>
-      <td>Community (mengzhuo) / RISE sponsor to coordinate</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>Fix cross-compilation toolchain documentation for SV39/SV48/SV57</td>
-      <td>0.5</td>
+      <td>Performance</td>
+      <td>Evaluate promoting <code class="language-plaintext highlighter-rouge">rv64gcb_zacas</code>/<code class="language-plaintext highlighter-rouge">_zalasr</code> to the riscv64 CMake default</td>
+      <td>1</td>
       <td>RISE contributor</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>CI/CD</td>
-      <td>Add riscv64 self-hosted runner to <code class="language-plaintext highlighter-rouge">test.yaml</code></td>
-      <td>2</td>
-      <td>RISE (hardware + maintainer coordination)</td>
-      <td>High</td>
-    </tr>
-    <tr>
       <td>Performance</td>
-      <td>Baseline benchmarks on riscv64 vs arm64 and x86-64 using existing <code class="language-plaintext highlighter-rouge">bench/</code> workloads</td>
-      <td>1</td>
+      <td>Establish riscv64 baseline benchmarks using existing <code class="language-plaintext highlighter-rouge">bench/</code> workloads, vs arm64 and x86-64</td>
+      <td>1.5</td>
       <td>RISE engineer with access to RISC-V hardware</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>Performance</td>
-      <td>Investigate additional arch-specific opts (Zba/Zbb bitmanip for size-class calculations) if benchmarks reveal gaps</td>
-      <td>4</td>
-      <td>RISE engineer</td>
+      <td>CI/CD</td>
+      <td>Propose <code class="language-plaintext highlighter-rouge">pull_request</code>-gating and remove <code class="language-plaintext highlighter-rouge">continue-on-error</code> for the riscv64 CI job</td>
+      <td>1</td>
+      <td>RISE contributor, needs maintainer buy-in</td>
       <td>Low</td>
     </tr>
+    <tr>
+      <td>Functional</td>
+      <td>None identified, all known RISC-V functional/correctness work has landed upstream</td>
+      <td>0</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1138,23 +1137,33 @@ make -j$(nproc)
 
 <ul>
   <li><a href="https://github.com/microsoft/mimalloc">microsoft/mimalloc repository</a></li>
+  <li><a href="https://microsoft.github.io/mimalloc/">mimalloc homepage / API reference</a></li>
   <li><a href="https://github.com/microsoft/mimalloc/issues/610">Issue #610: MI_HINT area is outside the VA range on some systems</a></li>
   <li><a href="https://github.com/microsoft/mimalloc/issues/640">Issue #640: Lots of warnings due to failing to allocate aligned OS memory</a></li>
   <li><a href="https://github.com/microsoft/mimalloc/issues/939">Issue #939: Unable to obtain aligned memory on RISC-V systems with an SV39 MMU</a></li>
   <li><a href="https://github.com/microsoft/mimalloc/pull/949">PR #949: Skip aligned allocation on SV39 MMUs</a></li>
-  <li><a href="https://github.com/microsoft/mimalloc/pull/1154">PR #1154: Implement RISC-V64 atomic_yield fastpath</a></li>
-  <li><a href="https://github.com/microsoft/mimalloc/pull/1156">PR #1156: Implement RISC-V64 atomic_yield fastpath (second attempt)</a></li>
   <li><a href="https://github.com/microsoft/mimalloc/pull/1296">PR #1296: RISC-V: detect virtual address space at runtime using hwprobe (superseded)</a></li>
-  <li><a href="https://github.com/microsoft/mimalloc/pull/1299">PR #1299: RISC-V: detect virtual address space at runtime using hwprobe</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/pull/1299">PR #1299: RISC-V: detect virtual address space at runtime using hwprobe (merged)</a></li>
   <li><a href="https://github.com/microsoft/mimalloc/pull/1305">PR #1305: Add RISC-V 64 TLS support and atomic yield functionality (superseded)</a></li>
-  <li><a href="https://github.com/microsoft/mimalloc/pull/1319">PR #1319: Add RISC-V 64 TLS support and atomic yield functionality</a></li>
-  <li><a href="https://raw.githubusercontent.com/microsoft/mimalloc/main/.github/workflows/test.yaml">mimalloc test.yaml CI workflow (main branch)</a></li>
-  <li><a href="https://raw.githubusercontent.com/microsoft/mimalloc/dev/.github/workflows/release.yaml">mimalloc release.yaml CI workflow (dev branch)</a></li>
-  <li><a href="https://api.github.com/repos/microsoft/mimalloc/releases?per_page=5">GitHub Releases API for microsoft/mimalloc</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/libmimalloc2.0">Ubuntu 24.04 Noble package: libmimalloc2.0</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/pull/1319">PR #1319: riscv64 TLS and atomic yield (merged, successor of #1305)</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/pull/1363">PR #1363: Fix RISC-V thread ID lookup</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/pull/1388">PR #1388: dependabot CI bump referencing vmactions/freebsd-vm riscv64 support</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/commit/d7d90c6fce717f61ef3b290ceacfbc84aa57b873">Commit d7d90c6f: add detection for riscv sv48 and sv57 mmu’s</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/commit/d38870faada8169d2becb3c09fd15ab72afed107">Commit d38870fa: use __builtin_thread_pointer on riscV, pr #1363 by @rui314</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/commit/014be9ac46a8fab538ff201714d6f2663f8696d3">Commit 014be9ac: disable MEMZERO16X for now on riscV (due to compiler errors)</a></li>
+  <li><a href="https://raw.githubusercontent.com/microsoft/mimalloc/dev/.github/workflows/test.yaml">mimalloc test.yaml CI workflow (dev branch)</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/releases">GitHub Releases for microsoft/mimalloc</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=mimalloc&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu 26.04 (resolute) package search for mimalloc</a></li>
   <li><a href="https://buildd.debian.org/status/package.php?p=mimalloc&amp;suite=sid">Debian buildd status for mimalloc (sid)</a></li>
-  <li><a href="https://riseproject.dev">RISE Project member list</a></li>
+  <li><a href="https://microsoft.github.io/mimalloc/bench.html">mimalloc benchmark page</a></li>
+  <li><a href="https://github.com/daanx/mimalloc-bench">daanx/mimalloc-bench</a></li>
+  <li><a href="https://riseproject.dev">RISE Project</a></li>
   <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
+  <li><a href="https://riseproject.dev/2026/07/30/rise-working-groups-move-their-project-tracking-to-github/">RISE post: Working Groups move their project tracking to GitHub</a></li>
+  <li><a href="https://riscv-optimization-guide.riseproject.dev/">RISE RISC-V optimization guide</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/issues/1152">Issue #1152: x86 i686 segfault in test-stress with MI_SECURE</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/issues/343">Issue #343: Apple Silicon/arm64 TLS segfault</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/issues/876">Issue #876: slice_count overflow for very large allocations</a></li>
 </ul>
 
           
