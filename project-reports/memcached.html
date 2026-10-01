@@ -264,11 +264,13 @@
   
 </h1>
     
+
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for Memcached<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -278,15 +280,15 @@
 </h2>
     
 
-<p>Memcached is a general-purpose, high-performance, distributed in-memory key-value cache server written in C. It is used as a session store and database query cache by most large-scale web deployments. Current release: 1.6.42 (May 18, 2026).</p>
+<p>Memcached is a general-purpose, high-performance, distributed in-memory key-value cache server written in portable C. It is used as a session store and database query cache by large-scale web deployments. Distro packaging observed during this review (Ubuntu 26.04 “resolute,” Arch Linux RISC-V) places the current shipping line at 1.6.40-1.6.45; HEAD of the <code class="language-plaintext highlighter-rouge">master</code> branch at review time was commit <a href="https://github.com/memcached/memcached"><code class="language-plaintext highlighter-rouge">2d51e364799bc9698bd4b11728ea978cea12da6e</code></a>.</p>
 
-<p><strong>License:</strong> BSD 3-Clause (copyright 2003 Danga Interactive, Inc.).</p>
+<p><strong>License:</strong> 3-clause BSD-style license, copyright 2003 Danga Interactive, Inc. (confirmed via the repository’s <code class="language-plaintext highlighter-rouge">LICENSE</code>/<code class="language-plaintext highlighter-rouge">COPYING</code> file).</p>
 
-<p><strong>Governance:</strong> Informal BDFL-style. Alan “dormando” Kasindorf is the sole active maintainer (1,138 commits). There is no foundation affiliation (not Linux Foundation, Apache, CNCF, or RISE), no TSC, and no steering committee. Commercial support is channeled through Cache Forge LLC (<a href="https://cacheforge.com">cacheforge.com</a>), which dormando operates.</p>
+<p><strong>Governance:</strong> Informal, BDFL-style, centered on Alan “dormando” Kasindorf. Of roughly 2,360 commits in the full repository history, dormando authored approximately 1,180 (about 50%), and the most recent 30+ commits through July 2026 are all his. There is no written governance charter, no MAINTAINERS/OWNERS/CODEOWNERS file, and no formal RFC or PR-review-board process; <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> only points to a wiki page and asks users to run and report back on releases. Memcached is not affiliated with any foundation (not Linux Foundation, Apache, CNCF, or RISE).</p>
 
-<p><strong>Corporate history:</strong> Brad Fitzpatrick (Google, 164 commits) created the project. Steven Grimm (Facebook, early multithreaded rework) and Trond Norbye (Sun Microsystems) made early architectural contributions. Netflix is listed as a supporter on the official site. No active corporate co-maintainers exist today.</p>
+<p><strong>Corporate history and sponsors:</strong> Brad Fitzpatrick (Danga Interactive/LiveJournal, 164 commits) created the project. Trond Norbye (Sun Microsystems), Steven Grimm (Facebook), Tharanga Gamaethige (Netflix), Fei Hu (Stripe), Igor Bujna (Oracle), Paul Lindner (hi5), and David Carlier (independent) are the other historically significant contributors by commit count. Netflix is listed as a homepage sponsor on <a href="https://memcached.org/">memcached.org</a>, and Cache Forge is listed as a commercial-support provider. No single corporation funds a maintainer team; contributions are individual, drive-by patches from engineers at companies using memcached in production.</p>
 
-<p><strong>Culture on new ports:</strong> The project has no formal platform tier policy and no PLATFORMS.md or SUPPORT.md. Because memcached is portable C with no arch-specific code requirements, new architecture support is handled implicitly by OS distributions rather than through any upstream acceptance process. The maintainer’s public posture on RISC-V is positive: dormando acquired a HiFive Unmatched board in 2025 and confirmed in <a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a> (July 2025): “the build as-is is completely fine on RISCV and will continue to be going forward.”</p><hr />
+<p><strong>Culture on new ports:</strong> There is no <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>, or formal platform-tier policy. Portability relies entirely on generic GNU Autotools (<code class="language-plaintext highlighter-rouge">configure.ac</code>) rather than a maintained list of first/second-class architectures. The project’s historical pattern (the 2019 cross-compilation fix, the 2020 aarch64 hardware-CRC patch) is to accept architecture-portability patches when an outside contributor does the work and testing, but the maintainer does not proactively initiate port work himself. On RISC-V specifically, dormando’s public stance is positive but reactive: he confirmed in July 2025, after acquiring a HiFive Unmatched board, that “memcached does build and run just fine” on riscv64 (<a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a>), but a community request for upstream RISC-V CI opened in February 2024 sat without a merged CI change for over a year and a half.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -306,78 +308,103 @@
   </thead>
   <tbody>
     <tr>
-      <td>October 2019</td>
-      <td>Contributor olajep (Rocket Chip FPGA research platform) files PR #552 fixing <code class="language-plaintext highlighter-rouge">AC_RUN_IFELSE</code> cross-compilation failures; explicitly tests against <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code></td>
+      <td>2019-10-05</td>
+      <td>bkuhls files <a href="https://github.com/memcached/memcached/issues/550">Issue #550</a>: cross-compilation broken, <code class="language-plaintext highlighter-rouge">configure: error: cannot run test program while cross compiling</code></td>
+      <td><a href="https://github.com/memcached/memcached/issues/550">Issue #550</a></td>
+    </tr>
+    <tr>
+      <td>2019-10-07</td>
+      <td>Ola Jeppsson (olajep) opens <a href="https://github.com/memcached/memcached/pull/552">PR #552</a>, replacing <code class="language-plaintext highlighter-rouge">AC_RUN_IFELSE</code> autoconf checks with cross-compile-safe fallbacks (<code class="language-plaintext highlighter-rouge">AC_CHECK_SIZEOF</code>, <code class="language-plaintext highlighter-rouge">AC_C_BIGENDIAN</code>); explicitly validated against the <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code> cross-compiler</td>
       <td><a href="https://github.com/memcached/memcached/pull/552">PR #552</a></td>
     </tr>
     <tr>
-      <td>November 2019</td>
-      <td>PR #552 patch content committed as <code class="language-plaintext highlighter-rouge">be0804cf</code> by dormando; ships in memcached 1.5.20</td>
-      <td><a href="https://github.com/memcached/memcached/pull/552">PR #552</a></td>
+      <td>2019-10-17</td>
+      <td>dormando commits the patch content directly to master as <a href="https://github.com/memcached/memcached/commit/be0804cf3855cf968b3c6c0cc6e1f4b0724205a7"><code class="language-plaintext highlighter-rouge">be0804cf3855cf968b3c6c0cc6e1f4b0724205a7</code></a></td>
+      <td>commit be0804c</td>
     </tr>
     <tr>
-      <td>September 2021</td>
-      <td>mkszuba files Issue #816 reporting chunked-extstore test failures (tests 124, 178, 232) on BeagleV Starlight (rv64gc, Gentoo, memcached 1.6.10); failures do not reproduce under QEMU user-mode, only on physical hardware</td>
+      <td>2019-11-11</td>
+      <td><a href="https://github.com/memcached/memcached/pull/552">PR #552</a> closed; fix ships in release 1.5.20</td>
+      <td>GitHub PR API, tag ancestry check</td>
+    </tr>
+    <tr>
+      <td>2021-09-03</td>
+      <td>mkszuba files <a href="https://github.com/memcached/memcached/issues/816">Issue #816</a>: chunked-extstore tests 124/178/232 return empty records on a BeagleV Starlight (rv64gc, Gentoo, memcached 1.6.10)</td>
       <td><a href="https://github.com/memcached/memcached/issues/816">Issue #816</a></td>
     </tr>
     <tr>
-      <td>October 2022</td>
-      <td>Community member alexfanqi confirms no reproduction on QEMU and SiFive Unmatched with memcached 1.6.16/1.6.17</td>
+      <td>2022-10-30</td>
+      <td>alexfanqi reports no reproduction on QEMU user-mode or SiFive Unmatched with memcached 1.6.16/1.6.17</td>
       <td><a href="https://github.com/memcached/memcached/issues/816">Issue #816</a></td>
     </tr>
     <tr>
-      <td>February 2024</td>
-      <td>alitariq4589 files Issue #1111 requesting upstream riscv64 CI via Cloud-V; dormando responds he has purchased a RISC-V board</td>
+      <td>2024-02-26</td>
+      <td>alitariq4589 files <a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a> requesting upstream riscv64 CI via the Cloud-V platform; dormando states he has purchased a RISC-V board</td>
       <td><a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a></td>
     </tr>
     <tr>
-      <td>July 2025</td>
-      <td>dormando gets HiFive Unmatched running; confirms “it does build and run just fine” on riscv64; states personal CI planned</td>
+      <td>2025-02-19 to 2025-07-29</td>
+      <td>dormando searches for HiFive Unmatched parts, then confirms the board is running and “does build and run just fine” on riscv64; states plans to add it to his own in-house CI</td>
       <td><a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a></td>
     </tr>
     <tr>
-      <td>August 5, 2025</td>
-      <td>Issue #816 closed by dormando as fixed in recent releases</td>
+      <td>2025-08-05</td>
+      <td><a href="https://github.com/memcached/memcached/issues/816">Issue #816</a> closed by dormando as fixed in recent releases</td>
       <td><a href="https://github.com/memcached/memcached/issues/816">Issue #816</a></td>
+    </tr>
+    <tr>
+      <td>2025-08-06</td>
+      <td>Last activity on <a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a>; issue remains open, no CI PR filed</td>
+      <td><a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a></td>
+    </tr>
+    <tr>
+      <td>(release notes)</td>
+      <td>Memcached 1.6.39 wiki release notes state: “our in-house CI supports riscv64 and all known tests pass”</td>
+      <td><a href="https://github.com/memcached/memcached/wiki/ReleaseNotes1639">ReleaseNotes1639 wiki</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Key contributors with orgs:</strong></p>
+<p><strong>Key contributors with context:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Contributor</th>
-      <th>Org</th>
+      <th>Context</th>
       <th>Contribution</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>olajep</td>
-      <td>FPGA research (unnamed)</td>
-      <td>PR #552: cross-compilation fix for riscv64</td>
+      <td>External contributor</td>
+      <td>PR #552 / commit be0804c: cross-compilation fix validated against riscv64-unknown-linux-gnu</td>
     </tr>
     <tr>
       <td>mkszuba</td>
-      <td>Individual / Gentoo</td>
-      <td>Issue #816: initial RISC-V extstore bug report</td>
+      <td>Individual (Gentoo)</td>
+      <td>Issue #816: initial RISC-V extstore bug report, offered temporary hardware access</td>
     </tr>
     <tr>
-      <td>alexfanqi</td>
-      <td>Individual</td>
-      <td>Issue #816: confirmed fixed on physical RISC-V hardware</td>
+      <td>ArchFeh / alexfanqi</td>
+      <td>Individual contributors</td>
+      <td>Issue #816: reproduced and later confirmed fixed on real hardware (BeagleV Starlight, SiFive Unmatched)</td>
     </tr>
     <tr>
-      <td>alitariq4589 / 10x Engineers</td>
-      <td>Cloud-V / RISC-V Labs</td>
-      <td>Issue #1111: CI infrastructure outreach</td>
+      <td>alitariq4589</td>
+      <td>Non-maintainer (author association “NONE”), Cloud-V / RISC-V Labs</td>
+      <td>Issue #1111: repeated offers of free RISC-V CI access (Cloud-V), never accepted into the public workflow</td>
+    </tr>
+    <tr>
+      <td>dormando</td>
+      <td>Maintainer</td>
+      <td>Acquired personal RISC-V hardware (SiFive HiFive Unmatched), confirmed functional correctness, plans in-house (non-public) CI</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Upstreaming status:</strong> The cross-compilation fix is fully upstream (1.5.20+). The extstore bug is fixed. No dedicated RISC-V code path has ever been added because none is required – the codebase is portable by design. The project is functionally supported but lacks upstream CI coverage.</p><hr />
+<p><strong>Upstreaming status:</strong> The cross-compilation fix shipped in 1.5.20 via a direct commit rather than a GitHub-merged PR (GitHub’s own API records <code class="language-plaintext highlighter-rouge">"merged": false, "merged_at": null"</code> for PR #552, with the <code class="language-plaintext highlighter-rouge">merge_commit_sha</code> field pointing to a non-ancestor synthetic test-merge commit; the real fix, commit be0804c, is confirmed by <code class="language-plaintext highlighter-rouge">git merge-base --is-ancestor</code> to be present in <code class="language-plaintext highlighter-rouge">master</code> and in the 1.5.20 tag but absent from 1.5.19). The extstore correctness bug (#816) is closed and fixed. No dedicated RISC-V code path has ever been added to the project because none is required for correctness; the codebase is portable C by design. The project is functionally reported working on riscv64 by its sole maintainer, but that status rests on private, unverifiable infrastructure rather than anything checked into the public repository (see Section 7).</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -387,7 +414,7 @@
 </h2>
     
 
-<p>Memcached has no formal tier policy. The CI configuration is a single 21-line GitHub Actions workflow targeting <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) only. There is no architecture matrix, no release-blocking tests for non-x86_64, and no official riscv64 binary releases.</p>
+<p>Memcached has no formal platform-tier policy, no <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code>, and no <code class="language-plaintext highlighter-rouge">SUPPORT.md</code>. The CI configuration is a single ~20-line GitHub Actions workflow (<code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>) targeting <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) only, confirmed by direct repository inspection (fresh clone, HEAD <code class="language-plaintext highlighter-rouge">2d51e364799bc9698bd4b11728ea978cea12da6e</code>) and by a repository-wide case-insensitive grep for “riscv,” which returned zero matches anywhere in the tree.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -400,20 +427,20 @@
   </thead>
   <tbody>
     <tr>
-      <td>Upstream CI</td>
-      <td>Yes (ubuntu-latest)</td>
+      <td>Upstream public CI</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">ubuntu-latest</code>)</td>
       <td>No</td>
       <td>No</td>
     </tr>
     <tr>
       <td>Release-blocking tests</td>
-      <td>Yes</td>
+      <td>Yes (public CI)</td>
       <td>No</td>
-      <td>No</td>
+      <td>No (claimed in private maintainer CI only, unverifiable)</td>
     </tr>
     <tr>
       <td>Official upstream binary</td>
-      <td>No (source-only)</td>
+      <td>No (source-only; no GitHub Releases exist at all)</td>
       <td>No</td>
       <td>No</td>
     </tr>
@@ -421,24 +448,24 @@
       <td>Distro binary available</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (Ubuntu, Debian)</td>
+      <td>Yes (Ubuntu 26.04 “resolute,” Debian sid, Arch Linux RISC-V)</td>
     </tr>
     <tr>
       <td>Maintainer confirmed working</td>
       <td>Yes</td>
       <td>Not stated</td>
-      <td>Yes (Issue #1111, Jul 2025)</td>
+      <td>Yes, personally, on a HiFive Unmatched board (<a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a>, Jul 2025)</td>
     </tr>
     <tr>
       <td>Hardware CRC32 acceleration</td>
       <td>Yes (SSE4.2)</td>
-      <td>Yes (ARM CRC ext)</td>
+      <td>Yes (ARMv8 CRC extension)</td>
       <td>No (software fallback)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Effective tier: riscv64 is an informal community-supported tier with no upstream CI, no release-blocking tests, and no official binaries. Distribution packages exist and are functional.</p><hr />
+<p>Effective tier: riscv64 is a community/distro-supported tier with no public upstream CI, no release-blocking riscv64 tests, and no official upstream binaries of any kind for any architecture (memcached ships source tarballs and git tags, not GitHub Releases). Distribution packages build and are functional.</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -448,14 +475,25 @@
 </h2>
     
 
-<p>Memcached has no JIT compiler, no garbage collector, no floating-point subsystem, and no SIMD dispatch layer. The entire architecture-specific code is in one file: <code class="language-plaintext highlighter-rouge">crc32c.c</code>.</p>
+<p>Memcached has no JIT compiler, no garbage collector, no floating-point computation subsystem, and no general SIMD dispatch layer. A repository-wide search for architecture guards (<code class="language-plaintext highlighter-rouge">__riscv</code>, <code class="language-plaintext highlighter-rouge">__x86_64__</code>, <code class="language-plaintext highlighter-rouge">__aarch64__</code>, <code class="language-plaintext highlighter-rouge">__arm__</code>, intrinsics headers) found exactly one memcached-authored file with real per-architecture hand-written code paths: <code class="language-plaintext highlighter-rouge">crc32c.c</code>. <code class="language-plaintext highlighter-rouge">xxhash.h</code> is a vendored third-party header with its own independent SIMD autodetection, not memcached-authored arch code.</p>
 
-<p><strong>CRC32C (<code class="language-plaintext highlighter-rouge">crc32c.c</code>):</strong> Used to checksum data written to the extstore disk-offload backend.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">crc32c.c</code> structure (verified by direct source read):</strong></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#ifdef __x86_64__
+</span>   <span class="cm">/* inline-asm crc32q/crc32b hardware CRC, SSE4.2 detected via cpuid */</span>
+<span class="cp">#elif defined(__aarch64__) &amp;&amp; (linux || apple)
+</span>   <span class="cm">/* inline-asm crc32cx/crc32cb using ARMv8 CRC extension, HWCAP_CRC32/sysctl detected */</span>
+<span class="cp">#else </span><span class="cm">/* every other architecture, including riscv64 */</span><span class="cp">
+</span>   <span class="kt">void</span> <span class="nf">crc32c_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span> <span class="n">crc32c</span> <span class="o">=</span> <span class="n">crc32c_sw</span><span class="p">;</span> <span class="p">}</span>
+<span class="cp">#endif
+</span></code></pre></div></div>
+
+<p>riscv64 falls into the final <code class="language-plaintext highlighter-rouge">#else</code> branch along with ppc64, s390x, mips, and armv7, landing on <code class="language-plaintext highlighter-rouge">crc32c_sw</code>, a generic byte/8-byte-chunk table-driven software CRC32C. This fallback is fully correct and functional, not a stub or placeholder; it is the identical code path used by every non-x86_64/non-aarch64 target and is exercised by the normal test suite. It contains no reference anywhere to RISC-V’s Zbc/Zbkc (carry-less multiply) or vector extensions. <code class="language-plaintext highlighter-rouge">configure.ac</code> confirms the asymmetry directly: there is an <code class="language-plaintext highlighter-rouge">ENABLE_ARM_CRC32</code> flag wiring the aarch64 hardware path and runtime SSE4.2 detection for x86_64, but no equivalent riscv64 flag or detection exists anywhere in <code class="language-plaintext highlighter-rouge">configure.ac</code>, <code class="language-plaintext highlighter-rouge">Makefile.am</code>, or the C sources.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Implementation</th>
+      <th>Component</th>
       <th>amd64</th>
       <th>arm64</th>
       <th>riscv64</th>
@@ -463,51 +501,39 @@
   </thead>
   <tbody>
     <tr>
-      <td>Strategy</td>
-      <td>Hardware SSE4.2 intrinsics + triple-stream pipelining</td>
-      <td>Hardware ARM CRC extension (<code class="language-plaintext highlighter-rouge">crc32cx</code>/<code class="language-plaintext highlighter-rouge">crc32cb</code>)</td>
-      <td>Software table-driven fallback</td>
+      <td>CRC32C checksum (<code class="language-plaintext highlighter-rouge">crc32c.c</code>)</td>
+      <td>Full (hand-tuned inline-asm SSE4.2, runtime cpuid-detected)</td>
+      <td>Full (hand-tuned inline-asm ARMv8 CRC extension, runtime HWCAP-detected)</td>
+      <td>Scalar software fallback (correct, no Zbc/vector usage, unoptimized)</td>
     </tr>
     <tr>
-      <td>ISA extension required</td>
-      <td>SSE4.2</td>
-      <td><code class="language-plaintext highlighter-rouge">HWCAP_CRC32</code> (detected at runtime)</td>
-      <td>None</td>
+      <td>Hashing (jenkins_hash.c, murmur3_hash.c)</td>
+      <td>Scalar portable C</td>
+      <td>Scalar portable C</td>
+      <td>Scalar portable C (no ISA-specific code on any platform; “MurmurHash3_x86_32” denotes an output-size variant, not an x86 dependency)</td>
     </tr>
     <tr>
-      <td>Runtime detection</td>
-      <td>Yes (<code class="language-plaintext highlighter-rouge">cpuid</code>)</td>
-      <td>Yes (<code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code>)</td>
-      <td>N/A</td>
+      <td>xxHash (vendored <code class="language-plaintext highlighter-rouge">xxhash.h</code>)</td>
+      <td>Optional SSE2/AVX2 autovectorized paths (third-party, not memcached-authored)</td>
+      <td>NEON autovectorized paths (third-party)</td>
+      <td>Generic scalar fallback (third-party; no RISC-V vector path)</td>
     </tr>
     <tr>
-      <td>Quality</td>
-      <td>Hand-tuned</td>
-      <td>Hand-tuned</td>
-      <td>Generic C99</td>
+      <td>Seccomp sandbox (<code class="language-plaintext highlighter-rouge">linux_priv.c</code>)</td>
+      <td>Tested (README states x86-64 only)</td>
+      <td>Untested upstream</td>
+      <td>Untested upstream; libseccomp’s own architecture-neutral API means no memcached-side syscall table is required</td>
     </tr>
     <tr>
-      <td>Correctness</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Full</td>
-    </tr>
-    <tr>
-      <td>Relative performance</td>
-      <td>Baseline</td>
-      <td>Comparable</td>
-      <td>Degraded (~2-5x slower for CRC-intensive extstore workloads) [NEEDS VERIFICATION]</td>
+      <td>Everything else (slab/item/network/protocol/extstore/auth/logging)</td>
+      <td>Scalar, fully generic</td>
+      <td>Scalar</td>
+      <td>Scalar - architecture is irrelevant to correctness</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 scalar fallback is a complete, correct implementation – it is not a stub. It is the same fallback used for ppc64le, s390x, and all other architectures. The practical impact is limited to deployments that use the <code class="language-plaintext highlighter-rouge">extstore</code> feature (disk offload); the main caching path does not use CRC32C.</p>
-
-<p><strong>MurmurHash3 (<code class="language-plaintext highlighter-rouge">murmur3_hash.c</code>):</strong> Generic portable C99, no architecture-specific code on any platform.</p>
-
-<p><strong>Seccomp sandbox (<code class="language-plaintext highlighter-rouge">linux_priv.c</code>):</strong> Uses libseccomp’s architecture-neutral API. No architecture-specific syscall filter lists are required in the memcached source. The upstream README states seccomp is tested on x86-64 only; the project recommends <code class="language-plaintext highlighter-rouge">--disable-seccomp</code> (by omission – seccomp is not enabled by default) for other architectures until validated.</p>
-
-<p><strong>No other architecture-specific components exist.</strong> The repository contains zero <code class="language-plaintext highlighter-rouge">.S</code> assembly files, zero JIT backends, and zero inline asm outside <code class="language-plaintext highlighter-rouge">crc32c.c</code>.</p><hr />
+<p>The repository contains zero <code class="language-plaintext highlighter-rouge">.S</code> assembly files and zero inline asm outside <code class="language-plaintext highlighter-rouge">crc32c.c</code>. Memcached is not an optimization-purpose project; its value proposition is correctness and scalability as a cache server, not CPU-bound numerical or SIMD throughput, so the one performance-sensitive path identified (CRC32C for the optional extstore feature) is the only architecture-dependent optimization surface in the project.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -517,9 +543,9 @@
 </h2>
     
 
-<p><strong>Build system:</strong> Autotools only (autoconf + automake). No CMake, no Meson, no toolchain files.</p>
+<p><strong>Build system:</strong> GNU Autotools only (<code class="language-plaintext highlighter-rouge">autogen.sh</code> + <code class="language-plaintext highlighter-rouge">configure.ac</code> + <code class="language-plaintext highlighter-rouge">Makefile.am</code>). Confirmed by direct repository inspection: there is no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, no <code class="language-plaintext highlighter-rouge">cmake/</code> directory, no Meson, and no toolchain files anywhere in the tree.</p>
 
-<p><strong>Native build (standard):</strong></p>
+<p><strong>Native build (from <code class="language-plaintext highlighter-rouge">README.md</code>, verbatim):</strong></p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./autogen.sh
 ./configure
@@ -527,21 +553,22 @@ make
 make test
 </code></pre></div></div>
 
-<p><strong>Cross-compilation to riscv64 (standard autotools pattern; no project-specific documentation exists):</strong></p>
+<p>With optional features: <code class="language-plaintext highlighter-rouge">./configure --enable-tls</code>, <code class="language-plaintext highlighter-rouge">./configure --enable-sasl --enable-sasl-pwdb</code>, <code class="language-plaintext highlighter-rouge">./configure --enable-seccomp</code>, <code class="language-plaintext highlighter-rouge">./configure --enable-proxy</code> (requires running <code class="language-plaintext highlighter-rouge">cd vendor &amp;&amp; ./fetch.sh</code> first to pull Lua and optionally liburing).</p>
+
+<p><strong>Cross-compilation to riscv64:</strong> No project-specific documentation exists anywhere in the repository (<code class="language-plaintext highlighter-rouge">README.md</code>, <code class="language-plaintext highlighter-rouge">doc/</code>, no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, <code class="language-plaintext highlighter-rouge">docs/building.md</code>, or <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> exist). <code class="language-plaintext highlighter-rouge">configure.ac</code> uses standard <code class="language-plaintext highlighter-rouge">AC_CANONICAL_HOST</code> host-triplet detection, which is what makes the generic autotools cross-compilation pattern work:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./autogen.sh
-./configure --host=riscv64-linux-gnu --build=x86_64-linux-gnu \
-    CC=riscv64-linux-gnu-gcc
+./configure --host=riscv64-linux-gnu --build=x86_64-linux-gnu CC=riscv64-linux-gnu-gcc
 make
 </code></pre></div></div>
 
-<p>The cross-compilation fix in PR #552 (shipped 1.5.20) replaced <code class="language-plaintext highlighter-rouge">AC_RUN_IFELSE</code> calls in <code class="language-plaintext highlighter-rouge">configure.ac</code> with <code class="language-plaintext highlighter-rouge">AC_COMPILE_IFELSE</code> fallbacks that do not require executing code on the target. This is the only riscv64-specific build system change ever made.</p>
+<p>The only riscv64-specific build-system change ever made is the one behind PR #552 / commit be0804c (2019): replacing <code class="language-plaintext highlighter-rouge">AC_RUN_IFELSE</code> calls (which require executing target code, impossible when cross-compiling) with <code class="language-plaintext highlighter-rouge">AC_CHECK_SIZEOF</code>, <code class="language-plaintext highlighter-rouge">AC_C_BIGENDIAN</code>, and <code class="language-plaintext highlighter-rouge">AS_IF</code>-based fallbacks that default to a cross-compile-safe assumption with a warning rather than hard-failing. Without this fix, memcached could not be cross-compiled for riscv64 at all.</p>
 
-<p><strong>Minimum toolchain versions:</strong> Not explicitly stated. <code class="language-plaintext highlighter-rouge">configure.ac</code> requires autoconf 2.52 (a 2003 vintage); the code uses C99 features (m4/c99-backport.m4 present). Any GCC or Clang version capable of riscv64-linux-gnu targeting will suffice.</p>
+<p><strong>Minimum toolchain versions:</strong> Not documented for any architecture. <code class="language-plaintext highlighter-rouge">configure.ac</code> targets a legacy Autoconf baseline (2003-era) and the source uses C99 features (<code class="language-plaintext highlighter-rouge">m4/c99-backport.m4</code> is present for pre-C99 compatibility). No GCC/Clang minimum version tied to riscv64 is stated anywhere.</p>
 
-<p><strong>QEMU usage:</strong> Zero. No QEMU-based emulation is used or documented anywhere in the project.</p>
+<p><strong>QEMU usage:</strong> None. No QEMU-based emulation is referenced anywhere in the memcached repository.</p>
 
-<p><strong>Known build failures:</strong> None active as of 1.6.42. The extstore test failures (Issue #816) on BeagleV Starlight were timing-sensitive failures on slow hardware, not build failures. They are resolved in releases 1.6.16+.</p>
+<p><strong>Known build failures:</strong> None confirmed active at the current reviewed HEAD. The chunked-extstore test failures of Issue #816 were timing-sensitive test failures on slow physical hardware (BeagleV Starlight), not build failures, and were closed as resolved by 1.6.16/1.6.17 without an isolated fix commit ever being identified; the fix appears to have been an incidental side effect of other extstore work.</p>
 
 <p><strong>Feature flags relevant to riscv64:</strong></p>
 
@@ -555,26 +582,30 @@ make
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--enable-seccomp</code></td>
-      <td>Tested x86-64 only per upstream README. Use with caution on riscv64; libseccomp itself supports riscv64 since v2.5.0 (2021).</td>
+      <td>README states tested on x86-64 only. libseccomp itself has shipped native riscv64 syscall-table support since a 2020 merge (<a href="https://github.com/seccomp/libseccomp/pull/197">PR #197</a>); see Section 9.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--enable-tls</code></td>
-      <td>Arch-neutral. Requires OpenSSL and pkg-config.</td>
+      <td>Architecture-neutral at the memcached level. Requires OpenSSL; see Section 9 for riscv64-specific OpenSSL caveats.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">--enable-sasl</code></td>
-      <td>Arch-neutral. Requires libsasl2.</td>
+      <td><code class="language-plaintext highlighter-rouge">--enable-sasl</code> / <code class="language-plaintext highlighter-rouge">--enable-sasl-pwdb</code></td>
+      <td>Architecture-neutral. Requires libsasl2.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--enable-proxy</code></td>
-      <td>Requires running <code class="language-plaintext highlighter-rouge">cd vendor &amp;&amp; ./fetch.sh</code> first to pull Lua and optionally liburing. Arch-neutral.</td>
+      <td>Requires vendoring Lua (and optionally liburing) via <code class="language-plaintext highlighter-rouge">vendor/fetch.sh</code>. Architecture-neutral.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">--enable-proxy-uring</code></td>
+      <td>EXPERIMENTAL. Vendors liburing; see Section 9 for its riscv64 CI caveats.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--enable-extstore</code></td>
-      <td>Arch-neutral. Uses software CRC32C on riscv64.</td>
+      <td>Architecture-neutral; uses the software CRC32C fallback on riscv64.</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -583,8 +614,6 @@ make
   
 </h2>
     
-
-<p><strong>Functional feature matrix:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -618,7 +647,7 @@ make
       <td>TLS termination</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full</td>
+      <td>Full (subject to the OpenSSL AES caveat below)</td>
     </tr>
     <tr>
       <td>SASL authentication</td>
@@ -639,29 +668,21 @@ make
       <td>Untested upstream</td>
     </tr>
     <tr>
-      <td>io_uring proxy (EXPERIMENTAL)</td>
+      <td>io_uring proxy backend (EXPERIMENTAL)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (liburing has riscv64 CI)</td>
+      <td>Compiles (vendored source, and the system <code class="language-plaintext highlighter-rouge">liburing</code> package cross-compiles for riscv64 in its own upstream CI); never exercised under QEMU or on real hardware in any CI observed</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Performance gaps:</strong></p>
+<p><strong>Functional gaps:</strong> None identified that are specific to riscv64 at the memcached source level. The codebase has no architecture-conditional feature code outside <code class="language-plaintext highlighter-rouge">crc32c.c</code>.</p>
 
-<ul>
-  <li>CRC32C throughput: riscv64 uses software fallback vs. hardware acceleration on amd64 and arm64. This affects only the extstore code path. Magnitude of throughput reduction is not quantified in any published benchmark – data not available.</li>
-  <li>No other performance gaps attributable to missing riscv64 code paths have been identified.</li>
-</ul>
+<p><strong>Performance gaps:</strong> CRC32C throughput on riscv64 uses the generic software fallback versus hand-tuned hardware paths on amd64 (SSE4.2) and arm64 (ARMv8 CRC extension). This affects only the optional extstore (disk-offload) code path; the primary in-memory caching path does not use CRC32C. No published benchmark quantifies the magnitude of this specific gap: data not available.</p>
 
-<p><strong>Security hardening gaps:</strong></p>
+<p><strong>Security hardening gaps:</strong> The seccomp sandbox is explicitly documented as tested on x86-64 only and is untested upstream on riscv64; it is not enabled by default. For <code class="language-plaintext highlighter-rouge">--enable-tls</code> deployments, OpenSSL’s AES implementation is not constant-time on riscv64 hardware lacking the Zkn/Zvkned vector-crypto extensions (OpenSSL fix PRs <a href="https://github.com/openssl/openssl/pull/31080">#31080</a> and <a href="https://github.com/openssl/openssl/pull/31082">#31082</a> are open and unmerged as of this review), which is a timing side-channel risk for TLS-enabled memcached deployments on baseline rv64gc hardware. Hardware implementing Zkn is unaffected.</p>
 
-<ul>
-  <li>The seccomp sandbox (<code class="language-plaintext highlighter-rouge">--enable-seccomp</code>) is untested on riscv64 upstream. It is not enabled by default in the upstream build. Deployments requiring seccomp sandboxing on riscv64 must validate independently.</li>
-  <li>OpenSSL dependency: AES without the Zkn vector-crypto extension is not constant-time on riscv64 (OpenSSL issues <a href="https://github.com/openssl/openssl/issues/20980">#20980</a>, <a href="https://github.com/openssl/openssl/issues/31080">#31080</a>), creating a potential timing side-channel for TLS-enabled memcached deployments on baseline rv64gc hardware without Zkn. OpenSSL maintainers have open PRs addressing this.</li>
-</ul>
-
-<p><strong>No floating-point or NaN semantics issues identified.</strong> Memcached does not perform floating-point arithmetic.</p><hr />
+<p><strong>NaN / floating-point semantics issues:</strong> None. Memcached performs no floating-point arithmetic in its core paths.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -671,7 +692,7 @@ make
 </h2>
     
 
-<p>The upstream CI configuration is a single file: <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>, 21 lines total.</p>
+<p>Full and current content of the sole CI file, <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code> (independently re-fetched twice during this review, both via <code class="language-plaintext highlighter-rouge">raw.githubusercontent.com</code> and via a fresh shallow clone, both landing on identical HEAD <code class="language-plaintext highlighter-rouge">2d51e364799bc9698bd4b11728ea978cea12da6e</code>):</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">name</span><span class="pi">:</span> <span class="s">GitHub CI</span>
 <span class="na">on</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">push</span><span class="pi">,</span> <span class="nv">pull_request</span><span class="pi">]</span>
@@ -679,16 +700,22 @@ make
   <span class="na">ubuntu-build-test</span><span class="pi">:</span>
     <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-latest</span>
     <span class="na">steps</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v4</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">sudo apt-get install -y libevent-dev libseccomp-dev git libsasl2-dev libio-socket-ssl-perl</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">gcc --version</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">./autogen.sh</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">./configure --enable-seccomp --enable-tls --enable-sasl --enable-sasl-pwdb</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">make -j</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">PARALLEL=5 make test</span>
+    <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v4</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Install deps</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="pi">|</span>
+        <span class="s">sudo apt-get update -y</span>
+        <span class="s">sudo apt-get install -y libevent-dev libseccomp-dev git libsasl2-dev libio-socket-ssl-perl</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Build</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="pi">|</span>
+        <span class="s">gcc --version</span>
+        <span class="s">./autogen.sh</span>
+        <span class="s">./configure --enable-seccomp --enable-tls --enable-sasl --enable-sasl-pwdb</span>
+        <span class="s">make -j</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Test</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">PARALLEL=5 make test</span>
 </code></pre></div></div>
 
-<p>No Jenkinsfile, no <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code> exists in the repository. This is the entire CI footprint.</p>
+<p>This is a single job on a GitHub-hosted <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) runner, with no matrix, no QEMU setup action, no riscv64 runner, no cross-compilation step, and no <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> or <code class="language-plaintext highlighter-rouge">schedule</code> trigger. <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, and <code class="language-plaintext highlighter-rouge">azure-pipelines.yml</code> do not exist anywhere in the repository root. A repository-wide, case-insensitive grep for “riscv” across the entire tree returns zero matches, and GitHub’s own code-search API (<code class="language-plaintext highlighter-rouge">riscv repo:memcached/memcached</code>) independently returns <code class="language-plaintext highlighter-rouge">total_count: 0</code>.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -701,7 +728,7 @@ make
   </thead>
   <tbody>
     <tr>
-      <td>CI job exists upstream</td>
+      <td>Public CI job exists</td>
       <td>Yes</td>
       <td>No</td>
       <td>No</td>
@@ -713,7 +740,7 @@ make
       <td>No</td>
     </tr>
     <tr>
-      <td>QEMU-based cross-arch</td>
+      <td>QEMU-based cross-arch testing</td>
       <td>No</td>
       <td>No</td>
       <td>No</td>
@@ -722,7 +749,7 @@ make
       <td>Hardware-in-the-loop</td>
       <td>No</td>
       <td>No</td>
-      <td>No (planned personal, not upstream)</td>
+      <td>Claimed, privately (not in any public repository file)</td>
     </tr>
     <tr>
       <td>RISE CI runners used</td>
@@ -734,22 +761,14 @@ make
       <td>Cloud-V integration</td>
       <td>No</td>
       <td>No</td>
-      <td>No (offered, not accepted)</td>
-    </tr>
-    <tr>
-      <td>Release gates on test pass</td>
-      <td>No (informally yes)</td>
-      <td>N/A</td>
-      <td>N/A</td>
+      <td>Offered repeatedly (Feb 2024-Jul 2025), never accepted</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>RISE involvement:</strong> Zero. No RISE Project blog posts mention Memcached. No RISE-funded RFP or working group deliverable covers Memcached. The RISE wheel builder does not apply to a C server daemon.</p>
+<p><strong>On the “in-house CI supports riscv64” claim:</strong> Memcached’s 1.6.39 wiki release notes state, “As a side note, our in-house CI supports riscv64 and all known tests pass” (<a href="https://github.com/memcached/memcached/wiki/ReleaseNotes1639">ReleaseNotes1639</a>), and dormando states in <a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a> that his personal HiFive Unmatched board “will be in my own CI shortly.” Both are wiki/comment assertions about private, off-repository infrastructure, not files checked into the repository, and are not independently inspectable or reproducible by anyone outside the maintainer. No corresponding GitHub Actions job, Jenkinsfile, or any other in-repo CI configuration for riscv64 has ever been added. This status should be read as “maintainer-asserted, functionally plausible given manual testing history, but not verifiable from the public repository” rather than as confirmed CI coverage. [NEEDS VERIFICATION]</p>
 
-<p><strong>Maintainer’s personal CI:</strong> dormando stated in <a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a> (July 2025) that his HiFive Unmatched “will be in my own CI shortly.” This is personal/private infrastructure, not upstream GitHub Actions. No pull request integrating riscv64 CI has been filed as of the last activity in Issue #1111 (August 6, 2025).</p>
-
-<p><strong>Arch Linux RISC-V data point:</strong> The Arch Linux RISC-V port shows memcached 1.6.42-1 as FTBFS (<code class="language-plaintext highlighter-rouge">check() failed</code>) as of the report date. This is evidence that the test suite does not pass reliably on riscv64 in at least one build environment, and that the absence of upstream riscv64 CI allows regressions to go undetected.</p><hr />
+<p><strong>RISE involvement:</strong> None found. No RISE Project blog post (37 posts checked via the RISE sitemap, spanning May 2024-September 2026) mentions memcached. No RISE-affiliated GitHub repository, working group, or the RISE Python wheel builder (not applicable to a C daemon) references memcached. The only RISC-V-affiliated outreach found is from Cloud-V / RISC-V Labs (alitariq4589 in Issue #1111), which is a distinct, unaffiliated effort.</p>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -759,59 +778,54 @@ make
 </h2>
     
 
-<p>Memcached does not publish binary releases. GitHub Releases returns an empty array; the project uses git tags only, with auto-generated source tarballs. No binary assets of any kind are attached to any release.</p>
+<p>Memcached publishes no GitHub Releases of any kind for any architecture; the GitHub Releases page states “There aren’t any releases here.” The project ships via git tags and source tarballs on <a href="https://memcached.org/">memcached.org</a>, with distribution packaging as the sole path to a prebuilt riscv64 binary. There is no PyPI package (memcached is a C daemon, not a Python package; <code class="language-plaintext highlighter-rouge">pypi.org/pypi/memcached/json</code> returns HTTP 404) and no npm/Maven relevance.</p>
 
 <p><strong>To obtain a working riscv64 binary, a user must either:</strong></p>
 <ol>
-  <li>Install the distribution package (Ubuntu, Debian), or</li>
-  <li>Cross-compile from source using the standard autotools cross pattern.</li>
+  <li>Install the distribution package (Ubuntu, Debian, Arch Linux RISC-V), or</li>
+  <li>Cross-compile from source using the standard autotools pattern in Section 5.</li>
 </ol>
 
-<p><strong>Distribution package status:</strong></p>
+<p><strong>Distribution package status (directly verified by HTTP fetch during this review):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Distro</th>
       <th>Package</th>
-      <th>riscv64 Status</th>
-      <th>Version</th>
+      <th>riscv64 status</th>
+      <th>Version observed</th>
       <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Ubuntu Noble (24.04 LTS)</td>
-      <td>memcached</td>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td><code class="language-plaintext highlighter-rouge">memcached</code></td>
       <td>Available</td>
-      <td>1.6.24-1build3</td>
-      <td>File: <code class="language-plaintext highlighter-rouge">memcached_1.6.24-1build3_riscv64.deb</code> (222 kB). SHA256: b8b44991649212fba88bb0d1e7728bc34c449be9ebffa5a1b18c933578a75cc</td>
+      <td>1.6.40-1 listed on packages.ubuntu.com; <code class="language-plaintext highlighter-rouge">.deb</code> artifacts confirmed on ports.ubuntu.com up to 1.6.45-1ubuntu1 (2026-08-14, 304K)</td>
+      <td>Listed architectures: amd64, arm64, armhf, ppc64el, riscv64, s390x; built from unmodified upstream source, no riscv64 patches</td>
     </tr>
     <tr>
       <td>Debian sid</td>
-      <td>memcached</td>
-      <td>Installed</td>
+      <td><code class="language-plaintext highlighter-rouge">memcached</code></td>
+      <td>Installed/built</td>
       <td>1.6.42-1</td>
-      <td>Built on <code class="language-plaintext highlighter-rouge">rv-manda-03</code> buildd approximately 33 days before report date</td>
+      <td>Builds on the Debian riscv64 porter buildd infrastructure</td>
     </tr>
     <tr>
       <td>Arch Linux RISC-V</td>
-      <td>memcached</td>
-      <td>FTBFS</td>
-      <td>1.6.42-1</td>
-      <td><code class="language-plaintext highlighter-rouge">check() failed</code>; cascading <code class="language-plaintext highlighter-rouge">DEP BROKEN</code> for python-memcached, pifpaf, consul, nginx, nginx-mainline, and others</td>
-    </tr>
-    <tr>
-      <td>Fedora riscv64</td>
-      <td>memcached</td>
-      <td>Data not available: Fedora riscv64 package database was not queried.</td>
-      <td>-</td>
-      <td>-</td>
+      <td><code class="language-plaintext highlighter-rouge">memcached</code></td>
+      <td>Available (<code class="language-plaintext highlighter-rouge">[extra]</code> repo)</td>
+      <td>1.6.45-1</td>
+      <td>Confirmed via direct fetch of <code class="language-plaintext highlighter-rouge">memcached-1.6.45-1-riscv64.pkg.tar.zst</code> (HTTP 200, <code class="language-plaintext highlighter-rouge">last-modified: 2026-09-04</code>, correct zstd content type and size)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Ubuntu Noble companion packages on riscv64:</strong> libmemcached-dev, libmemcached-tools, libmemcached11t64, libmemcachedutil2t64, libcache-memcached-fast-perl, php-memcached, php8.3-memcached, kamailio-memcached-modules – all listed as riscv64-available on Ubuntu Noble.</p><hr />
+<p>Companion packages confirmed riscv64-available on Ubuntu 26.04 “resolute”: <code class="language-plaintext highlighter-rouge">libmemcached-dev</code>, <code class="language-plaintext highlighter-rouge">libmemcached-tools</code>, <code class="language-plaintext highlighter-rouge">libmemcached11t64</code>, <code class="language-plaintext highlighter-rouge">libmemcachedutil2t64</code>, <code class="language-plaintext highlighter-rouge">php-memcached</code>, <code class="language-plaintext highlighter-rouge">python3-binary-memcached</code>.</p>
+
+<p>Qualification note: because memcached contains no architecture-specific code at all, Ubuntu 26.04 and Debian sid build and ship the <code class="language-plaintext highlighter-rouge">memcached</code> package for riscv64 from unmodified upstream source with no riscv64 patches required - this is the basis for the “clean-distro-build” grading exception discussed in Section 13.</p>
 <h2 id="9-dependencies">
   
   
@@ -826,97 +840,128 @@ make
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>riscv64 Build</th>
-      <th>riscv64 Test</th>
-      <th>riscv64 Release</th>
+      <th>Relation / Criticality</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
       <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>libevent (mandatory)</td>
-      <td>Event loop, all network I/O</td>
-      <td>OK (Debian sid ships it)</td>
-      <td>No riscv64 CI upstream</td>
-      <td>System package</td>
-      <td>General C; 0 riscv64 issues found</td>
+      <td>libevent</td>
+      <td>Core event loop; required for every build</td>
+      <td>Runtime, critical</td>
+      <td>Builds cleanly, zero arch-specific code; Ubuntu 26.04 <code class="language-plaintext highlighter-rouge">libevent-dev 2.1.12-stable-10build2</code>, riscv64 (ports archive)</td>
+      <td>No upstream riscv64 CI (0 references in any GitHub Actions workflow); Debian sid builds on a riscv64 buildd (build-only, no gated tests)</td>
+      <td>Distro-only (Debian sid, Ubuntu, Alpine, Gentoo ~riscv)</td>
+      <td>No open riscv64 issues found</td>
     </tr>
     <tr>
-      <td>OpenSSL (optional, <code class="language-plaintext highlighter-rouge">--enable-tls</code>)</td>
-      <td>TLS termination</td>
-      <td>CI: dedicated <code class="language-plaintext highlighter-rouge">riscv-more-cross-compiles.yml</code> runs daily; linux64-riscv64 QEMU tests</td>
-      <td>QEMU tests in upstream CI</td>
-      <td>Debian riscv64</td>
-      <td>12 open riscv64 issues; AES constant-time gap without Zkn (<a href="https://github.com/openssl/openssl/issues/20980">#20980</a>, <a href="https://github.com/openssl/openssl/issues/31080">#31080</a>) is a security concern for TLS deployments on rv64gc without Zkn</td>
+      <td>OpenSSL</td>
+      <td>Optional TLS for client/server sockets and proxy TLS (<code class="language-plaintext highlighter-rouge">--enable-tls</code>, <code class="language-plaintext highlighter-rouge">--enable-proxy-tls</code>)</td>
+      <td>Runtime, optional</td>
+      <td>Builds; Ubuntu 26.04 <code class="language-plaintext highlighter-rouge">libssl-dev 3.5.5-1ubuntu3</code>, riscv64 (ports archive); includes RVV/Zkn/Zvk-accelerated crypto paths where present</td>
+      <td>CI is QEMU-only, no native riscv64 runner; SSL test suite reportedly hangs/fails at high parallelism (<a href="https://github.com/openssl/openssl/issues/22166">openssl/openssl#22166</a>, open since 2023)</td>
+      <td>Distro-only (Debian sid 3.6.3-1, Ubuntu resolute 3.5.5-1ubuntu3); no upstream binaries for any architecture</td>
+      <td>Critical open gap: AES T-table fallback is not constant-time without Zkn/Zvkned (fix PRs <a href="https://github.com/openssl/openssl/pull/31080">#31080</a>, <a href="https://github.com/openssl/openssl/pull/31082">#31082</a>, open/unmerged); also <a href="https://github.com/openssl/openssl/issues/28118">#28118</a> (musl Zbb detection broken) and <a href="https://github.com/openssl/openssl/issues/29357">#29357</a> (<code class="language-plaintext highlighter-rouge">no-deprecated</code> cross-compile failure, fix open)</td>
     </tr>
     <tr>
-      <td>Cyrus SASL / libsasl2 (optional, <code class="language-plaintext highlighter-rouge">--enable-sasl</code>)</td>
-      <td>SASL authentication</td>
-      <td>OK (Debian riscv64)</td>
-      <td>No riscv64 CI upstream</td>
-      <td>System package</td>
-      <td>General C; 0 riscv64 issues found</td>
+      <td>Cyrus SASL</td>
+      <td>Optional SASL authentication (<code class="language-plaintext highlighter-rouge">--enable-sasl</code>, <code class="language-plaintext highlighter-rouge">--enable-sasl-pwdb</code>)</td>
+      <td>Runtime, optional</td>
+      <td>Ubuntu 26.04 <code class="language-plaintext highlighter-rouge">libsasl2-dev 2.1.28+dfsg1-9ubuntu3</code>, riscv64, in the main archive across the full architecture set</td>
+      <td>Data not available: no riscv64 CI information found for <code class="language-plaintext highlighter-rouge">cyrusimap/cyrus-sasl</code></td>
+      <td>Ubuntu resolute confirmed</td>
+      <td>No open riscv64 issues found</td>
     </tr>
     <tr>
-      <td>libseccomp (optional, <code class="language-plaintext highlighter-rouge">--enable-seccomp</code>)</td>
-      <td>Syscall sandbox</td>
-      <td>riscv64 supported since v2.5.0 (2021); v2.6.0 (Jan 2025)</td>
-      <td>Debian riscv64</td>
-      <td>v2.6.0</td>
-      <td>Issue <a href="https://github.com/seccomp/libseccomp/issues/327">#327</a>: riscv32 not yet supported; riscv64 is fine. Syscall table lags kernel by a few releases</td>
+      <td>libseccomp</td>
+      <td>Optional syscall sandboxing, Linux-only, marked EXPERIMENTAL (<code class="language-plaintext highlighter-rouge">--enable-seccomp</code>)</td>
+      <td>Runtime, optional</td>
+      <td>Ubuntu 26.04 <code class="language-plaintext highlighter-rouge">libseccomp2</code>/<code class="language-plaintext highlighter-rouge">libseccomp-dev 2.6.0-2ubuntu5</code>, riscv64</td>
+      <td>No upstream riscv64 CI (ubuntu-24.04 x86_64 only, no QEMU); a downstream NixOS QEMU seccomp-emulation test failure (<a href="https://github.com/NixOS/nixpkgs/issues/301385">NixOS/nixpkgs#301385</a>) is reported as stale/environment-specific, not an upstream libseccomp bug</td>
+      <td>Distro-only (Ubuntu, Debian trixie, Arch RISC-V)</td>
+      <td>Native riscv64 syscall-table support merged upstream via <a href="https://github.com/seccomp/libseccomp/pull/197">PR #197</a> in 2020; separately, release-level riscv64 support is also cited as landing with v2.5.0 (2021) - the two dates reflect merge vs. shipped-release timing rather than a true conflict. <a href="https://github.com/seccomp/libseccomp/issues/327">Issue #327</a> notes riscv32 (not riscv64) remains unsupported</td>
     </tr>
     <tr>
-      <td>Lua 5.4 (vendored in <code class="language-plaintext highlighter-rouge">vendor/lua/</code>)</td>
-      <td>Proxy scripting engine</td>
-      <td>Architecture-neutral C99</td>
-      <td>No riscv64 CI upstream (0 riscv issues)</td>
-      <td>N/A (vendored, in-tree copy is 5.4.3)</td>
-      <td>Fully portable C; latest upstream is 5.4.7; vendored copy is stale</td>
+      <td>Lua (vendored, plain Lua 5.x, not LuaJIT)</td>
+      <td>Optional proxy scripting engine (<code class="language-plaintext highlighter-rouge">--enable-proxy</code>)</td>
+      <td>Runtime, optional</td>
+      <td>Ubuntu 26.04 <code class="language-plaintext highlighter-rouge">lua5.4 5.4.8-1build1</code>, riscv64; vendored in-tree copy observed at 5.4.3 in prior review (stale vs. upstream 5.4.7)</td>
+      <td>Debian sid builds/installs on its riscv64 buildd; no riscv64-specific bugs found in the Lua 5.x tracker</td>
+      <td>Distro-only (Debian sid, Ubuntu)</td>
+      <td>None found. Memcached vendors plain Lua, not LuaJIT; LuaJIT’s separate, more serious riscv64 port gap does not apply here</td>
     </tr>
     <tr>
-      <td>liburing (vendored, optional, <code class="language-plaintext highlighter-rouge">--enable-proxy-uring</code>, EXPERIMENTAL)</td>
-      <td>io_uring async I/O for proxy</td>
-      <td>Upstream CI has explicit <code class="language-plaintext highlighter-rouge">arch: riscv64</code> cross-compile entry</td>
-      <td>Cross-compile tested upstream</td>
-      <td>liburing-2.14 (Feb 2026) via vendor fetch</td>
-      <td>Issues <a href="https://github.com/axboe/liburing/issues/930">#930</a>/<a href="https://github.com/axboe/liburing/issues/928">#928</a> (riscv64 nolibc) closed; <a href="https://github.com/axboe/liburing/issues/1601">#1601</a> open (documentation only)</td>
+      <td>liburing (vendored under <code class="language-plaintext highlighter-rouge">vendor/liburing</code>)</td>
+      <td>Optional io_uring backend for the proxy, EXPERIMENTAL (<code class="language-plaintext highlighter-rouge">--enable-proxy-uring</code>)</td>
+      <td>Runtime, optional</td>
+      <td>Ubuntu 26.04 <code class="language-plaintext highlighter-rouge">liburing2</code>/<code class="language-plaintext highlighter-rouge">liburing-dev 2.14-1</code>, riscv64, confirmed as a genuine riscv64 ELF binary; upstream CI itself cross-compiles for riscv64 (<code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> on an x86_64 runner)</td>
+      <td>Cross-compiled riscv64 binaries are never executed in upstream CI (no QEMU, no hardware runner)</td>
+      <td>Distro-only; upstream GitHub Releases are source-only</td>
+      <td>This review found 0 open riscv-related issues/PRs in <code class="language-plaintext highlighter-rouge">axboe/liburing</code>; a prior pass of this report had cited specific open issues (<a href="https://github.com/axboe/liburing/issues/930">#930</a>/<a href="https://github.com/axboe/liburing/issues/928">#928</a>/<a href="https://github.com/axboe/liburing/issues/1601">#1601</a>) as closed/open respectively - treat the exact current issue state as [NEEDS VERIFICATION] given the discrepancy between passes. Memcached vendors liburing’s source directly, so the real build target is the vendored copy compiling under a riscv64 toolchain, which is unaffected either way</td>
     </tr>
     <tr>
-      <td>mcmc (vendored in <code class="language-plaintext highlighter-rouge">vendor/mcmc/</code>)</td>
-      <td>Internal proxy backend client</td>
-      <td>Pure C; 0 riscv issues</td>
-      <td>No riscv64-specific CI</td>
-      <td>N/A (vendored)</td>
-      <td>No issues</td>
+      <td>mcmc (vendored under <code class="language-plaintext highlighter-rouge">vendor/mcmc</code>)</td>
+      <td>Memcached’s own sibling C client library, used internally by the proxy to speak the memcached protocol to backend pools</td>
+      <td>Runtime, optional</td>
+      <td>Not independently packaged (vendored source only, no apt package); trivial portable C with no arch-specific code observed</td>
+      <td>Data not available: GitHub issue search against <code class="language-plaintext highlighter-rouge">memcached/mcmc</code> returned a 422 (“cannot be searched”) rather than a result set</td>
+      <td>N/A (vendored, never released standalone)</td>
+      <td>No riscv64 evidence found either way</td>
     </tr>
     <tr>
-      <td>CRC32C (in-tree, <code class="language-plaintext highlighter-rouge">crc32c.c</code>)</td>
-      <td>Extstore checksum</td>
-      <td>Software fallback (correct, ~2-5x slower than hw paths)</td>
-      <td>No riscv64 test</td>
-      <td>N/A (in-tree)</td>
-      <td>No hw path for riscv64; no upstream issue filed</td>
-    </tr>
-    <tr>
-      <td>xxhash (in-tree header, <code class="language-plaintext highlighter-rouge">xxhash.h</code>)</td>
+      <td>xxHash (vendored header, <code class="language-plaintext highlighter-rouge">xxhash.h</code>)</td>
       <td>Proxy request hash routing</td>
-      <td>Architecture-neutral</td>
-      <td>N/A</td>
+      <td>Runtime, optional</td>
+      <td>Architecture-neutral; falls through to its generic scalar implementation on riscv64 (its optional SSE2/AVX2/NEON autovectorized paths are third-party code, not memcached-authored, and have no RISC-V vector path)</td>
       <td>N/A (header-only)</td>
-      <td>No issues</td>
+      <td>N/A (header-only)</td>
+      <td>No issues found</td>
     </tr>
     <tr>
-      <td>pthreads / glibc (mandatory)</td>
-      <td>Threading, runtime</td>
-      <td>riscv64 fully supported</td>
-      <td>Debian riscv64</td>
-      <td>N/A (system)</td>
-      <td>No issues</td>
+      <td>autoconf</td>
+      <td>Generates <code class="language-plaintext highlighter-rouge">configure</code> from <code class="language-plaintext highlighter-rouge">configure.ac</code></td>
+      <td>Build, critical</td>
+      <td>Data not available: no riscv64-specific research was conducted on autoconf packaging; the fact that Debian/Ubuntu riscv64 buildds already produce the <code class="language-plaintext highlighter-rouge">memcached</code> packages in Section 8 using the standard GNU toolchain is indirect evidence it functions on riscv64, but this was not independently verified</td>
+      <td>Data not available</td>
+      <td>Distro-only (standard GNU toolchain component on every riscv64 Linux distro)</td>
+      <td>No riscv64-specific issues identified</td>
+    </tr>
+    <tr>
+      <td>automake</td>
+      <td>Generates <code class="language-plaintext highlighter-rouge">Makefile.in</code> from <code class="language-plaintext highlighter-rouge">Makefile.am</code></td>
+      <td>Build, critical</td>
+      <td>Data not available, same basis as autoconf above</td>
+      <td>Data not available</td>
+      <td>Distro-only</td>
+      <td>No riscv64-specific issues identified</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Default compiler; the public CI explicitly runs <code class="language-plaintext highlighter-rouge">gcc --version</code> before building</td>
+      <td>Build, critical</td>
+      <td>Data not available: no riscv64 GCC-specific research was conducted in this pass; CI itself only exercises GCC on x86_64 (<code class="language-plaintext highlighter-rouge">ubuntu-latest</code>), not riscv64</td>
+      <td>Data not available</td>
+      <td>Distro-only (riscv64 GCC cross and native toolchains are standard Debian/Ubuntu/Arch packages, as implied by the riscv64 memcached packages in Section 8)</td>
+      <td>No riscv64-specific issues identified</td>
+    </tr>
+    <tr>
+      <td>Perl</td>
+      <td>Required to run the test suite (<code class="language-plaintext highlighter-rouge">make test</code>, <code class="language-plaintext highlighter-rouge">prove</code>); CI installs <code class="language-plaintext highlighter-rouge">libio-socket-ssl-perl</code></td>
+      <td>Test, critical</td>
+      <td>N/A (interpreted, not compiled by memcached)</td>
+      <td>Data not available: no riscv64-specific Perl interpreter research was conducted; Debian/Ubuntu riscv64 ship a working Perl as a base-system package, which the successful riscv64 package builds in Section 8 implicitly depend on</td>
+      <td>Distro-only</td>
+      <td>No riscv64-specific issues identified</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>OpenSSL riscv64 deep-dive (TLS path):</strong> OpenSSL is the only dependency with meaningful riscv64-specific active issues. For memcached deployments that enable TLS (<code class="language-plaintext highlighter-rouge">--enable-tls</code>), baseline rv64gc hardware without the Zkn vector-crypto extension will use a non-constant-time AES implementation, which is a timing side-channel risk. Hardware with Zkn (e.g., SpacemiT X60 cores) will not be affected. OpenSSL has open PRs to address this. This is not a blocker for non-TLS deployments, which are the majority of internal datacenter use cases.</p><hr />
+<p><strong>OpenSSL riscv64 deep-dive (TLS path):</strong> OpenSSL is the dependency with the most material, currently open riscv64-specific risk. For memcached deployments that enable TLS (<code class="language-plaintext highlighter-rouge">--enable-tls</code>), hardware without the Zkn/Zvkned extensions will run a non-constant-time AES path, a timing side-channel risk; the relevant OpenSSL fix PRs are open and unmerged. This is not a blocker for non-TLS deployments, which constitute the majority of internal datacenter memcached usage.</p>
+
+<p>Memcached has no significant dependent package ecosystem of its own (no language-level package manager distributes “memcached” as a library users install transitively; <code class="language-plaintext highlighter-rouge">libmemcached</code> client bindings exist across several languages but are themselves independent projects, not part of this review’s dependency graph). Section 10 (Ecosystem Status) is accordingly omitted.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -940,44 +985,49 @@ make
     <tr>
       <td><a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a></td>
       <td>RISC-V CI for memcached</td>
-      <td>Open (Feb 2024)</td>
-      <td>Low</td>
-      <td>No upstream CI added; maintainer confirmed personal CI planned; Cloud-V offer unaccepted</td>
+      <td>Open since 2024-02-26, last activity 2025-08-06</td>
+      <td>Low (process, not correctness)</td>
+      <td>No public CI added; maintainer confirms personal RISC-V hardware and plans private CI; Cloud-V’s free CI offer remains unaccepted</td>
     </tr>
     <tr>
       <td><a href="https://github.com/memcached/memcached/pull/1291">PR #1291</a></td>
-      <td>SPARC traps on unaligned memory accesses</td>
-      <td>Open (May 2026)</td>
+      <td>Fix unaligned memory access (titled around SPARC traps)</td>
+      <td>Open</td>
       <td>Medium</td>
-      <td>Fixes three unaligned access bugs gated on <code class="language-plaintext highlighter-rouge">NEED_ALIGN</code> preprocessor flag: (1) MurmurHash3 unaligned key pointer reads, (2) <code class="language-plaintext highlighter-rouge">ITEM_suffix()</code> unaligned <code class="language-plaintext highlighter-rouge">client_flags_t*</code> cast, (3) logger payload 64-bit alignment. RISC-V is not named in the PR but would be affected on toolchains that define <code class="language-plaintext highlighter-rouge">NEED_ALIGN</code>. Whether <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> GCC defines <code class="language-plaintext highlighter-rouge">NEED_ALIGN</code> is not confirmed in the research findings – data not available.</td>
+      <td>Fixes unaligned-access bugs in MurmurHash3’s <code class="language-plaintext highlighter-rouge">getblock32</code>, the <code class="language-plaintext highlighter-rouge">ITEM_suffix()</code>/<code class="language-plaintext highlighter-rouge">FLAGS_CONV</code> cast, and logger payload alignment, gated on a <code class="language-plaintext highlighter-rouge">NEED_ALIGN</code>-style preprocessor path. Not framed as a RISC-V fix, but would affect riscv64 toolchains/configurations that trigger the same strict-alignment code path. Whether <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> GCC triggers that path is not confirmed in available research: data not available. [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
       <td><a href="https://github.com/memcached/memcached/pull/1180">PR #1180</a></td>
-      <td>mc_swap64 UB fix (signed integer overflow)</td>
-      <td>Open (Oct 2024)</td>
+      <td>Fix signed-integer-overflow undefined behavior (<code class="language-plaintext highlighter-rouge">mc_swap64</code>/<code class="language-plaintext highlighter-rouge">util.c</code>)</td>
+      <td>Open</td>
       <td>Medium</td>
-      <td>UBSan-detected signed integer overflow in <code class="language-plaintext highlighter-rouge">util.c</code> line 247 during <code class="language-plaintext highlighter-rouge">binary_append</code> test. x86_64 masks this as accidental correctness; strict-conformance targets including riscv64 may produce incorrect behavior rather than the expected wrap-around.</td>
+      <td>UBSan-detected signed overflow during <code class="language-plaintext highlighter-rouge">binary_append</code> testing; x86_64 masks this as accidentally correct two’s-complement wraparound, while strict-conformance targets, potentially including riscv64 toolchains, could produce incorrect behavior rather than wraparound. Not merged</td>
     </tr>
     <tr>
       <td><a href="https://github.com/memcached/memcached/issues/816">Issue #816</a></td>
       <td>chunked-extstore test failures on RISC-V</td>
-      <td>Closed Aug 2025</td>
-      <td>High (was)</td>
-      <td>Tests 124/178/232 in <code class="language-plaintext highlighter-rouge">t/chunked-extstore.t</code> returned empty records on BeagleV Starlight and SiFive Unmatched running memcached 1.6.10. Fixed organically around 1.6.16-1.6.17. No dedicated RISC-V patch; fix was a general correctness improvement.</td>
+      <td>Closed 2025-08-05</td>
+      <td>High (historical)</td>
+      <td>Tests 124/178/232 returned empty records on a BeagleV Starlight (rv64gc). No isolated fix commit was ever identified; the bug self-resolved between 1.6.10 and 1.6.16/1.6.17 as a side effect of other extstore work</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/memcached/memcached/pull/552">PR #552</a></td>
+      <td><a href="https://github.com/memcached/memcached/pull/552">PR #552</a> / commit <a href="https://github.com/memcached/memcached/commit/be0804cf3855cf968b3c6c0cc6e1f4b0724205a7">be0804c</a></td>
       <td>Fix cross compilation</td>
-      <td>Closed / shipped 1.5.20</td>
-      <td>N/A (resolved)</td>
-      <td><code class="language-plaintext highlighter-rouge">AC_RUN_IFELSE</code> incompatible with cross-compilation; replaced with compile-time fallbacks. Explicitly tested against <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code>.</td>
+      <td>Closed (GitHub API: not merged via the merge button); fix content shipped directly in 1.5.20</td>
+      <td>Resolved</td>
+      <td><code class="language-plaintext highlighter-rouge">AC_RUN_IFELSE</code> incompatible with cross-compilation; replaced with compile-time-safe fallbacks; explicitly tested against <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code></td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/memcached/memcached/issues/902">Issue #902</a></td>
+      <td>Alignment issues on SPARC (not RISC-V)</td>
+      <td>Open, filed 2022-06-13, last updated 2026-01-23</td>
+      <td>Reference only</td>
+      <td>Unaligned-access crashes in <code class="language-plaintext highlighter-rouge">murmur3_hash.c</code>, the <code class="language-plaintext highlighter-rouge">FLAGS_CONV</code> macro, and <code class="language-plaintext highlighter-rouge">storage_write</code> on strict-alignment SPARC64 hardware; same bug class a RISC-V configuration with strict alignment requirements could hit. Not itself a RISC-V issue</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Correctness bugs (current):</strong> PR #1291 (unaligned access) and PR #1180 (signed integer overflow UB) are the two open issues with potential correctness impact on riscv64. Neither has been merged. Both are filed but unacknowledged by the maintainer in the research findings.</p>
-
-<p><strong>Arch Linux RISC-V FTBFS:</strong> Memcached 1.6.42-1 fails the test suite (<code class="language-plaintext highlighter-rouge">check()</code>) in the Arch Linux RISC-V build environment. The specific test failures are not identified in the research findings – data not available. This may be related to timing sensitivity on slow hardware (the identified root cause of Issue #816) or may be a new regression. Given that Debian sid 1.6.42-1 builds cleanly on the Debian riscv64 buildd, the Arch FTBFS is likely environment-specific rather than a fundamental correctness regression.</p><hr />
+<p><strong>Correctness bugs with potential riscv64 relevance (currently open):</strong> PR #1291 (unaligned access) and PR #1180 (signed-integer-overflow UB) are the two open items with plausible riscv64 correctness impact. Neither is merged, and neither has been explicitly acknowledged by the maintainer as RISC-V-relevant in the available research. No open issue specifically alleges a RISC-V correctness or NaN/floating-point bug; a targeted search for “riscv nan floating” returned only Issue #1111 (the CI request), confirming no such report exists.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -987,96 +1037,95 @@ make
 </h2>
     
 
-<p><strong>No stated objections exist.</strong> The maintainer (dormando) has publicly expressed positive interest in RISC-V support and acquired personal hardware.</p>
+<p><strong>No stated objections exist.</strong> The maintainer has publicly expressed positive, if unhurried, interest in RISC-V support and has personally acquired RISC-V hardware (a SiFive HiFive Unmatched board).</p>
 
 <p><strong>Technical blockers:</strong></p>
 
 <ol>
-  <li>
-    <p>Test suite timing sensitivity: Issue #816 showed that the extstore test suite produces false failures on physically slow RISC-V hardware. The root cause is timing-dependent tests, not hardware bugs. This is a test infrastructure problem, not a product bug, but it creates unreliable CI results on lower-end RISC-V boards.</p>
-  </li>
-  <li>
-    <p>CRC32C hardware acceleration gap: No <code class="language-plaintext highlighter-rouge">__riscv</code> hardware CRC32C path exists. RISC-V has no widely implemented standardized CRC32 instruction as of this report. The Zbkc (Carry-less Multiply) extension exists but is not equivalent to CRC32C. This is a performance gap only, not a correctness blocker.</p>
-  </li>
-  <li>
-    <p>OpenSSL TLS AES constant-time gap: Only relevant for <code class="language-plaintext highlighter-rouge">--enable-tls</code> deployments on hardware without Zkn.</p>
-  </li>
+  <li>Test-suite timing sensitivity: Issue #816 showed the extstore test suite can produce false failures on physically slow RISC-V hardware. This is a test-infrastructure characteristic rather than a product defect, but it creates unreliable results on lower-end boards and is a plausible reason the maintainer has not yet added public riscv64 CI.</li>
+  <li>No hardware-accelerated CRC32C path for riscv64: no widely adopted standardized CRC32 instruction is referenced anywhere in the memcached source for RISC-V; this is a performance gap, not a correctness blocker, and is confined to the optional extstore feature.</li>
+  <li>OpenSSL TLS AES constant-time gap on hardware lacking Zkn/Zvkned: relevant only to <code class="language-plaintext highlighter-rouge">--enable-tls</code> deployments.</li>
 </ol>
 
-<p><strong>Organizational blockers:</strong></p>
+<p><strong>Organizational blockers:</strong> Memcached is a single-maintainer project. Any upstream CI infrastructure change requires dormando’s personal time. The Cloud-V free, token-free GitHub runner offer has been available since at least July 2025 with no action taken as of the latest activity recorded on Issue #1111 (2025-08-06), and no RISE project engagement with memcached exists to apply resourcing pressure or supply engineering time.</p>
 
-<ul>
-  <li>Single-maintainer project: dormando is the sole active maintainer. Any upstream CI infrastructure change requires his personal time and bandwidth. The Cloud-V automated GitHub runner offer (free, no tokens required) has been available since at least July 2025 with no action taken.</li>
-</ul>
-
-<p><strong>Acceptance probability for upstream contributions:</strong> High for correctness bug fixes (PR #1291, PR #1180 style). Medium for CI infrastructure additions (dormando has personal CI planned but has not integrated any external CI in 18 months of the open issue). Low for performance work (CRC32C riscv64 hardware path) unless a contributor submits a clean, tested PR.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability for upstream contributions:</strong> High for correctness bug fixes in the style of PR #1291 / PR #1180 (the project has a track record of accepting outside architecture-portability patches, e.g. PR #552 in 2019 and the aarch64 CRC patch via Issue #374 in 2020). Medium for CI infrastructure additions, given 18+ months of an open CI request with no integration. Low priority, though not objected to, for riscv64-specific performance work (a hardware CRC32C path) absent a contributor submitting a clean, tested PR.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has zero funded work on Memcached. No prior investment to avoid duplicating.</p>
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>Two open PRs with correctness implications for riscv64 are unreviewed by the maintainer:</p>
-
 <ul>
-  <li>
-    <p>PR #1291 (unaligned memory access): Confirming whether <code class="language-plaintext highlighter-rouge">NEED_ALIGN</code> is triggered on riscv64-linux-gnu, testing the fix, and nudging dormando to merge constitutes roughly 1 person-week. The fix is already written by a third-party contributor; the work is review and follow-through.</p>
-  </li>
-  <li>
-    <p>PR #1180 (signed integer overflow UB): Same pattern. Fix exists, needs review and merge nudge.</p>
-  </li>
+  <li><strong>Color:</strong> yellow (clean-distro-build)</li>
+  <li><strong>Release provider:</strong> distro</li>
 </ul>
 
-<p>Arch Linux RISC-V FTBFS: Diagnosing whether the test suite failures are timing-related (same root cause as Issue #816) or a new regression requires access to an Arch riscv64 build environment. Estimated 1-2 person-weeks to diagnose and patch.</p>
-<h3 id="132-performance-optimization">
+<p>Memcached has no upstream riscv64 CI at all: its only workflow, <a href="https://raw.githubusercontent.com/memcached/memcached/master/.github/workflows/ci.yml">.github/workflows/ci.yml</a>, runs a single <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64) job with no riscv64 target, no QEMU, and no cross-compile step, and a fresh clone/grep confirms zero mentions of “riscv” anywhere in the repository. Since memcached has no architecture-specific code at all (pure portable autotools C), Ubuntu 26.04 and Debian sid build and ship its <code class="language-plaintext highlighter-rouge">memcached</code> package for riscv64 from unmodified upstream source with no riscv64 patches (per <a href="https://packages.ubuntu.com/resolute/memcached">packages.ubuntu.com</a> and the Debian buildd infrastructure), which qualifies for the clean-distro-build exception, upgrading the grade from orange (no CI) to yellow rather than leaving it at orange. Memcached is not an optimization-purpose project (its value is correctness/scalability as a cache server, not CPU-bound numerical/SIMD throughput), so no optimization-level modifier applies to this grade.</p>
+
+<p><strong>Pending work that could change the grade:</strong> <a href="https://github.com/memcached/memcached/issues/1111">Issue #1111</a> (“RISC-V CI for memcached”) has been open since February 2024; maintainer dormando confirmed in July 2025 that memcached builds and runs fine on a personal HiFive Unmatched board and plans to add it to his own in-house CI, but as of HEAD (October 2026) no riscv64 job has been merged into the public GitHub Actions workflow, and a Cloud-V free CI offer (RISC-V Labs-affiliated) remains unaccepted. No RISE project involvement with memcached was found anywhere (blog, GitHub org, wheel builder). Two open PRs, <a href="https://github.com/memcached/memcached/pull/1291">#1291</a> (unaligned-access fix) and <a href="https://github.com/memcached/memcached/pull/1180">#1180</a> (signed-overflow UB fix), could affect riscv64 correctness if merged. No RISE-affiliated or other credible riscv64-vs-other-architecture performance benchmark exists; the only riscv64 optimization attempts found (RVSPOC contest forks, unaffiliated third parties) are unmerged and show no RISE connection.</p>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has zero funded or identified work on memcached. There is no prior investment to avoid duplicating.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>Adding a hardware CRC32C path for riscv64 in <code class="language-plaintext highlighter-rouge">crc32c.c</code> using the Zbc or Zbkc extension would close the performance gap for extstore-heavy workloads. Prerequisites: the extension must be present (Rocket Chip, SiFive P-series with Zbkc) and the toolchain must support the intrinsics. Estimated effort: 2-3 person-weeks (implementation, runtime detection via <code class="language-plaintext highlighter-rouge">getauxval</code>, testing). Priority is low – extstore is an optional feature and the software fallback is correct.</p>
-<h3 id="133-cicd-infrastructure">
+<p>Two open PRs with potential riscv64 correctness implications are unreviewed by the maintainer:</p>
+
+<ul>
+  <li>PR #1291 (unaligned memory access): confirming whether <code class="language-plaintext highlighter-rouge">NEED_ALIGN</code>-equivalent conditions are triggered on <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code>, testing the fix, and following through to merge is roughly 1 person-week. The fix itself is already written by a third-party contributor; the remaining work is verification and maintainer follow-up.</li>
+  <li>PR #1180 (signed-integer-overflow UB): same pattern - fix exists, needs riscv64-specific verification and a merge nudge, roughly 1 person-week.</li>
+</ul>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>The Cloud-V automated GitHub runner (<a href="https://cloud-v.co/github-riscv-runner">cloud-v.co/github-riscv-runner</a>) is free for open-source projects, self-service, and requires no access tokens. The offer has been made to dormando and not acted upon. Adding an riscv64 CI job to <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code> is trivial mechanical work (1-3 days) if the test suite timing issues are resolved first.</p>
-
-<p>The test suite timing problem is the gating dependency: if the CI job is added before timing-sensitive tests are fixed or marked skip-on-slow-hardware, the CI will produce intermittent failures that dormando will disable. Fixing the timing sensitivity is estimated at 1-2 person-weeks.</p>
-<h3 id="134-ecosystem-enablement">
+<p>Adding a hardware CRC32C path for riscv64 in <code class="language-plaintext highlighter-rouge">crc32c.c</code> using the Zbc or Zbkc extension would close the one identified performance gap, relevant only to extstore-heavy workloads. Prerequisites: target hardware must implement the extension and the toolchain must expose the intrinsics. The only existing riscv64 vectorization attempts (RVSPOC contest PRs against a third-party fork, not against upstream) show that memcached’s CPU profile is dominated by locking (about 25%) and syscalls (about 20%), with application code at under 20%, leaving limited room for vectorization gains; contest organizers awarded no champion in this category because no submission met a 30% improvement bar, with best end-to-end results in the single digits to low double digits percent and some scenarios showing no measurable gain. This should temper expectations for a dedicated CRC32C port: estimated effort 2-3 person-weeks, priority low, since extstore is optional and the current software fallback is already correct.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>Not applicable. Memcached is a server daemon. Its RISC-V availability is determined by distribution packages, not a plugin or wheel ecosystem. Ubuntu Noble and Debian sid carry working riscv64 packages. The Arch Linux RISC-V FTBFS creates downstream cascading broken packages (python-memcached, consul, nginx, pifpaf) but the root fix is in the memcached test suite, not in the downstream packages.</p>
-<h3 id="135-summary-table">
+<p>The Cloud-V automated GitHub runner is free for open-source projects, self-service, and requires no access tokens; it has been offered to dormando repeatedly since February 2024 and not acted upon. Adding a riscv64 CI job to <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code> is mechanically trivial (an estimated 1-3 days) once the test-suite’s timing sensitivity on slow hardware (the root cause behind the historical Issue #816 failures) is understood and mitigated, so it does not reintroduce flaky results that the maintainer would disable. Estimated 1-2 person-weeks to characterize and, if needed, fix the timing sensitivity ahead of a CI PR.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Not applicable. Memcached is a standalone server daemon with no dependent package ecosystem of its own; its riscv64 availability is governed entirely by distribution packaging (Section 8), which is already functional on Ubuntu 26.04, Debian sid, and Arch Linux RISC-V.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1095,60 +1144,43 @@ make
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Review and merge PR #1291 (unaligned access) + confirm riscv64 impact</td>
+      <td>Verify riscv64 impact of and help land PR #1291 (unaligned access)</td>
       <td>1</td>
       <td>External contributor / RISE engineer</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Review and merge PR #1180 (signed integer overflow UB)</td>
+      <td>Verify riscv64 impact of and help land PR #1180 (signed-overflow UB)</td>
       <td>1</td>
       <td>External contributor / RISE engineer</td>
       <td>High</td>
     </tr>
     <tr>
-      <td>Functional</td>
-      <td>Diagnose and fix Arch Linux RISC-V FTBFS (test suite)</td>
-      <td>2</td>
+      <td>CI/CD</td>
+      <td>Characterize and, if needed, fix test-suite timing sensitivity on slow riscv64 hardware</td>
+      <td>1-2</td>
       <td>RISE engineer</td>
-      <td>High</td>
+      <td>Medium</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Fix timing-sensitive test suite failures on slow riscv64 hardware</td>
-      <td>2</td>
-      <td>RISE engineer</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Add riscv64 CI job to upstream GitHub Actions (via Cloud-V runner)</td>
+      <td>Add a public riscv64 CI job to <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code> (via the standing Cloud-V offer or RISE runners), coordinated with dormando</td>
       <td>0.5</td>
-      <td>RISE engineer + dormando</td>
+      <td>RISE engineer plus maintainer</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Add riscv64 hardware CRC32C path in <code class="language-plaintext highlighter-rouge">crc32c.c</code> (Zbc/Zbkc, <code class="language-plaintext highlighter-rouge">getauxval</code> detection)</td>
-      <td>3</td>
+      <td>Add a riscv64 hardware CRC32C path in <code class="language-plaintext highlighter-rouge">crc32c.c</code> (Zbc/Zbkc, <code class="language-plaintext highlighter-rouge">getauxval</code> detection)</td>
+      <td>2-3</td>
       <td>RISE engineer</td>
       <td>Low</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Total estimated investment:</strong> 9.5 person-weeks to reach full CI coverage, all open correctness bugs fixed, and one performance optimization. The functional and CI items (6 person-weeks) are the practical minimum for production confidence on riscv64.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p><strong>Total estimated investment:</strong> approximately 5.5-7.5 person-weeks to close the two open correctness PRs, stand up public riscv64 CI, and ship one performance optimization. The functional and CI items (3.5-4.5 person-weeks) represent the practical minimum to move memcached from “distro-build-only, no public CI” to a verifiably tested riscv64 target.</p>
 <h2 id="15-references">
   
   
@@ -1160,24 +1192,36 @@ make
 
 <ul>
   <li><a href="https://github.com/memcached/memcached">memcached/memcached repository</a></li>
-  <li><a href="https://memcached.org">Memcached project homepage</a></li>
-  <li><a href="https://github.com/memcached/memcached/pull/552">PR #552 - Fix cross compilation (riscv64-unknown-linux-gnu)</a></li>
+  <li><a href="https://memcached.org/">Memcached project homepage</a></li>
+  <li><a href="https://raw.githubusercontent.com/memcached/memcached/master/.github/workflows/ci.yml">.github/workflows/ci.yml</a></li>
+  <li><a href="https://github.com/memcached/memcached/issues/550">Issue #550 - Cross-compilation is broken</a></li>
+  <li><a href="https://github.com/memcached/memcached/pull/552">PR #552 - Fix cross compilation</a></li>
+  <li><a href="https://github.com/memcached/memcached/commit/be0804cf3855cf968b3c6c0cc6e1f4b0724205a7">Commit be0804c - configure: Fix cross-compilation errors</a></li>
   <li><a href="https://github.com/memcached/memcached/issues/816">Issue #816 - chunked-extstore test failures on RISC-V</a></li>
-  <li><a href="https://github.com/memcached/memcached/issues/1111">Issue #1111 - RISC-V CI for memcached</a></li>
-  <li><a href="https://github.com/memcached/memcached/pull/1291">PR #1291 - SPARC traps on unaligned memory accesses</a></li>
-  <li><a href="https://github.com/memcached/memcached/pull/1180">PR #1180 - mc_swap64 UB fix proposal</a></li>
   <li><a href="https://bugs.gentoo.org/811477">Gentoo Bug 811477 - memcached RISC-V test failures</a></li>
-  <li><a href="https://raw.githubusercontent.com/memcached/memcached/master/crc32c.c">memcached crc32c.c source</a></li>
-  <li><a href="https://raw.githubusercontent.com/memcached/memcached/master/.github/workflows/ci.yml">memcached .github/workflows/ci.yml</a></li>
-  <li><a href="https://packages.ubuntu.com/noble/riscv64/memcached/download">Ubuntu Noble memcached package (riscv64)</a></li>
+  <li><a href="https://github.com/memcached/memcached/issues/1111">Issue #1111 - RISC-V CI for memcached</a></li>
+  <li><a href="https://github.com/memcached/memcached/wiki/ReleaseNotes1639">Memcached wiki - ReleaseNotes1639</a></li>
+  <li><a href="https://github.com/memcached/memcached/pull/1291">PR #1291 - Fix unaligned memory access</a></li>
+  <li><a href="https://github.com/memcached/memcached/pull/1180">PR #1180 - mc_swap64 UB fix proposal</a></li>
+  <li><a href="https://github.com/memcached/memcached/issues/902">Issue #902 - Alignment issues on SPARC</a></li>
+  <li><a href="https://github.com/memcached/memcached/issues/374">Issue #374 - Add hardware crc support for aarch64</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/memcached">Ubuntu “resolute” (26.04) memcached package</a></li>
   <li><a href="https://buildd.debian.org/status/package.php?p=memcached&amp;suite=sid">Debian buildd status - memcached sid</a></li>
   <li><a href="https://archriscv.felixc.at/.status/status.htm">Arch Linux RISC-V port status</a></li>
-  <li><a href="https://cacheforge.com">Cache Forge LLC (dormando commercial support)</a></li>
-  <li><a href="https://cloud-v.co">Cloud-V RISC-V CI platform</a></li>
-  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/20980">OpenSSL issue #20980 - AES constant-time without Zkn</a></li>
-  <li><a href="https://github.com/openssl/openssl/issues/31080">OpenSSL issue #31080 - AES constant-time riscv64</a></li>
+  <li><a href="https://github.com/rv2036/rvspoc-S2604-memcached">rv2036/rvspoc-S2604-memcached - RVV optimization contest fork</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/22166">OpenSSL issue #22166 - SSL test suite hangs at high parallelism</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/31080">OpenSSL PR #31080 - AES constant-time fix</a></li>
+  <li><a href="https://github.com/openssl/openssl/pull/31082">OpenSSL PR #31082 - AES constant-time fix</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/28118">OpenSSL issue #28118 - musl Zbb detection broken</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/29357">OpenSSL issue #29357 - no-deprecated cross-compile failure</a></li>
+  <li><a href="https://github.com/seccomp/libseccomp/pull/197">libseccomp PR #197 - native riscv64 syscall table support</a></li>
   <li><a href="https://github.com/seccomp/libseccomp/issues/327">libseccomp issue #327 - riscv32 not yet supported</a></li>
+  <li><a href="https://github.com/NixOS/nixpkgs/issues/301385">NixOS/nixpkgs issue #301385 - stale QEMU seccomp-emulation test failure</a></li>
+  <li><a href="https://riseproject.dev/blog">RISE Project blog</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
+  <li><a href="https://cloud-v.co/">Cloud-V RISC-V CI platform</a></li>
+  <li><a href="https://cacheforge.com/">Cache Forge LLC</a></li>
 </ul>
 
           
