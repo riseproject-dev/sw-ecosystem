@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> orange (downstream-only)<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for ONNX Runtime (microsoft/onnxruntime)<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -281,12 +282,17 @@
 
 <p><strong>Repository:</strong> <a href="https://github.com/microsoft/onnxruntime">microsoft/onnxruntime</a><br />
 <strong>Homepage:</strong> <a href="https://onnxruntime.ai/">onnxruntime.ai</a><br />
-<strong>License:</strong> MIT<br />
-<strong>Governance:</strong> Microsoft-controlled. No independent steering committee. New public APIs require Microsoft team review. Contribution proposals are evaluated against Microsoft’s internal roadmap.<br />
-<strong>Primary funding:</strong> Microsoft (Windows, Office, Azure, Bing listed as internal users). The project lists NVIDIA, Intel, AMD, Hugging Face, Adobe, Oracle, and others as adopters, not financial sponsors. No formal sponsorship tier structure is publicly documented.<br />
-<strong>ONNX spec vs. ONNX Runtime:</strong> The ONNX format and schema (onnx/onnx) is hosted under Linux Foundation AI and Data. ONNX Runtime (microsoft/onnxruntime) is a separate, Microsoft-controlled inference engine that consumes ONNX models. This report covers ONNX Runtime unless otherwise stated.<br /></p>
+<strong>License:</strong> MIT<br /></p>
 
-<p>ONNX Runtime is an inference engine that runs ONNX-format models. Its primary CPU execution path for edge and embedded targets goes through MLAS (Microsoft BLAS), an internal hand-optimized linear algebra library that lives in <code class="language-plaintext highlighter-rouge">onnxruntime/core/mlas/lib/</code>. MLAS contains architecture-specific SIMD kernels for x86 (assembly), aarch64 (assembly), and – as of 2026 – riscv64 (C++ RVV intrinsics). The XNNPACK execution provider is an optional alternative CPU backend. No GPU execution provider exists for riscv64.</p><hr />
+<p>ONNX Runtime is an inference engine that executes ONNX-format models. Its primary CPU execution path for edge and embedded targets runs through MLAS (Microsoft BLAS), an internal hand-optimized linear-algebra library at <code class="language-plaintext highlighter-rouge">onnxruntime/core/mlas/lib/</code>. MLAS contains architecture-specific SIMD kernels for amd64 (hand-written assembly), aarch64 (hand-written assembly), and, as of 2026, riscv64 (C++ RVV intrinsics). The XNNPACK execution provider is an optional alternative CPU backend. No GPU execution provider exists for riscv64.</p>
+
+<p><strong>Governance:</strong> onnxruntime.ai and the GitHub repository carry no Linux Foundation AI &amp; Data (or other foundation) affiliation; the site states “Copyright (c) Microsoft. All rights reserved,” and the repository’s Code of Conduct is the Microsoft Open Source Code of Conduct (contact: opencode@microsoft.com). <code class="language-plaintext highlighter-rouge">CODEOWNERS</code> assigns review and ownership entirely to Microsoft-org GitHub teams: <code class="language-plaintext highlighter-rouge">@microsoft/onnxruntime-admin</code> (CODEOWNERS itself, dependency manifests), <code class="language-plaintext highlighter-rouge">@microsoft/onnxruntime-mobile</code> (FlatBuffers mobile schema), and <code class="language-plaintext highlighter-rouge">@microsoft/onnxruntime-api</code> (public C/C++, C#, and Python API surfaces). No <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, or <code class="language-plaintext highlighter-rouge">PLATFORMS.md</code> file exists. Governance is Microsoft-controlled, not a multi-stakeholder or foundation model. <code class="language-plaintext highlighter-rouge">SUPPORT.md</code> limits support to GitHub Issues and GitHub Discussions, with no documented SLA or platform-tier policy.</p>
+
+<p>Note: the ONNX model format/schema itself (the separate <code class="language-plaintext highlighter-rouge">onnx/onnx</code> repository, consumed by ONNX Runtime as a dependency, see Section 9) is historically associated with the Linux Foundation AI &amp; Data Foundation; this report’s governance findings above pertain specifically to <code class="language-plaintext highlighter-rouge">microsoft/onnxruntime</code>, the subject repository, not to <code class="language-plaintext highlighter-rouge">onnx/onnx</code>.</p>
+
+<p><strong>Corporate contributors to the RISC-V port</strong> (from commit data, not official maintainer roles): Phoebe Chen (SiFive, commit signed off as phoebe.chen@sifive.com), Zestion (zhuzhentao.zzt@alibaba-inc.com, Alibaba), and velonica0 (email masked; test hardware referenced in commits is SpacemiT K3). The existing project record attributed velonica0’s PRs (#28261, #28411, #28518) to SiFive; the SpacemiT K3 hardware signature in velonica0’s later PR (#32710) suggests a SpacemiT affiliation instead. Neither attribution is independently confirmed from a public profile or email domain. [NEEDS VERIFICATION]</p>
+
+<p><strong>Community stance on new ports:</strong> empirically permissive. SiFive’s cross-compile PR (#19238) was accepted in January 2024, and optimization PRs from Alibaba and (likely) SpacemiT continued landing through September 2026, gated by normal CODEOWNERS review rather than any formal tiering or membership requirement. The first full attempt at RISC-V support (PR #18115) was closed without merging after nearly two years in review, with a maintainer stating explicitly: “The minimum requirement is that all build pipelines are green” – a CI bar that, as of this writing, still has not been satisfied for riscv64 (see Sections 3 and 7).</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -296,121 +302,113 @@
 </h2>
     
 
-<p>The RISC-V port is community-driven, not Microsoft-initiated. Contributors are from SiFive, Andes Technology, Nuclei System Technology, ZTE Corporation, and SpacemiT (hardware test platform). Microsoft has acted as reviewer and gatekeeper; the maintainer hariharans29 has merged all 2026 RVV PRs.</p>
+<p>The RISC-V port is community-driven, not Microsoft-initiated. Contributors are affiliated with SiFive, Andes Technology, Alibaba, ZTE Corporation, and (for hardware benchmarking) SpacemiT. Microsoft maintainers (Faith Xu, Hariharan Seshadri/hariharans29, Changming Sun/snnn) have acted as reviewers and gatekeepers.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Date</th>
       <th>Event</th>
-      <th>PR / Issue</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
+      <td>Dec 2018</td>
+      <td>Original RISC-V/portability request, closed with no action</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/145">Issue #145</a></td>
+    </tr>
+    <tr>
       <td>Jun 2023</td>
-      <td>Feature request for SHL execution provider (T-HEAD heterogeneous compute library)</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/issues/16544">#16544</a> (open)</td>
+      <td>Feature request for a SHL (T-HEAD heterogeneous RISC-V CPU/NPU) Execution Provider, still open, no implementation</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/16544">Issue #16544</a></td>
     </tr>
     <tr>
-      <td>Sep 2023</td>
-      <td>Pre-PR coordination thread, Andes Technology proposes basic RISC-V support</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/issues/17466">#17466</a> (closed)</td>
+      <td>Sep 8, 2023</td>
+      <td>Tracking discussion: CNOCycle proposes RISC-V support; Microsoft (Faith Xu) sets conditions – a named long-term maintainer and CI coverage; Andes Technology (NonerKao) commits to maintaining via QEMU</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/17466">Issue/Discussion #17466</a></td>
     </tr>
     <tr>
-      <td>Oct 2023</td>
-      <td>First RISC-V PR submitted: scalar MLAS for rv64imafdc, no vector extension</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/18115">#18115</a> (closed without merge Jul 2025)</td>
+      <td>Oct 26, 2023</td>
+      <td>First RISC-V PR: scalar MLAS for rv64imafdc, no vector extension. Stalled on a failing lint/CI bar; closed without merging Jul 3, 2025 (by snnn)</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/18115">PR #18115</a>, <strong>closed, not merged</strong></td>
     </tr>
     <tr>
       <td>Jan 25, 2024</td>
-      <td>First RISC-V commit merged: riscv64 cross-compilation toolchain and <code class="language-plaintext highlighter-rouge">--rv64</code> build flag. Author: Phoebe Chen (SiFive).</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/19238">#19238</a> MERGED</td>
+      <td>First RISC-V commit merged on <code class="language-plaintext highlighter-rouge">main</code>: riscv64 cross-compilation toolchain and <code class="language-plaintext highlighter-rouge">--rv64</code> build flag (Phoebe Chen, SiFive). Shipped in v1.17.0.</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/19238">PR #19238</a>, <strong>merged</strong></td>
     </tr>
     <tr>
       <td>Apr 5, 2024</td>
-      <td>Cross-compilation documentation merged; documents ~6.8% test failure rate on QEMU</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/19239">#19239</a> MERGED</td>
+      <td>Cross-compilation documentation merged into the <code class="language-plaintext highlighter-rouge">gh-pages</code> branch only (docs site, not shipped in any versioned package release)</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/19239">PR #19239</a>, <strong>merged (docs branch only)</strong></td>
     </tr>
     <tr>
       <td>Mar 22, 2024</td>
-      <td>Inference accuracy collapse reported: 15% vs 86% on LicheeRV Nano (C906, rv64imafdcv0p7xthead)</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/issues/20030">#20030</a> (open, unresolved)</td>
+      <td>Inference accuracy collapse reported: 15.23% vs 86.09% accuracy, LicheeRV Nano (C906, non-ratified RVV 0.7.1 ISA). Still open as of Oct 2026.</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/20030">Issue #20030</a>, <strong>open</strong></td>
     </tr>
     <tr>
-      <td>Jul 5, 2024</td>
-      <td>SGEMM packing-width mismatch fix proposed</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/21261">#21261</a> (closed as stale Jul 2025)</td>
+      <td>Jul 2024</td>
+      <td>Scalar MlasSgemm CopyPackB/TransposePackB fix for RISCV proposed; closed as stale Jul 3, 2025 without merging</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/21261">PR #21261</a>, <strong>closed, not merged</strong></td>
     </tr>
     <tr>
       <td>Oct 22, 2024</td>
-      <td>Incorrect inference results on riscv64 reported, root cause identified as SGEMM CopyPackB 4-wide vs 16-wide mismatch</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/issues/22530">#22530</a> (closed May 2026)</td>
+      <td>Inference discrepancies on RISC-V narrowed to <code class="language-plaintext highlighter-rouge">torch.nn.Linear</code> layers; closed May 2026</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/22530">Issue #22530</a>, closed</td>
     </tr>
     <tr>
       <td>Apr 30, 2025</td>
-      <td>RVV support tracking issue filed, Nuclei System Technology</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/issues/24596">#24596</a> (closed as stale Dec 2025)</td>
-    </tr>
-    <tr>
-      <td>Sep 28, 2025</td>
-      <td>DeviceDiscoveryTest.HasCpuDevice fails on riscv64 / Alpine Linux musl</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/issues/26187">#26187</a> (open)</td>
+      <td>RVV-in-MLAS upstreaming plan filed; closed stale, superseded by #28261</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/24596">Issue #24596</a>, closed</td>
     </tr>
     <tr>
       <td>Mar 25, 2026</td>
-      <td>WASM scalar SGEMM packing fix merged; incidentally fixes riscv64 SGEMM correctness (issue #22530)</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/27819">#27819</a> MERGED</td>
+      <td>WASM scalar SGEMM packing-width fix merged; incidentally resolves the riscv64 correctness bug from #22530 (a non-riscv64-targeted fix)</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/27819">PR #27819</a>, merged</td>
     </tr>
     <tr>
       <td>Apr 30, 2026</td>
-      <td>First RVV-vectorized MLAS kernels: SGEMM (3.6x) and Softmax (3.0-3.2x). Author: velonica0 (SiFive). Closes #17466 and #24596.</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/28261">#28261</a> MERGED</td>
-    </tr>
-    <tr>
-      <td>Apr 30, 2026</td>
-      <td>INT8 GEMM and FP32 GEMV early submission, immediately superseded</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/28287">#28287</a> (closed same day)</td>
+      <td>First RVV-vectorized MLAS kernels (SGEMM, Softmax); closes #17466 and #24596. First shipped in release v1.26.0.</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/28261">PR #28261</a>, <strong>merged</strong></td>
     </tr>
     <tr>
       <td>May 6, 2026</td>
-      <td>MLAS_TARGET_RISCV64 macro proposal, closed because #28261 and #27819 already landed both goals</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/28110">#28110</a> (closed by author)</td>
+      <td><code class="language-plaintext highlighter-rouge">MLAS_TARGET_RISCV64</code> macro PR self-closed by author (Shengyu-Wu): already resolved via #27819 and #28261</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/28110">PR #28110</a>, <strong>closed, not merged</strong></td>
     </tr>
     <tr>
-      <td>May 12, 2026</td>
-      <td>RVV NCHWc convolution (pointwise: 30x, depthwise: 12x) and pooling (max: 20x) kernels</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/28411">#28411</a> MERGED</td>
+      <td>Apr 30 - Jun 2026</td>
+      <td>INT8 GEMM/GEMV, NCHWc conv/pooling, activation-kernel fixes merge in rapid succession</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/28287">#28287</a> (closed, superseded), <a href="https://github.com/microsoft/onnxruntime/pull/28308">#28308</a>, <a href="https://github.com/microsoft/onnxruntime/pull/28411">#28411</a>, <a href="https://github.com/microsoft/onnxruntime/pull/28506">#28506</a>, <a href="https://github.com/microsoft/onnxruntime/pull/28538">#28538</a> – all merged except #28287</td>
     </tr>
     <tr>
-      <td>May 19, 2026</td>
-      <td>NaN canonical form test fix for riscv64 (F extension mandates 0x7fc00000)</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/28538">#28538</a> MERGED</td>
+      <td>May 15-24, 2026</td>
+      <td>RVV-optimized LLM operators (FP16 GEMM, cast, RoPE, RMSNorm) merge; SGEMM optimization PR opened, still open</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/28518">PR #28518</a> merged; <a href="https://github.com/microsoft/onnxruntime/pull/28655">PR #28655</a> <strong>open</strong></td>
     </tr>
     <tr>
-      <td>May 20, 2026</td>
-      <td>Depthwise kernel compilation error fix (ZTE Corporation)</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/28506">#28506</a> MERGED</td>
+      <td>Jul 3, 2026</td>
+      <td>RVV backend for MLAS QNBitGemm (quantized LLM matmul) merges</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/29537">PR #29537</a>, merged</td>
     </tr>
     <tr>
-      <td>May 23, 2026</td>
-      <td>RVV LLM operators: FP16 GEMM (up to 191x), FP16/FP32 Cast, RotaryEmbedding, RMSNorm. Qwen3-0.6B: 6.5 tok/s on K3.</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/28518">#28518</a> MERGED</td>
+      <td>Sep 3-23, 2026</td>
+      <td>Runtime vector-extension detection regression fixed (PR #32406); further kernel optimizations (PR #32540) and LinearAttention/ReduceMinMax kernels (PR #32710) merge; three further kernel PRs remain open</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/32406">#32406</a>, <a href="https://github.com/microsoft/onnxruntime/pull/32540">#32540</a>, <a href="https://github.com/microsoft/onnxruntime/pull/32710">#32710</a> merged; <a href="https://github.com/microsoft/onnxruntime/pull/32583">#32583</a>, <a href="https://github.com/microsoft/onnxruntime/pull/32585">#32585</a>, <a href="https://github.com/microsoft/onnxruntime/pull/32608">#32608</a> <strong>open</strong></td>
     </tr>
     <tr>
-      <td>May 24, 2026</td>
-      <td>SGEMM optimization PR filed (ZTE), VLEN portability concerns raised by maintainer</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/28655">#28655</a> OPEN</td>
-    </tr>
-    <tr>
-      <td>Jun 9, 2026</td>
-      <td>RVV INT8 GEMM/GEMV, M=1 routing, six activation kernels. bge-base INT8: 2.93x speedup.</td>
-      <td><a href="https://github.com/microsoft/onnxruntime/pull/28308">#28308</a> MERGED</td>
+      <td>Sep 7, 2026</td>
+      <td>Feature request to activate the existing riscv64/QEMU build-test path in CI, citing #20030 as a 2-year-unresolved consequence of having no CI. Open, unanswered by maintainers.</td>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/32465">Issue #32465</a>, <strong>open</strong></td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Key observation:</strong> The riscv64 port was dormant from January 2024 (cross-compile toolchain) to March 2026 (SGEMM correctness fix). In the 10 weeks from April 30, 2026 to June 9, 2026, five PRs adding substantial RVV kernel coverage merged. This is a recent, concentrated burst of activity from SiFive and affiliated contributors, not sustained long-term investment.</p><hr />
+<p><strong>Is it fully upstream?</strong> Partially. Only two PRs have merged source changes that materially advanced riscv64 support into <code class="language-plaintext highlighter-rouge">main</code> as standalone milestones: #19238 (basic cross-compile, Jan 2024) and #28261 (first RVV kernels, Apr 2026), followed by a dense cluster of 9 further merged kernel PRs through September 2026. Three PRs that specifically targeted the original correctness/NaN issues raised in #17466 and #20030 (#18115, #21261, #28110) were closed without merging; that specific correctness work landed instead as a side effect of an unrelated WASM fix (#27819). The port was dormant for roughly 26 months (Jan 2024 to Mar 2026) before the current burst of kernel work began.</p>
+
+<p><strong>Key observation:</strong> None of the ~15 merged riscv64 RVV kernel files are built or tested by any automated CI pipeline (see Section 7). Every merge listed above was accepted on the strength of manual QEMU/hardware testing reported in the PR description, not automated verification.</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -420,11 +418,46 @@
 </h2>
     
 
-<p>ONNX Runtime does not publish a formal named-tier policy (Tier 1/2/3) in public documentation. The compatibility matrix lists Windows, Linux (CentOS 7), macOS, Android (API 28), and iOS (12) as primary tested platforms. RISC-V appears only in the cross-compilation build guide, labeled as Linux/riscv64 requiring cross-compilation. There is no CI badge, no official test matrix entry, and no release artifact for riscv64.</p>
+<p>ONNX Runtime publishes no formal named-tier (Tier 1/2/3) policy. No <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, <code class="language-plaintext highlighter-rouge">docs/building.md</code>, <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code>, or <code class="language-plaintext highlighter-rouge">README.md</code> content mentions riscv64 or RISC-V anywhere in the repository (<code class="language-plaintext highlighter-rouge">docs/</code>, 46 files, grepped and confirmed clean). RISC-V support is documented, if at all, only through code comments and the sample build script (Section 5). There is no CI badge, no official test-matrix entry, and no release artifact for riscv64 (Section 7, Section 8).</p>
 
-<p><strong>Effective tier (inferred):</strong> Experimental / community-supported. Build infrastructure exists; RVV kernels are merging; no CI, no official binary, no Microsoft commitment to maintaining the port.</p>
+<p><strong>Effective tier (inferred):</strong> experimental, community-maintained at the source level. Build tooling and a substantial RVV kernel set exist; no CI, no official binary, and no written Microsoft commitment to maintain the port exist.</p>
 
-<p>No single master tracking issue for the riscv64 port exists. No official milestone or project board tracks the riscv64 work.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Capability</th>
+      <th>amd64</th>
+      <th>aarch64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CI build + test</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td><strong>No</strong></td>
+    </tr>
+    <tr>
+      <td>Official release binaries</td>
+      <td>Yes (GitHub Releases, PyPI, NuGet)</td>
+      <td>Yes</td>
+      <td><strong>No</strong></td>
+    </tr>
+    <tr>
+      <td>Hand-tuned kernel depth</td>
+      <td>~55 asm/intrinsic files</td>
+      <td>~19 asm/intrinsic files</td>
+      <td>15 C++ intrinsic files, no assembly</td>
+    </tr>
+    <tr>
+      <td>Documented build path</td>
+      <td>Primary</td>
+      <td>Primary</td>
+      <td>Sample script only, “you may need to make changes before using it” (script’s own comment)</td>
+    </tr>
+  </tbody>
+</table></div><hr />
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -433,127 +466,159 @@
   
 </h2>
     
-<h3 id="41-mlas-primary-cpu-kernel-library">
+<h3 id="41-location-model">
   
   
-    <a href="#41-mlas-primary-cpu-kernel-library" class="anchor-heading" aria-labelledby="41-mlas-primary-cpu-kernel-library"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 MLAS (Primary CPU Kernel Library)
+    <a href="#41-location-model" class="anchor-heading" aria-labelledby="41-location-model"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Location model
   
   
 </h3>
     
 
-<p>MLAS is the dominant performance path for CPU inference in ONNX Runtime. It is an internal library at <code class="language-plaintext highlighter-rouge">onnxruntime/core/mlas/lib/</code>. The riscv64 subdirectory contains 11 RVV kernel files, all using C++ intrinsics from <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code> (no hand-written assembly).</p>
+<p>No <code class="language-plaintext highlighter-rouge">arch/riscv/</code> top-level directory and no <code class="language-plaintext highlighter-rouge">.S</code> assembly files exist for riscv64 (unlike amd64/aarch64). RISC-V support is a pure C++ intrinsics backend under <code class="language-plaintext highlighter-rouge">onnxruntime/core/mlas/lib/riscv64/</code>, dispatched through <code class="language-plaintext highlighter-rouge">MLAS_PLATFORM</code> function-pointer tables in <code class="language-plaintext highlighter-rouge">platform.cpp</code>, the same mechanism used for AVX2/AVX512/NEON/SVE. No RISC-V-specific JIT backend or execution provider exists; this is CPU-EP kernel acceleration only.</p>
+<h3 id="42-mlas-kernel-inventory-verified-by-direct-clone-not-githubs-code-search-index-which-undercounted">
+  
+  
+    <a href="#42-mlas-kernel-inventory-verified-by-direct-clone-not-githubs-code-search-index-which-undercounted" class="anchor-heading" aria-labelledby="42-mlas-kernel-inventory-verified-by-direct-clone-not-githubs-code-search-index-which-undercounted"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 MLAS kernel inventory (verified by direct clone, not GitHub’s code-search index, which undercounted)
+  
+  
+</h3>
+    
+
+<p>15 complete, non-stub files, 6,708 total lines:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>File</th>
-      <th>Lines (est.)</th>
+      <th>Lines</th>
       <th>Purpose</th>
-      <th>ISA</th>
-      <th>Status</th>
+      <th>ISA gate</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">sgemm_kernel_rvv.cpp</code></td>
-      <td>~200</td>
-      <td>FP32 GEMM</td>
-      <td>RVV m4</td>
-      <td>Complete</td>
+      <td>275</td>
+      <td>FP32 SGEMM compute, dynamic <code class="language-plaintext highlighter-rouge">vsetvli</code>, any VLEN</td>
+      <td>RVV (<code class="language-plaintext highlighter-rouge">MLAS_USE_RVV</code>, <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">sgemm_pack_b_rvv.cpp</code></td>
-      <td>~115</td>
-      <td>GEMM B-panel packing</td>
-      <td>RVV m4</td>
-      <td>Complete</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">softmax_kernel_rvv.cpp</code></td>
-      <td>~250</td>
-      <td>Softmax / log-softmax</td>
-      <td>RVV m1</td>
-      <td>Complete</td>
+      <td>115</td>
+      <td>SGEMM B-matrix packing</td>
+      <td>RVV</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">qgemm_kernel_rvv.cpp</code></td>
-      <td>~350</td>
-      <td>INT8 GEMM, 4 signedness variants, GEMV fast path</td>
-      <td>RVV u8m1/u16m2/u32m4</td>
-      <td>Mostly complete (2-row tile missing, GEMV threshold pending profiling)</td>
+      <td>499</td>
+      <td>INT8 quantized GEMM via <code class="language-plaintext highlighter-rouge">vwmacc.vv</code> widening MAC</td>
+      <td>RVV</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">activation_kernel_rvv.cpp</code></td>
-      <td>~200</td>
-      <td>Erf, Tanh, Logistic, Exp, SiLU, GeluErf</td>
-      <td>RVV m4</td>
-      <td>Complete</td>
+      <td><code class="language-plaintext highlighter-rouge">qnbitgemm_kernel_rvv.cpp</code></td>
+      <td>1,049</td>
+      <td>4/8-bit quantized MatMulNBits: GEMV, CompFp32, CompInt8</td>
+      <td>RVV</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">sconv_depthwise_kernel_rvv.cpp</code></td>
-      <td>~200</td>
-      <td>3x3 stride-1 depthwise convolution</td>
-      <td>RVV m4</td>
-      <td>Complete</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">sconv_nchwc_kernel_rvv.cpp</code></td>
-      <td>~300</td>
-      <td>NCHWc direct/depthwise/pointwise conv + max/avg pooling</td>
-      <td>RVV m4, VLEN&gt;=128 assumed</td>
-      <td>Complete</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">layernorm_kernel_rvv.cpp</code></td>
-      <td>~120</td>
-      <td>LayerNorm and RMSNorm</td>
-      <td>RVV m4+m1</td>
-      <td>Complete</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">rotary_embedding_kernel_rvv.cpp</code></td>
-      <td>~100</td>
-      <td>RoPE transformer positional embedding</td>
-      <td>RVV m4</td>
-      <td>FP32 complete; FP16 path = nullptr (stub)</td>
+      <td><code class="language-plaintext highlighter-rouge">hqnbitgemm_kernel_rvv.cpp</code></td>
+      <td>340</td>
+      <td>FP16-activation path of n-bit quantized GEMM</td>
+      <td>Zvfh (<code class="language-plaintext highlighter-rouge">-march=rv64gcv_zvfh</code>)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">halfgemm_kernel_rvv.cpp</code></td>
-      <td>~150</td>
-      <td>FP16 GEMM</td>
-      <td>RVV + Zvfh</td>
-      <td>Complete (requires Zvfh extension)</td>
+      <td>239</td>
+      <td>Half-precision (FP16) GEMM</td>
+      <td>Zvfh</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">cast_kernel_rvv.cpp</code></td>
-      <td>~60</td>
-      <td>FP16 &lt;-&gt; FP32 type conversion</td>
+      <td>62</td>
+      <td>FP16/FP32 cast</td>
       <td>Zvfhmin</td>
-      <td>Complete (requires Zvfh build gate)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">softmax_kernel_rvv.cpp</code></td>
+      <td>286</td>
+      <td>Softmax/LogSoftmax primitives</td>
+      <td>RVV</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">layernorm_kernel_rvv.cpp</code></td>
+      <td>109</td>
+      <td>LayerNorm/RMSNorm</td>
+      <td>RVV</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">activation_kernel_rvv.cpp</code></td>
+      <td>310</td>
+      <td>Erf, Tanh, Logistic, Exp, SiLU, GeluErf, LMUL=4</td>
+      <td>RVV</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">conv_activation_kernel_rvv.cpp</code></td>
+      <td>291</td>
+      <td>Fused activation for conv (Identity/Relu/LeakyRelu/Clip/HardSigmoid)</td>
+      <td>RVV</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">rotary_embedding_kernel_rvv.cpp</code></td>
+      <td>108</td>
+      <td>RoPE, interleaved and non-interleaved</td>
+      <td>RVV</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">sconv_depthwise_kernel_rvv.cpp</code></td>
+      <td>731</td>
+      <td>NCHW depthwise conv, 3x3 specialized + general, runtime LMUL 1/2/4</td>
+      <td>RVV</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">sconv_nchwc_kernel_rvv.cpp</code></td>
+      <td>1,203</td>
+      <td>NCHWc direct/depthwise/pointwise conv, BlockSize=16</td>
+      <td>RVV</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">linear_attention_kernel_rvv.cpp</code></td>
+      <td>1,091</td>
+      <td>Linear/gated/delta recurrent attention</td>
+      <td>RVV</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>RVV design:</strong> All kernels use VLEN-agnostic <code class="language-plaintext highlighter-rouge">vsetvl</code> calls. Runtime dispatch queries <code class="language-plaintext highlighter-rouge">__riscv_vlenb()</code> at startup to set <code class="language-plaintext highlighter-rouge">NchwcBlockSize</code> (16 if VLEN&gt;=128, 1 otherwise). The <code class="language-plaintext highlighter-rouge">ORT_MLAS_RISCV_FORCE_SCALAR</code> environment variable bypasses RVV dispatch.</p>
+<p>This supersedes an earlier count of 11 files; a direct <code class="language-plaintext highlighter-rouge">grep -rl __riscv</code> against a live clone (HEAD <code class="language-plaintext highlighter-rouge">9ae8f3e</code>) found 17 files total (the 15 kernel files plus <code class="language-plaintext highlighter-rouge">mlas.h</code> and <code class="language-plaintext highlighter-rouge">cmake/onnxruntime_mlas.cmake</code>), while GitHub’s hosted code-search index returned only 3 hits for the same query – the index should not be relied on for completeness claims on this repository.</p>
 
-<p><strong>Dispatch infrastructure:</strong> <code class="language-plaintext highlighter-rouge">platform.cpp</code> populates <code class="language-plaintext highlighter-rouge">MLAS_PLATFORM</code> under <code class="language-plaintext highlighter-rouge">#if defined(MLAS_TARGET_RISCV64)</code>. A <code class="language-plaintext highlighter-rouge">#define MLAS_TARGET_RISCV64</code> macro is set in <code class="language-plaintext highlighter-rouge">mlas.h</code> when <code class="language-plaintext highlighter-rouge">(__riscv &amp;&amp; __riscv_xlen == 64)</code>. There is no dynamic CPUID-style dispatcher; the platform struct is populated once at startup.</p>
+<p>ISA extensions used: RVV “V” base vector extension throughout, plus Zvfh/Zvfhmin for the three FP16 files. No Zba/Zbb/Zbc/Zbs bit-manipulation extensions are used anywhere. Only two TODO(perf) comments exist in the entire kernel set (<code class="language-plaintext highlighter-rouge">qgemm_kernel_rvv.cpp</code>, a GEMV microbench note and a missing 2-row tile), neither blocking functionality.</p>
 
-<p><strong>One known dispatch issue from review:</strong> In PR #28261, Copilot flagged that RVV kernel declarations in <code class="language-plaintext highlighter-rouge">mlasi.h</code> were enabled whenever <code class="language-plaintext highlighter-rouge">MLAS_TARGET_RISCV64</code> was defined, even without <code class="language-plaintext highlighter-rouge">MLAS_USE_RVV</code>, potentially causing link errors on scalar-only riscv64 builds. Whether this was resolved before merge is not stated in the research data. [NEEDS VERIFICATION]</p>
-<h3 id="42-execution-providers">
+<p>The existing-report claim that <code class="language-plaintext highlighter-rouge">rotary_embedding_kernel_rvv.cpp</code>’s FP16 path is a <code class="language-plaintext highlighter-rouge">nullptr</code> stub, and that no BF16 GEMM kernel exists, were not independently re-confirmed in this round of research. [NEEDS VERIFICATION]</p>
+<h3 id="43-dispatch-and-runtime-detection">
   
   
-    <a href="#42-execution-providers" class="anchor-heading" aria-labelledby="42-execution-providers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Execution Providers
+    <a href="#43-dispatch-and-runtime-detection" class="anchor-heading" aria-labelledby="43-dispatch-and-runtime-detection"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Dispatch and runtime detection
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">platform.cpp</code> populates <code class="language-plaintext highlighter-rouge">MLAS_PLATFORM</code> under <code class="language-plaintext highlighter-rouge">#if defined(MLAS_TARGET_RISCV64)</code>. Runtime vector-extension detection uses <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP) &amp; COMPAT_HWCAP_ISA_V</code> to decide whether RVV kernels are installed into the dispatch table at all – this check was itself found broken and restored by <a href="https://github.com/microsoft/onnxruntime/pull/32406">PR #32406</a> (merged Sep 2026): prior to that fix, RVV kernels could run without verifying hardware support for the V extension. A test-only <code class="language-plaintext highlighter-rouge">ORT_MLAS_RISCV_FORCE_SCALAR</code> environment variable forces the scalar fallback path regardless of hardware. When the V-extension isn’t detected, dispatch pointers fall back to <code class="language-plaintext highlighter-rouge">MlasGemmQuantDispatchDefault</code>/generic C kernels, matching the degradation pattern used for every other architecture block in the same file.</p>
+<h3 id="44-execution-providers">
+  
+  
+    <a href="#44-execution-providers" class="anchor-heading" aria-labelledby="44-execution-providers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Execution Providers
   
   
 </h3>
     
 
 <ul>
-  <li><strong>CPU EP (via MLAS):</strong> Fully wired for riscv64. All 11 RVV kernel files are dispatched through the CPU EP.</li>
-  <li><strong>XNNPACK EP:</strong> Build system supports <code class="language-plaintext highlighter-rouge">--use_xnnpack</code> with <code class="language-plaintext highlighter-rouge">--rv64</code>. XNNPACK itself has substantial riscv64 RVV kernel coverage (206 RVV files), but its CI is broken as of April 2026 (see Section 9).</li>
-  <li><strong>No other EPs:</strong> No CUDA, TensorRT, OpenVINO, CoreML, or DirectML EP for riscv64. The <a href="https://github.com/microsoft/onnxruntime/issues/16544">SHL EP request</a> for T-HEAD heterogeneous compute (filed June 2023) remains open with no implementation activity.</li>
-  <li><strong>No JIT backend:</strong> No RISC-V JIT or code-generation backend exists in the ORT runtime itself.</li>
+  <li><strong>CPU EP (via MLAS):</strong> fully wired for riscv64, independent of the gaps below.</li>
+  <li><strong>XNNPACK EP:</strong> build-system supported (<code class="language-plaintext highlighter-rouge">--use_xnnpack</code> with <code class="language-plaintext highlighter-rouge">--rv64</code>), but its upstream riscv64 test suite is broken (100+ failing RVV test targets, see Section 9).</li>
+  <li><strong>No other EPs:</strong> no CUDA, TensorRT, OpenVINO, CoreML, or DirectML EP exists for riscv64. The SHL EP request (<a href="https://github.com/microsoft/onnxruntime/issues/16544">#16544</a>, filed Jun 2023) remains open with no implementation activity.</li>
+  <li><strong>No RISC-V JIT backend</strong> exists in ORT itself.</li>
 </ul><hr />
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
@@ -563,142 +628,116 @@
   
 </h2>
     
-<h3 id="51-flags-and-variables">
+<h3 id="51-no-standalone-build-documentation">
   
   
-    <a href="#51-flags-and-variables" class="anchor-heading" aria-labelledby="51-flags-and-variables"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Flags and Variables
+    <a href="#51-no-standalone-build-documentation" class="anchor-heading" aria-labelledby="51-no-standalone-build-documentation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 No standalone build documentation
   
   
 </h3>
     
 
-<p>Build system support landed in PR #19238 (merged January 2024, author: Phoebe Chen, SiFive). The following flags are defined in <code class="language-plaintext highlighter-rouge">tools/ci_build/build_args.py</code> and processed by <code class="language-plaintext highlighter-rouge">tools/ci_build/build.py</code>:</p>
+<p>No <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, <code class="language-plaintext highlighter-rouge">docs/building.md</code>, or <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> exists in the repository. RISC-V build knowledge lives entirely in code and scripts, not prose docs.</p>
+<h3 id="52-reference-build-script--toolsscriptsbuild_riscv64sh">
+  
+  
+    <a href="#52-reference-build-script--toolsscriptsbuild_riscv64sh" class="anchor-heading" aria-labelledby="52-reference-build-script--toolsscriptsbuild_riscv64sh"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Reference build script – <code class="language-plaintext highlighter-rouge">tools/scripts/build_riscv64.sh</code>
+  
+  
+</h3>
+    
+
+<p>Authored by SiFive (Phoebe Chen, 2024, MIT License). Host-restricted to Ubuntu. Interactively prompts for a toolchain path and downloads a prebuilt toolchain from <code class="language-plaintext highlighter-rouge">riscv-collab/riscv-gnu-toolchain</code> releases:</p>
+<ul>
+  <li>Version: <code class="language-plaintext highlighter-rouge">2023.11.20</code></li>
+  <li>File: <code class="language-plaintext highlighter-rouge">riscv64-glibc-ubuntu-22.04-llvm-nightly-2023.11.20-nightly.tar.gz</code></li>
+  <li>SHA256: <code class="language-plaintext highlighter-rouge">98d6531b757fac01e065460c19abe8974976c607a8d88631cc5c1529d90ba7ba</code></li>
+</ul>
+
+<p>(Despite the “llvm-nightly” filename, this archive ships the GNU toolchain binaries actually used, <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu-gcc</code>/<code class="language-plaintext highlighter-rouge">g++</code>, plus a bundled <code class="language-plaintext highlighter-rouge">qemu-riscv64</code>.) The script’s own comment reads: “The script is a sample … you should ensure that your environment meets ORT requirements. You may need to make changes before using it.”</p>
+<h3 id="53-cmake-toolchain-file--cmakeriscv64toolchaincmake">
+  
+  
+    <a href="#53-cmake-toolchain-file--cmakeriscv64toolchaincmake" class="anchor-heading" aria-labelledby="53-cmake-toolchain-file--cmakeriscv64toolchaincmake"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 CMake toolchain file – <code class="language-plaintext highlighter-rouge">cmake/riscv64.toolchain.cmake</code>
+  
+  
+</h3>
+    
+
+<p>Sets <code class="language-plaintext highlighter-rouge">CMAKE_SYSTEM_PROCESSOR riscv64</code>, requires <code class="language-plaintext highlighter-rouge">RISCV_TOOLCHAIN_ROOT</code> to be defined (fatal error otherwise), points at <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu-gcc</code>/<code class="language-plaintext highlighter-rouge">g++</code>, and wires <code class="language-plaintext highlighter-rouge">qemu-riscv64</code> in as <code class="language-plaintext highlighter-rouge">CMAKE_CROSSCOMPILING_EMULATOR</code> (invoked as <code class="language-plaintext highlighter-rouge">qemu-riscv64 -L &lt;sysroot&gt; &lt;test-binary&gt;</code>) when <code class="language-plaintext highlighter-rouge">RISCV_QEMU_PATH</code> is set.</p>
+<h3 id="54-build-driver-flags-toolsci_buildbuild_argspy-buildpy">
+  
+  
+    <a href="#54-build-driver-flags-toolsci_buildbuild_argspy-buildpy" class="anchor-heading" aria-labelledby="54-build-driver-flags-toolsci_buildbuild_argspy-buildpy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Build driver flags (<code class="language-plaintext highlighter-rouge">tools/ci_build/build_args.py</code>, <code class="language-plaintext highlighter-rouge">build.py</code>)
+  
+  
+</h3>
+    
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Flag</th>
-      <th>CMake variable injected</th>
-      <th>Purpose</th>
+      <th>Effect</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--rv64</code></td>
-      <td><code class="language-plaintext highlighter-rouge">CMAKE_TOOLCHAIN_FILE=cmake/riscv64.toolchain.cmake</code>, <code class="language-plaintext highlighter-rouge">onnxruntime_CROSS_COMPILING=ON</code></td>
-      <td>Enables riscv64 cross-compilation</td>
+      <td>Cross-compile target; also disables telemetry support (<code class="language-plaintext highlighter-rouge">target_supports_telemetry</code> returns <code class="language-plaintext highlighter-rouge">False</code>)</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--riscv_toolchain_root &lt;path&gt;</code></td>
-      <td><code class="language-plaintext highlighter-rouge">RISCV_TOOLCHAIN_ROOT:PATH=&lt;path&gt;</code></td>
-      <td>Path to riscv64-unknown-linux-gnu GCC toolchain</td>
+      <td>Required with <code class="language-plaintext highlighter-rouge">--rv64</code>; raises <code class="language-plaintext highlighter-rouge">BuildError</code> if missing</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--riscv_qemu_path &lt;path&gt;</code></td>
-      <td><code class="language-plaintext highlighter-rouge">RISCV_QEMU_PATH:PATH=&lt;path&gt;</code></td>
-      <td>Optional QEMU user-mode emulator for cross-compile test runs</td>
+      <td>Required unless <code class="language-plaintext highlighter-rouge">--skip_tests</code> is also passed; raises <code class="language-plaintext highlighter-rouge">BuildError</code> otherwise</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">--enable_rvv</code></td>
-      <td><code class="language-plaintext highlighter-rouge">onnxruntime_USE_RVV=ON</code></td>
-      <td>Builds RVV MLAS kernels with <code class="language-plaintext highlighter-rouge">-march=rv64gcv -mabi=lp64d</code></td>
+      <td>Sets <code class="language-plaintext highlighter-rouge">onnxruntime_USE_RVV=ON</code>, builds RVV MLAS kernels</td>
     </tr>
     <tr>
-      <td>(cmake extra define)</td>
-      <td><code class="language-plaintext highlighter-rouge">onnxruntime_USE_RVV_ZVFH=ON</code></td>
-      <td>Adds Zvfh kernels with <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zvfh -mabi=lp64d</code></td>
+      <td>(cmake extra define only, no CLI flag) <code class="language-plaintext highlighter-rouge">onnxruntime_USE_RVV_ZVFH=ON</code></td>
+      <td>Adds the three Zvfh FP16 kernel files</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="52-toolchain-file">
+
+<p>Example build command (test run via QEMU):</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>python3 tools/ci_build/build.py --build_dir build/Linux --rv64 --parallel \
+  --config RelWithDebInfo --cmake_generator=Ninja \
+  --riscv_qemu_path=&lt;path-to-qemu-riscv64&gt; \
+  --riscv_toolchain_root=&lt;path-to-riscv64-unknown-linux-gnu&gt; \
+  --enable_rvv
+</code></pre></div></div>
+<h3 id="55-toolchain-version-requirement">
   
   
-    <a href="#52-toolchain-file" class="anchor-heading" aria-labelledby="52-toolchain-file"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Toolchain File
+    <a href="#55-toolchain-version-requirement" class="anchor-heading" aria-labelledby="55-toolchain-version-requirement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Toolchain version requirement
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">cmake/riscv64.toolchain.cmake</code> (copyright SiFive, Inc. 2024 / Phoebe Chen, MIT License) hardcodes <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu-gcc</code> / <code class="language-plaintext highlighter-rouge">g++</code>. When <code class="language-plaintext highlighter-rouge">RISCV_QEMU_PATH</code> is set, it configures <code class="language-plaintext highlighter-rouge">CMAKE_CROSSCOMPILING_EMULATOR</code> to allow CTest to transparently execute riscv64 ELF binaries under QEMU with <code class="language-plaintext highlighter-rouge">-L ${CMAKE_SYSROOT}</code>.</p>
-<h3 id="53-typical-build-commands">
-  
-  
-    <a href="#53-typical-build-commands" class="anchor-heading" aria-labelledby="53-typical-build-commands"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Typical Build Commands
-  
-  
-</h3>
-    
+<p><code class="language-plaintext highlighter-rouge">cmake/CMakeLists.txt</code> (lines 306-308) enforces, globally for all architectures including riscv64: <strong>GCC &gt;= 11.1 is a hard <code class="language-plaintext highlighter-rouge">FATAL_ERROR</code> if violated.</strong> This is a direct code-read finding and corrects an earlier claim that GCC &gt;= 9 was the minimum; the “GCC &gt;= 9 / GCC 8.x unsupported” figure may reflect outdated documentation rather than the actual enforced gate. [NEEDS VERIFICATION on the source of the “GCC &gt;= 9” figure]</p>
 
-<p>Minimal cross-compile (no tests):</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./build.sh --parallel --config Release --rv64 \
-  --riscv_toolchain_root /path/to/riscv64-unknown-linux-gnu \
-  --skip_tests
-</code></pre></div></div>
-
-<p>With RVV MLAS kernels:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./build.sh --parallel --config Release --rv64 \
-  --riscv_toolchain_root /path/to/riscv64-unknown-linux-gnu \
-  --enable_rvv --skip_tests
-</code></pre></div></div>
-
-<p>With tests via QEMU:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./build.sh --parallel --config Debug --rv64 \
-  --riscv_toolchain_root /path/to/riscv64-unknown-linux-gnu \
-  --riscv_qemu_path /path/to/qemu-riscv64
-</code></pre></div></div>
-<h3 id="54-requirements">
+<p>Enabling RVV kernels is not separately version-gated; instead, <code class="language-plaintext highlighter-rouge">cmake/onnxruntime_mlas.cmake</code> runtime-probes compiler support via <code class="language-plaintext highlighter-rouge">check_cxx_source_compiles</code> with <code class="language-plaintext highlighter-rouge">-march=rv64gcv -mabi=lp64d</code>. If the probe fails, the build does <strong>not</strong> fail – it falls back to scalar MLAS kernels with only a <code class="language-plaintext highlighter-rouge">WARNING</code>, silently losing RVV acceleration.</p>
+<h3 id="56-notable-build-gaps">
   
   
-    <a href="#54-requirements" class="anchor-heading" aria-labelledby="54-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Requirements
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Requirement</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>CMake</td>
-      <td>&gt;= 3.28</td>
-    </tr>
-    <tr>
-      <td>Host OS</td>
-      <td>Linux</td>
-    </tr>
-    <tr>
-      <td>GCC</td>
-      <td>&gt;= 9 (GCC 8.x explicitly unsupported per docs)</td>
-    </tr>
-    <tr>
-      <td>Toolchain source</td>
-      <td>riscv-gnu-toolchain releases (<code class="language-plaintext highlighter-rouge">riscv64-glibc-ubuntu-22.04-llvm-nightly-*.tar.gz</code>)</td>
-    </tr>
-    <tr>
-      <td>Clang support</td>
-      <td>Not stated for riscv64 target; toolchain file hardcodes GCC</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="55-notable-build-gaps">
-  
-  
-    <a href="#55-notable-build-gaps" class="anchor-heading" aria-labelledby="55-notable-build-gaps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.5 Notable Build Gaps
+    <a href="#56-notable-build-gaps" class="anchor-heading" aria-labelledby="56-notable-build-gaps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.6 Notable build gaps
   
   
 </h3>
     
 
 <ul>
-  <li><strong>No riscv64 Docker image.</strong> <code class="language-plaintext highlighter-rouge">tools/ci_build/github/linux/docker/</code> contains only <code class="language-plaintext highlighter-rouge">aarch64/</code> and <code class="language-plaintext highlighter-rouge">x86_64/</code> subdirectories. No <code class="language-plaintext highlighter-rouge">riscv64/</code> directory, no <code class="language-plaintext highlighter-rouge">Dockerfile.riscv64</code>.</li>
-  <li><strong>CF-protection hardening disabled.</strong> <code class="language-plaintext highlighter-rouge">build.py</code> applies <code class="language-plaintext highlighter-rouge">-fcf-protection</code> only when not <code class="language-plaintext highlighter-rouge">--rv64</code>. This is correct (the flag is x86-specific), but it means the riscv64 build implicitly lacks control-flow integrity hardening. [NEEDS VERIFICATION on whether an equivalent riscv64 flag is applied]</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">CMAKE_REQUIRED_FLAGS</code> overwrite.</strong> Both PR #28261 and PR #28518 review comments noted that the MLAS build logic overwrites <code class="language-plaintext highlighter-rouge">CMAKE_REQUIRED_FLAGS</code> instead of save/restoring it, which can interfere with subsequent CMake feature checks. This was flagged by reviewers but not confirmed as fixed before merge in the research data.</li>
-  <li><strong><code class="language-plaintext highlighter-rouge">protoc</code> binary.</strong> <code class="language-plaintext highlighter-rouge">protobuf</code> (a dependency) has no pre-built <code class="language-plaintext highlighter-rouge">protoc</code> binary for riscv64 in official releases. PRs <a href="https://github.com/protocolbuffers/protobuf">#23205 and #23206</a> to add protoc riscv64 prebuilts were abandoned mid-2025. Cross-compilation toolchains must build <code class="language-plaintext highlighter-rouge">protoc</code> from source.</li>
+  <li><strong>No riscv64 Dockerfile anywhere</strong> in the repository (<code class="language-plaintext highlighter-rouge">dockerfiles/</code>, <code class="language-plaintext highlighter-rouge">tools/ci_build/github/linux/docker/</code>, <code class="language-plaintext highlighter-rouge">.devcontainer/</code> all checked – only <code class="language-plaintext highlighter-rouge">aarch64/</code> and <code class="language-plaintext highlighter-rouge">x86_64/</code> subdirectories exist under the CI docker tree).</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">protoc</code> has no riscv64 prebuilt binary</strong> in official Protocol Buffers releases (PRs #23205/#23206 to add one were abandoned mid-2025), forcing cross-compilation workflows to build <code class="language-plaintext highlighter-rouge">protoc</code> from source.</li>
+  <li><strong>No riscv64-specific CF-protection equivalent:</strong> <code class="language-plaintext highlighter-rouge">-fcf-protection</code> (x86-specific) is simply skipped for <code class="language-plaintext highlighter-rouge">--rv64</code> builds; no equivalent control-flow-integrity hardening flag is applied. [NEEDS VERIFICATION]</li>
+  <li><strong>No provider-disabling logic exists for riscv64</strong> in any cmake file (grepped <code class="language-plaintext highlighter-rouge">onnxruntime_providers*.cmake</code>, <code class="language-plaintext highlighter-rouge">onnxruntime_external_deps.cmake</code>, <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> – zero matches); all non-CPU EPs simply default to OFF, so nothing needs to be explicitly disabled.</li>
 </ul><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
@@ -708,14 +747,6 @@
   
 </h2>
     
-<h3 id="61-mlas-kernel-coverage-comparison">
-  
-  
-    <a href="#61-mlas-kernel-coverage-comparison" class="anchor-heading" aria-labelledby="61-mlas-kernel-coverage-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.1 MLAS Kernel Coverage Comparison
-  
-  
-</h3>
-    
 
 <div class="table-wrapper"><table>
   <thead>
@@ -724,7 +755,6 @@
       <th>amd64</th>
       <th>aarch64</th>
       <th>riscv64</th>
-      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
@@ -732,170 +762,76 @@
       <td>FP32 SGEMM</td>
       <td>Hand-asm (SSE2/AVX/AVX-512 tiers)</td>
       <td>Hand-asm (NEON)</td>
-      <td>RVV intrinsics</td>
-      <td>Covered</td>
-    </tr>
-    <tr>
-      <td>FP32 SGEMM pack-B</td>
-      <td>Hand-asm</td>
-      <td>Hand-asm</td>
-      <td>RVV intrinsics</td>
-      <td>Covered</td>
-    </tr>
-    <tr>
-      <td>FP32 SGEMV (M=1)</td>
-      <td>Dedicated kernel</td>
-      <td>NEON</td>
-      <td>Via M=1 routing added in PR #28308</td>
-      <td>Covered</td>
+      <td>RVV intrinsics, covered</td>
     </tr>
     <tr>
       <td>INT8 GEMM (4 signedness variants)</td>
       <td>Hand-asm + VNNI</td>
-      <td>NEON Dot-product/Sdot/Smmla</td>
-      <td>RVV widening MAC</td>
-      <td>Covered (2-row tile missing, minor)</td>
+      <td>NEON Dot/Sdot/Smmla</td>
+      <td>RVV widening MAC, covered</td>
     </tr>
     <tr>
       <td>FP16 GEMM</td>
       <td>AVX-512 FP16 / AMX</td>
       <td>KleidiAI / NEON</td>
-      <td>RVV Zvfh</td>
-      <td>Covered (Zvfh required)</td>
+      <td>RVV Zvfh, covered (requires Zvfh hardware)</td>
     </tr>
     <tr>
-      <td>FP16 &lt;-&gt; FP32 cast</td>
-      <td>AVX-512</td>
-      <td>NEON</td>
-      <td>RVV Zvfhmin</td>
-      <td>Covered (Zvfh required)</td>
-    </tr>
-    <tr>
-      <td>Softmax</td>
-      <td>AVX2/AVX-512</td>
-      <td>NEON</td>
-      <td>RVV</td>
-      <td>Covered</td>
-    </tr>
-    <tr>
-      <td>Activation kernels (Erf, Tanh, Logistic, Exp, SiLU, GeluErf)</td>
+      <td>Softmax, activations (Erf/Tanh/Logistic/Exp/SiLU/GeluErf)</td>
       <td>x86 SIMD</td>
       <td>NEON</td>
-      <td>RVV</td>
-      <td>Covered</td>
+      <td>RVV, covered</td>
     </tr>
     <tr>
       <td>LayerNorm / RMSNorm</td>
       <td>x86 SIMD</td>
       <td>NEON</td>
-      <td>RVV</td>
-      <td>Covered</td>
+      <td>RVV, covered</td>
     </tr>
     <tr>
-      <td>Rotary Embedding (FP32)</td>
+      <td>RoPE</td>
       <td>x86 SIMD</td>
       <td>NEON</td>
-      <td>RVV</td>
-      <td>Covered</td>
+      <td>RVV, covered (FP16 path previously reported as stub; not re-confirmed this round, [NEEDS VERIFICATION])</td>
     </tr>
     <tr>
-      <td>Rotary Embedding (FP16)</td>
+      <td>NCHWc convolution, pooling</td>
       <td>x86 SIMD</td>
       <td>NEON</td>
-      <td><strong>nullptr (stub)</strong></td>
-      <td>Gap: FP16 RoPE not implemented</td>
+      <td>RVV, covered</td>
     </tr>
     <tr>
-      <td>NCHWc convolution (pointwise, depthwise)</td>
+      <td>LinearAttention / gated-delta attention</td>
       <td>x86 SIMD</td>
       <td>NEON</td>
-      <td>RVV</td>
-      <td>Covered</td>
+      <td>RVV, covered (added Sep 2026, PR #32710)</td>
     </tr>
     <tr>
-      <td>Max/Avg pooling</td>
+      <td>QNBitGemm (quantized LLM matmul)</td>
       <td>x86 SIMD</td>
       <td>NEON</td>
-      <td>RVV</td>
-      <td>Covered</td>
+      <td>RVV, covered (added Jul 2026, PR #29537)</td>
     </tr>
     <tr>
       <td>BF16 GEMM</td>
       <td>AVX-512 BF16 / AMX</td>
       <td>NEON / SME</td>
-      <td><strong>Not present</strong></td>
-      <td>Gap: no BF16 kernels</td>
+      <td>Not present per existing-report claim, not independently re-confirmed this round [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
       <td>KleidiAI integration</td>
       <td>N/A</td>
-      <td>Yes (ARM micro-kernel library)</td>
-      <td><strong>N/A</strong></td>
-      <td>Not applicable to riscv64</td>
+      <td>Yes</td>
+      <td>N/A – ARM-specific, no riscv64 equivalent</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="62-execution-provider-coverage">
-  
-  
-    <a href="#62-execution-provider-coverage" class="anchor-heading" aria-labelledby="62-execution-provider-coverage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.2 Execution Provider Coverage
-  
-  
-</h3>
-    
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>EP</th>
-      <th>amd64</th>
-      <th>aarch64</th>
-      <th>riscv64</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>CPU (MLAS)</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Substantial (11 kernel files, some gaps above)</td>
-    </tr>
-    <tr>
-      <td>XNNPACK</td>
-      <td>Supported</td>
-      <td>Supported</td>
-      <td>Build-system supported; runtime broken (see Section 9)</td>
-    </tr>
-    <tr>
-      <td>CUDA / TensorRT / ROCm</td>
-      <td>Supported</td>
-      <td>Partial</td>
-      <td>Not supported</td>
-    </tr>
-    <tr>
-      <td>CoreML / DirectML / OpenVINO</td>
-      <td>Supported</td>
-      <td>Partial</td>
-      <td>Not supported</td>
-    </tr>
-    <tr>
-      <td>SHL (T-HEAD heterogeneous)</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>Issue open, no implementation</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="63-quantitative-architecture-comparison">
-  
-  
-    <a href="#63-quantitative-architecture-comparison" class="anchor-heading" aria-labelledby="63-quantitative-architecture-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.3 Quantitative Architecture Comparison
-  
-  
-</h3>
-    
+<p><strong>Known correctness/semantics gap:</strong> the RISC-V F extension (IEEE 754-2019-vs-RISC-V spec divergence) canonicalizes all NaN results to <code class="language-plaintext highlighter-rouge">0x7fc00000</code>, discarding payload bits, which initially broke MLAS activation test assertions. This was worked around at the test level (accepting any canonical NaN rather than bit-exact match, <a href="https://github.com/microsoft/onnxruntime/pull/28538">PR #28538</a>) rather than being an implementation defect; the underlying ISA-level behavioral difference remains.</p>
 
-<p>The amd64 MLAS directory contains approximately 50 files of hand-written x86 assembly with SSE2/AVX/AVX-512 tiers. The aarch64 MLAS directory contains approximately 30 files of hand-written ARM assembly with NEON/Sdot/Smmla/Ummla tiers. The riscv64 directory contains 11 files of C++ RVV intrinsics. The riscv64 port covers the critical inference operators but has a shallower optimization depth (fewer tile variants, no assembly-level optimization, no multi-VLEN specialization beyond the VLEN=128 threshold check for NchwcBlockSize).</p><hr />
+<p><strong>Cross-architecture performance, not just feature coverage:</strong> independent third-party benchmarking on SpacemiT K3 (<a href="https://github.com/iree-org/iree/issues/24772">IREE issue #24772</a>) found ONNX Runtime consistently behind IREE, ExecuTorch, and LiteRT on the same riscv64 hardware for several model/precision combinations – e.g. INT8 ResNet50: ORT 1,012ms vs ExecuTorch 43.0ms vs IREE 196.0ms vs LiteRT 120.7ms; INT8 VGG16: ORT 2,474ms vs ExecuTorch 120.6ms vs IREE 772.0ms. The same study reports ONNX Runtime could not load bf16 models on this platform at all. Data not available: a controlled, apples-to-apples riscv64-vs-arm64 ONNX Runtime benchmark on equivalent hardware; no such study was found in this or prior research.</p>
+
+<p><strong>Independent RVV-acceleration benchmark</strong> (Sanchez-Yun et al., Univ. of Malaga, RISC-V Summit Europe 2026, custom RVV convolution EP overriding MLAS scalar fallback, Banana Pi BPI-F3, ORT v1.24.2, 6 CNNs, 50-run average): average 2.77x speedup, peak ~3x, ranging from 2.11x (AlexNet) to 3.35x (GoogleNet).</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -905,31 +841,54 @@
 </h2>
     
 
-<p><strong>No riscv64 CI exists in microsoft/onnxruntime.</strong></p>
+<p><strong>No riscv64 CI exists in microsoft/onnxruntime, confirmed exhaustively.</strong> A direct clone-and-grep of commit <code class="language-plaintext highlighter-rouge">9ae8f3e86b7ecb6f51759103f31fba0c35e94ccc</code> (HEAD, 2026-10-01) found zero “riscv”/”rv64”/”rvv” references across all 52 GitHub Actions workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code>, all 72 composite actions in <code class="language-plaintext highlighter-rouge">.github/actions/</code>, all 18 top-level Azure Pipelines definitions plus 106 stage/template files under <code class="language-plaintext highlighter-rouge">tools/ci_build/github/azure-pipelines/</code>, and all 209 <code class="language-plaintext highlighter-rouge">.yml</code>/<code class="language-plaintext highlighter-rouge">.yaml</code> files in the repository. No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists. This was independently verified twice in this research pass with identical results.</p>
 
-<p>This was confirmed by reading all 46 (or 47) GitHub Actions workflow files under <code class="language-plaintext highlighter-rouge">.github/workflows/</code>. None of the workflow files contain any reference to “riscv”, “riscv64”, or “rv64”. There is no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> in the repository.</p>
+<p><strong>What exists in the source tree but is wired to no CI trigger</strong> (no <code class="language-plaintext highlighter-rouge">on: push</code>, <code class="language-plaintext highlighter-rouge">pull_request</code>, <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>, or <code class="language-plaintext highlighter-rouge">schedule</code> references any of it, and no pipeline runner is configured for it):</p>
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">cmake/riscv64.toolchain.cmake</code></li>
+  <li><code class="language-plaintext highlighter-rouge">tools/scripts/build_riscv64.sh</code> (explicitly a manual, interactive sample script)</li>
+  <li><code class="language-plaintext highlighter-rouge">tools/ci_build/build.py</code> <code class="language-plaintext highlighter-rouge">--rv64</code>/<code class="language-plaintext highlighter-rouge">--riscv_toolchain_root</code>/<code class="language-plaintext highlighter-rouge">--riscv_qemu_path</code> flags</li>
+  <li><code class="language-plaintext highlighter-rouge">tools/ci_build/build_args.py</code> <code class="language-plaintext highlighter-rouge">--enable_rvv</code> flag</li>
+  <li>The riscv64 MLAS kernel sources and their CMake wiring</li>
+  <li><code class="language-plaintext highlighter-rouge">#if defined(MLAS_TARGET_RISCV64)</code> dispatch guards</li>
+</ol>
 
-<p><strong>Architectures in active CI:</strong></p>
-<ul>
-  <li>x64 Linux (Debug + Release)</li>
-  <li>arm64 Linux (Debug + Release)</li>
-  <li>Android arm64-v8a (NNAPI)</li>
-  <li>x64/arm64 Windows</li>
-  <li>macOS</li>
-  <li>iOS</li>
-  <li>WASM (via <code class="language-plaintext highlighter-rouge">linux-wasm-ci-build-and-test-workflow.yml</code>)</li>
-</ul>
+<p>This is exactly what <a href="https://github.com/microsoft/onnxruntime/issues/32465">Issue #32465</a> (opened Sep 7, 2026, still open and unanswered) states in its own words: a build/test path exists but is not activated in CI.</p>
 
-<p><strong>What the build system supports but CI does not exercise:</strong></p>
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">cmake/riscv64.toolchain.cmake</code> cross-compilation toolchain</li>
-  <li><code class="language-plaintext highlighter-rouge">--rv64</code>, <code class="language-plaintext highlighter-rouge">--riscv_toolchain_root</code>, <code class="language-plaintext highlighter-rouge">--riscv_qemu_path</code>, <code class="language-plaintext highlighter-rouge">--enable_rvv</code> flags in <code class="language-plaintext highlighter-rouge">build_args.py</code></li>
-  <li>QEMU-based cross-compile testing (configured in the toolchain file via <code class="language-plaintext highlighter-rouge">CMAKE_CROSSCOMPILING_EMULATOR</code>)</li>
-</ul>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Architecture</th>
+      <th>CI build</th>
+      <th>CI test</th>
+      <th>Hardware used</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>amd64</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>GitHub-hosted / Microsoft-hosted runners</td>
+    </tr>
+    <tr>
+      <td>aarch64</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>GitHub-hosted / Microsoft-hosted runners</td>
+    </tr>
+    <tr>
+      <td>riscv64</td>
+      <td><strong>No</strong></td>
+      <td><strong>No</strong></td>
+      <td>None (manual testing only, reported in PR descriptions on SpacemiT K3, Banana Pi BPI-F3, A210/C920V2)</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>Implication:</strong> Every merged RISC-V PR – including the 5 RVV kernel PRs from April-June 2026 – was merged without any automated build verification or test execution on riscv64 within the ORT CI pipeline. Review and benchmarking were done by the contributors on physical SpacemiT K3 hardware or QEMU locally. Regression testing is entirely manual.</p>
+<p><strong>RISE runner relevance:</strong> RISE operates native bare-metal riscv64 GitHub Actions runners on Scaleway EM-RV1 hardware (announced <a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">2026-03-24</a>), used by other projects (llama.cpp, PyTorch per the existing project record). No evidence was found that <code class="language-plaintext highlighter-rouge">microsoft/onnxruntime</code>’s own CI pipeline uses these runners; Issue #32465 asks for GitHub-hosted (not self-hosted) runners with QEMU rather than native hardware.</p>
 
-<p>PR #19239 (documentation companion to the initial cross-compile PR) explicitly documented approximately 6.8% test failure rate when running under QEMU. No subsequent PR has reported an updated failure rate or addressed those failures. [NEEDS VERIFICATION on whether the QEMU test failure rate has improved with the correctness fix in PR #27819]</p><hr />
+<p><strong>Concrete cost of the CI gap:</strong> a 2024-era SGEMM packing-width mismatch (root cause of <a href="https://github.com/microsoft/onnxruntime/issues/22530">Issue #22530</a>) went undetected for roughly 14 months (Jan 2024 to Mar 2026) until an unrelated WASM fix (PR #27819) incidentally corrected it. The still-open <a href="https://github.com/microsoft/onnxruntime/issues/20030">Issue #20030</a> correctness regression (86% to 15% accuracy) has been open and unaddressed for over 2 years as of this writing, and is the explicit motivating example cited in Issue #32465.</p><hr />
 <h2 id="8-distribution-and-release-status">
   
   
@@ -938,26 +897,24 @@
   
 </h2>
     
-<h3 id="81-official-upstream-binaries-microsoft">
+<h3 id="81-official-microsoft-binaries--none-for-riscv64">
   
   
-    <a href="#81-official-upstream-binaries-microsoft" class="anchor-heading" aria-labelledby="81-official-upstream-binaries-microsoft"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.1 Official Upstream Binaries (Microsoft)
+    <a href="#81-official-microsoft-binaries--none-for-riscv64" class="anchor-heading" aria-labelledby="81-official-microsoft-binaries--none-for-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.1 Official Microsoft binaries – none for riscv64
   
   
 </h3>
     
 
-<p><strong>No riscv64 binary exists in any official Microsoft release.</strong></p>
-
 <ul>
-  <li><strong>GitHub Releases (v1.27.0, latest as of research):</strong> 11 assets. Architectures: aarch64, x64 (Linux), arm64/arm64x/x64 (Windows), arm64 (macOS). No riscv64 asset. Release notes mention RVV code, but no riscv64 binary is shipped.</li>
-  <li><strong>PyPI – onnxruntime:</strong> 24 wheel filenames enumerated from the PyPI JSON API. Architecture tags: aarch64, x86_64, arm64 (macOS), win_amd64, win_arm64. No riscv64 wheel.</li>
-  <li><strong>PyPI – onnx (schema/IR library, not Runtime):</strong> 24 wheel filenames enumerated. Architecture tags: x86_64, aarch64, win32, win_amd64, win_arm64, universal2 (macOS), wasm32. No riscv64 wheel.</li>
+  <li><strong>PyPI <code class="language-plaintext highlighter-rouge">onnxruntime</code>:</strong> no riscv64 wheel in any checked version.</li>
+  <li><strong>PyPI <code class="language-plaintext highlighter-rouge">onnx</code> (schema):</strong> no riscv64 wheel exists across the entire version history, confirmed by downloading and parsing the complete PyPI JSON API response (996KB, all releases). One pass reported the latest version as 1.23.1 shipping wheels for x86_64, i686, aarch64, arm64 (macOS), ppc64le, and s390x; a separate verification pass reported the latest version as 1.22.0 shipping only <code class="language-plaintext highlighter-rouge">manylinux_2_28_x86_64</code> and <code class="language-plaintext highlighter-rouge">manylinux_2_28_aarch64</code>. These two passes disagree on the exact current release and its non-riscv64 architecture list [NEEDS VERIFICATION], but both independently confirm the one load-bearing fact: <strong>no riscv64 wheel has ever been published for <code class="language-plaintext highlighter-rouge">onnx</code> on PyPI.</strong></li>
+  <li><strong>GitHub Releases (<code class="language-plaintext highlighter-rouge">microsoft/onnxruntime</code>):</strong> checked v1.30.0, v1.29.1, and v1.28.2. Asset filenames are consistently <code class="language-plaintext highlighter-rouge">onnxruntime-linux-{aarch64,x64}-*.tgz</code>, <code class="language-plaintext highlighter-rouge">onnxruntime-osx-arm64-*.tgz</code>, <code class="language-plaintext highlighter-rouge">onnxruntime-win-{arm64,arm64x,x64}-*.zip</code>, plus CUDA variants and source archives – no filename contains “riscv” in any of the three releases. v1.30.0’s release notes mention a RISC-V-related fix (“restored runtime vector-extension checks on RISC-V,” i.e. PR #32406) but that is a source change, not a prebuilt riscv64 binary asset. v1.26.0 (tagged 2026-05-04) was the first release whose notes credit RVV CPU EP support (PR #28261), again as source code only.</li>
 </ul>
-<h3 id="82-third-party--distribution-packages">
+<h3 id="82-third-party-and-distribution-packages">
   
   
-    <a href="#82-third-party--distribution-packages" class="anchor-heading" aria-labelledby="82-third-party--distribution-packages"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.2 Third-Party / Distribution Packages
+    <a href="#82-third-party-and-distribution-packages" class="anchor-heading" aria-labelledby="82-third-party-and-distribution-packages"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.2 Third-party and distribution packages
   
   
 </h3>
@@ -968,53 +925,57 @@
     <tr>
       <th>Source</th>
       <th>Package</th>
-      <th>riscv64 Status</th>
+      <th>riscv64 status</th>
       <th>Version</th>
-      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Debian sid (buildd)</td>
-      <td>onnxruntime</td>
-      <td>YES – Installed</td>
-      <td>1.23.2+dfsg-6+b3</td>
-      <td>Debian-packaged, built from source. “+dfsg” = stripped. Predates all RVV merges.</td>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td><code class="language-plaintext highlighter-rouge">python3-onnxruntime</code>, <code class="language-plaintext highlighter-rouge">libonnxruntime1.23</code>, <code class="language-plaintext highlighter-rouge">libonnxruntime-dev</code>, <code class="language-plaintext highlighter-rouge">libonnxruntime-providers</code>, <code class="language-plaintext highlighter-rouge">onnxruntime-tools</code></td>
+      <td><strong>Yes, confirmed down to the binary.</strong> <code class="language-plaintext highlighter-rouge">python3-onnxruntime_1.23.2+dfsg-6ubuntu1_riscv64.deb</code>, exact size 11,661,018 bytes, verified via live download-page fetch.</td>
+      <td>1.23.2+dfsg-6ubuntu1</td>
+    </tr>
+    <tr>
+      <td>Ubuntu 26.04 “resolute”</td>
+      <td><code class="language-plaintext highlighter-rouge">python3-onnx</code>, <code class="language-plaintext highlighter-rouge">libonnx-dev</code>, <code class="language-plaintext highlighter-rouge">libonnx1t64</code>, <code class="language-plaintext highlighter-rouge">libonnx-testdata</code></td>
+      <td>Yes, confirmed with working riscv64 download links</td>
+      <td>1.20.0-1</td>
     </tr>
     <tr>
       <td>Debian sid (buildd)</td>
-      <td>onnx (schema)</td>
-      <td>YES – Installed</td>
+      <td><code class="language-plaintext highlighter-rouge">onnxruntime</code> (source package)</td>
+      <td>Yes, buildd status “Installed”; riscv64-patch status unconfirmed</td>
+      <td>1.23.2+dfsg</td>
+    </tr>
+    <tr>
+      <td>Debian sid (buildd)</td>
+      <td><code class="language-plaintext highlighter-rouge">onnx</code> (schema)</td>
+      <td>Yes, “Installed,” built on <code class="language-plaintext highlighter-rouge">rv-manda-03</code></td>
       <td>1.20.0-5</td>
-      <td>Built on rv-manda-03</td>
     </tr>
     <tr>
       <td>RISE wheel builder (GitLab project 56254198)</td>
-      <td>onnx (schema only, NOT Runtime)</td>
-      <td>YES</td>
-      <td>1.21.0</td>
-      <td>manylinux_2_39_riscv64, requires RISC-V-specific patches per release. Maintained by RISE (Rivos, BayLibre).</td>
+      <td><code class="language-plaintext highlighter-rouge">onnx</code></td>
+      <td>Yes, 18 package files across 5 versions</td>
+      <td>1.19.1, 1.20.0, 1.20.1, 1.21.0, 1.22.0 (<code class="language-plaintext highlighter-rouge">manylinux_2_39_riscv64</code>)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> (GitHub)</td>
+      <td><code class="language-plaintext highlighter-rouge">onnx</code></td>
+      <td>Yes</td>
+      <td>1.23.0, 1.23.1</td>
     </tr>
     <tr>
       <td>PyPI official</td>
-      <td>onnx</td>
-      <td>NO</td>
-      <td>1.22.0 (latest)</td>
-      <td>No riscv64 wheel</td>
-    </tr>
-    <tr>
-      <td>Ubuntu 24.04</td>
-      <td>onnx packages</td>
-      <td>N/A</td>
-      <td>1.14.1-2.1build2</td>
-      <td>Ubuntu 24.04 does not support riscv64 as a release architecture</td>
+      <td><code class="language-plaintext highlighter-rouge">onnx</code>, <code class="language-plaintext highlighter-rouge">onnxruntime</code></td>
+      <td><strong>No</strong></td>
+      <td>n/a</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Distinction:</strong> The RISE wheel builder provides riscv64 wheels for <code class="language-plaintext highlighter-rouge">onnx</code> (the schema and IR library) only, not for <code class="language-plaintext highlighter-rouge">onnxruntime</code> (the inference engine). These are different packages with different purposes.</p>
-
-<p><strong>Debian onnxruntime package note:</strong> Version 1.23.2+dfsg is 4 releases behind upstream (v1.27.0) and predates the SGEMM correctness fix (PR #27819, March 2026) and all RVV acceleration PRs (April-June 2026). Anyone relying on the Debian package for riscv64 gets a build without any of the recently merged RVV kernels and possibly with incorrect SGEMM outputs.</p><hr />
+<p><strong>What a user must do to get a working riscv64 ONNX Runtime binary today:</strong> either accept the Ubuntu 26.04 “resolute” or Debian sid package at version 1.23.2+dfsg (4 releases behind upstream v1.30.0, predating all merged RVV kernel PRs from PR #28261 onward – i.e. no RVV acceleration), or cross-compile from source using the toolchain and flags in Section 5, with no automated verification that the resulting binary is correct (Section 7). There is no officially released riscv64 wheel, GitHub release asset, or NuGet package from Microsoft at any version.</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -1023,182 +984,190 @@
   
 </h2>
     
-<h3 id="91-mlas-internal">
-  
-  
-    <a href="#91-mlas-internal" class="anchor-heading" aria-labelledby="91-mlas-internal"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 MLAS (Internal)
-  
-  
-</h3>
-    
 
-<p>MLAS is not an external dependency; it is internal to onnxruntime. The riscv64 RVV kernels are now present (11 files). See Section 4.1 for detail.</p>
-<h3 id="92-external-critical-dependencies">
-  
-  
-    <a href="#92-external-critical-dependencies" class="anchor-heading" aria-labelledby="92-external-critical-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 External Critical Dependencies
-  
-  
-</h3>
-    
+<p>Note: the <code class="language-plaintext highlighter-rouge">project-graph</code> MCP server used to cross-check Ubuntu 26.04 riscv64 package-graph availability failed to connect for this entire research session (<code class="language-plaintext highlighter-rouge">CONNECTION_CLOSED</code>, confirmed on repeated retries). This is a tooling failure, not an empty-result signal; where a Ubuntu riscv64 availability figure below is missing, it reflects this gap, not an absence of packaging.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dependency</th>
+      <th>Relation / criticality</th>
+      <th>Role</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
+      <th>Blocking issues</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>CMake</strong></td>
+      <td>build-dependency, critical</td>
+      <td>Build system, processes <code class="language-plaintext highlighter-rouge">riscv64.toolchain.cmake</code></td>
+      <td>Architecture-independent; packaged for riscv64 in all major distros</td>
+      <td>N/A (host tool)</td>
+      <td>Packaged in Debian/Ubuntu</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td><strong>riscv-gnu-toolchain</strong></td>
+      <td>build-dependency, critical</td>
+      <td>Cross-compilation toolchain (<code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu-gcc</code>/<code class="language-plaintext highlighter-rouge">g++</code>), bundles <code class="language-plaintext highlighter-rouge">qemu-riscv64</code></td>
+      <td>The pinned release (<code class="language-plaintext highlighter-rouge">2023.11.20</code>) is validated by the sample script; global GCC &gt;= 11.1 gate also applies</td>
+      <td>Used as the cross-build toolchain for QEMU-based testing</td>
+      <td>Downloaded from <code class="language-plaintext highlighter-rouge">riscv-collab/riscv-gnu-toolchain</code> GitHub Releases</td>
+      <td>Not wired to any CI (Section 7); only manually invoked</td>
+    </tr>
+    <tr>
+      <td><strong>googletest</strong></td>
+      <td>test-dependency, critical</td>
+      <td>ORT’s unit-test framework</td>
+      <td>Data not available: no targeted riscv64-specific search was conducted for googletest in this research pass; it is an architecture-agnostic C++ library with no SIMD/arch-specific code paths</td>
+      <td>Same</td>
+      <td>Not separately released; FetchContent</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td><strong>QEMU</strong></td>
+      <td>test-dependency, critical</td>
+      <td>User-mode riscv64 emulator (<code class="language-plaintext highlighter-rouge">qemu-riscv64</code>), wired as <code class="language-plaintext highlighter-rouge">CMAKE_CROSSCOMPILING_EMULATOR</code> for cross-compiled test execution</td>
+      <td>Mature riscv64 support; bundled in the recommended toolchain archive</td>
+      <td>Not itself exercised by any ORT CI (Section 7); Issue #32465 explicitly proposes adding a QEMU-based CI job</td>
+      <td>Packaged in all major distros</td>
+      <td>Not blocking QEMU itself; the gap is that no CI invokes it</td>
+    </tr>
+    <tr>
+      <td><strong>Protocol Buffers</strong></td>
+      <td>runtime-dependency, critical</td>
+      <td>Model (<code class="language-plaintext highlighter-rouge">.onnx</code>/<code class="language-plaintext highlighter-rouge">.pb</code>) serialization, C++ stub codegen</td>
+      <td>Builds (v21.12+ confirmed; current ORT pin v33.6)</td>
+      <td>Historical riscv64 build-fail issues (protobuf #14549, #12266) both closed/resolved</td>
+      <td>No pre-built <code class="language-plaintext highlighter-rouge">protoc</code> riscv64 binary in official releases (PRs #23205/#23206 to add one abandoned mid-2025)</td>
+      <td>Missing prebuilt <code class="language-plaintext highlighter-rouge">protoc</code> forces build-from-source in cross-compile workflows. Medium severity.</td>
+    </tr>
+    <tr>
+      <td><strong>ONNX (format/schema)</strong></td>
+      <td>runtime-dependency, critical</td>
+      <td>Model format/schema definitions and Python IR library (<code class="language-plaintext highlighter-rouge">onnx/onnx</code>)</td>
+      <td>Builds on riscv64</td>
+      <td>No riscv64 test concerns found</td>
+      <td>No official PyPI wheel; available via Ubuntu 26.04 resolute, Debian sid, RISE wheel builder, and <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> (see Section 8.2)</td>
+      <td>Inherits the protoc build concern from Protocol Buffers</td>
+    </tr>
+    <tr>
+      <td><strong>cpuinfo</strong></td>
+      <td>runtime-dependency, critical</td>
+      <td>CPU/ISA feature probing, feeds both XNNPACK and MLAS dispatch</td>
+      <td>Builds on Linux riscv64 (reported via QEMU CI upstream)</td>
+      <td><code class="language-plaintext highlighter-rouge">pytorch/cpuinfo</code> issue #124 “Add: RISC-V support” still open since 2022, indicating incomplete riscv64 support tracking</td>
+      <td>Not separately released; FetchContent only</td>
+      <td><strong>Missing <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> – direct root cause of XNNPACK issue #9886.</strong> Does not affect MLAS’s own runtime detection path (<code class="language-plaintext highlighter-rouge">getauxval</code>-based, Section 4.3), only the XNNPACK EP.</td>
+    </tr>
+    <tr>
+      <td><strong>XNNPACK</strong></td>
+      <td>runtime-dependency, optional</td>
+      <td>Alternate SIMD/neural-net microkernel CPU backend (XNNPACK EP)</td>
+      <td>Builds; a dedicated <code class="language-plaintext highlighter-rouge">cmake-linux-riscv64</code> CI job exists upstream</td>
+      <td><strong>Broken:</strong> 100+ RVV test targets fail (<a href="https://github.com/google/XNNPACK/issues/9886">google/XNNPACK#9886</a>, open since Apr 2026); operator tests excluded from CI. Also open: <a href="https://github.com/google/XNNPACK/issues/8052">#8052</a> (cross-compile transpose-test failure), <a href="https://github.com/google/XNNPACK/issues/4650">#4650</a> (RISC-V cpuinfo build error)</td>
+      <td>No tagged releases (zero tags); Debian ships a stale <code class="language-plaintext highlighter-rouge">0.0~git20241108</code></td>
+      <td>Unconditional FP16/Zvfh kernel activation without runtime detection causes wrong results or crashes. <strong>Critical only for the optional XNNPACK EP; ORT’s default MLAS CPU path is unaffected.</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Eigen</strong></td>
+      <td>runtime-dependency, optional</td>
+      <td>Header-only dense linear algebra (pre/post-processing, not ORT’s hot inference path)</td>
+      <td>Header-only, architecture-independent; compiles anywhere a C++ compiler targets riscv64</td>
+      <td>Not applicable (no arch-specific code paths)</td>
+      <td>Available as an arch-independent package</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td><strong>Abseil</strong></td>
+      <td>runtime-dependency, optional</td>
+      <td>C++ utilities: containers, hashing, CRC32C checksums, synchronization</td>
+      <td>Builds on riscv64</td>
+      <td>Open: <a href="https://github.com/abseil/abseil-cpp/issues/1702">abseil-cpp #1702</a> “Can’t link using riscv64 toolchain” (Jul 2024). Closed: #1684 (NegativeNaN test), #1561 (riscv protobuf-via-abseil build failure). The existing project record separately cites issue #1986 for the CRC32C gap; this round’s research surfaced #1702 instead. These may refer to the same underlying hardware-acceleration gap under different issue numbers. [NEEDS VERIFICATION]</td>
+      <td>Packaged in Debian/Ubuntu</td>
+      <td>CRC32C hardware acceleration unavailable on RISC-V; software fallback works (performance-only gap, not correctness)</td>
+    </tr>
+    <tr>
+      <td><strong>mimalloc</strong></td>
+      <td>runtime-dependency, optional</td>
+      <td>High-performance memory allocator</td>
+      <td>Builds on riscv64; an SV39 MMU alignment bug (<a href="https://github.com/microsoft/mimalloc/issues/939">#939</a>) was fixed Dec 2024</td>
+      <td>Two PRs (#1296/#1299) for <code class="language-plaintext highlighter-rouge">hwprobe</code>-based VA-space detection (SV39 vs SV57) were reported as open in the prior project record; not independently re-surfaced in this round’s search. [NEEDS VERIFICATION]</td>
+      <td>Available via vcpkg and some distros</td>
+      <td>Correctness unaffected; performance-only risk on non-default page-table configurations</td>
+    </tr>
+    <tr>
+      <td><strong>pthreadpool</strong></td>
+      <td>runtime-dependency, optional</td>
+      <td>Thread pool for XNNPACK dispatch</td>
+      <td>Architecture-agnostic C, builds on any target</td>
+      <td>No riscv64-specific issues found</td>
+      <td>FetchContent only, not separately released</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td><strong>FlatBuffers</strong></td>
+      <td>runtime-dependency, optional</td>
+      <td>ORT internal model serialization format</td>
+      <td>Builds on riscv64</td>
+      <td>No riscv64 test failures surfaced</td>
+      <td>Packaged in Debian/Ubuntu</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td><strong>pybind11</strong></td>
+      <td>runtime-dependency, optional</td>
+      <td>Python bindings for the onnxruntime Python package</td>
+      <td>Header-only, no arch-specific code</td>
+      <td>No riscv64 issues filed</td>
+      <td>Available as a Debian package</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td><strong>re2</strong></td>
+      <td>runtime-dependency, optional</td>
+      <td>Regex engine for graph pattern matching</td>
+      <td>Builds on riscv64</td>
+      <td>No riscv64-specific issues found (only unrelated ARM64 CI issues #527/#519)</td>
+      <td>Packaged in Debian/Ubuntu</td>
+      <td>None found</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Additional indirect dependencies found via <code class="language-plaintext highlighter-rouge">cmake/deps.txt</code> recursion, not in the originally supplied dependency set:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
-      <th>riscv64 Build</th>
-      <th>riscv64 Test</th>
-      <th>riscv64 Release</th>
-      <th>Blocking Issues</th>
+      <th>riscv64 status</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>XNNPACK</strong></td>
-      <td>CPU neural-network inference backend (alternative to MLAS for XNNPACK EP)</td>
-      <td>Builds. Dedicated <code class="language-plaintext highlighter-rouge">cmake-linux-riscv64</code> CI job exists in XNNPACK upstream.</td>
-      <td><strong>BROKEN:</strong> 100+ RVV test targets failing (<a href="https://github.com/google/XNNPACK/issues/9886">#9886</a>, open Apr 2026). Operator tests excluded from CI (<code class="language-plaintext highlighter-rouge">--label-exclude operator</code>). Root cause: FP16 kernels enabled unconditionally without runtime Zvfh detection.</td>
-      <td>No releases (zero tags). Debian: <code class="language-plaintext highlighter-rouge">0.0~git20241108</code> (debports, 18 months stale).</td>
-      <td><a href="https://github.com/google/XNNPACK/issues/9886">#9886</a>: broken Zvfh detection causes FP16 failures. Root cause is <code class="language-plaintext highlighter-rouge">pytorch/cpuinfo</code> missing <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code>. <strong>Critical for XNNPACK EP.</strong></td>
+      <td>mbedtls</td>
+      <td>TLS/crypto (networking support, e.g. with curl)</td>
+      <td>No riscv64-specific open issue found; the only historical hit (#3066, “hardening flag causes crash”) is 32-bit-only, not riscv64/rv64</td>
+      <td>New in the current <code class="language-plaintext highlighter-rouge">cmake/deps.txt</code>; not yet tracked by a dedicated project report</td>
     </tr>
     <tr>
-      <td><strong>cpuinfo</strong></td>
-      <td>CPU feature detection (ISA extension probing for XNNPACK and MLAS dispatch)</td>
-      <td>Builds on Linux riscv64. CI via QEMU.</td>
-      <td>CI via QEMU (PR #288 to upgrade to Ubuntu 24.04 was abandoned without merge). No native hardware CI.</td>
-      <td>Not a separately released artifact; FetchContent only.</td>
-      <td><code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> function missing – direct root cause of XNNPACK #9886.</td>
-    </tr>
-    <tr>
-      <td><strong>protobuf</strong></td>
-      <td>Model serialization (ONNX <code class="language-plaintext highlighter-rouge">.pb</code> files); generates C++ stubs</td>
-      <td>Builds as of v21.12</td>
-      <td>No dedicated riscv64 CI known at v21.12</td>
-      <td>No pre-built <code class="language-plaintext highlighter-rouge">protoc</code> binary for riscv64 in official releases. PRs #23205/#23206 abandoned mid-2025.</td>
-      <td>Missing <code class="language-plaintext highlighter-rouge">protoc</code> forces build-from-source in cross-compilation workflows. Medium severity.</td>
-    </tr>
-    <tr>
-      <td><strong>Eigen</strong></td>
-      <td>Dense linear algebra (pre/post-processing, optimizer math)</td>
-      <td>Header-only, architecture-independent</td>
-      <td>Not applicable</td>
-      <td><code class="language-plaintext highlighter-rouge">libeigen3-dev</code> available as arch-independent Debian package</td>
-      <td>No riscv64 vectorization in Eigen for ORT’s usage. Scalar fallback. Not a correctness blocker; performance could improve with RVV Eigen but ORT does not use Eigen for hot inference paths.</td>
-    </tr>
-    <tr>
-      <td><strong>Abseil-cpp</strong></td>
-      <td>C++ utilities (containers, hashing, CRC, synchronization)</td>
-      <td>Builds on riscv64</td>
-      <td>No dedicated riscv64 CI</td>
-      <td>Available in Debian/Ubuntu</td>
-      <td><a href="https://github.com/abseil/abseil-cpp/issues/1986">#1986</a>: CRC32C hardware acceleration missing for RISC-V (software fallback works; performance gap only). Not a correctness blocker.</td>
-    </tr>
-    <tr>
-      <td><strong>mimalloc</strong></td>
-      <td>High-performance memory allocator</td>
-      <td>Builds on riscv64. SV39 MMU alignment issue (#939) resolved Dec 2024.</td>
-      <td>No dedicated riscv64 CI known</td>
-      <td>Available via vcpkg and some Linux distros</td>
-      <td><a href="https://github.com/microsoft/mimalloc/issues/1299">#1299</a> / <a href="https://github.com/microsoft/mimalloc/issues/1296">#1296</a>: Two competing open PRs for runtime VA space detection via <code class="language-plaintext highlighter-rouge">hwprobe</code> (SV57 vs SV39). Not merged as of data collection. Correctness fine; potential performance degradation on non-default page table configurations.</td>
-    </tr>
-    <tr>
-      <td><strong>pthreadpool</strong></td>
-      <td>Thread pool for XNNPACK parallel dispatch</td>
-      <td>Architecture-agnostic C. Builds on any target.</td>
-      <td>No riscv64 issues filed.</td>
-      <td>FetchContent only.</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td><strong>FlatBuffers</strong></td>
-      <td>ORT internal model format serialization</td>
-      <td>Builds on riscv64.</td>
-      <td>No riscv64 test failures reported.</td>
-      <td>Available in Debian/Ubuntu.</td>
-      <td>None. Used at model load time, not inference.</td>
-    </tr>
-    <tr>
-      <td><strong>pybind11</strong></td>
-      <td>Python bindings for onnxruntime Python package</td>
-      <td>Header-only, no arch-specific code.</td>
-      <td>No riscv64 issues filed.</td>
-      <td>Available as Debian package.</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td><strong>re2</strong></td>
-      <td>Regular expression engine (graph pattern matching)</td>
-      <td>Builds on riscv64.</td>
-      <td>No riscv64 test concerns found.</td>
-      <td>Available in Debian/Ubuntu.</td>
-      <td>None.</td>
-    </tr>
-    <tr>
-      <td><strong>onnx schema</strong> (onnx/onnx)</td>
-      <td>ONNX schema and protobuf definitions</td>
-      <td>Builds on riscv64.</td>
-      <td>No riscv64 test concerns found.</td>
-      <td>Available as Python package (pure Python/protobuf). Depends on protobuf (see above).</td>
-      <td>Inherits protoc build concern from protobuf.</td>
+      <td>curl</td>
+      <td>HTTP client (networking)</td>
+      <td>No riscv64-specific issues found</td>
+      <td>New in the current <code class="language-plaintext highlighter-rouge">cmake/deps.txt</code>; not yet tracked by a dedicated project report</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="93-dependency-blocking-summary">
-  
-  
-    <a href="#93-dependency-blocking-summary" class="anchor-heading" aria-labelledby="93-dependency-blocking-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 Dependency Blocking Summary
-  
-  
-</h3>
-    
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Dependency</th>
-      <th>Blocks riscv64 ORT?</th>
-      <th>Severity</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>XNNPACK (#9886: Zvfh detection broken)</td>
-      <td>Yes – FP16 inference via XNNPACK EP produces wrong results or crashes on QEMU</td>
-      <td>Critical (for XNNPACK EP)</td>
-    </tr>
-    <tr>
-      <td>cpuinfo (missing <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code>)</td>
-      <td>Yes – root cause of XNNPACK #9886</td>
-      <td>Critical (for XNNPACK EP)</td>
-    </tr>
-    <tr>
-      <td>protobuf (no protoc riscv64 prebuilt)</td>
-      <td>Partial – blocks native cross-compilation workflows; workaround is build-from-source</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>mimalloc (#1299/#1296 open)</td>
-      <td>No – correctness fine</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>abseil-cpp (#1986 CRC32C)</td>
-      <td>No – software fallback present</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>MLAS (internal, 11 RVV kernel files)</td>
-      <td>Not a blocker – kernels are present and actively developed</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>Eigen, pthreadpool, FlatBuffers, re2, pybind11, onnx schema</td>
-      <td>No</td>
-      <td>None</td>
-    </tr>
-  </tbody>
-</table></div><hr />
+<p>Not applicable to riscv64 (ARM-specific or GPU-only, no riscv64 code path exists or is planned in ORT): <code class="language-plaintext highlighter-rouge">kleidiai</code>/<code class="language-plaintext highlighter-rouge">kleidiai-qmx</code> (ARM NEON/SME microkernels); <code class="language-plaintext highlighter-rouge">cutlass</code>, <code class="language-plaintext highlighter-rouge">deep_gemm</code>, <code class="language-plaintext highlighter-rouge">cudnn_frontend</code>, <code class="language-plaintext highlighter-rouge">dawn</code>, <code class="language-plaintext highlighter-rouge">dawn_agility_sdk</code>, <code class="language-plaintext highlighter-rouge">directx_headers</code>, <code class="language-plaintext highlighter-rouge">vulkan_headers</code> (CUDA/Vulkan/DirectX/WebGPU kernel libraries, gating GPU EPs only).</p>
+
+<p><strong>Cross-cutting finding:</strong> the dependency-chain’s actual riscv64 blocker is narrow and well-localized – <code class="language-plaintext highlighter-rouge">pytorch/cpuinfo</code>’s missing <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> function is the root cause of XNNPACK issue #9886 (100+ failing RVV tests from unconditional FP16/Zvfh kernel activation). Fixing it in <code class="language-plaintext highlighter-rouge">cpuinfo</code> would unblock both <code class="language-plaintext highlighter-rouge">cpuinfo</code>’s own riscv64 completeness and the XNNPACK execution provider. ORT’s default/primary CPU path (MLAS) does not depend on XNNPACK or on cpuinfo’s Zvfh detection and is unaffected by this gap.</p><hr />
 <h2 id="10-ecosystem-status">
   
   
@@ -1207,52 +1176,19 @@
   
 </h2>
     
-<h3 id="101-rise-project">
-  
-  
-    <a href="#101-rise-project" class="anchor-heading" aria-labelledby="101-rise-project"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 RISE Project
-  
-  
-</h3>
-    
 
-<p>RISE (RISC-V Software Ecosystem) is the Linux Foundation project coordinating riscv64 software enablement. Premier members include: Andes Technology, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, DAMO Academy (Alibaba), and Tenstorrent. General members include SpacemiT and ZTE – both of whom have contributed to the ORT riscv64 port.</p>
+<p>ONNX Runtime does not itself define a plugin/extension ecosystem analogous to Kubernetes operators or npm packages, but a real downstream Python-package ecosystem depends on <code class="language-plaintext highlighter-rouge">onnx</code>/<code class="language-plaintext highlighter-rouge">onnxruntime</code> being available on riscv64, and this ecosystem is actively being built out by RISE rather than by Microsoft:</p>
 
-<p>RISE has an AI/ML Working Group (lead: Leye Wang, Peking University / BOSC) focused on “optimizing open-source AI software for RISC-V architectures.”</p>
-
-<p><strong>RISE involvement with ONNX Runtime:</strong> No direct RISE project funding for ONNX Runtime was found. No RISE blog post mentions ONNX Runtime by name (27 blog posts scanned; search at riseproject.dev returned no ONNX results). The RISE wheel builder provides riscv64 wheels for <code class="language-plaintext highlighter-rouge">onnx</code> (the schema library) – not for <code class="language-plaintext highlighter-rouge">onnxruntime</code> – and requires RISC-V-specific patches for each release.</p>
-
-<p><strong>SiFive</strong> is both a RISE Premier member and the company that contributed the initial riscv64 cross-compile support (Phoebe Chen, PR #19238) and the first RVV kernels (velonica0, PR #28261 and #28518). The connection between RISE membership and ORT contributions appears to be personnel overlap rather than a funded work item.</p>
-<h3 id="102-hardware">
-  
-  
-    <a href="#102-hardware" class="anchor-heading" aria-labelledby="102-hardware"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 Hardware
-  
-  
-</h3>
-    
-
-<p>All published ORT riscv64 benchmarks were run on <strong>SpacemiT K3 (X60/X100 CPU, VLEN=256, RVA22 profile)</strong>. SpacemiT is a RISE General Member. No benchmarks from other riscv64 hardware platforms (SiFive HiFive, Sophgo SG2044, StarFive JH7110, etc.) appear in the merged PR data, though PR #28655 (open) reports data from an SG2044.</p>
-
-<p>The C906 accuracy regression (<a href="https://github.com/microsoft/onnxruntime/issues/20030">#20030</a>) involves a different platform with a non-standard ISA encoding (<code class="language-plaintext highlighter-rouge">rv64imafdcv0p7xthead</code>), which is T-HEAD’s pre-ratification RVV variant – not compatible with ratified RVV 1.0 kernels.</p>
-<h3 id="103-community-contribution-pattern">
-  
-  
-    <a href="#103-community-contribution-pattern" class="anchor-heading" aria-labelledby="103-community-contribution-pattern"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 Community Contribution Pattern
-  
-  
-</h3>
-    
-
-<p>Contributors active in 2026 ORT riscv64 work:</p>
 <ul>
-  <li><strong>velonica0</strong> (SiFive): PRs #28261, #28411, #28518</li>
-  <li><strong>qiurui144</strong>: PRs #28287, #28308, #28538</li>
-  <li><strong>zejianzhang1982</strong> (ZTE Corporation): PRs #28506, #28655</li>
-  <li><strong>hariharans29</strong> (Microsoft): reviewer and merger for all 2026 riscv64 PRs</li>
+  <li><strong>RISE GitLab wheel builder</strong> (<a href="https://riseproject.gitlab.io/python/wheel_builder/">riseproject.gitlab.io/python/wheel_builder</a>) lists <code class="language-plaintext highlighter-rouge">onnx</code> among 85 riscv64-targeted Python packages it builds wheels for.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code></strong> (GitHub, 26-repo org, this repo has 797 open issues) actively publishes riscv64 wheels for: <code class="language-plaintext highlighter-rouge">onnx</code> (v1.23.0, v1.23.1), <code class="language-plaintext highlighter-rouge">onnxoptimizer</code> (v0.4.2), <code class="language-plaintext highlighter-rouge">sherpa-onnx</code> (v1.13.7, v1.13.8), and <code class="language-plaintext highlighter-rouge">sherpa-onnx-core</code> (v1.13.6 through v1.13.8). An open issue in that repo (“sherpa-onnx riscv64 support,” #1847) tracks further work. This session’s GitHub access was scoped only to <code class="language-plaintext highlighter-rouge">riseproject-dev/sw-ecosystem</code>, so the <code class="language-plaintext highlighter-rouge">python-wheels</code> README could not be read directly; wheel-build activity is inferred from release/PR history (<code class="language-plaintext highlighter-rouge">riseproject-dev[bot]</code>-driven, plus at least one human contributor, luhenry).</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">k2-fsa/sherpa-onnx</code></strong>, a speech-recognition project built on top of <code class="language-plaintext highlighter-rouge">onnxruntime</code>, maintains its own riscv64 wheel builds and documentation (<a href="https://k2-fsa.github.io/sherpa/onnx/install/riscv64-embedded-linux.html">riscv64 embedded Linux install guide</a>), independently corroborating downstream demand.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">ucb-bar/onnxruntime-riscv</code></strong> is an unmaintained UC Berkeley fork from ~2021 focused on RISC-V accelerator support; not part of the upstream project and not actively developed.</li>
 </ul>
 
-<p>The ORT CONTRIBUTING.md requires feature requests to use the feature request template for alignment before coding. Non-trivial features are evaluated against the ORT roadmap. All the riscv64 RVV PRs followed this path and were accepted. The pattern suggests openness to well-scoped, self-maintained MLAS kernel additions, but no Microsoft commitment to own the platform long-term.</p><hr />
+<p>No direct RISE project funding for <code class="language-plaintext highlighter-rouge">microsoft/onnxruntime</code> itself was found. The one RISE blog post that touches ONNX (“Optimizing IREE Compilation and End-to-End Object Detection Pipeline for RISC-V,” <a href="https://riseproject.dev/2026/07/07/optimizing-iree-compilation-and-end-to-end-object-detection-pipeline-for-risc-v/">2026-07-07</a>, 10xEngineers in collaboration with RISE) uses ONNX only as an interchange format feeding IREE’s <code class="language-plaintext highlighter-rouge">iree-import-onnx</code>; it does not benchmark or fund ONNX Runtime itself.</p>
+
+<p><strong>Net picture:</strong> the downstream Python ecosystem that depends on ONNX/ONNX Runtime riscv64 availability is being filled by RISE and community wheel-building infrastructure (schema library <code class="language-plaintext highlighter-rouge">onnx</code>, and consumer packages <code class="language-plaintext highlighter-rouge">onnxoptimizer</code>/<code class="language-plaintext highlighter-rouge">sherpa-onnx</code>), not by official Microsoft release engineering, mirroring the distro-only availability pattern described in Section 8.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1261,67 +1197,83 @@
   
 </h2>
     
-<h3 id="111-unresolved-correctness-bugs">
-  
-  
-    <a href="#111-unresolved-correctness-bugs" class="anchor-heading" aria-labelledby="111-unresolved-correctness-bugs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.1 Unresolved Correctness Bugs
-  
-  
-</h3>
-    
 
-<p><strong><a href="https://github.com/microsoft/onnxruntime/issues/20030">#20030</a> – Inference accuracy collapse on LicheeRV Nano (C906)</strong></p>
-<ul>
-  <li>Status: Open (filed March 22, 2024), “contributions welcome”, no fix posted</li>
-  <li>Hardware: LicheeRV Nano (Allwinner D1, C906, <code class="language-plaintext highlighter-rouge">rv64imafdcv0p7xthead</code> – non-standard RVV variant)</li>
-  <li>Symptom: 3-layer CNN accuracy 15.23% (riscv64) vs 86.09% (x86). Compiler flags: <code class="language-plaintext highlighter-rouge">-mcpu=c906fdv -march=rv64imafdcv0p7xthead -mcmodel=medany -mabi=lp64d</code>.</li>
-  <li>Root cause: Unidentified. The C906 uses T-HEAD’s pre-ratification RVV 0.7.1 variant (<code class="language-plaintext highlighter-rouge">v0p7xthead</code>), which is incompatible with ratified RVV 1.0 intrinsics used in the ORT kernels.</li>
-  <li>Risk assessment: This issue predates all the RVV kernel work. The v0p7xthead ISA is not RVV 1.0 compliant; attempting to run RVV 1.0 code on C906 hardware is a configuration error. The bug is real but the affected hardware (Allwinner D1, StarFive JH7110 – both using the C906) falls outside the target ISA for the current kernel set.</li>
-</ul>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/20030">#20030</a></td>
+      <td>Inference accuracy collapse on LicheeRV Nano (C906)</td>
+      <td>Open since 2024-03-22</td>
+      <td><strong>Critical correctness</strong></td>
+      <td>86.09% to 15.23% accuracy on a 3-layer CNN. Hardware uses T-HEAD’s pre-ratification RVV 0.7.1 variant (<code class="language-plaintext highlighter-rouge">rv64imafdcv0p7xthead</code>), not ratified RVV 1.0 – possibly a hardware/ISA-mismatch configuration issue rather than an ORT defect, but unresolved and unexplained after 2+ years. Explicitly cited as motivation in #32465.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/32465">#32465</a></td>
+      <td>Activate existing RISCV64 QEMU build/test path in CI</td>
+      <td>Open since 2026-09-07, unanswered by maintainers</td>
+      <td><strong>Critical process gap</strong></td>
+      <td>Proposes running MLAS-only unit tests on GitHub-hosted runners, nightly or on <code class="language-plaintext highlighter-rouge">onnxruntime/core/mlas/**</code> changes. Three open questions to maintainers (hidden pipeline? scoped QEMU job acceptable? GitHub Actions vs Azure Pipelines?) remain unanswered.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/26187">#26187</a></td>
+      <td><code class="language-plaintext highlighter-rouge">DeviceDiscoveryTest.HasCpuDevice</code> fails on ppc64le/aarch64/loongarch64/riscv64 (Alpine/musl)</td>
+      <td>Open since 2025-09-28</td>
+      <td>Medium</td>
+      <td>Blocks Alpine Linux packaging of ORT v1.23.0+; assigned to edgchen1, no fix posted</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/microsoft/onnxruntime/issues/16544">#16544</a></td>
+      <td>Add SHL (T-HEAD) Execution Provider for RISC-V</td>
+      <td>Open since 2023-06-30</td>
+      <td>Low</td>
+      <td>No implementation activity, no comments</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/28655">PR #28655</a></td>
+      <td>SGEMM RVV optimization</td>
+      <td>Open</td>
+      <td>Medium</td>
+      <td>VLEN-portability regression flagged: hardcodes 4-wide blocks (<code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>), idling 3/4 of vector width on VLEN&gt;=256 hardware (the SpacemiT K3 used for most ORT benchmarks). Independent reviewer benchmark on K3 showed ~0.9% improvement vs the author’s claimed 15% on SG2044 (VLEN=128). A potential <code class="language-plaintext highlighter-rouge">k_shift</code> underflow was also flagged.</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/32583">PR #32583</a></td>
+      <td>RISC-V pause hint support for SpinPause</td>
+      <td>Open since 2026-09-14</td>
+      <td>Low</td>
+      <td>Continuing kernel/runtime work, unmerged as of Oct 2026</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/32585">PR #32585</a></td>
+      <td>Rewrite RVV CompInt8 QNBitGemm kernels</td>
+      <td>Open since 2026-09-14</td>
+      <td>Low</td>
+      <td>Continuing kernel work, unmerged</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/microsoft/onnxruntime/pull/32608">PR #32608</a></td>
+      <td>RVV fused activation fast path</td>
+      <td>Open since 2026-09-15</td>
+      <td>Low</td>
+      <td>Continuing kernel work, unmerged</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>NaN canonical form mismatch (PR <a href="https://github.com/microsoft/onnxruntime/pull/18115">#18115</a>, closed without merge)</strong></p>
+<p><strong>Closed but load-bearing history:</strong></p>
 <ul>
-  <li>The RISC-V F extension (ch. 11.3) canonicalizes all NaN results to <code class="language-plaintext highlighter-rouge">0x7fc00000</code>, discarding payload bits. IEEE 754-2019 retains NaN payload bits through arithmetic operations. This causes MLAS activation test failures on riscv64.</li>
-  <li>The symptom was addressed for the merged activation kernels via PR #28538 (relaxing test NaN comparison to accept any NaN rather than bit-exact match). However, the underlying behavioral difference between riscv64 and other platforms is inherent to the ISA and is not eliminated – it is worked around at the test level.</li>
-</ul>
-
-<p><strong>SGEMM packing-width mismatch (issue <a href="https://github.com/microsoft/onnxruntime/issues/22530">#22530</a>, closed May 2026)</strong></p>
-<ul>
-  <li>Root cause: <code class="language-plaintext highlighter-rouge">CopyPackB</code> packed 4-wide but <code class="language-plaintext highlighter-rouge">TransposePackB</code> consumed 16-wide (WASM scalar path inheritance). Fixed by PR #27819 (March 2026), a WASM scalar fix that incidentally resolved the riscv64 case.</li>
-  <li>The fix was not a riscv64-targeted patch. Riscv64 correctness was a side effect of fixing a WASM bug. This is relevant because it implies riscv64 was not a first-class test target – the bug existed from January 2024 (PR #19238) to March 2026 without a dedicated fix.</li>
-</ul>
-<h3 id="112-open-infrastructure-bugs">
-  
-  
-    <a href="#112-open-infrastructure-bugs" class="anchor-heading" aria-labelledby="112-open-infrastructure-bugs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Open Infrastructure Bugs
-  
-  
-</h3>
-    
-
-<p><strong><a href="https://github.com/microsoft/onnxruntime/issues/26187">#26187</a> – DeviceDiscoveryTest.HasCpuDevice fails on riscv64 / Alpine Linux</strong></p>
-<ul>
-  <li>Status: Open (filed September 28, 2025), assigned to edgchen1, no fix posted</li>
-  <li>Affects: onnxruntime v1.23.0 on Alpine Linux (musl libc), GCC 15.2.0</li>
-  <li>Confirmed on riscv64, aarch64, ppc64le, loongarch64</li>
-  <li>Impact: Blocks Alpine Linux packaging of ORT v1.23.0 and later</li>
-</ul>
-<h3 id="113-open-prs-with-known-issues">
-  
-  
-    <a href="#113-open-prs-with-known-issues" class="anchor-heading" aria-labelledby="113-open-prs-with-known-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 Open PRs with Known Issues
-  
-  
-</h3>
-    
-
-<p><strong>PR <a href="https://github.com/microsoft/onnxruntime/pull/28655">#28655</a> – SGEMM kernel optimization (open, ZTE Corporation)</strong></p>
-<ul>
-  <li>VLEN portability regression: proposes replacing VLEN-agnostic <code class="language-plaintext highlighter-rouge">vfloat32m4_t</code> kernel with <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code> hardcoded to 4-wide blocks. On VLEN&gt;=256 hardware (the SpacemiT K3 used for all ORT riscv64 benchmarks), leaves 3/4 of vector register width idle.</li>
-  <li>Independent benchmark by velonica0 on K3 hardware: ~0.9% improvement (within noise), contradicting the author’s claimed 15% on SG2044 (VLEN=128).</li>
-  <li>Potential underflow bug: reviewer hariharans29 flagged that <code class="language-plaintext highlighter-rouge">k_shift</code> computation could wrap around if <code class="language-plaintext highlighter-rouge">CountK == 0</code>.</li>
-  <li>3-row and 4-row tile paths dropped, reducing coverage.</li>
-  <li>Status: awaiting author response; no maintainer approval.</li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/17466">#17466</a> – the original tracking proposal (2023), closed by PR #28261.</li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/22530">#22530</a> – SGEMM <code class="language-plaintext highlighter-rouge">CopyPackB</code>/<code class="language-plaintext highlighter-rouge">TransposePackB</code> packing-width mismatch producing numerically wrong output specifically for <code class="language-plaintext highlighter-rouge">torch.nn.Linear</code> layers; root cause lived in the WASM scalar code shared with riscv64 from Jan 2024 to Mar 2026, fixed incidentally by PR #27819, not by a riscv64-targeted patch.</li>
+  <li>The NaN canonical-form divergence (IEEE 754 payload-preserving vs RISC-V’s mandated <code class="language-plaintext highlighter-rouge">0x7fc00000</code>) was worked around at the test level by PR #28538; the underlying ISA-level behavior difference is unchanged.</li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/24596">#24596</a> – RVV-in-MLAS plan, superseded by PR #28261.</li>
 </ul><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
@@ -1332,226 +1284,94 @@
 </h2>
     
 
-<p><strong>Objection 1: “The XNNPACK EP is broken on riscv64, so ORT cannot use accelerated inference via that path.”</strong></p>
-<ul>
-  <li>Valid. The XNNPACK upstream CI has 100+ failing riscv64 tests (issue #9886) due to unconditional FP16 kernel activation without runtime Zvfh detection. The root cause (missing <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> in <code class="language-plaintext highlighter-rouge">pytorch/cpuinfo</code>) has not been fixed as of the research data. Using <code class="language-plaintext highlighter-rouge">--use_xnnpack</code> on riscv64 will produce incorrect results for FP16 model paths or crash under QEMU.</li>
-  <li>Mitigation: MLAS (the default CPU EP) is not affected. All 11 RVV kernel files in MLAS are independent of XNNPACK.</li>
-</ul>
+<p><strong>Objection 1: “The XNNPACK EP is broken on riscv64.”</strong>
+Valid. Upstream XNNPACK has 100+ failing riscv64 tests (issue #9886), root-caused to a missing <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> function. <code class="language-plaintext highlighter-rouge">--use_xnnpack</code> on riscv64 risks incorrect FP16 results or crashes. Mitigation: ORT’s default CPU EP (MLAS) does not depend on XNNPACK and is unaffected.</p>
 
-<p><strong>Objection 2: “There is no CI, so regressions will go undetected.”</strong></p>
-<ul>
-  <li>Valid. There is no automated riscv64 build or test in ORT CI. Contributors do manual testing on K3 hardware or QEMU. Regressions in non-riscv64 code paths (e.g., a WASM fix incidentally breaking riscv64, as with issue #22530 in reverse) could go undetected for months.</li>
-  <li>Mitigation: Adding a QEMU-based CI job is a relatively bounded engineering task. QEMU riscv64 CI is already in use upstream for cpuinfo, oneDNN, and other projects.</li>
-</ul>
+<p><strong>Objection 2: “There is no CI, so regressions go undetected.”</strong>
+Valid and demonstrated. No riscv64 CI exists anywhere in the repository (Section 7, verified exhaustively across 52 workflow files, 72 composite actions, and 124 Azure Pipelines files). The concrete, already-realized cost is the ~14-month-undetected SGEMM packing bug (#22530) and the still-open 2+-year accuracy regression (#20030). Issue #32465 proposes a bounded fix (MLAS-only QEMU tests on GitHub-hosted runners) but is unanswered as of this writing.</p>
 
-<p><strong>Objection 3: “No official binary exists for riscv64, so deployment requires building from source.”</strong></p>
-<ul>
-  <li>Valid. No upstream Microsoft binary (PyPI wheel, GitHub Release tarball) exists for riscv64. The Debian package (v1.23.2) predates all RVV acceleration. Any deployment on riscv64 today requires a cross-compile from source using the toolchain from PR #19238.</li>
-  <li>Mitigation: Publishing a PyPI wheel requires CI (objection 2) and a release engineering decision from Microsoft.</li>
-</ul>
+<p><strong>Objection 3: “No official binary exists, so deployment requires building from source.”</strong>
+Valid. No PyPI wheel or GitHub Release asset exists for riscv64 at any checked version (v1.28.2 through v1.30.0). The only path to a prebuilt binary is the Ubuntu 26.04/Debian sid package at v1.23.2+dfsg, which predates every merged RVV kernel PR.</p>
 
-<p><strong>Objection 4: “The Debian riscv64 package provides RVV-accelerated ORT.”</strong></p>
-<ul>
-  <li>Invalid. The Debian package is version 1.23.2+dfsg. All RVV kernels merged April-June 2026 (PRs #28261, #28308, #28411, #28518). The Debian package does not contain any RVV acceleration.</li>
-</ul>
+<p><strong>Objection 4: “The Debian/Ubuntu riscv64 package provides RVV-accelerated ORT.”</strong>
+Invalid. The packaged version (1.23.2+dfsg) predates PR #28261 (Apr 2026, the first merged RVV kernel) by several releases; the distro package ships scalar-only MLAS kernels on riscv64.</p>
 
-<p><strong>Objection 5: “RISC-V support is at parity with arm64.”</strong></p>
-<ul>
-  <li>Invalid. The aarch64 MLAS directory contains approximately 30 files of hand-written assembly with multiple NEON/Sdot/Smmla/Ummla tiers plus KleidiAI integration. The riscv64 directory contains 11 C++ intrinsic files with no assembly and no multi-VLEN specialization beyond a single VLEN threshold check. aarch64 has full CI coverage; riscv64 has none. aarch64 has official Microsoft binary releases; riscv64 has none.</li>
-</ul>
+<p><strong>Objection 5: “RISC-V support is at parity with arm64.”</strong>
+Invalid. aarch64 has ~19 hand-written assembly files plus KleidiAI integration, full CI coverage, and official Microsoft binaries. riscv64 has 15 C++ intrinsic files with no assembly, no multi-VLEN specialization beyond basic <code class="language-plaintext highlighter-rouge">vsetvli</code> dynamic sizing, no CI, and no official binary.</p>
 
-<p><strong>Objection 6: “The port is stable because multiple PRs have been merged.”</strong></p>
-<ul>
-  <li>Partially valid. The recent burst of merges (5 PRs in 10 weeks) demonstrates active development. However, correctness issue #20030 remains open, the DeviceDiscovery test failure (#26187) blocks Alpine Linux packaging, and the SGEMM was broken for two years (January 2024 to March 2026) before it was incidentally fixed by a WASM patch. The track record indicates that riscv64 correctness issues are not caught quickly without CI.</li>
-</ul><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Objection 6: “The port is stable because many PRs have merged recently.”</strong>
+Partially valid. 9+ kernel PRs merged April-September 2026 demonstrate active, accelerating development. But #20030 remains open, #26187 blocks Alpine packaging, and the SGEMM correctness bug (#22530) went uncaught for 14 months precisely because nothing automatically tested riscv64. Recent merge velocity does not substitute for CI coverage.</p><hr />
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
 
-<p>The basic functional path – cross-compiling ORT for riscv64, loading an ONNX model, running FP32 inference through the CPU EP with RVV MLAS kernels – works as of June 2026, provided the build uses the merged RVV kernels (post-PR #28261) and not the Debian package. The following functional gaps remain:</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Gap</th>
-      <th>Severity</th>
-      <th>Upstream Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>FP16 RotaryEmbedding (RoPE) – stub (nullptr)</td>
-      <td>Medium – affects LLM inference with FP16 inputs</td>
-      <td>No PR filed</td>
-    </tr>
-    <tr>
-      <td>BF16 GEMM</td>
-      <td>Medium – increasingly common in quantized LLM workflows</td>
-      <td>No activity</td>
-    </tr>
-    <tr>
-      <td>XNNPACK EP broken for FP16 (dependency: cpuinfo missing Zvfh detection)</td>
-      <td>High – renders XNNPACK EP unsafe to use</td>
-      <td>Open: XNNPACK #9886, cpuinfo missing function</td>
-    </tr>
-    <tr>
-      <td>SHL EP (T-HEAD hardware)</td>
-      <td>Low – niche hardware, single open issue with no implementation</td>
-      <td>Issue #16544, open since June 2023</td>
-    </tr>
-    <tr>
-      <td>DeviceDiscoveryTest.HasCpuDevice failure on Alpine Linux / musl</td>
-      <td>Medium – blocks packaging</td>
-      <td>Issue #26187, open since September 2025</td>
-    </tr>
-    <tr>
-      <td>Inference correctness on T-HEAD C906 (<code class="language-plaintext highlighter-rouge">v0p7xthead</code>)</td>
-      <td>Medium – affects deployed Allwinner D1 / StarFive JH7110 hardware</td>
-      <td>Issue #20030, open since March 2024, unresolved</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="132-performance-optimization">
-  
-  
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>Benchmark data (all from SpacemiT K3, VLEN=256, comparing RVV to scalar MLAS fallback):</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Kernel</th>
-      <th>Speedup vs scalar</th>
-      <th>Source PR</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>FP32 SGEMM (compute-only)</td>
-      <td>3.3x - 3.6x</td>
-      <td>#28261</td>
-    </tr>
-    <tr>
-      <td>FP32 Softmax</td>
-      <td>3.0x - 3.2x</td>
-      <td>#28261</td>
-    </tr>
-    <tr>
-      <td>Depthwise NCHWc Conv</td>
-      <td>10.8x - 12.5x</td>
-      <td>#28411</td>
-    </tr>
-    <tr>
-      <td>Pointwise NCHWc Conv</td>
-      <td>29.4x - 30.4x</td>
-      <td>#28411</td>
-    </tr>
-    <tr>
-      <td>Max Pooling</td>
-      <td>12.5x - 20.0x</td>
-      <td>#28411</td>
-    </tr>
-    <tr>
-      <td>INT8 GEMV (K=N=384, 1 thread)</td>
-      <td>7.1x vs compiler autovec</td>
-      <td>#28308</td>
-    </tr>
-    <tr>
-      <td>INT8 end-to-end bge-base-zh-v1.5</td>
-      <td>2.93x</td>
-      <td>#28308</td>
-    </tr>
-    <tr>
-      <td>FP16 GEMM (32x768x768)</td>
-      <td>187.9x</td>
-      <td>#28518</td>
-    </tr>
-    <tr>
-      <td>FP16/FP32 Cast</td>
-      <td>4.8x - 11.3x</td>
-      <td>#28518</td>
-    </tr>
-    <tr>
-      <td>RotaryEmbedding (dim=256, non-interleaved)</td>
-      <td>13.0x</td>
-      <td>#28518</td>
-    </tr>
-    <tr>
-      <td>RMSNorm (hidden=4096)</td>
-      <td>6.6x</td>
-      <td>#28518</td>
-    </tr>
-    <tr>
-      <td>Qwen3-0.6B token generation (end-to-end, K3)</td>
-      <td>6.5 tok/s (FP32)</td>
-      <td>#28518</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p><strong>No riscv64 vs arm64 or riscv64 vs x86 cross-architecture benchmarks were found in the research data.</strong> All published data is within-platform (riscv64 scalar vs RVV). Data not available: cross-architecture comparison of ORT riscv64 vs ORT aarch64 on equivalent hardware.</p>
-
-<p><strong>Performance gaps remaining:</strong></p>
 <ul>
-  <li>FP32 SGEMM: the open PR #28655 claims 15% further improvement but is under review for VLEN portability concerns and shows only 0.9% on K3 hardware. No additional merged optimization work is in progress.</li>
-  <li>INT8 GEMV memory-bound regression at large sizes (K=N=4096: 0.82x vs autovec) per #28308 benchmark data.</li>
-  <li>FP16 paths require Zvfh (ratified RISC-V extension for half-precision vector). Hardware support varies; K3 supports it, but many deployed riscv64 boards do not.</li>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> distro</li>
 </ul>
-<h3 id="133-cicd-infrastructure">
+
+<p>ONNX Runtime (microsoft/onnxruntime) has no upstream riscv64 CI: a direct grep of all 52 GitHub Actions workflow files, 72 composite actions, and the full Azure Pipelines tree (18 top-level pipelines + 106 stage/template files) found zero “riscv”/”rv64” references, so none of the 15 merged RVV MLAS kernel files (e.g. <a href="https://github.com/microsoft/onnxruntime/pull/28261">PR #28261</a>) are built or tested automatically. Upstream also publishes no riscv64 binaries (PyPI wheels, GitHub Release assets checked through v1.30.0). The only riscv64 availability is a Debian sid build of the <code class="language-plaintext highlighter-rouge">onnxruntime</code> source package (1.23.2+dfsg, buildd status “Installed”), with riscv64-patch status unconfirmed, so the distribution floor caps the color at orange (downstream-only) rather than yellow. ONNX Runtime is a general-purpose ML inference engine, not a RISC-V-specific optimization library – its value proposition is architecture-agnostic model execution, not RISC-V performance – so no optimization-level rating applies to this project.</p>
+
+<p><strong>Pending work that could change the grade:</strong> Open issue <a href="https://github.com/microsoft/onnxruntime/issues/32465">#32465</a> (Sep 2026) explicitly asks Microsoft to wire the existing riscv64/QEMU build-test path into CI, citing the 2-year-unresolved correctness bug <a href="https://github.com/microsoft/onnxruntime/issues/20030">#20030</a> (86% to 15% accuracy collapse on a RISC-V board) as motivation. Four open PRs (<a href="https://github.com/microsoft/onnxruntime/pull/28655">#28655</a>, <a href="https://github.com/microsoft/onnxruntime/pull/32583">#32583</a>, <a href="https://github.com/microsoft/onnxruntime/pull/32585">#32585</a>, <a href="https://github.com/microsoft/onnxruntime/pull/32608">#32608</a>) continue RVV kernel work as of September 2026. Contributing companies SiFive and SpacemiT are RISE members (though <code class="language-plaintext highlighter-rouge">onnxruntime</code> itself is not a RISE member project), and SiFive authored both the original cross-compile support (<a href="https://github.com/microsoft/onnxruntime/pull/19238">PR #19238</a>) and the first RVV kernels (<a href="https://github.com/microsoft/onnxruntime/pull/28261">PR #28261</a>), suggesting possible future RISE-adjacent CI investment, though none has materialized as of this writing.</p><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing new work: RISE has not funded or operated CI for <code class="language-plaintext highlighter-rouge">microsoft/onnxruntime</code> itself. RISE’s contribution to this project’s riscv64 story is indirect – member-company engineers (SiFive, likely SpacemiT) authoring kernel PRs, and separate RISE infrastructure (wheel builder, <code class="language-plaintext highlighter-rouge">python-wheels</code> repo) covering the <code class="language-plaintext highlighter-rouge">onnx</code> schema package and downstream consumers (<code class="language-plaintext highlighter-rouge">sherpa-onnx</code>, <code class="language-plaintext highlighter-rouge">onnxoptimizer</code>), not <code class="language-plaintext highlighter-rouge">onnxruntime</code> itself. No work below is already covered by RISE funding.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>Adding riscv64 CI to ORT requires the following components:</p>
-
-<ol>
-  <li>A riscv64 QEMU-based Docker image (analogous to existing <code class="language-plaintext highlighter-rouge">aarch64/</code> Docker directory). No such image exists.</li>
-  <li>A GitHub Actions workflow triggering the riscv64 cross-compile + QEMU test run.</li>
-  <li>A decision on which tests to run (the 6.8% failure rate documented in PR #19239 is a ceiling; the correctness fixes since then may have reduced it, but the current failure rate is unknown).</li>
-  <li>Optionally: native hardware CI using RISE’s free riscv64 CI runners (mentioned in the RISE blog “RISE RISC-V Runners: six weeks in”, May 2026, which lists llama.cpp and PyTorch as users).</li>
-</ol>
-
-<p>Without CI, every MLAS kernel addition is merged without automated regression verification. The two-year window during which SGEMM produced incorrect results (January 2024 to March 2026) is the concrete cost of this gap.</p>
-<h3 id="134-ecosystem-enablement">
+<p>The functional CPU-EP inference path (cross-compile, load an ONNX model, run FP32/INT8/FP16 inference via MLAS RVV kernels) works as of the Sep 2026 kernel set, provided the build uses source post-#28261 rather than the stale Debian package. Remaining gaps: the FP16 RoPE and BF16 GEMM gaps reported in the prior project record were not re-confirmed this round [NEEDS VERIFICATION]; the XNNPACK EP is unsafe to use for FP16 paths pending the <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> fix; the <code class="language-plaintext highlighter-rouge">DeviceDiscoveryTest.HasCpuDevice</code> failure blocks Alpine/musl packaging (#26187); the C906/non-ratified-RVV correctness issue (#20030) remains unexplained.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p><strong>PyPI wheel:</strong> Publishing an official <code class="language-plaintext highlighter-rouge">onnxruntime</code> wheel to PyPI for riscv64 is gated on (a) CI that produces and validates the wheel, and (b) a Microsoft release engineering decision. The RISE wheel builder currently covers <code class="language-plaintext highlighter-rouge">onnx</code> (schema library) but not <code class="language-plaintext highlighter-rouge">onnxruntime</code>. Filling this gap would make ORT accessible to Python-based ML workflows on riscv64 without a source build.</p>
-
-<p><strong>Debian package currency:</strong> The current Debian sid package (v1.23.2) is 4 releases behind and has none of the RVV acceleration. Upstreaming a Debian package update to v1.27.0 is a Debian maintainer task, not an ORT task, but RVV acceleration will be absent from the Debian ecosystem until this is updated.</p>
-
-<p><strong>cpuinfo fix:</strong> Upstreaming <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> to <code class="language-plaintext highlighter-rouge">pytorch/cpuinfo</code> unblocks the XNNPACK EP for Zvfh-capable hardware. This is a targeted, bounded contribution that resolves a chain of issues (#9886 in XNNPACK, and downstream FP16 inference correctness in any ORT build using <code class="language-plaintext highlighter-rouge">--use_xnnpack</code>).</p>
-<h3 id="135-summary-table">
+<p>Multiple independently reported benchmarks show the merged RVV kernels deliver real speedups over scalar fallback (2.77x average across 6 CNNs per the Malaga/RISC-V Summit study; 2-3x per PR #32540’s model-level benchmarks; up to 9.7x on reduce-min/max micro-benchmarks per PR #32710). However, third-party cross-framework comparison on identical riscv64 hardware (IREE issue #24772) shows ONNX Runtime trailing ExecuTorch, IREE, and LiteRT on several model/precision combinations, most severely at INT8 (e.g. ResNet50: ORT 1,012ms vs ExecuTorch 43.0ms), and unable to load bf16 models at all on that platform. Closing this competitive gap, not just beating ORT’s own scalar fallback, is unaddressed work with no open PR targeting it specifically.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+
+<p>The single highest-leverage, best-scoped investment is standing up the CI job proposed in Issue #32465: a GitHub-hosted-runner, QEMU-based, MLAS-unit-test-only job triggered on changes under <code class="language-plaintext highlighter-rouge">onnxruntime/core/mlas/**</code>. This requires (a) a riscv64 Docker image (none currently exists; only <code class="language-plaintext highlighter-rouge">aarch64/</code> and <code class="language-plaintext highlighter-rouge">x86_64/</code> exist under <code class="language-plaintext highlighter-rouge">tools/ci_build/github/linux/docker/</code>), and (b) a GitHub Actions workflow invoking <code class="language-plaintext highlighter-rouge">build.py --rv64 --riscv_qemu_path ... --enable_rvv</code>. This is a bounded, well-understood engineering task; the blocker is a maintainer decision, which has sat unanswered for over three weeks as of this writing (filed Sep 7, 2026, data cutoff Oct 1, 2026).</p>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>Publishing an official riscv64 <code class="language-plaintext highlighter-rouge">onnxruntime</code> PyPI wheel is gated on CI existing (14.3) plus a Microsoft release-engineering decision; RISE’s wheel builder currently covers only the <code class="language-plaintext highlighter-rouge">onnx</code> schema package, not <code class="language-plaintext highlighter-rouge">onnxruntime</code> itself, leaving a gap for Python-based ML workflows on riscv64 that want RVV-accelerated inference without a source build. Upstreaming <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> to <code class="language-plaintext highlighter-rouge">pytorch/cpuinfo</code> is a small, targeted contribution that resolves the XNNPACK EP blocker as a side effect.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1569,94 +1389,70 @@
   </thead>
   <tbody>
     <tr>
-      <td>Functional</td>
-      <td>Fix FP16 RotaryEmbedding (currently nullptr stub)</td>
-      <td>1-2</td>
-      <td>MLAS contributor</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>Add BF16 GEMM kernel</td>
-      <td>3-5</td>
-      <td>MLAS contributor</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>Fix DeviceDiscoveryTest.HasCpuDevice on musl libc (issue #26187)</td>
-      <td>1-2</td>
-      <td>Microsoft (assigned to edgchen1) or contributor</td>
-      <td>Medium</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>Add <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> to pytorch/cpuinfo (unblocks XNNPACK #9886)</td>
+      <td>CI/CD</td>
+      <td>Stand up a riscv64 Docker image for cross-compile builds</td>
       <td>1</td>
-      <td>cpuinfo contributor / RISE AI-ML WG</td>
+      <td>Microsoft or contributor</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Add a riscv64 QEMU-based GitHub Actions workflow answering Issue #32465</td>
+      <td>1-2</td>
+      <td>Microsoft (decision needed) or contributor</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Investigate and resolve the C906/pre-ratified-RVV correctness bug (#20030), or document it as an unsupported hardware configuration</td>
+      <td>2-4</td>
+      <td>Contributor, needs physical or emulated C906 access</td>
       <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Fix <code class="language-plaintext highlighter-rouge">cpuinfo_has_riscv_zvfh()</code> in pytorch/cpuinfo, unblocking XNNPACK #9886</td>
+      <td>1</td>
+      <td>cpuinfo contributor / RISE AI-ML working group</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Fix <code class="language-plaintext highlighter-rouge">DeviceDiscoveryTest.HasCpuDevice</code> on musl libc (#26187)</td>
+      <td>1-2</td>
+      <td>Microsoft (assigned, edgchen1) or contributor</td>
+      <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Resolve PR #28655 (SGEMM VLEN portability + missing tile paths)</td>
+      <td>Merge/rework PR #28655 to restore VLEN-agnostic SGEMM tiling without the VLEN=256 regression</td>
       <td>2-3</td>
-      <td>zejianzhang1982 (ZTE) + hariharans29 review</td>
+      <td>ZTE author + Microsoft review</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>INT8 GEMV memory-bound regression at large sizes</td>
-      <td>2-4</td>
+      <td>Close the ORT-vs-ExecuTorch/IREE/LiteRT competitive gap at INT8, per IREE issue #24772 data</td>
+      <td>4-8</td>
       <td>MLAS contributor</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Add riscv64 Docker image for cross-compile builds</td>
-      <td>1</td>
-      <td>Microsoft or contributor</td>
-      <td>Critical</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Add riscv64 QEMU-based GitHub Actions workflow</td>
-      <td>1-2</td>
-      <td>Microsoft or contributor</td>
-      <td>Critical</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Investigate and reduce 6.8% QEMU test failure rate (documented in PR #19239)</td>
-      <td>2-4</td>
-      <td>Contributor</td>
-      <td>High</td>
+      <td>Medium</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Publish official riscv64 onnxruntime PyPI wheel</td>
-      <td>2-4 (plus Microsoft release infra decision)</td>
+      <td>Publish an official riscv64 <code class="language-plaintext highlighter-rouge">onnxruntime</code> PyPI wheel</td>
+      <td>2-4 (plus Microsoft release-infra decision)</td>
       <td>Microsoft</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Update Debian onnxruntime package to v1.27.0</td>
-      <td>0.5 (Debian maintainer task)</td>
-      <td>Debian maintainer</td>
+      <td>Update the Debian/Ubuntu <code class="language-plaintext highlighter-rouge">onnxruntime</code> package to a current release with RVV kernels</td>
+      <td>0.5 (distro maintainer task)</td>
+      <td>Debian/Ubuntu maintainer</td>
       <td>Medium</td>
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
 <h2 id="15-references">
   
   
@@ -1668,34 +1464,61 @@
 
 <ul>
   <li><a href="https://github.com/microsoft/onnxruntime">microsoft/onnxruntime – main repository</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/19238">PR #19238 – Enable RISC-V 64-bit Cross-Compiling Support</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/19239">PR #19239 – Cross-Compilation Documentation for RISC-V</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/18115">PR #18115 – Basic RISC-V Support (closed)</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/21261">PR #21261 – Scalar MlasSgemm CopyPackB for RISCV (closed)</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/27819">PR #27819 – fix non-SIMD sgemm implementation</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/28110">PR #28110 – Add MLAS_TARGET_RISCV64 macro (closed)</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/28261">PR #28261 – Add RISC-V Vector (RVV) support for CPU Execution Provider</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/28287">PR #28287 – RVV INT8 GEMM and GEMV kernels (closed)</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/28308">PR #28308 – RVV INT8 GEMM/GEMV, M=1 routing, and activation kernels</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/28411">PR #28411 – RVV convolution and pooling kernels</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/28506">PR #28506 – Correcting compilation errors in riscv64 depthwise kernel</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/28518">PR #28518 – RVV-Optimized LLM Operators for RISC-V</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/28538">PR #28538 – accept canonical NaN in activation NaN round-trip check</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/pull/28655">PR #28655 – Optimize RISC-V RVV SGEMM kernel performance (open)</a></li>
+  <li><a href="https://onnxruntime.ai/">onnxruntime.ai – homepage</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/145">Issue #145 – original RISC-V/portability request (2018, closed)</a></li>
   <li><a href="https://github.com/microsoft/onnxruntime/issues/16544">Issue #16544 – Add SHL Execution Provider for RISC-V (open)</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/issues/17466">Issue #17466 – Proposal to Contribute RISC-V Support (closed)</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/issues/20030">Issue #20030 – Inference Accuracy Collapse on RISC-V Platform (open)</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/issues/22530">Issue #22530 – Discrepancies in ONNX Runtime Inference Results on RISC-V (closed)</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/issues/24596">Issue #24596 – Plan to add RISC-V Vector (RVV) support to MLAS (closed stale)</a></li>
-  <li><a href="https://github.com/microsoft/onnxruntime/issues/26187">Issue #26187 – DeviceDiscoveryTest.HasCpuDevice fails on riscv64 (open)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/17466">Issue #17466 – Proposal to contribute RISC-V support (tracking, closed by PR #28261)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/20030">Issue #20030 – Inference accuracy collapse on RISC-V (open)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/22530">Issue #22530 – Discrepancies in ONNX Runtime inference results on RISC-V (closed)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/24596">Issue #24596 – Plan to add RVV support to MLAS (closed, stale)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/26187">Issue #26187 – DeviceDiscoveryTest.HasCpuDevice fails on riscv64 and other archs (open)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/issues/32465">Issue #32465 – Activate existing RISCV64 QEMU build/test path in CI (open)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/18115">PR #18115 – Basic RISC-V Support (closed, not merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/19238">PR #19238 – Enable RISC-V 64-bit Cross-Compiling Support (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/19239">PR #19239 – Cross-Compilation Documentation for RISC-V (merged, gh-pages only)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/21261">PR #21261 – Scalar MlasSgemm CopyPackB/TransposePackB for RISCV (closed, not merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/27819">PR #27819 – WASM scalar sgemm fix (merged, incidentally fixes riscv64)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/28110">PR #28110 – Add MLAS_TARGET_RISCV64 macro (closed, not merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/28261">PR #28261 – Add RISC-V Vector (RVV) support for CPU Execution Provider (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/28287">PR #28287 – RVV INT8 GEMM/GEMV early submission (closed, superseded)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/28308">PR #28308 – RVV INT8 GEMM/GEMV, M=1 routing, activation kernels (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/28411">PR #28411 – RVV convolution/pooling kernels (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/28506">PR #28506 – Fix compile error in sconv_depthwise_kernel_rvv.cpp (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/28518">PR #28518 – RVV-optimized LLM operators for RISC-V (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/28538">PR #28538 – Accept canonical NaN in activation round-trip check (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/28655">PR #28655 – Optimize RISC-V RVV SGEMM kernel performance (open)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/29537">PR #29537 – RVV backend for MLAS QNBitGemm (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/32406">PR #32406 – Restore the runtime vector extension check on riscv64 (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/32540">PR #32540 – Riscv64 RVV kernel optimizations (merged)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/32583">PR #32583 – Add RISC-V pause hint support to SpinPause (open)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/32585">PR #32585 – Rewrite the RVV CompInt8 QNBitGemm kernels (open)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/32608">PR #32608 – Add RVV fused activation fast path on riscv64 (open)</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/pull/32710">PR #32710 – RVV LinearAttention and ReduceMinimumMaximumF32 kernels (merged)</a></li>
   <li><a href="https://github.com/microsoft/onnxruntime/tree/main/onnxruntime/core/mlas/lib/riscv64">MLAS riscv64 kernel directory</a></li>
   <li><a href="https://github.com/microsoft/onnxruntime/blob/main/cmake/riscv64.toolchain.cmake">cmake/riscv64.toolchain.cmake</a></li>
   <li><a href="https://github.com/microsoft/onnxruntime/blob/main/cmake/onnxruntime_mlas.cmake">cmake/onnxruntime_mlas.cmake</a></li>
+  <li><a href="https://github.com/microsoft/onnxruntime/blob/main/tools/scripts/build_riscv64.sh">tools/scripts/build_riscv64.sh</a></li>
   <li><a href="https://github.com/google/XNNPACK/issues/9886">XNNPACK issue #9886 – 100+ riscv64 RVV CI failures</a></li>
+  <li><a href="https://github.com/google/XNNPACK/issues/8052">XNNPACK issue #8052 – cross-compile transpose-test failure</a></li>
+  <li><a href="https://github.com/google/XNNPACK/issues/4650">XNNPACK issue #4650 – RISC-V cpuinfo build error</a></li>
+  <li><a href="https://github.com/pytorch/cpuinfo/issues/124">pytorch/cpuinfo issue #124 – Add RISC-V support</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/1702">abseil-cpp issue #1702 – Can’t link using riscv64 toolchain</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/issues/939">mimalloc issue #939 – unable to obtain aligned memory on RISC-V SV39 MMU (fixed)</a></li>
   <li><a href="https://buildd.debian.org/status/package.php?p=onnxruntime&amp;suite=sid">Debian buildd – onnxruntime riscv64 status</a></li>
   <li><a href="https://buildd.debian.org/status/package.php?p=onnx&amp;suite=sid">Debian buildd – onnx riscv64 status</a></li>
-  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/packages/onnx.html">RISE wheel builder – onnx riscv64 wheels</a></li>
-  <li><a href="https://riseproject.dev">RISE project – member list</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/python3-onnxruntime">packages.ubuntu.com – python3-onnxruntime (resolute, riscv64)</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/python3-onnx">packages.ubuntu.com – python3-onnx (resolute, riscv64)</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel builder – onnx package list</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels">riseproject-dev/python-wheels</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE project – member list</a></li>
+  <li><a href="https://riseproject.dev/2026/07/07/optimizing-iree-compilation-and-end-to-end-object-detection-pipeline-for-risc-v/">RISE blog – Optimizing IREE Compilation and End-to-End Object Detection Pipeline for RISC-V</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE blog – Announcing the RISE RISC-V Runners</a></li>
+  <li><a href="https://cfp.riscv-europe.org/eu-summit-2026/talk/WHMPM8/">RISC-V Summit Europe 2026 – ONNX Runtime Convolution Acceleration on RISC-V via RVV</a></li>
+  <li><a href="https://github.com/iree-org/iree/issues/24772">IREE issue #24772 – IREE vs ExecuTorch vs ONNX Runtime vs LiteRT on SpacemiT K3</a></li>
+  <li><a href="https://arxiv.org/html/2504.03774v1">arXiv 2504.03774 – Exploring energy consumption of AI frameworks on a 64-core RV64 server CPU</a></li>
+  <li><a href="https://arxiv.org/abs/2405.15380">arXiv 2405.15380 – Full-stack evaluation of ML inference workloads for RISC-V systems</a></li>
+  <li><a href="https://github.com/k2-fsa/sherpa-onnx">k2-fsa/sherpa-onnx</a></li>
+  <li><a href="https://github.com/ucb-bar/onnxruntime-riscv">ucb-bar/onnxruntime-riscv (unmaintained fork)</a></li>
   <li><a href="https://pypi.org/project/onnxruntime/">PyPI – onnxruntime</a></li>
   <li><a href="https://pypi.org/project/onnx/">PyPI – onnx</a></li>
 </ul>
