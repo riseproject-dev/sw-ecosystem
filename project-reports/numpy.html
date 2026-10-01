@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for NumPy<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items verified from only one source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,9 +280,15 @@
 </h2>
     
 
-<p>NumPy is the foundational numerical array library for the Python scientific computing stack. It is the direct dependency of SciPy, pandas, scikit-learn, PyTorch, and virtually every Python ML/data workload. It is a <a href="https://numfocus.org/">NumFOCUS Sponsored Project</a> governed by a Steering Council. Active steering council members with named employers: Sebastian Berg (NVIDIA), Ralf Gommers (Quansight), Matti Picus (Quansight), Melissa Weber Mendonca (Quansight), Nathan Goldbaum (Quansight), Stefan van der Walt (UC Berkeley). Governance is consensus-driven; the Steering Council is a tiebreaker, not a corporate-controlled body.</p>
+<p>NumPy is the foundational numerical array library for the Python scientific computing stack and the direct dependency of SciPy, pandas, scikit-learn, PyTorch, and virtually every Python ML/data workload. It is a <a href="https://numfocus.org/">NumFOCUS</a> Sponsored Project: NumFOCUS (a 501(c)(3) nonprofit) provides fiscal, legal, and administrative support and holds NumPy’s trademarks through a 5-member Subcommittee (Charles Harris, Ralf Gommers, Inessa Pawson, Sebastian Berg, plus external member Thomas Caswell) that manages funding only and has no say in technical direction.</p>
 
-<p>Repository: <a href="https://github.com/numpy/numpy">numpy/numpy</a>. Latest stable release as of this writing: 2.4.6. Development target: 2.6.0 (the first release milestone that includes riscv64 CI).</p><hr />
+<p>Technical governance is consensus-based (no BDFL). A 9-member Steering Council (Sebastian Berg, Ralf Gommers, Charles Harris, Inessa Pawson, Matti Picus, Stefan van der Walt, Melissa Weber Mendonca, Marten van Kerkwijk, Nathan Goldbaum) handles technical direction and only formally votes (Apache-style +1/-1/fractional) when consensus breaks down; members are nominated for sustained, broad contribution, not commit count. License: BSD. There is no dedicated MAINTAINERS/OWNERS/CODEOWNERS file at the repo root; governance lives in <code class="language-plaintext highlighter-rouge">doc/source/dev/governance/governance.rst</code>.</p>
+
+<p>Direct funders: Gordon and Betty Moore Foundation, Alfred P. Sloan Foundation, Chan Zuckerberg Initiative, Tidelift. Institutional partners employing contributors: Quansight (Nathan Goldbaum, Ralf Gommers, Matti Picus, Melissa Weber Mendonca, Mateusz Sokol), NVIDIA (Sebastian Berg), UC Berkeley (Stefan van der Walt, academic).</p>
+
+<p>Community stance on the RISC-V port is positive: the Tier 3 promotion drew explicit support (“Very happy to see it happening”) in the discussion tied to <a href="https://github.com/numpy/numpy/issues/30216">issue #30216</a>, with maintainers signaling intent to reassess for a higher tier once CI stability improves.</p>
+
+<p>Repository: <a href="https://github.com/numpy/numpy">numpy/numpy</a>. Homepage: <a href="https://numpy.org/">numpy.org</a>. Latest stable release as of this writing: 2.4.6. Development target for the native riscv64 CI work: 2.6.0.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -290,8 +297,6 @@
   
 </h2>
     
-
-<p>The RISC-V port has a seven-year history with three distinct phases: initial architecture recognition, test-suite correctness fixes, and the current infrastructure build-out phase.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -305,82 +310,129 @@
     <tr>
       <td>Oct 2016</td>
       <td><a href="https://github.com/numpy/numpy/issues/8213">Issue #8213</a></td>
-      <td>First request for riscv64 support</td>
+      <td>First request for riscv64 support, with a submitted patch</td>
     </tr>
     <tr>
       <td>Apr 2018</td>
       <td><a href="https://github.com/numpy/numpy/pull/10833">PR #10833</a></td>
-      <td>Initial riscv64 support merged; full test suite passed on Python 2.7 and 3.6 with one noted exception (test_float in TestBoolCmp)</td>
+      <td>Initial 64-bit RISC-V support merged (aurel32); full test suite passing on Python 2.7/3.6 with one noted exception (<code class="language-plaintext highlighter-rouge">test_float</code> in <code class="language-plaintext highlighter-rouge">TestBoolCmp</code>); closed #8213</td>
     </tr>
     <tr>
       <td>Mar 2019</td>
-      <td><a href="https://github.com/numpy/numpy/pull/13095">PR #13095</a></td>
-      <td>First riscv64-specific test fixes (f2py selectedrealkind, openSUSE Factory riscv64 build failures)</td>
+      <td><a href="https://github.com/numpy/numpy/pull/13095">PR #13095</a> / <a href="https://github.com/numpy/numpy/pull/13141">PR #13141</a></td>
+      <td>First riscv64-specific test fixes (ppc and riscv testsuite failures); backported to 1.16.x</td>
+    </tr>
+    <tr>
+      <td>Nov 2020 (authored) / Sep 2024 (merged)</td>
+      <td><a href="https://github.com/numpy/numpy/pull/17780">PR #17780</a></td>
+      <td>RISCV-32 (32-bit) build support added (Khem Raj); sat dormant ~4 years, rebased after the numpy/core to numpy/_core move in NumPy 2.0</td>
     </tr>
     <tr>
       <td>Nov 2023</td>
       <td><a href="https://github.com/numpy/numpy/pull/25246">PR #25246</a></td>
-      <td>First riscv64 CI job added (markdryan); two tests disabled at the time</td>
+      <td>First riscv64 CI job added (markdryan), disabling two then-failing tests</td>
     </tr>
     <tr>
       <td>Dec 2023</td>
       <td><a href="https://github.com/numpy/numpy/pull/25280">PR #25280</a></td>
-      <td>riscv64 NaN sign-preservation test accommodation (RISC-V ISA section 11.3 requires canonical positive NaN from many instructions)</td>
+      <td>riscv64 NaN sign-preservation test accommodation (fp_noncontiguous, fpclass)</td>
+    </tr>
+    <tr>
+      <td>Jan 2024</td>
+      <td><a href="https://github.com/numpy/numpy/pull/25430">PR #25430</a> / <a href="https://github.com/numpy/numpy/pull/25618">PR #25618</a></td>
+      <td>test_numeric fixes on riscv64; backported to 1.26.x</td>
     </tr>
     <tr>
       <td>Apr 2024</td>
       <td><a href="https://github.com/numpy/numpy/pull/26187">PR #26187</a></td>
-      <td>Fix test failures on Arch Linux riscv64 (platform.processor() returns empty string; replaced with platform.machine())</td>
+      <td>Use <code class="language-plaintext highlighter-rouge">platform.machine()</code> instead of <code class="language-plaintext highlighter-rouge">platform.processor()</code> for riscv64 portability (Arch Linux riscv64 returns empty processor string)</td>
     </tr>
     <tr>
       <td>Apr 2024</td>
       <td><a href="https://github.com/numpy/numpy/pull/26219">PR #26219</a></td>
-      <td>RVV compile-time and runtime CPU feature detection foundation merged</td>
+      <td>RVV compile-time and runtime CPU feature detection merged (ksco)</td>
     </tr>
     <tr>
-      <td>Sep 2024</td>
-      <td><a href="https://github.com/numpy/numpy/pull/17780">PR #17780</a></td>
-      <td>RISCV-32 architecture definitions added (PR had sat dormant since 2020, rebased after numpy/core moved to numpy/_core in NumPy 2.0)</td>
+      <td>Oct 2024</td>
+      <td><a href="https://github.com/numpy/numpy/pull/27613">PR #27613</a> / <a href="https://github.com/numpy/numpy/pull/27616">PR #27616</a></td>
+      <td>QEMU CI workflow fixes</td>
+    </tr>
+    <tr>
+      <td>Nov 2024</td>
+      <td><a href="https://github.com/numpy/numpy/pull/27827">PR #27827</a> / <a href="https://github.com/numpy/numpy/pull/27828">PR #27828</a></td>
+      <td>Skip ninja installation in the QEMU workflow (cross-build friction fix)</td>
+    </tr>
+    <tr>
+      <td>Sep 2025</td>
+      <td>PR #29607</td>
+      <td>RISC-V CPU dispatcher unit tests enabled (r-devulap)</td>
     </tr>
     <tr>
       <td>Oct 2025</td>
       <td><a href="https://github.com/numpy/numpy/pull/29927">PR #29927</a></td>
-      <td>Unit tests for RISC-V CPU feature detection merged; validated on Banana Pi BPI-F3 (SpaceMiT K1)</td>
+      <td>Unit tests for RISC-V CPU feature detection merged, validated on a Banana Pi BPI-F3 (SpaceMiT K1)</td>
     </tr>
     <tr>
       <td>Oct 2025</td>
       <td><a href="https://github.com/numpy/numpy/pull/29992">PR #29992</a></td>
-      <td>SIMD build option documentation for riscv64 merged</td>
+      <td>SIMD build-option documentation updated to cover riscv64</td>
     </tr>
     <tr>
       <td>Nov 2025</td>
       <td><a href="https://github.com/numpy/numpy/issues/30216">Issue #30216</a></td>
-      <td>Master tracking issue opened: build and distribute manylinux riscv64 wheels to PyPI</td>
+      <td>Master tracking issue opened: build and distribute manylinux riscv64 wheels to PyPI. Still open.</td>
     </tr>
     <tr>
       <td>Feb 2026</td>
       <td><a href="https://github.com/numpy/numpy/pull/30763">PR #30763</a></td>
-      <td>scipy-openblas updated to a version that includes RISC-V wheels</td>
+      <td>scipy-openblas updated to a version with riscv64 wheels</td>
     </tr>
     <tr>
       <td>May 2026</td>
       <td><a href="https://github.com/numpy/numpy/pull/30338">PR #30338</a></td>
-      <td>RVV version detection bug fixed: replaced hwcap (cannot distinguish RVV v0.7 from v1.0) with riscv_hwprobe; backported to 2.5.x in <a href="https://github.com/numpy/numpy/pull/31538">PR #31538</a></td>
+      <td>RVV version-detection bug fixed (hwcap cannot distinguish RVV v0.7 from v1.0); backported in <a href="https://github.com/numpy/numpy/pull/31538">PR #31538</a></td>
     </tr>
     <tr>
       <td>May 2026</td>
+      <td><a href="https://github.com/numpy/numpy/pull/30995">PR #30995</a></td>
+      <td>riscv64 added to the wheel build matrix using RISE native runners (38 min to 12 min build times vs. QEMU); superseded by #31488</td>
+    </tr>
+    <tr>
+      <td>May 27 2026</td>
       <td><a href="https://github.com/numpy/numpy/pull/31488">PR #31488</a></td>
-      <td>Native riscv64 wheel-build CI workflow added (RISE-provided runners, milestone 2.6.0)</td>
+      <td>Native riscv64 CI workflow merged (Ludovic Henry / luhenry, co-authored Bruno Verachten / gounthar, reviewed by Ralf Gommers), milestone 2.6.0</td>
     </tr>
     <tr>
-      <td>May 2026</td>
+      <td>May 29-30 2026</td>
       <td><a href="https://github.com/numpy/numpy/pull/31522">PR #31522</a></td>
-      <td>RISC-V formally promoted to Tier 3 in NEP 57</td>
+      <td>RISC-V formally promoted to Tier 3 in <a href="https://numpy.org/neps/nep-0057-numpy-platform-support.html">NEP 57</a> (Ralf Gommers, merged by Charles Harris)</td>
+    </tr>
+    <tr>
+      <td>Jun 29 2026</td>
+      <td><a href="https://github.com/numpy/numpy/pull/31753">PR #31753</a></td>
+      <td>“TST: Fix failing riscv64 tests” merged</td>
+    </tr>
+    <tr>
+      <td>Jun 30 2026</td>
+      <td><a href="https://github.com/numpy/numpy/pull/31800">PR #31800</a></td>
+      <td>CI housekeeping: move <code class="language-plaintext highlighter-rouge">paths-ignore</code> to <code class="language-plaintext highlighter-rouge">pull_requests</code> in <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code></td>
+    </tr>
+    <tr>
+      <td>Aug 21 2026</td>
+      <td><a href="https://github.com/numpy/numpy/issues/32376">Issue #32376</a></td>
+      <td>111 test failures on riscv64 (NumPy 2.4.5, EasyBuild/SciPy-bundle build); same tests passed on 2.3.2 on identical hardware, indicating a regression. Open, unbisected.</td>
+    </tr>
+    <tr>
+      <td>Aug 30 2026</td>
+      <td><a href="https://github.com/numpy/numpy/issues/32461">Issue #32461</a></td>
+      <td>76 test failures on riscv64 (conda-forge build), overlapping failure signature with #32376. Open.</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>First RISC-V code in the repository: March 6, 2019 (PR #13095, Andreas Schwab). First riscv64-targeted CI: November 30, 2023 (PR #25246, markdryan). Native CI infrastructure: May 27, 2026 (PR #31488, Ludovic Henry / RISE project).</p><hr />
+<p>First RISC-V-related commit in the repository: 2019-03-05 (Andreas Schwab, <code class="language-plaintext highlighter-rouge">8b7f717</code>, an f2py REAL(10) fix touching both ppc and riscv, merged via PR #13095). First dedicated riscv64 architecture-enablement commit: 2018-04-01 (PR #10833). First riscv64-targeted CI: 2023-11-30 (PR #25246). Native CI infrastructure: 2026-05-27 (PR #31488, RISE-provided runners).</p>
+
+<p>The port is fully upstream: all architecture-detection, CPU-feature-detection, build-system, and CI code lives in the main <code class="language-plaintext highlighter-rouge">numpy/numpy</code> repository with no out-of-tree fork or patchset. Two PRs remain open and unmerged: <a href="https://github.com/numpy/numpy/pull/30144">#30144</a> (Zfh float16, opened Nov 2025) and <a href="https://github.com/numpy/numpy/pull/30988">#30988</a> (hwcap test fix).</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -390,7 +442,7 @@
 </h2>
     
 
-<p>NumPy uses a formal platform support policy defined in <a href="https://numpy.org/neps/nep-0057-numpy-platform-support.html">NEP 57</a>. As of May 30, 2026 (PR #31522), RISC-V riscv64 is <strong>Tier 3</strong>.</p>
+<p>NumPy uses a formal platform-support policy defined in <a href="https://numpy.org/neps/nep-0057-numpy-platform-support.html">NEP 57</a> (merged 2026-02-11, authored by Ralf Gommers). RISC-V was promoted to <strong>Tier 3</strong> on 2026-05-29/30 via PR #31522.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -429,16 +481,46 @@
   </tbody>
 </table></div>
 
-<p>The practical consequence of Tier 3 for riscv64:</p>
+<p>For riscv64 specifically: no commitment to publish PyPI wheels (tracked in open <a href="https://github.com/numpy/numpy/issues/30216">issue #30216</a>); CI runs on RISE-provided self-hosted runners under the <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> label (confirmed by NEP 57’s own text, which states riscv64 “runs on RISE-provided self-hosted runners,” resolving the runner-ownership ambiguity left by the label alone); named platform contacts are Ludovic Henry (luhenry) and Bruno Verachten (gounthar), both RISE-affiliated.</p>
 
-<ul>
-  <li>No commitment to publish riscv64 wheels to PyPI (open issue: <a href="https://github.com/numpy/numpy/issues/30216">#30216</a>).</li>
-  <li>CI runs on RISE-provided self-hosted runners via the <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> label.</li>
-  <li>Named platform contacts: Ludovic Henry (luhenry) and Bruno Verachten (gounthar), both RISE-affiliated.</li>
-  <li>Stated longer-term goal by luhenry is reaching Tier 2, which would require publishing riscv64 PyPI wheels.</li>
-</ul>
+<p><strong>Discrepancy on CI-blocking claim:</strong> NEP 57’s Tier 3 description states CI failures “block releases, with exceptions.” The actual workflow files contradict a strict reading of this for riscv64: <code class="language-plaintext highlighter-rouge">linux_qemu.yml</code>’s riscv64 job carries <code class="language-plaintext highlighter-rouge">continue-on-error: true</code> (non-blocking by construction), and <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> (the native-hardware workflow) has no test step at all, only a wheel build. Nothing in riscv64’s current CI can mechanically block a PR or release on a riscv64 test failure. This is consistent with why two active correctness-regression issues (#32461, #32376) remain open without blocking merges.</p>
 
-<p><strong>Contradictory claim on CI blocking:</strong> The NEP 57 Tier 3 description states that CI failures “block releases.” However, the actual <code class="language-plaintext highlighter-rouge">linux_qemu.yml</code> workflow file contains <code class="language-plaintext highlighter-rouge">continue-on-error: true</code> on the riscv64 job, which means QEMU-emulated riscv64 test failures are non-blocking. The native-hardware workflow (<code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code>) has no test step and therefore cannot block a release on test failure. The claim that riscv64 CI failures block releases is not consistent with the workflow file contents as they exist.</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PyPI official wheels</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>Native CI</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Build only, no test step</td>
+    </tr>
+    <tr>
+      <td>CI blocks release on failure</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (continue-on-error / no test step)</td>
+    </tr>
+    <tr>
+      <td>Platform tier</td>
+      <td>Tier 1</td>
+      <td>Tier 1</td>
+      <td>Tier 3</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -448,11 +530,11 @@
 </h2>
     
 
-<p>NumPy has two internal SIMD abstraction layers:</p>
+<p>NumPy has two internal SIMD abstraction layers.</p>
 
-<p><strong>NPYV (NumPy Vector)</strong> is the primary hand-tuned SIMD layer used for ~22 arithmetic, comparison, transcendental, and reduction dispatch targets. Backends exist for SSE2/AVX2/AVX512 (x86), NEON/SVE (ARM), VSX (POWER), and LSX (LoongArch). There is <strong>no RVV backend for NPYV.</strong> There is no <code class="language-plaintext highlighter-rouge">numpy/_core/src/common/simd/rvv/</code> directory. <code class="language-plaintext highlighter-rouge">NPY_SIMD</code> evaluates to 0 on riscv64. All NPYV-dispatched kernels (addition, multiplication, exp, log, sin, floor, minimum, sort helpers, etc.) execute the scalar C fallback on RISC-V.</p>
+<p><strong>NPYV (NumPy Vector)</strong>, the primary hand-tuned SIMD layer covering roughly 22 arithmetic/comparison/transcendental/reduction dispatch targets, has backends for SSE2/AVX2/AVX512 (x86), NEON/SVE (ARM), VSX (POWER), and LSX (LoongArch), but <strong>no RVV backend</strong>. There is no <code class="language-plaintext highlighter-rouge">numpy/_core/src/common/simd/rvv/</code> directory and no hand-written RVV intrinsic kernel file anywhere in the repository (a GitHub code search for <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code> in numpy/numpy returned zero hits). <code class="language-plaintext highlighter-rouge">NPY_SIMD</code> evaluates to 0 on riscv64; every NPYV-dispatched kernel executes the scalar C fallback.</p>
 
-<p><strong>CPU dispatcher (via Meson)</strong> defines feature-gated compilation units that can be compiled with architecture-specific flags. For riscv64, the only defined feature is RVV (<code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>). The dispatch infrastructure is operational. However, only three targets use it:</p>
+<p><strong>CPU dispatcher (Meson-based)</strong> defines feature-gated compilation units. For riscv64 the only defined feature is <code class="language-plaintext highlighter-rouge">RVV</code> (<code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>, <code class="language-plaintext highlighter-rouge">meson_cpu/riscv64/meson.build</code>); no sub-extension (Zba, Zbb, Zbc, Zbs bitmanip, Zvl*) is referenced anywhere in the repo. Three dispatch targets actually use it:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -471,31 +553,86 @@
     <tr>
       <td><code class="language-plaintext highlighter-rouge">loops_autovec.dispatch.c.src</code></td>
       <td>Yes</td>
-      <td>Scalar C with <code class="language-plaintext highlighter-rouge">UNARY_LOOP_FAST</code>/<code class="language-plaintext highlighter-rouge">BINARY_LOOP_FAST</code> macros compiled with <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>; relies on compiler auto-vectorization, not hand-written intrinsics</td>
+      <td>Scalar C compiled with <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code>; relies on compiler auto-vectorization, not hand-written intrinsics</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">_umath_tests.dispatch.c</code></td>
       <td>Yes</td>
-      <td>CPU dispatch infrastructure test/introspection code only; not a computational kernel</td>
+      <td>CPU dispatch introspection/test code only, not a computational kernel</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>All other dispatch targets (~22 covering arithmetic, trigonometric, exponential, hyperbolic, comparison, reduction, type conversion) have no RVV implementation and fall through to scalar C.</p>
+<p>All other dispatch targets fall through to scalar C on riscv64.</p>
 
-<p><strong>RVV runtime detection</strong> is functional as of PR #30338 (merged May 29, 2026). Detection uses the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall checking <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_KEY_IMA_EXT_0 | RISCV_HWPROBE_IMA_V</code>, which unambiguously signals RVV 1.0 (Linux 6.5+). Fallback to <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> with <code class="language-plaintext highlighter-rouge">COMPAT_HWCAP_ISA_V</code> is retained for kernels older than Linux 6.4. Detection for other extensions (Zfh, Zvfh, Zba, Zbb, etc.) does not exist.</p>
+<p><strong>RVV runtime detection</strong> uses the <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall (<code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_KEY_IMA_EXT_0</code> / <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_IMA_V</code>) when available, with a <code class="language-plaintext highlighter-rouge">getauxval(AT_HWCAP)</code> / <code class="language-plaintext highlighter-rouge">HWCAP_RISCV_V</code> (bit 21) fallback for older kernels, in <code class="language-plaintext highlighter-rouge">numpy/_core/src/common/npy_cpu_features.c</code>. This replaced a hwcap-only approach that could not distinguish pre-standard RVV v0.7 from ratified v1.0 (fixed in <a href="https://github.com/numpy/numpy/pull/30338">PR #30338</a>, merged May 29 2026, backported in <a href="https://github.com/numpy/numpy/pull/31538">PR #31538</a>). Detection for other extensions (Zfh, Zvfh, Zba, Zbb) does not exist. <code class="language-plaintext highlighter-rouge">numpy/_core/tests/test_cpu_features.py</code> contains a functional <code class="language-plaintext highlighter-rouge">Test_RISCV_Features</code> class gated on <code class="language-plaintext highlighter-rouge">is_riscv = re.match(r"^(riscv)", machine, re.IGNORECASE)</code>.</p>
 
-<p><strong>float16 / Zfh:</strong> Native half-precision scalar conversion using the Zfh extension was proposed in <a href="https://github.com/numpy/numpy/pull/30144">PR #30144</a> (November 2025, author: Wang Yang / ixgbe). The PR is open with no reviewers assigned as of June 2026.</p>
+<p><strong>float16 / Zfh:</strong> native half-precision scalar conversion via the Zfh extension is proposed in open, unreviewed <a href="https://github.com/numpy/numpy/pull/30144">PR #30144</a> (opened Nov 2025).</p>
 
-<p><strong>BLAS:</strong> NumPy’s linear algebra (<code class="language-plaintext highlighter-rouge">numpy.linalg</code>) requires an external BLAS/LAPACK backend. On riscv64, the only available option requires the Meson flag <code class="language-plaintext highlighter-rouge">-Dallow-noblas=true</code>, which disables the BLAS requirement and uses slow internal fallback routines. scipy-openblas wheels exist for riscv64 (PR #30763, February 2026), but a correctness regression in OpenBLAS 0.3.33 on RVV-capable hardware (SpaceMiT K1 / <code class="language-plaintext highlighter-rouge">riscv64_zvl256b</code> kernel path) causes <code class="language-plaintext highlighter-rouge">numpy.linalg.cholesky</code> to raise <code class="language-plaintext highlighter-rouge">LinAlgError</code> on mathematically valid inputs. See Section 11.</p>
+<p><strong>BLAS:</strong> <code class="language-plaintext highlighter-rouge">numpy.linalg</code> requires an external BLAS/LAPACK backend. CI builds with <code class="language-plaintext highlighter-rouge">-Dallow-noblas=true</code> because no reliable BLAS is available in the QEMU/cross environment. scipy-openblas wheels exist for riscv64 (<a href="https://github.com/numpy/numpy/pull/30763">PR #30763</a>, merged Feb 2026), but a correctness regression on RVV-capable hardware causes incorrect results (see Section 11).</p>
 
-<p><strong>FFT:</strong> PocketFFT is vendored (pure C++ header-only). No riscv64-specific issues found.</p>
+<p><strong>FFT:</strong> PocketFFT is vendored (pure C++ header-only); no riscv64-specific issues found in <code class="language-plaintext highlighter-rouge">mreineck/pocketfft</code>.</p>
 
-<p><strong>Sort:</strong> The x86-simd-sort backend is explicitly gated to <code class="language-plaintext highlighter-rouge">cpu_family in ['x86', 'x86_64']</code> in <code class="language-plaintext highlighter-rouge">meson.build</code> and is not compiled on riscv64. Generic sort is used.</p>
+<p><strong>Sort:</strong> the x86-simd-sort backend is gated to <code class="language-plaintext highlighter-rouge">cpu_family in ['x86', 'x86_64']</code>; not compiled on riscv64. Generic sort is used.</p>
 
-<p><strong>SVML:</strong> Intel SVML (vectorized exp/log/sin via AVX-512) is gated to <code class="language-plaintext highlighter-rouge">linux and x86_64</code>. Not compiled on riscv64.</p>
+<p><strong>SVML:</strong> Intel SVML (vectorized exp/log/sin via AVX-512) is gated to <code class="language-plaintext highlighter-rouge">linux and x86_64</code>; not compiled on riscv64.</p>
 
-<p><strong>libmvec IFUNC dispatch:</strong> On x86_64 and aarch64, glibc’s libmvec provides SIMD-vectorized math functions (exp, log, sin, etc.) that NumPy ufuncs invoke via GCC SIMD clone / IFUNC dispatch, delivering 2-4x throughput for element-wise math operations. libmvec does not exist for riscv64 in any current distribution (Debian, Ubuntu, Fedora, Arch Linux RISC-V all confirmed absent). Five RFC rounds for riscv64 libmvec have been submitted between April 2024 and May 2026 with none merged upstream. The psABI name mangling blocker was resolved June 18, 2026 (<a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/pull/455">PR #455</a>) but no new glibc patch has been submitted as of this writing. The practical impact is that element-wise math (<code class="language-plaintext highlighter-rouge">np.exp</code>, <code class="language-plaintext highlighter-rouge">np.log</code>, <code class="language-plaintext highlighter-rouge">np.sin</code>) on riscv64 runs without SIMD acceleration at the math library level.</p><hr />
+<p><strong>libmvec IFUNC dispatch:</strong> on x86_64/aarch64, glibc’s libmvec backs NumPy ufunc SIMD-vectorized math (exp, log, sin) via IFUNC dispatch. libmvec does not exist for riscv64 in Debian, Ubuntu, Fedora, or Arch. Five upstream RFC rounds (Apr 2024 to May 2026) have not been merged; the psABI name-mangling blocker was resolved 2026-06-18 but no glibc patch has been submitted since.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Subsystem</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Hand-tuned SIMD (NPYV)</td>
+      <td>SSE2/AVX2/AVX512</td>
+      <td>NEON/SVE</td>
+      <td>None (no backend)</td>
+    </tr>
+    <tr>
+      <td>SIMD arithmetic/transcendental dispatch</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (scalar C)</td>
+    </tr>
+    <tr>
+      <td>SIMD logical-loop dispatch</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Partial (Highway, RVV)</td>
+    </tr>
+    <tr>
+      <td>SIMD sort</td>
+      <td>Yes</td>
+      <td>No</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>libmvec IFUNC math</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>float16 native scalar conversion</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (PR #30144 open)</td>
+    </tr>
+    <tr>
+      <td>Runtime feature detection granularity</td>
+      <td>~30 features</td>
+      <td>~8 features</td>
+      <td>1 feature (RVV)</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -505,61 +642,59 @@
 </h2>
     
 
-<p>NumPy uses Meson as its build system (<code class="language-plaintext highlighter-rouge">mesonpy</code> backend). There is no CMakeLists.txt.</p>
+<p>NumPy builds with Meson via the <code class="language-plaintext highlighter-rouge">mesonpy</code> backend declared in <code class="language-plaintext highlighter-rouge">pyproject.toml</code>; there is no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, <code class="language-plaintext highlighter-rouge">go.mod</code>, or <code class="language-plaintext highlighter-rouge">Cargo.toml</code> anywhere in the tree.</p>
 
-<p><strong>For cross-compilation (official CI method – QEMU):</strong></p>
+<p><strong><code class="language-plaintext highlighter-rouge">pyproject.toml</code> build-system block</strong> was read from two different live fetches with conflicting Cython minimums: one fetch (direct repo clone at commit <code class="language-plaintext highlighter-rouge">c44e705a</code>) shows <code class="language-plaintext highlighter-rouge">requires = ["meson-python&gt;=0.20.0", "Cython&gt;=3.1.0"]</code>; a separate research pass’s dependency report states <code class="language-plaintext highlighter-rouge">Cython&gt;=3.13.1</code>. This is a direct contradiction between two sources in this research and could not be reconciled; treat the exact minimum as [NEEDS VERIFICATION] and confirm against the live <code class="language-plaintext highlighter-rouge">pyproject.toml</code> before depending on either figure.</p>
 
-<p>The QEMU CI workflow cross-compiles on an x86_64 Ubuntu 22.04 host using the <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> toolchain, then runs compiled binaries inside a <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:22.04</code> Docker container via QEMU binfmt emulation (QEMU version pinned to <code class="language-plaintext highlighter-rouge">tonistiigi/binfmt:qemu-v9.2.2-52</code>). The cross-compiler binaries are symlinked from the host into the container.</p>
+<p><strong>Native riscv64 wheel build (CI method):</strong> <code class="language-plaintext highlighter-rouge">pypa/cibuildwheel</code> pinned to v4.2.1, <code class="language-plaintext highlighter-rouge">CIBW_BUILD: cp312-manylinux_riscv64</code>, <code class="language-plaintext highlighter-rouge">manylinux-riscv64-image = "manylinux_2_39"</code> (set in <code class="language-plaintext highlighter-rouge">pyproject.toml</code>), run on the <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> self-hosted runner with Docker as the container engine and ccache for compilation caching.</p>
 
-<p>Key Meson option required for riscv64:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-Dallow-noblas=true
+<p><strong>QEMU cross-compile + test (CI method):</strong> cross-compiles on an x86_64 <code class="language-plaintext highlighter-rouge">ubuntu-22.04</code> host using <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> / <code class="language-plaintext highlighter-rouge">g++-riscv64-linux-gnu</code> / <code class="language-plaintext highlighter-rouge">gfortran-riscv64-linux-gnu</code> (whatever version Ubuntu 22.04’s apt repos carry - no pinned/minimum version is specified anywhere in-repo), then runs inside a <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:22.04</code> Docker container via <code class="language-plaintext highlighter-rouge">tonistiigi/binfmt:qemu-v9.2.2-52</code> userspace emulation. Exact build command:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>spin build --clean -- -Dallow-noblas=true
 </code></pre></div></div>
-<p>This bypasses the BLAS dependency because no BLAS binary is available in the QEMU environment.</p>
-
-<p><strong>For cross-compilation using a Meson cross file (distro method):</strong></p>
-<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">[properties]</span><span class="w">
-</span><span class="py">longdouble_format</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'IEEE_DOUBLE_LE'</span>
-<span class="w">
-</span><span class="nn">[host_machine]</span><span class="w">
-</span><span class="py">system</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'linux'</span>
-<span class="py">cpu_family</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64'</span>
-<span class="py">cpu</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'riscv64'</span>
-<span class="py">endian</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">'little'</span>
+<p>Exact test command:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>F90=/usr/bin/gfortran spin test -- --timeout=600 --durations=10 -k "test_kind or test_multiarray or test_simd or test_umath or test_ufunc"
 </code></pre></div></div>
-<p>The <code class="language-plaintext highlighter-rouge">longdouble_format</code> must be set explicitly because the build system normally detects it by running a compiled binary, which fails in a cross-compilation context without QEMU. On riscv64, <code class="language-plaintext highlighter-rouge">long double</code> is 64-bit IEEE double (same as <code class="language-plaintext highlighter-rouge">double</code>), unlike x86_64’s 80-bit extended format.</p>
+<p>The workflow file’s own header comments flag two structural hurdles explicitly: “Meson’s Python module doesn’t support crosscompiling, and python dependencies may be another potential hurdle,” and “There might also be a need to run runtime tests during configure time” - the recommended workaround is relying on Docker’s x86_64 crosscompile toolchain with the rest emulated via binfmt. A separate friction point was the ninja binary itself needing to be symlinked from the host rather than installed fresh, fixed in <a href="https://github.com/numpy/numpy/pull/27827">PR #27827</a> / <a href="https://github.com/numpy/numpy/pull/27828">PR #27828</a> (“skip ninja installation in linux_qemu workflows”).</p>
 
-<p><strong>RVV compile-time detection probe</strong> (<code class="language-plaintext highlighter-rouge">numpy/_core/src/_simd/checks/cpu_rvv.c</code>): checks for <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code>, <code class="language-plaintext highlighter-rouge">vuint32m1_t</code>, <code class="language-plaintext highlighter-rouge">__riscv_vadd_vv_u32m1</code>, and <code class="language-plaintext highlighter-rouge">__riscv_vsetvlmax_e32m1</code>. If the compiler does not support RVV (or if <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code> is not passed), RVV is silently disabled.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">-Dallow-noblas=true</code></strong> is the only riscv64-specific Meson flag used in CI, because no BLAS binary is reliably available in the QEMU/cross environment.</p>
 
-<p><strong>Required tool versions</strong> (from <code class="language-plaintext highlighter-rouge">pyproject.toml</code> and <code class="language-plaintext highlighter-rouge">requirements/build_requirements.txt</code>):</p>
+<p><strong>RVV compile-time probe</strong> (<code class="language-plaintext highlighter-rouge">numpy/_core/src/_simd/checks/cpu_rvv.c</code>): a ~5-line file testing <code class="language-plaintext highlighter-rouge">#ifndef __riscv_vector</code> / <code class="language-plaintext highlighter-rouge">#include &lt;riscv_vector.h&gt;</code>, used by <code class="language-plaintext highlighter-rouge">meson_cpu/riscv64/meson.build</code> to gate the <code class="language-plaintext highlighter-rouge">RVV</code> feature on <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code> support.</p>
+
+<p><strong>Toolchain requirements table:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Component</th>
       <th>Minimum Version</th>
+      <th>Source</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>Python</td>
       <td>3.12</td>
+      <td><code class="language-plaintext highlighter-rouge">pyproject.toml</code> (<code class="language-plaintext highlighter-rouge">requires-python = "&gt;=3.12"</code>)</td>
     </tr>
     <tr>
       <td>meson-python</td>
-      <td>0.20.0 (build_requirements.txt)</td>
+      <td>0.20.0</td>
+      <td><code class="language-plaintext highlighter-rouge">pyproject.toml</code></td>
     </tr>
     <tr>
       <td>Cython</td>
-      <td>3.2.5 (build_requirements.txt)</td>
+      <td>3.1.0 or 3.13.1 (sources disagree, see above)</td>
+      <td><code class="language-plaintext highlighter-rouge">pyproject.toml</code> / dependency report</td>
     </tr>
     <tr>
       <td>GCC cross (riscv64-linux-gnu)</td>
-      <td>Ubuntu 22.04 default (GCC 11); no explicit minimum documented</td>
+      <td>Unpinned, whatever Ubuntu 22.04/24.04 ships</td>
+      <td><code class="language-plaintext highlighter-rouge">linux_qemu.yml</code></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>No explicit GCC minimum version is documented for riscv64 by NumPy. However, Google Highway (the SIMD abstraction layer NumPy bundles) requires GCC 15+ for correct RVV codegen; earlier GCC versions had a vnclipu mis-optimization (fixed in Highway <a href="https://github.com/google/highway/pull/2971">PR #2971</a>). This creates an undocumented effective requirement for the Highway-backed dispatch targets.</p><hr />
+<p>No explicit GCC minimum is documented by NumPy for riscv64. Google Highway (the SIMD abstraction NumPy bundles for the <code class="language-plaintext highlighter-rouge">loops_logical</code> dispatch path) is reported elsewhere in this research to require either GCC 15+ or Clang 19+ for RVV runtime dispatch depending on the source (see Section 9 for the discrepancy); this creates an undocumented effective requirement for that one dispatch target.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -581,7 +716,7 @@
   <tbody>
     <tr>
       <td>NPYV hand-tuned SIMD backends</td>
-      <td>SSE2, AVX2, AVX512 (F/CD/BW/DQ/VNNI)</td>
+      <td>SSE2, AVX2, AVX512</td>
       <td>NEON, ASIMD, SVE</td>
       <td>None</td>
     </tr>
@@ -601,19 +736,19 @@
       <td>SIMD-dispatched logical loops</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Partial (Google Highway, runtime dispatch requires Clang 19+ or GCC 15+)</td>
+      <td>Partial (Highway, RVV)</td>
     </tr>
     <tr>
       <td>SIMD sort</td>
       <td>Yes (x86-simd-sort)</td>
-      <td>No (generic sort)</td>
-      <td>No (generic sort)</td>
+      <td>No</td>
+      <td>No</td>
     </tr>
     <tr>
       <td>BLAS (numpy.linalg)</td>
       <td>OpenBLAS / MKL / BLIS</td>
       <td>OpenBLAS</td>
-      <td>Partial (OpenBLAS available but has RVV correctness regression; CI runs with -Dallow-noblas=true)</td>
+      <td>Partial (OpenBLAS available but with a known RVV correctness regression; CI builds with <code class="language-plaintext highlighter-rouge">-Dallow-noblas=true</code>)</td>
     </tr>
     <tr>
       <td>libmvec IFUNC math acceleration</td>
@@ -625,12 +760,12 @@
       <td>float16 native scalar conversion</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No (PR #30144 open, unreviewed)</td>
+      <td>No (PR #30144 open)</td>
     </tr>
     <tr>
       <td>Runtime CPU feature detection</td>
-      <td>~30 features (SSE through AMX)</td>
-      <td>~8 features (NEON through SVE2)</td>
+      <td>~30 features</td>
+      <td>~8 features</td>
       <td>1 feature (RVV only)</td>
     </tr>
     <tr>
@@ -643,12 +778,20 @@
       <td>CI on native hardware</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Build only (no test step)</td>
+      <td>Build only, no test step</td>
+    </tr>
+    <tr>
+      <td>Reliably-passing automated test suite</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No - two open regressions (#32461, #32376) as of Aug 2026</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The riscv64 implementation is a functional port with correct scalar execution. It is not a performance-parity port. Every vectorized kernel path that exists for amd64 and arm64 falls back to scalar C on riscv64.</p><hr />
+<p>The riscv64 port is functionally correct for ordinary scalar workloads but is not a performance-parity port: every vectorized kernel path available for amd64 and arm64 falls back to scalar C on riscv64, and the test suite currently has unresolved correctness failures specific to floating-point-exception handling (ceil/floor/trunc and floor-division). <a href="https://github.com/numpy/numpy/issues/32376">Issue #32376</a> explicitly reports that the same tests passed on NumPy 2.3.2 on identical hardware, indicating a regression introduced between 2.3.2 and 2.4.x that has not yet been bisected or triaged by a maintainer.</p>
+
+<p><strong>Performance context (not NumPy-specific):</strong> an arXiv work-in-progress paper measured a 2.71x speedup offloading float64 128x128 matmul from a CVA6 rv64g host to an 8-core Snitch accelerator via OpenBLAS, with data-copy overhead accounting for 47% of runtime (<a href="https://arxiv.org/pdf/2504.03677">arXiv:2504.03677</a>); a separate SG2042 64-core RISC-V characterization paper found 2.6x-16.7x single-core advantage over other RISC-V solutions on compute-bound HPC kernels (NASA NPB suite), weaker on memory-bound workloads (<a href="https://arxiv.org/pdf/2406.12394">arXiv:2406.12394</a>). Neither paper reports NumPy-specific GFLOPS figures. No published benchmark comparing NumPy computational throughput directly between riscv64 and arm64/amd64 was found in any searched source; the only available performance data concerns build/install timing (Section 8).</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -658,40 +801,66 @@
 </h2>
     
 
-<p>NumPy has two workflow files with riscv64 content.</p>
+<p>NumPy has exactly two GitHub Actions workflow files referencing riscv (<code class="language-plaintext highlighter-rouge">.github/workflows/linux_riscv64.yml</code> and <code class="language-plaintext highlighter-rouge">.github/workflows/linux_qemu.yml</code>; confirmed via <code class="language-plaintext highlighter-rouge">grep -rn riscv .github/workflows/*.yml</code> against a clone of HEAD, commit <code class="language-plaintext highlighter-rouge">c44e705a</code>). No <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>/<code class="language-plaintext highlighter-rouge">.cirrus.star</code> exist in the repo. riscv64 is <strong>not</strong> part of the main release <code class="language-plaintext highlighter-rouge">wheels.yml</code> build matrix.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> – Native riscv64 wheel builder</strong></p>
-
+<p><strong><code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> - native riscv64 wheel builder:</strong></p>
 <ul>
-  <li>Runner: <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> (GitHub-hosted label; [NEEDS VERIFICATION] that these are RISE-provided hardware vs. GitHub’s own riscv64 runner fleet – the workflow file only specifies the label, not the hardware owner)</li>
-  <li>Triggers: push to <code class="language-plaintext highlighter-rouge">main</code> (path-filtered), <code class="language-plaintext highlighter-rouge">pull_request</code> to <code class="language-plaintext highlighter-rouge">main</code> or <code class="language-plaintext highlighter-rouge">maintenance/**</code>, <code class="language-plaintext highlighter-rouge">workflow_dispatch</code></li>
-  <li>What it does: builds a single <code class="language-plaintext highlighter-rouge">cp312-manylinux_riscv64</code> wheel using <code class="language-plaintext highlighter-rouge">cibuildwheel</code> with ccache</li>
-  <li>What it does NOT do: there is no <code class="language-plaintext highlighter-rouge">CIBW_TEST_COMMAND</code>, no test step, no pytest invocation; the job is named “Build wheel” only</li>
-  <li>Build timing measured during PR #31488 review: approximately 975s (~16 min) cold cache, 157s (~2.6 min) hot cache</li>
-  <li>Cache saved only on pushes to <code class="language-plaintext highlighter-rouge">main</code>; PRs restore but do not save</li>
+  <li>Runner: <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>, confirmed by NEP 57’s text to be RISE-provided self-hosted hardware (Scaleway EM-RV1, per RISE’s own blog post “RISE RISC-V Runners: six weeks in”)</li>
+  <li>Triggers: <code class="language-plaintext highlighter-rouge">push</code> to <code class="language-plaintext highlighter-rouge">main</code>, <code class="language-plaintext highlighter-rouge">pull_request</code> into <code class="language-plaintext highlighter-rouge">main</code>/<code class="language-plaintext highlighter-rouge">maintenance/**</code> (doc-paths ignored), <code class="language-plaintext highlighter-rouge">workflow_dispatch</code></li>
+  <li>Builds a single <code class="language-plaintext highlighter-rouge">cp312-manylinux_riscv64</code> wheel via cibuildwheel with ccache; <strong>no test step</strong> (<code class="language-plaintext highlighter-rouge">CIBW_TEST_COMMAND</code> is not set in this workflow for riscv64)</li>
+  <li>Build timing from PR #31488 review: ~975s (16 min) cold cache, ~157s (2.6 min) hot cache</li>
   <li>Disabled on forks (<code class="language-plaintext highlighter-rouge">if: github.repository == 'numpy/numpy'</code>)</li>
 </ul>
 
-<p><strong><code class="language-plaintext highlighter-rouge">linux_qemu.yml</code> – QEMU cross-compilation test</strong></p>
-
+<p><strong><code class="language-plaintext highlighter-rouge">linux_qemu.yml</code> - QEMU cross-compile test:</strong></p>
 <ul>
-  <li>Runner: <code class="language-plaintext highlighter-rouge">ubuntu-22.04</code> (x86_64 host)</li>
-  <li>Triggers: <code class="language-plaintext highlighter-rouge">pull_request</code> to <code class="language-plaintext highlighter-rouge">main</code> or <code class="language-plaintext highlighter-rouge">maintenance/**</code>, <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> – does NOT trigger on push to <code class="language-plaintext highlighter-rouge">main</code></li>
-  <li>Architecture: <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:22.04</code> container via QEMU binfmt emulation</li>
-  <li>Cross-compiler: <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code> installed on x86_64 host, symlinked into container</li>
-  <li>Meson options: <code class="language-plaintext highlighter-rouge">-Dallow-noblas=true</code> – tests run without OpenBLAS</li>
-  <li>Test filter: <code class="language-plaintext highlighter-rouge">test_kind or test_multiarray or test_simd or test_umath or test_ufunc</code> with <code class="language-plaintext highlighter-rouge">--timeout=600</code></li>
-  <li><code class="language-plaintext highlighter-rouge">continue-on-error: true</code> – failures are non-blocking for PRs and releases</li>
+  <li>Runner: <code class="language-plaintext highlighter-rouge">ubuntu-22.04</code> (x86_64 host), riscv64 target emulated via <code class="language-plaintext highlighter-rouge">tonistiigi/binfmt</code> + <code class="language-plaintext highlighter-rouge">docker run --platform=linux/riscv64</code> against <code class="language-plaintext highlighter-rouge">riscv64/ubuntu:22.04</code></li>
+  <li>Triggers: <code class="language-plaintext highlighter-rouge">pull_request</code> only (no <code class="language-plaintext highlighter-rouge">push</code>), plus <code class="language-plaintext highlighter-rouge">workflow_dispatch</code></li>
+  <li>Test filter: <code class="language-plaintext highlighter-rouge">test_kind or test_multiarray or test_simd or test_umath or test_ufunc</code>, <code class="language-plaintext highlighter-rouge">--timeout=600</code></li>
+  <li><code class="language-plaintext highlighter-rouge">continue-on-error: true</code> - failures are non-blocking by construction</li>
+  <li>As of Aug 2026, this is the job type surfacing <a href="https://github.com/numpy/numpy/issues/32461">#32461</a> and <a href="https://github.com/numpy/numpy/issues/32376">#32376</a> (though those were actually reported via conda-forge/EasyBuild riscv64 builds outside NumPy’s own CI, not caught by <code class="language-plaintext highlighter-rouge">continue-on-error</code> masking)</li>
 </ul>
 
-<p><strong>Key gap identified by gounthar in PR #31488 review:</strong> “OpenBLAS’s RVV kernels stay untested in this CI, so a regression like <a href="https://github.com/OpenMathLib/OpenBLAS/issues/5811">#5811</a> wouldn’t get caught here.” The RISE runners used by <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> lack RVV capability, and QEMU CI runs without OpenBLAS entirely. There is no CI path that tests OpenBLAS RVV kernels under NumPy.</p>
+<p><strong>Key gap identified by gounthar during PR #31488 review:</strong> testing on a real RVV-capable board (Banana Pi F3) surfaced 8 Cholesky-decomposition test failures traced to an upstream OpenBLAS regression (<a href="https://github.com/OpenMathLib/OpenBLAS/issues/5811">OpenBLAS #5811</a>); the RISE CI runners themselves lack RVV, so this class of bug is invisible to NumPy’s own CI.</p>
 
-<p><strong>Known hardware defect on RISE runners:</strong> After PR #31488 merged, CI produced crashes with:</p>
-<blockquote>
-  <p>“Fatal glibc error: pthread_mutex_lock.c:94 (___pthread_mutex_lock): assertion failed: mutex-&gt;__data.__owner == 0”</p>
-</blockquote>
+<p><strong>Known hardware defect on RISE runners:</strong> CI runs after PR #31488 merged produced intermittent crashes (<code class="language-plaintext highlighter-rouge">Fatal glibc error: pthread_mutex_lock.c:94 ... assertion failed: mutex-&gt;__data.__owner == 0</code>), attributed by luhenry to a hardware atomic-CAS bug on the runners [NEEDS VERIFICATION - single source: PR #31488 review comment].</p>
 
-<p>Ludovic Henry identified the root cause as a hardware bug in the atomic CAS implementation on the runners (a CAS can report success when it did not succeed). Estimated occurrence: 2-4 times per week across approximately 400-500 daily jobs [NEEDS VERIFICATION – single source: luhenry comment in PR #31488].</p><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Native CI</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (build only)</td>
+    </tr>
+    <tr>
+      <td>Emulated CI</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Yes (QEMU, non-blocking)</td>
+    </tr>
+    <tr>
+      <td>Test step present</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Only in the non-blocking QEMU job</td>
+    </tr>
+    <tr>
+      <td>CI result blocks merge/release</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -715,51 +884,56 @@
       <td>PyPI (<code class="language-plaintext highlighter-rouge">pip install numpy</code>)</td>
       <td>No</td>
       <td>N/A</td>
-      <td>Exhaustive API enumeration of all 72 files in the 2.4.6 release confirms zero riscv64 entries; this holds across all historical releases</td>
+      <td>Tracked in open <a href="https://github.com/numpy/numpy/issues/30216">issue #30216</a>; a direct PyPI JSON fetch in this research found no riscv64 wheel filenames, though that fetch is flagged low-confidence/possibly stale</td>
     </tr>
     <tr>
-      <td><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel builder</a></td>
+      <td>RISE <code class="language-plaintext highlighter-rouge">wheel_builder</code> (GitLab)</td>
       <td>Yes</td>
-      <td>2.4.3 (latest as of June 2026)</td>
-      <td>Community index; install via <code class="language-plaintext highlighter-rouge">pip install numpy --index-url https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple</code></td>
+      <td>71 wheel files across 1.26.4, 2.0.0-2.0.2, 2.1.3, 2.2.0/2.2.2, 2.3.1/2.3.3/2.3.4, 2.4.2/2.4.3, 2.5.0-2.5.2</td>
+      <td>Community index at <a href="https://riseproject.gitlab.io/python/wheel_builder/">riseproject.gitlab.io/python/wheel_builder</a>, e.g. <code class="language-plaintext highlighter-rouge">numpy-2.1.3-cp310-cp310-manylinux_2_35_riscv64.whl</code>; install via <code class="language-plaintext highlighter-rouge">--index-url https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple</code></td>
     </tr>
     <tr>
-      <td>Debian sid (<code class="language-plaintext highlighter-rouge">apt install python3-numpy</code>)</td>
+      <td>RISE <code class="language-plaintext highlighter-rouge">python-wheels</code> (GitHub, <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code>)</td>
       <td>Yes</td>
-      <td>2.4.6</td>
-      <td>Standard Debian archive; autopkgtests pass on riscv64; migration to testing blocked by regressions in reverse-dependencies, not in NumPy itself</td>
+      <td>release tag <code class="language-plaintext highlighter-rouge">numpy-v2.5.3-20260918074523</code></td>
+      <td>Newer distribution channel, served via <code class="language-plaintext highlighter-rouge">pypi.riseproject.dev</code>; actively tracked (PR “numpy: Add version 2.5.3”, issue “numpy-quaternion riscv64 support”)</td>
+    </tr>
+    <tr>
+      <td>Debian sid/testing (<code class="language-plaintext highlighter-rouge">apt install python3-numpy</code>)</td>
+      <td>Yes</td>
+      <td>current</td>
+      <td>Standard Debian archive; autopkgtests pass on riscv64</td>
     </tr>
     <tr>
       <td>Ubuntu 24.04 noble</td>
       <td>Yes</td>
       <td>1.26.4</td>
-      <td><code class="language-plaintext highlighter-rouge">python3-numpy</code> riscv64 <code class="language-plaintext highlighter-rouge">.deb</code> available via apt</td>
+      <td><code class="language-plaintext highlighter-rouge">python3-numpy</code> riscv64 <code class="language-plaintext highlighter-rouge">.deb</code></td>
     </tr>
     <tr>
-      <td>Arch Linux RISC-V</td>
+      <td>Ubuntu 26.04 resolute</td>
+      <td>Yes</td>
+      <td><code class="language-plaintext highlighter-rouge">1:2.3.5+ds-3ubuntu1</code></td>
+      <td>Confirmed live via packages.ubuntu.com: architectures <code class="language-plaintext highlighter-rouge">amd64 arm64 armhf ppc64el riscv64 s390x</code>; <code class="language-plaintext highlighter-rouge">python3-numpy-dev</code> and related packages (<code class="language-plaintext highlighter-rouge">libboost-numpy*</code>, <code class="language-plaintext highlighter-rouge">numpy-stl</code>, <code class="language-plaintext highlighter-rouge">python3-numpy-groupies</code>, <code class="language-plaintext highlighter-rouge">python3-numpydoc</code>, <code class="language-plaintext highlighter-rouge">python3-numpysane</code>) also ship riscv64</td>
+    </tr>
+    <tr>
+      <td>Arch Linux RISC-V (ISCAS mirror)</td>
       <td>Yes</td>
       <td>2.4.6</td>
-      <td><code class="language-plaintext highlighter-rouge">python-numpy-2.4.6-1-riscv64.pkg.tar.zst</code> confirmed at ISCAS mirror [NEEDS VERIFICATION – single source: ISCAS mirror directory listing]</td>
+      <td><code class="language-plaintext highlighter-rouge">python-numpy-2.4.6-1-riscv64.pkg.tar.zst</code> [NEEDS VERIFICATION - single source]</td>
     </tr>
     <tr>
       <td>GitHub Releases</td>
       <td>No</td>
       <td>N/A</td>
-      <td>GitHub release assets contain only source tarballs; wheels are distributed exclusively via PyPI</td>
+      <td>Release assets contain only source tarballs</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>PyPI riscv64 wheel publication blockers</strong> (from <a href="https://github.com/numpy/numpy/issues/30216">issue #30216</a>):</p>
-<ol>
-  <li>openblas-libs riscv64 wheels exist but are described as “slow”; speed investigation ongoing</li>
-  <li><code class="language-plaintext highlighter-rouge">actions/setup-python</code> lacks riscv64 support</li>
-  <li>NumPy’s wheel-build scripts require updates for riscv64 targets</li>
-</ol>
+<p><strong>PyPI riscv64 wheel publication blockers</strong> (from <a href="https://github.com/numpy/numpy/issues/30216">issue #30216</a>): (1) openblas-libs riscv64 wheels exist but build slowly and need optimization; (2) <code class="language-plaintext highlighter-rouge">actions/setup-python</code> lacks riscv64 support, forcing manual cibuildwheel/QEMU workarounds; (3) NumPy’s own wheel-build workflows needed updating to add the riscv64 target - the third item is now substantially addressed by <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> (PR #31488), but items (1) and (2) remain open.</p>
 
-<p><strong>First planned riscv64 PyPI wheel:</strong> NumPy 2.6.0 (development target). This is not yet released; the most recent pre-release is 2.5.0rc1 (which does not include riscv64 wheels).</p>
-
-<p><strong>RISE wheel builder details:</strong> The RISE project (funded as RP011, Rivos Inc. origin, Baylibre co-maintainer) has distributed riscv64 manylinux wheels for over a year. Available NumPy versions: 1.26.4, 2.0.0 through 2.0.2, 2.1.3, 2.2.0, 2.2.2, 2.3.1, 2.3.3, 2.3.4, 2.4.2, 2.4.3. Formats: manylinux_2_35 and manylinux_2_39 for riscv64. Python versions: 3.10 through 3.13 (including free-threaded cp313t, cp314t for recent versions). Install time from RISE wheels vs. building from source on VisionFive 2: approximately 25 seconds vs. 15 minutes (36x speedup).</p><hr />
+<p><strong>To get a working riscv64 NumPy binary today</strong>, a user must either: install from the RISE wheel index (<code class="language-plaintext highlighter-rouge">pypi.riseproject.dev</code> or the GitLab <code class="language-plaintext highlighter-rouge">wheel_builder</code>), install the distro package (Debian sid, Ubuntu 24.04/26.04, Arch RISC-V), or build from source (RISE measured ~15-20 minutes on a VisionFive 2, vs. ~25 seconds to install a pre-built RISE wheel, a ~36-50x speedup; source: <a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">RISE blog, 2025-05-14</a>).</p>
 <h2 id="9-dependencies">
   
   
@@ -782,63 +956,113 @@
   </thead>
   <tbody>
     <tr>
-      <td>OpenBLAS (via scipy-openblas)</td>
-      <td>numpy.linalg, matrix multiply</td>
-      <td>Green: RISCV64_GENERIC, ZVL128B, ZVL256B, DYNAMIC_ARCH all build</td>
-      <td>Partial: BLAS L1/L2/L3 tested under QEMU; LAPACK tests disabled (time out under emulation); no native CI</td>
-      <td>Green for source; no upstream binary</td>
-      <td>(1) DGEMM correctness regression on ZVL256B / SpaceMiT K1 (OpenBLAS #5811, fix in PR #5815 merged but unreleased); (2) TRSM has no RVV kernel for ZVL256B; (3) GEMM rewrite (PR #5561) stalled since Mar 2026</td>
+      <td>OpenBLAS</td>
+      <td>runtime-dependency, critical</td>
+      <td>Green: RISCV64_GENERIC, ZVL128B, ZVL256B, DYNAMIC_ARCH all build upstream</td>
+      <td>QEMU-only; LAPACK tests explicitly disabled in CI (<code class="language-plaintext highlighter-rouge">exit 0</code>, “take too long”); no native CI</td>
+      <td>Debian sid ships 0.3.33+ds-3 riscv64; Ubuntu 24.04 noble ships an older 0.3.26 (pre-DYNAMIC_ARCH)</td>
+      <td>TRSM has no RVV kernel for ZVL256B (unassigned correctness gap); DGEMM regression <a href="https://github.com/OpenMathLib/OpenBLAS/issues/5811">OpenBLAS #5811</a> (fix in PR #5815 merged but unreleased), surfaced in NumPy’s own PR #31488 review as Cholesky test failures on a real RVV board; GEMM rewrite PR #5561 stalled since March 2026</td>
     </tr>
     <tr>
-      <td>Google Highway (vendored)</td>
-      <td>SIMD ufuncs via abstraction layer</td>
-      <td>Green: RVV 1.0 target compiles</td>
-      <td>Partial: tested via QEMU; open test failure HwyDemoteTestGroup/TestAllReorderDemote2To/EMU128 on riscv64/gcc15</td>
-      <td>Green: vendored in NumPy source</td>
-      <td>(1) Runtime dispatch requires Clang 19+ or GCC 15+; older toolchains fall back silently to scalar; (2) Linker bug with mold on riscv64</td>
+      <td>Highway</td>
+      <td>runtime-dependency, optional</td>
+      <td>Green: RVV 1.0 target compiles, vendored into NumPy for <code class="language-plaintext highlighter-rouge">loops_logical.dispatch.cpp</code></td>
+      <td>Exercised in Highway’s own upstream CI but with <code class="language-plaintext highlighter-rouge">continue-on-error: true</code> (build-only-gated in effect)</td>
+      <td>Ubuntu 26.04 resolute confirmed shipping <code class="language-plaintext highlighter-rouge">libhwy-dev</code>/<code class="language-plaintext highlighter-rouge">libhwy1t64</code> 1.3.0-2 for riscv64 (architectures: amd64, arm64, armhf, i386, ppc64el, riscv64, s390x); Debian sid/trixie too</td>
+      <td>Open mold-linker segfault on riscv64 (<a href="https://github.com/google/highway/issues/2854">Highway #2854</a>); <strong>discrepancy on toolchain requirement:</strong> one source in this research states RVV runtime dispatch requires GCC 15+ (fixing a vnclipu mis-optimization, Highway PR #2971), another states it is Clang 19+ only with no GCC path - not reconciled, flag as [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
-      <td>x86-simd-sort (vendored)</td>
-      <td>SIMD sort</td>
-      <td>N/A – gated to x86/x86_64 in meson.build</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>None; by design</td>
+      <td>PocketFFT</td>
+      <td>runtime-dependency, optional</td>
+      <td>Green: pure C++ header-only, compiled as part of NumPy</td>
+      <td>N/A; 0 riscv-related issues found on <code class="language-plaintext highlighter-rouge">mreineck/pocketfft</code></td>
+      <td>Always vendored with NumPy source</td>
+      <td>None found</td>
     </tr>
     <tr>
-      <td>Intel SVML (vendored)</td>
-      <td>AVX-512 vectorized math</td>
-      <td>N/A – gated to linux/x86_64 in meson.build</td>
+      <td>libmvec</td>
+      <td>runtime-dependency, optional</td>
+      <td>N/A - not present on riscv64 in Debian, Ubuntu, Fedora, or Arch</td>
       <td>N/A</td>
-      <td>N/A</td>
-      <td>None; by design</td>
+      <td>Red: no riscv64 implementation exists anywhere</td>
+      <td>5 upstream glibc RFC rounds since Apr 2024, none merged; psABI name-mangling blocker resolved Jun 18 2026, no glibc patch submitted since</td>
     </tr>
     <tr>
-      <td>PocketFFT (vendored)</td>
-      <td>numpy.fft</td>
-      <td>Green: pure C++ header-only</td>
-      <td>Green: no riscv64-specific issues found</td>
-      <td>Green: always vendored</td>
-      <td>None</td>
+      <td>Meson (meson-python backend)</td>
+      <td>build-dependency, critical</td>
+      <td>Green as a build tool, but the <code class="language-plaintext highlighter-rouge">linux_qemu.yml</code> workflow’s own comments flag that “Meson’s Python module doesn’t support crosscompiling” as a structural hurdle worked around via Docker/binfmt</td>
+      <td>N/A</td>
+      <td>No riscv64-specific packaging issue found</td>
+      <td>Cross-compilation support gap noted in-repo, worked around rather than fixed</td>
     </tr>
     <tr>
-      <td>glibc libmvec</td>
-      <td>IFUNC vectorized math (exp, log, sin)</td>
-      <td>N/A – not present for riscv64</td>
+      <td>Ninja</td>
+      <td>build-dependency, critical</td>
+      <td>Green, but required an explicit workaround (<a href="https://github.com/numpy/numpy/pull/27827">PR #27827</a>/<a href="https://github.com/numpy/numpy/pull/27828">#27828</a>, “skip ninja installation in linux_qemu workflows”) because the cross-container’s ninja had to be symlinked from the host rather than freshly installed</td>
       <td>N/A</td>
-      <td>Red: not available in any distribution on riscv64</td>
-      <td>Five upstream RFC rounds (Apr 2024 - May 2026) with no merge; psABI name mangling resolved Jun 18 2026 but no new patch submitted</td>
+      <td>Standard Ubuntu riscv64 package</td>
+      <td>None outstanding</td>
+    </tr>
+    <tr>
+      <td>GCC (riscv64-linux-gnu cross toolchain)</td>
+      <td>build-dependency, critical</td>
+      <td>Green; no pinned/minimum version documented by NumPy - uses whichever <code class="language-plaintext highlighter-rouge">gcc-riscv64-linux-gnu</code>/<code class="language-plaintext highlighter-rouge">g++-riscv64-linux-gnu</code>/<code class="language-plaintext highlighter-rouge">gfortran-riscv64-linux-gnu</code> Ubuntu 22.04/24.04 apt ships</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Undocumented minimum version is a latent risk for reproducibility</td>
     </tr>
     <tr>
       <td>Cython</td>
-      <td>Build tool</td>
-      <td>Green: pure-Python wheel available</td>
-      <td>Green: no riscv64-specific failures</td>
-      <td>Partial: no prebuilt riscv64 binary wheel; <a href="https://github.com/cython/cython/issues/7646">issue #7646</a> closed as “Not planned” (May 2026); pure-Python fallback is functional</td>
-      <td>No blocking functional issue</td>
+      <td>build-dependency, optional</td>
+      <td>Green: pure-Python wheel, no riscv64-specific build issue</td>
+      <td>No riscv64-specific test failures found</td>
+      <td>No prebuilt riscv64 binary wheel; <a href="https://github.com/cython/cython/issues/7646">Cython #7646</a> “Build RISC-V wheels” closed as Not Planned (Apr 2026); pure-Python fallback install works</td>
+      <td>Non-blocking (functional via source install); minimum-version requirement in <code class="language-plaintext highlighter-rouge">pyproject.toml</code> is itself ambiguous between live sources (3.1.0 vs 3.13.1, see Section 5)</td>
+    </tr>
+    <tr>
+      <td>cibuildwheel</td>
+      <td>build-dependency, optional</td>
+      <td>Green: used directly in <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code>, pinned to v4.2.1; riscv64 support landed in cibuildwheel v3.1.2 per the discuss.python.org packaging thread</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>None found</td>
+    </tr>
+    <tr>
+      <td>pytest</td>
+      <td>test-dependency, critical</td>
+      <td>N/A (test runner, not compiled)</td>
+      <td>Runs the NumPy test suite via <code class="language-plaintext highlighter-rouge">spin test</code>/<code class="language-plaintext highlighter-rouge">numpy.test()</code>; the suite itself is where #32461/#32376 surface</td>
+      <td>N/A</td>
+      <td>The failures are in NumPy’s own tests, not in pytest</td>
+    </tr>
+    <tr>
+      <td>LAPACK (netlib, bundled inside OpenBLAS)</td>
+      <td>indirect runtime-dependency</td>
+      <td>Bundled with OpenBLAS riscv64 builds</td>
+      <td>Not tested in OpenBLAS’s riscv64 CI (explicitly skipped, times out under QEMU); correctness on riscv64 is unvalidated upstream</td>
+      <td>Ships as part of OpenBLAS riscv64 builds (Debian sid, Ubuntu 24.04)</td>
+      <td>Structural CI gap requiring native riscv64 hardware with RVV, not currently resolved; 0 riscv64 issues found on <code class="language-plaintext highlighter-rouge">Reference-LAPACK/lapack</code> directly</td>
+    </tr>
+    <tr>
+      <td>x86-simd-sort (vendored)</td>
+      <td>indirect, N/A on riscv64</td>
+      <td>N/A - gated to <code class="language-plaintext highlighter-rouge">cpu_family in ['x86','x86_64']</code> in <code class="language-plaintext highlighter-rouge">meson.build</code>, never compiled on riscv64</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>None, by design</td>
+    </tr>
+    <tr>
+      <td>Intel SVML (vendored)</td>
+      <td>indirect, N/A on riscv64</td>
+      <td>N/A - gated to <code class="language-plaintext highlighter-rouge">linux and x86_64</code></td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>None, by design</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p><strong>Key takeaway:</strong> NumPy’s riscv64-critical dependency chain runs OpenBLAS (numerics, has a Tier-3-blocking correctness bug on RVV hardware) through Highway (SIMD, build-only-gated CI upstream but already packaged for Ubuntu 26.04 resolute riscv64) to PocketFFT/LAPACK/Cython (low risk, functional). No dependency in this chain has a JIT backend, crypto, compression, or custom allocator component.</p>
 <h2 id="10-ecosystem-status">
   
   
@@ -848,15 +1072,18 @@
 </h2>
     
 
-<p><strong>RISE Project involvement:</strong> RISE (RISC-V Software Ecosystem) is a Linux Foundation project. Relevant to NumPy: RISE RP011 (“Python Package Support for RISC-V riscv64”) funds the wheel_builder infrastructure (Rivos Inc. origin, Baylibre co-maintainer). RISE provides native riscv64 GitHub Actions runners (used by <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code>). Ludovic Henry and Bruno Verachten (both RISE-affiliated) are the named NumPy riscv64 platform maintainers. NumPy is not a RISE member organization.</p>
+<p>NumPy is not itself a plugin host, but it is the root dependency for the entire Python scientific/ML stack on riscv64 (SciPy, pandas, scikit-learn, PyTorch), and its riscv64 readiness is a direct gate on all of them. RISE’s own infrastructure documentation describes NumPy as sitting “at the bottom of a very large dependency tree,” calling native riscv64 CI integration for NumPy “a big lever” (RISE blog, <a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">“RISE RISC-V Runners: six weeks in”</a>, 2026-05-12).</p>
 
-<p>RISE Premier Members include: Andes Technology, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Damo Academy (Alibaba), Tenstorrent. General Members include: BOSC, ByteDance, Canonical, ISCAS, SpaceMIT, ZTE, and others.</p>
+<p><strong>RISE involvement is extensive and funded</strong>, not incidental:</p>
+<ul>
+  <li>RISE RFP <strong>RP011 “Python Package Support for RISC-V riscv64”</strong>, delivered by <strong>BayLibre</strong>, with development credited to <strong>Rivos Inc. and BayLibre</strong>; RISE funds the build machines.</li>
+  <li>Two parallel RISE-run wheel distribution systems exist: the original GitLab <code class="language-plaintext highlighter-rouge">wheel_builder</code> (81 tracked packages including numpy, scipy, pandas, matplotlib, scipy-openblas32/64), and the newer GitHub-hosted <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> repository (created 2026-06-16, 801 open issues, serving <code class="language-plaintext highlighter-rouge">pypi.riseproject.dev</code>), which actively tracks NumPy releases (e.g. tag <code class="language-plaintext highlighter-rouge">numpy-v2.5.3-20260918074523</code>).</li>
+  <li>NumPy’s native CI integration (<code class="language-plaintext highlighter-rouge">numpy/numpy#30995</code> to <code class="language-plaintext highlighter-rouge">#31488</code>) runs on RISE’s hosted runner fleet: 13,000+ jobs, 197 repos, 87 orgs, 99.78% completion rate as of a May 2026 report, climbing to 40,000+ relay events and ~3,900 builds by August 2026 (Scaleway EM-RV1 hardware).</li>
+</ul>
 
-<p><strong>NumPy as a dependency bottleneck:</strong> The RISE RP011 project documentation notes that NumPy “sits at the bottom of a very large dependency tree.” NumPy 2.0 migration was documented as requiring a full week to make available via the wheel_builder, even though a prior version had already been distributed [NEEDS VERIFICATION – single source: RISE RP011 wiki page].</p>
+<p><strong>Downstream signal:</strong> PyTorch 2.13.0 became available on riscv64 in August 2026 via the same RISE pipeline (<a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE blog</a>), explicitly naming NumPy as a foundational dependency (“almost everything else depends on it”) and citing two of the NumPy PRs covered in this report (#31488, #31522) as the enabling milestones. Separately, CPython itself reached Tier 3 RISC-V support in August 2026, funded by the Sovereign Tech Agency’s fellowship program and also running on RISE-donated hardware (<a href="https://riseproject.dev/2026/08/24/python-now-officially-supports-risc-v/">RISE blog</a>) - raising the floor for the entire interpreter stack NumPy builds on.</p>
 
-<p><strong>Community packaging discussion:</strong> <a href="https://discuss.python.org/t/packaging-support-for-riscv64/58475">discuss.python.org thread</a> (initiated July 2024 by Mark Ryan / RISE) documents that the full Python packaging toolchain for riscv64 is now unblocked: manylinux_2_39_riscv64 and musllinux_1_2_riscv64 images exist, cibuildwheel supports riscv64 as of v3.1.2, PyPI/warehouse accepts riscv64 wheels, auditwheel 6.1.0 added riscv64 policy support, and uv/maturin have published riscv64 wheels to PyPI. The infrastructure gap that remains is NumPy-specific, not toolchain-general.</p>
-
-<p><strong>Compute performance benchmarks:</strong> No published benchmark comparing NumPy computational throughput (matrix multiply, FFT, ufunc speed) between riscv64 and x86_64 or aarch64 was found in any searched source. The only published performance data is build/install timing.</p><hr />
+<p><strong>Community packaging discussion:</strong> a <a href="https://discuss.python.org/t/packaging-support-for-riscv64/58475">discuss.python.org thread</a> (initiated July 2024 by Mark Ryan / RISE) documents that the general Python packaging toolchain gap for riscv64 is closed: manylinux_2_39_riscv64 and musllinux_1_2_riscv64 images exist, cibuildwheel supports riscv64 as of v3.1.2, PyPI/warehouse accepts riscv64 wheels, auditwheel 6.1.0 added riscv64 policy support, and uv/maturin publish riscv64 wheels. The remaining gap for NumPy’s ecosystem reach is NumPy-specific (official PyPI wheels, Section 8), not toolchain-general.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -866,65 +1093,91 @@
 </h2>
     
 
-<p><strong>OpenBLAS DGEMM correctness regression on RVV hardware</strong></p>
-
-<p>Symptom: <code class="language-plaintext highlighter-rouge">numpy.linalg.cholesky</code> raises <code class="language-plaintext highlighter-rouge">LinAlgError("Matrix is not positive definite")</code> on matrices that are mathematically positive definite. Reproduction: compute <code class="language-plaintext highlighter-rouge">A^T @ A</code> on a 50x50 random float64 matrix; the minimum eigenvalue is approximately -2.779 on affected hardware (far outside floating-point rounding error). Affects hardware with RVV VLEN=256, specifically SpaceMiT K1 (dispatched to <code class="language-plaintext highlighter-rouge">riscv64_zvl256b</code> kernel in OpenBLAS DYNAMIC_ARCH). Hardware without RVV (e.g., SiFive U74, dispatched to <code class="language-plaintext highlighter-rouge">riscv64_generic</code>) is not affected. Regression is between OpenBLAS 0.3.31 (working) and 0.3.33 (broken). Filed as <a href="https://github.com/OpenMathLib/OpenBLAS/issues/5811">OpenMathLib/OpenBLAS#5811</a>; fix submitted as OpenBLAS PR #5815 (merged but unreleased as of this research). This bug is invisible to NumPy’s CI because the RISE runners lack RVV capability.</p>
-
-<p><strong>RVV version detection bug (fixed in NumPy 2.5.0 and 2.6.0)</strong></p>
-
-<p>Linux <code class="language-plaintext highlighter-rouge">hwcap</code> (<code class="language-plaintext highlighter-rouge">HWCAP_RISCV_V</code>) cannot distinguish pre-standard RVV v0.7/v0.7.1 from ratified RVV v1.0. NumPy was using hwcap, meaning it could incorrectly activate RVV 1.0 code paths on v0.7 hardware, potentially producing wrong results or crashes. Fixed in <a href="https://github.com/numpy/numpy/pull/30338">PR #30338</a> (merged May 29, 2026, milestone 2.6.0) and backported in <a href="https://github.com/numpy/numpy/pull/31538">PR #31538</a> (merged May 30, 2026, milestone 2.5.0). The fix uses <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> with <code class="language-plaintext highlighter-rouge">RISCV_HWPROBE_KEY_IMA_EXT_0 | RISCV_HWPROBE_IMA_V</code> (Linux 6.5+), retaining hwcap as a fallback for kernels older than Linux 6.4.</p>
-
-<p><strong>RISC-V ISA NaN canonicalization (permanent architectural difference)</strong></p>
-
-<p>The RISC-V ISA (section 11.3) requires many instructions to return a canonical NaN, which is always positive. This means <code class="language-plaintext highlighter-rouge">-np.nan</code> does not preserve its sign bit after passing through certain hardware operations on riscv64. NumPy accommodates this by disabling sign-preservation subtests for negative NaNs on riscv64 (<a href="https://github.com/numpy/numpy/pull/25280">PR #25280</a>, merged December 2023). Code that relies on <code class="language-plaintext highlighter-rouge">-np.nan</code> sign semantics will behave differently on RISC-V compared to x86_64 or aarch64. This is a permanent architectural constraint, not a NumPy bug.</p>
-
-<p><strong>Hardware atomic CAS bug on RISE runners</strong></p>
-
-<p>The RISE CI runners have a hardware defect where a compare-and-swap operation can report success when it did not succeed, causing intermittent glibc pthread_mutex_lock assertion failures. Estimated rate: 2-4 CI crashes per week across approximately 400-500 daily jobs [NEEDS VERIFICATION – single source: luhenry comment in PR #31488]. This creates false-negative CI signal.</p>
-
-<p><strong>Open PRs requiring action:</strong></p>
-
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>PR</th>
+      <th>ID</th>
       <th>Title</th>
       <th>Status</th>
-      <th>Opened</th>
-      <th>Blocker</th>
+      <th>Severity</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://github.com/numpy/numpy/pull/30144">#30144</a></td>
-      <td>ENH: Enable native half-precision scalar conversion via Zfh</td>
+      <td><a href="https://github.com/numpy/numpy/issues/32376">#32376</a></td>
+      <td>BUG: Failing test_unary_spurious_fpexception and test_floor_division_errors tests on RISC-V</td>
+      <td>Open, Aug 21 2026</td>
+      <td>Correctness regression</td>
+      <td>111 test failures building NumPy 2.4.5 for EasyBuild/SciPy-bundle; floating-point-exception handling on ceil/floor/trunc and floor-division. Same tests passed on NumPy 2.3.2 on identical hardware - a regression between 2.3.2 and 2.4.x that no maintainer has yet bisected or commented on</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/numpy/numpy/issues/32461">#32461</a></td>
+      <td>TST: test_unary_spurious_fpexception fails comprehensively on riscv</td>
+      <td>Open, Aug 30 2026</td>
+      <td>Correctness regression</td>
+      <td>76 failures, overlapping root cause with #32376; also includes CPU-feature-detection test failures and multithreading-deadlock test timeouts, plausibly emulator-slowness-related rather than a logic bug</td>
+    </tr>
+    <tr>
+      <td>OpenBLAS DGEMM/Cholesky correctness on RVV hardware</td>
+      <td>n/a (tracked as <a href="https://github.com/OpenMathLib/OpenBLAS/issues/5811">OpenBLAS #5811</a>)</td>
+      <td>Fix merged upstream (PR #5815), unreleased</td>
+      <td>Correctness regression</td>
+      <td><code class="language-plaintext highlighter-rouge">numpy.linalg.cholesky</code> raises <code class="language-plaintext highlighter-rouge">LinAlgError</code> on mathematically valid positive-definite matrices on RVV VLEN=256 hardware (SpaceMiT K1, <code class="language-plaintext highlighter-rouge">riscv64_zvl256b</code> kernel path); non-RVV hardware (e.g. SiFive U74, <code class="language-plaintext highlighter-rouge">riscv64_generic</code>) unaffected; invisible to NumPy’s own CI because RISE runners lack RVV</td>
+    </tr>
+    <tr>
+      <td>RVV v0.7 vs v1.0 misdetection</td>
+      <td>Fixed</td>
+      <td><a href="https://github.com/numpy/numpy/pull/30338">PR #30338</a> / <a href="https://github.com/numpy/numpy/pull/31538">#31538</a></td>
+      <td>Resolved correctness bug</td>
+      <td>hwcap alone could not distinguish pre-standard RVV v0.7/v0.7.1 from ratified v1.0, risking incorrect RVV code-path activation; fixed via <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code>, merged into 2.5.0/2.6.0</td>
+    </tr>
+    <tr>
+      <td>RISC-V ISA NaN canonicalization</td>
+      <td>n/a (architectural)</td>
+      <td>Permanent</td>
+      <td>Behavioral difference, not a bug</td>
+      <td>RISC-V ISA section 11.3 mandates a canonical (always-positive) NaN from many instructions; <code class="language-plaintext highlighter-rouge">-np.nan</code> does not preserve sign bit on riscv64. Accommodated via disabled subtests since <a href="https://github.com/numpy/numpy/pull/25280">PR #25280</a></td>
+    </tr>
+    <tr>
+      <td>Hardware atomic-CAS bug on RISE runners</td>
       <td>Open</td>
-      <td>Nov 2025</td>
-      <td>No reviewer assigned</td>
+      <td>n/a</td>
+      <td>CI-infrastructure flakiness</td>
+      <td>Intermittent <code class="language-plaintext highlighter-rouge">pthread_mutex_lock</code> assertion failures post-#31488 merge, attributed to a hardware CAS defect on RISE runners [NEEDS VERIFICATION - single source]</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/numpy/numpy/issues/30216">#30216</a></td>
+      <td>ENH: Build and distribute manylinux wheels for riscv64</td>
+      <td>Open, master tracking issue</td>
+      <td>Packaging gap</td>
+      <td>Zero comments as of last check; captures remaining PyPI-publication blockers</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/numpy/numpy/pull/30144">#30144</a></td>
+      <td>ENH: Enable native half-precision scalar conversion (Zfh)</td>
+      <td>Open PR</td>
+      <td>Feature gap</td>
+      <td>No reviewer assigned as of this research</td>
     </tr>
     <tr>
       <td><a href="https://github.com/numpy/numpy/pull/30988">#30988</a></td>
       <td>TST: use getauxval to read AT_HWCAP in cpu feature tests</td>
-      <td>Open</td>
-      <td>Mar 2026</td>
+      <td>Open PR</td>
+      <td>Minor test fix</td>
       <td>Awaiting review</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/numpy/numpy/pull/26300">#26300</a></td>
-      <td>TST: Add CPU dispatch test for RVV extension</td>
-      <td>Open, stalled</td>
-      <td>Apr 2024</td>
-      <td>Unrelated free-threading CI failure blocking progress</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/numpy/numpy/issues/30216">Issue #30216</a></td>
-      <td>ENH: Build and distribute manylinux wheels for riscv64</td>
-      <td>Open</td>
-      <td>Nov 2025</td>
-      <td>openblas-libs performance, actions/setup-python lack of riscv64 support, wheel build script updates</td>
+      <td><a href="https://github.com/numpy/numpy/issues/26200">#26200</a></td>
+      <td>ENH: Add RISC-V Vector V1.0 Support (full SIMD kernels)</td>
+      <td>Open, uncommented design question</td>
+      <td>Feature gap</td>
+      <td>Unresolved choice between extending NPYV directly vs. adopting NEP-054/Highway; no maintainer decision recorded</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p>The two correctness regressions (#32376, #32461) are the most urgent unresolved problem of the group: both center on <code class="language-plaintext highlighter-rouge">test_unary_spurious_fpexception</code>, both surfaced via third-party packaging builds (conda-forge, EasyBuild) rather than NumPy’s own CI, and neither has been connected to the other or triaged by a maintainer as of this research.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -934,83 +1187,84 @@
 </h2>
     
 
-<p><strong>Supply chain policy blocks Tier 2 path.</strong> Ralf Gommers stated explicitly during PR #30995 review: “we don’t want to use self-hosted runners or any caching on the <code class="language-plaintext highlighter-rouge">numpy-release</code> repo for supply chain security reasons.” Publishing PyPI wheels from self-hosted (RISE-provided) runners requires resolving this policy constraint. The current <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> workflow is on the main repo, not <code class="language-plaintext highlighter-rouge">numpy-release</code>, so it avoids this for CI artifact builds, but the policy applies to the release signing and upload pipeline.</p>
+<p><strong>Supply-chain policy blocks a near-term Tier 2 path.</strong> Ralf Gommers stated explicitly during the PR #30995 review: “we don’t want to use self-hosted runners or any caching on the <code class="language-plaintext highlighter-rouge">numpy-release</code> repo for supply chain security reasons.” Publishing signed PyPI wheels from RISE-provided self-hosted runners requires resolving this policy constraint; <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> lives on the main repo (not <code class="language-plaintext highlighter-rouge">numpy-release</code>), sidestepping the issue for CI artifact builds but not for the release pipeline.</p>
 
-<p><strong>No BLAS on riscv64 without correctness risk.</strong> scipy-openblas wheels exist for riscv64 but carry a known correctness regression (OpenBLAS #5811) on RVV hardware. CI for NumPy runs without OpenBLAS (<code class="language-plaintext highlighter-rouge">-Dallow-noblas=true</code>). Publishing riscv64 PyPI wheels that bundle a broken OpenBLAS would constitute a regression for users on RVV-capable hardware. This must be resolved at the OpenBLAS level before riscv64 wheel publication is viable.</p>
+<p><strong>No credible native test signal exists.</strong> <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> builds wheels but has no test step; <code class="language-plaintext highlighter-rouge">linux_qemu.yml</code> tests but with <code class="language-plaintext highlighter-rouge">continue-on-error: true</code> and without OpenBLAS. The two open correctness regressions (#32376, #32461) demonstrate this gap concretely: they were caught by third-party downstream packagers, not by NumPy’s own CI. Promoting past Tier 3 requires a release-blocking test signal from real riscv64 hardware, which does not currently exist.</p>
 
-<p><strong>CI does not run tests on native hardware.</strong> The <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> workflow builds wheels but has no test step. Test execution happens only under QEMU (<code class="language-plaintext highlighter-rouge">linux_qemu.yml</code>), which runs with <code class="language-plaintext highlighter-rouge">continue-on-error: true</code> and without OpenBLAS. Promoting to Tier 2 requires a credible test signal from native hardware, which does not currently exist.</p>
+<p><strong>BLAS correctness risk blocks safe PyPI publication.</strong> scipy-openblas riscv64 wheels carry a known DGEMM/Cholesky correctness regression on RVV hardware (<a href="https://github.com/OpenMathLib/OpenBLAS/issues/5811">OpenBLAS #5811</a>). Publishing riscv64 PyPI wheels that bundle a broken OpenBLAS would be a regression for users on RVV-capable hardware; this must be fixed and released upstream before wheel publication is safe.</p>
 
-<p><strong>No hand-written SIMD kernels.</strong> The NPYV layer (used for performance-critical arithmetic, comparison, and math dispatch) has no RVV backend. Implementing a complete NPYV RVV backend is a significant engineering investment. The two dispatch targets that do use RVV rely on Google Highway (a portable abstraction) and compiler auto-vectorization, neither of which delivers the per-operation tuning that the hand-written x86/ARM backends provide.</p>
+<p><strong>No hand-written SIMD kernels.</strong> NPYV has no RVV backend; the only RVV-accelerated path (<code class="language-plaintext highlighter-rouge">loops_logical.dispatch.cpp</code>) is Highway-mediated and limited to logical ops. Building a full NPYV RVV backend is a substantial engineering investment, and issue #26200 shows the design direction (NPYV-native vs. Highway/NEP-054) has not even been decided.</p>
 
-<p><strong>libmvec is not available on riscv64.</strong> Without libmvec, element-wise math operations (<code class="language-plaintext highlighter-rouge">np.exp</code>, <code class="language-plaintext highlighter-rouge">np.log</code>, <code class="language-plaintext highlighter-rouge">np.sin</code>) on riscv64 execute without SIMD acceleration at the math library level. This gap exists independently of NumPy’s own SIMD dispatch infrastructure. Five upstream glibc RFC rounds since April 2024 have not produced a merged implementation.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>libmvec is unavailable on riscv64</strong> independent of NumPy’s own dispatch infrastructure, so element-wise transcendental math has no SIMD acceleration path at the math-library level on this architecture; five glibc RFC rounds since April 2024 have not produced a merge.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>NumPy runs correctly on riscv64 for scalar workloads. The port is functional enough that RISE has distributed tested manylinux wheels for over a year. The remaining functional gaps that block official PyPI distribution:</p>
 
 <ul>
-  <li>OpenBLAS DGEMM correctness on RVV hardware (requires fix in OpenBLAS, not NumPy)</li>
-  <li><code class="language-plaintext highlighter-rouge">actions/setup-python</code> riscv64 support (requires fix in the <code class="language-plaintext highlighter-rouge">actions/setup-python</code> GitHub Action)</li>
-  <li>Wheel build script updates (NumPy-side work, estimated low effort given the CI workflow already builds wheels)</li>
+  <li><strong>Color:</strong> yellow (build-only-ci)</li>
+  <li><strong>Release provider:</strong> RISE</li>
+  <li><strong>Justification:</strong> NumPy’s native riscv64 CI (<code class="language-plaintext highlighter-rouge">.github/workflows/linux_riscv64.yml</code>, from merged <a href="https://github.com/numpy/numpy/pull/31488">PR #31488</a>) builds manylinux wheels on real riscv64 hardware but has no test step, while its QEMU-based test job (<code class="language-plaintext highlighter-rouge">linux_qemu.yml</code>) is marked <code class="language-plaintext highlighter-rouge">continue-on-error: true</code> and, as of Aug 2026, is actively failing (open issues <a href="https://github.com/numpy/numpy/issues/32461">#32461</a>: ~76 failures; <a href="https://github.com/numpy/numpy/issues/32376">#32376</a>: 111 failures) - so the CI “build yes / test no reliably-passing” pattern applies, giving yellow rather than blue. No official PyPI riscv64 wheels exist (tracking issue <a href="https://github.com/numpy/numpy/issues/30216">#30216</a>, open); consumable riscv64 builds come instead from the RISE project’s community wheel builder/<code class="language-plaintext highlighter-rouge">python-wheels</code> index (and separately from Debian/Ubuntu packaging), not from upstream.</li>
+  <li><strong>Pending work that could change the grade:</strong> open master tracking issue #30216 (PyPI riscv64 wheel publication, blocked on OpenBLAS wheel build speed, missing <code class="language-plaintext highlighter-rouge">actions/setup-python</code> riscv64 support, and wheel-script updates); two open correctness-test-failure issues (#32461, #32376) on riscv64 floating-point-exception handling; open, unreviewed PRs #30144 (Zfh float16) and #30988 (hwcap test fix); RISE is actively funding CI runners and wheel distribution (RP011/BayLibre/Rivos) with named NumPy riscv64 maintainers Ludovic Henry and Bruno Verachten, and NEP 57 lists RISC-V as Tier 3 with intent to reassess for a higher tier once CI stability improves.</li>
 </ul>
-<h3 id="132-performance-optimization">
+<h2 id="14-investment-analysis">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing new work: RISE has already funded and delivered the native CI build pipeline (RP011/BayLibre/Rivos; PR #31488/#30995), the Tier 3 policy promotion (PR #31522), RVV CPU-feature detection and its v0.7/v1.0 fix (PR #26219, #30338/#31538), and two independent community wheel-distribution channels (<code class="language-plaintext highlighter-rouge">wheel_builder</code>, <code class="language-plaintext highlighter-rouge">python-wheels</code>). None of that work should be re-sized below.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The NPYV layer has no RVV backend. Implementing a complete NPYV RVV backend would require implementing eight or more header files covering arithmetic, conversion, math, memory, misc, operators, and reorder operations – comparable in scope to the existing NEON or VSX backends. This is the highest-leverage single contribution for computation-heavy workloads but is a substantial engineering undertaking. There are no published NumPy computational benchmarks for riscv64 to quantify the current scalar performance gap.</p>
-
-<p>The Highway-backed <code class="language-plaintext highlighter-rouge">loops_logical</code> dispatch target provides some vectorization for boolean operations, but coverage is limited to that one file. Highway runtime dispatch requires Clang 19+ or GCC 15+ on riscv64; toolchains below these versions silently fall back to scalar [NEEDS VERIFICATION for the specific version thresholds – single source: Highway project PR #2968 and #2971 summaries in the research findings].</p>
-
-<p>float16 (Zfh) support (PR #30144) is ready for review and would provide a low-effort performance gain for applications using half-precision on compatible hardware.</p>
-<h3 id="133-cicd-infrastructure">
+<p>Remaining gaps blocking official PyPI distribution: (1) the OpenBLAS DGEMM/Cholesky correctness regression on RVV hardware (fix merged upstream in OpenBLAS PR #5815 but unreleased - this is an OpenBLAS-side release task, not NumPy code); (2) <code class="language-plaintext highlighter-rouge">actions/setup-python</code> riscv64 support (upstream GitHub Actions dependency, outside NumPy’s control); (3) NumPy wheel-build-script updates to formally add riscv64 to <code class="language-plaintext highlighter-rouge">wheels.yml</code> (low effort, given <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> already proves the build works); (4) triage and fix the open #32376/#32461 regression, which first requires a maintainer to bisect NumPy 2.3.2 to 2.4.x.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Current CI state: wheel-build-only on native hardware, non-blocking tests on QEMU. The gap between this and a credible Tier 2 CI posture:</p>
-
-<ul>
-  <li>Add a test step to <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> (requires resolving the <code class="language-plaintext highlighter-rouge">actions/setup-python</code> gap or using a workaround already available from the QEMU CI workflow)</li>
-  <li>Resolve the hardware atomic CAS bug or use alternative hardware for release-blocking CI</li>
-  <li>Add CI coverage for OpenBLAS RVV correctness – requires RVV-capable hardware, which the current RISE runners do not provide</li>
-</ul>
-<h3 id="134-ecosystem-enablement">
+<p>NPYV has no RVV backend. A full NPYV RVV implementation (arithmetic, conversion, math, memory, misc, operator, reorder headers) is comparable in scope to the existing NEON/VSX backends - the highest-leverage single contribution for compute-heavy workloads, but a substantial undertaking, and issue #26200 shows the design approach (native NPYV vs. Highway/NEP-054) is still undecided. The Highway-backed <code class="language-plaintext highlighter-rouge">loops_logical</code> path provides limited vectorization (boolean ops only) and its toolchain requirement is itself unreconciled in current research (GCC 15+ vs. Clang 19+ only, see Section 9). PR #30144 (Zfh float16) is ready for review and would be a low-effort, narrow-scope performance gain.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>NumPy is the root dependency for SciPy, pandas, scikit-learn, and PyTorch riscv64 ports. Publishing riscv64 wheels to PyPI unblocks all of these. The RISE wheel_builder demonstrates this is technically achievable; the remaining gap is the OpenBLAS correctness issue and the upstream policy/supply-chain constraints.</p>
-<h3 id="135-summary-table">
+<p>Current state: wheel-build-only on native hardware, non-blocking test on QEMU, two unresolved correctness regressions surfaced only by third-party downstream builds. Closing this gap requires: adding a test step to <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code> (needs the <code class="language-plaintext highlighter-rouge">actions/setup-python</code> workaround or reuse of the QEMU workflow’s install path); triaging/fixing #32376 and #32461; obtaining RVV-capable CI hardware to catch OpenBLAS-class regressions the current non-RVV RISE runners miss; and resolving or working around the reported hardware atomic-CAS flakiness.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>NumPy is the root dependency for SciPy, pandas, scikit-learn, and PyTorch riscv64 ports, and RISE’s own materials describe it as the biggest single lever in their dependency tree. The RISE wheel-distribution channels demonstrate the port is technically consumable today; the remaining gap to unlock the full downstream ecosystem on official infrastructure is the OpenBLAS correctness fix plus the PyPI publication blockers in #30216.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1029,52 +1283,73 @@
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Fix OpenBLAS DGEMM regression on ZVL256B (OpenBLAS PR #5815 follow-through)</td>
-      <td>2-4</td>
+      <td>Fix and release OpenBLAS DGEMM/Cholesky regression (PR #5815 follow-through)</td>
+      <td>1-2 (release only, fix already merged upstream)</td>
       <td>OpenBLAS maintainers</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Resolve actions/setup-python riscv64 support</td>
-      <td>1-2</td>
-      <td>upstream Actions / NumPy</td>
+      <td>Triage/bisect and fix #32376 / #32461 (2.3.2 to 2.4.x regression)</td>
+      <td>2-4</td>
+      <td>NumPy riscv64 contacts</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Update NumPy wheel build scripts for riscv64</td>
+      <td>Resolve <code class="language-plaintext highlighter-rouge">actions/setup-python</code> riscv64 support</td>
+      <td>1-2</td>
+      <td>upstream GitHub Actions / NumPy</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Update NumPy wheel-build scripts to add riscv64 to <code class="language-plaintext highlighter-rouge">wheels.yml</code></td>
       <td>1</td>
       <td>NumPy riscv64 contacts</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Review and merge PR #30144 (Zfh float16 scalar conversion)</td>
-      <td>1-2</td>
-      <td>NumPy reviewer + ixgbe</td>
+      <td>Review and merge PR #30144 (Zfh float16) and PR #30988 (hwcap test fix)</td>
+      <td>0.5-1</td>
+      <td>NumPy reviewer</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Add test step to linux_riscv64.yml (native hardware test run)</td>
+      <td>Add a release-blocking test step to <code class="language-plaintext highlighter-rouge">linux_riscv64.yml</code></td>
       <td>1-2</td>
       <td>NumPy riscv64 contacts</td>
       <td>High</td>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>Obtain RVV-capable CI hardware for OpenBLAS kernel validation</td>
+      <td>Obtain RVV-capable CI hardware for OpenBLAS/Cholesky validation</td>
       <td>4-8</td>
       <td>RISE / hardware partners</td>
       <td>High</td>
     </tr>
     <tr>
+      <td>CI/CD</td>
+      <td>Diagnose/mitigate the hardware atomic-CAS flakiness on RISE runners</td>
+      <td>1-2</td>
+      <td>RISE infra team</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
       <td>Performance</td>
-      <td>Implement NPYV RVV backend (rv, rvv/, full arithmetic/conversion/math)</td>
+      <td>Implement an NPYV RVV backend (arithmetic/conversion/math/memory/reorder)</td>
       <td>20-40</td>
       <td>RISC-V SIMD contributors</td>
       <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
+      <td>Resolve the GCC/Clang RVV toolchain-requirement discrepancy for Highway dispatch</td>
+      <td>0.5 (investigation)</td>
+      <td>NumPy / Highway maintainers</td>
+      <td>Low</td>
     </tr>
     <tr>
       <td>Performance</td>
@@ -1084,38 +1359,14 @@
       <td>Medium</td>
     </tr>
     <tr>
-      <td>Performance</td>
+      <td>Ecosystem</td>
       <td>Publish NumPy computational benchmarks for riscv64 vs arm64/amd64</td>
       <td>1-2</td>
       <td>NumPy perf team</td>
       <td>Low</td>
     </tr>
-    <tr>
-      <td>Ecosystem</td>
-      <td>Merge PR #30988 (getauxval test fix)</td>
-      <td>0.5</td>
-      <td>NumPy reviewer</td>
-      <td>Low</td>
-    </tr>
-    <tr>
-      <td>Ecosystem</td>
-      <td>Close PR #26300 (RVV dispatch test, stalled since 2024)</td>
-      <td>1</td>
-      <td>NumPy reviewer</td>
-      <td>Low</td>
-    </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1126,34 +1377,48 @@
     
 
 <ul>
-  <li><a href="https://github.com/numpy/numpy/issues/30216">numpy/numpy Issue #30216 – ENH: Build and distribute manylinux wheels for riscv64</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/31522">numpy/numpy PR #31522 – DOC/NEP: promote RISC-V to a Tier 3 platform in NEP 57</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/31488">numpy/numpy PR #31488 – CI: Add wheel building and testing on Linux-riscv64</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/31538">numpy/numpy PR #31538 – BUG: Avoid hwcap for RVV version detection (backport)</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/30338">numpy/numpy PR #30338 – BUG: Avoid hwcap for RVV version detection</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/30995">numpy/numpy PR #30995 – ENH: add riscv64 to the wheel build matrix (closed)</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/30988">numpy/numpy PR #30988 – TST: use getauxval to read AT_HWCAP in cpu feature tests</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/30763">numpy/numpy PR #30763 – MAINT: update scipy-openblas to one with RISC-V</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/30144">numpy/numpy PR #30144 – ENH: Enable native half-precision scalar conversion on RISC-V</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/29992">numpy/numpy PR #29992 – DOC: update SIMD build options to cover riscv64</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/29927">numpy/numpy PR #29927 – TST: Add unit test for RISC-V CPU features</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/26300">numpy/numpy PR #26300 – TST: Add CPU Dispatch test for RVV extension</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/26219">numpy/numpy PR #26219 – ENH: Enable RVV CPU Feature Detection</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/26187">numpy/numpy PR #26187 – TST: Use platform.machine() for improved portability on riscv64</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/25280">numpy/numpy PR #25280 – TST: Fix fp_noncontiguous and fpclass on riscv64</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/25246">numpy/numpy PR #25246 – CI: Add CI test for riscv64</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/17780">numpy/numpy PR #17780 – ENH, BLD: Define RISCV-32 support</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/13095">numpy/numpy PR #13095 – BUG: Fix testsuite failures on ppc and riscv</a></li>
-  <li><a href="https://github.com/numpy/numpy/pull/10833">numpy/numpy PR #10833 – ENH: Add support for the 64-bit RISC-V architecture</a></li>
-  <li><a href="https://github.com/numpy/numpy/issues/8213">numpy/numpy Issue #8213 – Support for RISC-V architecture</a></li>
-  <li><a href="https://numpy.org/neps/nep-0057-numpy-platform-support.html">NEP 57 – NumPy platform support</a></li>
-  <li><a href="https://github.com/OpenMathLib/OpenBLAS/issues/5811">OpenMathLib/OpenBLAS Issue #5811 – DGEMM correctness regression on riscv64 RVV hardware</a></li>
-  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/packages/numpy.html">RISE wheel builder – NumPy package page</a></li>
-  <li><a href="https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/75628548/">RISE Project RP011 – Python Package Support for RISC-V riscv64</a></li>
-  <li><a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">RISE blog – Easy Installation of Binary Python Packages on riscv64 Devices</a></li>
-  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE blog – RISE RISC-V Runners: six weeks in</a></li>
-  <li><a href="https://discuss.python.org/t/packaging-support-for-riscv64/58475">discuss.python.org – Packaging support for riscv64</a></li>
-  <li><a href="https://tracker.debian.org/pkg/numpy">Debian tracker – python3-numpy</a></li>
+  <li><a href="https://github.com/numpy/numpy/issues/30216">numpy/numpy Issue #30216 - ENH: Build and distribute manylinux wheels for riscv64</a></li>
+  <li><a href="https://github.com/numpy/numpy/issues/32461">numpy/numpy Issue #32461 - TST: test_unary_spurious_fpexception fails comprehensively on riscv</a></li>
+  <li><a href="https://github.com/numpy/numpy/issues/32376">numpy/numpy Issue #32376 - BUG: Failing test_unary_spurious_fpexception and test_floor_division_errors tests on RISC-V</a></li>
+  <li><a href="https://github.com/numpy/numpy/issues/26200">numpy/numpy Issue #26200 - ENH: Add RISC-V Vector V1.0 Support</a></li>
+  <li><a href="https://github.com/numpy/numpy/issues/8213">numpy/numpy Issue #8213 - Support for RISC-V architecture</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/31800">numpy/numpy PR #31800 - CI: move paths-ignore to pull_requests in the linux_riscv64 workflow</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/31753">numpy/numpy PR #31753 - TST: Fix failing riscv64 tests</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/31522">numpy/numpy PR #31522 - DOC/NEP: promote RISC-V to a Tier 3 platform in NEP 57</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/31488">numpy/numpy PR #31488 - CI: Add wheel building and testing on Linux-riscv64</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/31538">numpy/numpy PR #31538 - BUG: Avoid hwcap for RVV version detection (backport)</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/30338">numpy/numpy PR #30338 - BUG: Avoid hwcap for RVV version detection</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/30995">numpy/numpy PR #30995 - ENH: add riscv64 to the wheel build matrix</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/30988">numpy/numpy PR #30988 - TST: use getauxval to read AT_HWCAP in cpu feature tests</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/30763">numpy/numpy PR #30763 - MAINT: update scipy-openblas to one with RISC-V</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/30144">numpy/numpy PR #30144 - ENH: Enable native half-precision scalar conversion on RISC-V</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/29992">numpy/numpy PR #29992 - DOC: update SIMD build options to cover riscv64</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/29927">numpy/numpy PR #29927 - TST: Add unit test for RISC-V CPU features</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/27827">numpy/numpy PR #27827 - CI: skip ninja installation in linux_qemu workflows</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/27613">numpy/numpy PR #27613 - BUG: Fix Linux QEMU CI workflow</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/26219">numpy/numpy PR #26219 - ENH: Enable RVV CPU Feature Detection</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/26187">numpy/numpy PR #26187 - TST: Use platform.machine() for improved portability on riscv64</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/25280">numpy/numpy PR #25280 - TST: Fix fp_noncontiguous and fpclass on riscv64</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/25246">numpy/numpy PR #25246 - CI: Add CI test for riscv64</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/17780">numpy/numpy PR #17780 - ENH, BLD: Define RISCV-32 support</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/13095">numpy/numpy PR #13095 - BUG: Fix testsuite failures on ppc and riscv</a></li>
+  <li><a href="https://github.com/numpy/numpy/pull/10833">numpy/numpy PR #10833 - ENH: Add support for the 64-bit RISC-V architecture</a></li>
+  <li><a href="https://numpy.org/neps/nep-0057-numpy-platform-support.html">NEP 57 - NumPy platform support</a></li>
+  <li><a href="https://github.com/OpenMathLib/OpenBLAS/issues/5811">OpenMathLib/OpenBLAS Issue #5811 - DGEMM correctness regression on riscv64 RVV hardware</a></li>
+  <li><a href="https://github.com/google/highway/issues/2854">google/highway Issue #2854 - mold linker segfault on riscv64</a></li>
+  <li><a href="https://github.com/cython/cython/issues/7646">cython/cython Issue #7646 - Build RISC-V wheels (closed, Not Planned)</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel_builder - package list</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/packages/numpy.html">RISE wheel_builder - NumPy package page</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels">riseproject-dev/python-wheels (GitHub)</a></li>
+  <li><a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">RISE blog - Easy Installation of Binary Python Packages on riscv64 Devices</a></li>
+  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE blog - RISE RISC-V Runners: six weeks in</a></li>
+  <li><a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE blog - PyTorch is available on riscv64!</a></li>
+  <li><a href="https://riseproject.dev/2026/08/24/python-now-officially-supports-risc-v/">RISE blog - Python Now Officially Supports RISC-V</a></li>
+  <li><a href="https://discuss.python.org/t/packaging-support-for-riscv64/58475">discuss.python.org - Packaging support for riscv64</a></li>
+  <li><a href="https://arxiv.org/pdf/2504.03677">arXiv:2504.03677 - Accelerating Numpy With OpenBLAS For Open-Source RISC-V Chips</a></li>
+  <li><a href="https://arxiv.org/pdf/2406.12394">arXiv:2406.12394 - Performance characterisation of the 64-core SG2042 RISC-V CPU for HPC</a></li>
+  <li><a href="https://tracker.debian.org/pkg/numpy">Debian tracker - python3-numpy</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=NumPy&amp;suite=resolute&amp;searchon=names&amp;section=all">Ubuntu packages - python3-numpy (resolute)</a></li>
 </ul>
 
           
