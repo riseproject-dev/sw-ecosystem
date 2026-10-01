@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;
-<strong>Date:</strong> 2026-07-20<br />
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for Python (CPython)<br />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-10-01<br />
+<strong>Readiness:</strong> blue<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for Python<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -281,9 +282,15 @@
 
 <p>CPython is the reference implementation of the Python programming language, maintained by the Python Software Foundation (PSF), a 501(c)(3) non-profit. Homepage: <a href="https://www.python.org/">https://www.python.org/</a>. Repository: <a href="https://github.com/python/cpython">https://github.com/python/cpython</a>. License: Python Software Foundation License v2 (permissive, GPL-compatible).</p>
 
-<p>Python is the dominant language for data science, machine learning, and scientific computing. Its binary packaging ecosystem (PyPI, manylinux wheels) is critical to end-user productivity: roughly 15% of the top 10,000 PyPI packages are binary-only, covering numpy, scipy, pandas, scikit-learn, tokenizers, and the broader ML stack.</p>
+<p>Technical governance sits with a 5-person Steering Council (PEP 13), elected each feature release by core team members via Multi-winner Bloc STAR voting, which replaced Guido van Rossum’s BDFL role after he stepped down in July 2018. The Council works with the PSF on project assets. Platform-support policy is formalized as PEP 11 (“Supported Platforms”), which defines a three-tier system (see Section 3).</p>
 
-<p><strong>RISC-V status in one sentence:</strong> Python builds and runs on riscv64, but the two highest-value architecture-specific features (the Tier-2 copy-and-patch JIT and Linux perf profiling) are absent or disabled, stack unwinding is actively broken in the current 3.15 beta series, and the platform carries no official support tier.</p><hr />
+<p>PSF corporate sponsors by tier: Visionary - Bloomberg, Anthropic PBC, Meta, Hudson River Trading, NVIDIA, Google, Fastly. Sustainability - Microsoft. Maintaining - Anaconda Inc, Capital One, Vercel, Red Hat, SerpApi, AWS. Contributing - Cubist Systematic Strategies, OpenEDG Python Institute, Snowflake, JetBrains, Sentry, Netflix, Cloudflare, Jane Street, Posit PBC, Indeed, Malwarebytes and others. Supporting/Partner/Participating - Qube Research &amp; Technologies, Hex, CodSpeed, Elastic, Apify, ClickHouse, marimo, Astral, Trail of Bits, Quansight, Six Feet Up and others.</p>
+
+<p>Python is the dominant language for data science, machine learning and scientific computing. Its binary packaging ecosystem (PyPI, manylinux wheels) is critical to end-user productivity: an estimated ~15% of the top 10,000 PyPI packages are binary-only, including numpy, scipy, pandas and scikit-learn (<a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">riseproject.dev, May 2025</a>).</p>
+
+<p>Community stance on new ports: PEP 11’s tier system is the formal on-ramp for new architectures. A new port is accepted at Tier 3 once a core developer volunteers and a reliable buildbot exists; there is no release-blocking obligation until the port proves itself and is promoted. This is a structured, low-bar-but-real, volunteer-driven stance.</p>
+
+<p><strong>RISC-V status in one sentence:</strong> CPython reached official PEP 11 Tier 3 status for <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code> in August-September 2026, backed by RISE-funded buildbot hardware with reliable build and test results; CPython does not itself publish riscv64 binaries, so the consumable riscv64 Python today comes from Debian/Ubuntu and third-party channels, and two performance-facing subsystems (the copy-and-patch JIT and the Linux-perf JIT trampoline) remain unimplemented or unwired on riscv64.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -303,88 +310,114 @@
   <tbody>
     <tr>
       <td>2018-03-13</td>
-      <td>First issue requesting RISC-V platform triplets (<a href="https://github.com/python/cpython/issues/77251">bpo-33377</a>)</td>
+      <td>First issue requesting RISC-V platform triplets (<a href="https://github.com/python/cpython/issues/77251">bpo-33377 / issue #77251</a>)</td>
     </tr>
     <tr>
       <td>2018-04-30</td>
-      <td><a href="https://github.com/python/cpython/pull/6655">PR #6655</a> merged: adds Debian-style multiarch triplets for riscv64 to <code class="language-plaintext highlighter-rouge">configure</code>. First RISC-V content in CPython. Author: Matthias Klose (doko42), Debian/Ubuntu maintainer.</td>
+      <td><a href="https://github.com/python/cpython/pull/6655">PR #6655</a> merged: adds autoconf triplets for mips-r6 and riscv to <code class="language-plaintext highlighter-rouge">config.sub</code>/<code class="language-plaintext highlighter-rouge">config.guess</code>. Author: Matthias Klose (doko42), Debian/Ubuntu maintainer. First RISC-V content in CPython.</td>
     </tr>
     <tr>
-      <td>2018-05-01</td>
-      <td><a href="https://github.com/python/cpython/pull/6660">PR #6660</a> merged: backport of triplets to Python 3.7</td>
+      <td>2018-04-30 to 05-01</td>
+      <td><a href="https://github.com/python/cpython/pull/6660">PR #6660</a> merged: backport of the triplets to Python 3.7</td>
     </tr>
     <tr>
-      <td>2019-04-22</td>
-      <td><a href="https://github.com/python/cpython/issues/80880">Issue #80880</a>: riscv multilib build support requested; closed as out-of-scope (third party)</td>
+      <td>2019-04-22 to 05-02</td>
+      <td><a href="https://github.com/python/cpython/issues/80880">Issue #80880</a>: riscv multilib build support, patch attached, closed</td>
     </tr>
     <tr>
       <td>2023-04-11</td>
-      <td><a href="https://github.com/python/cpython/issues/103438">Issue #103438</a>: <code class="language-plaintext highlighter-rouge">CTYPES_PASS_BY_REF_HACK</code> workaround added for riscv64</td>
+      <td><a href="https://github.com/python/cpython/issues/103438">Issue #103438</a> / <a href="https://github.com/python/cpython/pull/103439">PR #103439</a>: <code class="language-plaintext highlighter-rouge">CTYPES_PASS_BY_REF_HACK</code> extended to riscv64; PR closed/merged 2024-06-26, issue itself left open for cleanup</td>
     </tr>
     <tr>
-      <td>2023-12-05</td>
-      <td><a href="https://github.com/python/cpython/issues/112779">Issue #112779</a>: build failure with undefined <code class="language-plaintext highlighter-rouge">__atomic_exchange_1</code> on some riscv64 GCC configs</td>
+      <td>2023-12-05 to 12-08</td>
+      <td><a href="https://github.com/python/cpython/issues/112779">Issue #112779</a> / <a href="https://github.com/python/cpython/pull/112819">PR #112819</a>: build failure, undefined reference to <code class="language-plaintext highlighter-rouge">__atomic_exchange_1</code> on riscv64 (StarFive board, GCC 12.2.0), fixed via configure-phase atomic-op detection</td>
     </tr>
     <tr>
-      <td>2023-12-08</td>
-      <td><a href="https://github.com/python/cpython/pull/112819">PR #112819</a> merged: <code class="language-plaintext highlighter-rouge">configure</code> detects and links <code class="language-plaintext highlighter-rouge">-latomic</code> on riscv64</td>
+      <td>2023-12-11 to 12-22</td>
+      <td><a href="https://github.com/python/cpython/issues/112951">Issue #112951</a>: mimalloc “unable to directly request hinted aligned OS memory” warning on riscv64, closed on the CPython side (upstream mimalloc issue remains open, see Section 9)</td>
     </tr>
     <tr>
       <td>2024-02-27</td>
-      <td><a href="https://github.com/python/cpython/issues/115988">Issue #115988</a>: missing <code class="language-plaintext highlighter-rouge">FILTER_RISCV</code> constant in lzma module</td>
+      <td><a href="https://github.com/python/cpython/issues/115988">Issue #115988</a> opened: missing ARM64/RISC-V BCJ filter constant in the <code class="language-plaintext highlighter-rouge">lzma</code> module</td>
     </tr>
     <tr>
-      <td>2024-06-05</td>
-      <td><a href="https://github.com/python/cpython/pull/120089">PR #120089</a> opened: perf trampoline support for riscv64, tested on SOPHON SG2042</td>
-    </tr>
-    <tr>
-      <td>2024-06-12</td>
-      <td>PR #120089 merged; <a href="https://github.com/python/cpython/issues/120400">Issue #120400</a> closed</td>
+      <td>2024-06-05 to 06-12</td>
+      <td><a href="https://github.com/python/cpython/pull/120089">PR #120089</a> merged: adds Linux-perf support for seeing Python calls on riscv64; backported to 3.13 via PR #120413 (2024-06-14); closes <a href="https://github.com/python/cpython/issues/120400">Issue #120400</a>. Lands in CPython 3.13.0.</td>
     </tr>
     <tr>
       <td>2024-07-01</td>
-      <td><a href="https://github.com/python/cpython/issues/121201">Issue #121201</a>: riscv64 fails to build <code class="language-plaintext highlighter-rouge">perf_jit_trampoline.c</code></td>
+      <td><a href="https://github.com/python/cpython/issues/121201">Issue #121201</a> opened: riscv64 fails to build <code class="language-plaintext highlighter-rouge">Python/perf_jit_trampoline.c</code> (“Unsupported target architecture”); introduced by the above perf work (first-bad commit <code class="language-plaintext highlighter-rouge">56657f6</code>)</td>
     </tr>
     <tr>
       <td>2024-07-03</td>
-      <td><a href="https://github.com/python/cpython/pull/121328">PR #121328</a> merged: disables perf_trampoline on riscv64 as workaround; <a href="https://github.com/python/cpython/pull/121336">PR #121336</a> backports to 3.13</td>
+      <td><a href="https://github.com/python/cpython/pull/121328">PR #121328</a> merged (author stefanor): disables perf_trampoline on riscv64 as a stopgap; backported to 3.13 via <a href="https://github.com/python/cpython/pull/121336">PR #121336</a> (2024-07-04)</td>
     </tr>
     <tr>
       <td>2024-07-04</td>
-      <td><a href="https://github.com/python/cpython/pull/121387">PR #121387</a> opened: proper riscv64 perf JIT support (correct DWARF register defs: RA=1, SP=2)</td>
+      <td><a href="https://github.com/python/cpython/pull/121387">PR #121387</a> opened (author furkanonder): proper riscv64 perf-JIT DWARF register fix (<code class="language-plaintext highlighter-rouge">DWRF_REG_RA=1</code>, <code class="language-plaintext highlighter-rouge">DWRF_REG_SP=2</code>); pablogsal states on 2024-07-13 that it cannot be merged without validation on a machine with working <code class="language-plaintext highlighter-rouge">perf</code></td>
     </tr>
     <tr>
-      <td>2024-09-23</td>
-      <td><a href="https://github.com/python/cpython/pull/124264">PR #124264</a> merged: C recursion limit lowered for platforms including riscv64</td>
-    </tr>
-    <tr>
-      <td>2025-05-02</td>
-      <td><a href="https://github.com/python/cpython/issues/133304">Issue #133304</a>: <code class="language-plaintext highlighter-rouge">PyFloat_Pack4/Unpack4</code> SNaN roundtrip failure on riscv64 buildbot</td>
-    </tr>
-    <tr>
-      <td>2025-05-03</td>
-      <td><a href="https://github.com/python/cpython/pull/133328">PR #133328</a> merged: workaround for RISC-V NaN canonicalization in float packing</td>
+      <td>2025-05-02 to 05-03</td>
+      <td><a href="https://github.com/python/cpython/issues/133304">Issue #133304</a> / <a href="https://github.com/python/cpython/pull/133328">PR #133328</a>: <code class="language-plaintext highlighter-rouge">PyFloat_Pack4/Unpack4</code> NaN round-trip failure on the riscv64 buildbot, fixed</td>
     </tr>
     <tr>
       <td>2026-04-17</td>
-      <td>PR #121387 marked stale; no review activity since July 2024</td>
+      <td>PR #121387 auto-labeled stale after 30+ days of inactivity; no reviewer has engaged since</td>
     </tr>
     <tr>
       <td>2026-05-28</td>
-      <td><a href="https://github.com/python/cpython/pull/115989">PR #115989</a> merged: adds <code class="language-plaintext highlighter-rouge">FILTER_RISCV</code> constant to lzma module (2+ years after filing); lands in Python 3.16</td>
+      <td><a href="https://github.com/python/cpython/pull/115989">PR #115989</a> merged: adds <code class="language-plaintext highlighter-rouge">lzma.FILTER_RISCV</code>; targets CPython 3.16</td>
     </tr>
     <tr>
-      <td>2026-06-04</td>
-      <td><a href="https://github.com/python/cpython/issues/150919">Issue #150919</a>: <code class="language-plaintext highlighter-rouge">test_frame_pointer_unwind</code> fails on riscv64 in Python 3.15.0b1 (Fedora 44)</td>
+      <td>2026-06-04 to 07-01</td>
+      <td><a href="https://github.com/python/cpython/issues/150919">Issue #150919</a>: <code class="language-plaintext highlighter-rouge">test_frame_pointer_unwind</code> fails on riscv64 in 3.15.0b1, closed (fix mechanism not separately documented in the sources reviewed)</td>
     </tr>
     <tr>
-      <td>2026-06-07</td>
-      <td><a href="https://github.com/python/cpython/issues/151040">Issue #151040</a>: <code class="language-plaintext highlighter-rouge">test_c_stack_unwind</code> fails on riscv64 in Python 3.15.0b2 (Fedora 44)</td>
+      <td>2026-06-07 to 07-01</td>
+      <td><a href="https://github.com/python/cpython/issues/151040">Issue #151040</a>: <code class="language-plaintext highlighter-rouge">test_c_stack_unwind</code> fails on riscv64, Fedora 44, 3.15.0b2, closed via <a href="https://github.com/python/cpython/pull/152370">PR #152370</a> (merged 2026-06-27/29)</td>
+    </tr>
+    <tr>
+      <td>2026-07-24</td>
+      <td><a href="https://github.com/python/steering-council/issues/360">python/steering-council#360</a> opened by StanFromIreland: formal proposal for PEP 11 Tier 3 status for <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code></td>
+    </tr>
+    <tr>
+      <td>2026-08-20</td>
+      <td>Steering Council (Yhg1s) comments agreement on steering-council#360: “The SC agrees with the proposal for tier 3 support for this platform. Please send us a PR…”</td>
+    </tr>
+    <tr>
+      <td>2026-08-21</td>
+      <td>StanFromIreland notes PEP text written, <a href="https://github.com/python/peps">python/peps#5102</a></td>
+    </tr>
+    <tr>
+      <td>2026-08-22</td>
+      <td>steering-council#360 closed as approved; <a href="https://github.com/python/cpython/issues/156244">cpython#156244</a> opened (implementation-tracking issue)</td>
+    </tr>
+    <tr>
+      <td>2026-08-23</td>
+      <td><a href="https://github.com/python/cpython/pull/156277">PR #156277</a> merged (StanFromIreland, emmatyping): marks <code class="language-plaintext highlighter-rouge">riscv64-*-linux-gnu/gcc</code> and <code class="language-plaintext highlighter-rouge">/clang</code> as <code class="language-plaintext highlighter-rouge">PY_SUPPORT_TIER=3</code> in <code class="language-plaintext highlighter-rouge">configure.ac</code>. Blog post “RISC-V is now officially supported by CPython!” published on <a href="https://blog.python.org/2026/08/riscv-now-officially-supported/">blog.python.org</a> and <a href="https://riseproject.dev/2026/08/24/python-now-officially-supports-risc-v/">“Python Now Officially Supports RISC-V”</a> on riseproject.dev (2026-08-24). Same day, StanFromIreland closes the 6-year-old <a href="https://github.com/python/cpython/issues/85518">Issue #85518</a> (“not planned”), stating the underlying tests “now pass cleanly on CPython’s four RISC-V buildbots.”</td>
+    </tr>
+    <tr>
+      <td>2026-08-27</td>
+      <td>Follow-up commit <code class="language-plaintext highlighter-rouge">1b38ad1</code> by clin1234 on cpython#156244</td>
+    </tr>
+    <tr>
+      <td>2026-09-10</td>
+      <td>cpython#156244 closed by hugovk. <a href="https://github.com/python/cpython/pull/156358">PR #156358</a> (backport of #156277 to the 3.15 branch) <strong>closed unmerged</strong>; hugovk: “Let’s not backport.”</td>
+    </tr>
+    <tr>
+      <td>2026-09-17 to 09-18</td>
+      <td><a href="https://github.com/python/cpython/issues/157688">Issue #157688</a> / <a href="https://github.com/python/cpython/pull/157690">PR #157690</a>: <code class="language-plaintext highlighter-rouge">test_linux_ext_suffix</code> performs no assertions on riscv64, fixed</td>
+    </tr>
+    <tr>
+      <td>2026-09-10</td>
+      <td><a href="https://www.infoq.com/news/2026/09/riscv-cpython/">“CPython Officially Adds RISC-V Support As a Tier 3 Platform”</a>, InfoQ</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The port began as triplet recognition (2018) and has advanced incrementally through distro-driven bug reports. No single company or individual has owned the port end-to-end.</p><hr />
+<p>The port began as autoconf triplet recognition (2018) and advanced through distro- and buildbot-driven bug reports for six years before reaching formal PEP 11 status in August 2026. Key individual contributors: Stan Ulbrych (StanFromIreland, primary architect of the Tier 3 push, supported by a Sovereign Tech Agency fellowship), Furkan Onder (RISE Project, original buildbot operator and perf-JIT fix author), Emma Smith (co-maintainer of the riscv64 tier per PEP 11), and Matthias Klose (initial 2018 triplet work, Debian/Ubuntu). RISE (RISC-V Software Ecosystem) funded/provided the physical hardware underpinning the buildbot fleet that justified the Tier 3 approval.</p>
+
+<p>Governance status: the Tier 3 classification is formally and fully upstream in <code class="language-plaintext highlighter-rouge">configure.ac</code> on the <code class="language-plaintext highlighter-rouge">main</code> branch (merged, released toward 3.16). It is <strong>not</strong> present in the CPython 3.15 branch: the backport PR #156358 was explicitly rejected by core developer hugovk, so Python 3.15 ships without the formal Tier 3 marking even though the Steering Council’s underlying governance approval (steering-council#360) predates and covers it.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -394,9 +427,7 @@
 </h2>
     
 
-<p><strong>riscv64 is not listed in any tier in <a href="https://peps.python.org/pep-0011/">PEP 11</a>.</strong> It is effectively Tier 0 (unsupported).</p>
-
-<p>PEP 11 tier definitions for context:</p>
+<p>PEP 11 defines three support tiers:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -409,28 +440,64 @@
   <tbody>
     <tr>
       <td>1</td>
-      <td>All core devs responsible; CI failures block releases</td>
-      <td>aarch64-apple-darwin, aarch64-linux-gnu, i686/x86_64-windows-msvc, x86_64-linux-gnu</td>
+      <td>All core devs responsible for the platform; CI failures block releases</td>
+      <td>x86_64-linux-gnu and other primary desktop/server targets</td>
     </tr>
     <tr>
       <td>2</td>
-      <td>&gt;=2 core dev sponsors + reliable buildbot; failures block releases</td>
-      <td>aarch64-linux-gnu (clang), wasm32-wasip1, x86_64-apple-darwin</td>
+      <td>At least 2 core-dev sponsors plus a reliable buildbot; failures block releases</td>
+      <td>aarch64-linux-gnu (clang variant) and others</td>
     </tr>
     <tr>
       <td>3</td>
-      <td>&gt;=1 core dev sponsor + reliable buildbot; failures do NOT block releases</td>
-      <td>Android, iOS, FreeBSD, Emscripten, s390x, powerpc64le</td>
-    </tr>
-    <tr>
-      <td>untiered</td>
-      <td>No formal commitment</td>
-      <td>riscv64</td>
+      <td>At least 1 core-dev sponsor plus a reliable buildbot; failures do <strong>not</strong> block releases</td>
+      <td>riscv64-unknown-linux-gnu (gcc and clang variants), Android, iOS, FreeBSD, Emscripten, s390x, powerpc64le, and others</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Promotion to any tier requires Steering Council approval (PEP 13). The 2026 Steering Council members are Pablo Galindo Salgado, Savannah Ostrowski, Barry Warsaw (NVIDIA), Donghee Na, and Thomas Wouters (Google). The riscv64 buildbot is tagged “unstable” in the buildbot registry. There is no PEP proposal to promote riscv64 to Tier 3 and no named core developer sponsor for the platform.</p><hr />
+<p><strong>riscv64-unknown-linux-gnu is Tier 3</strong>, approved by the Steering Council on 2026-08-22 (<a href="https://github.com/python/steering-council/issues/360">steering-council#360</a>) and implemented in <code class="language-plaintext highlighter-rouge">configure.ac</code> via <a href="https://github.com/python/cpython/pull/156277">PR #156277</a> (merged 2026-08-23, first ships in CPython 3.16). It is maintained by Stan Ulbrych and Emma Smith [NEEDS VERIFICATION for the specific named-maintainer attribution; sourced from a single PEP 11 policy summary]. The <code class="language-plaintext highlighter-rouge">configure.ac</code> entries cover both GCC and Clang toolchains:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[riscv64-*-linux-gnu/gcc],   [PY_SUPPORT_TIER=3],
+[riscv64-*-linux-gnu/clang], [PY_SUPPORT_TIER=3],
+</code></pre></div></div>
+
+<p>Evidence that this is a real, functioning Tier 3 rather than a paper classification: steering-council#360 cites “three stable Buildbots plus one semi-stable free-threading Buildbot” at approval time, and the closure comment on the 6-year-old <a href="https://github.com/python/cpython/issues/85518">Issue #85518</a> (2026-08-23) states the relevant tests “now pass cleanly on CPython’s four RISC-V buildbots” - i.e. build=yes and test=yes on buildbot.python.org infrastructure. These buildbots are not GitHub Actions; a full-repository grep of <code class="language-plaintext highlighter-rouge">.github/workflows/</code> (23 files) and the rest of the tree found zero riscv references, confirming riscv64 testing happens exclusively through the external buildbot fleet, not through CPython’s own GitHub Actions matrix (see Section 7).</p>
+
+<p>CPython does not publish riscv64 release binaries under any tier (see Section 8); Tier 3 governs build/test obligations, not official binary distribution.</p>
+
+<p>Comparison:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Architecture</th>
+      <th>PEP 11 tier</th>
+      <th>CI mechanism</th>
+      <th>Official binaries</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>x86_64-linux-gnu</td>
+      <td>Tier 1</td>
+      <td>GitHub Actions</td>
+      <td>python.org source tarball (no official Linux binaries for any arch)</td>
+    </tr>
+    <tr>
+      <td>aarch64-linux-gnu</td>
+      <td>Tier 1/2</td>
+      <td>GitHub Actions</td>
+      <td>Same as above</td>
+    </tr>
+    <tr>
+      <td>riscv64-unknown-linux-gnu</td>
+      <td>Tier 3</td>
+      <td>buildbot.python.org (3 stable + 1 semi-stable/free-threading)</td>
+      <td>None from CPython; distro and third-party only</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -439,91 +506,99 @@
   
 </h2>
     
-<h3 id="41-risc-v-specific-files-in-cpython">
-  
-  
-    <a href="#41-risc-v-specific-files-in-cpython" class="anchor-heading" aria-labelledby="41-risc-v-specific-files-in-cpython"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 RISC-V-Specific Files in cpython
-  
-  
-</h3>
-    
 
-<p><strong><code class="language-plaintext highlighter-rouge">Python/asm_trampoline_riscv64.S</code></strong> – perf profiling trampoline assembly.</p>
+<p>A fresh clone of <code class="language-plaintext highlighter-rouge">python/cpython</code> (HEAD <code class="language-plaintext highlighter-rouge">eb30e3d</code>, 2026-10-01) confirms there is no <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory, no RVV/vector intrinsics (<code class="language-plaintext highlighter-rouge">vfloat32m1_t</code> etc.) anywhere in the tree, and no RISC-V entries in the experimental copy-and-patch JIT’s target list.</p>
 
-<ul>
-  <li>12 lines. Defines <code class="language-plaintext highlighter-rouge">_Py_trampoline_func_start</code> / <code class="language-plaintext highlighter-rouge">_Py_trampoline_func_end</code> symbols, wrapping each Python code object’s stack frame so Linux <code class="language-plaintext highlighter-rouge">perf record</code> can distinguish Python call sites.</li>
-  <li>ISA: RV64I base only (<code class="language-plaintext highlighter-rouge">addi</code>, <code class="language-plaintext highlighter-rouge">sd</code>, <code class="language-plaintext highlighter-rouge">jalr</code>, <code class="language-plaintext highlighter-rouge">ld</code>, <code class="language-plaintext highlighter-rouge">jr ra</code>). No RVV, no Zba/Zbb/Zbc.</li>
-  <li>Status: present on disk but not wired into <code class="language-plaintext highlighter-rouge">configure.ac</code>. Only x86_64 and aarch64 are in the <code class="language-plaintext highlighter-rouge">PERF_TRAMPOLINE_OBJ</code> selection logic. The file compiles to nothing. [NEEDS VERIFICATION – the configure.ac gap was confirmed from the first 1000 lines of an 8576-line file.]</li>
-</ul>
+<p><strong><code class="language-plaintext highlighter-rouge">Python/asm_trampoline_riscv64.S</code></strong> - 12-line GAS assembly perf-profiling trampoline (<code class="language-plaintext highlighter-rouge">_Py_trampoline_func_start/_end</code>): <code class="language-plaintext highlighter-rouge">addi sp,sp,-16; sd ra,8(sp); jalr a3; ld ra,8(sp); addi sp,sp,16; jr ra</code>. Base RV64I only, no ISA extensions, no CFI/security notes. By comparison, <code class="language-plaintext highlighter-rouge">Python/asm_trampoline_x86_64.S</code> is 45 lines (adds CET <code class="language-plaintext highlighter-rouge">endbr64</code> and a <code class="language-plaintext highlighter-rouge">.note.gnu.property</code> security descriptor) and <code class="language-plaintext highlighter-rouge">Python/asm_trampoline_aarch64.S</code> is 77 lines (adds BTI/PAC/GCS feature detection and security notes). <strong>This file is dead code</strong>: <code class="language-plaintext highlighter-rouge">configure.ac</code>’s <code class="language-plaintext highlighter-rouge">AS_CASE($PLATFORM_TRIPLET)</code> block that sets <code class="language-plaintext highlighter-rouge">PERF_TRAMPOLINE_OBJ</code> only matches <code class="language-plaintext highlighter-rouge">x86_64-linux-{gnu,musl}</code> and <code class="language-plaintext highlighter-rouge">aarch64-linux-{gnu,musl}</code> (plus macOS); there is no <code class="language-plaintext highlighter-rouge">riscv64-*-linux-gnu</code> case, so the file and its <code class="language-plaintext highlighter-rouge">Makefile.pre.in</code> build rule are never invoked by <code class="language-plaintext highlighter-rouge">./configure</code>.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">Python/perf_jit_trampoline.c</code></strong> – Linux perf JIT dump writer.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">Python/perf_jit_trampoline.c</code></strong> (852 lines) - contains a working <code class="language-plaintext highlighter-rouge">EM_RISCV</code> (243) case in its ELF-machine-detection switch, but is wrapped in <code class="language-plaintext highlighter-rouge">#ifdef PY_HAVE_PERF_TRAMPOLINE</code>, which is never defined for riscv64 given the gap above. It compiles to an empty translation unit on riscv64. This is the root of open <a href="https://github.com/python/cpython/issues/121201">Issue #121201</a>.</p>
 
-<ul>
-  <li>Contains <code class="language-plaintext highlighter-rouge">#elif defined(__riscv)</code> returning <code class="language-plaintext highlighter-rouge">EM_RISCV 243</code> in <code class="language-plaintext highlighter-rouge">GetElfMachineArchitecture()</code>. Architecture detection works.</li>
-  <li>The companion <code class="language-plaintext highlighter-rouge">Python/jit_unwind.c</code> has <code class="language-plaintext highlighter-rouge">#error "Unsupported target architecture"</code> for anything that is not x86_64 or AArch64. The DWARF CFA/register enum needed for full perf JIT functionality is absent for RISC-V. Attempting to build with perf JIT on riscv64 fails with this error.</li>
-  <li>Open bug: <a href="https://github.com/python/cpython/issues/121201">Issue #121201</a>, open since July 2024, affecting 3.13, 3.14, 3.15.</li>
-</ul>
+<p><strong><code class="language-plaintext highlighter-rouge">Tools/jit/_targets.py</code></strong> (the experimental copy-and-patch JIT, PEP 744, headline 3.13+ performance feature) - host-triple regex matching covers only <code class="language-plaintext highlighter-rouge">aarch64-*</code> and <code class="language-plaintext highlighter-rouge">x86_64-*|i686-*</code> variants. Zero riscv64 entries. The architecture is not recognized by the JIT build tooling at all; this is a missing subsystem, not a scalar fallback.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">Python/jit_unwind.c</code></strong> – DWARF <code class="language-plaintext highlighter-rouge">.eh_frame</code> generation for JIT.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">Objects/floatobject.c</code></strong> - <code class="language-plaintext highlighter-rouge">#ifndef __riscv</code> guards (two sites) in <code class="language-plaintext highlighter-rouge">PyFloat_Pack4/Unpack4</code>. RISC-V’s FPU canonicalizes/silences NaN payloads on float32-to-float64 widening differently from other architectures, so the optimized fast path is explicitly excluded on riscv64 and a portable fallback is used instead, with sign/payload restored from the raw packed bytes (<a href="https://github.com/python/cpython/pull/133328">PR #133328</a>). Functionally correct, but not the native fast path other tier-1 architectures get.</p>
 
-<ul>
-  <li>No RISC-V support. <code class="language-plaintext highlighter-rouge">#error "Unsupported target architecture"</code> fallback.</li>
-  <li>Fix proposed in <a href="https://github.com/python/cpython/pull/121387">PR #121387</a>: add <code class="language-plaintext highlighter-rouge">DWRF_REG_RA = 1, DWRF_REG_SP = 2</code> and extend the AArch64 DWARF CFA block to cover <code class="language-plaintext highlighter-rouge">defined(__riscv)</code>. Correct per the RISC-V psABI. Stale since April 2026.</li>
-</ul>
+<p><strong><code class="language-plaintext highlighter-rouge">Modules/_ctypes/callproc.c</code></strong> - <code class="language-plaintext highlighter-rouge">CTYPES_PASS_BY_REF_HACK</code> is enabled for <code class="language-plaintext highlighter-rouge">__riscv</code> alongside aarch64/mingw64/cygwin: structs larger than 8 bytes or of non-power-of-2 size are passed by reference through the libffi call path, matching RISC-V’s calling convention. Functional but a shared heuristic, not riscv-tuned; cleanup tracked in open <a href="https://github.com/python/cpython/issues/103438">Issue #103438</a>.</p>
 
-<p><strong><code class="language-plaintext highlighter-rouge">Objects/floatobject.c</code></strong> – SNaN workaround.</p>
+<p><strong><code class="language-plaintext highlighter-rouge">Modules/_testinternalcapi.c</code></strong> - <code class="language-plaintext highlighter-rouge">FRAME_POINTER_NEXT_OFFSET</code>/<code class="language-plaintext highlighter-rouge">FRAME_POINTER_RETURN_OFFSET</code> set to <code class="language-plaintext highlighter-rouge">-2</code>/<code class="language-plaintext highlighter-rouge">-1</code> for <code class="language-plaintext highlighter-rouge">__riscv</code>, implementing the correct RISC-V ELF psABI frame-pointer convention for C-stack walking, fixed via <a href="https://github.com/python/cpython/pull/152370">PR #152370</a>.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">#ifndef __riscv</code> guard blocks in <code class="language-plaintext highlighter-rouge">PyFloat_Pack4</code> / <code class="language-plaintext highlighter-rouge">PyFloat_Unpack4</code>. On RISC-V, the FPU canonicalizes NaNs on float32-to-float64 widening, destroying SNaN payload and sign bit. The workaround restores sign and payload from the raw packed bytes after the conversion.</li>
-  <li>Merged <a href="https://github.com/python/cpython/pull/133328">PR #133328</a> May 2025, targeting Python 3.14.</li>
-</ul>
-<h3 id="42-confirmed-absent">
-  
-  
-    <a href="#42-confirmed-absent" class="anchor-heading" aria-labelledby="42-confirmed-absent"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Confirmed Absent
-  
-  
-</h3>
-    
+<p><strong><code class="language-plaintext highlighter-rouge">Include/cpython/object.h</code></strong> - thread-id fast path uses <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer()</code> (clang) or inline <code class="language-plaintext highlighter-rouge">mv %0, tp</code> asm to read RISC-V’s <code class="language-plaintext highlighter-rouge">tp</code> register per the RISC-V ABI. Correct, native intrinsic path.</p>
+
+<p><strong><code class="language-plaintext highlighter-rouge">Modules/_hacl/include/krml/internal/types.h</code></strong> - vendored HACL* crypto header; <code class="language-plaintext highlighter-rouge">__riscv &amp;&amp; __riscv_xlen==64</code> included in the <code class="language-plaintext highlighter-rouge">HAS_INT128</code> detection macro alongside s390x/mips64, enabling 128-bit integer support for the vendored hash/crypto implementations.</p>
+
+<p><strong><code class="language-plaintext highlighter-rouge">Modules/_lzmamodule.c</code> / <code class="language-plaintext highlighter-rouge">Lib/lzma.py</code></strong> - <code class="language-plaintext highlighter-rouge">lzma.FILTER_RISCV</code> (BCJ filter ID <code class="language-plaintext highlighter-rouge">0x0B</code>) exposed in the public API, same tier of support as the ARM64 filter; requires liblzma &gt;= 5.6.0 at runtime; new in 3.16 (<a href="https://github.com/python/cpython/pull/115989">PR #115989</a>).</p>
+
+<p><strong><code class="language-plaintext highlighter-rouge">Misc/platform_triplet.c</code></strong> - correct <code class="language-plaintext highlighter-rouge">riscv32</code>/<code class="language-plaintext highlighter-rouge">riscv64</code> detection via <code class="language-plaintext highlighter-rouge">__riscv_xlen</code> for extension-module filename suffixes.</p>
+
+<p><strong><code class="language-plaintext highlighter-rouge">Include/cpython/pyatomic_gcc.h</code></strong> - no arch-specific code for any architecture (generic <code class="language-plaintext highlighter-rouge">__atomic_*</code> builtins plus a configure-time <code class="language-plaintext highlighter-rouge">-latomic</code> check); this is a uniform gap, not riscv-specific.</p>
+
+<p>Architecture-specific code-surface comparison (non-test files containing the platform guard): <code class="language-plaintext highlighter-rouge">__x86_64__</code> appears in 22 files, <code class="language-plaintext highlighter-rouge">__aarch64__</code> in 17 files, <code class="language-plaintext highlighter-rouge">__riscv</code> in 7 files. riscv64 carries roughly a third of x86_64’s architecture-specific footprint, consistent with its 2026 Tier 3 status versus x86_64/aarch64’s Tier 1/2 maturity.</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Component</th>
-      <th>Status</th>
+      <th>x86_64</th>
+      <th>aarch64</th>
+      <th>riscv64</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">Tools/jit/_targets.py</code> – copy-and-patch JIT targets</td>
-      <td>x86_64 and AArch64 only; <code class="language-plaintext highlighter-rouge">ValueError</code> for any other host including riscv64</td>
+      <td>Copy-and-patch JIT (<code class="language-plaintext highlighter-rouge">Tools/jit/</code>)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Missing - zero entries in <code class="language-plaintext highlighter-rouge">_targets.py</code></td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">Python/jit.c</code> – JIT runtime trampolines</td>
-      <td>AArch64 and x86_64 only; riscv64 gets <code class="language-plaintext highlighter-rouge">TRAMPOLINE_SIZE 0</code></td>
+      <td>Perf ASM trampoline</td>
+      <td>Full (CET)</td>
+      <td>Full (BTI/PAC/GCS)</td>
+      <td>Source present, unreachable - not wired into <code class="language-plaintext highlighter-rouge">configure.ac</code></td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">Modules/_hacl/libintvector.h</code> – SIMD dispatch</td>
-      <td>x86 (SSE/AVX2), ARM (NEON), s390x, ppc64; no RVV</td>
+      <td>Perf JIT trampoline (DWARF CFI)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td><code class="language-plaintext highlighter-rouge">EM_RISCV</code> detection present but gated by the unreachable trampoline (open Issue #121201)</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">configure.ac</code> – <code class="language-plaintext highlighter-rouge">PERF_TRAMPOLINE_OBJ</code></td>
-      <td>No riscv64 entry</td>
+      <td>Manual frame-pointer unwinding</td>
+      <td>Correct</td>
+      <td>Correct</td>
+      <td>Correct, fixed via PR #152370</td>
     </tr>
     <tr>
-      <td>Any <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory</td>
-      <td>Does not exist</td>
+      <td>ctypes/libffi ABI</td>
+      <td>Native</td>
+      <td>Native</td>
+      <td>Functional via shared <code class="language-plaintext highlighter-rouge">PASS_BY_REF_HACK</code> heuristic</td>
     </tr>
     <tr>
-      <td>RVV intrinsics (<code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>, vector builtins)</td>
-      <td>Not present anywhere in CPython</td>
+      <td>Float NaN packing</td>
+      <td>Native fast path</td>
+      <td>Native fast path</td>
+      <td>Correct via <code class="language-plaintext highlighter-rouge">#ifndef __riscv</code> portable fallback</td>
     </tr>
     <tr>
-      <td>Zba/Zbb/Zbc/Zbs extension usage</td>
-      <td>Not present</td>
+      <td>HACL* 128-bit crypto ints</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full, same tier as s390x/mips64</td>
+    </tr>
+    <tr>
+      <td>lzma BCJ filter</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Full, added 3.16</td>
+    </tr>
+    <tr>
+      <td>Thread-pointer read</td>
+      <td>Native</td>
+      <td>Native</td>
+      <td>Native (<code class="language-plaintext highlighter-rouge">__builtin_thread_pointer</code>/<code class="language-plaintext highlighter-rouge">tp</code> register)</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -532,111 +607,29 @@
   
 </h2>
     
-<h3 id="51-build-system">
-  
-  
-    <a href="#51-build-system" class="anchor-heading" aria-labelledby="51-build-system"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.1 Build System
-  
-  
-</h3>
-    
 
-<p>CPython uses autotools (<code class="language-plaintext highlighter-rouge">./configure</code> + <code class="language-plaintext highlighter-rouge">Makefile</code>). There is no CMakeLists.txt, no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, and no CPython-authored Dockerfile for riscv64. The <a href="https://github.com/python/cpython/tree/main/Platforms">Platforms/</a> directory covers Android, Apple, WASI, and Emscripten only.</p>
+<p>CPython uses GNU Autotools exclusively (<code class="language-plaintext highlighter-rouge">configure</code> generated from <code class="language-plaintext highlighter-rouge">configure.ac</code>, <code class="language-plaintext highlighter-rouge">Makefile.pre.in</code> -&gt; <code class="language-plaintext highlighter-rouge">Makefile</code>). A direct repository inspection confirms there is <strong>no CMakeLists.txt, no <code class="language-plaintext highlighter-rouge">cmake/</code> directory, no Dockerfile anywhere in the tree, and no QEMU usage anywhere in the repository</strong> (<code class="language-plaintext highlighter-rouge">search_code</code> for <code class="language-plaintext highlighter-rouge">qemu riscv64</code>, <code class="language-plaintext highlighter-rouge">riscv64 Dockerfile</code>, and <code class="language-plaintext highlighter-rouge">riscv64 path:.github</code> each returned zero results). <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, <code class="language-plaintext highlighter-rouge">docs/building.md</code>, and <code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> do not exist; the build documentation lives at <a href="https://docs.python.org/3/using/configure.html">docs.python.org/3/using/configure.html</a>.</p>
 
-<p>riscv64 falls into the generic <code class="language-plaintext highlighter-rouge">*-*-linux*</code> branch of <code class="language-plaintext highlighter-rouge">configure.ac</code>. No riscv64-specific configure block exists beyond triplet recognition (added in 2018) and the <code class="language-plaintext highlighter-rouge">-latomic</code> detection fix (2023).</p>
-<h3 id="52-cross-compilation-generic-pattern">
-  
-  
-    <a href="#52-cross-compilation-generic-pattern" class="anchor-heading" aria-labelledby="52-cross-compilation-generic-pattern"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.2 Cross-Compilation (Generic Pattern)
-  
-  
-</h3>
-    
+<p>Standard native build (identical for riscv64, no special flags):</p>
 
-<p>CPython’s cross-compilation model requires a host build first (<code class="language-plaintext highlighter-rouge">--with-build-python</code>), available since Python 3.11. The upstream documentation is at <a href="https://docs.python.org/3/using/configure.html">https://docs.python.org/3/using/configure.html</a>.</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Step 1: build host Python
-mkdir build-host &amp;&amp; cd build-host
-../configure --prefix=$PWD/install
-make -j$(nproc) &amp;&amp; make install
-cd ..
-
-# Step 2: cross-compile for riscv64
-CONFIG_SITE=../config.site-riscv64 \
-../configure \
-    --build=x86_64-pc-linux-gnu \
-    --host=riscv64-unknown-linux-gnu \
-    --with-build-python=../build-host/install/bin/python3 \
-    --prefix=/usr
-make -j$(nproc)
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./configure
+make
+make test
+sudo make install
 </code></pre></div></div>
 
-<p>Required <code class="language-plaintext highlighter-rouge">config.site</code> overrides (autoconf cannot run target binaries during cross-build):</p>
+<p>Cross-compiling uses CPython’s generic Autotools cross-build mechanism; there is no riscv64-specific wrapper or toolchain file. <code class="language-plaintext highlighter-rouge">configure.ac</code> requires both <code class="language-plaintext highlighter-rouge">--host</code> and <code class="language-plaintext highlighter-rouge">--build</code> when cross-compiling, and a <code class="language-plaintext highlighter-rouge">--with-build-python</code> matching the target Python version (the cross-build runs the host-architecture Python to freeze modules and generate headers):</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ac_cv_buggy_getaddrinfo=no
-ac_cv_file__dev_ptmx=yes
-ac_cv_file__dev_ptc=no
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./configure --host=riscv64-unknown-linux-gnu --build=&lt;your-build-triple&gt; \
+            --with-build-python=&lt;path-to-native-python-for-same-version&gt;
+make
 </code></pre></div></div>
 
-<p>Cross-compilation is not officially supported on CPython 3.10 and earlier.</p>
-<h3 id="53-known-flags-to-disable-for-riscv64">
-  
-  
-    <a href="#53-known-flags-to-disable-for-riscv64" class="anchor-heading" aria-labelledby="53-known-flags-to-disable-for-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.3 Known Flags to Disable for riscv64
-  
-  
-</h3>
-    
+<p><strong>Toolchain versions:</strong> <code class="language-plaintext highlighter-rouge">configure.ac</code> enforces <strong>no riscv64-specific, and no general, minimum GCC/Clang version string</strong>; compiler support is entirely feature-detected (checks for flags like <code class="language-plaintext highlighter-rouge">-fno-strict-aliasing</code>, <code class="language-plaintext highlighter-rouge">-fvisibility=hidden</code>, and builtins like <code class="language-plaintext highlighter-rouge">__builtin_thread_pointer</code>) rather than gated on a version number. In practice, whatever GCC or Clang a distro ships with a working <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code>/<code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> target (both are explicitly listed as supported in the Tier 3 <code class="language-plaintext highlighter-rouge">configure.ac</code> entries) is sufficient. The RISC-V backend first became available upstream in roughly GCC 7.1, GNU binutils 2.28, and glibc 2.27, which is the practical floor even though CPython’s own <code class="language-plaintext highlighter-rouge">configure</code> does not check for it directly [NEEDS VERIFICATION for the exact version-numbers, carried from a single source].</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">--enable-experimental-jit</code>: do not use. JIT does not support riscv64 in any released or beta version as of 3.15.</li>
-  <li><code class="language-plaintext highlighter-rouge">--enable-optimizations</code>: do not use when cross-compiling; requires running the target binary for PGO.</li>
-  <li><code class="language-plaintext highlighter-rouge">--with-tail-call-interp</code>: requires Clang 19+.</li>
-</ul>
-<h3 id="54-toolchain-requirements">
-  
-  
-    <a href="#54-toolchain-requirements" class="anchor-heading" aria-labelledby="54-toolchain-requirements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5.4 Toolchain Requirements
-  
-  
-</h3>
-    
+<p>The canonical riscv64 Linux ABI used across GCC, Clang, QEMU and all major riscv64 distributions is ISA <code class="language-plaintext highlighter-rouge">rv64gc</code> (IMAFD + Zicsr + Zifencei + C), ABI <code class="language-plaintext highlighter-rouge">lp64d</code>, triple <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code> or <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code>. The manylinux standard for binary wheel distribution uses <code class="language-plaintext highlighter-rouge">manylinux_2_39_riscv64</code> (glibc 2.39) or <code class="language-plaintext highlighter-rouge">manylinux_2_35_riscv64</code> (glibc 2.35, used by RISE’s wheel_builder).</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Component</th>
-      <th>Minimum</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>GCC</td>
-      <td>7.1</td>
-      <td>First release with RISC-V backend</td>
-    </tr>
-    <tr>
-      <td>Binutils</td>
-      <td>2.28</td>
-      <td>First release with RISC-V support</td>
-    </tr>
-    <tr>
-      <td>glibc</td>
-      <td>2.27</td>
-      <td>First release with RISC-V support</td>
-    </tr>
-    <tr>
-      <td>QEMU (user-mode)</td>
-      <td>2.12</td>
-      <td>First with RISC-V user/system emulation</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>The manylinux standard for binary distribution uses GCC 14 and glibc 2.39 (<code class="language-plaintext highlighter-rouge">manylinux_2_39_riscv64</code>) or glibc 2.35 (<code class="language-plaintext highlighter-rouge">manylinux_2_35_riscv64</code>, used by the RISE wheel_builder).</p>
-
-<p>The canonical riscv64 Linux ABI for Python: ISA <code class="language-plaintext highlighter-rouge">rv64gc</code> (G = IMAFD + Zicsr + Zifencei, C = compressed), ABI <code class="language-plaintext highlighter-rouge">lp64d</code>, triple <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code> or <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code>. This is the established baseline across GCC, Clang, QEMU, and all major riscv64 Linux distributions.</p>
+<p>Flags to avoid on riscv64: <code class="language-plaintext highlighter-rouge">--enable-experimental-jit</code> (the JIT does not recognize riscv64 in any released or beta version); <code class="language-plaintext highlighter-rouge">--enable-optimizations</code> when cross-compiling (PGO requires running the target binary natively).</p>
 
 <p>Debian/Ubuntu cross-compiler setup:</p>
 
@@ -644,7 +637,7 @@ ac_cv_file__dev_ptc=no
 sudo apt-get install gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
 export CC=riscv64-linux-gnu-gcc
 export CXX=riscv64-linux-gnu-g++
-</code></pre></div></div><hr />
+</code></pre></div></div>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -665,77 +658,85 @@ export CXX=riscv64-linux-gnu-g++
   </thead>
   <tbody>
     <tr>
-      <td>Tier-2 copy-and-patch JIT (3.13+)</td>
-      <td>Full (3 targets)</td>
-      <td>Full (3 targets)</td>
+      <td>Copy-and-patch JIT (3.13+)</td>
+      <td>Full</td>
+      <td>Full</td>
       <td>Missing entirely</td>
     </tr>
     <tr>
-      <td>perf ASM trampoline</td>
+      <td>Perf ASM trampoline</td>
       <td>Full (CET)</td>
       <td>Full (BTI/PAC/GCS)</td>
-      <td>File exists, not wired into configure</td>
+      <td>Present on disk, not wired into configure.ac</td>
     </tr>
     <tr>
-      <td>perf JIT trampoline (DWARF CFI)</td>
+      <td>Perf JIT trampoline (DWARF CFI)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Build fails; workaround: disabled</td>
+      <td>Build fails without the disable workaround; real fix stalled (PR #121387)</td>
     </tr>
     <tr>
       <td>Manual frame-pointer unwinding</td>
       <td>Correct</td>
       <td>Correct</td>
-      <td>Broken in 3.15.0b1/b2 (zero frames)</td>
+      <td>Correct (fixed, PR #152370)</td>
     </tr>
     <tr>
-      <td>ctypes / libffi ABI</td>
-      <td>Full</td>
-      <td>Full</td>
-      <td>Functional with acknowledged workaround</td>
+      <td>ctypes/libffi ABI</td>
+      <td>Native</td>
+      <td>Native</td>
+      <td>Functional via shared ABI workaround</td>
     </tr>
     <tr>
       <td>Float SNaN handling</td>
-      <td>Correct (native)</td>
-      <td>Correct (native)</td>
-      <td>Correct via workaround (Pack4/Unpack4)</td>
+      <td>Native fast path</td>
+      <td>Native fast path</td>
+      <td>Correct via portable fallback (PR #133328)</td>
     </tr>
     <tr>
       <td>lzma FILTER constant</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Fixed in 3.16 (2 years after filing)</td>
+      <td>Added in 3.16</td>
     </tr>
     <tr>
       <td>libatomic linking</td>
       <td>Not needed</td>
       <td>Not needed</td>
-      <td>Fix in configure (2023)</td>
+      <td>Fixed via configure detection (2023)</td>
     </tr>
     <tr>
-      <td>SIMD / RVV dispatch</td>
-      <td>SSE/AVX2 in hash libs</td>
-      <td>NEON in hash libs</td>
+      <td>SIMD/vector dispatch (hash/compression libs)</td>
+      <td>SSE/AVX2</td>
+      <td>NEON</td>
       <td>None</td>
     </tr>
     <tr>
       <td>PEP 11 platform tier</td>
       <td>Tier 1</td>
-      <td>Tier 1</td>
-      <td>Untiered</td>
+      <td>Tier 1/2</td>
+      <td>Tier 3</td>
     </tr>
     <tr>
-      <td>Official GitHub Actions CI</td>
+      <td>GitHub Actions CI</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No</td>
+      <td>No - relies on buildbot.python.org</td>
+    </tr>
+    <tr>
+      <td>Official binary releases</td>
+      <td>None from CPython for any arch (source + distro)</td>
+      <td>Same</td>
+      <td>Same</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The JIT gap is the most significant. On supported architectures, the copy-and-patch JIT provides an estimated 5-15% throughput improvement on macrobenchmarks (per CPython team public statements on x86/ARM results). riscv64 runs the bytecode interpreter only.</p>
+<p>The JIT gap is the most significant performance item: on supported architectures the copy-and-patch JIT is CPython’s primary 3.13+ performance investment. riscv64 runs the bytecode interpreter only, with no upstream issue or PR yet opened to begin riscv64 JIT work (confirmed by zero riscv references in <code class="language-plaintext highlighter-rouge">Tools/jit/</code>).</p>
 
-<p>The stack unwinding regression in 3.15 betas is a correctness issue that will affect Fedora 44 and any distribution shipping Python 3.15 on riscv64 if not resolved before the 3.15.0 final release.</p><hr />
+<p>The perf-JIT trampoline gap is a tooling/observability issue, not a correctness bug: <code class="language-plaintext highlighter-rouge">perf record</code> cannot resolve Python call sites into JIT-generated frames on riscv64, because the real fix is blocked on validation hardware (see Section 12).</p>
+
+<p>Correctness issues that existed in the 3.15 beta series (<code class="language-plaintext highlighter-rouge">test_frame_pointer_unwind</code>, <code class="language-plaintext highlighter-rouge">test_c_stack_unwind</code>) are now closed; stack unwinding on riscv64 is reported as working.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -744,62 +745,43 @@ export CXX=riscv64-linux-gnu-g++
   
 </h2>
     
-<h3 id="71-github-actions">
-  
-  
-    <a href="#71-github-actions" class="anchor-heading" aria-labelledby="71-github-actions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.1 GitHub Actions
-  
-  
-</h3>
-    
 
-<p>Zero riscv64 coverage. All 23 workflow files in <a href="https://github.com/python/cpython/tree/main/.github/workflows"><code class="language-plaintext highlighter-rouge">.github/workflows/</code></a> were checked. The word “riscv” does not appear in any of them. The CI matrix covers: x86_64 Linux/Windows/macOS, arm64/aarch64 Linux/Windows/macOS, i686 Windows, wasm32 (WASI/Emscripten), Android, and iOS. No RISC-V target in any form, whether via a native runner or QEMU emulation.</p>
-<h3 id="72-buildbot">
-  
-  
-    <a href="#72-buildbot" class="anchor-heading" aria-labelledby="72-buildbot"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.2 Buildbot
-  
-  
-</h3>
-    
+<p>CPython’s own GitHub Actions matrix has <strong>zero riscv64 coverage</strong>. A direct clone-and-grep of all 23 workflow files in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> (<code class="language-plaintext highlighter-rouge">build.yml</code>, <code class="language-plaintext highlighter-rouge">jit.yml</code>, <code class="language-plaintext highlighter-rouge">lint.yml</code>, <code class="language-plaintext highlighter-rouge">mypy.yml</code>, <code class="language-plaintext highlighter-rouge">reusable-ubuntu.yml</code>, <code class="language-plaintext highlighter-rouge">reusable-macos.yml</code>, <code class="language-plaintext highlighter-rouge">reusable-windows.yml</code>, <code class="language-plaintext highlighter-rouge">reusable-wasi.yml</code>, <code class="language-plaintext highlighter-rouge">reusable-emscripten.yml</code>, <code class="language-plaintext highlighter-rouge">reusable-san.yml</code>, <code class="language-plaintext highlighter-rouge">reusable-cifuzz.yml</code>, <code class="language-plaintext highlighter-rouge">tail-call.yml</code>, <code class="language-plaintext highlighter-rouge">stale.yml</code>, and others) plus a repository-wide search for <code class="language-plaintext highlighter-rouge">.yml</code>/<code class="language-plaintext highlighter-rouge">.yaml</code> files found no mention of “riscv” in any form. There is no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> at the repository root. The CI matrix covers x86_64/arm64 Linux, Windows, macOS, i686 Windows, wasm32 (WASI/Emscripten), Android and iOS; RISC-V is absent, whether via native runner or QEMU emulation.</p>
 
-<p>One buildbot worker exists: <code class="language-plaintext highlighter-rouge">"onder-riscv64"</code>, a StarFive VisionFive 2 v1.3B running Ubuntu 25.04, operated by Furkan Onder (a single individual, contact: <code class="language-plaintext highlighter-rouge">furkanonder@protonmail.com</code>). This is not project-managed infrastructure.</p>
+<p>riscv64 testing instead runs on <strong>buildbot.python.org</strong>, external infrastructure not represented in this repository’s workflow files. Per steering-council#360 (approved 2026-08-22), the riscv64 Tier 3 approval was backed by “three stable Buildbots plus one semi-stable free-threading Buildbot” - four buildbots total. The closure comment on <a href="https://github.com/python/cpython/issues/85518">Issue #85518</a> (2026-08-23) independently corroborates “CPython’s four RISC-V buildbots,” confirming the fleet is operating and testing reliably as of the Tier 3 approval date. RISE supplied the physical riscv64 hardware behind this buildbot coverage (<a href="https://riseproject.dev/2026/08/24/python-now-officially-supports-risc-v/">riseproject.dev blog, 2026-08-24</a>). This coverage is a material increase from the project’s early 2024-2026 state, when riscv64 CI ran on a single volunteer-operated board; the buildbot fleet’s exact current operator/ownership structure is not independently documented in the sources reviewed here [NEEDS VERIFICATION].</p>
 
-<p>Builder <code class="language-plaintext highlighter-rouge">"riscv64 Ubuntu23 PR"</code> (builderid 1377):</p>
+<p>RISE separately operates “RISE RISC-V Runners,” free ephemeral GitHub Actions runners on physical riscv64 hardware (reported as bare-metal Scaleway servers). These runners back RISE’s own adjacent projects - <code class="language-plaintext highlighter-rouge">riseproject-dev/python-wheels</code> (wheel building) and <code class="language-plaintext highlighter-rouge">riseproject-dev/python-versions</code> (prebuilt CPython binaries) - but are not wired into CPython’s own <code class="language-plaintext highlighter-rouge">.github/workflows/</code>.</p>
 
-<ul>
-  <li>32 total builds since first build on 2024-03-13</li>
-  <li>Average: approximately 1.2 builds per month</li>
-  <li>Last successful build: 2025-08-09 (build #31)</li>
-  <li>Last build: 2026-03-25 (build #32) – FAILURE at the “update” step, approximately 5 minutes runtime (never reached compile or test phases)</li>
-  <li>Tags: <code class="language-plaintext highlighter-rouge">["PullRequest", "unstable", "installed"]</code></li>
-  <li><strong>Currently broken. Has been broken for over 3 months with no fix.</strong></li>
-</ul>
-
-<p>Builder <code class="language-plaintext highlighter-rouge">"riscv64 Ubuntu23 main"</code> (builderid 1980):</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">masterids: []</code> – no build master connected, offline</li>
-  <li>Zero builds ever recorded</li>
-</ul>
-
-<p>The builder <code class="language-plaintext highlighter-rouge">"riscv64 Ubuntu23 PR"</code> is officially tagged “unstable,” meaning failures do not block releases. For comparison, Tier 1 x86_64 builders run thousands of builds. Describing this as “CI coverage” significantly overstates the situation.</p>
-<h3 id="73-the-single-hardware-dependency">
-  
-  
-    <a href="#73-the-single-hardware-dependency" class="anchor-heading" aria-labelledby="73-the-single-hardware-dependency"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.3 The Single Hardware Dependency
-  
-  
-</h3>
-    
-
-<p>@furkanonder is the only contributor with riscv64 hardware (the VisionFive 2 board). He is the buildbot operator and filed the perf JIT DWARF register values that inform PR #121387. However:</p>
-
-<ul>
-  <li>The SiFive-based hardware lacks working Linux <code class="language-plaintext highlighter-rouge">perf</code> hardware counters (HPM), so the perf JIT functionality required to validate PR #121387 cannot be tested on his board. This is the hard blocker that has kept the PR unmerged for nearly 2 years.</li>
-  <li>@vstinner (Red Hat) and @pablogsal (the perf trampoline maintainer) have no riscv64 hardware access.</li>
-  <li>The frame-pointer unwinding failures (issues #150919, #151040) were pinged to @furkanonder on 2026-06-16 with no response as of the research date.</li>
-</ul><hr />
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>x86_64</th>
+      <th>aarch64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GitHub Actions in cpython repo</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>buildbot.python.org coverage</td>
+      <td>Extensive, Tier 1</td>
+      <td>Extensive</td>
+      <td>4 buildbots (3 stable + 1 semi-stable free-threading), Tier 3</td>
+    </tr>
+    <tr>
+      <td>Release-blocking</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (Tier 3)</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -808,64 +790,21 @@ export CXX=riscv64-linux-gnu-g++
   
 </h2>
     
-<h3 id="81-cpython-upstream">
-  
-  
-    <a href="#81-cpython-upstream" class="anchor-heading" aria-labelledby="81-cpython-upstream"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.1 CPython Upstream
-  
-  
-</h3>
-    
 
-<p>CPython publishes no riscv64 binaries from its own channels. <a href="https://www.python.org/downloads/">python.org downloads</a> provides source tarballs plus Windows (amd64/arm64) and macOS installers. No riscv64 file appears in any release asset listing through the current stable release (3.14.6 at time of research).</p>
-<h3 id="82-debian">
-  
-  
-    <a href="#82-debian" class="anchor-heading" aria-labelledby="82-debian"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.2 Debian
-  
-  
-</h3>
-    
+<p>CPython publishes <strong>no riscv64 binaries from its own channels</strong>. <a href="https://www.python.org/downloads/">python.org/downloads</a> and the FTP mirror provide only source tarballs (<code class="language-plaintext highlighter-rouge">.tar.xz</code>/<code class="language-plaintext highlighter-rouge">.tgz</code>) plus Windows (amd64/arm64) and macOS installers - this is true for every architecture, including amd64 Linux; CPython has never shipped official Linux binaries for any architecture, so the absence of a riscv64 asset is not riscv64-specific.</p>
 
-<p>A riscv64 binary package <code class="language-plaintext highlighter-rouge">python3.13_3.13.14-1_riscv64.deb</code> exists in Debian sid (main archive), built by Debian buildd worker <code class="language-plaintext highlighter-rouge">rv-osuosl-03</code>, last modified 2026-06-11. This is produced by Debian’s autobuilder infrastructure, not CPython upstream. Status: <code class="language-plaintext highlighter-rouge">Installed</code> (up-to-date in the archive).</p>
-<h3 id="83-ubuntu">
-  
-  
-    <a href="#83-ubuntu" class="anchor-heading" aria-labelledby="83-ubuntu"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.3 Ubuntu
-  
-  
-</h3>
-    
+<p>Downstream distro and third-party channels confirmed directly:</p>
 
-<p><code class="language-plaintext highlighter-rouge">python3</code> version <code class="language-plaintext highlighter-rouge">3.12.3-0ubuntu1</code> is available for riscv64 on Ubuntu 24.04 (noble) via <a href="https://packages.ubuntu.com/noble/python3">packages.ubuntu.com</a>. Distro-built, not upstream.</p>
-<h3 id="84-arch-linux-risc-v">
-  
-  
-    <a href="#84-arch-linux-risc-v" class="anchor-heading" aria-labelledby="84-arch-linux-risc-v"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.4 Arch Linux RISC-V
-  
-  
-</h3>
-    
+<ul>
+  <li><strong>Ubuntu 26.04 (“resolute”)</strong>: <code class="language-plaintext highlighter-rouge">python3</code> (version <code class="language-plaintext highlighter-rouge">3.14.3-0ubuntu2</code>), <code class="language-plaintext highlighter-rouge">python3-minimal</code>, and <code class="language-plaintext highlighter-rouge">python3-dev</code> are all present for riscv64, confirmed via direct fetch of <a href="https://packages.ubuntu.com/resolute/riscv64/python3">packages.ubuntu.com/resolute/riscv64/python3</a> (HTTP 200; package <code class="language-plaintext highlighter-rouge">python3_3.14.3-0ubuntu2_riscv64.deb</code>, pool <code class="language-plaintext highlighter-rouge">pool/main/p/python3-defaults/</code>). riscv64 is tagged a <code class="language-plaintext highlighter-rouge">ports</code> architecture in Ubuntu, meaning it carries ports-tier (not primary-archive) support guarantees.</li>
+  <li><strong>Debian sid</strong>: <code class="language-plaintext highlighter-rouge">python3.13_3.13.14-1_riscv64.deb</code>, built by Debian buildd worker <code class="language-plaintext highlighter-rouge">rv-osuosl-03</code>, installed/up-to-date in the archive [carried from prior assessment, not re-verified this cycle].</li>
+  <li><strong>Arch Linux RISC-V</strong>: <code class="language-plaintext highlighter-rouge">python-3.14.7-1.1-riscv64.pkg.tar.zst</code> confirmed present in the <code class="language-plaintext highlighter-rouge">core</code> repository at <a href="https://archriscv.felixc.at/repo/core/">archriscv.felixc.at/repo/core/</a> (dated 2026-09-08, 21.1MB, with detached signature).</li>
+  <li><strong>RISE python-versions</strong> (<a href="https://github.com/riseproject-dev/python-versions">riseproject-dev/python-versions</a>): third-party channel publishing prebuilt CPython binaries for linux/riscv64 as GitHub Releases, built on <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> RISE runners, tracking upstream CPython version tags, compatible with the <code class="language-plaintext highlighter-rouge">setup-python</code> toolcache format.</li>
+</ul>
 
-<p>The base <code class="language-plaintext highlighter-rouge">python</code> package is not listed on the Arch RISC-V FTBFS or problem tracker at <a href="https://archriscv.felixc.at/">archriscv.felixc.at</a>, which on that tracker means it is expected to build cleanly. [NEEDS VERIFICATION – the tracker page did not return a fully parseable package table.]</p>
-<h3 id="85-binary-wheels-pypi">
-  
-  
-    <a href="#85-binary-wheels-pypi" class="anchor-heading" aria-labelledby="85-binary-wheels-pypi"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8.5 Binary Wheels (PyPI)
-  
-  
-</h3>
-    
+<p>PyPI itself has no package literally named “python” (CPython is not distributed as a PyPI package); this check is inapplicable by design, not evidence of a riscv64 gap.</p>
 
-<p>Prior to August 2025, PyPI did not accept riscv64 wheels and the manylinux build infrastructure had no riscv64 support. As of August 2025, three milestones were reached:</p>
-
-<ol>
-  <li><code class="language-plaintext highlighter-rouge">manylinux_2_39_riscv64</code> and <code class="language-plaintext highlighter-rouge">musllinux_1_2_riscv64</code> images are available at <a href="https://quay.io/pypa/">quay.io/pypa/</a></li>
-  <li><a href="https://github.com/pypa/cibuildwheel">cibuildwheel</a> v3.1.0 added experimental riscv64; v3.1.2 enabled by default</li>
-  <li>PyPI/warehouse now accepts riscv64 wheel uploads</li>
-</ol>
-
-<p>The first projects confirmed with riscv64 wheels on PyPI were <code class="language-plaintext highlighter-rouge">uv</code> and <code class="language-plaintext highlighter-rouge">maturin</code>. [NEEDS VERIFICATION – sourced from a single discuss.python.org thread.]</p><hr />
+<p><strong>Bottom line for a user who wants riscv64 Python today:</strong> install from Debian sid or Ubuntu 26.04’s <code class="language-plaintext highlighter-rouge">python3</code> package, use Arch Linux RISC-V’s <code class="language-plaintext highlighter-rouge">python</code> package, or pull a prebuilt interpreter from RISE’s <code class="language-plaintext highlighter-rouge">python-versions</code> releases. Building from CPython source with <code class="language-plaintext highlighter-rouge">./configure &amp;&amp; make</code> also works, backed by Tier 3 buildbot validation. There is no path to an “official” CPython-published riscv64 binary.</p>
 <h2 id="9-dependencies">
   
   
@@ -879,88 +818,179 @@ export CXX=riscv64-linux-gnu-g++
   <thead>
     <tr>
       <th>Dependency</th>
-      <th>Role in CPython</th>
-      <th>riscv64 Status</th>
-      <th>Blocking Issues</th>
+      <th>Role</th>
+      <th>Relation/Criticality</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>libffi</td>
-      <td><code class="language-plaintext highlighter-rouge">_ctypes</code> module</td>
-      <td>Builds; two open riscv64 issues (struct ABI test failure since 2022; linkage failure since 2023)</td>
-      <td><a href="https://github.com/libffi/libffi/issues/281">libffi #281</a>: <code class="language-plaintext highlighter-rouge">struct_by_value_big</code> test failure; linkage failure open since April 2023</td>
+      <td>FFI backend for <code class="language-plaintext highlighter-rouge">ctypes</code></td>
+      <td>runtime-dependency, critical</td>
+      <td>Builds, with correctness gaps</td>
+      <td><code class="language-plaintext highlighter-rouge">struct_by_value_big</code> test <strong>fails</strong> on riscv64 (open)</td>
+      <td>Unclear - open linking issue</td>
+      <td><a href="https://github.com/libffi/libffi/issues/466">libffi#466</a> (small ints not promoted to <code class="language-plaintext highlighter-rouge">ffi_arg</code> on riscv64, open), <a href="https://github.com/libffi/libffi/issues/777">#777</a> (linking <code class="language-plaintext highlighter-rouge">libffi.a</code> on riscv64 fails, open), <a href="https://github.com/libffi/libffi/issues/694">#694</a> (<code class="language-plaintext highlighter-rouge">struct_by_value_big</code> fails on aarch64+riscv64, open)</td>
     </tr>
     <tr>
       <td>OpenSSL</td>
-      <td><code class="language-plaintext highlighter-rouge">_ssl</code>, <code class="language-plaintext highlighter-rouge">_hashlib</code></td>
-      <td>Builds; dedicated CI with 13 riscv64 configurations</td>
-      <td><a href="https://github.com/openssl/openssl/issues/30787">#30787</a>: ChaCha20 RVV asm not merged; <a href="https://github.com/openssl/openssl/issues/31082">#31082</a>: GHASH constant-time fallback; <a href="https://github.com/openssl/openssl/issues/30880">#30880</a>: test_lhash CI flakiness</td>
+      <td><code class="language-plaintext highlighter-rouge">ssl</code>/<code class="language-plaintext highlighter-rouge">hashlib</code> crypto backend</td>
+      <td>runtime-dependency, critical</td>
+      <td>Builds; RISC-V crypto-extension acceleration (Zknd/Zkne AES, SHA256) still maturing</td>
+      <td>Flaky: <code class="language-plaintext highlighter-rouge">test_lhash</code> intermittently fails on riscv64 CI (open)</td>
+      <td>No distinct riscv64 release gating; generic C fallback ships</td>
+      <td><a href="https://github.com/openssl/openssl/issues/28118">openssl#28118</a> (riscv ext. detection broken on musl, open), <a href="https://github.com/openssl/openssl/issues/30880">#30880</a> (flaky riscv64 CI, open), <a href="https://github.com/openssl/openssl/issues/29453">#29453</a> (intrinsics vs inline asm, open), <a href="https://github.com/openssl/openssl/issues/28664">#28664</a> (SHA256 perf, open), <a href="https://github.com/openssl/openssl/issues/25334">#25334</a> (AES needs Zknd+Zkne simultaneously, open)</td>
     </tr>
     <tr>
       <td>zlib</td>
-      <td><code class="language-plaintext highlighter-rouge">zlib</code> module</td>
-      <td>Builds; no SIMD path</td>
-      <td>No blocking bugs; performance gap vs arm64/x86-64</td>
+      <td><code class="language-plaintext highlighter-rouge">zlib</code>/<code class="language-plaintext highlighter-rouge">gzip</code> compression</td>
+      <td>runtime-dependency, optional</td>
+      <td>No riscv64-specific issues found</td>
+      <td>No riscv64-specific issues found</td>
+      <td>N/A, portable C</td>
+      <td>None found in search</td>
     </tr>
     <tr>
-      <td>libbz2</td>
-      <td><code class="language-plaintext highlighter-rouge">_bz2</code> module</td>
-      <td>Builds; pure C</td>
-      <td>No known riscv64 issues</td>
+      <td>bzip2</td>
+      <td><code class="language-plaintext highlighter-rouge">bz2</code> compression</td>
+      <td>runtime-dependency, optional</td>
+      <td>Not searchable via GitHub (hosted on sourceware.org)</td>
+      <td>Same</td>
+      <td>Same</td>
+      <td>Use sourceware Bugzilla directly</td>
     </tr>
     <tr>
-      <td>liblzma / xz</td>
-      <td><code class="language-plaintext highlighter-rouge">_lzma</code> module</td>
-      <td>Builds; <code class="language-plaintext highlighter-rouge">FILTER_RISCV</code> constant fixed (3.16); <code class="language-plaintext highlighter-rouge">TUKLIB_FAST_UNALIGNED_ACCESS</code> not enabled (performance gap)</td>
-      <td>No correctness blockers</td>
+      <td>xz</td>
+      <td><code class="language-plaintext highlighter-rouge">lzma</code> compression</td>
+      <td>runtime-dependency, optional</td>
+      <td>OK; unaligned-access perf path added</td>
+      <td>-</td>
+      <td>-</td>
+      <td><a href="https://github.com/tukaani-project/xz/issues/146">tukaani-project/xz#146</a> (<code class="language-plaintext highlighter-rouge">TUKLIB_FAST_UNALIGNED_ACCESS</code> for RISC-V, closed/merged); CPython-side <a href="https://github.com/python/cpython/issues/115988">#115988</a> (missing <code class="language-plaintext highlighter-rouge">FILTER_RISCV</code>, closed/fixed)</td>
     </tr>
     <tr>
-      <td>libzstd</td>
-      <td><code class="language-plaintext highlighter-rouge">_zstd</code> (new in 3.14)</td>
+      <td>zstd</td>
+      <td><code class="language-plaintext highlighter-rouge">_zstd</code> module (new in 3.14)</td>
+      <td>runtime-dependency, optional</td>
       <td>Builds; 4-way fast decompression loop not enabled</td>
-      <td><a href="https://github.com/facebook/zstd/pull/4622">zstd PR #4622</a>: performance gap</td>
+      <td>-</td>
+      <td>-</td>
+      <td><a href="https://github.com/facebook/zstd/pull/4622">zstd PR #4622</a>: performance gap, open</td>
     </tr>
     <tr>
       <td>libmpdec</td>
-      <td><code class="language-plaintext highlighter-rouge">_decimal</code> module</td>
-      <td>Builds; uses generic uint128 fallback; no riscv64 asm path</td>
-      <td>No correctness blockers; performance gap</td>
+      <td><code class="language-plaintext highlighter-rouge">decimal</code> module C accelerator</td>
+      <td>runtime-dependency, critical</td>
+      <td>Not searchable via GitHub (hosted on bytereef.org)</td>
+      <td>Same</td>
+      <td>Same</td>
+      <td>Uses generic uint128 fallback on riscv64; no riscv64 asm path; no known correctness blockers</td>
     </tr>
     <tr>
-      <td>libexpat</td>
-      <td><code class="language-plaintext highlighter-rouge">pyexpat</code>, <code class="language-plaintext highlighter-rouge">_elementtree</code></td>
-      <td>Builds</td>
-      <td>No known riscv64 issues</td>
+      <td>expat</td>
+      <td><code class="language-plaintext highlighter-rouge">xml.parsers.expat</code>, vendored in CPython</td>
+      <td>runtime-dependency, optional</td>
+      <td>No riscv64-specific issues found</td>
+      <td>No riscv64-specific issues found</td>
+      <td>N/A</td>
+      <td>None found in search</td>
     </tr>
     <tr>
       <td>SQLite</td>
-      <td><code class="language-plaintext highlighter-rouge">_sqlite3</code></td>
-      <td>Builds</td>
-      <td>No known riscv64 issues</td>
+      <td><code class="language-plaintext highlighter-rouge">sqlite3</code> module</td>
+      <td>runtime-dependency, optional</td>
+      <td>No riscv64-specific issues found</td>
+      <td>No riscv64-specific issues found</td>
+      <td>N/A</td>
+      <td>None found in search</td>
     </tr>
     <tr>
-      <td>mimalloc (default allocator, 3.13+)</td>
-      <td>Memory allocator</td>
-      <td>Partial; SV39 MMU aligned alloc issue fixed Dec 2024; hwprobe-based VA detection fix in-progress (2 open PRs, May 2026)</td>
-      <td>Hardware-dependent behavior on SV39 vs SV48/SV57 MMUs; open PRs at <a href="https://github.com/microsoft/mimalloc">microsoft/mimalloc</a></td>
+      <td>mimalloc</td>
+      <td>Default allocator (3.13+, including free-threaded builds)</td>
+      <td>runtime-dependency, critical</td>
+      <td>Functional correctness gap on RISC-V</td>
+      <td>-</td>
+      <td>-</td>
+      <td><a href="https://github.com/microsoft/mimalloc/issues/939">microsoft/mimalloc#939</a>: “Unable to obtain aligned memory on RISC-V systems with an SV39 MMU,” open; corresponding CPython-side symptom closed as <a href="https://github.com/python/cpython/issues/112951">Issue #112951</a></td>
     </tr>
     <tr>
-      <td>LLVM / clang (Tier-2 JIT backend)</td>
-      <td><code class="language-plaintext highlighter-rouge">--enable-experimental-jit</code></td>
-      <td>Not supported; <code class="language-plaintext highlighter-rouge">Tools/jit/_targets.py</code> raises <code class="language-plaintext highlighter-rouge">ValueError</code> for riscv64</td>
-      <td>Requires new ELF relocation types (<code class="language-plaintext highlighter-rouge">R_RISCV_*</code>), new <code class="language-plaintext highlighter-rouge">ELFUnwindConfig</code>, frame-pointer conventions; no upstream work started</td>
+      <td>LLVM</td>
+      <td>Alternate C/C++ toolchain (Clang), riscv64 explicitly listed in <code class="language-plaintext highlighter-rouge">configure.ac</code> Tier 3 entries</td>
+      <td>build-dependency, optional</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv64-*-linux-gnu/clang</code> is a Tier 3 PY_SUPPORT_TIER entry</td>
+      <td>-</td>
+      <td>-</td>
+      <td>No riscv64-specific LLVM/Clang blocking issues found in this research pass</td>
     </tr>
     <tr>
-      <td>glibc / libm</td>
-      <td>C runtime, pthread, math</td>
-      <td>Builds; riscv64 upstream since glibc 2.27</td>
-      <td>No blocking issues; RVV memset and libmvec ongoing for performance parity</td>
+      <td>glibc</td>
+      <td>C runtime, pthreads, math</td>
+      <td>runtime-dependency, critical</td>
+      <td>Builds; riscv64 upstream support since early glibc 2.2x releases</td>
+      <td>-</td>
+      <td>-</td>
+      <td>No blocking issues found; RVV-accelerated memset/libmvec work ongoing upstream for performance parity [NEEDS VERIFICATION, single-source]</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Primary build toolchain</td>
+      <td>build-dependency, critical</td>
+      <td>No version minimum enforced by <code class="language-plaintext highlighter-rouge">configure.ac</code>; feature-detected</td>
+      <td>-</td>
+      <td>-</td>
+      <td>riscv64 GCC backend has been available for years; CPython relies on no specific version string</td>
+    </tr>
+    <tr>
+      <td>GNU binutils</td>
+      <td>Assembler/linker</td>
+      <td>build-dependency, critical</td>
+      <td>No version minimum enforced by <code class="language-plaintext highlighter-rouge">configure.ac</code>; relies on distro-provided <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> binutils</td>
+      <td>-</td>
+      <td>-</td>
+      <td>No CPython-side riscv64 binutils issues found</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The mimalloc dependency deserves emphasis: it became the default allocator in CPython 3.13. Its VA-space detection issues on SV39 MMU hardware (common on current riscv64 boards including the VisionFive 2) produce warning-level allocator failures. Two open PRs targeting <code class="language-plaintext highlighter-rouge">hwprobe</code>-based detection were filed in May 2026 and are unmerged.</p><hr />
+<p>Additional indirect/recursed dependencies surfaced by research but not in the direct-dependency list above:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dependency</th>
+      <th>Role</th>
+      <th>riscv64 status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GNU readline</td>
+      <td><code class="language-plaintext highlighter-rouge">readline</code> module (interactive REPL)</td>
+      <td>Not searchable via GitHub (hosted on savannah.gnu.org); no issues independently located</td>
+    </tr>
+    <tr>
+      <td>ncurses</td>
+      <td><code class="language-plaintext highlighter-rouge">curses</code> module</td>
+      <td>GitHub mirror (<code class="language-plaintext highlighter-rouge">mirror/ncurses</code>) is a read-only CVS mirror, not where real bugs are filed; not informative either way</td>
+    </tr>
+    <tr>
+      <td>Tcl/Tk</td>
+      <td><code class="language-plaintext highlighter-rouge">tkinter</code> backend (optional)</td>
+      <td>No riscv64-specific issues found on GitHub; Tcl/Tk 9.0 reported available for RISC-V per a steering-council#360 comment from terryjreedy</td>
+    </tr>
+    <tr>
+      <td>util-linux (libuuid)</td>
+      <td><code class="language-plaintext highlighter-rouge">uuid</code> module ctypes binding</td>
+      <td>Open build-porting issue <a href="https://github.com/util-linux/util-linux/issues/1526">util-linux#1526</a> (“Trying to compile util-linux for RISC-V architecture,” open); riscv64 test failures closed in <a href="https://github.com/util-linux/util-linux/issues/4618">#4618</a>/<a href="https://github.com/util-linux/util-linux/issues/2402">#2402</a>; <code class="language-plaintext highlighter-rouge">lscpu</code> segfault on rv64 fixed in <a href="https://github.com/util-linux/util-linux/issues/1401">#1401</a></td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Two dependencies with the most material riscv64-side risk: <strong>libffi</strong> (an open, unresolved test failure for struct-by-value ABI handling directly affects <code class="language-plaintext highlighter-rouge">ctypes</code> correctness) and <strong>mimalloc</strong> (an open upstream aligned-memory bug on SV39 MMU hardware affects the default allocator used by CPython 3.13+, including free-threaded builds).</p>
 <h2 id="10-ecosystem-status">
   
   
@@ -969,74 +999,26 @@ export CXX=riscv64-linux-gnu-g++
   
 </h2>
     
-<h3 id="101-rise-project-involvement">
-  
-  
-    <a href="#101-rise-project-involvement" class="anchor-heading" aria-labelledby="101-rise-project-involvement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 RISE Project Involvement
-  
-  
-</h3>
-    
 
-<p>Python and the PSF are not RISE members. However, RISE has funded a formal wheel-building project via an RFP.</p>
+<p>Python carries a large dependent-package ecosystem on PyPI that must independently gain riscv64 binary wheel support; this is distinct from CPython’s own interpreter port and is the dominant practical barrier to a productive riscv64 Python experience.</p>
 
-<p><strong>wheel_builder / python-wheels:</strong> Initiated by Rivos Inc., funded by RISE (machines and engineering). Maintained jointly by Rivos Inc. and Baylibre, SAS. Provides pre-built riscv64 binary wheels for 78+ packages including numpy, scipy, pandas, tokenizers, safetensors, pillow, cryptography, aiohttp, orjson, and others.</p>
+<p>An estimated ~15% of the top 10,000 PyPI packages are binary-only (numpy, scipy, pandas, pillow, scikit-learn and similar), and historically lacked riscv64 wheels (<a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">riseproject.dev, May 2025</a>).</p>
 
-<ul>
-  <li>GitLab origin: <a href="https://gitlab.com/riseproject/python/wheel_builder">gitlab.com/riseproject/python/wheel_builder</a></li>
-  <li>GitHub successor: <a href="https://github.com/riseproject-dev/python-wheels">riseproject-dev/python-wheels</a>, building on native riscv64 hardware via RISE runners</li>
-  <li>Index URL: <code class="language-plaintext highlighter-rouge">https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple</code></li>
-  <li>Wheel format: <code class="language-plaintext highlighter-rouge">manylinux_2_35</code> and <code class="language-plaintext highlighter-rouge">manylinux_2_39</code></li>
-  <li>Python versions: 3.10, 3.11, 3.12, 3.13</li>
-  <li>Requires pip &gt;= 24.1</li>
-</ul>
+<p><strong>RISE wheel_builder / python-wheels</strong>: RISE’s primary response to this gap. Initiated by Rivos Inc. (author Mark Ryan), funded/supported by RISE, developed and maintained by Rivos and Baylibre (a RISE RFP awardee). Provides a GitLab-hosted PyPI index (<code class="language-plaintext highlighter-rouge">pip install numpy --index-url https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple</code>) covering CPython 3.10-3.13, <code class="language-plaintext highlighter-rouge">manylinux_2_35</code>, and (per the May 2025 post) 49 projects. Measured install-time improvement: numpy installs in ~25 seconds via wheel_builder versus ~15 minutes building from source on a VisionFive 2 board (~36x faster). The project has been superseded/continued as <a href="https://github.com/riseproject-dev/python-wheels">riseproject-dev/python-wheels</a> (797 open issues as of this research, continuing wheel coverage via native riscv64 RISE Runners, index at <code class="language-plaintext highlighter-rouge">https://pypi.riseproject.dev/simple/</code>, dual MIT/Apache-2.0 license).</p>
 
-<p><strong>python-versions:</strong> <a href="https://github.com/riseproject-dev/python-versions">riseproject-dev/python-versions</a> provides prebuilt CPython binaries for linux/riscv64 via GitHub Releases, in the <code class="language-plaintext highlighter-rouge">actions/python-versions</code> tarball layout, covering CPython 3.10+ including free-threaded (3.13+) variants. CI runs on <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> RISE runners.</p>
+<p><strong>RISC-V Wheels Dashboard</strong>: tracks the 15,000 most-downloaded PyPI packages’ riscv64 wheel coverage by color code (has wheel / built in RISE registry only / pure-Python / unavailable); no performance data, coverage tracking only (<a href="https://stanfromireland.github.io/riscv-wheels/">stanfromireland.github.io/riscv-wheels/</a>).</p>
 
-<p><strong>setup-python:</strong> <a href="https://github.com/riseproject-dev/setup-python">riseproject-dev/setup-python</a> is a fork of <code class="language-plaintext highlighter-rouge">actions/setup-python</code> maintained to support riscv64 in GitHub Actions workflows.</p>
+<p><strong>conda-forge</strong>: 500+ packages built for <code class="language-plaintext highlighter-rouge">linux-riscv64</code> at <code class="language-plaintext highlighter-rouge">rv64gc</code> baseline (not RVA23), per <a href="https://conda-forge.org/blog/2026/09/15/riscv64/">conda-forge’s September 2026 blog post</a> [not a RISE source, included for ecosystem completeness; NEEDS VERIFICATION, single source].</p>
 
-<p><strong>ML stack forks under riseproject-dev:</strong> pytorch, pytorch-ci, executorch, numpy, bcrypt, setup-uv, micromamba-releases-riscv64, conda-forge-miniforge, conda-forge-docker-images.</p>
-<h3 id="102-pytorch">
-  
-  
-    <a href="#102-pytorch" class="anchor-heading" aria-labelledby="102-pytorch"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 PyTorch
-  
-  
-</h3>
-    
+<p><strong>Community wheel efforts outside RISE</strong>: <a href="https://github.com/gounthar/riscv64-python-wheels">gounthar/riscv64-python-wheels</a> (independent community wheel-building project); <a href="https://github.com/riseproject-dev/python-wheels">riseproject-dev/python-wheels issue tracker</a> requests wheel support for individual packages (e.g. typeid-python #1438, ecos #1135, vispy #1719); <a href="https://github.com/python-pillow/Pillow/issues/9462">python-pillow/Pillow#9462</a> (“Add riscv64 wheel to PyPI releases,” tracking a specific high-impact package).</p>
 
-<p>PyTorch has out-of-tree CI running on RISE riscv64 native runners (870 completed jobs as of May 2026 per <a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE runners blog post</a>). A RISE integration PR is open (<a href="https://github.com/numpy/numpy/pull/30995">numpy/numpy#30995</a> is the NumPy counterpart described in the same blog post). PyTorch is targeting Level 3 CI integration (non-blocking PR checks).</p>
-<h3 id="103-numpy">
-  
-  
-    <a href="#103-numpy" class="anchor-heading" aria-labelledby="103-numpy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 NumPy
-  
-  
-</h3>
-    
+<p><strong>PyTorch on riscv64</strong>: a RISE-adjacent milestone, not a Python-core item, but material to the ML-dependent ecosystem. PyTorch 2.13.0 wheels for riscv64 (<code class="language-plaintext highlighter-rouge">manylinux_2_39_riscv64</code>) are natively built (not emulated) on Scaleway EM-RV1 hardware for CPython 3.12/3.13/3.14/3.14t (<a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">riseproject.dev, 2026-08-18</a>). A test run on 2026-08-14 recorded 212,038 test cases: 165,591 passed, 46,256 skipped, 191 failed (99.998% pass rate of enabled tests). Build time: ~20 hours cold-cache, ~1.5 hours hot-cache. RVV vectorization is not yet implemented in ATen (PR tracked upstream, open since February 2026, blocked on design); most tensor ops currently run scalar code, so this is not yet representative of RVV-optimized performance. oneDNN is disabled (<code class="language-plaintext highlighter-rouge">USE_MKLDNN=0</code>, falls back to OpenBLAS); an unmerged change reportedly shows an “8.85x speedup on elementwise multiply on SG2044” [NEEDS VERIFICATION, single source, not yet landed in CI].</p>
 
-<p>A RISE CI integration PR is open against the upstream numpy repository (<a href="https://github.com/numpy/numpy/pull/30995">numpy/numpy#30995</a>). NumPy is described as a priority because it anchors a large portion of the Python scientific stack.</p>
-<h3 id="104-packaging-infrastructure-as-of-august-2025">
-  
-  
-    <a href="#104-packaging-infrastructure-as-of-august-2025" class="anchor-heading" aria-labelledby="104-packaging-infrastructure-as-of-august-2025"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.4 Packaging Infrastructure (as of August 2025)
-  
-  
-</h3>
-    
+<p><strong>NumPy</strong>: designated NEP 57 Tier-3 for riscv64, with riscv64 CI added in May 2026 [NEEDS VERIFICATION, single source].</p>
 
-<p>As documented in the <a href="https://discuss.python.org/t/packaging-support-for-riscv64/">discuss.python.org packaging thread</a>:</p>
+<p><strong>RISE packaging staffing</strong>: RISE posted a call for a dedicated Python packaging contractor for riscv64 on <a href="https://discuss.python.org/t/rise-is-looking-for-a-python-packaging-contractor-for-riscv64/66538">discuss.python.org</a>, indicating continued, organizationally-backed investment in closing the wheel-coverage gap.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">manylinux_2_39_riscv64</code> and <code class="language-plaintext highlighter-rouge">musllinux_1_2_riscv64</code> images are available on quay.io</li>
-  <li>cibuildwheel &gt;= 3.1.2 supports riscv64 by default</li>
-  <li>auditwheel 6.1.0+ includes riscv64 policy support</li>
-  <li>PyPI accepts riscv64 wheel uploads</li>
-  <li>uv includes riscv64 release targets (since PR #12688)</li>
-  <li>maturin supports riscv64</li>
-</ul>
-
-<p>The critical infrastructure gap that existed before mid-2025 – no manylinux image because AlmaLinux/RHEL do not support riscv64 – was resolved by switching to Rocky Linux 10 as the manylinux_2_39 base. [NEEDS VERIFICATION – sourced from one discuss.python.org thread.]</p><hr />
+<p><strong>Bottom line</strong>: CPython’s own Tier 3 status does not by itself make the Python ecosystem usable on riscv64; wheel coverage for the binary-heavy scientific/ML stack is the larger ongoing effort, and it is substantially RISE-funded and RISE-infrastructure-dependent (GitLab/GitHub wheel indices, RISE RISC-V Runners, a supplementary PyPI index) rather than upstream-PyPI-native.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1045,10 +1027,10 @@ export CXX=riscv64-linux-gnu-g++
   
 </h2>
     
-<h3 id="111-open-issues">
+<h3 id="open">
   
   
-    <a href="#111-open-issues" class="anchor-heading" aria-labelledby="111-open-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.1 Open Issues
+    <a href="#open" class="anchor-heading" aria-labelledby="open"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Open
   
   
 </h3>
@@ -1057,7 +1039,7 @@ export CXX=riscv64-linux-gnu-g++
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Issue</th>
+      <th>Issue/PR</th>
       <th>Title</th>
       <th>Opened</th>
       <th>Severity</th>
@@ -1065,66 +1047,23 @@ export CXX=riscv64-linux-gnu-g++
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://github.com/python/cpython/issues/151040">#151040</a></td>
-      <td>3.15.0b2, Fedora 44, riscv64: failing test: test_c_stack_unwind</td>
-      <td>2026-06-07</td>
-      <td>High – correctness regression in 3.15 beta</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/python/cpython/issues/150919">#150919</a></td>
-      <td>Python 3.15.0~b1, test_frame_pointer_unwind fails on riscv64</td>
-      <td>2026-06-04</td>
-      <td>High – same root cause as #151040</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/python/cpython/issues/121201">#121201</a></td>
-      <td>riscv64 fails to build Python/perf_jit_trampoline.c: Unsupported target architecture</td>
+      <td><a href="https://github.com/python/cpython/issues/121201">#121201</a> / <a href="https://github.com/python/cpython/pull/121387">PR #121387</a></td>
+      <td>riscv64 fails to build <code class="language-plaintext highlighter-rouge">Python/perf_jit_trampoline.c</code>: “Unsupported target architecture”</td>
       <td>2024-07-01</td>
-      <td>Medium – perf profiling disabled; workaround in place</td>
+      <td>Medium - perf profiling disabled on riscv64; correct fix written but unmerged, stale since 2026-04-17, blocked on perf-hardware validation</td>
     </tr>
     <tr>
       <td><a href="https://github.com/python/cpython/issues/103438">#103438</a></td>
-      <td>Don’t define CTYPES_PASS_BY_REF_HACK on aarch64 or riscv64</td>
+      <td>Don’t define <code class="language-plaintext highlighter-rouge">CTYPES_PASS_BY_REF_HACK</code> on aarch64 or riscv64</td>
       <td>2023-04-11</td>
-      <td>Low – workaround correct, cleanup pending</td>
+      <td>Low - workaround is correct, cleanup pending; implementing PR #103439 already merged</td>
     </tr>
   </tbody>
 </table></div>
-
-<p><strong>Issues #150919 and #151040 detail:</strong> Both filed by @mcepl (Fedora riscv64 packager) against 3.15 betas. <code class="language-plaintext highlighter-rouge">test_manual_unwind_finds_expected_frames</code> and <code class="language-plaintext highlighter-rouge">test_manual_unwind_respects_frame_pointers</code> find 0 Python frames when &gt;=10 are expected. Root cause: <code class="language-plaintext highlighter-rouge">manual_unwind_from_fp()</code> in <code class="language-plaintext highlighter-rouge">Modules/_testinternalcapi.c</code> uses default <code class="language-plaintext highlighter-rouge">FRAME_POINTER_NEXT_OFFSET</code> and <code class="language-plaintext highlighter-rouge">FRAME_POINTER_RETURN_OFFSET</code> values that are incorrect for the RISC-V frame pointer convention (see <a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-cc.adoc#frame-pointer-convention">riscv-elf-psabi-doc frame-pointer-convention</a>). @vstinner confirmed the root cause and pinged @furkanonder (the only contributor with riscv64 hardware) on 2026-06-16. No response as of the research date. The official riscv64 buildbot (<code class="language-plaintext highlighter-rouge">riscv64 Ubuntu23 3.x</code>, builder 1379) also fails on these tests per @vstinner’s comment.</p>
-
-<p><strong>Issue #121201 detail:</strong> Build regression introduced in <code class="language-plaintext highlighter-rouge">Python/perf_jit_trampoline.c</code> at line 375. The required fix (DWARF register values RA=1, SP=2, and a one-line extension to the AArch64 CFA block) is written in PR #121387. The blocker is that no available riscv64 machine has working Linux <code class="language-plaintext highlighter-rouge">perf</code> hardware counters (the contributor’s SiFive-based VisionFive 2 skips perf tests entirely), and the maintainer (@pablogsal) requires end-to-end functional validation before merging. The workaround – disabling the entire perf_trampoline feature on riscv64 – has been in place since July 2024.</p>
-<h3 id="112-open-prs">
+<h3 id="closedresolved">
   
   
-    <a href="#112-open-prs" class="anchor-heading" aria-labelledby="112-open-prs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Open PRs
-  
-  
-</h3>
-    
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>PR</th>
-      <th>Title</th>
-      <th>Opened</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="https://github.com/python/cpython/pull/121387">#121387</a></td>
-      <td>gh-121201: Support riscv64 architecture for Perf JIT</td>
-      <td>2024-07-04</td>
-      <td>Open, marked stale 2026-04-17</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="113-recently-resolved">
-  
-  
-    <a href="#113-recently-resolved" class="anchor-heading" aria-labelledby="113-recently-resolved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.3 Recently Resolved
+    <a href="#closedresolved" class="anchor-heading" aria-labelledby="closedresolved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Closed/resolved
   
   
 </h3>
@@ -1136,38 +1075,74 @@ export CXX=riscv64-linux-gnu-g++
       <th>Issue/PR</th>
       <th>Title</th>
       <th>Resolution</th>
-      <th>Version</th>
+      <th>Target version</th>
     </tr>
   </thead>
   <tbody>
     <tr>
+      <td><a href="https://github.com/python/cpython/issues/85518">#85518</a></td>
+      <td><code class="language-plaintext highlighter-rouge">test_thousand</code>/<code class="language-plaintext highlighter-rouge">compileall</code> hang on riscv64 (6+ years open)</td>
+      <td>Closed 2026-08-23 as “not planned”; tests now pass cleanly on CPython’s four RISC-V buildbots - resolved incidentally, no linked fix PR</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/python/cpython/issues/157688">#157688</a> / <a href="https://github.com/python/cpython/pull/157690">PR #157690</a></td>
+      <td><code class="language-plaintext highlighter-rouge">test_linux_ext_suffix</code> performs no assertions on riscv64</td>
+      <td>Fixed</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/python/cpython/issues/151040">#151040</a> / <a href="https://github.com/python/cpython/pull/152370">PR #152370</a></td>
+      <td><code class="language-plaintext highlighter-rouge">test_c_stack_unwind</code> fails on riscv64, Fedora 44 (3.15.0b2)</td>
+      <td>Fixed</td>
+      <td>3.15</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/python/cpython/issues/150919">#150919</a></td>
+      <td><code class="language-plaintext highlighter-rouge">test_frame_pointer_unwind</code> fails on riscv64 (3.15.0b1)</td>
+      <td>Closed</td>
+      <td>3.15</td>
+    </tr>
+    <tr>
       <td><a href="https://github.com/python/cpython/issues/133304">#133304</a> / <a href="https://github.com/python/cpython/pull/133328">PR #133328</a></td>
-      <td><code class="language-plaintext highlighter-rouge">PyFloat_Pack4/Unpack4</code> SNaN roundtrip failure on RISC-V buildbot</td>
-      <td>Workaround merged 2025-05-03</td>
+      <td><code class="language-plaintext highlighter-rouge">test_pack_unpack_roundtrip_for_nans</code> failing on RISC-V buildbot</td>
+      <td>Fixed - RISC-V FP unit canonicalizes/silences NaN payloads on widening, breaking bit-exact round-trip; workaround restores sign/payload from raw bytes</td>
       <td>3.14</td>
     </tr>
     <tr>
       <td><a href="https://github.com/python/cpython/issues/115988">#115988</a> / <a href="https://github.com/python/cpython/pull/115989">PR #115989</a></td>
-      <td>Missing ARM64 and RISCV filter in lzma module</td>
-      <td>Merged 2026-05-28</td>
-      <td>3.16 (unreleased)</td>
+      <td>ARM64/RISCV BCJ filter missing in <code class="language-plaintext highlighter-rouge">lzma</code> module</td>
+      <td>Fixed</td>
+      <td>3.16</td>
     </tr>
     <tr>
       <td><a href="https://github.com/python/cpython/issues/120400">#120400</a> / <a href="https://github.com/python/cpython/pull/120089">PR #120089</a></td>
-      <td>Linux perf profiling not seeing Python calls on RISC-V</td>
-      <td>Merged June 2024, then disabled by workaround PR #121328</td>
-      <td>3.13 (feature disabled)</td>
+      <td>Linux perf profiling can’t see Python calls on RISC-V</td>
+      <td>Merged, then partially reverted/disabled for riscv64 by PR #121328</td>
+      <td>3.13 (feature disabled on riscv64)</td>
     </tr>
     <tr>
       <td><a href="https://github.com/python/cpython/issues/112779">#112779</a> / <a href="https://github.com/python/cpython/pull/112819">PR #112819</a></td>
-      <td>Build error: undefined reference to <code class="language-plaintext highlighter-rouge">__atomic_exchange_1</code> on riscv64</td>
-      <td>Fixed 2023-12-08</td>
-      <td>3.12.1 or 3.13.0</td>
+      <td>Build error on RISC-V: undefined reference to <code class="language-plaintext highlighter-rouge">__atomic_exchange_1</code> (StarFive board)</td>
+      <td>Fixed - configure-phase atomic-op detection added</td>
+      <td>2023-12-08</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/python/cpython/issues/112951">#112951</a></td>
+      <td>mimalloc warning: unable to directly request hinted aligned OS memory [RISC-V]</td>
+      <td>Closed on CPython side; upstream <a href="https://github.com/microsoft/mimalloc/issues/939">microsoft/mimalloc#939</a> remains open</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/python/cpython/issues/121138">#121138</a></td>
+      <td>riscv64 perf_jit_trampoline.c:491 “Unsupported target architecture” (duplicate of #121201)</td>
+      <td>Closed in favor of #121201</td>
+      <td>-</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>The SNaN fix (#133304) merits emphasis: it was a silent data corruption bug where packing a signaling NaN into a 4-byte float and unpacking it could return positive infinity on riscv64 hardware. The RISC-V ISA specification mandates NaN canonicalization on float32-to-float64 widening, which destroyed the payload and sign bit. The bug was discovered via the riscv64 buildbot.</p><hr />
+<p><strong>Correctness bugs worth flagging separately:</strong> #133304 was a silent data-corruption class bug (NaN bit-pattern loss on riscv64 float packing), now fixed. #85518 was a 6-year-standing multiprocessing hang with no root-cause fix identified in the closing comment - it resolved incidentally alongside other kernel/glibc/toolchain changes, which is a weaker form of resolution than a targeted patch.</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1177,100 +1152,107 @@ export CXX=riscv64-linux-gnu-g++
 </h2>
     
 
-<p><strong>Blocker 1 – Single-point-of-failure hardware.</strong>
-All riscv64 CI and most riscv64 debugging flows through one individual (@furkanonder) and one physical board (VisionFive 2). When that individual is unavailable, issues go unaddressed. The frame-pointer issues (#150919, #151040) have had no activity after @vstinner’s ping on 2026-06-16. The buildbot has been broken since March 2026.</p>
+<p><strong>Blocker 1 - Perf-JIT trampoline fix blocked on unavailable validation hardware.</strong> The correct fix for <a href="https://github.com/python/cpython/issues/121201">#121201</a> (DWARF register values <code class="language-plaintext highlighter-rouge">RA=1</code>, <code class="language-plaintext highlighter-rouge">SP=2</code>, matching the RISC-V psABI) has existed since July 2024 in <a href="https://github.com/python/cpython/pull/121387">PR #121387</a>. Maintainer pablogsal stated on 2024-07-13 that it cannot be merged without end-to-end validation on a machine with working Linux <code class="language-plaintext highlighter-rouge">perf</code> hardware performance counters, and no such riscv64 machine has been supplied as of the PR’s 2026-04-17 stale marking. This is a hard, specific, named blocker, unresolved for over two years.</p>
 
-<p><strong>Blocker 2 – Hardware without Linux perf support prevents PR #121387 merge.</strong>
-The fix for issue #121201 (perf JIT trampoline DWARF registers) is correct per the RISC-V psABI and was provided in July 2024. The maintainer will not merge without end-to-end perf test validation. The contributor’s SiFive hardware lacks HPM counters, so <code class="language-plaintext highlighter-rouge">test_perf_profiler</code> skips entirely. The fix has been stale for nearly 2 years as a result. A machine with working perf hardware (SOPHON SG2042 or equivalent) would unblock this immediately.</p>
+<p><strong>Blocker 2 - 3.15 ships without the formal Tier 3 marking.</strong> The backport of the Tier 3 <code class="language-plaintext highlighter-rouge">configure.ac</code> change to the 3.15 branch (<a href="https://github.com/python/cpython/pull/156358">PR #156358</a>) was explicitly rejected by core developer hugovk (“Let’s not backport”). Users and distros building CPython 3.15 on riscv64 do not get the formal Tier 3 declaration even though the governance decision (steering-council#360) predates the 3.15 release; the marking first appears in 3.16.</p>
 
-<p><strong>Blocker 3 – No named Tier 3 sponsor.</strong>
-Promotion to Tier 3 requires at least one core developer to formally commit to platform maintenance and a reliable buildbot. No core developer has done this for riscv64. Without a Tier 3 designation, there is no mechanism to prevent further regressions from landing unreported.</p>
+<p><strong>Blocker 3 - No riscv64 entry in the experimental JIT’s target list.</strong> <code class="language-plaintext highlighter-rouge">Tools/jit/_targets.py</code> has zero riscv64 handling. Enabling the copy-and-patch JIT on riscv64 would require new ELF relocation-type handlers (<code class="language-plaintext highlighter-rouge">R_RISCV_*</code>), a new unwind configuration, and RISC-V frame-pointer convention support - substantial new work with no open upstream issue or PR tracking it as of this research.</p>
 
-<p><strong>Blocker 4 – JIT backend requires significant new work.</strong>
-The copy-and-patch JIT in CPython 3.13+ requires new ELF relocation type handlers (<code class="language-plaintext highlighter-rouge">R_RISCV_*</code>), a new <code class="language-plaintext highlighter-rouge">ELFUnwindConfig</code>, and handling of the RISC-V frame pointer conventions in <code class="language-plaintext highlighter-rouge">_targets.py</code>. No upstream issue or PR exists for this. The effort is non-trivial (the aarch64 JIT target took multiple release cycles to reach full feature parity with x86_64).</p>
+<p><strong>Blocker 4 - mimalloc SV39 MMU alignment bug remains open upstream.</strong> <a href="https://github.com/microsoft/mimalloc/issues/939">microsoft/mimalloc#939</a> affects CPython 3.13+’s default allocator (including free-threaded builds) on common riscv64 hardware with SV39 MMUs. This is an external dependency blocker, not something fixable inside CPython.</p>
 
-<p><strong>Blocker 5 – mimalloc VA detection.</strong>
-CPython 3.13+ uses mimalloc as the default allocator. Two open PRs (May 2026) at microsoft/mimalloc target hwprobe-based VA space detection for riscv64 to handle SV39/SV48/SV57 MMU variability. Until these merge, running CPython 3.13+ on riscv64 hardware with SV39 MMUs produces allocator warnings and possible silent fallback to slower allocation paths.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Blocker 5 - libffi struct-by-value ABI test failure remains open upstream.</strong> <a href="https://github.com/libffi/libffi/issues/694">libffi#694</a> (“<code class="language-plaintext highlighter-rouge">struct_by_value_big</code> fails on aarch64+riscv64”) directly affects <code class="language-plaintext highlighter-rouge">ctypes</code> correctness and is outside CPython’s control.</p>
+
+<p><strong>Resolved/substantially mitigated objections:</strong> the earlier single-point-of-failure hardware concern (one volunteer, one board) is materially improved - the Tier 3 approval is backed by four buildbots, with RISE funding the physical hardware. The earlier “no named Tier 3 sponsor” objection is resolved: the Steering Council formally approved Tier 3 with named core-developer sponsorship.</p>
+
+<p><strong>Acceptance probability for further promotion:</strong> RISE has publicly stated its next goal is promotion to Tier 2 (<a href="https://riseproject.dev/2026/08/24/python-now-officially-supports-risc-v/">riseproject.dev, 2026-08-24</a>), which under PEP 11 requires at least 2 core-dev sponsors plus a reliable buildbot with release-blocking status - a materially higher bar than Tier 3’s “no SLA” model. Given the active RISE investment in hardware and the existing 4-buildbot fleet, Tier 2 promotion appears organizationally plausible but is not yet proposed or scheduled in any source reviewed.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
-  
-  
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
-  
-  
-</h3>
-    
-
-<p>The interpreter runs. The standard library is largely complete. ctypes, ssl, decimal, sqlite3, and most extension modules work. The remaining functional gaps are:</p>
 
 <ul>
-  <li>Stack unwinding in Python 3.15 (actively broken, needs frame pointer convention implementation in <code class="language-plaintext highlighter-rouge">_testinternalcapi.c</code>)</li>
-  <li>perf JIT trampoline (build fails; fix written, needs validation hardware)</li>
-  <li>ctypes <code class="language-plaintext highlighter-rouge">PASS_BY_REF_HACK</code> cleanup (cosmetic, workaround is correct)</li>
+  <li><strong>Color:</strong> blue</li>
+  <li><strong>Release provider:</strong> distro</li>
 </ul>
-<h3 id="132-performance-optimization">
+
+<p><strong>Justification:</strong> CPython’s own CI infrastructure (buildbot.python.org, not GitHub Actions) builds and tests riscv64 reliably: the Steering Council’s Tier 3 approval (<a href="https://github.com/python/steering-council/issues/360">python/steering-council#360</a>, closed 2026-08-22) cites “three stable Buildbots plus one semi-stable free-threading Buildbot,” and StanFromIreland’s 2026-08-23 closure of the 6-year-old hang (<a href="https://github.com/python/cpython/issues/85518">python/cpython#85518</a>) states these tests “now pass cleanly on CPython’s four RISC-V buildbots” - i.e. build=yes, test=yes. The implementing <a href="https://github.com/python/cpython/pull/156277">PR #156277</a> (merged 2026-08-23) formally marks <code class="language-plaintext highlighter-rouge">riscv64-*-linux-gnu</code> as PEP 11 Tier 3 in <code class="language-plaintext highlighter-rouge">configure.ac</code>. However, CPython does not publish riscv64 binaries itself (python.org ships only source tarballs plus Windows/macOS installers for any architecture); the consumable riscv64 package comes from Debian sid and Ubuntu (release_provider = distro), with RISE’s <a href="https://github.com/riseproject-dev/python-versions">riseproject-dev/python-versions</a> also providing a third-party prebuilt-binary channel. Per the color model this is build=yes / test=yes / release=no, which maps to blue, not green. Python is a general-purpose language runtime, so the optimization-purpose modifier does not apply and no Optimization level is assigned.</p>
+
+<p><strong>Pending work that could change the grade:</strong></p>
+<ul>
+  <li>Open <a href="https://github.com/python/cpython/issues/121201">cpython#121201</a> / <a href="https://github.com/python/cpython/pull/121387">PR #121387</a>: riscv64 has no Linux-perf JIT trampoline support (DWARF register fix written in 2024, stale since April 2026, blocked because no available riscv64 machine has working perf hardware counters for maintainer pablogsal to validate against).</li>
+  <li>Open <a href="https://github.com/python/cpython/issues/103438">cpython#103438</a>: leftover <code class="language-plaintext highlighter-rouge">CTYPES_PASS_BY_REF_HACK</code> cleanup.</li>
+  <li>RISE is actively funding buildbot/runner hardware and has stated the next goal is promotion to Tier 2 (<a href="https://riseproject.dev/2026/08/24/python-now-officially-supports-risc-v/">riseproject.dev, 2026-08-24</a>).</li>
+  <li>Backport PR #156358 bringing the Tier 3 <code class="language-plaintext highlighter-rouge">configure.ac</code> marking to the 3.15 branch was explicitly rejected, so 3.15 ships without the formal marking even though 3.16 will have it.</li>
+  <li>A path to green would require CPython (or a channel treated as sufficiently canonical) to actually publish riscv64 release binaries; given CPython’s own release model ships no official Linux binaries for any architecture, this would most plausibly come via broader, more official recognition of a distro or RISE-backed binary channel rather than a change in CPython’s own release practice.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing new work: RISE has already funded or executed the buildbot hardware behind the Tier 3 approval, the RISE RISC-V Runners infrastructure, the python-wheels/wheel_builder binary-wheel project, the python-versions prebuilt-CPython-binary project, the PyTorch riscv64 CI effort, and (per a discuss.python.org post) is actively hiring a dedicated Python packaging contractor for riscv64. None of the items below duplicate that funded work; they are the gaps that remain after it.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>Three performance gaps relative to x86_64 and aarch64:</p>
+<p>The interpreter builds, runs, and passes its test suite on riscv64 per the Tier 3 buildbot fleet. Standard library modules relying on libffi, OpenSSL, decimal, sqlite3 and most extension modules work, subject to the open upstream dependency bugs noted in Section 9 (libffi struct-by-value, mimalloc SV39 alignment). Remaining functional gaps:</p>
+<ul>
+  <li>Perf JIT trampoline build failure on riscv64 (workaround disables the feature; real fix exists, blocked on validation hardware)</li>
+  <li><code class="language-plaintext highlighter-rouge">CTYPES_PASS_BY_REF_HACK</code> cleanup (cosmetic; workaround is already correct)</li>
+  <li>3.15-branch does not carry the formal Tier 3 <code class="language-plaintext highlighter-rouge">configure.ac</code> marking (rejected backport)</li>
+</ul>
+<h3 id="142-performance-optimization">
+  
+  
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
+  
+  
+</h3>
+    
 
+<p>Three gaps relative to x86_64/aarch64:</p>
 <ol>
-  <li>
-    <p><strong>No JIT (highest impact).</strong> The copy-and-patch JIT is the primary CPython performance investment for 3.13+. riscv64 runs interpreter-only. Implementing the riscv64 JIT target requires <code class="language-plaintext highlighter-rouge">_targets.py</code> additions, new ELF relocation handling, DWARF unwind support, and stencil generation. No upstream work has started. Effort: on the order of several engineer-months for a first pass, more for full feature parity.</p>
-  </li>
-  <li>
-    <p><strong>No SIMD in hash and compression libraries.</strong> zlib, zstd, lzma, and the HACL* hash library (used for SHA-2, BLAKE2, SHA-3 in CPython) have no RVV paths. This affects throughput for cryptographic operations and data compression. Effort: library-level work (OpenSSL has the most maturity; zlib/zstd are lower effort with existing scalar baselines).</p>
-  </li>
-  <li>
-    <p><strong>mimalloc VA detection.</strong> Minor but affects default 3.13+ configurations on SV39 hardware. Upstream fix pending.</p>
-  </li>
+  <li><strong>No JIT.</strong> The copy-and-patch JIT has zero riscv64 entries in <code class="language-plaintext highlighter-rouge">Tools/jit/_targets.py</code>. Implementing a first-pass riscv64 JIT target requires new ELF relocation handling, DWARF unwind support, and stencil generation - no upstream work has started.</li>
+  <li><strong>No SIMD/RVV in hash and compression libraries.</strong> zlib, zstd, lzma, and the HACL* hash library have no RVV paths; this affects throughput for cryptographic operations and compression.</li>
+  <li><strong>mimalloc SV39 MMU alignment.</strong> Affects default-allocator performance/correctness on common riscv64 hardware; upstream fix pending at <a href="https://github.com/microsoft/mimalloc/issues/939">microsoft/mimalloc#939</a>.</li>
 </ol>
-<h3 id="133-cicd-infrastructure">
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
-  
-  
-</h3>
-    
-
-<p>Current state: one volunteer buildbot, broken for 3+ months, on hardware without perf support.</p>
-
-<p>Minimum viable CI for riscv64 to reach CPython Tier 3:</p>
-
-<ul>
-  <li>A buildbot connected to a machine with working Linux perf hardware (required to merge PR #121387 and any future perf-related work)</li>
-  <li>A GitHub Actions job (preferably using RISE runners at <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>) for PR-level testing</li>
-  <li>A named core developer sponsor</li>
-</ul>
-
-<p>RISE already operates the runner infrastructure (<code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code>) used by python-versions and python-wheels. Adding a CPython GitHub Actions job on those runners is technically straightforward; the organizational step is getting a core developer to commit to Tier 3 sponsorship.</p>
-<h3 id="134-ecosystem-enablement">
-  
-  
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>The binary wheel infrastructure gap that existed before mid-2025 is now resolved upstream (manylinux, cibuildwheel, PyPI). The RISE wheel_builder provides 78+ packages including the full ML stack. The outstanding gap is that individual package maintainers need to add riscv64 to their CI (using cibuildwheel’s riscv64 support) and publish wheels to PyPI. NumPy and PyTorch are in progress; numpy’s RISE CI PR is open.</p>
-<h3 id="135-summary-table">
+<p>Current state is materially sound for Tier 3: four buildbots (3 stable + 1 semi-stable free-threading) back the current status. The specific remaining infrastructure gap is a riscv64 machine with working Linux <code class="language-plaintext highlighter-rouge">perf</code> hardware performance counters, needed solely to unblock PR #121387’s merge. RISE already operates <code class="language-plaintext highlighter-rouge">ubuntu-24.04-riscv</code> GitHub Actions runners for its own projects (python-wheels, python-versions); extending that runner class, or providing a perf-capable board to a CPython core developer, would be a comparatively low-cost unblock.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>The binary-wheel ecosystem gap is the larger remaining item relative to CPython-core work. RISE’s wheel_builder/python-wheels already covers a substantial and growing package set; the outstanding work is per-package maintainer adoption (adding riscv64 to individual projects’ CI via cibuildwheel, publishing to PyPI directly rather than relying solely on RISE’s supplementary index) and continued investment in RVV-accelerated numerics (PyTorch ATen vectorization is explicitly not yet implemented for riscv64, per the open upstream PR noted in Section 10).</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1289,93 +1271,76 @@ CPython 3.13+ uses mimalloc as the default allocator. Two open PRs (May 2026) at
   <tbody>
     <tr>
       <td>Functional</td>
-      <td>Fix frame-pointer offsets for riscv64 in <code class="language-plaintext highlighter-rouge">_testinternalcapi.c</code> (issues #150919, #151040)</td>
-      <td>1-2</td>
-      <td>Requires riscv64 hardware access; @furkanonder or equivalent</td>
-      <td>Critical – blocks 3.15.0 release on riscv64</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>Validate and merge PR #121387 (perf JIT DWARF registers)</td>
-      <td>1 (if perf hardware available)</td>
-      <td>Requires machine with working Linux perf HPM</td>
+      <td>Provide/validate PR #121387 (perf JIT DWARF registers) on real perf hardware</td>
+      <td>1 (if hardware available)</td>
+      <td>Requires a riscv64 machine with working Linux perf HPM counters</td>
       <td>High</td>
-    </tr>
-    <tr>
-      <td>Functional</td>
-      <td>Fix mimalloc hwprobe VA detection (microsoft/mimalloc open PRs)</td>
-      <td>2-4 (upstream)</td>
-      <td>Microsoft/mimalloc maintainers; RISE can drive</td>
-      <td>High for 3.13+ deployments on SV39 hardware</td>
     </tr>
     <tr>
       <td>Functional</td>
       <td>Cleanup <code class="language-plaintext highlighter-rouge">CTYPES_PASS_BY_REF_HACK</code> (issue #103438)</td>
       <td>1</td>
       <td>Open to any contributor</td>
-      <td>Low – workaround is correct</td>
+      <td>Low</td>
     </tr>
     <tr>
-      <td>CI/CD</td>
-      <td>Provide riscv64 machine with working Linux perf hardware to cpython buildbot</td>
-      <td>1-2 (setup)</td>
-      <td>RISE or Qualcomm infra</td>
-      <td>High – unblocks PR #121387 and future perf work</td>
+      <td>Functional</td>
+      <td>Drive libffi#694/#466/#777 fixes upstream (struct-by-value, int promotion, static linking)</td>
+      <td>2-4</td>
+      <td>libffi maintainers, can be RISE-funded</td>
+      <td>Medium - directly affects ctypes correctness</td>
     </tr>
     <tr>
-      <td>CI/CD</td>
-      <td>Add riscv64 GitHub Actions job to cpython <code class="language-plaintext highlighter-rouge">.github/workflows/build.yml</code></td>
-      <td>1-2</td>
-      <td>Requires core developer sponsor for Tier 3</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Identify and commit a Tier 3 core developer sponsor for riscv64</td>
-      <td>N/A</td>
-      <td>Steering Council approval required</td>
-      <td>High – prerequisite for Tier 3</td>
+      <td>Functional</td>
+      <td>Drive microsoft/mimalloc#939 (SV39 aligned-memory) to merge</td>
+      <td>2-4</td>
+      <td>mimalloc maintainers, RISE can sponsor</td>
+      <td>High for 3.13+ free-threaded deployments</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Implement riscv64 JIT target in <code class="language-plaintext highlighter-rouge">Tools/jit/_targets.py</code></td>
+      <td>Implement riscv64 target in <code class="language-plaintext highlighter-rouge">Tools/jit/_targets.py</code></td>
       <td>20-40 (first pass)</td>
       <td>Requires JIT subsystem expertise; no upstream work started</td>
-      <td>Medium – high payoff but large scope</td>
+      <td>Medium - high payoff, large scope</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>RVV paths in OpenSSL for CPython <code class="language-plaintext highlighter-rouge">_ssl</code> and <code class="language-plaintext highlighter-rouge">_hashlib</code></td>
+      <td>RVV paths in OpenSSL for <code class="language-plaintext highlighter-rouge">_ssl</code>/<code class="language-plaintext highlighter-rouge">_hashlib</code></td>
       <td>10-20</td>
       <td>OpenSSL community + hardware vendors</td>
       <td>Medium</td>
     </tr>
     <tr>
-      <td>Ecosystem</td>
-      <td>Drive numpy riscv64 CI PR (#30995) to merge</td>
-      <td>2-4</td>
-      <td>RISE / numpy maintainers</td>
-      <td>High – anchors scientific stack</td>
+      <td>Performance</td>
+      <td>RVV vectorization in PyTorch ATen (adjacent ecosystem, not CPython-core)</td>
+      <td>10-20+</td>
+      <td>RISE/PyTorch upstream, PR open since Feb 2026</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Provide/identify a riscv64 machine with working Linux perf HPM counters for buildbot/maintainer use</td>
+      <td>1-2 (setup)</td>
+      <td>RISE or hardware vendor</td>
+      <td>High - unblocks PR #121387</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Pursue Tier 2 promotion per RISE’s stated goal (2 core-dev sponsors, release-blocking buildbot)</td>
+      <td>N/A</td>
+      <td>Steering Council approval required</td>
+      <td>Medium - RISE has stated intent</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Drive PyTorch to Level 3 CI on riscv64</td>
-      <td>10-20</td>
-      <td>RISE / Meta PyTorch team</td>
-      <td>Medium</td>
+      <td>Expand riscv64 wheel coverage for packages outside RISE’s existing ~50-80 package set</td>
+      <td>Ongoing</td>
+      <td>RISE-funded contractor role already being recruited</td>
+      <td>High - anchors the practical user experience</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1387,35 +1352,65 @@ CPython 3.13+ uses mimalloc as the default allocator. Two open PRs (May 2026) at
 
 <ul>
   <li><a href="https://github.com/python/cpython">CPython repository</a></li>
-  <li><a href="https://peps.python.org/pep-0011/">PEP 11 – Supported Platforms</a></li>
-  <li><a href="https://github.com/python/cpython/issues/151040">CPython issue #151040</a></li>
-  <li><a href="https://github.com/python/cpython/issues/150919">CPython issue #150919</a></li>
-  <li><a href="https://github.com/python/cpython/issues/121201">CPython issue #121201</a></li>
-  <li><a href="https://github.com/python/cpython/issues/133304">CPython issue #133304</a></li>
-  <li><a href="https://github.com/python/cpython/issues/120400">CPython issue #120400</a></li>
-  <li><a href="https://github.com/python/cpython/issues/115988">CPython issue #115988</a></li>
-  <li><a href="https://github.com/python/cpython/issues/112779">CPython issue #112779</a></li>
-  <li><a href="https://github.com/python/cpython/issues/103438">CPython issue #103438</a></li>
-  <li><a href="https://github.com/python/cpython/pull/121387">CPython PR #121387</a></li>
-  <li><a href="https://github.com/python/cpython/pull/133328">CPython PR #133328</a></li>
-  <li><a href="https://github.com/python/cpython/pull/121328">CPython PR #121328</a></li>
-  <li><a href="https://github.com/python/cpython/pull/120089">CPython PR #120089</a></li>
-  <li><a href="https://github.com/python/cpython/pull/115989">CPython PR #115989</a></li>
-  <li><a href="https://github.com/python/cpython/pull/124264">CPython PR #124264</a></li>
-  <li><a href="https://github.com/python/cpython/pull/112819">CPython PR #112819</a></li>
-  <li><a href="https://github.com/python/cpython/pull/6655">CPython PR #6655</a></li>
-  <li><a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">RISE blog: Easy Installation of Binary Python Packages on riscv64 Devices</a></li>
-  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE blog: RISE RISC-V Runners: Six Weeks In</a></li>
-  <li><a href="https://gitlab.com/riseproject/python/wheel_builder">RISE wheel_builder (GitLab)</a></li>
-  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel_builder documentation</a></li>
+  <li><a href="https://peps.python.org/pep-0011/">PEP 11 - Supported Platforms</a></li>
+  <li><a href="https://github.com/python/steering-council/issues/360">python/steering-council#360 - PEP 11 Tier 3 proposal</a></li>
+  <li><a href="https://github.com/python/cpython/issues/156244">cpython#156244 - Update RISC-V’s support tier in configure.ac</a></li>
+  <li><a href="https://github.com/python/cpython/pull/156277">cpython PR #156277 - Update configure for RISC-V support</a></li>
+  <li><a href="https://github.com/python/cpython/pull/156358">cpython PR #156358 - rejected 3.15 backport</a></li>
+  <li><a href="https://github.com/python/cpython/issues/121201">cpython#121201 - perf_jit_trampoline.c build failure on riscv64</a></li>
+  <li><a href="https://github.com/python/cpython/pull/121387">cpython PR #121387 - Support riscv64 architecture for Perf JIT</a></li>
+  <li><a href="https://github.com/python/cpython/pull/121328">cpython PR #121328 - Disable perf_trampoline on riscv64</a></li>
+  <li><a href="https://github.com/python/cpython/pull/121336">cpython PR #121336 - 3.13 backport of #121328</a></li>
+  <li><a href="https://github.com/python/cpython/pull/120089">cpython PR #120089 - Support Linux perf profile for RISC-V</a></li>
+  <li><a href="https://github.com/python/cpython/issues/120400">cpython#120400 - Linux perf profile can’t see Python calls on RISC-V</a></li>
+  <li><a href="https://github.com/python/cpython/issues/85518">cpython#85518 - test_thousand/compileall hang on riscv64</a></li>
+  <li><a href="https://github.com/python/cpython/issues/133304">cpython#133304 - NaN roundtrip failure on RISC-V buildbot</a></li>
+  <li><a href="https://github.com/python/cpython/pull/133328">cpython PR #133328 - RISC-V NaN packing workaround</a></li>
+  <li><a href="https://github.com/python/cpython/issues/115988">cpython#115988 - missing ARM64/RISCV filter in lzma</a></li>
+  <li><a href="https://github.com/python/cpython/pull/115989">cpython PR #115989 - add FILTER_RISCV</a></li>
+  <li><a href="https://github.com/python/cpython/issues/112779">cpython#112779 - undefined reference to __atomic_exchange_1 on riscv64</a></li>
+  <li><a href="https://github.com/python/cpython/pull/112819">cpython PR #112819 - fix atomic-op detection</a></li>
+  <li><a href="https://github.com/python/cpython/issues/112951">cpython#112951 - mimalloc aligned memory warning on RISC-V</a></li>
+  <li><a href="https://github.com/python/cpython/issues/103438">cpython#103438 - CTYPES_PASS_BY_REF_HACK cleanup</a></li>
+  <li><a href="https://github.com/python/cpython/pull/103439">cpython PR #103439 - don’t define CTYPES_PASS_BY_REF_HACK on aarch64/riscv64</a></li>
+  <li><a href="https://github.com/python/cpython/issues/150919">cpython#150919 - test_frame_pointer_unwind fails on riscv64</a></li>
+  <li><a href="https://github.com/python/cpython/issues/151040">cpython#151040 - test_c_stack_unwind fails on riscv64</a></li>
+  <li><a href="https://github.com/python/cpython/pull/152370">cpython PR #152370 - fix test_c_stack_unwind on riscv64</a></li>
+  <li><a href="https://github.com/python/cpython/issues/157688">cpython#157688 - test_linux_ext_suffix no assertions on riscv64</a></li>
+  <li><a href="https://github.com/python/cpython/pull/157690">cpython PR #157690 - fix test_linux_ext_suffix</a></li>
+  <li><a href="https://github.com/python/cpython/pull/6655">cpython PR #6655 - add triplets for mips-r6 and riscv</a></li>
+  <li><a href="https://github.com/python/cpython/pull/6660">cpython PR #6660 - 3.7 backport of triplets</a></li>
+  <li><a href="https://github.com/python/cpython/issues/80880">cpython#80880 - riscv multilib build support</a></li>
+  <li><a href="https://github.com/python/cpython/issues/77251">cpython#77251 - Add platform triplet for RISC-V</a></li>
+  <li><a href="https://blog.python.org/2026/08/riscv-now-officially-supported/">blog.python.org - RISC-V is now officially supported by CPython</a></li>
+  <li><a href="https://riseproject.dev/2026/08/24/python-now-officially-supports-risc-v/">riseproject.dev - Python Now Officially Supports RISC-V</a></li>
+  <li><a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">riseproject.dev - Easy Installation of Binary Python Packages on riscv64 Devices</a></li>
+  <li><a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">riseproject.dev - PyTorch is available on riscv64!</a></li>
+  <li><a href="https://www.infoq.com/news/2026/09/riscv-cpython/">InfoQ - CPython Officially Adds RISC-V Support As a Tier 3 Platform</a></li>
   <li><a href="https://github.com/riseproject-dev/python-wheels">riseproject-dev/python-wheels</a></li>
   <li><a href="https://github.com/riseproject-dev/python-versions">riseproject-dev/python-versions</a></li>
-  <li><a href="https://github.com/riseproject-dev/setup-python">riseproject-dev/setup-python</a></li>
-  <li><a href="https://discuss.python.org/t/packaging-support-for-riscv64/">discuss.python.org: Packaging support for riscv64</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE wheel_builder documentation</a></li>
+  <li><a href="https://github.com/gounthar/riscv64-python-wheels">gounthar/riscv64-python-wheels</a></li>
+  <li><a href="https://github.com/python-pillow/Pillow/issues/9462">python-pillow/Pillow#9462 - riscv64 wheel for PyPI</a></li>
+  <li><a href="https://stanfromireland.github.io/riscv-wheels/">RISC-V Wheels Dashboard</a></li>
+  <li><a href="https://conda-forge.org/blog/2026/09/15/riscv64/">conda-forge blog - Bringing RISC-V to conda-forge</a></li>
+  <li><a href="https://discuss.python.org/t/rise-is-looking-for-a-python-packaging-contractor-for-riscv64/66538">discuss.python.org - RISE is looking for a Python packaging contractor for riscv64</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/riscv64/python3">Ubuntu packages - python3 (resolute/riscv64)</a></li>
+  <li><a href="https://archriscv.felixc.at/repo/core/">Arch Linux RISC-V core repository</a></li>
+  <li><a href="https://github.com/libffi/libffi/issues/466">libffi#466 - small ints not promoted to ffi_arg on riscv64</a></li>
+  <li><a href="https://github.com/libffi/libffi/issues/777">libffi#777 - linking libffi.a on riscv64 fails</a></li>
+  <li><a href="https://github.com/libffi/libffi/issues/694">libffi#694 - struct_by_value_big fails on aarch64+riscv64</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/28118">openssl#28118 - riscv extension detection broken on musl</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/30880">openssl#30880 - flaky riscv64 CI test</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/29453">openssl#29453 - intrinsics vs inline asm</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/28664">openssl#28664 - SHA256 perf on RISC-V</a></li>
+  <li><a href="https://github.com/openssl/openssl/issues/25334">openssl#25334 - AES needs Zknd+Zkne simultaneously</a></li>
+  <li><a href="https://github.com/tukaani-project/xz/issues/146">tukaani-project/xz#146 - TUKLIB_FAST_UNALIGNED_ACCESS for RISC-V</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/issues/939">microsoft/mimalloc#939 - aligned memory on RISC-V SV39 MMU</a></li>
+  <li><a href="https://github.com/util-linux/util-linux/issues/1526">util-linux#1526 - compile util-linux for RISC-V</a></li>
   <li><a href="https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-cc.adoc#frame-pointer-convention">RISC-V psABI frame pointer convention</a></li>
   <li><a href="https://docs.python.org/3/using/configure.html">CPython configure documentation</a></li>
-  <li><a href="https://github.com/pypa/manylinux">manylinux (pypa)</a></li>
-  <li><a href="https://buildd.debian.org/status/package.php?p=python3.13&amp;suite=sid">Debian package tracker: python3.13 riscv64 sid</a></li>
+  <li><a href="https://buildd.debian.org/status/package.php?p=python3.13&amp;suite=sid">Debian package tracker - python3.13 riscv64 sid</a></li>
 </ul>
 
           
