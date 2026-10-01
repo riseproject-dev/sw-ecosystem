@@ -265,11 +265,13 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY &lt;ludovic.henry@qti.qualcomm.com&gt;
-<strong>Date:</strong> 2026-07-20
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for SLEEF
-<strong>Audience:</strong> Technical leadership, resource allocation strategy
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].</p><hr />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> blue<br />
+<strong>Optimization level:</strong> partial<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for SLEEF<br />
+<strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,68 +281,88 @@
 </h2>
     
 
-<p>SLEEF (SIMD Library for Evaluating Elementary Functions) is a C library providing SIMD-accelerated implementations of standard math functions (transcendentals, DFT, quad-precision) across multiple architectures. It is consumed by OpenJDK Vector API, PyTorch, LLVM auto-vectorization, and scientific computing runtimes.</p>
+<p>SLEEF (SIMD Library for Evaluating Elementary Functions) is a C library providing SIMD-accelerated implementations of standard math functions (transcendentals, DFT/FFT, quad-precision arithmetic) across x86_64, AArch64, RISC-V, POWER/VSX and s390x. It is consumed downstream by OpenJDK’s Vector API, PyTorch, LLVM auto-vectorization (<code class="language-plaintext highlighter-rouge">-fveclib=SLEEF</code>), and scientific computing runtimes. Homepage: <a href="https://sleef.org/">sleef.org</a>. Repository: <a href="https://github.com/shibatch/sleef">shibatch/sleef</a>.</p>
 
 <p><strong>License:</strong> Boost Software License 1.0 (BSL-1.0), permissive.</p>
 
-<p><strong>Governance:</strong> No foundation affiliation, no governance board. Sole owner and maintainer is Naoki Shibata (<a href="https://github.com/shibatch">@shibatch</a>). The project solicits financial support from corporations earning over $1M/year from SLEEF-dependent products, framing it as operational risk management. There is no formal tier policy document.</p>
+<p><strong>Governance:</strong> No foundation affiliation, no governance board. The project is BDFL-style, led by sole long-term maintainer Naoki Shibata (<a href="https://github.com/shibatch">@shibatch</a>), who accounts for 329 of recent commits per <code class="language-plaintext highlighter-rouge">git shortlog -sne --all</code>. No MAINTAINERS, OWNERS, or CODEOWNERS file exists in the repository.</p>
 
-<p><strong>Corporate contributors:</strong></p>
+<p>As of November 2025 the project added <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> and <code class="language-plaintext highlighter-rouge">SUSTAINABILITY.md</code>, which establish a pointed funding stance: companies with over US$1M in annual revenue who embed SLEEF in products are asked for financial support, and face a Corporate Contributor License Agreement (CCLA) requiring full IP assignment and unlimited liability for contributions, unless they negotiate a separate “Maintenance Support Agreement” for an “Authorized Exemption.” The maintainer ties this explicitly to the project’s Code of Conduct (cross-referencing <code class="language-plaintext highlighter-rouge">shibatch/nofreelunch</code>), framing uncompensated corporate use as “extractive.” Practical implication for RISC-V: absent dedicated sponsorship or stewardship, platform tiers degrade rather than advance - the RISC-V/RVV port, despite real historical investment from Arm and Rivos, has been downgraded to “Unmaintained” status in the current README (see Section 3), and x86 SSE2 is separately flagged “seeking sponsorship.”</p>
+
+<p><strong>Corporate contributors (by commit volume, <code class="language-plaintext highlighter-rouge">git shortlog -sne --all</code>):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Login</th>
-      <th>Name</th>
+      <th>Login/Name</th>
       <th>Affiliation</th>
       <th>Commits</th>
+      <th>Role</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>shibatch</td>
-      <td>Naoki Shibata</td>
+      <td>Naoki Shibata (shibatch)</td>
       <td>Independent</td>
-      <td>358 – sole maintainer</td>
+      <td>329 (recent shortlog)</td>
+      <td>Sole maintainer, BDFL</td>
     </tr>
     <tr>
-      <td>blapie</td>
-      <td>Pierre Blanchard</td>
+      <td>Francesco Petrogalli</td>
       <td>Arm Ltd</td>
-      <td>53 – effective co-maintainer</td>
+      <td>62</td>
+      <td>Heaviest corporate contributor</td>
     </tr>
     <tr>
-      <td>joanaxcruz</td>
-      <td>Joana Cruz</td>
+      <td>Pierre Blanchard (blapie)</td>
       <td>Arm Ltd</td>
-      <td>22</td>
+      <td>34 + 19 (two emails) = 53</td>
+      <td>Effective co-maintainer; merged every significant RISC-V PR</td>
     </tr>
     <tr>
-      <td>xuhancn</td>
-      <td>Xu Han</td>
+      <td>Joana Cruz (joanaxcruz)</td>
+      <td>Arm Ltd</td>
+      <td>12 + 7 = 19 [existing-report figure of 22 NEEDS VERIFICATION against this]</td>
+      <td>Reviewer</td>
+    </tr>
+    <tr>
+      <td>Diana Bite</td>
+      <td>Arm Ltd</td>
+      <td>10</td>
+      <td>Contributor</td>
+    </tr>
+    <tr>
+      <td>Simon Hosie (sh1boot)</td>
+      <td>Rivos Inc</td>
+      <td>Multiple (exact count not independently re-confirmed)</td>
+      <td>Drove RVV cleanup/DFT/quad work</td>
+    </tr>
+    <tr>
+      <td>Ludovic Henry (luhenry)</td>
+      <td>Rivos Inc</td>
+      <td>Multiple (authored first RISC-V commit)</td>
+      <td>Authored PR #477 integration</td>
+    </tr>
+    <tr>
+      <td>Xu Han (xuhancn)</td>
       <td>Intel Corporation</td>
-      <td>5</td>
+      <td>Not independently re-confirmed</td>
+      <td>Contributor</td>
     </tr>
     <tr>
-      <td>sh1boot</td>
-      <td>Simon Hosie</td>
-      <td>Rivos Inc.</td>
-      <td>8</td>
-    </tr>
-    <tr>
-      <td>luhenry</td>
-      <td>Ludovic Henry</td>
-      <td>Rivos Inc.</td>
-      <td>4</td>
+      <td>Michael Orlitzky (orlitzky)</td>
+      <td>Independent</td>
+      <td>-</td>
+      <td>Fixed PR #602 (GCC-13 RVV detection)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Arm Ltd employees are the secondary maintainer tier. Rivos Inc. drove the RISC-V port. blapie (Arm) has merged every significant RISC-V PR.</p>
+<p>Arm Ltd employees form the de facto secondary maintainer tier; blapie (Arm) has merged every significant RISC-V pull request, including the original integration PR #477. Rivos Inc. engineers (Hosie, Henry) authored the bulk of the RISC-V/RVV implementation work itself.</p>
 
-<p><strong>Community stance on new ports:</strong> The project is receptive to externally driven ports. The full RISC-V port was authored by Rivos Inc. and accepted by blapie. Issues <a href="https://github.com/shibatch/sleef/issues/432">#432</a> and <a href="https://github.com/shibatch/sleef/issues/455">#455</a> tracking RISC-V enablement were both closed as completed in November 2023 after the integration PR landed.</p>
+<p><strong>Community stance on new ports:</strong> The project is receptive to externally driven ports when a corporate sponsor funds the work. The full RISC-V port was authored by Rivos Inc. and accepted by Arm’s blapie. Issues <a href="https://github.com/shibatch/sleef/issues/432">#432</a> and <a href="https://github.com/shibatch/sleef/issues/455">#455</a>, tracking RISC-V enablement, were both closed as completed after the integration PR landed in November 2023.</p>
 
-<p><strong>RISE membership:</strong> SLEEF is not a RISE member project. RISE lists member companies. Rivos Inc. (which authored the port) is not on the June 2026 RISE member list either; relevant RISE members include SiFive, NVIDIA, Google, Red Hat, and SpacemiT. The RISE project published one blog post covering SLEEF integration into OpenJDK (authored by Hamlin Li, Rivos), indicating indirect RISE involvement through the OpenJDK working group.</p><hr />
+<p><strong>RISE involvement:</strong> SLEEF itself is not a RISE member project and has no dedicated repository under the <code class="language-plaintext highlighter-rouge">riseproject-dev</code> GitHub organization. However, RISE documents and tracks SLEEF explicitly: it is catalogued internally as project <strong>SL_02_003</strong> (per RISE’s wiki, indexed summary: “a vectorized libm, libquad and dft implementation,” development completed Q4 2023, upstreaming completed), and RISE has published two blog posts referencing SLEEF - one on integrating SLEEF into OpenJDK’s Vector API (<a href="https://riseproject.dev/2025/09/24/openjdk-supercharging-vectorized-math-with-sleef/">2025-09-24</a>) and one on PyTorch’s riscv64 support that cites SLEEF’s RISC-V port as foundational (<a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">2026-08-18</a>). SLEEF is not among the packages built by RISE’s Python wheel builder (<a href="https://riseproject.gitlab.io/python/wheel_builder/">riseproject.gitlab.io/python/wheel_builder</a>) - unsurprising, since no PyPI distribution of SLEEF exists for any architecture (Section 8).</p><hr />
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -366,100 +388,110 @@
     </tr>
     <tr>
       <td>2022-10-19</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/448">PR #448</a>: FMA support for RISC-V (luhenry, Rivos)</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/448">PR #448</a>: FMA support for RISC-V; closed/unmerged, folded into #477</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2023-01-13</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/449">PR #449</a>: SiFive initial RVV backend, RVVM1 and RVVM2 (Rivos)</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/449">PR #449</a>: SiFive-submitted RVV backend (RVVM1/RVVM2, LMUL=1/2); closed/unmerged, folded into #477</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2023-03-18</td>
+      <td>Issue <a href="https://github.com/shibatch/sleef/issues/455">#455</a> filed: “Enable Riscv64 Support,” pointing to the SiFive fork (<code class="language-plaintext highlighter-rouge">sifive/sifive-sleef</code>) as a patch source</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2023-08-03</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/468">PR #468</a>: “Support for RiscV architecture,” flagged as duplicate of #448, closed unmerged</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2023-11-04</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/477">PR #477</a> opened: “Integrate RISC-V support” (luhenry, Rivos) – folds in #448, #449, #468</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/477">PR #477</a> opened: “Integrate RISC-V support” (luhenry, Rivos), depended on #476</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2023-11-20</td>
-      <td><strong>PR #477 merged by blapie (Arm).</strong> First RISC-V code in mainline. GCC RVV CI commented out due to lack of GCC RVV support at that time; Clang 17 only.</td>
-      <td>GitHub</td>
-    </tr>
-    <tr>
-      <td>2024-01-09</td>
-      <td>Issue <a href="https://github.com/shibatch/sleef/issues/501">#501</a>: DFT init infinite loop with 1024-bit QEMU vectors</td>
+      <td><strong>PR #477 merged</strong> (merge commit <code class="language-plaintext highlighter-rouge">cea4434</code>, by blapie/Arm). First RISC-V code in mainline; Clang 17 only at merge time, GCC RVV support explicitly deferred (“GCC needed trunk rather than release versions currently available”)</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2024-01-17</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/503">PR #503</a>: “Enable libsleefdft and libsleefquad on riscv64” (sh1boot, Rivos)</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/503">PR #503</a> opened, continuation of closed <a href="https://github.com/shibatch/sleef/pull/496">#496</a>: “Enable libsleefdft and libsleefquad on riscv64,” dependent on prerequisite PRs #520 to #522 and #527</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2024-02-15</td>
-      <td><strong>SLEEF 3.6 released</strong> – first release containing riscv64 libm support</td>
+      <td><strong>SLEEF 3.6 released</strong> - first release containing riscv64 libm support (PR #477)</td>
       <td>GitHub Releases</td>
     </tr>
     <tr>
       <td>2024-03-04</td>
-      <td>Issue <a href="https://github.com/shibatch/sleef/issues/526">#526</a>: fixed-vector-length optimization request</td>
+      <td>Issue <a href="https://github.com/shibatch/sleef/issues/526">#526</a> filed: fixed-vector-length optimization request (still open)</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2024-03-07</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/503">PR #503</a> merged: libsleefdft + libsleefquad on riscv64</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/503">PR #503</a> and <a href="https://github.com/shibatch/sleef/pull/521">PR #521</a> (“Clean up RVV register composition”) merged</td>
       <td>GitHub</td>
     </tr>
     <tr>
-      <td>2024-03-07</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/521">PR #521</a> merged: “Clean up RVV register composition” (sh1boot, Rivos)</td>
+      <td>2024-03-12</td>
+      <td>Issue <a href="https://github.com/shibatch/sleef/issues/524">#524</a> closed: RISC-V missing from sleef.org architecture table (documentation fix)</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2024-03-15</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/530">PR #530</a> merged: “Fix RVV intrinsic version detection” (sh1boot, Rivos)</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/530">PR #530</a> merged: “Fix RVV intrinsic version detection”</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2024-06-10</td>
-      <td><strong>SLEEF 3.6.1 released</strong> – adds libsleefdft and libsleefquad on riscv64</td>
+      <td><strong>SLEEF 3.6.1 released</strong> - adds libsleefdft and libsleefquad on riscv64 (#503, #520, #521, #522, #527)</td>
       <td>GitHub Releases</td>
     </tr>
     <tr>
       <td>2024-09-20</td>
-      <td>Issue <a href="https://github.com/shibatch/sleef/issues/579">#579</a>: GCC 13 build failure (RVV v0.11 vs v1.0 CMake mismatch)</td>
+      <td>Issue <a href="https://github.com/shibatch/sleef/issues/579">#579</a> filed: GCC-13 build break (RVV v0.11-draft vs v1.0 intrinsics mismatch), surfaced via Gentoo Bug #939400</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2024-11-01</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/601">PR #601</a> merged: bump CI GCC to 14 for riscv64</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/601">PR #601</a> merged: bump CI GCC to 14</td>
       <td>GitHub</td>
     </tr>
     <tr>
       <td>2024-11-11</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/602">PR #602</a> merged: “Configure.cmake: improve RVV1 check” (orlitzky)</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/602">PR #602</a> merged: “Configure.cmake: improve RVV1 check,” closes #579; backported by PyTorch packaging and Homebrew’s <code class="language-plaintext highlighter-rouge">sleef</code> formula (v3.8)</td>
       <td>GitHub</td>
-    </tr>
-    <tr>
-      <td>2025-01-28</td>
-      <td><strong>SLEEF 3.8 released</strong></td>
-      <td>GitHub Releases</td>
     </tr>
     <tr>
       <td>2025-02-08</td>
-      <td><a href="https://github.com/shibatch/sleef/pull/624">PR #624</a> merged: “Add riscv settings” to Jenkinsfile (shibatch)</td>
+      <td><a href="https://github.com/shibatch/sleef/pull/624">PR #624</a> merged (same day, by shibatch): “Add riscv settings” to Jenkinsfile - moves riscv64 CI to self-hosted hardware runners</td>
       <td>GitHub</td>
     </tr>
     <tr>
-      <td>2025-03-26</td>
-      <td><strong>SLEEF 3.9.0 released</strong></td>
+      <td>2025-03</td>
+      <td><strong>SLEEF 3.9.0 released</strong> (latest per GitHub releases.atom as of this research)</td>
       <td>GitHub Releases</td>
+    </tr>
+    <tr>
+      <td>2025-06-10 to 2025-07-01</td>
+      <td>Issue <a href="https://github.com/shibatch/sleef/issues/694">#694</a> filed and closed: Clang 21 cross-compile linker error (<code class="language-plaintext highlighter-rouge">crtbeginS.o</code>/<code class="language-plaintext highlighter-rouge">-lgcc</code> not found), a toolchain/triple-mismatch issue, not a SLEEF code defect</td>
+      <td>GitHub</td>
+    </tr>
+    <tr>
+      <td>2025-09-24</td>
+      <td>RISE blog post on SLEEF-in-OpenJDK integration published, referencing upstream contributions back to SLEEF (PRs <a href="https://github.com/shibatch/sleef/pull/536">#536</a>, <a href="https://github.com/shibatch/sleef/pull/537">#537</a>)</td>
+      <td><a href="https://riseproject.dev/2025/09/24/openjdk-supercharging-vectorized-math-with-sleef/">riseproject.dev</a></td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>All RISC-V code is fully upstream.</strong> No downstream forks carry patches not in mainline. The SiFive fork (sifive/sifive-sleef) that predated the port is now superseded.</p>
+<p><strong>All RISC-V code is fully upstream.</strong> No downstream forks carry patches absent from mainline; the originating SiFive fork (<code class="language-plaintext highlighter-rouge">sifive/sifive-sleef</code>) has been superseded by the merged work.</p>
 
-<p><strong>Key contributors to the port:</strong> Ludovic Henry (Rivos Inc.), Simon Hosie / sh1boot (Rivos Inc.), with merger credit to Pierre Blanchard (Arm Ltd). A later CMake fix came from Michael Orlitzky (independent).</p><hr />
+<p><strong>Key contributors to the port:</strong> Ludovic Henry (Rivos Inc.) authored the first RISC-V commit (<code class="language-plaintext highlighter-rouge">cea4434</code>, 2023-11-20, PR #477). Simon Hosie / sh1boot (Rivos Inc.) drove the DFT/quad-precision extension (PR #503) and subsequent RVV register cleanup (PR #521) and intrinsic-version-detection fix (PR #530). Pierre Blanchard (blapie, Arm Ltd) merged the integration PR and has reviewed/merged every significant RISC-V change since. Michael Orlitzky fixed the GCC-13 configure-time detection bug (PR #602).</p><hr />
 <h2 id="3-upstream-support-tier">
   
   
@@ -469,28 +501,50 @@
 </h2>
     
 
-<p>No formal written tier policy document exists in the repository. The classification below is derived from the sleef.org environment table and CMake options.</p>
+<p>No formal, separately maintained tier-policy document exists. The authoritative source is the “Support status of each vector extension” table in <code class="language-plaintext highlighter-rouge">README.adoc</code>:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Platform</th>
-      <th>GCC</th>
-      <th>Clang</th>
+      <th>Arch</th>
+      <th>Extension</th>
+      <th>Status</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>RISC-V 64-bit, Linux</td>
-      <td>Supported</td>
-      <td>Experimental</td>
+      <td>x86_64</td>
+      <td>SSE2</td>
+      <td>Experimental support, seeking sponsorship</td>
+    </tr>
+    <tr>
+      <td>x86_64</td>
+      <td>AVX2 / AVX512F</td>
+      <td>Mainline support</td>
+    </tr>
+    <tr>
+      <td>AArch64</td>
+      <td>AdvSIMD</td>
+      <td>Mainline support</td>
+    </tr>
+    <tr>
+      <td>RISC-V</td>
+      <td>RVVM1</td>
+      <td><strong>Unmaintained</strong></td>
+    </tr>
+    <tr>
+      <td>RISC-V</td>
+      <td>RVVM2</td>
+      <td><strong>Unmaintained</strong></td>
     </tr>
   </tbody>
 </table></div>
 
-<p>CMakeLists.txt marks both RVVM1 and RVVM2 as <strong>experimental</strong> (both default OFF, warning emitted when enabled). By contrast, AVX2, AVX512F, and AArch64 AdvSIMD carry no such flag and default differently. ARM SVE is not explicitly flagged “experimental” despite being a VLA architecture comparable to RVV [NEEDS VERIFICATION against current sleef.org table].</p>
+<p>The README defines “Unmaintained” as: “may be removed without notice,” “not tested and may not build correctly.” RISC-V does not appear at all in the OS/compiler test matrix table in README.adoc (only x86_64 and AArch64 Linux/Windows/Mac gcc/llvm/MSVC combinations are listed there). <code class="language-plaintext highlighter-rouge">docs/compile.xhtml</code>’s “Cross compilation for Linux” section, which README points to for cross-compile guidance, states in full: “This functionality will soon be removed.”</p>
 
-<p>The upstream README labels RVVM1 and RVVM2 as <strong>“Unmaintained”</strong> – defined in that document as “may be removed without notice” and “not tested and may not build correctly.” This contradicts the active commit history, the addition of Jenkinsfile CI in PR #624 (February 2025, merged by shibatch himself), and the Debian package shipping 3.9.0-1 for riscv64. The “unmaintained” label appears to reflect absence of a named maintainer rather than absence of functional code or active fixes.</p>
+<p>This README “Unmaintained” characterization is directly contradicted by live evidence: the Jenkinsfile riscv64 CI stages (added by PR #624, merged February 2025, by shibatch himself) build and run <code class="language-plaintext highlighter-rouge">ctest</code> on native riscv64 hardware for both GCC-14 and Clang-19; Ubuntu 26.04 (resolute) ships <code class="language-plaintext highlighter-rouge">libsleef3</code>/<code class="language-plaintext highlighter-rouge">libsleef-dev</code> 3.7-0ubuntu3 for riscv64; and RVV code paths see active engineering (PR #601/#602 in Nov 2024). Per the project’s own practice of trusting live workflow/CI configuration over static documentation claims, the README label is treated here as a stale or overly conservative signal rather than a ground truth of inactivity - but this remains a genuine confidence caveat, since the Jenkins dashboard itself is private and its pass/fail history cannot be independently observed (Section 7).</p>
+
+<p>CMake further marks both RVVM1 and RVVM2 as “experimental”: both default OFF, and enabling either emits a build-time warning (“You enabled RVV… support, which is an experimental feature. Experimental features may be removed without notice.”). AVX2, AVX512F and AArch64 AdvSIMD carry no such flag.</p>
 
 <p><strong>Comparison of upstream tier by architecture:</strong></p>
 
@@ -508,37 +562,37 @@
       <td>CMake “experimental” flag</td>
       <td>No</td>
       <td>No</td>
-      <td>Yes (both backends)</td>
+      <td>Yes (both RVVM1 and RVVM2)</td>
     </tr>
     <tr>
       <td>README status</td>
-      <td>Supported</td>
-      <td>Supported</td>
+      <td>Mainline support</td>
+      <td>Mainline support</td>
       <td>Unmaintained</td>
     </tr>
     <tr>
       <td>CI in GitHub Actions</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
+      <td>N/A (not confirmed in this research pass)</td>
+      <td>N/A (not confirmed)</td>
+      <td>No (zero riscv references in all 4 workflow files)</td>
     </tr>
     <tr>
       <td>CI in Jenkinsfile</td>
       <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes (added Feb 2025)</td>
+      <td>Yes (uses <code class="language-plaintext highlighter-rouge">-DEMULATOR=qemu-aarch64-static</code>)</td>
+      <td>Yes (native hardware, added Feb 2025)</td>
     </tr>
     <tr>
-      <td>CI public/observable</td>
-      <td>Yes (GHA)</td>
-      <td>Yes (GHA)</td>
-      <td>No (private Jenkins)</td>
+      <td>CI publicly observable</td>
+      <td>Via GitHub Actions badges where present</td>
+      <td>Via GitHub Actions badges where present</td>
+      <td>No (Jenkins is private/self-hosted)</td>
     </tr>
     <tr>
       <td>Release-blocking</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
+      <td>Not confirmed either way</td>
+      <td>Not confirmed either way</td>
+      <td>No - GitHub Releases ship source tarballs only, identical for every architecture</td>
     </tr>
     <tr>
       <td>Official pre-built binaries</td>
@@ -547,10 +601,10 @@
       <td>Source-only</td>
     </tr>
     <tr>
-      <td>Debian package</td>
-      <td>Yes (3.6.1-3)</td>
+      <td>Distro packages</td>
       <td>Yes</td>
-      <td>Yes (3.9.0-1 on riscv64)</td>
+      <td>Yes</td>
+      <td>Yes (Debian sid, Ubuntu 26.04 resolute)</td>
     </tr>
   </tbody>
 </table></div><hr />
@@ -563,42 +617,86 @@
 </h2>
     
 
-<p>SLEEF has no JIT engine and no garbage collector. Its RISC-V-specific surface area is entirely in one SIMD helper header, two rename headers, toolchain files, and CMake detection logic.</p>
-<h3 id="41-simd-infrastructure-helperrvvh">
+<p>SLEEF has no JIT engine and no garbage collector; it is a static/precompiled math-function library. RISC-V support contains no hand-written assembly (no <code class="language-plaintext highlighter-rouge">.S</code> files) and no dedicated <code class="language-plaintext highlighter-rouge">arch/riscv/</code> directory - it is implemented entirely as RVV C intrinsics via <code class="language-plaintext highlighter-rouge">&lt;riscv_vector.h&gt;</code>, driven by one core helper header plus CMake/build-system plumbing.</p>
+<h3 id="41-simd-infrastructure-srcarchhelperrvvh">
   
   
-    <a href="#41-simd-infrastructure-helperrvvh" class="anchor-heading" aria-labelledby="41-simd-infrastructure-helperrvvh"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 SIMD Infrastructure (helperrvv.h)
+    <a href="#41-simd-infrastructure-srcarchhelperrvvh" class="anchor-heading" aria-labelledby="41-simd-infrastructure-srcarchhelperrvvh"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 SIMD Infrastructure (<code class="language-plaintext highlighter-rouge">src/arch/helperrvv.h</code>)
   
   
 </h3>
     
 
-<p><strong>File:</strong> <code class="language-plaintext highlighter-rouge">src/arch/helperrvv.h</code>, approximately 650-660 lines.</p>
+<p>1,407 lines, 261 <code class="language-plaintext highlighter-rouge">static INLINE</code> functions - the largest and most function-dense architecture helper file in the codebase:</p>
 
-<p>This is the largest architecture-specific helper file in the codebase, larger than <code class="language-plaintext highlighter-rouge">helpersve.h</code> (ARM SVE, ~610 lines) and <code class="language-plaintext highlighter-rouge">helperadvsimd.h</code> (ARM NEON, ~510 lines). It is not a stub. It implements the full SIMD infrastructure layer:</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Lines</th>
+      <th>Inline functions</th>
+      <th>Arch</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>helperrvv.h</td>
+      <td>1,407</td>
+      <td>261</td>
+      <td>RISC-V (RVV, RVVM1+RVVM2, 5 CONFIGs covering runtime-VLEN and fixed 128 to 2048-bit)</td>
+    </tr>
+    <tr>
+      <td>helpersve.h</td>
+      <td>1,117</td>
+      <td>244</td>
+      <td>ARM SVE</td>
+    </tr>
+    <tr>
+      <td>helperpower_128.h</td>
+      <td>872</td>
+      <td>208</td>
+      <td>POWER/VSX</td>
+    </tr>
+    <tr>
+      <td>helperadvsimd.h</td>
+      <td>836</td>
+      <td>200</td>
+      <td>ARM NEON/AdvSIMD</td>
+    </tr>
+    <tr>
+      <td>helpersse2.h</td>
+      <td>486</td>
+      <td>193</td>
+      <td>x86 SSE2</td>
+    </tr>
+    <tr>
+      <td>helperavx512f.h</td>
+      <td>580</td>
+      <td>202</td>
+      <td>x86 AVX512F</td>
+    </tr>
+    <tr>
+      <td>helperavx2.h</td>
+      <td>483</td>
+      <td>194</td>
+      <td>x86 AVX2</td>
+    </tr>
+    <tr>
+      <td>helpers390x_128.h</td>
+      <td>460</td>
+      <td>200</td>
+      <td>IBM z/VXE</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<ul>
-  <li>SP and DP arithmetic (add, sub, mul, div, sqrt, abs, neg, FMA variants)</li>
-  <li>Integer arithmetic and bitwise operations</li>
-  <li>All comparison predicates</li>
-  <li>Load, store, gather, scatter, streaming stores</li>
-  <li>Conditional select (<code class="language-plaintext highlighter-rouge">vsel</code>)</li>
-  <li>Type casts and reinterprets</li>
-  <li>DFT helpers: <code class="language-plaintext highlighter-rouge">vposneg</code>, <code class="language-plaintext highlighter-rouge">vnegpos</code>, <code class="language-plaintext highlighter-rouge">vrev21</code>, <code class="language-plaintext highlighter-rouge">vreva2</code>, <code class="language-plaintext highlighter-rouge">vsubadd</code>, <code class="language-plaintext highlighter-rouge">vmlsubadd</code></li>
-  <li>Quad/extended-precision compound types (<code class="language-plaintext highlighter-rouge">tdx</code>, <code class="language-plaintext highlighter-rouge">tdi_t</code>)</li>
-  <li>Two LMUL configurations: RVVM1 (m1/mf2) and RVVM2 (m2/m1)</li>
-</ul>
+<p>A <code class="language-plaintext highlighter-rouge">grep</code> for TODO/FIXME/XXX/”not implement”/”stub” across all <code class="language-plaintext highlighter-rouge">src/arch/*.h</code> files returns zero hits in <code class="language-plaintext highlighter-rouge">helperrvv.h</code> (the sole hit project-wide is an unrelated comment in the POWER file). The handful of <code class="language-plaintext highlighter-rouge">#error</code> directives present are standard configuration-guard sanity checks, identical in style to equivalent guards in every other architecture header, not unimplemented-feature markers.</p>
 
-<p><strong>ISA extensions required:</strong></p>
+<p><strong>File count by architecture family:</strong> amd64 uses 4 helper files (SSE2/AVX2/AVX2-128/AVX512F); arm64 uses 2 (AdvSIMD, SVE); riscv64 uses 1 (<code class="language-plaintext highlighter-rouge">helperrvv.h</code>), but that single file is parameterized by a <code class="language-plaintext highlighter-rouge">CONFIG</code> macro (1, 2, 7, 8, 9, 10, 11) spanning both RVVM1 and RVVM2 across five vector lengths (128/256/512/1024/2048-bit), achieving functional coverage comparable to SVE’s multi-VL handling in a single file. Fewer files does not indicate less coverage here.</p>
 
-<ul>
-  <li>RVV 1.0 (<code class="language-plaintext highlighter-rouge">__riscv_v &gt;= 1000000</code>) – ratified vector extension</li>
-  <li>RVV intrinsics v0.12+ (<code class="language-plaintext highlighter-rouge">__riscv_v_intrinsic &gt;= 12000</code>)</li>
-  <li>Bitmanip extensions Zba, Zbb, Zbs (via <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zba_zbb_zbs</code>)</li>
-  <li>No explicit Zvfh or Zve sub-extension gating</li>
-</ul>
+<p><strong>ISA extensions required:</strong> RVV 1.0 (<code class="language-plaintext highlighter-rouge">__riscv_v &gt;= 1000000</code>), RVV intrinsics API v0.12+ (<code class="language-plaintext highlighter-rouge">__riscv_v_intrinsic &gt;= 12000</code>), and the Zba, Zbb, Zbs bit-manipulation extensions, via <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zba_zbb_zbs</code> (<code class="language-plaintext highlighter-rouge">Configure.cmake</code>, identical flag for both RVVM1 and RVVM2). No explicit Zvfh or Zve sub-extension gating is present.</p>
 
-<p><strong>Implementation quality:</strong> Pure C with RVV v1.0 intrinsics. No hand-written assembly (.S files do not exist for riscv64). This matches the SVE approach and is appropriate for a SIMD math library. Two compatibility macros exist for older toolchains (pre-RVV-1.0-rc0 intrinsics) with <code class="language-plaintext highlighter-rouge">-Wuninitialized</code> suppression, but the production path requires v1.0 intrinsics.</p>
+<p><strong>Implementation quality:</strong> pure C with RVV v1.0 intrinsics throughout - no hand-written assembly, matching the approach used for SVE. Compatibility shims exist for <code class="language-plaintext highlighter-rouge">__riscv_vcreate_v_*</code> intrinsics predating RVV spec v1.0-rc0, with GCC diagnostic pragmas suppressing uninitialized-value warnings.</p>
 
 <p><strong>LMUL variants:</strong></p>
 
@@ -614,14 +712,14 @@
   </thead>
   <tbody>
     <tr>
-      <td>RVVM1</td>
+      <td>RVVM1 (LMUL=1)</td>
       <td>vfloat64m1_t</td>
       <td>vfloat32m1_t</td>
       <td>vint32mf2_t</td>
       <td>vint32m1_t</td>
     </tr>
     <tr>
-      <td>RVVM2</td>
+      <td>RVVM2 (LMUL=2)</td>
       <td>vfloat64m2_t</td>
       <td>vfloat32m2_t</td>
       <td>vint32m1_t</td>
@@ -630,7 +728,9 @@
   </tbody>
 </table></div>
 
-<p><strong>vmask/vint size mismatch (design note from PR #503):</strong> <code class="language-plaintext highlighter-rouge">vmask</code> uses 64-bit elements even in single-precision code (required by <code class="language-plaintext highlighter-rouge">vcast_vm_i_i</code>), while <code class="language-plaintext highlighter-rouge">vint</code> uses 32-bit elements. For RVVM1 SP this means <code class="language-plaintext highlighter-rouge">vmask</code> needs LMUL=2 while <code class="language-plaintext highlighter-rouge">vint</code> needs LMUL=0.5 of 64-bit types to keep VLMAX=VECTLENDP. PR #503 resolved this with explicit widening/narrowing (<code class="language-plaintext highlighter-rouge">vncvt_x</code>, <code class="language-plaintext highlighter-rouge">vwcvtu_x</code>, <code class="language-plaintext highlighter-rouge">vwcvt_x</code>, <code class="language-plaintext highlighter-rouge">vnsrl 32</code>). No TODO or FIXME markers remain in the file.</p>
+<p><strong>vmask/vint size mismatch (design note, PR #503):</strong> <code class="language-plaintext highlighter-rouge">vmask</code> uses 64-bit elements even in single-precision code (required by <code class="language-plaintext highlighter-rouge">vcast_vm_i_i</code>), while <code class="language-plaintext highlighter-rouge">vint</code> uses 32-bit elements. PR #503 resolved resulting LMUL inconsistencies with explicit widening/narrowing intrinsics (<code class="language-plaintext highlighter-rouge">vncvt_x</code>, <code class="language-plaintext highlighter-rouge">vwcvtu_x</code>, <code class="language-plaintext highlighter-rouge">vwcvt_x</code>, <code class="language-plaintext highlighter-rouge">vnsrl 32</code>).</p>
+
+<p>Because RVV (and SVE) code cannot represent C structs of vector types in Clang, <code class="language-plaintext highlighter-rouge">src/common/commonfuncs.h</code>, <code class="language-plaintext highlighter-rouge">dd.h</code> and <code class="language-plaintext highlighter-rouge">df.h</code> carry <code class="language-plaintext highlighter-rouge">#if !(ENABLE_SVE || ENABLE_RVVM1 || ENABLE_RVVM2)</code> guards and fall back to packed single-vector representations in <code class="language-plaintext highlighter-rouge">helperrvv.h</code> instead of struct-based ones used elsewhere.</p>
 <h3 id="42-math-functions-libm">
   
   
@@ -640,9 +740,9 @@
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">sleefsimddp.c</code> and <code class="language-plaintext highlighter-rouge">sleefsimdsp.c</code> include <code class="language-plaintext highlighter-rouge">helperrvv.h</code> under <code class="language-plaintext highlighter-rouge">#ifdef ENABLE_RVVM1</code> and <code class="language-plaintext highlighter-rouge">#ifdef ENABLE_RVVM2</code> guards, each with <code class="language-plaintext highlighter-rouge">ENABLE_RVV_DP</code> and <code class="language-plaintext highlighter-rouge">ENABLE_RVV_SP</code> respectively. These are the same source files used for all other architectures; RISC-V gets the same transcendental function set (sin, cos, tan, asin, acos, atan, atan2, exp, exp2, expm1, log, log2, log10, log1p, pow, cbrt, hypot, sinh, cosh, tanh and their fast variants at ULP 1 and ULP 3.5).</p>
+<p><code class="language-plaintext highlighter-rouge">sleefsimddp.c</code> and <code class="language-plaintext highlighter-rouge">sleefsimdsp.c</code> - the same generic source files used by every other architecture - include <code class="language-plaintext highlighter-rouge">helperrvv.h</code> under <code class="language-plaintext highlighter-rouge">#ifdef ENABLE_RVVM1</code>/<code class="language-plaintext highlighter-rouge">ENABLE_RVVM2</code> guards with <code class="language-plaintext highlighter-rouge">ENABLE_RVV_DP</code>/<code class="language-plaintext highlighter-rouge">ENABLE_RVV_SP</code>. RISC-V therefore gets the full transcendental function set (sin, cos, tan, asin, acos, atan, atan2, exp, exp2, expm1, log, log2, log10, log1p, pow, cbrt, hypot, sinh, cosh, tanh and fast variants at ULP 1 and ULP 3.5) at full/complete coverage, both single and double precision.</p>
 
-<p>A handful of single-precision functions are explicitly excluded for VLA architectures (RVV and SVE alike): <code class="language-plaintext highlighter-rouge">vmulsign_vf_vf_vf</code>, <code class="language-plaintext highlighter-rouge">vcopysign_vf_vf_vf</code>, <code class="language-plaintext highlighter-rouge">vsign_vf_vf</code>, <code class="language-plaintext highlighter-rouge">vorsign_vf_vf_vf</code>, and the <code class="language-plaintext highlighter-rouge">fi_t</code>/<code class="language-plaintext highlighter-rouge">dfi_t</code> struct definitions. These are shared VLA limitations, not riscv64-specific gaps.</p>
+<p>A small set of single-precision functions (<code class="language-plaintext highlighter-rouge">vmulsign_vf_vf_vf</code>, <code class="language-plaintext highlighter-rouge">vcopysign_vf_vf_vf</code>, <code class="language-plaintext highlighter-rouge">vsign_vf_vf</code>, <code class="language-plaintext highlighter-rouge">vorsign_vf_vf_vf</code>, and the <code class="language-plaintext highlighter-rouge">fi_t</code>/<code class="language-plaintext highlighter-rouge">dfi_t</code> struct definitions) are excluded for all vector-length-agnostic (VLA) architectures, RVV and SVE alike - a shared VLA limitation, not riscv64-specific.</p>
 <h3 id="43-dft-libsleefdft">
   
   
@@ -652,7 +752,7 @@
 </h3>
     
 
-<p>Code support added by <a href="https://github.com/shibatch/sleef/pull/503">PR #503</a> (merged 2024-03-07). <code class="language-plaintext highlighter-rouge">src/dft/CMakeLists.txt</code> defines 10 RVVM1 and 10 RVVM2 DFT targets (5 widths x 2 precisions). DFT is <strong>disabled in CI</strong> (<code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_DFT=False</code>) due to open bug <a href="https://github.com/shibatch/sleef/issues/501">#501</a>: an infinite loop in <code class="language-plaintext highlighter-rouge">src/dft/dft.c</code> during initialization when QEMU emulates a 1024-bit vector width and <code class="language-plaintext highlighter-rouge">measure()</code> fails, leaving loop variable <code class="language-plaintext highlighter-rouge">level</code> never decrementing. The DFT code compiles but its correctness in edge cases with hardware wider than 512 bits is unverified.</p>
+<p>Code support was added by <a href="https://github.com/shibatch/sleef/pull/503">PR #503</a> (merged 2024-03-07); <code class="language-plaintext highlighter-rouge">src/dft/CMakeLists.txt</code> defines a full 20-way RVVM1/RVVM2 x vector-width x precision build matrix. <strong>DFT is explicitly disabled in the riscv64 Jenkins CI lane</strong> (<code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_DFT=False -DSLEEF_ENFORCE_DFT=False</code>), pending resolution of a wide-vector initialization bug. The code compiles but its correctness and CI coverage on riscv64 is currently unverified by upstream’s own pipeline. Data not available: a live GitHub issue search for open RISC-V-specific issues on this repository returned exactly one result (#526, Section 11); no currently-open, publicly tracked issue number specifically documenting this DFT initialization bug could be confirmed in the present research.</p>
 <h3 id="44-quad-precision-libsleefquad">
   
   
@@ -662,7 +762,7 @@
 </h3>
     
 
-<p>Added in <a href="https://github.com/shibatch/sleef/pull/503">PR #503</a>. <code class="language-plaintext highlighter-rouge">src/quad/sleefsimdqp.c</code> defines <code class="language-plaintext highlighter-rouge">Sleef_rvvm1quad</code> and <code class="language-plaintext highlighter-rouge">Sleef_rvvm2quad</code> types and includes the appropriate rename headers. Listed in <code class="language-plaintext highlighter-rouge">SLEEF_SUPPORTED_QUAD_EXTENSIONS</code> in CMake. No quad-specific open bugs found. CI enforces quad on riscv64 (<code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_QUAD=TRUE</code>).</p>
+<p>Added alongside DFT in <a href="https://github.com/shibatch/sleef/pull/503">PR #503</a>. <code class="language-plaintext highlighter-rouge">src/quad/sleefsimdqp.c</code> (3,684 lines) defines <code class="language-plaintext highlighter-rouge">Sleef_rvvm1quad</code>/<code class="language-plaintext highlighter-rouge">Sleef_rvvm2quad</code> types with <code class="language-plaintext highlighter-rouge">#ifdef ENABLE_RVVM1</code>/<code class="language-plaintext highlighter-rouge">ENABLE_RVVM2</code> branches wired identically to SVE/VSX. Quad precision is <strong>enforced in riscv64 CI</strong> (<code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_QUAD=TRUE</code>), both gcc-14 and clang-19 stages. No quad-specific open riscv64 bugs were found.</p>
 <h3 id="45-runtime-cpu-dispatch">
   
   
@@ -672,7 +772,7 @@
 </h3>
     
 
-<p><strong>Absent.</strong> No <code class="language-plaintext highlighter-rouge">dispriscv64.c.org</code> file exists. The build system does not generate a runtime dispatcher for RISC-V. Vector width selection (RVVM1 vs RVVM2) is compile-time only. This matches the aarch64 pattern: ARM also has no dispatcher (AdvSIMD vs SVE is compile-time). By contrast, x86 has <code class="language-plaintext highlighter-rouge">dispsse.c.org</code> and <code class="language-plaintext highlighter-rouge">dispavx.c.org</code> enabling runtime SSE2/AVX2/AVX512 selection via HWCAP. The absence of a dispatcher means an riscv64 binary must be compiled separately for each LMUL configuration.</p>
+<p>No <code class="language-plaintext highlighter-rouge">dispriscv64.c.org</code> file exists; the build system does not generate a runtime dispatcher for RISC-V. Vector width (RVVM1 vs RVVM2) selection is compile-time only - consistent with the AArch64 pattern (AdvSIMD vs SVE is also compile-time), but unlike x86, which ships <code class="language-plaintext highlighter-rouge">dispsse.c.org</code>/<code class="language-plaintext highlighter-rouge">dispavx.c.org</code> and selects SSE2/AVX2/AVX512 via HWCAP at load time. This means an riscv64 binary must be compiled separately per LMUL configuration; a single shared library cannot auto-select across mixed riscv64 hardware.</p>
 <h3 id="46-inline-headers">
   
   
@@ -682,11 +782,11 @@
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_INLINE_HEADERS=TRUE</code> is enforced in Jenkinsfile CI, so riscv64 inline header generation is tested. Rename headers <code class="language-plaintext highlighter-rouge">renamervvm1.h</code> and <code class="language-plaintext highlighter-rouge">renamervvm2.h</code> are present.</p>
+<p><code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_INLINE_HEADERS=TRUE</code> is enforced in the Jenkinsfile riscv64 CI, so inline-header generation is actively tested on riscv64. <code class="language-plaintext highlighter-rouge">src/libm/sleeflibm_header.h.org.in</code> carries <code class="language-plaintext highlighter-rouge">__riscv_v</code>-guarded <code class="language-plaintext highlighter-rouge">Sleef_vfloat32/64m1_t_2</code> typedefs; <code class="language-plaintext highlighter-rouge">src/quad/sleefquad_header.h.org.in</code> carries analogous <code class="language-plaintext highlighter-rouge">Sleef_rvvm1quad</code>/<code class="language-plaintext highlighter-rouge">Sleef_rvvm2quad</code> typedefs guarded by <code class="language-plaintext highlighter-rouge">defined(__riscv) &amp;&amp; defined(__riscv_v)</code>.</p>
 <h3 id="architecture-comparison">
   
   
-    <a href="#architecture-comparison" class="anchor-heading" aria-labelledby="architecture-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Architecture comparison:
+    <a href="#architecture-comparison" class="anchor-heading" aria-labelledby="architecture-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Architecture comparison
   
   
 </h3>
@@ -703,16 +803,16 @@
   </thead>
   <tbody>
     <tr>
-      <td>SIMD helper</td>
-      <td>helpersse2/avx/avx512</td>
-      <td>helperadvsimd + helpersve</td>
-      <td>helperrvv (RVV v1.0 intrinsics)</td>
+      <td>SIMD helper implementation</td>
+      <td>Intrinsics (SSE2/AVX2/AVX512F)</td>
+      <td>Intrinsics (NEON + SVE)</td>
+      <td>Intrinsics (RVV v1.0, Zba/Zbb/Zbs)</td>
     </tr>
     <tr>
-      <td>Implementation quality</td>
-      <td>Intrinsics + asm</td>
-      <td>Intrinsics</td>
-      <td>Intrinsics</td>
+      <td>Assembly (.S files)</td>
+      <td>Some</td>
+      <td>Some</td>
+      <td>None</td>
     </tr>
     <tr>
       <td>Math functions (SP+DP)</td>
@@ -722,19 +822,19 @@
     </tr>
     <tr>
       <td>DFT</td>
-      <td>Full, CI-enforced</td>
-      <td>Full, CI-enforced</td>
-      <td>Code present, CI disabled (bug #501)</td>
+      <td>Full</td>
+      <td>Full</td>
+      <td>Code present, CI-disabled (wide-vector init bug)</td>
     </tr>
     <tr>
       <td>Quad precision</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (CI-enforced)</td>
+      <td>Full, CI-enforced</td>
     </tr>
     <tr>
       <td>Runtime dispatch</td>
-      <td>Yes (SSE2/AVX2/AVX512)</td>
+      <td>Yes (SSE2/AVX2/AVX512F)</td>
       <td>No</td>
       <td>No</td>
     </tr>
@@ -742,13 +842,7 @@
       <td>Fixed-width SIMD variants</td>
       <td>Yes (128/256/512-bit)</td>
       <td>Fixed (128-bit NEON)</td>
-      <td>No (VLA only)</td>
-    </tr>
-    <tr>
-      <td>Assembly (.S files)</td>
-      <td>Some</td>
-      <td>Some</td>
-      <td>None</td>
+      <td>No (VLA; CONFIG spans 128 to 2048-bit)</td>
     </tr>
   </tbody>
 </table></div><hr />
@@ -760,124 +854,111 @@
   
 </h2>
     
-<h3 id="required-toolchain-versions">
+
+<p>No <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, <code class="language-plaintext highlighter-rouge">INSTALL</code>, or <code class="language-plaintext highlighter-rouge">docs/building.md</code>/<code class="language-plaintext highlighter-rouge">docs/cross-compilation.md</code> exist; build documentation lives in <code class="language-plaintext highlighter-rouge">README.adoc</code> and <code class="language-plaintext highlighter-rouge">docs/compile.xhtml</code>. No riscv64 Dockerfile exists anywhere in the repository or CI config.</p>
+<h3 id="required-toolchain-versions-and-why">
   
   
-    <a href="#required-toolchain-versions" class="anchor-heading" aria-labelledby="required-toolchain-versions"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Required toolchain versions
+    <a href="#required-toolchain-versions-and-why" class="anchor-heading" aria-labelledby="required-toolchain-versions-and-why"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Required toolchain versions and why
   
   
 </h3>
     
 
+<p>RVV support is gated at configure time (<code class="language-plaintext highlighter-rouge">Configure.cmake</code>, lines approx. 583-639) by direct preprocessor checks requiring:</p>
 <ul>
-  <li><strong>GCC:</strong> 14+ (riscv64 toolchain file searches <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc-14</code> first, then <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code> with no version fallback to 13 or older). GCC 13 fails: it passes the CMake RVV capability test but cannot compile the library code requiring RVV v1.0 tuple types (<code class="language-plaintext highlighter-rouge">vfloat64m1x4_t</code>) – fixed by <a href="https://github.com/shibatch/sleef/pull/602">PR #602</a>.</li>
-  <li><strong>Clang:</strong> 17+ preferred (toolchain file uses <code class="language-plaintext highlighter-rouge">clang-17</code>). Clang 18+ required if <code class="language-plaintext highlighter-rouge">__riscv_vcreate_*</code> functions are exercised (<a href="https://github.com/shibatch/sleef/pull/530">PR #530</a>). Clang 19 is used in Jenkinsfile CI.</li>
-  <li><strong>Architecture flags:</strong> <code class="language-plaintext highlighter-rouge">-march=rv64gcv_zba_zbb_zbs</code> (both RVVM1 and RVVM2)</li>
+  <li><strong>RVV 1.0</strong> (<code class="language-plaintext highlighter-rouge">__riscv_v &gt;= 1000000</code>) - fatal error “RVV version 1.0 not supported” otherwise</li>
+  <li><strong>RVV intrinsics API &gt;= 0.12</strong> (<code class="language-plaintext highlighter-rouge">__riscv_v_intrinsic &gt;= 12000</code>) - fatal error “RVV instrinsics version 0.12 not supported” otherwise</li>
 </ul>
-<h3 id="cmake-options-for-riscv64">
-  
-  
-    <a href="#cmake-options-for-riscv64" class="anchor-heading" aria-labelledby="cmake-options-for-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CMake options for riscv64
-  
-  
-</h3>
-    
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Flag</th>
-      <th>Default</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>-DSLEEF_ENABLE_RVVM1=ON</td>
-      <td>OFF</td>
-      <td>Enable RVVM1 (LMUL=1), emits “experimental” warning</td>
-    </tr>
-    <tr>
-      <td>-DSLEEF_ENABLE_RVVM2=ON</td>
-      <td>OFF</td>
-      <td>Enable RVVM2 (LMUL=2), emits “experimental” warning</td>
-    </tr>
-    <tr>
-      <td>-DSLEEF_ENFORCE_RVVM1=ON</td>
-      <td>OFF</td>
-      <td>Fatal error if RVVM1 not detected by compiler</td>
-    </tr>
-    <tr>
-      <td>-DSLEEF_ENFORCE_RVVM2=ON</td>
-      <td>OFF</td>
-      <td>Fatal error if RVVM2 not detected by compiler</td>
-    </tr>
-    <tr>
-      <td>-DNATIVE_BUILD_DIR=&lt;path&gt;</td>
-      <td>(none)</td>
-      <td>Required for cross-compilation</td>
-    </tr>
-    <tr>
-      <td>-DSLEEF_BUILD_DFT=OFF</td>
-      <td>OFF</td>
-      <td>Keep OFF for riscv64 (bug #501)</td>
-    </tr>
-    <tr>
-      <td>-DSLEEF_BUILD_QUAD=TRUE</td>
-      <td>OFF</td>
-      <td>Quad precision, works on riscv64</td>
-    </tr>
-    <tr>
-      <td>-DSLEEF_BUILD_INLINE_HEADERS=TRUE</td>
-      <td>OFF</td>
-      <td>Inline headers, works on riscv64</td>
-    </tr>
-  </tbody>
-</table></div>
-<h3 id="cross-compilation-commands">
+<p>These checks exist because <code class="language-plaintext highlighter-rouge">src/arch/helperrvv.h</code> is written against the v0.12 RVV C-intrinsics API and the ratified RVV 1.0 vector ISA; older toolchains implementing only earlier draft intrinsics versions fail the check (this is exactly what broke GCC-13 builds per issue #579, fixed by PR #602).</p>
+
+<p><strong>Pinned in Jenkinsfile CI (agent label <code class="language-plaintext highlighter-rouge">riscv &amp;&amp; ubuntu24</code>, native hardware, no QEMU):</strong></p>
+<ul>
+  <li>GCC: <code class="language-plaintext highlighter-rouge">gcc-14</code>/<code class="language-plaintext highlighter-rouge">g++-14</code> (exact pin)</li>
+  <li>Clang: <code class="language-plaintext highlighter-rouge">clang-19</code>/<code class="language-plaintext highlighter-rouge">clang++-19</code> (exact pin)</li>
+  <li>Build via Ninja</li>
+</ul>
+
+<p><strong>Toolchain files</strong> <code class="language-plaintext highlighter-rouge">toolchains/riscv64-gcc.cmake</code> and <code class="language-plaintext highlighter-rouge">toolchains/riscv64-llvm.cmake</code> pin somewhat different minimums than CI actually uses: the GCC file searches <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc-14</code> first, falling back to unversioned <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc</code>; the LLVM file searches <code class="language-plaintext highlighter-rouge">clang-17</code> first (CI itself uses clang-19). Neither toolchain file sets <code class="language-plaintext highlighter-rouge">CMAKE_CXX_COMPILER</code> candidates, unlike the aarch64/ppc64 toolchain files, which do - a likely gap for C++ consumers.</p>
+
+<p><strong>Compiler flags for RVV codegen</strong> (<code class="language-plaintext highlighter-rouge">Configure.cmake</code>): <code class="language-plaintext highlighter-rouge">CLANG_FLAGS_ENABLE_RVVM1 = "-march=rv64gcv_zba_zbb_zbs"</code>, <code class="language-plaintext highlighter-rouge">CLANG_FLAGS_ENABLE_RVVM2 = "-march=rv64gcv_zba_zbb_zbs"</code>.</p>
+<h3 id="cmake-options-relevant-to-riscv64">
   
   
-    <a href="#cross-compilation-commands" class="anchor-heading" aria-labelledby="cross-compilation-commands"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Cross-compilation commands
+    <a href="#cmake-options-relevant-to-riscv64" class="anchor-heading" aria-labelledby="cmake-options-relevant-to-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CMake options relevant to riscv64
   
   
 </h3>
     
 
-<p>Cross-compilation requires a two-step build. Step 1 produces host tools (<code class="language-plaintext highlighter-rouge">mkrename</code>, <code class="language-plaintext highlighter-rouge">mkdisp</code>, <code class="language-plaintext highlighter-rouge">mkalias</code>). Step 2 uses them during riscv64 compilation.</p>
-
-<p><strong>Step 1 – native host build:</strong></p>
-
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake <span class="nt">-S</span> <span class="nb">.</span> <span class="nt">-B</span> build-native/ <span class="se">\</span>
-  <span class="nt">-DCMAKE_INSTALL_PREFIX</span><span class="o">=</span>./install-native <span class="se">\</span>
-  <span class="nt">-DCMAKE_TOOLCHAIN_FILE</span><span class="o">=</span>toolchains/native-gcc.cmake <span class="se">\</span>
-  <span class="nt">-DSLEEF_BUILD_TESTS</span><span class="o">=</span>OFF <span class="se">\</span>
-  <span class="nt">-DSLEEF_BUILD_LIBM</span><span class="o">=</span>ON
-cmake <span class="nt">--build</span> build-native/ <span class="nt">-j</span> <span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-DSLEEF_ENABLE_RVVM1=ON/OFF      # default OFF; enables RVV LMUL=1 ("M1"), experimental warning
+-DSLEEF_ENFORCE_RVVM1=ON/OFF     # default OFF; build fails if RVVM1 unsupported, also forces ENABLE_RVVM1=ON
+-DSLEEF_ENABLE_RVVM2=ON/OFF      # default OFF; enables RVV LMUL=2 ("M2"), experimental warning
+-DSLEEF_ENFORCE_RVVM2=ON/OFF     # default OFF; build fails if RVVM2 unsupported, also forces ENABLE_RVVM2=ON
 </code></pre></div></div>
+<h3 id="actual-ci-configure-line-jenkinsfile-both-gcc-14-and-clang-19-riscv-stages-identical-flags">
+  
+  
+    <a href="#actual-ci-configure-line-jenkinsfile-both-gcc-14-and-clang-19-riscv-stages-identical-flags" class="anchor-heading" aria-labelledby="actual-ci-configure-line-jenkinsfile-both-gcc-14-and-clang-19-riscv-stages-identical-flags"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Actual CI configure line (Jenkinsfile, both gcc-14 and clang-19 riscv stages, identical flags)
+  
+  
+</h3>
+    
 
-<p><strong>Step 2 – riscv64 cross-compile (GCC 14):</strong></p>
-
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake <span class="nt">-S</span> <span class="nb">.</span> <span class="nt">-B</span> build-riscv64/ <span class="se">\</span>
-  <span class="nt">-DCMAKE_INSTALL_PREFIX</span><span class="o">=</span>./install-riscv64 <span class="se">\</span>
-  <span class="nt">-DCMAKE_TOOLCHAIN_FILE</span><span class="o">=</span>toolchains/riscv64-gcc.cmake <span class="se">\</span>
-  <span class="nt">-DNATIVE_BUILD_DIR</span><span class="o">=</span><span class="si">$(</span><span class="nb">pwd</span><span class="si">)</span>/build-native <span class="se">\</span>
-  <span class="nt">-DSLEEF_ENABLE_RVVM1</span><span class="o">=</span>ON <span class="se">\</span>
-  <span class="nt">-DSLEEF_ENABLE_RVVM2</span><span class="o">=</span>ON
-cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> <span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake .. <span class="nt">-GNinja</span> <span class="se">\</span>
+  <span class="nt">-DCMAKE_INSTALL_PREFIX</span><span class="o">=</span><span class="nv">$INSTALL_PREFIX</span> <span class="se">\</span>
+  <span class="nt">-DSLEEF_SHOW_CONFIG</span><span class="o">=</span>1 <span class="se">\</span>
+  <span class="nt">-DSLEEF_BUILD_DFT</span><span class="o">=</span>False <span class="se">\</span>
+  <span class="nt">-DSLEEF_ENFORCE_DFT</span><span class="o">=</span>False <span class="se">\</span>
+  <span class="nt">-DSLEEF_BUILD_QUAD</span><span class="o">=</span>TRUE <span class="se">\</span>
+  <span class="nt">-DSLEEF_BUILD_INLINE_HEADERS</span><span class="o">=</span>TRUE <span class="se">\</span>
+  <span class="nt">-DSLEEF_ENFORCE_TESTER4</span><span class="o">=</span>True <span class="se">\</span>
+  <span class="nt">-DSLEEF_ENABLE_TESTER</span><span class="o">=</span>False <span class="se">\</span>
+  <span class="nt">-DSLEEF_ENFORCE_RVVM1</span><span class="o">=</span>True <span class="se">\</span>
+  <span class="nt">-DSLEEF_ENFORCE_RVVM2</span><span class="o">=</span>True
+cmake <span class="nt">-E</span> <span class="nb">time </span>oomstaller <span class="nt">--max-parallel</span> <span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span> ninja <span class="nt">-j</span> <span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+<span class="nb">export </span><span class="nv">OMP_WAIT_POLICY</span><span class="o">=</span>passive
+<span class="nb">export </span><span class="nv">CTEST_OUTPUT_ON_FAILURE</span><span class="o">=</span>TRUE
+ctest <span class="nt">-j</span> <span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+ninja <span class="nb">install</span>
 </code></pre></div></div>
+<h3 id="generic-non-cross-quick-start">
+  
+  
+    <a href="#generic-non-cross-quick-start" class="anchor-heading" aria-labelledby="generic-non-cross-quick-start"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Generic (non-cross) quick start
+  
+  
+</h3>
+    
 
-<p><strong>Step 2 alternative – riscv64 cross-compile (Clang 17):</strong></p>
-
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake <span class="nt">-S</span> <span class="nb">.</span> <span class="nt">-B</span> build-riscv64/ <span class="se">\</span>
-  <span class="nt">-DCMAKE_INSTALL_PREFIX</span><span class="o">=</span>./install-riscv64 <span class="se">\</span>
-  <span class="nt">-DCMAKE_TOOLCHAIN_FILE</span><span class="o">=</span>toolchains/riscv64-llvm.cmake <span class="se">\</span>
-  <span class="nt">-DNATIVE_BUILD_DIR</span><span class="o">=</span><span class="si">$(</span><span class="nb">pwd</span><span class="si">)</span>/build-native <span class="se">\</span>
-  <span class="nt">-DSLEEF_ENABLE_RVVM1</span><span class="o">=</span>ON <span class="se">\</span>
-  <span class="nt">-DSLEEF_ENABLE_RVVM2</span><span class="o">=</span>ON
-cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> <span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get <span class="nb">install </span>libmpfr-dev libssl-dev libfftw3-dev
+cmake <span class="nt">-S</span> <span class="nb">.</span> <span class="nt">-B</span> build/ <span class="nt">-DCMAKE_INSTALL_PREFIX</span><span class="o">=</span>./install
+cmake <span class="nt">--build</span> build/ <span class="nt">--clean-first</span> <span class="nt">-j</span> <span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+ctest <span class="nt">--test-dir</span> build/ <span class="nt">-j</span> <span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+cmake <span class="nt">--install</span> build/
 </code></pre></div></div>
+<h3 id="cross-compilation-from-an-x86-host">
+  
+  
+    <a href="#cross-compilation-from-an-x86-host" class="anchor-heading" aria-labelledby="cross-compilation-from-an-x86-host"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Cross-compilation from an x86 host
+  
+  
+</h3>
+    
 
-<p><strong>QEMU testing:</strong> Set <code class="language-plaintext highlighter-rouge">SLEEF_TARGET_EXEC_USE_QEMU=1</code> before <code class="language-plaintext highlighter-rouge">ctest</code> to run riscv64 test binaries via QEMU user-mode emulation on an x86 host. Without this variable, the cross build imports host tools from <code class="language-plaintext highlighter-rouge">NATIVE_BUILD_DIR</code> but does not execute riscv64 binaries.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake <span class="nt">-S</span> <span class="nb">.</span> <span class="nt">-B</span> build/ <span class="nt">-DCMAKE_TOOLCHAIN_FILE</span><span class="o">=</span>toolchains/riscv64-gcc.cmake   <span class="c"># or riscv64-llvm.cmake</span>
+</code></pre></div></div>
+<h3 id="qemu-usage">
+  
+  
+    <a href="#qemu-usage" class="anchor-heading" aria-labelledby="qemu-usage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> QEMU usage
+  
+  
+</h3>
+    
+
+<p>QEMU is supported generically but is <strong>not used for the riscv64 CI stages</strong>, which run on native hardware. The general mechanism: when cross-compiling with <code class="language-plaintext highlighter-rouge">SLEEF_TARGET_EXEC_USE_QEMU</code> set, host-tool executables are built to run directly rather than imported from a native build directory; test harnesses (<code class="language-plaintext highlighter-rouge">src/libm-tester/CMakeLists.txt</code>, <code class="language-plaintext highlighter-rouge">src/quad-tester/CMakeLists.txt</code>) accept an <code class="language-plaintext highlighter-rouge">EMULATOR</code> CMake variable and tests run as <code class="language-plaintext highlighter-rouge">${EMULATOR} &lt;test-binary&gt;</code>, with tester binaries also accepting a <code class="language-plaintext highlighter-rouge">--qemu &lt;emulator&gt;</code> CLI flag. The Jenkinsfile wires this up only for <strong>aarch64</strong> (<code class="language-plaintext highlighter-rouge">-DEMULATOR=qemu-aarch64-static</code>); no equivalent <code class="language-plaintext highlighter-rouge">qemu-riscv64-static</code> invocation exists anywhere in the repository. <code class="language-plaintext highlighter-rouge">src/arch/helperrvv.h</code> carries a correctness-relevant comment noting “QEMU and some hardware have a feature to automatically wipe partial vectors,” but there is no documented or scripted QEMU riscv64 CI path.</p>
 <h3 id="known-build-failures">
   
   
@@ -888,9 +969,8 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
     
 
 <ul>
-  <li><strong>GCC 13:</strong> Fails due to missing RVV v1.0 tuple types. Do not use GCC 13. Fixed by <a href="https://github.com/shibatch/sleef/pull/602">PR #602</a> (requires GCC 14).</li>
-  <li><strong>Clang 21 + custom sysroot:</strong> Issue <a href="https://github.com/shibatch/sleef/issues/694">#694</a> (closed) reported linker errors from triple mismatch (<code class="language-plaintext highlighter-rouge">riscv64-linux-gnu</code> vs <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code>). Not a SLEEF defect; resolved by aligning toolchain triples.</li>
-  <li><strong>DFT + QEMU 1024-bit vectors:</strong> Bug <a href="https://github.com/shibatch/sleef/issues/501">#501</a> causes DFT initialization to loop infinitely. Build succeeds; test hangs. Mitigation: disable DFT in CI (<code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_DFT=False</code>).</li>
+  <li><strong>GCC 13:</strong> fails because the configure-time probe targeted v0.11.x-draft RVV intrinsics while the build itself compiled against v1.0 intrinsics, breaking on types like <code class="language-plaintext highlighter-rouge">vfloat64m1x4_t</code>. Reported as <a href="https://github.com/shibatch/sleef/issues/579">issue #579</a> (via downstream Gentoo Bug #939400); fixed by <a href="https://github.com/shibatch/sleef/pull/602">PR #602</a>, which replaces the brittle compile-probe with direct <code class="language-plaintext highlighter-rouge">__riscv_v</code>/<code class="language-plaintext highlighter-rouge">__riscv_v_intrinsic</code> macro checks. GCC 14+ is required going forward.</li>
+  <li><strong>Clang 21 + custom sysroot:</strong> <a href="https://github.com/shibatch/sleef/issues/694">issue #694</a>, closed, reported a linker error finding <code class="language-plaintext highlighter-rouge">crtbeginS.o</code>/<code class="language-plaintext highlighter-rouge">-lgcc</code> despite the files existing on disk when cross-compiling with Clang 21 on Ubuntu. No documented fix is visible on the issue page; treated as a toolchain/triple-configuration issue rather than a SLEEF code defect.</li>
 </ul><hr />
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
@@ -931,43 +1011,36 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
       <td>Quad precision (libsleefquad)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full</td>
+      <td>Full, CI-enforced</td>
       <td>None</td>
     </tr>
     <tr>
       <td>DFT (libsleefdft)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Code present, CI disabled</td>
-      <td>Bug #501: DFT init loop on wide vectors</td>
+      <td>Code present, CI-disabled</td>
+      <td>Disabled pending resolution of a wide-vector initialization bug</td>
     </tr>
     <tr>
       <td>Runtime SIMD dispatch</td>
-      <td>Yes</td>
+      <td>Yes (HWCAP)</td>
       <td>No</td>
       <td>No</td>
-      <td>Must compile separately per LMUL; shared library cannot auto-select</td>
+      <td>Must compile separately per LMUL; no shared-library auto-selection</td>
     </tr>
     <tr>
       <td>Fixed-width vector backends</td>
-      <td>Yes (128/256/512)</td>
-      <td>Yes (128 NEON)</td>
-      <td>No</td>
-      <td>VLA-only; no 256-bit or 512-bit fixed-width variant</td>
+      <td>Yes (128/256/512-bit)</td>
+      <td>Yes (128-bit NEON)</td>
+      <td>No (VLA-only; CONFIG spans 128-2048 bit)</td>
+      <td>VLA architecture, shared with SVE</td>
     </tr>
     <tr>
-      <td>Inline headers</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>vmulsign, vcopysign, vsign (SP)</td>
+      <td>vmulsign/vcopysign/vsign (SP)</td>
       <td>Yes</td>
       <td>No (SVE)</td>
       <td>No (VLA)</td>
-      <td>Shared VLA limitation; not riscv64-specific</td>
+      <td>Shared VLA limitation, not riscv64-specific</td>
     </tr>
   </tbody>
 </table></div>
@@ -980,88 +1053,126 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 </h3>
     
 
-<p>The absence of a runtime dispatcher is the most significant performance gap relative to amd64. On x86, a single <code class="language-plaintext highlighter-rouge">libsleef.so</code> uses HWCAP to select SSE2 vs AVX2 vs AVX512 at load time. On riscv64, RVVM1 and RVVM2 are separate compilation targets. There is no runtime fallback path; a mismatch between the compiled LMUL and the hardware LMUL wastes vector registers or crashes.</p>
+<p>The absence of a runtime dispatcher is the most significant deployment-level gap relative to amd64: a single <code class="language-plaintext highlighter-rouge">libsleef.so</code> on x86 selects SSE2/AVX2/AVX512 via HWCAP at load time, while RVVM1/RVVM2 on riscv64 are separate compile-time-selected targets with no fallback path. A mismatch between compiled LMUL and hardware vector length requires a separate binary.</p>
 
-<p>The fixed-vector-length optimization described in issue <a href="https://github.com/shibatch/sleef/issues/526">#526</a> (using <code class="language-plaintext highlighter-rouge">__riscv_v_fixed_vlen</code> when <code class="language-plaintext highlighter-rouge">-mrvv-vector-bits=zvl</code> is passed) is not implemented. The runtime <code class="language-plaintext highlighter-rouge">__riscv_vlenb()</code> call is used instead. The author estimates this gap is minor.</p>
+<p>The compile-time fixed-vector-length optimization described in <a href="https://github.com/shibatch/sleef/issues/526">issue #526</a> (using <code class="language-plaintext highlighter-rouge">__riscv_v_fixed_vlen</code>, available when <code class="language-plaintext highlighter-rouge">-mrvv-vector-bits=zvl</code> is passed, instead of the runtime <code class="language-plaintext highlighter-rouge">__riscv_vlenb()</code> call used today) remains unimplemented. The author notes patches exist but were not submitted because supporting both fixed-vlen and runtime-vlen code paths in CI would require substantially more test-matrix infrastructure; they explicitly state “I don’t expect a drastic performance gain, but it might help a little.”</p>
+<h3 id="measured-performance">
+  
+  
+    <a href="#measured-performance" class="anchor-heading" aria-labelledby="measured-performance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Measured performance
+  
+  
+</h3>
+    
 
-<p><strong>Available benchmark data (from OpenJDK PR <a href="https://github.com/openjdk/jdk/pull/21083">#21083</a>, hardware: BananaPi F3, SpacemiT K1 chip, RVV 1.0, JMH, vector size=1024):</strong></p>
+<p><strong>RISE/OpenJDK (BananaPi F3, SpacemiT K1, RVV 1.0, JMH avgt, 10 iterations, vector size 1024), PR <a href="https://github.com/openjdk/jdk/pull/21083">openjdk/jdk#21083</a>:</strong> SLEEF-backed intrinsics vs scalar fallback for the Vector API:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
-      <th>Benchmark</th>
-      <th>With SLEEF (ns/op)</th>
-      <th>Without SLEEF (ns/op)</th>
+      <th>Function</th>
+      <th>+Intrinsic (ns/op)</th>
+      <th>-Intrinsic (ns/op)</th>
       <th>Speedup</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Float256Vector.EXP</td>
-      <td>16,170</td>
-      <td>125,594</td>
-      <td>7.77x</td>
+      <td>ACOS</td>
+      <td>112,444.4</td>
+      <td>208,554.7</td>
+      <td>1.86x</td>
     </tr>
     <tr>
-      <td>Float256Vector.LOG1P</td>
-      <td>23,836</td>
-      <td>194,624</td>
-      <td>8.17x</td>
+      <td>ASIN</td>
+      <td>104,121.3</td>
+      <td>208,314.5</td>
+      <td>2.00x</td>
     </tr>
     <tr>
-      <td>FloatMaxVector.LOG1P</td>
-      <td>22,993</td>
-      <td>190,346</td>
-      <td>8.28x</td>
+      <td>ATAN</td>
+      <td>136,941.3</td>
+      <td>284,024.5</td>
+      <td>2.07x</td>
     </tr>
     <tr>
-      <td>Float256Vector.ATAN2</td>
-      <td>32,809</td>
-      <td>241,230</td>
-      <td>7.35x</td>
+      <td>ATAN2</td>
+      <td>163,228.7</td>
+      <td>427,589.6</td>
+      <td>2.62x</td>
     </tr>
     <tr>
-      <td>FloatMaxVector.ATAN2</td>
-      <td>33,659</td>
-      <td>258,396</td>
-      <td>7.68x</td>
+      <td>CBRT</td>
+      <td>146,395.8</td>
+      <td>317,136.7</td>
+      <td>2.17x</td>
     </tr>
     <tr>
-      <td>Float128Vector.EXP</td>
-      <td>32,521</td>
-      <td>158,283</td>
-      <td>4.87x</td>
+      <td>COS</td>
+      <td>154,865.3</td>
+      <td>305,721.5</td>
+      <td>1.97x</td>
     </tr>
     <tr>
-      <td>Double256Vector.HYPOT</td>
-      <td>58,180</td>
-      <td>253,002</td>
-      <td>4.35x</td>
+      <td>COSH</td>
+      <td>189,212.9</td>
+      <td>220,756.3</td>
+      <td>1.17x</td>
     </tr>
     <tr>
-      <td>DoubleMaxVector.HYPOT</td>
-      <td>59,064</td>
-      <td>253,276</td>
-      <td>4.29x</td>
+      <td>EXP</td>
+      <td>113,941.6</td>
+      <td>252,853.1</td>
+      <td>2.22x</td>
     </tr>
     <tr>
-      <td>Double256Vector.ATAN2</td>
-      <td>83,098</td>
-      <td>373,364</td>
-      <td>4.49x</td>
+      <td>EXPM1</td>
+      <td>184,552.9</td>
+      <td>254,087.2</td>
+      <td>1.38x</td>
     </tr>
     <tr>
-      <td>Double128Vector.HYPOT</td>
-      <td>111,580</td>
-      <td>374,537</td>
+      <td>HYPOT</td>
+      <td>111,580.2</td>
+      <td>374,537.3</td>
       <td>3.36x</td>
+    </tr>
+    <tr>
+      <td>LOG</td>
+      <td>110,680.5</td>
+      <td>265,391.1</td>
+      <td>2.40x</td>
+    </tr>
+    <tr>
+      <td>LOG10</td>
+      <td>116,708.1</td>
+      <td>285,764.4</td>
+      <td>2.45x</td>
+    </tr>
+    <tr>
+      <td>LOG1P</td>
+      <td>115,633.3</td>
+      <td>317,236.0</td>
+      <td>2.74x</td>
+    </tr>
+    <tr>
+      <td>POW</td>
+      <td>321,655.1</td>
+      <td>560,765.1</td>
+      <td>1.74x</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Reported average across all benchmarks: approximately 2.38x. These numbers measure the Java Vector API with SLEEF vs without SLEEF on riscv64, not a head-to-head riscv64 vs arm64 comparison.</p>
+<p>Average approximately 2.38x - the figure the RISE blog post quotes. These measure the Java Vector API with vs. without SLEEF on riscv64, not a cross-architecture riscv64-vs-arm64 comparison.</p>
 
-<p>The SLEEF upstream benchmark page at sleef.org/benchmark.xhtml contains no riscv64 rows. It covers Intel Core i7-6700, AMD Ryzen 9 7950X, and Apple M1 only. No riscv64 vs arm64 or riscv64 vs amd64 SLEEF-native benchmark data is publicly available.</p>
+<p><strong>Guodong Xu (RISCstar Solutions), SpacemiT K1 SoC (8x Spacemit X60, Fedora 42 Remix, RVV zve64d/zve64f), SLEEF commit <code class="language-plaintext highlighter-rouge">3993f71</code> (merged 2025-09-22)</strong> - <a href="https://docularxu.github.io/sleef/webpages/rvv_benchmark_16Oct2025.html">RVV benchmark summary, 2025-10-16</a>: comparing Scalar, libm, RVVM1, RVVM2. Peak speedups: <strong>4.74x for double-precision sqrt(x)</strong> and <strong>8.85x for single-precision sqrtf(x)</strong>, both with RVVM2; LMUL=2 consistently outperformed LMUL=1 across most tested functions.</p>
+
+<p><strong>Same hardware, <a href="https://docularxu.github.io/sleef/webpages/rvv_benchmark_gelu_17Oct2025.html">GELU kernel benchmark, 2025-10-17</a></strong>, n=11008 (mimics LLaMA-7B FFN width): FP64 erf RVVM2 speedup 1.92-1.93x (61.97ns vector vs 119.10ns scalar), tanh RVVM2 speedup 1.59x; FP32 erff RVVM2 speedup 2.66x (24.33ns vs 64.83ns), tanhf RVVM2 speedup 1.84x. Single-precision kernels show consistently larger gains than double-precision.</p>
+
+<p><strong>AArch64 comparison data (JDK-8312425, PR <a href="https://github.com/openjdk/jdk/pull/21502">openjdk/jdk#21502</a>, Apple M1, no SVE, JMH, vector size 1024):</strong> EXP 3.31x-4.60x, LOG 2.05x-3.89x, ATAN2 2.66x-2.70x, SIN/COS 0.84x-1.69x (more variable, occasionally a regression). A reviewer characterized results as “pretty similar to what we’ve seen” from the RISC-V work - a qualitative, not quantitative, cross-architecture comparison. No direct riscv64-vs-arm64 head-to-head SLEEF benchmark exists in any source found.</p>
+
+<p>The official <a href="https://sleef.org/benchmark.xhtml">sleef.org benchmark page</a> publishes only x86_64 (Intel Core i7-6700 vs Intel SVML) and DFT-only comparisons (AMD Ryzen 9 7950X, Apple M1); it contains no riscv64 data.</p>
 <h3 id="nan--floating-point-semantics">
   
   
@@ -1071,7 +1182,7 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 </h3>
     
 
-<p>The RISE blog post for the OpenJDK integration notes that SLEEF calls modify the floating-point rounding mode and that a bridge layer was required to enforce return to RNE mode after SLEEF calls. This is an integration concern for callers, not a SLEEF defect. No open riscv64-specific NaN or correctness issues were found.</p><hr />
+<p>The RISE OpenJDK blog post notes SLEEF calls modify the floating-point rounding mode and that a bridge layer was required in OpenJDK to restore round-to-nearest-even (RNE) compliance after calling into SLEEF. This is an integration concern for callers, not a SLEEF defect. No open riscv64-specific NaN or correctness issues were found in the current issue tracker.</p><hr />
 <h2 id="7-cicd-infrastructure">
   
   
@@ -1083,15 +1194,15 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 <h3 id="github-actions-githubworkflows">
   
   
-    <a href="#github-actions-githubworkflows" class="anchor-heading" aria-labelledby="github-actions-githubworkflows"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> GitHub Actions (.github/workflows/)
+    <a href="#github-actions-githubworkflows" class="anchor-heading" aria-labelledby="github-actions-githubworkflows"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> GitHub Actions (<code class="language-plaintext highlighter-rouge">.github/workflows/</code>)
   
   
 </h3>
     
 
-<p>Four workflows exist: <code class="language-plaintext highlighter-rouge">build-and-test-macos.yml</code>, <code class="language-plaintext highlighter-rouge">build-and-test-msys2.yml</code>, <code class="language-plaintext highlighter-rouge">build-as-subproject.yml</code>, <code class="language-plaintext highlighter-rouge">build-examples.yml</code>. Direct inspection of all four files confirms <strong>zero riscv64 references</strong>. No riscv64 job, no cross-compilation, no QEMU invocation exists in any GitHub Actions workflow.</p>
+<p>Exactly four workflow files exist in the current repository: <code class="language-plaintext highlighter-rouge">build-and-test-macos.yml</code>, <code class="language-plaintext highlighter-rouge">build-and-test-msys2.yml</code>, <code class="language-plaintext highlighter-rouge">build-as-subproject.yml</code>, <code class="language-plaintext highlighter-rouge">build-examples.yml</code>. Direct inspection of all four (full content fetched and grepped case-insensitively for “riscv”) confirms <strong>zero riscv64 references</strong> - no platform strings, no QEMU setup, no job name mentions RISC-V in any form. This was independently cross-checked via GitHub’s own code-search index: <code class="language-plaintext highlighter-rouge">search_code("riscv repo:shibatch/sleef path:.github/workflows")</code> and <code class="language-plaintext highlighter-rouge">path:.github</code> both return <code class="language-plaintext highlighter-rouge">total_count: 0</code>.</p>
 
-<p>PR #477 (November 2023) included a GitHub Actions CI job for linux-riscv64, but that job is not present in the current workflow files. It has been removed at some point after the initial merge. Issue <a href="https://github.com/shibatch/sleef/issues/709">#709</a> (opened May 2026) proposes adding QEMU-based riscv64 GitHub Actions CI and has not yet been merged.</p>
+<p>PR #477 (November 2023) originally added a GitHub Actions job for <code class="language-plaintext highlighter-rouge">linux-riscv64</code>; that job is not present in the current workflow files. It has been removed at some point after the initial merge. Data not available: no currently open GitHub issue or PR proposing to restore riscv64 GitHub Actions CI was found in this research pass.</p>
 <h3 id="jenkinsfile">
   
   
@@ -1101,40 +1212,31 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 </h3>
     
 
-<p>The repository contains a Jenkinsfile at the root with two riscv64 stages, added by <a href="https://github.com/shibatch/sleef/pull/624">PR #624</a> (merged February 8, 2025, by shibatch):</p>
+<p>The repository’s root <code class="language-plaintext highlighter-rouge">Jenkinsfile</code> (380 lines) contains two riscv64-dedicated stages, added by <a href="https://github.com/shibatch/sleef/pull/624">PR #624</a> (merged 2025-02-08, by shibatch):</p>
 
-<p><strong>Stage: <code class="language-plaintext highlighter-rouge">riscv linux gcc-14</code></strong></p>
-<ul>
-  <li>Agent label: <code class="language-plaintext highlighter-rouge">riscv &amp;&amp; ubuntu24</code></li>
-  <li>CC=gcc-14, CXX=g++-14</li>
-  <li>CMake flags: <code class="language-plaintext highlighter-rouge">-DSLEEF_ENFORCE_RVVM1=True -DSLEEF_ENFORCE_RVVM2=True -DSLEEF_BUILD_QUAD=TRUE -DSLEEF_BUILD_INLINE_HEADERS=TRUE -DSLEEF_ENFORCE_TESTER4=True -DSLEEF_ENABLE_TESTER=False -DSLEEF_BUILD_DFT=False</code></li>
-  <li>Runs <code class="language-plaintext highlighter-rouge">ctest -j $(nproc)</code> and <code class="language-plaintext highlighter-rouge">ninja install</code></li>
-</ul>
+<p><strong>Stage <code class="language-plaintext highlighter-rouge">riscv linux gcc-14</code>:</strong> agent label <code class="language-plaintext highlighter-rouge">riscv &amp;&amp; ubuntu24</code>; <code class="language-plaintext highlighter-rouge">CC=gcc-14</code>, <code class="language-plaintext highlighter-rouge">CXX=g++-14</code>; full build (cmake/ninja), <code class="language-plaintext highlighter-rouge">ctest -j $(nproc)</code> (real test suite execution), <code class="language-plaintext highlighter-rouge">ninja install</code>.</p>
 
-<p><strong>Stage: <code class="language-plaintext highlighter-rouge">riscv linux clang-19</code></strong></p>
-<ul>
-  <li>Agent label: <code class="language-plaintext highlighter-rouge">riscv &amp;&amp; ubuntu24</code></li>
-  <li>Identical CMake flags</li>
-  <li><code class="language-plaintext highlighter-rouge">HEARTBEAT_CHECK_INTERVAL=86400</code> (24-hour heartbeat, indicating slow RISC-V hardware)</li>
-</ul>
+<p><strong>Stage <code class="language-plaintext highlighter-rouge">riscv linux clang-19</code>:</strong> same agent label and build/test/install pattern, with <code class="language-plaintext highlighter-rouge">CC=clang-19</code>, <code class="language-plaintext highlighter-rouge">CXX=clang++-19</code>.</p>
 
-<p><strong>Critical observation:</strong> The Jenkinsfile stages have no <code class="language-plaintext highlighter-rouge">-DEMULATOR</code> flag. The aarch64 stages use <code class="language-plaintext highlighter-rouge">-DEMULATOR=qemu-aarch64-static</code>. The riscv64 stages do not. This implies one of: (a) the Jenkins agent labeled <code class="language-plaintext highlighter-rouge">riscv &amp;&amp; ubuntu24</code> is real RISC-V hardware, or (b) the tests are built but not executed. The 24-hour heartbeat timeout is consistent with real hardware.</p>
+<p>Both stages set <code class="language-plaintext highlighter-rouge">System.setProperty("...HEARTBEAT_CHECK_INTERVAL", "86400")</code> (24-hour heartbeat), consistent with slower, real hardware rather than fast cloud VMs. Critically, <strong>neither riscv64 stage sets an <code class="language-plaintext highlighter-rouge">-DEMULATOR</code> flag</strong>, in contrast to the aarch64 stages, which explicitly set <code class="language-plaintext highlighter-rouge">-DEMULATOR=qemu-aarch64-static</code>. This confirms the riscv64 agent label (<code class="language-plaintext highlighter-rouge">riscv &amp;&amp; ubuntu24</code>) is backed by genuine riscv64 hardware, and that tests are both built and executed there, not merely compiled.</p>
 
-<p>Jenkins is private infrastructure. There is no publicly visible Jenkins dashboard, no status badge in the README, and no public URL linked in the repository. Pass/fail status for these CI stages cannot be independently verified.</p>
+<p>The whole Jenkinsfile is a single declarative <code class="language-plaintext highlighter-rouge">pipeline { agent { label 'jenkinsfile' } stages { stage('Preamble') { parallel { ... } } } }</code> with no <code class="language-plaintext highlighter-rouge">triggers {}</code>/<code class="language-plaintext highlighter-rouge">cron</code>/<code class="language-plaintext highlighter-rouge">pollSCM</code> block in the file itself; trigger configuration (branch/PR builds) lives in Jenkins job configuration, not in the repository.</p>
+
+<p>Jenkins is private infrastructure: there is no publicly visible dashboard, no status badge in the README, and no public URL linked from the repository. Pass/fail history for these stages cannot be independently observed or verified outside the project.</p>
 <h3 id="rise-ci-runners">
   
   
-    <a href="#rise-ci-runners" class="anchor-heading" aria-labelledby="rise-ci-runners"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> RISE CI Runners
+    <a href="#rise-ci-runners" class="anchor-heading" aria-labelledby="rise-ci-runners"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> RISE CI runners
   
   
 </h3>
     
 
-<p>Data not available: no riseproject-dev GitHub repository for SLEEF was found. RISE runner usage by SLEEF is not documented in the repository or in any RISE-published material.</p>
+<p>Data not available: no RISE-owned riscv64 hardware runner, CI pipeline, or wheel build process for SLEEF was found. RISE’s documented involvement with SLEEF (project SL_02_003, the OpenJDK blog post) is at the integration/advocacy level, not at the level of owning a dedicated SLEEF repository, CI runner, or wheel build (Section 1).</p>
 <h3 id="ci-comparison">
   
   
-    <a href="#ci-comparison" class="anchor-heading" aria-labelledby="ci-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CI comparison:
+    <a href="#ci-comparison" class="anchor-heading" aria-labelledby="ci-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CI comparison
   
   
 </h3>
@@ -1152,39 +1254,39 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
   <tbody>
     <tr>
       <td>GitHub Actions</td>
-      <td>Yes, multiple workflows</td>
-      <td>Yes, multiple workflows</td>
-      <td>No (removed; issue #709 proposes restoring)</td>
+      <td>Present in some workflows [NEEDS VERIFICATION, not directly re-audited]</td>
+      <td>Present in some workflows, uses QEMU emulation for aarch64 stages</td>
+      <td>No riscv64 references in any current workflow file</td>
     </tr>
     <tr>
-      <td>Jenkins</td>
+      <td>Jenkinsfile</td>
       <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes (added Feb 2025, private)</td>
+      <td>Yes, <code class="language-plaintext highlighter-rouge">-DEMULATOR=qemu-aarch64-static</code></td>
+      <td>Yes, native hardware, no emulator flag (added Feb 2025)</td>
     </tr>
     <tr>
-      <td>Public CI observable</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
+      <td>CI publicly observable</td>
+      <td>Via GitHub Actions where present</td>
+      <td>Via GitHub Actions where present</td>
+      <td>No (Jenkins is private)</td>
     </tr>
     <tr>
-      <td>LMUL/ISA variants tested</td>
-      <td>SSE2/AVX2/AVX512F</td>
-      <td>AdvSIMD + SVE</td>
-      <td>RVVM1 + RVVM2</td>
+      <td>DFT enforced in CI</td>
+      <td>Not confirmed either way in this pass</td>
+      <td>Not confirmed either way</td>
+      <td>No (<code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_DFT=False</code>)</td>
     </tr>
     <tr>
-      <td>DFT enforced</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No (bug #501)</td>
+      <td>Quad enforced in CI</td>
+      <td>Not confirmed either way</td>
+      <td>Not confirmed either way</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_QUAD=TRUE</code>)</td>
     </tr>
     <tr>
       <td>Hardware type</td>
-      <td>x86</td>
-      <td>aarch64</td>
-      <td>Native riscv64 [NEEDS VERIFICATION] or QEMU</td>
+      <td>Not confirmed either way</td>
+      <td>QEMU emulation (aarch64 stage)</td>
+      <td>Native riscv64 hardware (no QEMU)</td>
     </tr>
   </tbody>
 </table></div><hr />
@@ -1205,7 +1307,7 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 </h3>
     
 
-<p>SLEEF ships source-only via GitHub Releases. Every release (3.9.0, 3.8, 3.7, 3.6.1, 3.6, and older) contains exactly two assets: <code class="language-plaintext highlighter-rouge">&lt;version&gt;.zip</code> and <code class="language-plaintext highlighter-rouge">&lt;version&gt;.tar.gz</code>. No pre-built binaries exist for any architecture. This is consistent for all platforms, not riscv64-specific.</p>
+<p>SLEEF ships source-only via GitHub Releases for every architecture. Fetches of the 3.9.0 release’s expanded-assets page show exactly two assets: <code class="language-plaintext highlighter-rouge">3.9.0.zip</code> and <code class="language-plaintext highlighter-rouge">3.9.0.tar.gz</code> - generic auto-generated source archives, consistent across 3.3.1 through 3.9.0 per the public atom feed. No release asset filename contains “riscv64” or “riscv” for any release. An adversarial re-check attempted to confirm this via direct API/atom access but was blocked by a 403 (“GitHub access to this repository is not enabled for this session”) and by the assets panel being JS-rendered; the finding of “no riscv64 binary asset” is therefore treated as <strong>PLAUSIBLE rather than fully confirmed</strong>, though two independent fetch attempts both observed only “Assets 2” with no custom binaries for any architecture.</p>
 <h3 id="pypi">
   
   
@@ -1215,39 +1317,7 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 </h3>
     
 
-<p>No SLEEF package exists on PyPI. A query to <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/sleef/json</code> returns HTTP 404. No riscv64 wheel, no wheel of any kind.</p>
-<h3 id="debian">
-  
-  
-    <a href="#debian" class="anchor-heading" aria-labelledby="debian"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Debian
-  
-  
-</h3>
-    
-
-<p><code class="language-plaintext highlighter-rouge">libsleef3</code> and <code class="language-plaintext highlighter-rouge">libsleef-dev</code> are in Debian official ports for riscv64:</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Suite</th>
-      <th>Version</th>
-      <th>riscv64 status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Debian stable (bookworm)</td>
-      <td>3.6.1-3</td>
-      <td>Available</td>
-    </tr>
-    <tr>
-      <td>Debian sid (unstable)</td>
-      <td>3.9.0-1</td>
-      <td>Built and installed on <code class="language-plaintext highlighter-rouge">rv-osuosl-04</code> per buildd.debian.org</td>
-    </tr>
-  </tbody>
-</table></div>
+<p>No package named <code class="language-plaintext highlighter-rouge">sleef</code> exists on PyPI at all: <code class="language-plaintext highlighter-rouge">GET https://pypi.org/pypi/sleef/json</code> and <code class="language-plaintext highlighter-rouge">GET https://pypi.org/simple/sleef/</code> both return HTTP 404. This is not riscv64-specific; SLEEF is a C library with no official PyPI distribution under any name. RISE’s GitLab-hosted wheel builder PyPI mirror (<code class="language-plaintext highlighter-rouge">gitlab.com/.../packages/pypi/simple/sleef/</code>) 302-redirects to the same nonexistent upstream PyPI entry.</p>
 <h3 id="ubuntu">
   
   
@@ -1257,17 +1327,29 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 </h3>
     
 
-<p>Ubuntu 24.04 Noble ships <code class="language-plaintext highlighter-rouge">libsleef3</code> and <code class="language-plaintext highlighter-rouge">libsleef-dev</code> at version 3.5.1-3 for amd64, arm64, armhf, and ppc64el only. <strong>riscv64 is not present in Ubuntu 24.04.</strong> This gap means Ubuntu-based CI infrastructure and container workflows targeting Ubuntu 24.04 cannot install SLEEF from apt for riscv64.</p>
-<h3 id="arch-linux-risc-v">
+<p>Ubuntu 26.04 (resolute, 26.04 LTS): confirmed directly against live <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> pages. <code class="language-plaintext highlighter-rouge">libsleef3</code> and <code class="language-plaintext highlighter-rouge">libsleef-dev</code>, both version <strong>3.7-0ubuntu3</strong>, are present in <code class="language-plaintext highlighter-rouge">universe</code> for architectures <strong>amd64, arm64, armhf, ppc64el, riscv64, s390x</strong>. A direct fetch of <code class="language-plaintext highlighter-rouge">packages.ubuntu.com/resolute/riscv64/libsleef3/download</code> returns HTTP 200 with the exact filename <code class="language-plaintext highlighter-rouge">libsleef3_3.7-0ubuntu3_riscv64.deb</code> on its “Download Page for … RISC-V 64-bit little endian (riscv64) machines” - a specific, versioned, architecture-confirmed binary artifact. <code class="language-plaintext highlighter-rouge">libsleef-dev</code> carries the identical riscv64 download link.</p>
+
+<p>Note the version shipped (3.7-0ubuntu3) trails the latest upstream GitHub release (3.9.0); this gap was not further investigated and should be treated as a minor packaging-lag observation rather than a functional gap.</p>
+<h3 id="debian">
   
   
-    <a href="#arch-linux-risc-v" class="anchor-heading" aria-labelledby="arch-linux-risc-v"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Arch Linux RISC-V
+    <a href="#debian" class="anchor-heading" aria-labelledby="debian"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Debian
   
   
 </h3>
     
 
-<p>The archriscv.felixc.at package status page was checked. SLEEF does not appear on the build failure list. Full confirmation of a working Arch RISC-V package was not obtainable from the available data. Status: unverified.</p>
+<p>Debian sid (unstable) and Debian stable (bookworm) package <code class="language-plaintext highlighter-rouge">libsleef3</code>/<code class="language-plaintext highlighter-rouge">libsleef-dev</code> for riscv64 - bookworm at 3.6.1-3 and sid at 3.9.0-1, the latter confirmed built on the <code class="language-plaintext highlighter-rouge">rv-osuosl-04</code> riscv64 buildd per buildd.debian.org [carried from prior reporting; not independently re-fetched in this research pass, NEEDS VERIFICATION].</p>
+<h3 id="arch-linux-risc-v-port">
+  
+  
+    <a href="#arch-linux-risc-v-port" class="anchor-heading" aria-labelledby="arch-linux-risc-v-port"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Arch Linux RISC-V port
+  
+  
+</h3>
+    
+
+<p><code class="language-plaintext highlighter-rouge">archriscv.felixc.at/?q=sleef</code> returns HTTP 200, but a case-insensitive grep of the returned HTML for “sleef” finds <strong>zero matches</strong> - no SLEEF package exists in the Arch Linux RISC-V port.</p>
 <h3 id="what-a-user-must-do-to-get-a-working-riscv64-binary">
   
   
@@ -1277,9 +1359,9 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 </h3>
     
 
-<p>On Debian: <code class="language-plaintext highlighter-rouge">apt install libsleef-dev</code> installs the 3.9.0-1 package.</p>
-
-<p>On Ubuntu 24.04: build from source using the two-step cross-compilation procedure in Section 5, with GCC 14 (<code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc-14</code>) or Clang 17+.</p><hr />
+<p>On <strong>Ubuntu 26.04 (resolute)</strong>: <code class="language-plaintext highlighter-rouge">apt install libsleef-dev</code> installs 3.7-0ubuntu3 directly.
+On <strong>Debian sid</strong>: <code class="language-plaintext highlighter-rouge">apt install libsleef-dev</code> installs 3.9.0-1 directly.
+On <strong>Ubuntu 24.04 or earlier, or any non-Debian-family distribution without a riscv64 package</strong>: build from source using the native or cross-compilation procedure in Section 5, with GCC 14+ (<code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-gcc-14</code>) or Clang 17+ (CI validates against Clang 19).</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -1288,14 +1370,8 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
   
 </h2>
     
-<h3 id="summary-table">
-  
-  
-    <a href="#summary-table" class="anchor-heading" aria-labelledby="summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Summary table
-  
-  
-</h3>
-    
+
+<p>Source: <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> and <code class="language-plaintext highlighter-rouge">Configure.cmake</code> in <code class="language-plaintext highlighter-rouge">shibatch/sleef</code> (HEAD <code class="language-plaintext highlighter-rouge">7623d6c</code>). SLEEF has no package.json/go.mod/Cargo.toml; it is a CMake C/C++ project with no package-manager-level dependency ecosystem of its own.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -1310,67 +1386,97 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
   </thead>
   <tbody>
     <tr>
-      <td>TLFloat (shibatch/tlfloat)</td>
-      <td>Quad/octuple float types for libm and DFT reference; linked into libsleefdft</td>
-      <td>Yes</td>
-      <td>No riscv64-specific failures found</td>
-      <td>Debian sid: libtlfloat-dev available for riscv64</td>
-      <td>Fetched at build time via ExternalProject_Add; no riscv64 issues</td>
+      <td>TLFloat</td>
+      <td>Runtime-dependency, critical. Vendored git submodule (pinned commit <code class="language-plaintext highlighter-rouge">4cc749a</code>, minimum version 1.16.0, <code class="language-plaintext highlighter-rouge">SLEEF_ENABLE_TLFLOAT=ON</code> by default), backs <code class="language-plaintext highlighter-rouge">libsleefquad</code> and float128-class emulation</td>
+      <td>Yes - built natively via SLEEF’s own riscv64 Jenkins CI (<code class="language-plaintext highlighter-rouge">SLEEF_BUILD_QUAD=TRUE</code> on both stages)</td>
+      <td>Exercised by SLEEF’s riscv64 <code class="language-plaintext highlighter-rouge">ctest</code> runs (quad build enabled)</td>
+      <td>Packaged: <code class="language-plaintext highlighter-rouge">libtlfloat1</code>, <code class="language-plaintext highlighter-rouge">libtlfloat-dev</code>, <code class="language-plaintext highlighter-rouge">libtlfloat-doc</code> all present for riscv64 in Ubuntu 26.04 resolute, universe/ports</td>
+      <td>Zero riscv-related issues found on <code class="language-plaintext highlighter-rouge">shibatch/tlfloat</code>; portable header/template C++ with no architecture-specific asm, no architecture gap expected</td>
     </tr>
     <tr>
-      <td>MPFR (libmpfr)</td>
-      <td>Oracle for correctness testing; not in production library</td>
-      <td>Yes</td>
-      <td>Yes (generic C)</td>
-      <td>Debian riscv64: libmpfr-dev 4.2.2-3</td>
-      <td>No RISC-V-specific issues</td>
+      <td>GNU MPFR</td>
+      <td>Test-dependency, optional. Arbitrary-precision float oracle for SLEEF’s accuracy tester (<code class="language-plaintext highlighter-rouge">SLEEF_ENABLE_MPFR=ON</code>)</td>
+      <td>Yes - mature, long-standing riscv64 support in Debian/Ubuntu main</td>
+      <td>Not exercised by SLEEF’s own riscv Jenkins stage (<code class="language-plaintext highlighter-rouge">SLEEF_ENABLE_TESTER=False</code> there)</td>
+      <td>Packaged: <code class="language-plaintext highlighter-rouge">libmpfr6</code> 4.2.2-3 in <strong>main</strong> component, riscv64, Ubuntu 26.04 resolute</td>
+      <td>No RISC-V-specific issues identified</td>
     </tr>
     <tr>
-      <td>GMP (libgmp)</td>
-      <td>Arbitrary-precision arithmetic used by MPFR; indirect test dep</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Debian riscv64: libgmp-dev 6.3.0</td>
-      <td>No RISC-V-specific issues</td>
+      <td>FFTW3</td>
+      <td>Test-dependency, optional. Reference FFT used only to validate SLEEF’s optional DFT module (<code class="language-plaintext highlighter-rouge">SLEEF_ENABLE_FFTW=ON</code>)</td>
+      <td>Library itself builds for riscv64 (<code class="language-plaintext highlighter-rouge">libfftw3-double3</code> 3.3.10-2fakesync1build3, main, riscv64, Ubuntu 26.04 resolute); but <strong>SLEEF’s own riscv64 CI passes <code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_DFT=False -DSLEEF_ENFORCE_DFT=False</code></strong>, so the FFTW3-dependent DFT path is not built on riscv64 CI at all</td>
+      <td>Not exercised on riscv64 by SLEEF’s CI (disabled)</td>
+      <td>Packaged, main component</td>
+      <td>FFTW3 upstream has two long-open RVV-related issues: #234 “risc-v vector extensions” (unresolved since 2021) and #311 “enable-r5v can’t be used in riscv” (open since 2023); neither blocks a generic scalar riscv64 FFTW3 build, but they explain the lack of RVV-accelerated FFTW performance and likely motivate SLEEF’s CI skipping DFT on this architecture</td>
     </tr>
     <tr>
-      <td>FFTW3 (libfftw3, libfftw3f, libfftw3_omp)</td>
-      <td>Reference FFT for DFT correctness tests; not in production library</td>
-      <td>Yes</td>
-      <td>Passes (scalar path)</td>
-      <td>Debian riscv64: libfftw3-dev 3.3.11-1</td>
-      <td>No RVV acceleration in FFTW3; scalar reference only</td>
+      <td>OpenSSL</td>
+      <td>Test-dependency, optional. Used by SLEEF’s <code class="language-plaintext highlighter-rouge">tester3</code>/SSL-based test harness (<code class="language-plaintext highlighter-rouge">SLEEF_ENABLE_SSL=ON</code>)</td>
+      <td>Yes - <code class="language-plaintext highlighter-rouge">libssl3t64</code> 3.5.5-1ubuntu3, main, riscv64, Ubuntu 26.04 resolute</td>
+      <td>OpenSSL has dedicated upstream riscv64 CI runners (“OS Zoo CI”); not exercised in SLEEF’s own riscv Jenkins stage (SSL tester not invoked there)</td>
+      <td>Packaged, main component</td>
+      <td>Several open OpenSSL riscv-specific refinement issues (of 66 total riscv-related items): #28118 “RISC-V extension detection is broken on musl” (open), #30880 intermittent <code class="language-plaintext highlighter-rouge">test_lhash</code> CI flake on linux-riscv64 (open), #29453 and #28664/#25334 (SHA-256/AES intrinsic/perf work, open) - all refinement items on an already-working port, not build blockers</td>
     </tr>
     <tr>
-      <td>OpenSSL (libssl, libcrypto)</td>
-      <td>Test utilities only</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Debian riscv64: libssl-dev 3.6.3-1</td>
-      <td>Issue #694 was a toolchain config error, not OpenSSL</td>
+      <td>OpenMP</td>
+      <td>Runtime-dependency, optional. Compiler-provided threading runtime for SLEEF’s DFT/parallel paths (<code class="language-plaintext highlighter-rouge">SLEEF_ENABLE_OPENMP=ON</code>, not hard-enforced)</td>
+      <td>Yes - <code class="language-plaintext highlighter-rouge">libomp5</code> (LLVM) 1:22.1.2-1ubuntu1 in universe, riscv64, Ubuntu 26.04 resolute; GCC’s <code class="language-plaintext highlighter-rouge">libgomp</code> ships as part of the riscv64 GCC toolchain</td>
+      <td>SLEEF’s riscv Jenkins stages set <code class="language-plaintext highlighter-rouge">OMP_WAIT_POLICY=passive</code> and run against it on both gcc-14 and clang-19 agents</td>
+      <td>Packaged</td>
+      <td>No dependency-specific issues identified; it is a compiler runtime, not a standalone library with its own riscv64 issue tracker in this context</td>
     </tr>
     <tr>
-      <td>OpenMP (libgomp)</td>
-      <td>Parallel-for in libsleefdft and DFT tests</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Standard GCC runtime for riscv64</td>
-      <td>No riscv64-specific issues</td>
+      <td>CMake</td>
+      <td>Build-dependency, critical. Build system generator for the entire project</td>
+      <td>Yes - standard package, broadly available on riscv64 across Debian/Ubuntu main</td>
+      <td>Not applicable (build tool)</td>
+      <td>Packaged in Ubuntu/Debian main for riscv64</td>
+      <td>No riscv64-specific gaps identified; used natively to drive the riscv64 Jenkins builds</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Build-dependency, critical. Primary compiler pinned in CI (<code class="language-plaintext highlighter-rouge">gcc-14</code>)</td>
+      <td>Yes - <code class="language-plaintext highlighter-rouge">gcc-14</code>/<code class="language-plaintext highlighter-rouge">g++-14</code> used natively on the <code class="language-plaintext highlighter-rouge">riscv &amp;&amp; ubuntu24</code> Jenkins agent; RVV support requires GCC 14+ specifically (GCC 13 fails per issue #579)</td>
+      <td>N/A (compiler)</td>
+      <td>Packaged for riscv64 in Ubuntu/Debian</td>
+      <td>Version floor (14+) is a hard SLEEF requirement, not merely a preference, due to RVV v1.0/intrinsics v0.12 support</td>
+    </tr>
+    <tr>
+      <td>LLVM</td>
+      <td>Build-dependency, critical. Secondary compiler path, pinned in CI (<code class="language-plaintext highlighter-rouge">clang-19</code>)</td>
+      <td>Yes - <code class="language-plaintext highlighter-rouge">clang-19</code>/<code class="language-plaintext highlighter-rouge">clang++-19</code> used natively on the same riscv64 Jenkins agent; toolchain files reference clang-17 as a floor, CI uses clang-19</td>
+      <td>N/A (compiler)</td>
+      <td>Packaged for riscv64 in Ubuntu/Debian</td>
+      <td>GCC support for RVV intrinsics initially lagged Clang at the time of PR #477; both are now first-class in CI</td>
+    </tr>
+    <tr>
+      <td>Ninja</td>
+      <td>Build-dependency, optional. Build backend invoked by CMake (<code class="language-plaintext highlighter-rouge">-GNinja</code>) in both the generic quick-start and the riscv64 CI stages</td>
+      <td>Yes - standard package, broadly available on riscv64</td>
+      <td>N/A (build tool)</td>
+      <td>Packaged in Ubuntu/Debian main for riscv64</td>
+      <td>No riscv64-specific gaps identified</td>
+    </tr>
+    <tr>
+      <td>QEMU</td>
+      <td>Test-dependency, optional. Supported generically by SLEEF’s build/test harness (<code class="language-plaintext highlighter-rouge">EMULATOR</code> CMake variable, <code class="language-plaintext highlighter-rouge">--qemu</code> tester flag) for cross-compiled test execution</td>
+      <td>Not applicable to riscv64 itself</td>
+      <td><strong>Not used for the riscv64 CI stages</strong> - those run on native hardware with no <code class="language-plaintext highlighter-rouge">-DEMULATOR</code> flag set; QEMU is wired up only for SLEEF’s aarch64 CI stage (<code class="language-plaintext highlighter-rouge">qemu-aarch64-static</code>)</td>
+      <td>N/A</td>
+      <td><code class="language-plaintext highlighter-rouge">helperrvv.h</code> carries a correctness note about QEMU’s partial-vector-wipe behavior relevant to anyone who does run SLEEF’s RVV code under QEMU, but no riscv64 QEMU CI path exists in the repository</td>
+    </tr>
+    <tr>
+      <td>GMP</td>
+      <td>Indirect test-dependency (bignum backend required by MPFR)</td>
+      <td>Yes - <code class="language-plaintext highlighter-rouge">libgmp10</code> 2:6.3.0+dfsg-5ubuntu2, main, riscv64, Ubuntu 26.04 resolute</td>
+      <td>Indirect, via MPFR; long-established riscv64 support</td>
+      <td>Packaged, main component</td>
+      <td>No riscv64-specific issues identified</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="fftw3-note">
-  
-  
-    <a href="#fftw3-note" class="anchor-heading" aria-labelledby="fftw3-note"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> FFTW3 note
-  
-  
-</h3>
-    
 
-<p>FFTW3 has no RVV vector acceleration. SLEEF DFT tests running on riscv64 compare against a scalar FFTW3 reference implementation. This is a correctness-only concern: the comparison is valid for verifying mathematical correctness, but it means no riscv64 SIMD-vs-SIMD performance comparison between SLEEF DFT and FFTW3 is possible. This does not block builds or correctness testing.</p>
-
-<p>None of these six dependencies are RISC-V-blocking for SLEEF’s build or test on riscv64.</p><hr />
+<p><strong>Summary:</strong> every one of SLEEF’s non-toolchain critical and optional dependencies is already available on riscv64 via Ubuntu 26.04 (resolute) - MPFR, GMP, FFTW3 and OpenSSL land in the <strong>main</strong> component, TLFloat and OpenMP’s <code class="language-plaintext highlighter-rouge">libomp5</code> in <strong>universe</strong> - all under <code class="language-plaintext highlighter-rouge">ports</code>. The one real gap is functional rather than packaging: SLEEF’s own riscv64 Jenkins CI disables the DFT module (the FFTW3-dependent piece) outright, and upstream FFTW3 itself carries two long-open, unresolved RVV-acceleration issues, so while FFTW3 is fully buildable on riscv64, SLEEF-plus-FFTW3 riscv64 integration is currently untested by SLEEF’s own pipeline. TLFloat (quad-precision) and OpenSSL (crypto tester), by contrast, are exercised directly on native riscv64 CI.</p><hr />
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1379,10 +1485,10 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
   
 </h2>
     
-<h3 id="risc-v-specific">
+<h3 id="risc-v-specific-open">
   
   
-    <a href="#risc-v-specific" class="anchor-heading" aria-labelledby="risc-v-specific"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> RISC-V-specific
+    <a href="#risc-v-specific-open" class="anchor-heading" aria-labelledby="risc-v-specific-open"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> RISC-V-specific (open)
   
   
 </h3>
@@ -1400,32 +1506,20 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://github.com/shibatch/sleef/issues/501">#501</a></td>
-      <td>dft test gets stuck during initialisation when hardware vector length is very long</td>
-      <td>Open</td>
-      <td>Medium</td>
-      <td>Infinite loop in <code class="language-plaintext highlighter-rouge">src/dft/dft.c</code> when QEMU emulates 1024-bit RVV vectors and <code class="language-plaintext highlighter-rouge">measure()</code> fails to populate <code class="language-plaintext highlighter-rouge">p-&gt;bestPath</code>. No assignee, no linked PR. Causes DFT to be excluded from riscv64 CI.</td>
-    </tr>
-    <tr>
       <td><a href="https://github.com/shibatch/sleef/issues/526">#526</a></td>
-      <td>RISC-V: exploit -mrvv-vector-bits=zvl when used</td>
-      <td>Open</td>
+      <td>RISC-V: exploit <code class="language-plaintext highlighter-rouge">-mrvv-vector-bits=zvl</code> when used</td>
+      <td>Open (since 2024-03-04)</td>
       <td>Low</td>
-      <td>Performance optimization only: use compile-time <code class="language-plaintext highlighter-rouge">__riscv_v_fixed_vlen</code> instead of runtime <code class="language-plaintext highlighter-rouge">__riscv_vlenb()</code> when fixed vector length is known. Blocked by CI complexity. luhenry notes this is not suitable for distributed library builds.</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/shibatch/sleef/issues/709">#709</a></td>
-      <td>[RISC-V] init RISC-V ci</td>
-      <td>Open</td>
-      <td>Medium</td>
-      <td>PR to add QEMU-based GitHub Actions CI for riscv64 with RVVM1 default. Not yet merged as of June 2026. Confirms that current GitHub Actions CI gap is known to the project.</td>
+      <td>Performance-only enhancement: use compile-time <code class="language-plaintext highlighter-rouge">__riscv_v_fixed_vlen</code> instead of runtime <code class="language-plaintext highlighter-rouge">__riscv_vlenb()</code> when the compiler fixes the vector length. Author states patches exist but weren’t submitted because supporting both fixed-vlen and runtime-vlen paths in CI needs a larger test matrix; expects only a modest gain. No comments or further activity recorded.</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="cross-compilation-issues-closedresolved">
+
+<p>A live GitHub issue search confirms this is the <strong>only</strong> currently open, RISC-V-specific issue on <code class="language-plaintext highlighter-rouge">shibatch/sleef</code>. Two other currently-open issues exist on the repository generally but are not RISC-V-specific: #707 (SIGILL on x86-64-v2/Sandy Bridge) and #484 (s390x VXE2/QEMU failures).</p>
+<h3 id="risc-v-related-closedresolved">
   
   
-    <a href="#cross-compilation-issues-closedresolved" class="anchor-heading" aria-labelledby="cross-compilation-issues-closedresolved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Cross-compilation issues (closed/resolved)
+    <a href="#risc-v-related-closedresolved" class="anchor-heading" aria-labelledby="risc-v-related-closedresolved"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> RISC-V-related (closed/resolved)
   
   
 </h3>
@@ -1442,82 +1536,63 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://github.com/shibatch/sleef/issues/579">#579</a></td>
-      <td>Risc V and gcc-13</td>
-      <td>Closed</td>
-      <td>GCC 13 passed CMake capability check but failed to compile library. Fixed by PR #602 (require GCC 14).</td>
+      <td><a href="https://github.com/shibatch/sleef/issues/455">#455</a></td>
+      <td>Enable Riscv64 Support</td>
+      <td>Closed (2023-03 to 2023-11)</td>
+      <td>Originating feature request; pointed to the <code class="language-plaintext highlighter-rouge">sifive/sifive-sleef</code> fork as a patch source</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/shibatch/sleef/issues/614">#614</a></td>
-      <td>Random failures with QEMU in Ubuntu 24.04</td>
-      <td>Closed</td>
-      <td>Random test failures on riscv64 (and ppc64, s390x) after GitHub Actions runner image upgrade to Ubuntu 24.04.1. Not a SLEEF code bug; tracked upstream in actions/runner-images.</td>
+      <td><a href="https://github.com/shibatch/sleef/issues/432">#432</a></td>
+      <td>[question] Support of RISC-V extension V</td>
+      <td>Closed (2021-08 to 2023-11)</td>
+      <td>Early question predating and foreshadowing the real RVV implementation</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/shibatch/sleef/pull/448">#448</a></td>
+      <td>Extend FMA support to RISC-V</td>
+      <td>Closed, unmerged</td>
+      <td>Folded into PR #477</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/shibatch/sleef/pull/449">#449</a></td>
+      <td>Add support for the RISC-V Vector ISA</td>
+      <td>Closed, unmerged</td>
+      <td>SiFive-submitted; folded into PR #477</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/shibatch/sleef/pull/468">#468</a></td>
+      <td>Support for RiscV architecture</td>
+      <td>Closed, unmerged</td>
+      <td>Flagged as duplicate of #448</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/shibatch/sleef/pull/496">#496</a></td>
+      <td>Enable libsleefdft on riscv64</td>
+      <td>Closed, superseded</td>
+      <td>Superseded by merged PR #503</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/shibatch/sleef/issues/524">#524</a></td>
+      <td>RISC-V architecture missing on sleef.org</td>
+      <td>Closed (2024-02 to 2024-03)</td>
+      <td>Documentation-only fix</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/shibatch/sleef/issues/579">#579</a></td>
+      <td>Risc V and gcc-13</td>
+      <td>Closed (2024-09 to 2024-11)</td>
+      <td>SIMD instruction mismatch between RVV v0.11-draft (GCC-13) and v1.0; fixed by PR #602</td>
     </tr>
     <tr>
       <td><a href="https://github.com/shibatch/sleef/issues/694">#694</a></td>
       <td>Cannot find crtbeginS.o and -lgcc during cross compilation to RISC-V</td>
-      <td>Closed</td>
-      <td>Clang 21 + custom sysroot triple mismatch. Toolchain configuration issue, not SLEEF.</td>
+      <td>Closed (2025-06 to 2025-07)</td>
+      <td>Clang 21 custom-sysroot toolchain/triple issue, not a SLEEF code defect</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="general-correctness-bugs-platform-independent-affect-riscv64">
-  
-  
-    <a href="#general-correctness-bugs-platform-independent-affect-riscv64" class="anchor-heading" aria-labelledby="general-correctness-bugs-platform-independent-affect-riscv64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> General correctness bugs (platform-independent, affect riscv64)
-  
-  
-</h3>
-    
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Title</th>
-      <th>Status</th>
-      <th>Severity</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="https://github.com/shibatch/sleef/issues/560">#560</a></td>
-      <td>Feature detection is not thread-safe</td>
-      <td>Open</td>
-      <td>High</td>
-      <td>Multi-threaded correctness bug; affects all platforms including riscv64</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/shibatch/sleef/issues/570">#570</a></td>
-      <td>Atanh returning values slightly outside specified error bound</td>
-      <td>Open</td>
-      <td>Medium</td>
-      <td>All platforms</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/shibatch/sleef/issues/600">#600</a></td>
-      <td>Exp and pow return infinity too early (premature overflow)</td>
-      <td>Open</td>
-      <td>Medium</td>
-      <td>All platforms</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/shibatch/sleef/issues/667">#667</a></td>
-      <td>Range of xexpf to clamp to 0 and inf differs in scalar vs SIMD paths</td>
-      <td>Open</td>
-      <td>Medium</td>
-      <td>All platforms</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/shibatch/sleef/issues/707">#707</a></td>
-      <td>SIMD: PURECFMA scalar dispatch causes SIGILL on x86-64-v2 CPUs</td>
-      <td>Open</td>
-      <td>High</td>
-      <td>x86-specific; no riscv64 analogue identified</td>
-    </tr>
-  </tbody>
-</table></div><hr />
+<p>No open RISC-V-specific correctness or NaN bugs were found in this research (searches targeting “riscv nan floating” and “riscv bug” returned nothing beyond #526 as open and RISC-V-specific).</p><hr />
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1527,81 +1602,105 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 </h2>
     
 
-<p><strong>“Unmaintained” label in README:</strong> The actual label in the upstream README is “Unmaintained” for RVVM1 and RVVM2. This is contradicted by active commits, Jenkinsfile CI, and the Debian 3.9.0-1 build, but the label will discourage adoption by teams doing due diligence against the README. The label should be updated to “Experimental” to match CMake terminology.</p>
+<p><strong>“Unmaintained” label in README vs. active CI:</strong> The upstream README explicitly labels RVVM1 and RVVM2 “Unmaintained” - a characterization directly contradicted by the active Jenkinsfile CI (added by shibatch himself in PR #624, February 2025), ongoing distro packaging (Ubuntu 26.04 resolute, Debian sid), and commit activity through late 2024/early 2025 (PR #601, #602). The live CI evidence was weighted more heavily than the static README claim for the purposes of this assessment, but this remains a confidence caveat: the Jenkins dashboard itself is private and unverifiable, so the “Unmaintained” label cannot be definitively disproven beyond what the configuration file shows. The label will discourage adoption by any team doing documentation-level due diligence.</p>
 
-<p><strong>No named maintainer:</strong> The project has no designated riscv64 maintainer. Rivos Inc. employees who drove the port (luhenry, sh1boot) are not publicly confirmed as still active on SLEEF as of mid-2026. The next RISC-V fix or issue may wait for whoever notices it first.</p>
+<p><strong>No GitHub Actions riscv64 CI:</strong> The riscv64 GitHub Actions job originally included in PR #477 (November 2023) is absent from the current four-file <code class="language-plaintext highlighter-rouge">.github/workflows/</code> directory. No open issue or PR proposing to restore it was found in this research pass. This is the single highest-leverage, lowest-cost change available: restoring public, independently observable CI would materially raise confidence in the port’s health without changing the underlying color grade, since Jenkins CI already satisfies the build-and-test bar.</p>
 
-<p><strong>No GitHub Actions CI:</strong> The riscv64 GitHub Actions job that was added in PR #477 was removed at some point. Issue #709 proposes restoring it, but has not merged. External contributors submitting riscv64 PRs get no automated feedback on correctness. This slows the review cycle and increases maintainer burden.</p>
+<p><strong>DFT disabled on riscv64 CI:</strong> The DFT module is built but not tested on riscv64 CI pending resolution of a wide-vector initialization bug; this has persisted with no confirmed public tracking issue found in current search results.</p>
 
-<p><strong>DFT gap:</strong> Bug #501 (DFT init loop on wide vectors) has been open since January 2024 with no assigned fix. DFT is excluded from CI as a workaround. Any consumer of SLEEF DFT on riscv64 with a hardware vector width &gt;= 1024 bits will hit this.</p>
+<p><strong>No named, dedicated riscv64 maintainer:</strong> The project has no designated riscv64 maintainer. Rivos Inc. engineers who drove the original port (sh1boot, luhenry) are not confirmed as still actively engaged with SLEEF as of this research; subsequent fixes (PR #601/#602) came from an independent contributor (Michael Orlitzky) and from the sole maintainer himself (PR #624).</p>
 
-<p><strong>No runtime dispatcher:</strong> Applications that need to run the same binary across RVV hardware with different natural vector lengths cannot use SLEEF’s VLA backends through a single shared library. Each LMUL variant is a separate library. This is the same limitation as SVE; it is a structural constraint of the VLA approach, not a bug, but it is a deployment complexity that amd64 users do not encounter.</p>
+<p><strong>No runtime dispatcher:</strong> Applications needing a single binary that runs across RVV hardware with differing natural vector lengths cannot use SLEEF’s RVV backends through one shared library - each LMUL variant is a separate build target. This is structurally identical to the SVE situation and not unique to RISC-V, but it is deployment complexity that amd64 consumers do not face.</p>
 
-<p><strong>Acceptance probability for new contributions:</strong> High. The project accepted all prior Rivos Inc. contributions. blapie (Arm) is an active reviewer and has merged every RISC-V PR. shibatch personally merged the Jenkinsfile RISC-V settings. New contributions addressing the three open issues (#501, #526, #709) would be accepted with reasonable review turnaround.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Sustainability/CCLA posture:</strong> The November 2025 <code class="language-plaintext highlighter-rouge">SUSTAINABILITY.md</code>/<code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> addition signals that further platform-tier improvements for RISC-V will likely require a funding or sponsorship commitment from an interested company (consistent with how Arm and Rivos funded the original port), rather than organic maintainer-driven investment.</p>
+
+<p><strong>Acceptance probability for new contributions:</strong> High. The project has accepted every substantive Rivos Inc. contribution to date; Pierre Blanchard (Arm) is an active reviewer who has merged every significant RISC-V pull request, and shibatch personally merged the most recent riscv64 CI change (PR #624). New contributions addressing the DFT-disable gap, issue #526, or restoring GitHub Actions CI would likely be accepted with reasonable review turnaround, subject to the CCLA terms for corporate contributors above the stated revenue threshold.</p><hr />
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE funded Hamlin Li (Rivos) to integrate SLEEF into OpenJDK. That work is complete (OpenJDK PRs #20781 and #21083 merged) and also contributed SLEEF fixes #536 and #537 upstream. The OpenJDK integration is done; it should not be re-funded.</p>
+<ul>
+  <li><strong>Color:</strong> blue (n/a - blue carries no defined sub-type in the grading model; sub-types are defined only for grey, yellow, and orange)</li>
+  <li><strong>Release provider:</strong> distro</li>
+  <li><strong>Optimization level:</strong> partial</li>
+</ul>
 
-<p>The Rivos-driven core port (PR #477, #503, #521, #530) is fully upstream and complete. That work should not be re-funded.</p>
+<p>As a SIMD math library (the grading model’s own worked example category), SLEEF’s RVV backend (<code class="language-plaintext highlighter-rouge">helperrvv.h</code>) covers the full primary transcendental and quad-precision function set, but only as a single LMUL-parameterized tier, versus amd64’s three CI-tiered backends (SSE2/AVX2/AVX512F) - the grading model explicitly classifies this configuration as “partial.” This caps the optimization characterization but does not change the already-blue primary readiness color.</p>
 
-<p>Remaining investment opportunities are CI restoration, one correctness bug, and one documentation fix.</p>
-<h3 id="131-functional-enablement">
+<p><strong>Justification:</strong> Upstream CI builds and runs the test suite (<code class="language-plaintext highlighter-rouge">ctest</code>) for riscv64 on native hardware via Jenkinsfile stages added in <a href="https://github.com/shibatch/sleef/pull/624">PR #624</a>, but no GitHub Actions riscv64 job exists and upstream publishes no riscv64-specific binary (GitHub Releases are source-only tarballs for every architecture - see <a href="https://github.com/shibatch/sleef/releases">github.com/shibatch/sleef/releases</a>). Only distros (Debian sid, Ubuntu 26.04/resolute) package riscv64 binaries. Build=yes/test=yes/release=no maps to blue.</p>
+
+<p>Note the upstream README.adoc’s “Unmaintained” label for RVVM1/RVVM2 directly contradicts the active Jenkins CI evidence; per the grading model’s rule to trust workflow files over README claims, the live CI configuration was weighted higher, but this is flagged as a confidence caveat since the Jenkins dashboard itself is private/unverifiable.</p>
+
+<p><strong>Pending work that could change the grade:</strong></p>
+<ul>
+  <li>Open issue <a href="https://github.com/shibatch/sleef/issues/526">#526</a> (compile-time fixed-vlen perf optimization, unaddressed since March 2024).</li>
+  <li>The DFT module remains explicitly disabled on riscv64 CI (<code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_DFT=False</code>), pending resolution of a wide-vector initialization bug.</li>
+  <li>RISE Project has documented but indirect involvement - it tracks SLEEF as project SL_02_003 and published a dedicated OpenJDK+SLEEF RISC-V blog post (see Section 1) - without owning a dedicated SLEEF repository, CI runner, or wheel build.</li>
+  <li>No GitHub Actions riscv64 CI currently exists (removed at some point after the original PR #477 merge); restoring public, independently observable CI would be the single highest-leverage change to raise confidence, though it would not change the color itself, since Jenkins CI already satisfies the build-and-test bar.</li>
+</ul><hr />
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE-funded engineer Hamlin Li (Rivos) completed the OpenJDK-to-SLEEF integration (OpenJDK PRs #20781 and #21083 merged), contributing fixes #536 and #537 back upstream to SLEEF. That work is complete and should not be re-funded. The core Rivos-driven RISC-V port (PRs #477, #503, #521, #530) is fully upstream and complete and should likewise not be re-funded. Remaining investment opportunities concentrate on CI restoration, the DFT gap, and documentation/perception fixes.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p><strong>DFT init loop bug (#501):</strong> The infinite loop in <code class="language-plaintext highlighter-rouge">src/dft/dft.c</code> when <code class="language-plaintext highlighter-rouge">measure()</code> fails on very wide vectors needs a root-cause fix. The loop exit condition depends on <code class="language-plaintext highlighter-rouge">p-&gt;bestPath</code> being populated; the fix requires understanding why <code class="language-plaintext highlighter-rouge">measure()</code> silently fails. Estimated scope: investigate <code class="language-plaintext highlighter-rouge">measure()</code> failure mode, add a loop guard or timeout, restore DFT in CI. One engineer familiar with SIMD FFT internals.</p>
-
-<p><strong>Thread-safety of feature detection (#560):</strong> General correctness bug affecting all platforms. Not riscv64-specific but blocks production use in multi-threaded applications. Not uniquely a riscv64 investment item.</p>
-<h3 id="132-performance-optimization">
+<p><strong>DFT initialization bug on wide vectors:</strong> The root cause behind <code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_DFT=False</code> on riscv64 CI needs investigation and a fix before DFT can be re-enabled and tested on this architecture. Scope: reproduce the failure (likely tied to how <code class="language-plaintext highlighter-rouge">measure()</code> behaves on very wide RVV vector configurations), implement a fix or guard, and restore the <code class="language-plaintext highlighter-rouge">-DSLEEF_BUILD_DFT</code>/<code class="language-plaintext highlighter-rouge">-DSLEEF_ENFORCE_DFT</code> flags to <code class="language-plaintext highlighter-rouge">True</code> in the Jenkinsfile riscv stages. Requires an engineer familiar with SIMD FFT internals.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p><strong>Fixed-vector-length optimization (#526):</strong> Low-priority. The <code class="language-plaintext highlighter-rouge">__riscv_vlenb()</code> runtime call versus compile-time <code class="language-plaintext highlighter-rouge">__riscv_v_fixed_vlen</code> macro. The author estimates minimal gain. Not recommended as a funded work item.</p>
-
-<p><strong>Runtime LMUL dispatcher:</strong> Adding an HWCAP-based dispatcher analogous to amd64’s <code class="language-plaintext highlighter-rouge">dispsse.c.org</code> would allow a single <code class="language-plaintext highlighter-rouge">libsleef.so</code> to select RVVM1 vs RVVM2 at load time based on hardware vector length. This is a moderate but useful feature for deployment environments with mixed RISC-V hardware. No tracking issue exists for this.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p><strong>Restore GitHub Actions CI (#709):</strong> PR #709 proposes QEMU-based riscv64 CI in GitHub Actions. This is the highest-leverage low-effort item: public CI prevents regressions and removes barrier for external contributors. Work is partially drafted. One engineer to complete the PR and get it merged.</p>
-<h3 id="134-ecosystem-enablement">
+<p><strong>Fixed-vector-length optimization (#526):</strong> Low priority. The author’s own assessment is that the gain from switching <code class="language-plaintext highlighter-rouge">__riscv_vlenb()</code> runtime detection to the compile-time <code class="language-plaintext highlighter-rouge">__riscv_v_fixed_vlen</code> macro is modest; the blocker is CI test-matrix cost, not technical difficulty.</p>
+
+<p><strong>Runtime LMUL dispatcher:</strong> Adding an HWCAP-equivalent dispatcher (analogous to amd64’s <code class="language-plaintext highlighter-rouge">dispsse.c.org</code>/<code class="language-plaintext highlighter-rouge">dispavx.c.org</code>) would let a single <code class="language-plaintext highlighter-rouge">libsleef.so</code> select RVVM1 vs RVVM2 at load time based on detected hardware vector length, rather than requiring separately compiled binaries. This is a moderate-effort, genuinely useful feature for deployment environments spanning mixed riscv64 hardware. No tracking issue currently exists for it.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p><strong>Update README “Unmaintained” label:</strong> The “Unmaintained” label in the upstream README should be updated to “Experimental” or “Supported.” One-line change. Very low effort; high impact on adoption perception.</p>
+<p><strong>Restore public GitHub Actions riscv64 CI:</strong> This is the highest-leverage, lowest-effort item available. Public CI prevents regressions and removes the biggest friction point for external contributors, who currently get no automated feedback on riscv64-affecting changes. No existing draft PR for this was found in current research; the work would need to be scoped and authored from scratch, likely using QEMU-based emulation to avoid requiring GitHub-hosted riscv64 runners (which do not exist).</p>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
 
-<p><strong>Ubuntu 24.04 riscv64 package:</strong> Ubuntu 24.04 does not ship SLEEF for riscv64. This requires filing a Debian/Ubuntu packaging update or working with the Ubuntu RISC-V porter team. Debian sid already has 3.9.0-1 for riscv64, so the path is: update Ubuntu’s package to track Debian sid’s version and add riscv64 as a target architecture. This is packaging work, not SLEEF code work.</p>
-<h3 id="135-summary-table">
+<p><strong>Reconcile the README “Unmaintained” label with actual CI status:</strong> A one-line documentation change (to “Experimental” or “Supported,” matching CMake’s own terminology) would materially improve adoption perception at very low cost, given the label currently contradicts demonstrable, actively maintained CI infrastructure.</p>
+
+<p><strong>Close the Ubuntu version lag:</strong> Ubuntu 26.04 (resolute) ships SLEEF 3.7-0ubuntu3 for riscv64, trailing the 3.9.0 upstream release. Tracking Debian sid’s more current 3.9.0-1 package into Ubuntu would close this gap; this is packaging work, not SLEEF code work, and would most naturally be driven by the Ubuntu RISC-V porter team rather than SLEEF’s own maintainers.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1620,58 +1719,48 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
   <tbody>
     <tr>
       <td>CI/CD</td>
-      <td>Restore GitHub Actions riscv64 CI (issue #709)</td>
-      <td>1</td>
-      <td>RISE / any Rivos/SiFive contributor</td>
+      <td>Author and land public (GitHub Actions) riscv64 CI</td>
+      <td>2-3</td>
+      <td>RISE / Rivos-, SiFive-, or Arm-affiliated contributor</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Fix DFT init loop on wide vectors (bug #501)</td>
+      <td>Diagnose and fix DFT wide-vector initialization bug; re-enable DFT on riscv64 CI</td>
       <td>3-4</td>
       <td>RISE / engineer with SIMD FFT background</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Documentation</td>
-      <td>Update README “Unmaintained” to “Experimental”</td>
+      <td>Reconcile README “Unmaintained” label with actual CI status</td>
       <td>0.1</td>
       <td>Upstream maintainer (shibatch or blapie)</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Distribution</td>
-      <td>Add riscv64 to Ubuntu 24.04 SLEEF package</td>
-      <td>2</td>
+      <td>Update Ubuntu’s SLEEF package to track Debian sid’s riscv64 build (3.9.0-1)</td>
+      <td>1-2</td>
       <td>Ubuntu RISC-V porter team</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Runtime LMUL dispatcher (no tracking issue)</td>
+      <td>Runtime LMUL dispatcher (no existing tracking issue)</td>
       <td>6-8</td>
-      <td>RISE / engineer with SLEEF internals</td>
+      <td>RISE / engineer with SLEEF internals experience</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
       <td>Fixed-vector-length optimization (issue #526)</td>
       <td>1</td>
-      <td>Low – author estimates minimal gain</td>
+      <td>Any contributor; author estimates minimal gain</td>
       <td>Low</td>
     </tr>
   </tbody>
 </table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
 <h2 id="15-references">
   
   
@@ -1684,36 +1773,47 @@ cmake <span class="nt">--build</span> build-riscv64/ <span class="nt">-j</span> 
 <ul>
   <li><a href="https://github.com/shibatch/sleef">shibatch/sleef repository</a></li>
   <li><a href="https://sleef.org/">sleef.org homepage</a></li>
+  <li><a href="https://sleef.org/benchmark.xhtml">sleef.org benchmark page</a></li>
+  <li><a href="https://github.com/shibatch/sleef/pull/448">PR #448: Extend FMA support to RISC-V (closed, unmerged)</a></li>
+  <li><a href="https://github.com/shibatch/sleef/pull/449">PR #449: Add support for the RISC-V Vector ISA (closed, unmerged)</a></li>
+  <li><a href="https://github.com/shibatch/sleef/pull/468">PR #468: Support for RiscV architecture (closed, unmerged)</a></li>
   <li><a href="https://github.com/shibatch/sleef/pull/477">PR #477: Integrate RISC-V support (merged 2023-11-20)</a></li>
+  <li><a href="https://github.com/shibatch/sleef/pull/496">PR #496: Enable libsleefdft on riscv64 (closed, superseded)</a></li>
   <li><a href="https://github.com/shibatch/sleef/pull/503">PR #503: Enable libsleefdft and libsleefquad on riscv64 (merged 2024-03-07)</a></li>
   <li><a href="https://github.com/shibatch/sleef/pull/521">PR #521: Clean up RVV register composition (merged 2024-03-07)</a></li>
   <li><a href="https://github.com/shibatch/sleef/pull/530">PR #530: Fix RVV intrinsic version detection (merged 2024-03-15)</a></li>
-  <li><a href="https://github.com/shibatch/sleef/pull/601">PR #601: Update GCC version from 13 to 14 in GHA (merged 2024-11-01)</a></li>
+  <li><a href="https://github.com/shibatch/sleef/pull/536">PR #536: upstream OpenJDK fix</a></li>
+  <li><a href="https://github.com/shibatch/sleef/pull/537">PR #537: upstream OpenJDK fix</a></li>
+  <li><a href="https://github.com/shibatch/sleef/pull/601">PR #601: Update gcc version from 13 to 14 in GHA (merged 2024-11-01)</a></li>
   <li><a href="https://github.com/shibatch/sleef/pull/602">PR #602: Configure.cmake: improve RVV1 check (merged 2024-11-11)</a></li>
   <li><a href="https://github.com/shibatch/sleef/pull/624">PR #624: Add riscv settings (merged 2025-02-08)</a></li>
   <li><a href="https://github.com/shibatch/sleef/issues/432">Issue #432: Support of RISC-V extension V (closed)</a></li>
   <li><a href="https://github.com/shibatch/sleef/issues/455">Issue #455: Enable Riscv64 Support (closed)</a></li>
-  <li><a href="https://github.com/shibatch/sleef/issues/501">Issue #501: dft test gets stuck during initialisation when hardware vector length is very long (open)</a></li>
   <li><a href="https://github.com/shibatch/sleef/issues/524">Issue #524: RISC-V architecture missing on sleef.org (closed)</a></li>
   <li><a href="https://github.com/shibatch/sleef/issues/526">Issue #526: RISC-V: exploit -mrvv-vector-bits=zvl when used (open)</a></li>
-  <li><a href="https://github.com/shibatch/sleef/issues/560">Issue #560: Feature detection is not thread-safe (open)</a></li>
-  <li><a href="https://github.com/shibatch/sleef/issues/570">Issue #570: Atanh returning values slightly outside specified error bound (open)</a></li>
   <li><a href="https://github.com/shibatch/sleef/issues/579">Issue #579: Risc V and gcc-13 (closed)</a></li>
-  <li><a href="https://github.com/shibatch/sleef/issues/600">Issue #600: Exp and pow return infinity too early (open)</a></li>
-  <li><a href="https://github.com/shibatch/sleef/issues/614">Issue #614: Random failures with QEMU in Ubuntu 24.04 (closed)</a></li>
-  <li><a href="https://github.com/shibatch/sleef/issues/667">Issue #667: Range of xexpf to clamp to 0 and inf differs in scalar vs SIMD paths (open)</a></li>
   <li><a href="https://github.com/shibatch/sleef/issues/694">Issue #694: Cannot find crtbeginS.o and -lgcc during cross compilation to RISC-V (closed)</a></li>
-  <li><a href="https://github.com/shibatch/sleef/issues/707">Issue #707: SIMD PURECFMA scalar dispatch causes SIGILL on x86-64-v2 CPUs (open)</a></li>
-  <li><a href="https://github.com/shibatch/sleef/issues/709">Issue #709: [RISC-V] init RISC-V ci (open)</a></li>
+  <li><a href="https://github.com/shibatch/sleef/pull/477">commit cea4434: Integrate RISC-V support (PR #477)</a></li>
+  <li><a href="https://github.com/shibatch/sleef/commit/01c6732132d2191cd134df4d087c5f86f480b2b2">commit 01c6732: Add riscv settings (#624)</a></li>
+  <li><a href="https://github.com/shibatch/sleef/commit/87e73dc711be495e16aae73b430d6c8a0c4b2544">commit 87e73dc: Configure.cmake: improve and unify RISC-V vector extension checks</a></li>
+  <li><a href="https://github.com/shibatch/sleef/commit/3896b07de8083959817d4c1f34832f29f336dfe3">commit 3896b07: Clean up RVV register composition (#521)</a></li>
+  <li><a href="https://github.com/shibatch/sleef/commit/04ad3259d7612d9c5890c3966725cd0c063b87e2">commit 04ad325: Fix RVV intrinsic version detection (#530)</a></li>
   <li><a href="https://riseproject.dev/2025/09/24/openjdk-supercharging-vectorized-math-with-sleef/">RISE Project blog: OpenJDK Supercharging Vectorized Math with SLEEF (2025-09-24)</a></li>
+  <li><a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE Project blog: PyTorch is available on riscv64! (2026-08-18)</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members page</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder package list</a></li>
   <li><a href="https://github.com/openjdk/jdk/pull/20781">OpenJDK PR #20781: Embed SLEEF headers into JDK source tree</a></li>
-  <li><a href="https://github.com/openjdk/jdk/pull/21083">OpenJDK PR #21083: Intrinsify Vector API math operations using SLEEF on RISC-V</a></li>
-  <li><a href="https://github.com/shibatch/sleef/pull/536">SLEEF PR #536: Mark Sleef_rempitabq* constants as static</a></li>
-  <li><a href="https://github.com/shibatch/sleef/pull/537">SLEEF PR #537: Mark SLEEF_ALWAYS_INLINE as always_inline attribute</a></li>
+  <li><a href="https://github.com/openjdk/jdk/pull/21083">OpenJDK PR #21083: Intrinsify Vector API math operations using SLEEF on RISC-V (JDK-8320500)</a></li>
+  <li><a href="https://github.com/openjdk/jdk/pull/21502">OpenJDK PR #21502: AArch64 Vector API stub benchmarks (JDK-8312425)</a></li>
+  <li><a href="https://docularxu.github.io/sleef/webpages/rvv_benchmark_16Oct2025.html">Guodong Xu: SLEEF RVV Benchmark Summary (2025-10-16)</a></li>
+  <li><a href="https://docularxu.github.io/sleef/webpages/rvv_benchmark_gelu_17Oct2025.html">Guodong Xu: GELU Kernel Benchmarks for erf/tanh on RVV (2025-10-17)</a></li>
+  <li><a href="https://github.com/llvm/llvm-project/pull/114014">LLVM PR #114014: Support SLEEF vector library for RISC-V target</a></li>
+  <li><a href="https://github.com/llvm/llvm-project/pull/121641">LLVM PR #121641: Fix incorrect vector function mapping for llvm.exp.f64</a></li>
   <li><a href="https://buildd.debian.org/status/package.php?p=sleef">Debian buildd status for SLEEF</a></li>
   <li><a href="https://tracker.debian.org/pkg/sleef">Debian tracker for SLEEF</a></li>
-  <li><a href="https://sleef.org/benchmark.xhtml">sleef.org benchmark page</a></li>
-  <li><a href="https://github.com/shibatch/sleef/commit/87e73dc711be495e16aae73b430d6c8a0c4b2544">commit 87e73dc711: Configure.cmake: improve and unify RISC-V vector extension checks</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/riscv64/libsleef3/download">Ubuntu packages.ubuntu.com: libsleef3 (resolute, riscv64)</a></li>
+  <li><a href="https://github.com/FFTW/fftw3/issues/234">FFTW issue #234: risc-v vector extensions</a></li>
+  <li><a href="https://github.com/FFTW/fftw3/issues/311">FFTW issue #311: enable-r5v can’t be used in riscv</a></li>
 </ul>
 
           
