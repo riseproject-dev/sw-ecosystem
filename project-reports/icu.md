@@ -3,9 +3,6 @@ title: ICU
 parent: Project Reports
 color: yellow
 dependencies:
-  - name: HarfBuzz
-    relation: runtime-dependency
-    criticality: optional
   - name: double-conversion
     relation: runtime-dependency
     criticality: optional
@@ -15,15 +12,19 @@ dependencies:
   - name: GCC
     relation: build-dependency
     criticality: optional
-  - name: OpenJDK
-    relation: runtime-dependency
-    criticality: optional
-  - name: Maven
-    relation: build-dependency
-    criticality: optional
-  - name: JMH
-    relation: test-dependency
-    criticality: optional
+  # It's not critical and it pulls OpenJDK and HarfBuzz in too many dependency graphs
+  # - name: HarfBuzz
+  #   relation: runtime-dependency
+  #   criticality: optional
+  # - name: OpenJDK
+  #   relation: runtime-dependency
+  #   criticality: optional
+  # - name: Maven
+  #   relation: build-dependency
+  #   criticality: optional
+  # - name: JMH
+  #   relation: test-dependency
+  #   criticality: optional
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="icu" %}
