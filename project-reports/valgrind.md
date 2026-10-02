@@ -2,9 +2,16 @@
 title: Valgrind
 parent: Project Reports
 color: blue
-categories:
-  - debug
 dependencies:
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: LLVM
+    relation: build-dependency
+    criticality: optional
+  - name: GNU binutils
+    relation: build-dependency
+    criticality: critical
   - name: GNU make
     relation: build-dependency
     criticality: critical
@@ -17,6 +24,9 @@ dependencies:
   - name: Perl
     relation: test-dependency
     criticality: critical
+  - name: Python
+    relation: test-dependency
+    criticality: optional
   - name: glibc
     relation: runtime-dependency
     criticality: critical
@@ -36,424 +46,519 @@ dependencies:
 # Valgrind
 
 **Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
-**Date:** 2026-07-20<br/>
+**Date:** 2026-10-02<br/>
+**Readiness:** blue<br/>
 **Scope:** RISC-V (riscv64/linux) support status for Valgrind<br/>
 **Audience:** Technical leadership, resource allocation strategy<br/>
 **Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
----
-
 ## 1. Project Overview
 
-[Valgrind](https://valgrind.org/) is a dynamic binary instrumentation framework providing memory error detection (Memcheck), data-race detection (Helgrind, DRD), call-graph profiling (Callgrind), and heap profiling (Massif). It operates by translating guest binary code into an intermediate representation (VEX IR) and re-emitting instrumented code for the host. It is licensed under GPLv3-or-later, hosted at [sourceware.org](https://sourceware.org/git/valgrind.git), and has no formal foundation. Sourceware.org is operated by Red Hat. Valgrind is not a RISE Project member.
+[Valgrind](https://valgrind.org/) is a dynamic binary instrumentation framework. Its tools include Memcheck (memory error detection), Helgrind and DRD (data-race detection), Callgrind and Cachegrind (profiling), and Massif (heap profiling). It translates guest machine code into an intermediate representation (VEX IR), instruments it, and re-emits host code. The guest and host architecture are the same on every supported platform, so each port needs both a guest decoder and a host code generator.
 
-The current upstream release is **3.27.1** (released 20 May 2026), which lists riscv64/linux as a supported platform.
+- **License:** GPL v3, as stated on valgrind.org. The out-of-tree riscv64 forks are licensed GPLv2.
+- **Hosting:** [sourceware.org](https://sourceware.org/git/valgrind.git). The project is not on GitHub or GitLab.
+- **Governance:** No foundation. Copyright is held by "Valgrind Developers". Governance is informal and meritocratic. The AUTHORS file credits Julian Seward as original founder. `README_DEVELOPERS` says commit access is granted by asking an existing developer and filling in the sourceware account form. The git tree has no MAINTAINERS file.
+- **Patch flow:** Patches are attached to [KDE Bugzilla](https://bugs.kde.org/) bugs and committed directly to trunk. A contributor who offered a GitLab merge request on bug 503253 was told by Paul Floyd that the project does not use GitLab and patches go on the bug.
+- **Sponsors:** The commit log shows the main corporate backers are Red Hat and IBM. Active committers since 2024-01-01 by commit count:
 
----
+| Committer | Commits | Affiliation evidence |
+|---|---|---|
+| Paul Floyd | 970 | Unclear (wanadoo.fr email) |
+| Florian Krohm | 297 | Personal email; IBM s390x work is from recollection [NEEDS VERIFICATION] |
+| Mark Wielaard | 200 | Personal email; Red Hat is from recollection [NEEDS VERIFICATION] |
+| Andreas Arnez | 63 | IBM (linux.ibm.com email) |
+| Martin Cermak | 62 | Red Hat (redhat.com email) |
+| Alexandra Hajkova | 33 | Red Hat (redhat.com email) |
+| Philippe Waroquiers | 14 | Independent (skynet.be email) |
+| Petr Pavlu | 10 | SUSE from recollection; commits use a personal email [NEEDS VERIFICATION] |
+
+- **Stance on new ports:** Conservative. The [platforms page](https://valgrind.org/info/platforms.html) says "we can only justify supporting platforms that are widely used". It also says porters must make a "convincing case that the effort will be worth it, and that the port will be supported properly". The RISC-V port was accepted as a complete, tested, out-of-tree implementation that was then upstreamed.
+- **RISE:** Valgrind is not a RISE Project member or project. It is not mentioned on the [RISE members page](https://riseproject.dev/members/). RISE does track Valgrind work as working-group items (Section 13). Red Hat is a RISE Premier member and Canonical a General member, but the members page does not link either to Valgrind.
+- **Current release:** 3.27.1 (2026-05-20), preceded by 3.27.0 (2026-04-20) per valgrind.org. 3.28.0 is planned for October 2026 [NEEDS VERIFICATION - single source]. Tags VALGRIND_3_25_0, 3_25_1, 3_26_0, 3_27_0 and 3_27_1 exist in the repository.
 
 ## 2. Port History and Upstreaming Timeline
 
-The riscv64 port was initiated by **Petr Pavlu** (SUSE) on **2020-12-09** in the standalone development fork [petrpavlu/valgrind-riscv64](https://github.com/petrpavlu/valgrind-riscv64), branch `riscv64-linux`. The first commit subject was `riscv64: Add host definitions`. [NEEDS VERIFICATION - single source: fork repository metadata]
+The riscv64/Linux port is fully upstream for the RV64GC instruction set. Everything beyond RV64GC (vector, Zfh, Zba/Zbb, XTHead) is not upstream (Section 6).
 
-The fork developed over approximately four years with contributions from the following individuals: laokz, Xeonacid, JackGittes (zhaomingxin), and rjiejie. 9 pull requests were merged into the fork branch and 2 were closed without merge.
+| Date | Event | Source |
+|---|---|---|
+| 2020-12-09 | First commit in the out-of-tree fork petrpavlu/valgrind-riscv64, branch `riscv64-linux` [NEEDS VERIFICATION - single source: fork metadata] | [fork](https://github.com/petrpavlu/valgrind-riscv64) |
+| 2022-02-06 | FOSDEM 2022 talk "Valgrind on RISC-V" by Petr Pavlu [NEEDS VERIFICATION - single source] | [FOSDEM](https://archive.fosdem.org/2022/schedule/event/valgrind_riscv/) |
+| 2023-04-16 | Bug 468575 "Add support for RISC-V" opened by Petr Pavlu. The port was submitted as 6 patches (3 add port-specific files, 3 modify existing files). Local test result at submission: about 675 passed, 8 failed. | [Bug 468575](https://bugs.kde.org/show_bug.cgi?id=468575) |
+| 2023-04-26 | Bug 468979 (RVV support) opened | [Bug 468979](https://bugs.kde.org/show_bug.cgi?id=468979) |
+| 2023-2024 | Port sat without upstream acceptance for over a year. Contributors cited the need for git write access for maintainers, review of a large change, and regression testing across all platforms. | [Bug 468575](https://bugs.kde.org/show_bug.cgi?id=468575) |
+| 2024-12 to 2025-01 | Mark Wielaard rebased the patches onto trunk and fixed issues: `close_range` fd types, `readlinkat` POST handler, a VEX isel crash on I1 constants (plus And1 folding), missing `fence.tso`, test relocation problems with some binutils/GCC combinations, and an SV39 address-space limit in `sh-mem-random` (target moved from 408GB to 240GB). | [Bug 468575](https://bugs.kde.org/show_bug.cgi?id=468575) |
+| 2025-02-25 | Initial port commit date seen in the `host_riscv64_defs.c` history [NEEDS VERIFICATION - single source]. The patches carry an authoring date of 2023-04-11 (first commit 949abd047). | upstream git history (clone) |
+| 2025-04-25 | Valgrind 3.25.0, first release with RISCV64/Linux: "Added RISCV64 support for Linux. Specifically for the RV64GC instruction set." | [LWN](https://lwn.net/Articles/1019227/) |
+| 2025-05-09 | Commit 9dd24c9b fixes NaN-boxing (bug 503098). Commit 5efdbbd3 makes `riscv_hwprobe` return ENOSYS (bug 503253). | [Bug 503098](https://bugs.kde.org/show_bug.cgi?id=503098), [Bug 503253](https://bugs.kde.org/show_bug.cgi?id=503253) |
+| 2025-09-30 | Commit 97831bbb fixes shift masking (bug 509157) | [Bug 509157](https://bugs.kde.org/show_bug.cgi?id=509157) |
+| 2025-10-24 | Valgrind 3.26.0. NEWS lists the fixes for 503098, 503677 and 509157. | [NEWS](https://valgrind.org/docs/manual/dist.news.html) |
+| 2026-04-20 | Valgrind 3.27.0. NEWS lists no new RISC-V features; only skimmed. | [NEWS](https://valgrind.org/docs/manual/dist.news.html) |
+| 2026-05-20 | Valgrind 3.27.1 | [valgrind.org](https://valgrind.org/) |
+| 2026-06-21 | Latest riscv-related commit in the log, by Martin Cermak | upstream git history (clone) |
 
-The port was presented publicly at FOSDEM 2022 on February 6, 2022 (talk: "Valgrind on RISC-V", speaker: Petr Pavlu). [NEEDS VERIFICATION - single source: archive.fosdem.org]
+The final port test result on Pioneer hardware (Fedora 38, GCC 14.2.0, binutils 2.43.1) was 743 of 744 tests passing. The bug lists three remaining failures: `hgtls` (a GDB variable-location limitation), `sh-mem-random` (platform memory constraints) and `nestedfns` (a compiler-specific nested-function issue). Three named failures against a single failing test is a discrepancy in the source that was not resolved.
 
-**Upstream merge:** Valgrind **3.25.0** (released 25 April 2025) was the first release with official RISCV64/Linux support. The release notes state: "Added RISCV64 support for Linux. Specifically for the RV64GC instruction set." This resolved upstream Bugzilla [bug 468575](https://sourceware.org/bugzilla/show_bug.cgi?id=468575) ("Add support for RISC-V"), which served as the master tracking issue. The corresponding fork tracking issue [#3](https://github.com/petrpavlu/valgrind-riscv64/issues/3) ("Prepare for upstream?") remains open on the fork despite the merge having occurred.
+**Key contributors**
 
-Timeline summary:
+| Person | Role | Affiliation evidence |
+|---|---|---|
+| Petr Pavlu | Port author; maintains the fork | SUSE [NEEDS VERIFICATION] |
+| Mark Wielaard | Rebased and landed the port; assignee on bugs 504648 and 514962; administers the Buildbot riscv workers | Red Hat [NEEDS VERIFICATION] |
+| Martin Cermak | 15 of about 40 riscv-related commits since 2025-01-01 | Red Hat (redhat.com email) |
+| Paul Floyd | Reviewer and committer | Unclear |
+| Florian Krohm | Committed the shift fix (509157) | Unclear |
+| Ivan Tetyushkin | Authored the NaN-boxing fix (503098) | Not stated |
+| Christoph Jung | Authored the shift patch (509157) | Not stated |
+| Xiao W Wang | Intel; RISE scalable vector IR work | Intel |
+| laokz, Xeonacid, JackGittes (zhaomingxin), rjiejie | Fork contributors [NEEDS VERIFICATION - single source] | rjiejie and zhaomingxin use alibaba.com addresses on RVV patches |
 
-| Date | Event |
-|---|---|
-| 2020-12-09 | First commit in petrpavlu/valgrind-riscv64 fork |
-| 2022-02-06 | FOSDEM 2022 presentation |
-| 2025-04-25 | Valgrind 3.25.0 -- first upstream release with riscv64/linux |
-| 2025-10-24 | Valgrind 3.26.0 -- NaN-boxing and compiler warning fixes |
-| 2026-04-20 | Valgrind 3.27.0 -- shift instruction correctness fix |
-| 2026-05-20 | Valgrind 3.27.1 -- current release; riscv64/linux listed as fully supported |
-
----
+Since 2025-01-01 there have been about 40 riscv-related commits. The authors are Martin Cermak (15), Petr Pavlu (10), Mark Wielaard (9), and one each from Florian Krohm, Paul Floyd, Andreas Schwab, Ivan Tetyushkin and zhaomingxin. The port is actively maintained, mostly by Red Hat staff.
 
 ## 3. Upstream Support Tier
 
-Valgrind has no published tier policy. The project documentation states that each new port requires substantial ongoing maintainer commitment because Valgrind is deeply coupled to CPU and OS internals. The history of the RISC-V port -- roughly 4 years from first development commit to upstream acceptance -- is consistent with this position.
+**Formal policy.** The [platforms page](https://valgrind.org/info/platforms.html) defines three categories:
 
-**No official RISC-V maintainer is listed** on the upstream developers page as of June 2026. [NEEDS VERIFICATION - single source: valgrind.org developers page]
+- **Current:** actively supported. It lists X86, AMD64, ARM, PPC, MIPS, S390X, FreeBSD, Solaris, Darwin, Android and RISCV64/Linux.
+- **Out of Tree:** maintained outside the project, with varying completeness.
+- **Historical:** discontinued ports, for example AIX, TileGX, Windows and SPARC64.
 
-The port is described as "supported" in the 3.27.1 release. The practical meaning of "supported" is that it compiles and passes the regression suite -- not that all instruction variants and extensions are complete (see Section 6).
+RISCV64/Linux is in the Current category. The `README.riscv64` states that the port was tested on real hardware and under QEMU. In practice "supported" means the port builds and passes the regression suite. It does not mean every instruction or extension is covered (Section 6).
 
----
+**Evidence of tier**
+
+- Official binaries: none. Upstream ships source tarballs only.
+- In-tree CI: none (Section 7).
+- Out-of-tree CI: the sourceware Buildbot builds and tests riscv64 on real hardware. Whether Buildbot results gate releases: Data not available. Nothing in the repository or the Buildbot configuration states either way.
+- Named riscv64 maintainer: the tree has no MAINTAINERS file. Active committers are listed in Sections 1 and 2.
+
+| Aspect | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| Listed as Current platform | Yes (AMD64) | Yes (ARM, which includes arm64) | Yes (RISCV64/Linux) |
+| In-tree CI config | None found in tree (no CI files at all) | None found in tree | None found in tree |
+| Nightly config in `nightly/conf/` | Data not available: architectures of the 13 configs were not enumerated | `gcc114-arm64` present | None (grep for "riscv" returns no matches) |
+| Buildbot builders | Data not available: not enumerated | Data not available: not enumerated | 2 active (Ubuntu), 2 inactive (Fedora) |
+| Official binaries | Source only | Source only | Source only |
+| Vector extension | Fixed-width SIMD; AVX-512 requested in bug 383010 [NEEDS VERIFICATION] | SVE not supported (per bug 468979, 2023) | RVV not supported |
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-Valgrind's architecture code is organized by subsystem, with per-architecture files (e.g., `*-riscv64*.c/h/S`). There is no `arch/riscv/` directory. The riscv64 port consists of the following files.
+Valgrind has no `arch/riscv/` directory. Architecture code lives in per-architecture files across `VEX/` and `coregrind/`. A clone of the sourceware repository at commit `0ff27aab0831786c7f419e73a2b5217cbbcc792d` has 63 tracked riscv64-specific files. About 55 further shared files contain `VGA_riscv64` or `VGP_riscv64_linux` branches, including `m_machine.c`, `m_translate.c`, `m_main.c`, `m_signals.c`, `m_scheduler/scheduler.c`, `m_stacktrace.c`, `m_redir.c`, `m_trampoline.S`, `m_debuginfo/*`, `m_initimg/initimg-linux.c`, `m_cache.c`, `m_coredump/coredump-elf.c`, `memcheck/mc_machine.c` and `drd/drd_*`.
 
-**VEX IR/JIT backend (host-side code generation):**
-- `VEX/priv/host_riscv64_defs.h` -- host register and instruction definitions
-- `VEX/priv/host_riscv64_defs.c` -- implementation of host instruction defs
-- `VEX/priv/host_riscv64_isel.c` -- instruction selector (IR to riscv64 machine code)
+| Component | Files | Size / quality |
+|---|---|---|
+| Guest decoder (RISC-V to VEX IR) | `VEX/priv/guest_riscv64_toIR.c`, `guest_riscv64_helpers.c`, `guest_riscv64_defs.h`, `VEX/pub/libvex_guest_riscv64.h` | 3559 lines in `toIR.c`, 481 in helpers. Covers RV64I, M, A, F, D, C and Zicsr. Scalar only. Complete for RV64GC apart from the gaps in Section 6. |
+| Host back end (VEX IR to RISC-V) | `VEX/priv/host_riscv64_defs.c`, `host_riscv64_defs.h`, `host_riscv64_isel.c` | 2751 lines in `defs.c`, 2108 in `isel.c`. Scalar integer and FP. Complete for what the decoder emits (see below). |
+| Dispatcher | `coregrind/m_dispatch/dispatch-riscv64-linux.S` | 298 lines, assembly. Complete; no TODOs found. |
+| Syscall stub and clone | `coregrind/m_syswrap/syscall-riscv64-linux.S` | 198 lines, assembly. Complete; handles return-twice clone semantics. |
+| Syscall wrappers | `coregrind/m_syswrap/syswrap-riscv64-linux.c` | Partial. The table runs contiguously to syscall 469 and io_uring (425-427) is wired. `riscv_hwprobe` (258), `rseq` (293), `clone3` (435), `kexec_load` and `fadvise64` map to `sys_ni_syscall` (ENOSYS). |
+| Signal frames | `coregrind/m_sigframe/sigframe-riscv64-linux.c` | 422 lines. Complete; all 32 GPRs, PC, 32 FPRs and fcsr saved and restored. Not audited register by register. |
+| gdbserver | `coregrind/m_gdbserver/valgrind-low-riscv64.c` plus 8 XML files (`riscv64-cpu*.xml`, `riscv64-fpu*.xml`, `riscv64-linux*.xml`) | 287 lines. Complete. |
+| Kernel interface headers | `include/vki/vki-riscv64-linux.h`, `vki-posixtypes-riscv64-linux.h`, `vki-scnums-riscv64-linux.h` | Present. |
+| Machine / hwcaps | `coregrind/m_machine.c` | Partial. riscv64 is registered as `VexArchRISCV64`. No extension detection for riscv64 was found. |
+| Tests | `none/tests/riscv64/` (25 files; 8 `.c` sources: allexec, atomic, compressed, csr, float32, float64, integer, muldiv, plus testinst), `memcheck/tests/riscv64-linux/` (context_float, context_integer, scalar) | Present but thin. |
+| Docs | `README.riscv64`, `docs/internals/qemu-riscv64-linux-HOWTO.txt` | Present. |
 
-**VEX guest-state modeling (binary translation front-end):**
-- `VEX/priv/guest_riscv64_defs.h` -- guest register file layout
-- `VEX/priv/guest_riscv64_helpers.c` -- helpers for guest state (FP flags, etc.)
-- `VEX/priv/guest_riscv64_toIR.c` -- disassembler/lifter: decodes RV64GC to VEX IR
+**Host back end detail.** An earlier code reading listed `Iop_SubF32`, `Iop_MSubF32/F64`, `Iop_CmpNEZ16`, `FSUB_S`, `FLE_S/D` and `LR_D/SC_D` as missing. A later reading of upstream concluded these are never emitted. Single-precision subtract is generated as `AddF32` with `NegF32`, comparisons use `FEQ` and `FLT`, and 64-bit atomics use the VEX fallback. The later reading is treated as authoritative, so these are design choices and not gaps.
 
-**VEX public API:**
-- `VEX/pub/libvex_guest_riscv64.h` -- public VEX guest state struct for riscv64
+**LR/SC.** `guest_riscv64_toIR.c` contains a TODO to rework the non-fallback mode. LR/SC use the generic VEX fallback, which has the ABA problem.
 
-**Coregrind dispatch and syscall:**
-- `coregrind/m_dispatch/dispatch-riscv64-linux.S` -- assembly dispatch loop
-- `coregrind/m_syswrap/syscall-riscv64-linux.S` -- assembly syscall stub
-- `coregrind/m_syswrap/syswrap-riscv64-linux.c` -- C-level syscall wrappers
+**Live back-end bug.** `unchainXDirect_RISCV64` in `host_riscv64_defs.c` (line 2725 in the tree read) writes `p[19] = 0x89`. Its own comment says the bytes should be `82 92`, the encoding of `c.jalr t0`. The result is a corrupted instruction whenever a chained translation is unchained, for example on translation discard. This was confirmed in a tree containing commits through 2025-12-03. It was not re-checked against the 2026-09-21 HEAD. [NEEDS VERIFICATION - single source: code reading]
 
-**Signal handling:**
-- `coregrind/m_sigframe/sigframe-riscv64-linux.c`
+**Comparison with amd64 and arm64**
 
-**GDB stub:**
-- `coregrind/m_gdbserver/riscv64-cpu.xml`
-- `coregrind/m_gdbserver/riscv64-cpu-valgrind-s1.xml`
-- `coregrind/m_gdbserver/riscv64-cpu-valgrind-s2.xml`
-
-**Kernel interface headers:**
-- `include/vki/vki-riscv64-linux.h`
-- `include/vki/vki-posixtypes-riscv64-linux.h`
-- `include/vki/vki-scnums-riscv64-linux.h`
-
-**Tests:**
-- `none/tests/riscv64/` -- instruction-level tests (integer, muldiv, atomic, float32, float64, compressed, csr)
-- `memcheck/tests/riscv64-linux/` -- Memcheck syscall and register context tests
-
-**Documentation:**
-- `README.riscv64` -- supported ISA (RV64IMAFDCZICSR) and known gaps
-
-**Subsystem completeness assessment** (from direct code review of the fork):
-
-*Signal frame handling (`sigframe-riscv64-linux.c`):* Full. All 32 GPRs, PC, 32 FPRs, and fcsr are saved and restored. No stubs or TODOs.
-
-*GDB server (`valgrind-low-riscv64.c`):* Full. All 32 GPRs, PC, 32 FPRs, and CSR register fields are fully mapped. TLS via `tp`-based DTv is implemented.
-
-*Thread clone/stack-switch:* Full. `do_syscall_clone_riscv64_linux` is a complete assembly implementation handling return-twice clone semantics.
-
-*Instruction decoder (`guest_riscv64_toIR.c`):* Partial. See Section 6.
-
-*VEX IR instruction selector (`host_riscv64_isel.c`):* Partial. `Iop_SubF32`, `Iop_MSubF32`, `Iop_MSubF64`, and `Iop_CmpNEZ16` are absent from the handler. These are functional gaps, not code-quality issues.
-
-*Host instruction defs (`host_riscv64_defs.c/.h`):* Partial. `FSUB_S` (single-precision float subtract) is absent from `RISCV64FpBinaryOp`. `FLE_S` and `FLE_D` (float less-than-or-equal compare) are absent -- only FEQ and FLT are declared. `LR_D` and `SC_D` (64-bit load-reserved/store-conditional) are not declared -- only 32-bit `lr.w`/`sc.w` variants exist; 64-bit atomics go through `CAS_D`. There is a confirmed live correctness bug in `unchainXDirect_RISCV64`: it writes `p[19] = 0x89` instead of `0x92`, corrupting the unchained `c.jalr` instruction.
-
-*Syscall wrappers (`syswrap-riscv64-linux.c`):* Partial. `__NR_kexec_load`, `__NR_clone3`, and `__NR_rseq` use `sys_ni_syscall` placeholders. The lookup function `ML_(get_linux_syscall_entry)` only searches the contiguous initial section, meaning io_uring (525+) and newer syscalls may be silently unreachable.
-
----
+| Component | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| Guest decoder / host back end | Data not available: not researched | Data not available: not researched | Present, scalar RV64GC |
+| Fixed-width SIMD | Data not available: not researched | Data not available: not researched | Not applicable (no SIMD in RV64GC) |
+| Scalable vector (SVE / RVV) | Not applicable | Not supported (bug 468979, 2023) | Not supported; out-of-tree prototypes only |
+| Dispatcher, syscall stub, sigframe, gdbserver | Data not available: not researched | Data not available: not researched | Present and complete |
+| Hand-tuned code | Data not available | Data not available | None; the README lists instruction-selection and FP-exception optimization as TODOs |
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-Valgrind uses GNU Autotools (autoconf/automake), not CMake.
+Valgrind uses GNU Autotools only. There is no CMake, no Dockerfile and no CI YAML in the tree. There are no `-DUSE_X=OFF` style options. The `configure` flags below are the equivalent.
 
-**Native build (on riscv64 hardware or rootfs):**
-```sh
+**Native build from git** (tarballs skip `autogen.sh`):
+
+```
+git clone https://sourceware.org/git/valgrind.git
+cd valgrind
+./autogen.sh
 ./configure --prefix=/usr
 make -j$(nproc)
 make install
 ```
 
-**Cross-compilation from x86_64:**
-```sh
-export CC=riscv64-linux-gnu-gcc
-export AR=riscv64-linux-gnu-ar
-export LD=riscv64-linux-gnu-ld
-./configure --host=riscv64-linux-gnu --prefix=/usr
+`autogen.sh` runs `aclocal -I m4`, `autoheader`, `automake -a` and `autoconf`.
+
+**Cross-compilation.** Not documented anywhere in the tree. The following is the standard Autoconf approach and is untested here:
+
+```
+./autogen.sh
+./configure --host=riscv64-linux-gnu --prefix=/usr CC=riscv64-linux-gnu-gcc
 make -j$(nproc)
-make install DESTDIR=$(pwd)/Inst
+make install DESTDIR=$PWD/Inst
 ```
 
-The `configure.ac` `host_cpu` case matches on `riscv64` and sets `ARCH_MAX="riscv64"`. The combined `ARCH_MAX-VGCONF_OS` case matches `riscv64-linux` to configure the platform with:
+**Platform definition.** `configure.ac` accepts host_cpu `riscv64` and the combined platform `riscv64-linux`. It sets `VGCONF_PLATFORM_PRI_CAPS=RISCV64_LINUX` with no secondary architecture. The load addresses are `0x58000000` (normal) and `0x38000000` (inner). `Makefile.all.am` applies `@FLAG_M64@` (`-m64`) to riscv64. `--prefix` is baked into the binary, so the install must stay at that prefix (`README` and `README_PACKAGERS`).
 
-```
-VGCONF_ARCH_PRI="riscv64"
-VGCONF_ARCH_SEC=""
-VGCONF_PLATFORM_PRI_CAPS="RISCV64_LINUX"
-valt_load_address_pri_norml="0x58000000"
-valt_load_address_pri_inner="0x38000000"
-```
+**Toolchain requirements** (from `configure.ac`, `README_DEVELOPERS` and `README.riscv64`):
 
-There is no secondary/biarch architecture for riscv64.
-
-**Toolchain requirements:**
-
-| Requirement | Version | Notes |
+| Requirement | Version | Why |
 |---|---|---|
-| GCC | >= 3.0 (stated); >= 7 (practical for riscv64-linux-gnu target) | configure.ac enforces >= 3.0 globally; no riscv64-specific floor |
-| Clang | >= 2.9 (stated); >= 9 (practical for riscv64) | Same global check, no riscv64-specific gate |
-| autoconf | >= 2.68 (>= 2.70 for preferred build path) | |
-| automake | >= 1.10 | |
-| Python | >= 3.9 | Required for regression tests |
+| GCC | >= 3.0 | `configure.ac` global check. No riscv64-specific floor or `-march`/`-mabi` gate. |
+| Clang | >= 2.9 | Same global check. `README.riscv64` notes clang lacks `__builtin_longjmp` for riscv64, which Valgrind needs. |
+| autoconf | >= 2.69 | `AC_PREREQ(2.69)`; developer builds from git only |
+| automake | No minimum set | `AM_INIT_AUTOMAKE` has no version argument; `AM_PROG_AS` is required |
+| Python | >= 3.9 | Regression tests (`README_DEVELOPERS`) |
+| GNU sed, gdb, C++ compiler | Not versioned | Regression tests (`README_DEVELOPERS`) |
+| Perl | Located by `configure` | Test harness |
 
-**Hardening flags:** Stack-protector and several hardening flags are incompatible with Valgrind. Debian's packaging sets `hardening=-stackprotector,-stackprotectorstrong`. Gentoo's ebuild filters `-fomit-frame-pointer`, `-fstack-protector*`, `-fsanitize*`, and `-fharden-control-flow-redundancy` before running configure.
+**Configure flags**
 
-**QEMU:** The `README.riscv64` states only "The port has been tested to work on real hardware and under QEMU." No specific QEMU version floor or invocation flags are documented. Valgrind cannot run under QEMU user-mode itself -- Valgrind must execute on actual riscv64 hardware or a full-system QEMU guest.
+| Flag | Effect |
+|---|---|
+| `--enable-only64bit` | 64-bit only build. riscv64 has no secondary arch anyway. |
+| `--enable-lto=yes` | Link-time optimization. `README_PACKAGERS` says smaller and up to 10% faster. |
+| `--enable-inner` | Self-hosting build |
+| `--enable-ubsan` | Undefined-behaviour sanitizer |
+| `--enable-tls` | Platform supports TLS |
+| `--with-tmpdir=PATH` | Temp file directory, default `/tmp` |
+| `--with-gdbscripts-dir` | Where GDB scripts are installed |
+| `--with-mpicc` | MPI wrapper compiler |
 
-**Dockerfile:** No Dockerfile exists in any accessible Valgrind source tree.
+No `--disable-*` switches for individual tools are defined.
 
----
+**Hardening flags.** Stack-protector and several hardening flags are incompatible with Valgrind. Debian packaging sets `hardening=-stackprotector,-stackprotectorstrong`. Gentoo's ebuild filters `-fomit-frame-pointer`, `-fstack-protector*`, `-fsanitize*` and `-fharden-control-flow-redundancy`. [NEEDS VERIFICATION - single source]
+
+**QEMU.** `README.riscv64` says only "tested to work on real hardware and under QEMU", with no version. The [HOWTO](https://sourceware.org/git/valgrind.git) (last updated 2023-03-25) describes full-system emulation only. User-mode `qemu-riscv64` is not mentioned.
+
+- Required: `qemu-system-riscv64`, OpenSBI firmware at `/usr/share/qemu/opensbi-riscv64-generic-fw_dynamic.bin`, an openSUSE Tumbleweed RISC-V JeOS efi raw image converted with `qemu-img convert -f raw -O qcow2` and resized to 20G, and the `u-boot-qemu-riscv64smode` rpm for `u-boot.bin`.
+- Boot: `qemu-system-riscv64 -nographic -machine virt -smp 4 -m 8G -kernel u-boot/boot/u-boot.bin` with a virtio-blk drive and a user-mode netdev forwarding tcp::5555 to guest port 22.
+- Guest setup: `ssh -p 5555 root@localhost` (preset password "linux"), then `zypper install autoconf automake make gcc gcc-c++ git-core`.
+
+**Known build and test failures**
+
+- Test compilation failed with some binutils/GCC combinations because of relocation problems in the compressed and integer tests (bug 468575, comment #76).
+- Fork PR #23 reports a link error about relocation with GNU ld 2.42 on test files [NEEDS VERIFICATION - single source].
+- With SV39 virtual memory, user space is limited to 256GB, which broke the original `sh-mem-random` target address.
+
+I did not run a build or QEMU.
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
-The port targets **RV64GC** (I + M + A + F + D + C). Instruction coverage per `README.riscv64`:
+**Instruction coverage** (from `README.riscv64`; the fork README reports the same counts except where noted):
 
 | Extension | Supported | Total | Gap |
 |---|---|---|---|
 | RV64I | 52 | 52 | None |
-| RV64M | 12 | 13 | MULHSU missing |
-| RV64A | 22 | 22 | LR/SC use VEX fallback method with ABA problem |
-| RV64F | 30 | 30 | NaN-boxing check missing (partially addressed by bug 503098 in 3.26.0) |
+| RV64M | 12 | 13 | MULHSU not recognized |
+| RV64A | 22 | 22 | LR/SC use the VEX fallback with the ABA problem |
+| RV64F | 30 | 30 | See NaN-boxing note below |
 | RV64D | 32 | 32 | None |
-| RV64Zicsr | 3 | 6 | CSRRWI, CSRRSI, CSRRCI missing; only fflags/frm/fcsr CSRs accepted |
-| RV64Zifencei | 0 | 1 | FENCE.I entirely absent |
-| RV64C | 37 | 37 | None |
-| RVV (Vector) | 0 | large | No support; fundamental VEX IR limitation (see below) |
-| Zba/Zbb | 0 | various | No support |
-| XTHead vendor | 0 | various | No support |
-| Zfh (half-precision FP) | 0 | various | PR #12 closed unmerged in 2023; no follow-on |
-| RV32 on RV64 | 0 | n/a | Not implemented |
+| RV64C | 37 | 37 | None. The fork README lists 36/37 and fork PR #24 adds compressed hints [NEEDS VERIFICATION]. |
+| Zicsr | 3 | 6 | CSRRWI, CSRRSI, CSRRCI not recognized; only fflags, frm and fcsr accepted |
+| Zifencei | 0 | 1 | FENCE.I not recognized |
+| V (RVV 0.7.1 and 1.0) | 0 | large | Not upstream |
+| Zfh | 0 | various | Not upstream; patches under review (bug 504648) |
+| Zba, Zbb, Zbs, Zicond, other B/K | 0 | various | No decoder matches found |
+| XTHead | 0 | various | Not upstream (exists in the rjiejie fork) |
+| RV32 on RV64 | 0 | n/a | Not implemented (fork issue #20) |
 
-**RVV is not a near-term gap -- it is a fundamental architectural limitation.** VEX has no variable-length vector IR. All existing vector types are fixed-width (Ity_V128, Ity_V256). The VEX register allocator cannot handle vectors spanning multiple registers. Memcheck relies on fixed-width IR types. Adding RVV support requires a redesign of VEX IR, not incremental instruction coverage work. Open issue [#17](https://github.com/petrpavlu/valgrind-riscv64/issues/17) on the fork explicitly documents this; no solution has been proposed.
+**NaN-boxing / floating point.** `README.riscv64` still states that FP operands are not checked for correct NaN-boxing. The decoder contradicts this: `getFReg32()` checks NaN-boxing and substitutes the canonical NaN, matching the fix for bug 503098 (commit 9dd24c9b, 2025-05-09). On 2025-05-14 Paul Floyd asked for the README note to be removed. The README is stale on this point. Other floating-point TODOs from the README are optimizing FP exception handling without helper calls and optimizing instruction selection.
 
-**Comparison with arm64 and amd64:** Data not available -- no published riscv64 vs. arm64 or riscv64 vs. amd64 instruction coverage or functional parity comparisons exist in any accessible source.
+**Functional gaps (hard failures).** Any guest instruction outside the supported set produces `disInstr(riscv64): unhandled instruction`.
 
-**Performance overhead:** The upstream documentation states Memcheck runs 10-50x slower than native and the no-op Nulgrind adds approximately 4x overhead. These figures apply to all platforms. No riscv64-specific overhead measurements exist in any public source -- not in release notes, mailing lists, the upstream bug tracker, the RISE Project blog, or the fork repository.
+- FENCE.I is used by JIT-generating runtimes such as OpenJDK. Fork PR #21 adds it.
+- MULHSU and CSR immediate forms. Fork PR #22 adds them.
+- Binaries containing Zba/Zbb or XTHead instructions crash Valgrind. Fork issue #19 reports this on TH1520 (XTHead) and VisionFive 2 (Zba/Zbb). The claim that current GCC/Clang emit Zba/Zbb by default on capable hardware is not verified [NEEDS VERIFICATION - single source].
+- `riscv_hwprobe` (syscall 258) returns ENOSYS. glibc then falls back to baseline RV64GC code paths, so extension-specific IFUNC variants are not used. Bug 503253 notes this blocks any extension support.
+- RVV is absent. There are scoped design efforts (Section 13) but nothing upstream. The design problem is that translation reuse is keyed on PC only, while RVV semantics depend on VTYPE/VL state (bug 473978), and that VEX has fixed-width vector types (Ity_V128, Ity_V256). Bug 474280 proposes `Ijk_ExitBB` for `vsetvl`/`vsetvli`.
 
-One data point from fork issue [#20](https://github.com/petrpavlu/valgrind-riscv64/issues/20): a user measured `valgrind --tool=none` at approximately 17x slowdown on a VisionFive 2, vs. qemu-riscv64-static at approximately 8x. The benchmark used is described at [hoult.org/primes.txt](http://hoult.org/primes.txt). [NEEDS VERIFICATION - single source: GitHub issue comment]
+**Comparison with arm64 and amd64.** Data not available: no published riscv64 vs arm64 or riscv64 vs amd64 coverage or parity comparison was found.
 
-**Performance TODOs from `README.riscv64` (unfixed as of last fork update):**
-- Optimize `<instr>i` instruction selection variants (small-immediate forms)
-- Optimize floating-point exception handling to avoid helper calls
-- Review codegen register usage
-- Implement proper non-fallback LR/SC (correctness)
-- Address thread-state race conditions in exit sequence (correctness)
+**Performance.**
 
----
+- No RISC-V-specific Valgrind benchmark was found in the upstream README, Bugzilla, RISE wiki pages, RISE blog, or arXiv 2507.22451 ("Dissecting RISC-V Performance", which does not mention Valgrind).
+- Generic overhead figures differ between sources. The upstream manual is cited as Memcheck 10-50x slower and Nulgrind about 4x. A search snippet gave about 4x generally and up to about 100x for Memcheck, not traced to a primary source. Both are platform-independent.
+- One user measurement in the fork's issue tracker reports `valgrind --tool=none` at about 17x slowdown on a VisionFive 2, against about 8x for qemu-riscv64-static, using the benchmark at [hoult.org/primes.txt](http://hoult.org/primes.txt). [NEEDS VERIFICATION - single source]
+
+**Security hardening gaps.** Data not available: no riscv64-specific hardening data was found beyond the flag incompatibilities in Section 5.
 
 ## 7. CI/CD Infrastructure
 
-**No automated CI pipeline for riscv64 exists anywhere in the Valgrind project.**
+**In-tree CI: none.**
 
-Specific evidence:
+- The sourceware repository has no `.github/`, `.gitlab-ci.yml`, `.travis.yml`, `Jenkinsfile` or `.circleci/`. A search for `*.yml`, `*.yaml` and `Jenkinsfile` outside `.git` found nothing.
+- `nightly/conf/` has 13 `.conf` and 13 `.sendmail` files: cellbuzz-cross, cellbuzz-native, fedora390, freebsd, gcc114-arm64, illumos, lfedora1, nemesis, sless390, solaris11.3, solaris12, wildebeest, wildebeest32. A case-insensitive grep for "riscv" in `nightly/` returns nothing.
+- `tests/` has no riscv-named file. `configure.ac` has `riscv64)` cases, which is build-system support, not CI.
+- The only Buildbot mention in the tree is `README_DEVELOPERS` (line 247), which links to the `valgrind-try` builders without naming a riscv builder.
 
-- No `.gitlab-ci.yml`, `.travis.yml`, `Jenkinsfile`, or `.circleci/config.yml` exists in the upstream repository. All probe attempts returned HTTP 404.
-- No `.github/` directory exists in the upstream repository or in the `petrpavlu/valgrind-riscv64` fork.
-- The upstream `nightly/conf/` directory contains 13 `.conf` files covering: cellbuzz-cross, cellbuzz-native, fedora390, freebsd, gcc114-arm64, illumos, lfedora1, nemesis, sless390, solaris11.3, solaris12, wildebeest, wildebeest32. Not one of these files contains any reference to `riscv`, `riscv64`, or `RISC-V`.
+**Buildbot (out of tree).** Scheduler and builder definitions are in `master.cfg` of [builder.git](https://sourceware.org/git/builder.git) and were checked against the live [Buildbot REST API](https://builder.sourceware.org/buildbot/#/builders?tags=valgrind). There are four riscv builders:
 
-The `configure.ac` contains `riscv64)` case stanzas that allow the build system to configure for riscv64. This is build system support, not CI.
+| Builder | ID | State | Latest builds |
+|---|---|---|---|
+| `valgrind-ubuntu-riscv` | 340 | Active, master 2, 5 workers | #1146-#1148 all succeeded; #1148 on revision `0ff27aab0831786c7f419e73a2b5217cbbcc792d` (matches repo HEAD), latest completed 2026-09-24 |
+| `valgrind-try-ubuntu-riscv` | 341 | Active, master 2, same 5 workers | #211-#213 succeeded |
+| `valgrind-fedora-riscv` | 342 | Inactive: no master or workers, commented out in `master.cfg`; was bound to `bpi_f3_workers` | Last build #170, 2025-07-01 (about 15 months idle) |
+| `valgrind-try-fedora-riscv` | 343 | Inactive, commented out | Last build #19, about 2025-05-29 |
 
-**Buildbot for Valgrind:** The sourceware.org Buildbot at [builder.sourceware.org](https://builder.sourceware.org/buildbot/#/builders?tags=valgrind) has two RISC-V builders.
+- **Triggers:** `valgrind-ubuntu-riscv` is in the `valgrind` scheduler, which fires on master-branch updates. `valgrind-try-ubuntu-riscv` is in the `valgrind-try` scheduler, which fires on `users/<name>/try-*` branches. Both use `valgrind_make_check_factory` on `starfive_workers`.
+- **Workers:** the `starfive-riscv` worker reports Ubuntu 24.04.5, Linux 7.0.0-31 riscv64, glibc 2.39 and g++ 14.2.0. Its admin is Mark Wielaard. Other worker names are `starfive-1` through `starfive-4` [NEEDS VERIFICATION - single source]. An earlier record shows kernel 6.17.0-29 on Ubuntu 24.04.4, so the kernel and OS point release have changed.
+- **Hardware:** real StarFive boards, not QEMU. Web search results say these are StarFive-donated VisionFive 2 (JH7110, RV64GC) boards. That was not confirmed for the Valgrind workers.
+- **Cadence:** roughly daily (builds #1146-#1148). A build time of about 2.1 hours and the step list (`autogen.sh`, `configure`, `make`, `make check`, `make regtest`, `make ltpchecks`, upload to the Bunsen test-tracking system, `make distclean`) are carried from earlier records and were not re-verified. [NEEDS VERIFICATION]
+- **Release gating:** Data not available. Nothing found shows that Buildbot results gate merges or releases.
+- **RISE runners:** none. No connection between Valgrind and `riscv-runner` or any RISE CI was found.
 
-*Builder: `valgrind-ubuntu-riscv` (builderid: 340):*
-- Status: Active, connected to master 2
-- Workers: 5 physical StarFive RISC-V boards (`starfive-riscv`, `starfive-1` through `starfive-4`), all running Ubuntu 24.04.4 LTS, kernel Linux 6.17.0-29-generic riscv64, glibc 2.39, g++ 14.2.0
-- Admin: Mark Wielaard (mark@klomp.org)
-- Build frequency: Daily; each build takes approximately 2.1 hours
-- Recent builds: 1092-1096, all successful
-- Build steps: git checkout, `./autogen.sh`, `./configure`, `make`, `make check`, `make regtest`, `make ltpchecks`, package results to `bunsen.cpio.gz`, upload to Bunsen test-tracking system, `make distclean`
-- Hardware: real StarFive boards, not QEMU emulation
-
-*Builder: `valgrind-fedora-riscv` (builderid: 342):*
-- Status: Offline -- no active master assigned, no workers currently configured
-- Recent builds: 166-170 (from June 2025), all successful, run times 63-179 minutes
-
-**Conclusion:** riscv64 is tested daily on real hardware via the Buildbot Ubuntu builder. It is not integrated into any in-tree CI configuration and is not a gate on releases. The Fedora riscv64 builder is currently offline.
-
----
+| Aspect | amd64 | arm64 | riscv64 |
+|---|---|---|---|
+| In-tree CI | None | None | None |
+| `nightly/conf` entry | Data not available | `gcc114-arm64` | None |
+| Buildbot builders | Data not available: not enumerated | Data not available: not enumerated | `valgrind-ubuntu-riscv` and try variant active; Fedora pair inactive |
+| Hardware | Data not available | Data not available | Real StarFive boards |
+| Try-build for contributors | Data not available | Data not available | Yes: `valgrind-try-ubuntu-riscv` |
 
 ## 8. Distribution and Release Status
 
-| Distribution | Version | riscv64 Binary | Notes |
+**Upstream** ships source tarballs only, with no riscv64 binary. The riscv64 binary a user consumes comes from distributions.
+
+| Channel | Version | riscv64 binary | Notes |
 |---|---|---|---|
-| Upstream | 3.27.1 (2026-05-20) | Yes (source) | Official supported platform |
-| Debian sid | 1:3.25.1-3 | Yes -- `valgrind_3.25.1-3_riscv64.deb` confirmed live (15.1 MiB) | Built successfully on rv-osuosl-01 approximately 250 days ago |
-| Ubuntu 24.04 (Noble) | 1:3.22.0-0ubuntu3 | No | Version predates riscv64 support; `valgrind-if-available` is a dependency stub only |
-| Gentoo | 3.26.0-3.27.1 | Yes (source) | Marked `~riscv` (testing/experimental keyword) |
-| PyPI `valgrind` | 0.0.0 | No | Wrong package; a Python callgrind stub, not the Valgrind tool |
-| Arch Linux RISC-V | Indeterminate | Indeterminate | Dynamic content not accessible; not found in blacklist |
+| Upstream | 3.27.1 (2026-05-20) | No (source only) | Supported platform |
+| Debian sid | 1:3.27.1-0.2 per the [riscv64 package page](https://packages.debian.org/sid/riscv64/valgrind); 1:3.25.1-3 per an earlier check | Yes | Package page lists download size 14,928.7 kB. The earlier check found `valgrind_3.25.1-3_riscv64.deb` (15.1 MiB) built on rv-osuosl-01. Versions differ between checks; not reconciled. |
+| Ubuntu 26.04 (resolute) | 1:3.26.0-0ubuntu1 per [Launchpad](https://launchpad.net/ubuntu/resolute/riscv64/valgrind), status Published, released 2026-02-23 | Yes [NEEDS VERIFICATION - single source; packages.ubuntu.com returned 503] | |
+| Ubuntu 24.04 (noble) | 1:3.22.0-0ubuntu3 | No | Predates riscv64 support. `valgrind-if-available` is a dependency stub only. One search summary claims Ubuntu has riscv64 builds for Jammy and Noble, which conflicts; not resolved. |
+| Gentoo | 3.26.0 to 3.27.1 | Yes (source) | Marked `~riscv` (testing keyword) |
+| Arch Linux RISC-V | valgrind-3.23.0-8 in the [extra repo listing](https://archriscv.felixc.at/repo/extra/) | Yes | 3.23.0 predates upstream riscv64 support, so the package may carry out-of-tree patches or the listing may be stale. Not checked. |
+| PyPI `valgrind` | 0.0.0 | No | Unrelated package ("Control callgrind instrumentation from Python"), with only a macOS x86_64 cp38 wheel and an sdist |
+| RISE wheel builder | Not listed | No | The RISE GitLab index redirects to PyPI. The [wheel_builder page](https://riseproject.gitlab.io/python/wheel_builder/) lists 70 packages and Valgrind is not among them. |
+| Fedora riscv64 | Data not available: not searched | | |
+| npm, Maven, OCI | Not applicable / Data not available | | |
 
-Ubuntu 24.04 ships Valgrind 3.22.0, which predates riscv64 support entirely. Users on Ubuntu 24.04 riscv64 must build from source. Debian sid provides a binary package. No upgrade path exists for Ubuntu stable users short of a future release update or manual source build.
-
-RISE Project involvement: The RISE Debug and Profiling Working Group listed Valgrind as a tracking item in its December 2024 roadmap ("Cleanup, fencei, NaN-box checking, B/V extension support"), but Valgrind does not have an assigned RISE RP (funded project) number. The upstream port was contributed by Petr Pavlu (SUSE) through community effort, independent of RISE funding.
-
----
+**What a user must do.** On Debian sid or Ubuntu 26.04, install the distribution package. On Ubuntu 24.04, Fedora or any other system, build from a source tarball or git as in Section 5.
 
 ## 9. Dependencies
 
-| Dependency | Role | riscv64 Status | Blocking Issues |
-|---|---|---|---|
-| GCC >= 7 or Clang >= 9 | C/C++ compiler targeting riscv64-linux | Available | None |
-| GNU Make | Build system | Available | None |
-| autoconf >= 2.68 / automake >= 1.10 | Build configuration (developer builds only) | Available | None |
-| Perl | Build-time test harness scripts | Available | None |
-| glibc >= 2.2 | Required Linux C library; per-version suppression files shipped | Available; riscv64 suppression files included | Bug 503098 (NaN-boxing) fixed in 3.26.0; residual NaN-boxing TODO remains in README.riscv64 |
-| Linux kernel >= 2.6 | Required OS; Valgrind wraps kernel syscalls | Available | Ongoing: not all riscv64-specific syscalls are wrapped; clone3/rseq/kexec_load are stubs |
-| GDB | Optional -- `--vgdb` mode; built-in gdbserver | GDB 15+ has full riscv64 remote protocol support | No hard blockers as of GDB 15+ |
-| VEX (libVEX) | Core IR translation engine; bundled in-tree | Partial -- MULHSU, CSRRWI/SI/CI, FENCE.I not lifted; LR/SC ABA flaw | These are in-tree TODOs, not external dependency issues |
-| MPI (optional) | mpicc wrapper for MPI-aware tools | Available | None; optional feature |
-| pthread / librt | Required runtime libraries | Available (part of glibc riscv64) | None |
+The project-graph server failed to connect, so no Ubuntu 26.04 riscv64 graph query ran. Graph status is "Data not available" for every row, which is a tool failure and not an empty result. The build, test and release columns come from the research table and direct observation. Rows without a dependency-specific riscv64 query say so.
 
-GDB and glibc are tracked as first-class entries in this RISC-V ecosystem project.
+| Name | Role | riscv64 build | riscv64 test | riscv64 release | Community |
+|---|---|---|---|---|---|
+| GCC | build-dependency, critical | Available. `configure` requires >= 3.0 with no riscv64 floor. | Buildbot builds with g++ 14.2.0 | Available | Port tested with GCC 14.2.0 |
+| LLVM | build-dependency, optional (clang >= 2.9) | Limited: `README.riscv64` notes clang lacks `__builtin_longjmp` for riscv64, which Valgrind needs | Data not available | Data not available: no clang-based riscv64 build record found | None found |
+| GNU binutils | build-dependency, critical | Available. Port test run used 2.43.1. | Some binutils/GCC combinations broke test compilation (relocation errors); fork PR #23 reports a GNU ld 2.42 link error | Data not available: no dependency-specific riscv64 query was run | None found |
+| GNU make | build-dependency, critical | Available | Available | Available | None found |
+| autoconf | build-dependency, optional (>= 2.69, git builds only) | Available | Available | Available | None found |
+| automake | build-dependency, optional (git builds only) | Available | Available | Available | None found |
+| Perl | test-dependency, critical | Available | Available | Available | None found |
+| Python | test-dependency, optional (>= 3.9 for regression tests) | Available | Available | Available | None found |
+| glibc | runtime-dependency, critical | Available. Per-version suppression files are shipped. | Buildbot runs glibc 2.39 on riscv64 | Available | See status report in project-reports/glibc.md. Bug 503253 (hwprobe) limits IFUNC use under Valgrind. |
+| Linux kernel | runtime-dependency, critical | Available | Buildbot runs Linux 7.0.0-31 | Available | `riscv_hwprobe`, `rseq`, `clone3`, `kexec_load`, `fadvise64` are ENOSYS stubs |
+| GDB | runtime-dependency, optional (`--vgdb`, built-in gdbserver) | Available | Valgrind's gdbserver has a riscv64 target. The `hgtls` test fails. | GDB 15+ has full riscv64 remote support [NEEDS VERIFICATION - single source] | See status report in project-reports/gdb.md |
+| Open MPI | runtime-dependency, optional (`mpicc` wrapper via `--with-mpicc`) | Available | Not recorded | Available | None found |
+| pthread / librt (indirect) | Runtime libraries | Part of glibc riscv64 | Part of glibc | Part of glibc | None |
+| VEX (bundled, indirect) | Core IR engine, built in-tree | Partial: MULHSU, CSRRWI/SI/CI and FENCE.I are not lifted; LR/SC ABA flaw; `unchainXDirect` bug | In-tree tests | Ships with Valgrind | Gaps are in-tree TODOs, not external dependency issues |
 
----
+**Deep dive: glibc and kernel interaction.** glibc (2.41 and later, per bug 503253) probes CPU extensions through `riscv_hwprobe` to select IFUNC variants. Valgrind returns ENOSYS, so glibc stays on baseline RV64GC paths. This keeps glibc inside the instruction subset Valgrind decodes. The cost is that Valgrind cannot be used to analyse the extended-ISA code paths. A full implementation is blocked on extension support (Zfh bug 504648, RVV bug 468979).
 
-## 10. Ecosystem Status
-
-**Governance:** No formal foundation. Valgrind is not a RISE Project member. No named riscv64 maintainer exists upstream as of June 2026. Petr Pavlu (SUSE) authored the port but is not listed as a platform maintainer in the upstream developers list.
-
-**RISE involvement:** The December 2024 RISE Webinar PDF identifies Valgrind as a work item within the Debug and Profiling Working Group (led by Xaio Wang, Intel, and Ludovic Henry, Rivos at that time). The roadmap items listed were: cleanup, fence.i, NaN-box checking, B/V extension support. No RISE RP number was assigned. Zero RISE blog posts mention Valgrind.
-
-**Corporate maintainers active on the riscv64 port:**
-
-| Person | Company | Role |
-|---|---|---|
-| Petr Pavlu | SUSE | Port author; not listed as upstream platform maintainer |
-| XiaoWang1772 (xiao.w.wang@intel.com) | Intel | Author of open PRs #22 (MULHSU, CSR immediates) and #23 (link error fix) |
-| ita-sc | Unknown | Author of open PRs #24 (compressed hints) and #25 (NaN-boxing) |
-| mingyuan-xia | UltraRISC | Author of open PR #21 (fence.i) |
-| Mark Wielaard | Red Hat | General release management; administers the Buildbot RISC-V hardware |
-
-**Fork activity:** The [petrpavlu/valgrind-riscv64](https://github.com/petrpavlu/valgrind-riscv64) fork (68 stars, 17 forks) has 5 open pull requests and 4 open issues. None of the 5 open PRs have received review comments from the fork maintainer since their submission; the most recent reviewer ping went unanswered (PR #22, "Gentle ping," January 2, 2025). The fork's default branch was last updated July 2, 2024. The open PRs appear stalled.
-
----
+**Deep dive: toolchain output.** Valgrind can only analyse binaries whose instructions it decodes. A binary compiled with `-march` including Zba/Zbb, or with XTHead instructions, crashes Valgrind (fork issue #19). Hardware-specific toolchain defaults are therefore a dependency of Valgrind usability.
 
 ## 11. Known Bugs and Active Issues
 
-**Fixed upstream bugs (from release notes):**
+Valgrind's bug tracker is [KDE Bugzilla](https://bugs.kde.org/), product valgrind. Status labels (REPORTED, UNCONFIRMED, REOPENED) differed between list views and individual bug pages. The open/closed split below is reliable but the exact label is not.
 
-| Bug | Title | Fixed In |
-|---|---|---|
-| [468575](https://sourceware.org/bugzilla/show_bug.cgi?id=468575) | Add support for RISC-V | 3.25.0 (Apr 2025) |
-| [503098](https://sourceware.org/bugzilla/show_bug.cgi?id=503098) | Incorrect NAN-boxing for float registers in RISC-V | 3.26.0 (Oct 2025) |
-| [503677](https://sourceware.org/bugzilla/show_bug.cgi?id=503677) | duplicated-cond compiler warning in dis_RV64M | 3.26.0 (Oct 2025) |
-| [509157](https://sourceware.org/bugzilla/show_bug.cgi?id=509157) | riscv64: Shift instructions can behave wrong | Listed under 3.19.0 in NEWS but riscv64 support only landed in 3.25.0 -- placement is inconsistent with bug numbering sequence; actual fix cycle unclear |
+**Correctness bugs**
 
-Note on bug 509157: The placement of this bug number under the 3.19.0 release section is anomalous. Bug 503677 resolved in 3.26.0 carries a lower number than 509157. The research findings flag this as a likely documentation artifact; the actual fix may belong to the 3.26.x or 3.27.x cycle.
+| ID | Title | Status | Severity (assessed) | Notes |
+|---|---|---|---|---|
+| (none filed) | `unchainXDirect_RISCV64` writes `p[19] = 0x89` instead of `0x92` | Open in the code read; no Bugzilla entry found [NEEDS VERIFICATION] | High | Corrupts the `c.jalr` when a chained translation is unchained |
+| (README) | LR/SC use the VEX fallback with the ABA problem | Open (TODO in `guest_riscv64_toIR.c`) | Medium | Affects lock-free code correctness |
+| [509157](https://bugs.kde.org/show_bug.cgi?id=509157) | riscv64: Shift instructions can behave wrong | Fixed 2025-09-30 (commit 97831bbb), 3.26.0 | High (fixed) | Shift amounts were not masked to 6 bits (64-bit) or 5 bits (32-bit). Reported 2025-09-05. |
+| [503098](https://bugs.kde.org/show_bug.cgi?id=503098) | Incorrect NAN-boxing for float registers | Fixed 2025-05-09 (commit 9dd24c9b) | Medium (fixed) | Reported 2025-04-21 by Ivan Tetyushkin. Release: NEWS places it in 3.26.0; a search result says 3.25.1. Discrepancy not resolved. |
+| [503677](https://bugs.kde.org/show_bug.cgi?id=503677) | duplicated-cond compiler warning in `dis_RV64M` | Fixed 2025-05-04 (commit 09c161e6) | Low (fixed) | Duplicated `funct3 == 0b010` test; 3.26.0 |
 
-**Open issues (fork):**
+**Open RISC-V bugs and gaps**
 
-| Issue | Title | Impact |
-|---|---|---|
-| [#17](https://github.com/petrpavlu/valgrind-riscv64/issues/17) | riscv vector ISA support | Fundamental VEX IR limitation; no VLA vector type; affects all RVV code |
-| [#19](https://github.com/petrpavlu/valgrind-riscv64/issues/19) | Support for Zba, Zbb, and XTHead instructions | Hard crashes on TH1520 (XTHead) and VisionFive 2 (Zba/Zbb when enabled by compiler) |
-| [#20](https://github.com/petrpavlu/valgrind-riscv64/issues/20) | Running RV32 code on RV64 | Not implemented |
-
-**Open PRs awaiting upstream submission (fork only):**
-
-| PR | Title | Author | Blocks |
+| ID | Title | Status | Notes |
 |---|---|---|---|
-| [#21](https://github.com/petrpavlu/valgrind-riscv64/pull/21) | support fence.i | mingyuan-xia (UltraRISC) | FENCE.I decode gap; some JIT-compiled code (OpenJDK) uses it |
-| [#22](https://github.com/petrpavlu/valgrind-riscv64/pull/22) | Add support for mulhsu and CSRR*I instruction | XiaoWang1772 (Intel) | MULHSU and CSR immediate decode gaps |
-| [#23](https://github.com/petrpavlu/valgrind-riscv64/pull/23) | Fix link error about relocation | XiaoWang1772 (Intel) | Build failure with GNU ld 2.42 on test files |
-| [#24](https://github.com/petrpavlu/valgrind-riscv64/pull/24) | Support compress hint instructions | ita-sc | Compressed hint decode gap |
-| [#25](https://github.com/petrpavlu/valgrind-riscv64/pull/25) | Correct nan-boxing for single-precision calculations | ita-sc | Residual NaN-boxing correctness after bug 503098 |
+| [503253](https://bugs.kde.org/show_bug.cgi?id=503253) | `riscv_hwprobe` syscall (258) is missing | Open, confirmed; last change 2026-01-15 | Workaround commit 5efdbbd3 returns ENOSYS. Wielaard (2025-10-17): the workaround "isn't ideal and prevents use of extended instruction sets." A volunteer offered a fix on 2026-01-15. |
+| [504648](https://bugs.kde.org/show_bug.cgi?id=504648) | Add support for RISC-V Zfh | Open; last change 2026-01-19; assigned to Wielaard | 5 patches. Wielaard asked for `VEX_HWCAPS_RISCV_Zfh` checks in place of `#ifdef __riscv_zfh`, feature-detection tests and configure checks. Submitter posted updated patches in July 2025 and was waiting on review through January 2026. |
+| [468979](https://bugs.kde.org/show_bug.cgi?id=468979) | Add support for RISC-V vector instructions | Open; last change 2024-12-23 | Out-of-tree implementation in [rjiejie/valgrind-riscv64](https://github.com/rjiejie/valgrind-riscv64) (Zfh, Xthead, V0.7.1, V1.0) |
+| [473978](https://bugs.kde.org/show_bug.cgi?id=473978) | Add support for checking of cpu state in code translation | Open; last change 2024-12-23 | RVV prerequisite; 6 patches from Alibaba authors |
+| [474280](https://bugs.kde.org/show_bug.cgi?id=474280) | Add Ijk_ExitBB IR for potential critical state | Open; last change 2024-12-23 | RVV prerequisite (`vsetvl`/`vsetvli`) |
+| [514962](https://bugs.kde.org/show_bug.cgi?id=514962) | Add support for RISC-V debuginfo | Open; reported 2026-01-23; assigned to Wielaard | Patch attached |
 
-PRs #22, #23, #24, and #25 have received zero review comments from the fork maintainer. PR #21 received substantive technical review from petrpavlu in August-September 2024 but was not merged.
+Bugs 487862, 498103, 383010 and 522533 matched RISC-V searches but are not RISC-V-specific.
 
-**Confirmed correctness bug in upstream code (from code review):**
-In `host_riscv64_defs.c`, `unchainXDirect_RISCV64` writes `p[19] = 0x89` instead of the correct `0x92`, corrupting the unchained `c.jalr` instruction. This is a live correctness bug in the JIT chain/unchain path. It is not filed as a Bugzilla issue. [NEEDS VERIFICATION - single source: code review findings]
+**Fork issues and PRs** (not in upstream; [petrpavlu/valgrind-riscv64](https://github.com/petrpavlu/valgrind-riscv64)):
 
-**Test suite status (from fork, last updated July 2024):**
-737 total tests; 4 failures: `gdbserver_tests/hgtls` (stdoutB), `none/tests/double_close_range` (stderr, 3 variants).
+| Item | Title | Notes |
+|---|---|---|
+| [Issue #3](https://github.com/petrpavlu/valgrind-riscv64/issues/3) | Prepare for upstream? | Open despite the upstream merge |
+| [Issue #17](https://github.com/petrpavlu/valgrind-riscv64/issues/17) | riscv vector ISA support | Documents the VEX scalable-vector problem |
+| [Issue #19](https://github.com/petrpavlu/valgrind-riscv64/issues/19) | Support for Zba, Zbb, and XTHead instructions | Hard crashes on TH1520 and VisionFive 2 |
+| [Issue #20](https://github.com/petrpavlu/valgrind-riscv64/issues/20) | Running RV32 code on RV64 | Not implemented |
+| [PR #21](https://github.com/petrpavlu/valgrind-riscv64/pull/21) | support fence.i (mingyuan-xia, UltraRISC) | Technical review from Pavlu in Aug-Sep 2024; not merged |
+| [PR #22](https://github.com/petrpavlu/valgrind-riscv64/pull/22) | Add support for mulhsu and CSRR*I (XiaoWang1772, Intel) | Unreviewed; "Gentle ping" 2025-01-02 unanswered. Tracked by RISE issues #147 and #148. |
+| [PR #23](https://github.com/petrpavlu/valgrind-riscv64/pull/23) | Fix link error about relocation (XiaoWang1772, Intel) | Unreviewed |
+| [PR #24](https://github.com/petrpavlu/valgrind-riscv64/pull/24) | Support compress hint instructions (ita-sc) | Unreviewed |
+| [PR #25](https://github.com/petrpavlu/valgrind-riscv64/pull/25) | Correct nan-boxing for single-precision calculations (ita-sc) | Unreviewed. Its title matches upstream commit 9dd24c9b and upstream `getFReg32()` already checks NaN-boxing, so it is likely superseded [NEEDS VERIFICATION]. |
 
----
+PR author affiliations and review-status details are from fork metadata only [NEEDS VERIFICATION]. Fork repository metrics differ between fetches (59 or 68 stars, 17 forks, 4 or 7 open issues), so treat them as approximate. The fork README reports 737 tests with 4 failures (`hgtls` stdoutB and 3 `double_close_range` stderr variants), dated 2024-06-18.
 
 ## 12. Objections and Upstream Blockers
 
-**Objection 1: The port reached "supported" status, so it is complete.**
-Not accurate. "Supported" in Valgrind's terminology means it compiles and passes the regression suite. The port has documented correctness gaps in the host backend (missing FSUB_S, FLE_S/D, live unchainXDirect bug), instruction decode gaps (MULHSU, CSRRWI/SI/CI, FENCE.I, LR/SC ABA), and zero coverage of RVV and Zba/Zbb. These are not future-roadmap items; they cause hard crashes (`unhandled instruction`) when client code uses them.
+**Objection 1: "Supported" means complete.** Not accurate. Upstream covers RV64GC only. FENCE.I, MULHSU, CSR immediates and Zba/Zbb/XTHead instructions cause hard crashes. The `unchainXDirect` bug and the LR/SC ABA flaw are correctness issues independent of ISA coverage.
 
-**Objection 2: The 5 open fork PRs solve the known gaps.**
-Partially. PRs #21-#25 address FENCE.I, MULHSU, CSR immediates, compressed hints, and NaN-boxing. However, they have no upstream maintainer attention (zero reviews on #22-#25 since November 2024) and have not been submitted to the upstream Valgrind project. The path from fork PR to upstream merge is unclear and there is no named maintainer to drive it. RVV and Zba/Zbb are not addressed by any open PR.
+**Objection 2: The open fork PRs close the gaps.** Partially. PRs #21, #22 and #24 cover FENCE.I, MULHSU/CSR immediates and compressed hints. They sit in the fork and have not been submitted as Bugzilla patches. PR #25 is likely superseded. No PR addresses Zba/Zbb, XTHead, RVV or Zfh. RISE issues #147 and #148 track upstreaming of the PR #22 content.
 
-**Objection 3: The Buildbot riscv64 builder provides adequate CI.**
-The Ubuntu riscv64 Buildbot builder runs daily on real StarFive hardware and catches regressions. However, it is not an in-tree CI gate, it is not triggered by patch submission, and it does not block merges. The Fedora riscv64 builder is currently offline. No contributor can submit a try-build against riscv64 via the standard Valgrind contribution flow.
+**Objection 3: Buildbot is adequate CI.** It runs on real hardware almost daily and has a working try-build path (`valgrind-try-ubuntu-riscv`, triggered by `users/<name>/try-*` branches), so contributors can test riscv64 patches before commit. It is not an in-tree gate, and the Fedora pair has been inactive since mid-2025, leaving a single OS and worker pool.
 
-**Objection 4: RVV support can be added incrementally.**
-No. The VEX IR does not have variable-length vector types. `Ity_V128` and `Ity_V256` are fixed-width. Adding RVV support requires extending VEX IR to support VLA types and updating the register allocator. This is not an instruction-by-instruction coverage problem; it is a fundamental IR redesign. No design proposal exists in any upstream or fork discussion as of June 2026.
+**Objection 4: RVV can be added incrementally.** No. It needs scalable-vector IR support in VEX and CPU-state-aware translation caching (bugs 473978, 474280). This is under design (RISE issues #138 and #157; Section 13). The related Arm SVE prototype by Petr Pavlu and a unified SVE/RVV approach were discussed in 2023 (RISE issue #157 updates). Nothing is upstream.
 
-**Objection 5: Zba/Zbb issues only affect code compiled with those extensions explicitly enabled.**
-Accurate but understates the risk. Modern RISC-V toolchains (GCC 12+, Clang 14+) target `-march=rv64gc_zba_zbb` by default on hardware that supports it. Valgrind will hard-crash with `disInstr(riscv64): unhandled instruction` on any binary compiled with those flags. This includes system libraries on Zba/Zbb-capable hardware such as the VisionFive 2. [NEEDS VERIFICATION on exact GCC/Clang default flag behavior -- single source: issue #19 comment from brucehoult]
+**Objection 5: Zba/Zbb only affects explicit opt-in.** Binaries built with those extensions crash Valgrind. Whether current toolchains enable them by default on capable hardware is unverified [NEEDS VERIFICATION].
 
----
+**Technical blockers**
 
-## 13. Investment Analysis
+- `riscv_hwprobe` needs a real implementation before any extension (Zfh, RVV) can be exposed to guests (bug 503253).
+- Zfh needs hwcaps detection plumbing (`VEX_HWCAPS_RISCV_Zfh`) and tests (bug 504648).
+- RVV needs scalable-vector IR, CPU-state-keyed translation cache, and an `Ijk_ExitBB` jump kind.
 
-### 13.1 Functional Enablement
+**Organizational blockers**
 
-The riscv64 port is functional for plain C/C++ workloads on RV64GC hardware with no extensions beyond the base set. Three categories of hard crashes exist: (1) FENCE.I in JIT-compiled code (OpenJDK, similar), (2) MULHSU/CSR-immediate in math or low-level code, (3) Zba/Zbb instructions on hardware where the toolchain enables them by default. The `unchainXDirect` correctness bug affects all code hitting the JIT chain/unchain path.
+- Review bandwidth: the Zfh patches have been awaiting review since mid-2025, and Wielaard cited the 3.26.0 release for delays. Fork PRs #22-#25 have had no review.
+- No named riscv64 maintainer and no MAINTAINERS file.
+- Patch flow through Bugzilla attachments is unfamiliar to contributors who work through GitHub/GitLab, as the bug 503253 exchange shows.
+- Historical precedent: the base port took about two years from submission (April 2023) to release (April 2025).
 
-Addressing functional gaps requires: submitting the 5 open fork PRs to upstream with test cases, a named upstream maintainer to shepherd review, and fixing the `unchainXDirect` bug. The Zba/Zbb gap requires new decode and emission code beyond the existing PRs.
+**Acceptance probability.** Data not available as a quantity. Observed fix turnaround for confirmed RISC-V defects is short: 503677 in about 2 days, 503098 in 18 days, 509157 in 25 days. Larger or extension-level work (Zfh, RVV, hwprobe) has not been accepted after 9 to 36 months.
 
-RVV support requires a VEX IR redesign. This is not within the scope of a Valgrind-only investment; it requires coordination with all VEX platform backends and the upstream VEX/Valgrind maintainers.
+## 13. Readiness Assessment
 
-### 13.2 Performance Optimization
+- **Color:** blue
+- **Release provider:** distro
+- **Optimization-purpose project:** no. Valgrind is a dynamic analysis tool, so the optimization modifier does not apply.
 
-No baseline riscv64 performance measurements exist. The `README.riscv64` documents three performance TODOs: FP exception handling via helper calls (eliminatable), small-immediate instruction selection, and register selection. None have been quantified. Establishing a baseline is prerequisite to any optimization investment.
+**Justification.** The upstream sourceware Buildbot builder [valgrind-ubuntu-riscv](https://builder.sourceware.org/buildbot/#/builders?tags=valgrind) builds and runs make check/regtest on real riscv64 hardware (StarFive boards) almost daily. The last three builds (#1146-#1148, latest 2026-09-24) passed. riscv64/Linux has been a supported platform since [3.25.0](https://valgrind.org/docs/manual/dist.readme-riscv64.html), but upstream ships source tarballs only, so the consumable riscv64 binary comes from distros (Debian sid). The release is provided by Debian, not upstream. It is not green because upstream publishes no riscv64 binary. The CI is out-of-tree Buildbot, not an in-tree gate, and the Fedora riscv64 builder has been idle since 2025-07.
 
-### 13.3 CI/CD Infrastructure
+**Pending work that could change the grade**
 
-The Buildbot riscv64 builder is operational but peripheral. Adding an in-tree CI configuration (e.g., a `.gitlab-ci.yml` entry for riscv64) would require hosting riscv64 runners accessible to the sourceware.org GitLab instance, or contributing patches to the existing Buildbot nightly conf directory. The Fedora riscv64 builder is offline; restoring it is low-effort if the worker hardware is available.
+- Open KDE Bugzilla items: [503253](https://bugs.kde.org/show_bug.cgi?id=503253) (`riscv_hwprobe` only stubbed to return ENOSYS), [504648](https://bugs.kde.org/show_bug.cgi?id=504648) (Zfh patches awaiting review since mid-2025), [468979](https://bugs.kde.org/show_bug.cgi?id=468979), [473978](https://bugs.kde.org/show_bug.cgi?id=473978) and [474280](https://bugs.kde.org/show_bug.cgi?id=474280) (RVV and its prerequisites, not upstream), and [514962](https://bugs.kde.org/show_bug.cgi?id=514962) (RISC-V debuginfo).
+- Decode gaps are fork PRs #21-#25 (FENCE.I, MULHSU, CSR immediates, compressed hints), not yet upstream. Zba/Zbb/XTHead binaries crash Valgrind (fork issue #19).
+- RISE tracks Valgrind work in [riseproject-dev/kernel-and-virtualization-wg](https://github.com/riseproject-dev/kernel-and-virtualization-wg) issues #138 (scalable vector IR), #147 (mulhsu), #148 (CSR*I) and #157 (vector support, Intel-led). There is no RISE runner or release involvement.
+- The grade computation did not check the Ubuntu 26.04 riscv64 package because the project-graph server failed to connect. A Launchpad page shows 1:3.26.0-0ubuntu1 published for Ubuntu resolute riscv64 [NEEDS VERIFICATION - single source], which would be another distro provider. Ubuntu 24.04 ships 3.22.0 with no riscv64 binary.
 
-### 13.4 Ecosystem Enablement
+**RISE involvement in detail**
 
-Ubuntu 24.04 (Noble) does not ship a riscv64 Valgrind binary. Developers on Ubuntu riscv64 must build from source. Backporting Valgrind 3.25.x or later to Ubuntu 24.04 riscv64 would unblock this. Debian sid already provides the binary.
+- **Not a RISE project or member.** No RISE blog post mentions Valgrind (the [feed](https://riseproject.dev/feed/) returned 7 posts dated 2026-07-07 to 2026-09-28; older posts may not be covered). `riseproject-dev` has no Valgrind repository among its 30 repositories. The only Valgrind-related repos outside the organization are [petrpavlu/valgrind-riscv64](https://github.com/petrpavlu/valgrind-riscv64) and [intel/valgrind-rvv](https://github.com/intel/valgrind-rvv) (branch `poc-rvv`).
+- **DP_00_001 Valgrind vector support** ([issue #157](https://github.com/riseproject-dev/kernel-and-virtualization-wg/issues/157), open, last updated 2026-09-02). Led by Intel. Scope: a vector-IR framework plus tens of RVV instructions in the riscv port, tested against riscv-v-spec examples with Memcheck. Milestones: solution discussion 2023-08-31, prototype 2023-09-30, upstream 2023-12-31. Updates: 2023-08-30 Intel set up a public repo with dozens of RVV instructions; 2023-10-19 Petr Pavlu acked the patch; 2023-11-15 discussion of a unified SVE/RVV solution; 2024-02-29 Pavlu proposed an alternative approach, and Intel's prototype could run CoreMark with auto-vectorization. High priority per a search snippet [NEEDS VERIFICATION]. The Confluence page could not be fetched, so details come from the GitHub issue and search snippets. The `intel/valgrind-rvv` repository was archived read-only on 2025-09-29 and its README reports Memcheck 10/219, DRD 4/130, Helgrind 4/55 failing, in a status table dated December 2022.
+- **DP_00_002 Valgrind vector instruction support.** Led by T-Head (Alibaba), medium priority, in progress, helper-function-based RVV approach. Confluence page only; upstream status unknown. This matches the rjiejie fork (Zfh, Xthead, V0.7.1, V1.0; test results as of 2023-08-29: Memcheck 0/219, DRD 0/130, Helgrind 0/55, GDBserver 0/25 failures).
+- **DP_00_003 Valgrind basic RISC-V support.** Led by Ventana, low priority, tentative ETA Q3 2023, then RVA22/RVA23 extensions. Confluence page only. The base port later landed through community effort in 3.25.0.
+- **DP_00_005 Valgrind scalable vector IR** ([issue #138](https://github.com/riseproject-dev/kernel-and-virtualization-wg/issues/138)). Proof of concept of a generic scalable vector IR for both Arm SVE and RVV, based on intel/valgrind-rvv, so RVV can be upstreamed. The Confluence page is archived and credits Xiao W Wang.
+- **[Issue #147](https://github.com/riseproject-dev/kernel-and-virtualization-wg/issues/147) (mulhsu) and [#148](https://github.com/riseproject-dev/kernel-and-virtualization-wg/issues/148) (CSRRWI/CSRRSI/CSRRCI).** Add the missing instructions with tests. Success is a posted and reviewed patch. Upstreaming is tracked in fork PR #22.
+- All four issues are labelled "Debug Tools" and are open. They were created during the July 2026 move of working-group tracking to GitHub. The board at `riseproject-dev` project #14 and other working-group repositories were not searched. No funding amounts were seen.
 
-### 13.5 Summary Table
+## 14. Investment Analysis
+
+RISE already tracks vector support (#157, DP_00_002), scalable vector IR (#138), mulhsu (#147) and CSR*I (#148). Those items are not sized below. Effort figures are engineering estimates, not measured data.
+
+### 14.1 Functional Enablement
+
+- Submit fork PRs #21 (FENCE.I) and #24 (compressed hints) as Bugzilla patches with tests. PR #22 content is covered by RISE #147 and #148. Confirm whether PR #25 is superseded by commit 9dd24c9b.
+- Fix `unchainXDirect_RISCV64` and file the bug. Re-verify against the current HEAD first.
+- Implement `riscv_hwprobe` properly (bug 503253). Pair it with extension detection in `m_machine.c`.
+- Get the Zfh patches reviewed and finished (bug 504648). The code exists. The remaining work is review and the hwcaps and test changes Wielaard requested.
+- Add Zba/Zbb decode and emission, then XTHead if TH1520/C910 support is wanted (fork issue #19).
+- Resolve the LR/SC ABA problem for lock-free code.
+- Complete ENOSYS-stubbed syscalls where fallback is not deliberate (`kexec_load`, `fadvise64`).
+- Land RISC-V debuginfo (bug 514962 patch review).
+- Remove the stale NaN-boxing note from `README.riscv64`.
+
+### 14.2 Performance Optimization
+
+No riscv64 baseline exists, so none of the README optimization TODOs can be sized from data. Establish a baseline against arm64 first. Then address FP exception handling without helper calls, instruction selection for immediate forms, and register usage review.
+
+### 14.3 CI/CD Infrastructure
+
+Buildbot riscv64 is operational for Ubuntu. Options: restore a Fedora riscv64 worker (the builder definitions exist but are commented out), and add an in-tree CI definition if the project accepts one. The project has none for any architecture today.
+
+### 14.4 Ecosystem Enablement
+
+Debian sid carries a riscv64 package and Ubuntu 26.04 reportedly carries 3.26.0. A backport to Ubuntu 24.04 remains the open distro item. A first-party upstream riscv64 binary is not planned in any source found.
+
+### 14.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
-| Functional | Submit fork PRs #21-#25 to upstream with test cases | 2 | Assignee TBD | Critical |
-| Functional | Fix `unchainXDirect_RISCV64` `p[19]` byte corruption | 1 | Assignee TBD | Critical |
-| Functional | Zba/Zbb instruction decode and emission | 4 | Assignee TBD | High |
-| Functional | Clone3/rseq/kexec_load syscall wrapper completeness | 2 | Assignee TBD | High |
-| Functional | Missing isel ops: SubF32, MSubF32/F64, CmpNEZ16 | 2 | Assignee TBD | High |
-| Functional | Missing host defs: FSUB_S, FLE_S/D, LR_D/SC_D | 2 | Assignee TBD | High |
-| Functional | XTHead vendor instruction decode (TH1520, C910) | 3 | Assignee TBD | Medium |
-| Functional | LR/SC ABA problem (correctness for lock-free code) | 4 | Assignee TBD | Medium |
-| Functional | RVV support | Data not available: requires VEX IR VLA redesign; no scoping has been done upstream | Upstream VEX maintainers | Low (pre-requisites not met) |
-| Performance | Establish riscv64 performance baseline vs. arm64 | 2 | Assignee TBD | High |
+| Functional | Fix `unchainXDirect_RISCV64` byte corruption and file bug | 1 | Assignee TBD | Critical |
+| Functional | Upstream fork PRs #21 and #24 (FENCE.I, compressed hints) with tests | 2 | Assignee TBD | High |
+| Functional | Full `riscv_hwprobe` implementation plus hwcaps detection (bug 503253) | 3 | Assignee TBD | High |
+| Functional | Drive Zfh patches through review (bug 504648) | 1 | Assignee TBD | High |
+| Functional | Zba/Zbb decode and emission | 4 | Assignee TBD | High |
+| Functional | LR/SC non-fallback implementation (ABA) | 4 | Assignee TBD | Medium |
+| Functional | XTHead decode (TH1520, C910) | 3 | Assignee TBD | Medium |
+| Functional | Syscall wrapper completeness (`kexec_load`, `fadvise64`, review of `clone3`/`rseq` fallbacks) | 2 | Assignee TBD | Medium |
+| Functional | RISC-V debuginfo patch review (bug 514962) | 1 | Assignee TBD | Medium |
+| Functional | mulhsu, CSR*I upstreaming | Covered by RISE issues #147 and #148 | RISE | Not sized |
+| Functional | RVV and scalable vector IR | Covered by RISE issues #138 and #157 and DP_00_002; remaining effort not scoped upstream | Intel, T-Head, upstream maintainers | Not sized |
+| Performance | Establish riscv64 performance baseline vs arm64 | 2 | Assignee TBD | High |
 | Performance | Eliminate FP exception helper calls | 3 | Assignee TBD | Medium |
-| Performance | Small-immediate instruction selection (`<instr>i` forms) | 2 | Assignee TBD | Medium |
-| CI/CD | Add riscv64 entry to nightly/conf/ (Buildbot) or in-tree CI | 2 | Assignee TBD | High |
+| Performance | Immediate-form instruction selection | 2 | Assignee TBD | Medium |
 | CI/CD | Restore Fedora riscv64 Buildbot worker | 1 | Assignee TBD | Medium |
-| Ecosystem | Backport Valgrind >= 3.25.0 to Ubuntu 24.04 riscv64 | 3 | Canonical (RISE member) | High |
-| Ecosystem | Identify and establish named upstream riscv64 maintainer | 0 (organizational) | Leadership | Critical |
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
-
----
+| CI/CD | In-tree or nightly riscv64 CI entry | 2 | Assignee TBD | Medium |
+| Ecosystem | Backport Valgrind 3.25 or later to Ubuntu 24.04 riscv64 | 3 | Canonical | Medium |
+| Ecosystem | Name an upstream riscv64 maintainer / review owner | 0 (organizational) | Leadership | Critical |
 
 ## 15. References
 
 - [Valgrind homepage](https://valgrind.org/)
-- [Valgrind release news (dist.news.html)](https://valgrind.org/docs/manual/dist.news.html)
-- [Valgrind README.riscv64 (upstream docs)](https://valgrind.org/docs/manual/dist.readme-riscv64.html)
-- [Valgrind manual core (performance figures)](https://valgrind.org/docs/manual/manual-core.html)
-- [Valgrind upstream git repository](https://sourceware.org/git/valgrind.git)
-- [Sourceware.org Bugzilla bug 468575](https://sourceware.org/bugzilla/show_bug.cgi?id=468575)
-- [Sourceware.org Bugzilla bug 503098](https://sourceware.org/bugzilla/show_bug.cgi?id=503098)
-- [Sourceware.org Bugzilla bug 503677](https://sourceware.org/bugzilla/show_bug.cgi?id=503677)
-- [Sourceware.org Bugzilla bug 509157](https://sourceware.org/bugzilla/show_bug.cgi?id=509157)
-- [petrpavlu/valgrind-riscv64 fork (GitHub)](https://github.com/petrpavlu/valgrind-riscv64)
-- [Fork issue #3: Prepare for upstream?](https://github.com/petrpavlu/valgrind-riscv64/issues/3)
-- [Fork issue #17: riscv vector ISA support](https://github.com/petrpavlu/valgrind-riscv64/issues/17)
-- [Fork issue #19: Support for Zba, Zbb, and XTHead](https://github.com/petrpavlu/valgrind-riscv64/issues/19)
-- [Fork issue #20: Running RV32 code on RV64](https://github.com/petrpavlu/valgrind-riscv64/issues/20)
-- [Fork PR #21: support fence.i](https://github.com/petrpavlu/valgrind-riscv64/pull/21)
-- [Fork PR #22: Add support for mulhsu and CSRR*I](https://github.com/petrpavlu/valgrind-riscv64/pull/22)
-- [Fork PR #23: Fix link error about relocation](https://github.com/petrpavlu/valgrind-riscv64/pull/23)
-- [Fork PR #24: Support compress hint instructions](https://github.com/petrpavlu/valgrind-riscv64/pull/24)
-- [Fork PR #25: Correct nan-boxing for single-precision calculations](https://github.com/petrpavlu/valgrind-riscv64/pull/25)
-- [Sourceware.org Buildbot (Valgrind builders)](https://builder.sourceware.org/buildbot/#/builders?tags=valgrind)
-- [Debian packages.debian.org/sid/valgrind](https://packages.debian.org/sid/valgrind)
-- [Ubuntu packages.ubuntu.com/noble/valgrind](https://packages.ubuntu.com/noble/valgrind)
-- [RISE Project homepage](https://riseproject.dev)
-- [RISE Project blog](https://riseproject.dev/blog/)
-- [FOSDEM 2022: Valgrind on RISC-V (Petr Pavlu)](https://archive.fosdem.org/2022/schedule/event/valgrind_riscv/)
+- [Valgrind platforms and tier policy](https://valgrind.org/info/platforms.html)
+- [Valgrind release news](https://valgrind.org/docs/manual/dist.news.html)
+- [Valgrind README.riscv64](https://valgrind.org/docs/manual/dist.readme-riscv64.html)
+- [Valgrind git repository (sourceware)](https://sourceware.org/git/valgrind.git)
+- [Sourceware Buildbot master configuration (builder.git)](https://sourceware.org/git/builder.git)
+- [Sourceware Buildbot, Valgrind builders](https://builder.sourceware.org/buildbot/#/builders?tags=valgrind)
+- [LWN: Valgrind 3.25.0](https://lwn.net/Articles/1019227/)
+- [KDE Bug 468575: Add support for RISC-V](https://bugs.kde.org/show_bug.cgi?id=468575)
+- [KDE Bug 468979: RISC-V vector instructions](https://bugs.kde.org/show_bug.cgi?id=468979)
+- [KDE Bug 473978: checking of cpu state in code translation](https://bugs.kde.org/show_bug.cgi?id=473978)
+- [KDE Bug 474280: Ijk_ExitBB IR](https://bugs.kde.org/show_bug.cgi?id=474280)
+- [KDE Bug 503098: NaN-boxing](https://bugs.kde.org/show_bug.cgi?id=503098)
+- [KDE Bug 503253: riscv_hwprobe missing](https://bugs.kde.org/show_bug.cgi?id=503253)
+- [KDE Bug 503677: duplicated-cond warning in dis_RV64M](https://bugs.kde.org/show_bug.cgi?id=503677)
+- [KDE Bug 504648: Zfh extension](https://bugs.kde.org/show_bug.cgi?id=504648)
+- [KDE Bug 509157: Shift instructions](https://bugs.kde.org/show_bug.cgi?id=509157)
+- [KDE Bug 514962: RISC-V debuginfo](https://bugs.kde.org/show_bug.cgi?id=514962)
+- [KDE Bugzilla RISC-V query](https://bugs.kde.org/buglist.cgi?product=valgrind&quicksearch=riscv%20OR%20riscv64%20OR%20rvv&limit=100)
+- [petrpavlu/valgrind-riscv64 fork](https://github.com/petrpavlu/valgrind-riscv64)
+- [Fork issue #3](https://github.com/petrpavlu/valgrind-riscv64/issues/3)
+- [Fork issue #17](https://github.com/petrpavlu/valgrind-riscv64/issues/17)
+- [Fork issue #19](https://github.com/petrpavlu/valgrind-riscv64/issues/19)
+- [Fork issue #20](https://github.com/petrpavlu/valgrind-riscv64/issues/20)
+- [Fork PR #21](https://github.com/petrpavlu/valgrind-riscv64/pull/21)
+- [Fork PR #22](https://github.com/petrpavlu/valgrind-riscv64/pull/22)
+- [Fork PR #23](https://github.com/petrpavlu/valgrind-riscv64/pull/23)
+- [Fork PR #24](https://github.com/petrpavlu/valgrind-riscv64/pull/24)
+- [Fork PR #25](https://github.com/petrpavlu/valgrind-riscv64/pull/25)
+- [rjiejie/valgrind-riscv64 (T-Head RVV fork)](https://github.com/rjiejie/valgrind-riscv64)
+- [intel/valgrind-rvv](https://github.com/intel/valgrind-rvv)
+- [FOSDEM 2022: Valgrind on RISC-V](https://archive.fosdem.org/2022/schedule/event/valgrind_riscv/)
+- [RISE members](https://riseproject.dev/members/)
+- [RISE blog feed](https://riseproject.dev/feed/)
+- [RISE wheel builder](https://riseproject.gitlab.io/python/wheel_builder/)
+- [RISE DP_00_001 Valgrind vector support (wiki; not fetchable)](https://wiki.riseproject.dev/display/HOME/DP_00_001+-+Valgrind+vector+support)
+- [RISE DP_00_005 Valgrind scalable vector IR](https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/115081517/DP_00_005+-+Valgrind+scalable+vector+IR)
+- [RISE Debug and Profiling WG projects](https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/8589360/Debug+and+Profiling+WG+-+Projects)
+- [RISE kernel-and-virtualization-wg issue #138](https://github.com/riseproject-dev/kernel-and-virtualization-wg/issues/138)
+- [RISE kernel-and-virtualization-wg issue #147](https://github.com/riseproject-dev/kernel-and-virtualization-wg/issues/147)
+- [RISE kernel-and-virtualization-wg issue #148](https://github.com/riseproject-dev/kernel-and-virtualization-wg/issues/148)
+- [RISE kernel-and-virtualization-wg issue #157](https://github.com/riseproject-dev/kernel-and-virtualization-wg/issues/157)
+- [arXiv 2507.22451: Dissecting RISC-V Performance](https://arxiv.org/abs/2507.22451v1)
+- [Primes benchmark referenced in fork issue](http://hoult.org/primes.txt)
+- [Debian sid riscv64 valgrind package](https://packages.debian.org/sid/riscv64/valgrind)
+- [Ubuntu resolute riscv64 valgrind (Launchpad)](https://launchpad.net/ubuntu/resolute/riscv64/valgrind)
+- [Ubuntu noble valgrind package](https://packages.ubuntu.com/noble/valgrind)
+- [Arch Linux RISC-V extra repository](https://archriscv.felixc.at/repo/extra/)
+- [PyPI valgrind package (unrelated)](https://pypi.org/pypi/valgrind/json)
+- [FreeBSD status report on Valgrind arm64](https://www.freebsd.org/status/report-2024-01-2024-03/valgrind)
