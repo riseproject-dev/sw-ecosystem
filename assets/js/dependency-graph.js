@@ -240,10 +240,10 @@
       '</div>' +
       '<div class="dg-canvas"><svg></svg></div>' +
       '<div class="dg-legend"></div>' +
-      '<p class="dg-instructions">Arrows point from a node to what it depends on. Solid black = runtime ' +
-      'dependency, dashed black = build/test-time (or other non-runtime) dependency. Scroll to zoom, drag to ' +
-      'pan, click a node to open its report/repo/home, search for a node to focus its subgraph (click the ' +
-      'background or Reset view to return), hover to highlight neighbors.</p>';
+      '<p class="dg-instructions">' +
+      'Solid black = runtime dependency, dashed black = build/test-time dependency.<br>' +
+      '<i>Scroll to zoom, drag to pan, click a node to open its report/repo/home, search for a node to focus its subgraph, hover to highlight neighbors.<i>' +
+      '</p>';
     container.appendChild(wrap);
 
     renderLegend(wrap.querySelector('.dg-legend'));
