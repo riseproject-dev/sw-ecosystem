@@ -1,11 +1,11 @@
 /*
  * Renders a Jekyll-generated <slug>.graph.json as an
- * interactive dependency graph: a top-to-bottom layered DAG (dagre-d3 + d3 v5, both loaded via
+ * interactive dependency graph: a left-to-right layered DAG (dagre-d3 + d3 v5, both loaded via
  * CDN in _includes/dependency-graph.html -- no build step), with zoom/pan, click-a-node to open
  * its report/repo/home, hover to highlight neighbors, a search box (which can also focus a node's
  * ancestor+descendant subgraph), and a legend. A container's data-subset, when set, additionally
  * bounds the whole instance to one node's descendants (see descendantSubgraph below). The main/
- * root node ends up at the top of each rank, with its dependencies laid out in ranks below it,
+ * root node ends up at the left, with its dependencies laid out in ranks to the right,
  * mirroring conda-forge's DependencyGraph component.
  *
  * Loaded once per page; initializes every ".dependency-graph" container it finds.
@@ -196,7 +196,7 @@
     return tip;
   }
 
-  // ---- dagre-d3 layout (a plain top-to-bottom layered DAG -- no per-product clustering, to
+  // ---- dagre-d3 layout (a plain left-to-right layered DAG -- no per-product clustering, to
   // match conda-forge's DependencyGraph) ----------------------------------------------------
 
   // Re-run on every redraw (selection change, external-dependency toggle) since the visible node
@@ -204,7 +204,7 @@
   // builds the graphlib.Graph it lays out.
   function buildDagreGraph(ds) {
     var g = new dagreD3.graphlib.Graph({ directed: true })
-      .setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 70 })
+      .setGraph({ rankdir: 'LR', nodesep: 40, ranksep: 70 })
       .setDefaultEdgeLabel(function () { return {}; });
 
     ds.allNodeIds.forEach(function (id) {
@@ -240,10 +240,10 @@
       '</div>' +
       '<div class="dg-canvas"><svg></svg></div>' +
       '<div class="dg-legend"></div>' +
-      '<p class="dg-instructions">Arrows point from a node to what it depends on. Solid black = runtime ' +
-      'dependency, dashed black = build/test-time (or other non-runtime) dependency. Scroll to zoom, drag to ' +
-      'pan, click a node to open its report/repo/home, search for a node to focus its subgraph (click the ' +
-      'background or Reset view to return), hover to highlight neighbors.</p>';
+      '<p class="dg-instructions">' +
+      'Solid black = runtime dependency, dashed black = build/test-time dependency.<br>' +
+      '<i>Scroll to zoom, drag to pan, click a node to open its report/repo/home, search for a node to focus its subgraph, hover to highlight neighbors.<i>' +
+      '</p>';
     container.appendChild(wrap);
 
     renderLegend(wrap.querySelector('.dg-legend'));
