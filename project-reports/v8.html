@@ -266,10 +266,11 @@
     
 
 <p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
-<strong>Date:</strong> 2026-07-20<br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> blue<br />
 <strong>Scope:</strong> RISC-V (riscv64/linux) support status for V8<br />
 <strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p><hr />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +280,13 @@
 </h2>
     
 
-<p>V8 is Google’s JavaScript and WebAssembly engine. It is the runtime inside Chromium/Chrome, Node.js, and Deno. V8 is not affiliated with any independent foundation. It is a Google-owned project, governed entirely by Google under a BSD 3-Clause license, using the Chromium OWNERS file model for distributed code review authority.</p>
+<p>V8 is Google’s JavaScript and WebAssembly engine. It is the runtime inside Chromium/Chrome, Node.js, and Deno. V8 is not affiliated with any independent foundation (not OpenJS, not Linux Foundation as a project). It is a Google-owned project under a BSD-style license (site content under CC BY 3.0), governed through the Chromium OWNERS-file model for distributed code review authority, and it runs on Chromium’s own Gerrit/LUCI infrastructure rather than GitHub.</p>
 
-<p>The canonical repository is at <a href="https://chromium.googlesource.com/v8/v8">chromium.googlesource.com/v8/v8</a>. The GitHub repository at <a href="https://github.com/v8/v8">v8/v8</a> is a read-only mirror. All contributions must go through Gerrit at <a href="https://chromium-review.googlesource.com">chromium-review.googlesource.com</a>.</p>
+<p>The canonical repository is Google’s internal Gerrit at <a href="https://chromium-review.googlesource.com/c/v8/v8">chromium-review.googlesource.com/c/v8/v8</a>; bugs are tracked at <code class="language-plaintext highlighter-rouge">crbug.com</code> (Monorail/Buganizer), not GitHub Issues. The repository at <a href="https://github.com/v8/v8">v8/v8</a> is a read-only mirror: it has zero GitHub Issues for “riscv” or “riscv64” (confirmed by direct search), and the only file under <code class="language-plaintext highlighter-rouge">.github/</code> is <code class="language-plaintext highlighter-rouge">mistaken-pull-closer.yml</code>, a bot that auto-closes every pull request opened against the mirror with a message pointing contributors to <code class="language-plaintext highlighter-rouge">v8.dev/docs/contribute</code> (Gerrit). Consequently there is no GitHub-native master tracking issue for the riscv64 port; all 913 “riscv”-matching commits found on the <code class="language-plaintext highlighter-rouge">main</code> branch are Gerrit CLs that merely appear as mirrored commits.</p>
 
-<p>V8’s RISC-V backend is community-maintained by engineers at ISCAS/PLCT Lab and, in an advisory capacity, by Kasper Lund at Meta. Google does not maintain the RISC-V backend.</p><hr />
+<p>Committer process (<code class="language-plaintext highlighter-rouge">v8.dev/docs/become-committer</code>): 20+ non-trivial patches reviewed by 3 different people, nomination to <code class="language-plaintext highlighter-rouge">v8-committers@chromium.org</code>, two committers second it, a 5-business-day objection window, plus a mandatory Security Key. All patches require 2+ committer reviews, one of whom must be an OWNER. Google employees (Googlers) follow a separate, internal onboarding path, not available to external contributors - a structural asymmetry between Google’s internal V8 team and outside contributors such as the RISC-V team.</p>
+
+<p><code class="language-plaintext highlighter-rouge">COMMON_OWNERS</code> (root-level, broad approval authority) lists approximately 38 names, essentially all <code class="language-plaintext highlighter-rouge">@chromium.org</code>/<code class="language-plaintext highlighter-rouge">@google.com</code> - core governance is Google-dominated. V8’s RISC-V backend itself is community-maintained by engineers at ISCAS (Institute of Software, Chinese Academy of Sciences) / PLCT Lab, with Kasper Lund as an OWNER; Lund’s affiliation moved from Rivos Inc. to Meta during 2025 (a September 2025 commit shows him still as <code class="language-plaintext highlighter-rouge">kasperl@rivosinc.com</code>; <code class="language-plaintext highlighter-rouge">RISCV_OWNERS</code> now lists <code class="language-plaintext highlighter-rouge">kasperl@meta.com</code>). Google does not itself maintain the RISC-V backend.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -293,13 +296,56 @@
 </h2>
     
 
-<p>The RISC-V V8 port was initiated by Wei Wu (wuwei2016@iscas.ac.cn, ISCAS/PLCT Lab), who proposed upstreaming to the v8-dev mailing list on July 15, 2020. Prior to upstreaming, work existed in a community fork at github.com/isrc-cas/v8-riscv (later github.com/v8-riscv/v8), with an initial “helloworld” milestone running on QEMU Fedora RV64 in 2020. Two separate groups, ISCAS/PLCT Lab and FutureWei Technologies, merged their fork efforts before upstreaming.</p>
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Event</th>
+      <th>Source</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2020 (mid-year)</td>
+      <td>V8-RISC-V open-sourced as a separate repository by RIOS Lab/Futurewei (Brice Dobry and collaborators), announced by RISC-V International</td>
+      <td><a href="https://riscv.org/blog/2020/08/unlocking-javascript-v8-riscv-open-sourced/">RISC-V International blog, Aug 2020</a></td>
+    </tr>
+    <tr>
+      <td>2021-02-09</td>
+      <td>First RISC-V commit lands in the upstream V8 mirror: <code class="language-plaintext highlighter-rouge">ffd9e82dd5dd314bad48ab602517bd378b6d2184</code>, “Add RISC-V backend,” authored by Brice Dobry (Futurewei), <code class="language-plaintext highlighter-rouge">Cr-Commit-Position: refs/heads/master@{#72598}</code>, Bug <code class="language-plaintext highlighter-rouge">v8:10991</code></td>
+      <td>Verified directly via commit-search (by bug number, by text, and a date-bounded search confirming no earlier RISC-V commit exists)</td>
+    </tr>
+    <tr>
+      <td>2020-2021</td>
+      <td>Community fork work continues in parallel at <code class="language-plaintext highlighter-rouge">isrc-cas/v8-riscv</code> (ISRC-CAS/PLCT Lab’s historical fork) and later <code class="language-plaintext highlighter-rouge">v8-riscv/v8-riscv-tools</code>; both are superseded once the port lands upstream</td>
+      <td><a href="https://github.com/isrc-cas/v8-riscv">isrc-cas/v8-riscv</a></td>
+    </tr>
+    <tr>
+      <td>2021 onward</td>
+      <td>Ongoing upstreaming and feature work, primarily by ISCAS engineers Yahan Lu and Ji Qiu</td>
+      <td>913 commits matching “riscv” on the <code class="language-plaintext highlighter-rouge">main</code> branch</td>
+    </tr>
+    <tr>
+      <td>Late 2025</td>
+      <td>RISC-V 32-bit (riscv32) support deprecated; maintenance continues until May 2026, removal expected after that unless a strong use case emerges (embedded RV32 rarely runs Linux, which V8 requires)</td>
+      <td><a href="https://riseproject.dev/2025/12/09/a-glimpse-into-v8-development-for-risc-v/">RISE blog, Dec 2025</a></td>
+    </tr>
+    <tr>
+      <td>2025-12-09</td>
+      <td>RISE Project publishes “A Glimpse Into V8 Development for RISC-V,” describing the port as near feature parity with x86_64/ARM64 and reporting the full JetStream suite now passes</td>
+      <td><a href="https://riseproject.dev/2025/12/09/a-glimpse-into-v8-development-for-risc-v/">RISE blog</a></td>
+    </tr>
+    <tr>
+      <td>Through 2026-09-28</td>
+      <td>Active, near-daily commit cadence continues (e.g., <code class="language-plaintext highlighter-rouge">3ead75e</code>, 2026-09-28: hwprobe-detection fallback for vendor kernels)</td>
+      <td>GitHub commit search, <code class="language-plaintext highlighter-rouge">v8/v8</code> <code class="language-plaintext highlighter-rouge">main</code></td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p>The earliest commit in the upstream mirror with a <code class="language-plaintext highlighter-rouge">[riscv64]</code> label is commit <code class="language-plaintext highlighter-rouge">6d8e8ab</code> dated March 12, 2021, authored by luyahan (Lu Yahan, ISCAS), at commit-position <code class="language-plaintext highlighter-rouge">refs/heads/master@{#73370}</code>. The RISC-V backend directories were first present in the tree in approximately December 2020 to March 2021.</p>
+<p>Note on a discrepancy with the prior assumption that the first riscv64-labeled commit was <code class="language-plaintext highlighter-rouge">6d8e8ab</code> (dated 2021-03-12, attributed to Lu Yahan): direct, repeated commit-search verification (by bug ID, by text match, and a date-bounded query) establishes <code class="language-plaintext highlighter-rouge">ffd9e82d</code> (2021-02-09, Brice Dobry/Futurewei) as the actual first RISC-V commit in the mirror, roughly a month earlier and by a different primary author. The <code class="language-plaintext highlighter-rouge">ffd9e82d</code> finding is treated as authoritative here because it was independently verified through multiple search methods in the current research pass.</p>
 
-<p>Key early contributors: Lu Yahan (ISCAS, primary committer), Ji Qiu (ISCAS), Wei Wu (ISCAS, coordination), and a group of fork contributors including Xiaofang Zou, Jiayou Chen, Wenzhang Yang, and Liqiang Tao.</p>
-
-<p>The 32-bit RISC-V (riscv32) port was deprecated in late 2025 and is scheduled for removal after May 2026. The stated reason: 32-bit RISC-V is primarily used in embedded systems without a Linux OS, but V8 requires Linux. Five of the twelve currently open issues in riscv-collab/v8 are labeled RV32G, consistent with the pending removal.</p><hr />
+<p>Key contributors across the port’s history: Brice Dobry (Futurewei, original port author), Derek Tu (RIOS Lab), Wei Wu (ISCAS/PLCT, early coordination) [NEEDS VERIFICATION: Wu’s specific coordination role is carried from a single source], and the current primary maintainers Yahan Lu and Ji Qiu (both ISCAS), with Kasper Lund (Meta) as a third OWNER. The port is fully upstreamed into the main V8 tree; no separate fork is required for current development, though the legacy forks remain as historical references.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -309,18 +355,18 @@
 </h2>
     
 
-<p>V8 uses a CI-presence-based support model, not named tiers. Per <a href="https://v8.dev/docs/ports">v8.dev/docs/ports</a>, RISC-V is listed alongside MIPS, PPC, s390, and LoongArch as an “unofficially supported” port with a dedicated external team. The ports page states: “The Risc-V team will do the port. Contact/CC the Risc-V team in the CL if needed.” Contact email: v8-risc-v-ports@chromium.org.</p>
+<p>V8 uses a CI-presence-based support model rather than named tiers. Per <a href="https://v8.dev/docs/ports">v8.dev/docs/ports</a>, <strong>ARM</strong> is the only officially supported non-x64/IA-32 architecture. MIPS, PPC, s390, RISC-V, LoongArch64, and x87 are each explicitly listed as “not officially supported,” with the uniform policy text: “The [x] team will do the port. Contact/CC the [x] team in the CL if needed.” Contact for RISC-V: <code class="language-plaintext highlighter-rouge">v8-risc-v-ports@chromium.org</code>. <code class="language-plaintext highlighter-rouge">docs/official-support.md</code> ties “officially supported” to having a CI bot; riscv64 bots exist but run only via software simulator, not real hardware, which further distinguishes it from the officially supported tier.</p>
 
 <p>This means:</p>
 
 <ul>
   <li>Google accepts RISC-V patches but does not commit to maintaining the backend.</li>
-  <li>RISC-V breakages caused by upstream V8 changes are the responsibility of the RISC-V team (ISCAS/PLCT), not Google.</li>
-  <li>There is no SLA, no rollback policy, and no Google engineer designated to handle RISC-V CI failures.</li>
-  <li>Approximately 25% of all RISC-V V8 commits over the six months before December 2025 were purely tracking upstream changes, per the RISE blog post. This maintenance burden falls entirely on the ISCAS team.</li>
+  <li>RISC-V breakages introduced by upstream V8 changes are the responsibility of the RISC-V team (ISCAS/PLCT), not Google.</li>
+  <li>There is no SLA, no rollback policy, and no Google engineer designated to own RISC-V CI failures.</li>
+  <li>Approximately one-quarter of all RISC-V V8 commits in the six months prior to the December 2025 RISE post were purely tracking-work for upstream changes, per that post - a recurring maintenance tax borne entirely by the ISCAS team.</li>
 </ul>
 
-<p>The RISC-V OWNERS file (<code class="language-plaintext highlighter-rouge">RISCV_OWNERS</code>) lists three maintainers with approval rights over RISC-V subdirectories:</p>
+<p><code class="language-plaintext highlighter-rouge">RISCV_OWNERS</code> lists three maintainers with approval rights over RISC-V subdirectories:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -332,7 +378,7 @@
   <tbody>
     <tr>
       <td>kasperl@meta.com</td>
-      <td>Meta (Kasper Lund, V8 co-creator)</td>
+      <td>Meta (Kasper Lund, V8 co-creator; moved from Rivos Inc. during 2025)</td>
     </tr>
     <tr>
       <td>qiuji@iscas.ac.cn</td>
@@ -340,12 +386,55 @@
     </tr>
     <tr>
       <td>yahan@iscas.ac.cn</td>
-      <td>ISCAS / PLCT Lab (Lu Yahan)</td>
+      <td>ISCAS / PLCT Lab (Yahan Lu, also the security contact)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Google’s core V8 team (<code class="language-plaintext highlighter-rouge">COMMON_OWNERS</code>, approximately 38 engineers, all at @chromium.org or @google.com) retains authority to require a second Code-Review+2 from a V8 owner for any RISC-V CL before merging. The <code class="language-plaintext highlighter-rouge">Review-Enforcement</code> submit requirement in Gerrit is the mechanism. Active CLs (e.g., <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953190">CL 7953190</a>) are blocked by this requirement when only a RISC-V OWNER (Ji Qiu) has given +1 and no broader V8 owner has given +2.</p><hr />
+<p><code class="language-plaintext highlighter-rouge">COMMON_OWNERS</code> (approximately 38 engineers, essentially all <code class="language-plaintext highlighter-rouge">@chromium.org</code>/<code class="language-plaintext highlighter-rouge">@google.com</code>) retains authority to require a second Code-Review+2 from a general V8 owner on any RISC-V CL before merge, via Gerrit’s <code class="language-plaintext highlighter-rouge">Review-Enforcement</code> submit requirement. This is the active blocker on CL <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953190">7953190</a> (fp16 arithmetic): Ji Qiu, a RISC-V OWNER, has given +1, but no broader V8 owner has supplied the required +2.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>amd64 (x64)</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Official support tier</td>
+      <td>Yes (Tier 1)</td>
+      <td>Yes (officially supported)</td>
+      <td>No (“not officially supported,” external team)</td>
+    </tr>
+    <tr>
+      <td>CI</td>
+      <td>LUCI, full hardware + simulator, blocks CQ</td>
+      <td>LUCI, full hardware + simulator, blocks CQ</td>
+      <td>LUCI, simulator-only, blocks its own CQ lane but no native/QEMU hardware validation</td>
+    </tr>
+    <tr>
+      <td>Binary releases (any channel)</td>
+      <td>None via <code class="language-plaintext highlighter-rouge">v8/v8</code> GitHub Releases (repo has zero releases for any arch)</td>
+      <td>Same</td>
+      <td>Same - V8 ships no standalone binaries for any architecture</td>
+    </tr>
+    <tr>
+      <td>Embedded distribution</td>
+      <td>Chrome, Node.js official binaries</td>
+      <td>Chrome, Node.js official binaries</td>
+      <td>Not shipped in official Chrome binaries; Node.js itself does have a riscv64 build in Ubuntu 26.04 resolute, but that is Node.js packaging V8 internally, not a V8-specific artifact</td>
+    </tr>
+    <tr>
+      <td>OWNERS review requirement</td>
+      <td>Standard</td>
+      <td>Standard</td>
+      <td>Additional external-team OWNERS plus a required general V8 owner +2</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -355,115 +444,228 @@
 </h2>
     
 
-<p>V8 has four JIT tiers and a full interpreter. All four tiers have RISC-V backends.</p>
-<h3 id="41-assembler-layer-srccodegenriscv">
+<p>V8 has four JIT tiers (Sparkplug baseline, Maglev mid-tier, Turbofan/Turboshaft optimizing, plus Liftoff for WebAssembly) and a bytecode interpreter. Direct source inspection (shallow clone of <code class="language-plaintext highlighter-rouge">v8/v8</code> at <code class="language-plaintext highlighter-rouge">b49c556f</code>, 2026-10-01) confirms <strong>89 RISC-V-specific files across 11 directories, approximately 74,900 lines total</strong>, pure C++ using an in-tree hand-written assembler/disassembler - no <code class="language-plaintext highlighter-rouge">.S</code> GNU-as files anywhere (<code class="language-plaintext highlighter-rouge">src/heap/base/asm/riscv/push_registers_asm.cc</code> is <code class="language-plaintext highlighter-rouge">.cc</code> with inline <code class="language-plaintext highlighter-rouge">asm volatile</code>, same pattern as arm64/x64). No <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code>-style C intrinsics from <code class="language-plaintext highlighter-rouge">riscv_vector.h</code> are used for RVV codegen (0 hits); the one place that header is touched is runtime <code class="language-plaintext highlighter-rouge">vlenb</code> detection in <code class="language-plaintext highlighter-rouge">cpu-riscv.cc</code>.</p>
+<h3 id="directory-layout">
   
   
-    <a href="#41-assembler-layer-srccodegenriscv" class="anchor-heading" aria-labelledby="41-assembler-layer-srccodegenriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.1 Assembler Layer (src/codegen/riscv/)
-  
-  
-</h3>
-    
-
-<p>58 files. The assembler is built as a multi-layer mixin hierarchy: <code class="language-plaintext highlighter-rouge">AssemblerRISCVI</code> (base integer) plus per-extension classes compose into <code class="language-plaintext highlighter-rouge">Assembler</code>, which composes into <code class="language-plaintext highlighter-rouge">MacroAssembler</code>. Each ISA extension has its own pair of header/source files.</p>
-
-<p>ISA extensions with production assembler support: RV64I, RV32I, M, A, C, F, D, V (RVV, full coverage), Zba, Zbb, Zbs, Zfa, Zfh, Zicond, Zicsr, Zifencei, Zimop, Zicfiss (shadow stack).</p>
-
-<p>The <code class="language-plaintext highlighter-rouge">macro-assembler-riscv.cc</code> is 283 KB, exceeding x64 (177 KB) and arm64 (181 KB). The RISC-V total codegen directory is 58 files vs 12 for x64 and 22 for arm64; the higher file count reflects the modular ISA extension design, not redundancy.</p>
-
-<p>Extensions not present: Zbc (carry-less multiply), Zbkb. Zvfh (vector half-precision) is not present; <code class="language-plaintext highlighter-rouge">f16x8</code> Wasm operations return <code class="language-plaintext highlighter-rouge">false</code> (stub). Zabha (byte/halfword atomics) has a TODO in <code class="language-plaintext highlighter-rouge">liftoff-assembler-riscv64-inl.h</code> but is unimplemented.</p>
-
-<p>RVV implementation uses a custom C++ assembler wrapper layer. No <code class="language-plaintext highlighter-rouge">vfloat32m1_t</code> C intrinsics from <code class="language-plaintext highlighter-rouge">rvv_intrinsics.h</code> are used anywhere in the backend.</p>
-<h3 id="42-turbofan-jit-backend-srccompilerbackendriscv">
-  
-  
-    <a href="#42-turbofan-jit-backend-srccompilerbackendriscv" class="anchor-heading" aria-labelledby="42-turbofan-jit-backend-srccompilerbackendriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.2 Turbofan JIT Backend (src/compiler/backend/riscv/)
+    <a href="#directory-layout" class="anchor-heading" aria-labelledby="directory-layout"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Directory layout
   
   
 </h3>
     
 
-<p>7 files. <code class="language-plaintext highlighter-rouge">instruction-codes-riscv.h</code> (18 KB) defines the full IR opcode set with explicit <code class="language-plaintext highlighter-rouge">TARGET_ARCH_OPCODE_LIST_ZBA</code> and <code class="language-plaintext highlighter-rouge">_ZBB</code> sections and a large RVV SIMD opcode set. <code class="language-plaintext highlighter-rouge">code-generator-riscv.cc</code> (234 KB, vs 336 KB for x64 and 204 KB for arm64) emits machine code from selected opcodes, including full RVV SIMD via <code class="language-plaintext highlighter-rouge">VU.SetSimd128</code> + <code class="language-plaintext highlighter-rouge">vl</code>/<code class="language-plaintext highlighter-rouge">vs</code>, Zba/Zbb/Zbs inline, and shadow stack (Zicfiss). <code class="language-plaintext highlighter-rouge">instruction-selector-riscv64.cc</code> (104 KB) performs opcode selection including Zba <code class="language-plaintext highlighter-rouge">sh[1-3]add</code> address folding and Zbb byte-swap.</p>
-
-<p>The instruction scheduler (<code class="language-plaintext highlighter-rouge">instruction-scheduler-riscv.cc</code>, 38 KB vs 14 KB for x64/arm64) contains latency data that was copied from the MIPS port. This data is acknowledged as stale and is not accurate for any real RISC-V microarchitecture [NEEDS VERIFICATION: no Gerrit CL or public statement pinpointing this acknowledgment was found, though the MIPS-origin of the port is well-documented].</p>
-<h3 id="43-liftoff-webassembly-baseline-jit-srcwasmbaselineriscv">
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Directory</th>
+      <th>Role</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/codegen/riscv/</code></td>
+      <td>Assembler core, per-extension ISA encodings, MacroAssembler</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/compiler/backend/riscv/</code></td>
+      <td>Turbofan/Turboshaft instruction selector/scheduler/code generator</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/execution/riscv/</code></td>
+      <td>Simulator, stack frame layout, CFI shadow stack</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/builtins/riscv/</code></td>
+      <td>Hand-written builtin trampolines/stubs</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/baseline/riscv/</code></td>
+      <td>Sparkplug baseline JIT</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/maglev/riscv/</code></td>
+      <td>Maglev mid-tier JIT</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/wasm/baseline/riscv/</code></td>
+      <td>Liftoff Wasm baseline compiler, SIMD128 via RVV</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/wasm/interpreter/riscv/</code></td>
+      <td>Wasm interpreter builtins</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/regexp/riscv/</code></td>
+      <td>Irregexp native regexp codegen</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/diagnostics/riscv/</code></td>
+      <td>Disassembler and stack unwinder</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/heap/base/asm/riscv/</code></td>
+      <td>Conservative-stack-scan register-saving trampoline</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">src/base/cpu/cpu-riscv.cc</code></td>
+      <td>Runtime CPU-feature detection (hwprobe syscall, <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> fallback)</td>
+    </tr>
+  </tbody>
+</table></div>
+<h3 id="directory-level-line-count-parity-vs-arm64x64">
   
   
-    <a href="#43-liftoff-webassembly-baseline-jit-srcwasmbaselineriscv" class="anchor-heading" aria-labelledby="43-liftoff-webassembly-baseline-jit-srcwasmbaselineriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.3 Liftoff WebAssembly Baseline JIT (src/wasm/baseline/riscv/)
-  
-  
-</h3>
-    
-
-<p>3 files totaling approximately 273 KB (shared: 102 KB, riscv64-specific: 83 KB, riscv32-specific: 89 KB), larger than x64 (197 KB) and arm64 (174 KB), reflecting the extension modularization.</p>
-
-<p>All RVV SIMD128 Wasm operations are implemented (vadd, vmul, vfadd, FMA, comparisons, shuffles, reductions, conversions). One confirmed stub: <code class="language-plaintext highlighter-rouge">kF32LoadF16</code> (f16 memory load) is <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED()</code>, intentionally disabled pending float16 support. Full LR/SC and AMO atomic suite present. Zabha (byte/halfword atomics) has a <code class="language-plaintext highlighter-rouge">TODO(riscv): use Zabha instruction if enabled</code> comment and falls back to a slower sequence.</p>
-<h3 id="44-maglev-mid-tier-jit-srcmaglevriscv">
-  
-  
-    <a href="#44-maglev-mid-tier-jit-srcmaglevriscv" class="anchor-heading" aria-labelledby="44-maglev-mid-tier-jit-srcmaglevriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.4 Maglev Mid-Tier JIT (src/maglev/riscv/)
-  
-  
-</h3>
-    
-
-<p>3 files. <code class="language-plaintext highlighter-rouge">maglev-assembler-riscv.cc</code> (27 KB) and <code class="language-plaintext highlighter-rouge">maglev-assembler-riscv-inl.h</code> (82 KB) are comparable in size to x64 (24 KB / 55 KB) and arm64 (27 KB / 61 KB). <code class="language-plaintext highlighter-rouge">maglev-ir-riscv.cc</code> (47 KB) compares directly to x64 (47 KB) and arm64 (48 KB). Content analysis found no missing core functionality, only optimization-quality TODOs (peephole multiplication, better deopt reasons).</p>
-
-<p>The Maglev backend uses Zfa’s <code class="language-plaintext highlighter-rouge">fcvtmod_w_d</code> instruction as a fast path in <code class="language-plaintext highlighter-rouge">maglev-assembler-riscv.cc</code>.</p>
-<h3 id="45-builtins-srcbuiltinsriscv">
-  
-  
-    <a href="#45-builtins-srcbuiltinsriscv" class="anchor-heading" aria-labelledby="45-builtins-srcbuiltinsriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.5 Builtins (src/builtins/riscv/)
-  
-  
-</h3>
-    
-
-<p>Single file at 210 KB, within 2% of x64 (215 KB) and arm64 (215 KB). Covers JS entry/exit trampolines, interpreter entry, generator resumption, OSR, Function.apply/call, Maglev/Baseline prologues. Uses Zicond (<code class="language-plaintext highlighter-rouge">MoveIfZero</code>) and Zicfiss (<code class="language-plaintext highlighter-rouge">sspush_ra</code>/<code class="language-plaintext highlighter-rouge">sspopchk_ra</code>) shadow stack stubs.</p>
-<h3 id="46-simulator-srcexecutionriscv">
-  
-  
-    <a href="#46-simulator-srcexecutionriscv" class="anchor-heading" aria-labelledby="46-simulator-srcexecutionriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.6 Simulator (src/execution/riscv/)
-  
-  
-</h3>
-    
-
-<p><code class="language-plaintext highlighter-rouge">simulator-riscv.cc</code> is over 10,000 lines and fully interprets all instructions including complete RVV vector decode (<code class="language-plaintext highlighter-rouge">DecodeRvvIVV</code>, <code class="language-plaintext highlighter-rouge">DecodeRvvFVF</code>, and related). Supports RV32/RV64, Zfh, Zfa, A (LR/SC + AMO), and conditional RVV.</p>
-
-<p>Zicfiss (shadow stack): the hardware path in <code class="language-plaintext highlighter-rouge">shadow-stack-riscv.cc</code> is <code class="language-plaintext highlighter-rouge">UNREACHABLE()</code>. Only the simulator path is implemented, guarded by <code class="language-plaintext highlighter-rouge">V8_ENABLE_RISCV_SHADOW_STACK</code>. This means shadow stack cannot be used on real hardware.</p>
-
-<p>A simulator bug was found during real-hardware testing: vector register save/restore around C++ function calls was incorrect, and the simulator did not catch it. The bug was found and fixed only through testing on physical hardware (reported in the December 2025 RISE blog post).</p>
-<h3 id="47-regexp-jit-srcregexpriscv">
-  
-  
-    <a href="#47-regexp-jit-srcregexpriscv" class="anchor-heading" aria-labelledby="47-regexp-jit-srcregexpriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.7 Regexp JIT (src/regexp/riscv/)
-  
-  
-</h3>
-    
-
-<p><code class="language-plaintext highlighter-rouge">regexp-macro-assembler-riscv.h</code> is 60 KB (vs 75 KB for x64, 81 KB for arm64). Includes RVV-accelerated paths using <code class="language-plaintext highlighter-rouge">vrgather_vv</code> and <code class="language-plaintext highlighter-rouge">vfirst_m</code>. Production-level content with full stack frame layout.</p>
-<h3 id="48-deoptimizer-srcdeoptimizerriscv">
-  
-  
-    <a href="#48-deoptimizer-srcdeoptimizerriscv" class="anchor-heading" aria-labelledby="48-deoptimizer-srcdeoptimizerriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.8 Deoptimizer (src/deoptimizer/riscv/)
+    <a href="#directory-level-line-count-parity-vs-arm64x64" class="anchor-heading" aria-labelledby="directory-level-line-count-parity-vs-arm64x64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Directory-level line-count parity vs arm64/x64
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">ZapCode()</code> is empty with <code class="language-plaintext highlighter-rouge">// TODO(422364570): Support this platform.</code> This same TODO exists across multiple non-primary architectures and is an optimization-quality item (stack poisoning for debugging), not a correctness gap.</p>
-<h3 id="49-disassembler-srcdiagnosticsriscv">
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Subsystem</th>
+      <th>riscv lines</th>
+      <th>arm64 lines</th>
+      <th>x64 lines</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>src/codegen</td>
+      <td>23,501</td>
+      <td>26,821</td>
+      <td>18,306</td>
+    </tr>
+    <tr>
+      <td>src/execution</td>
+      <td>11,673</td>
+      <td>15,125</td>
+      <td>196 (x64 is the native host, needs no simulator)</td>
+    </tr>
+    <tr>
+      <td>src/regexp (irregexp)</td>
+      <td>1,866</td>
+      <td>2,905</td>
+      <td>2,728</td>
+    </tr>
+    <tr>
+      <td>src/wasm/baseline (Liftoff)</td>
+      <td>7,709</td>
+      <td>4,699</td>
+      <td>5,321</td>
+    </tr>
+    <tr>
+      <td>src/compiler/backend</td>
+      <td>14,599</td>
+      <td>13,951</td>
+      <td>16,916</td>
+    </tr>
+    <tr>
+      <td>src/diagnostics</td>
+      <td>3,579</td>
+      <td>4,975</td>
+      <td>3,754</td>
+    </tr>
+    <tr>
+      <td>src/deoptimizer</td>
+      <td>72</td>
+      <td>89</td>
+      <td>126</td>
+    </tr>
+    <tr>
+      <td>src/maglev</td>
+      <td>4,140</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><code class="language-plaintext highlighter-rouge">V8_TARGET_ARCH_RISCV64</code> appears in 104 files repo-wide, vs <code class="language-plaintext highlighter-rouge">V8_TARGET_ARCH_ARM64</code> in 111 and <code class="language-plaintext highlighter-rouge">V8_TARGET_ARCH_X64</code> in 107 - riscv64 is woven into the codebase at essentially the same breadth as the two tier-1 architectures. <code class="language-plaintext highlighter-rouge">UNIMPLEMENTED()</code>/<code class="language-plaintext highlighter-rouge">UNREACHABLE()</code> density across codegen+execution+backend+wasm-baseline+regexp: riscv 49/222, arm64 66/180, x64 12/293 - riscv64 is not an outlier toward incompleteness.</p>
+<h3 id="key-implementation-files">
   
   
-    <a href="#49-disassembler-srcdiagnosticsriscv" class="anchor-heading" aria-labelledby="49-disassembler-srcdiagnosticsriscv"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4.9 Disassembler (src/diagnostics/riscv/)
+    <a href="#key-implementation-files" class="anchor-heading" aria-labelledby="key-implementation-files"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key implementation files
   
   
 </h3>
     
 
-<p><code class="language-plaintext highlighter-rouge">disasm-riscv.cc</code> at over 2,200 lines covers all extensions: RVV via <code class="language-plaintext highlighter-rouge">DecodeVType</code>, Zba/Zbb/Zbs, Zfa, Zfh, Zimop, Zicfiss. Unwinder present in <code class="language-plaintext highlighter-rouge">unwinder-riscv.cc</code>.</p><hr />
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">src/execution/riscv/simulator-riscv.cc</code> (9,953 lines) - full RV64GC+V interpreter for running RISC-V code on non-RISC-V CI hosts; 98 UNIMPLEMENTED/UNREACHABLE markers for rare encodings.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/codegen/riscv/macro-assembler-riscv.cc</code> (8,350 lines) - MacroAssembler including Wasm RVV helpers.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/compiler/backend/riscv/code-generator-riscv.cc</code> (6,248 lines) - Turbofan codegen, including RVV-based SIMD128 lowering.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/builtins/riscv/builtins-riscv.cc</code> (5,562 lines, 0 stub markers) - interpreter entry/exit, JS call stubs, deopt trampolines.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/diagnostics/riscv/disasm-riscv.cc</code> (3,565 lines) - full disassembler including RVV mnemonics.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/wasm/baseline/riscv/liftoff-assembler-riscv*-inl.h</code> (7,709 combined) - Liftoff Wasm baseline, SIMD128 lowered to RVV.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/maglev/riscv/*</code> (4,140 lines combined) - full Maglev backend.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/regexp/riscv/regexp-macro-assembler-riscv.cc</code> (1,597 lines) - native regexp codegen, gates a fast path on <code class="language-plaintext highlighter-rouge">CpuFeatures::IsSupported(RVV)</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/base/cpu/cpu-riscv.cc</code> (131 lines) - Linux <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code> syscall plus <code class="language-plaintext highlighter-rouge">/proc/cpuinfo</code> “isa”/”mmu” string fallback (added 2026-09-28, commit <code class="language-plaintext highlighter-rouge">3ead75e</code>, to support vendor kernels such as SpacemiT K1 that backport RVV without <code class="language-plaintext highlighter-rouge">riscv_hwprobe</code>); detects RVV, FPU, Zba/Zbb/Zbs/Zfa/Zfh/Zvfh, Sv39/48/57 MMU mode, and VLEN.</li>
+</ul>
+<h3 id="isa-extensions-referencedused">
+  
+  
+    <a href="#isa-extensions-referencedused" class="anchor-heading" aria-labelledby="isa-extensions-referencedused"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> ISA extensions referenced/used
+  
+  
+</h3>
+    
+
+<p>RV64GC base (I, M, A, F, D, C) plus <strong>V</strong> (RVV 1.0, vector/SIMD), <strong>Zba, Zbb, Zbs</strong> (bitmanip), <strong>Zcb</strong> (compressed, added 2026-08-18 per commit <code class="language-plaintext highlighter-rouge">b9b6c32</code>), <strong>Zfa, Zfh</strong> (float), <strong>Zvfh</strong> (vector half-float - detection only; full arithmetic is pending, see 6.2), <strong>Zicsr, Zifencei, Zimop, Zicond</strong>, and <strong>Zicfiss</strong> (CFI shadow stack, build flag <code class="language-plaintext highlighter-rouge">riscv_use_zicfiss</code>). Wasm SIMD128 and Turbofan SIMD are both lowered to RVV vector instructions (<code class="language-plaintext highlighter-rouge">SIMD_VISIT_BINOP_RVV</code> / <code class="language-plaintext highlighter-rouge">kRiscvVxxVv</code> opcode family) - there is no separate “P” packed-SIMD path.</p>
+<h3 id="per-tier-verdict">
+  
+  
+    <a href="#per-tier-verdict" class="anchor-heading" aria-labelledby="per-tier-verdict"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Per-tier verdict
+  
+  
+</h3>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Verdict</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Macro-assembler / core codegen (per-extension A/B/C/D/F/M/V/Zfa/Zfh/Zicond/Zicsr/Zifencei/Zimop)</td>
+      <td>Full, hand-tuned</td>
+    </tr>
+    <tr>
+      <td>Optimizing compiler backend (Turbofan/Turboshaft instruction selector + code generator)</td>
+      <td>Full, hand-tuned; split riscv32/riscv64 selectors</td>
+    </tr>
+    <tr>
+      <td>Maglev mid-tier JIT</td>
+      <td>Full, hand-tuned</td>
+    </tr>
+    <tr>
+      <td>Liftoff / Wasm baseline incl. SIMD (RVV)</td>
+      <td>Full, hand-tuned; real vector-ISA codegen, no scalar fallback found</td>
+    </tr>
+    <tr>
+      <td>Irregexp (regexp JIT)</td>
+      <td>Full, hand-tuned</td>
+    </tr>
+    <tr>
+      <td>Execution glue (simulator, frame constants, shadow stack)</td>
+      <td>Full (shadow stack hardware path is UNREACHABLE(), simulator-only, see 6.7)</td>
+    </tr>
+    <tr>
+      <td>Diagnostics (disassembler, unwinder)</td>
+      <td>Full, hand-tuned</td>
+    </tr>
+    <tr>
+      <td>Deoptimizer</td>
+      <td>Thin (72 lines) uniformly across all architectures by design, not riscv-specific</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Extensions not yet present: Zbc (carry-less multiply), Zbkb. f16x8 Wasm SIMD arithmetic (distinct from Zvfh detection) still returns <code class="language-plaintext highlighter-rouge">false</code> pending CL 7953190 (see Section 6.2). Zabha (byte/halfword atomics) has an open <code class="language-plaintext highlighter-rouge">TODO(riscv): use Zabha instruction if enabled</code> in <code class="language-plaintext highlighter-rouge">liftoff-assembler-riscv64-inl.h</code>, falling back to a slower sequence.</p>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -473,78 +675,34 @@
 </h2>
     
 
-<p>V8 uses GN + Ninja. There are no CMakeLists.txt files. There are no Dockerfiles for riscv64 in upstream repositories (v8/v8, chromium/src, riscv-collab/v8). No prebuilt sysroot CIPD package exists for riscv64; the sysroot is fetched as a tarball from Google Cloud Storage via <code class="language-plaintext highlighter-rouge">build/linux/sysroot_scripts/install-sysroot.py --arch=riscv64</code>. The sysroot is Debian Trixie (all other architectures use Bullseye).</p>
+<p>V8 uses <strong>GN (Generate Ninja) + Ninja</strong>, with a secondary/experimental Bazel build (<code class="language-plaintext highlighter-rouge">BUILD.bazel</code>, <code class="language-plaintext highlighter-rouge">MODULE.bazel</code>). There is no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>, no <code class="language-plaintext highlighter-rouge">BUILDING.md</code>, no <code class="language-plaintext highlighter-rouge">INSTALL</code>, and no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code> anywhere in the repository. There are <strong>no Dockerfiles anywhere in the repo</strong> - confirmed both by a local <code class="language-plaintext highlighter-rouge">find</code> and by a GitHub <code class="language-plaintext highlighter-rouge">search_code</code> query for <code class="language-plaintext highlighter-rouge">riscv64 repo:v8/v8 filename:Dockerfile</code> (0 results).</p>
 
-<p>Three GN toolchain targets are defined in <code class="language-plaintext highlighter-rouge">build/toolchain/linux/BUILD.gn</code>:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">gcc_toolchain("riscv64")</code>: GCC cross-compile with <code class="language-plaintext highlighter-rouge">toolprefix = "riscv64-linux-gnu"</code>. Used for native <code class="language-plaintext highlighter-rouge">target_cpu="riscv64" is_clang=false</code> builds.</li>
-  <li><code class="language-plaintext highlighter-rouge">clang_toolchain("clang_riscv64")</code>: Clang native for <code class="language-plaintext highlighter-rouge">is_clang=true target_cpu="riscv64"</code> builds.</li>
-  <li><code class="language-plaintext highlighter-rouge">clang_v8_toolchain("clang_x64_v8_riscv64")</code>: Simulator build, <code class="language-plaintext highlighter-rouge">target_cpu="x64" v8_target_cpu="riscv64"</code>.</li>
-</ul>
-
-<p><strong>Simulator build (recommended for development, requires no cross-compiler):</strong></p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tools/dev/gm.py riscv64.debug
-tools/dev/gm.py riscv64.release
+<p><strong>Convenience workflow (<code class="language-plaintext highlighter-rouge">gm</code>):</strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>alias gm=/path/to/v8/tools/dev/gm.py
+gm riscv64.release
+gm riscv64.release.check
 </code></pre></div></div>
+<p>Caveat, found directly in <code class="language-plaintext highlighter-rouge">tools/dev/gm.py</code> (<code class="language-plaintext highlighter-rouge">ManagedConfig.get_target_cpu</code>): <code class="language-plaintext highlighter-rouge">gm</code> only auto-detects a native host for arm64/arm/loong64/mips64el. There is no riscv64-host branch, so on a typical x64 development machine <code class="language-plaintext highlighter-rouge">gm riscv64.release</code> silently falls through to <code class="language-plaintext highlighter-rouge">cpu="x64"</code> - producing an <strong>x64-hosted simulator build</strong>, not a real cross-compiled riscv64 binary, unless GN args are given manually.</p>
 
-<p>Or manually:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gn gen out/riscv64.debug --args='target_cpu="x64" v8_target_cpu="riscv64" is_debug=true v8_enable_slow_dchecks=true v8_optimized_debug=false'
-ninja -C out/riscv64.debug d8 -j$(nproc)
+<p><strong>Manual GN, native riscv64 cross-compile</strong> (from <code class="language-plaintext highlighter-rouge">infra/mb/mb_config.pyl</code> bot configs):</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gn gen out/riscv64.release --args='target_cpu="riscv64" use_custom_libcxx=false is_clang=false is_debug=false dcheck_always_on=false'
+ninja -C out/riscv64.release d8
 </code></pre></div></div>
+<p>Debug variant adds <code class="language-plaintext highlighter-rouge">is_debug=true v8_enable_backtrace=true v8_enable_slow_dchecks=true v8_full_debug=true</code>.</p>
 
-<p><strong>Native cross-compiled build:</strong> Requires <code class="language-plaintext highlighter-rouge">riscv-gnu-toolchain</code> built from source (approximately 8 GB disk). The toolchain-installed prefix is <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu-</code>; if it differs from the expected <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-</code>, update <code class="language-plaintext highlighter-rouge">build/toolchain/linux/BUILD.gn</code> accordingly. Key GN args: <code class="language-plaintext highlighter-rouge">target_cpu="riscv64" v8_target_cpu="riscv64" is_clang=false use_custom_libcxx=false treat_warnings_as_errors=false</code>.</p>
+<p><strong>Manual GN, simulator build</strong> (what V8’s own CI actually runs, host x64):</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gn gen out/riscv64.release.sim --args='target_cpu="x64" v8_target_cpu="riscv64" is_debug=false dcheck_always_on=false'
+ninja -C out/riscv64.release.sim d8
+</code></pre></div></div>
+<p>Add <code class="language-plaintext highlighter-rouge">v8_enable_pointer_compression=true</code> for the <code class="language-plaintext highlighter-rouge">riscv64_pointer_compression</code> CI variant.</p>
 
-<p><strong>Known exclusions:</strong></p>
+<p><code class="language-plaintext highlighter-rouge">use_custom_libcxx=false</code> disables V8/Chromium’s bundled libc++ and falls back to system <code class="language-plaintext highlighter-rouge">libstdc++</code>, because no prebuilt libc++ is shipped for riscv64 cross-compilation (same flag used for ppc64 and s390x). <code class="language-plaintext highlighter-rouge">v8_riscv_enable_deprecated_riscv32 = false</code> by default in <code class="language-plaintext highlighter-rouge">BUILD.gn</code> compiles riscv32 out unless explicitly enabled.</p>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">_FORTIFY_SOURCE</code> is explicitly disabled for <code class="language-plaintext highlighter-rouge">current_cpu == "riscv64"</code> in <code class="language-plaintext highlighter-rouge">build/config/compiler/BUILD.gn</code>. Do not pass it manually.</li>
-  <li><code class="language-plaintext highlighter-rouge">use_custom_libcxx=false</code> is required for GCC native builds.</li>
-  <li>No ASAN/TSAN/MSAN riscv64 CI configuration exists. Sanitizer builds are not officially supported on riscv64 in V8’s CI.</li>
-</ul>
+<p><strong>Compiler selection:</strong> the <code class="language-plaintext highlighter-rouge">'gcc'</code> mixin in <code class="language-plaintext highlighter-rouge">infra/mb/mb_config.pyl</code> sets <code class="language-plaintext highlighter-rouge">is_clang=false</code> for native (non-simulator) riscv64 debug/release bots - native riscv64 builds in V8 CI use <strong>GCC</strong>, not Clang (Clang is used for everything else, including the x64-hosted simulator builds). <strong>No minimum GCC or Clang version is declared anywhere in the repository</strong> for riscv64; <code class="language-plaintext highlighter-rouge">DEPS</code> pins Clang via an opaque CIPD package hash, architecture-generic, not riscv64-specific. The native-riscv64 <code class="language-plaintext highlighter-rouge">gcc</code> mixin assumes whatever riscv64 cross-GCC toolchain is already on the builder’s <code class="language-plaintext highlighter-rouge">PATH</code>. The sysroot is Debian Trixie for riscv64 (all other architectures use Bullseye) [NEEDS VERIFICATION: this sysroot detail is carried from prior research and was not independently re-confirmed in the current pass], fetched via <code class="language-plaintext highlighter-rouge">build/linux/sysroot_scripts/install-sysroot.py --arch=riscv64</code> since no prebuilt CIPD sysroot exists for riscv64.</p>
 
-<p><strong>RISC-V extension GN args (from <code class="language-plaintext highlighter-rouge">build/config/riscv.gni</code>, all default to false):</strong></p>
+<p>The riscv-specific <code class="language-plaintext highlighter-rouge">declare_args()</code> defaults gating codegen (<code class="language-plaintext highlighter-rouge">riscv_use_rvv</code>, <code class="language-plaintext highlighter-rouge">riscv_rvv_vlen</code>, <code class="language-plaintext highlighter-rouge">riscv_profile</code>, <code class="language-plaintext highlighter-rouge">riscv_use_zba/zbb/zbs/zicond/zicfiss</code>, <code class="language-plaintext highlighter-rouge">riscv_code_alignment</code>, <code class="language-plaintext highlighter-rouge">riscv_constant_pool_alignment</code>, <code class="language-plaintext highlighter-rouge">riscv_use_sv39</code>) live in <code class="language-plaintext highlighter-rouge">build/config/riscv.gni</code>, which is <strong>not in <code class="language-plaintext highlighter-rouge">v8/v8</code></strong> - it is pinned via <code class="language-plaintext highlighter-rouge">DEPS</code> at commit <code class="language-plaintext highlighter-rouge">bc0661cf80717e97e1b6868396f61f7f94f2d04a</code> of the separate <code class="language-plaintext highlighter-rouge">chromium/src/build.git</code> repo, fetched through <code class="language-plaintext highlighter-rouge">gclient sync</code>/depot_tools.</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Arg</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_rvv</code></td>
-      <td>Enable RVV</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_rvv_vlen</code></td>
-      <td>Simulator VLEN: 128/256/512/1024 (default 128)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zba</code></td>
-      <td>Zba</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zbb</code></td>
-      <td>Zbb</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zbs</code></td>
-      <td>Zbs</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zicfiss</code></td>
-      <td>Shadow stack</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">riscv_use_zicond</code></td>
-      <td>Conditional ops</td>
-    </tr>
-  </tbody>
-</table></div><hr />
+<p><strong>QEMU:</strong> no QEMU usage anywhere in the repo for riscv64. The one script with a <code class="language-plaintext highlighter-rouge">--use-qemu</code> flag (<code class="language-plaintext highlighter-rouge">tools/builtins-pgo/generate.py</code>) explicitly supports only <code class="language-plaintext highlighter-rouge">arm</code>/<code class="language-plaintext highlighter-rouge">arm64</code> and errors out (<code class="language-plaintext highlighter-rouge">"{cpu} binaries can't be run with qemu"</code>) for any other target, including riscv64. V8’s own CI bots for riscv64 run on <code class="language-plaintext highlighter-rouge">Ubuntu-22.04</code> x64 swarming workers, testing the software simulator - not real riscv64 hardware or QEMU userspace emulation.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -553,18 +711,16 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
   
 </h2>
     
-<h3 id="61-jit-tier-completeness">
+<h3 id="61-overall-parity">
   
   
-    <a href="#61-jit-tier-completeness" class="anchor-heading" aria-labelledby="61-jit-tier-completeness"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.1 JIT Tier Completeness
+    <a href="#61-overall-parity" class="anchor-heading" aria-labelledby="61-overall-parity"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.1 Overall Parity
   
   
 </h3>
     
 
-<p>All four JIT tiers (Interpreter, Liftoff, Maglev, Turbofan/Turboshaft) have RISC-V backends. File sizes are within 20% of x64 and arm64 equivalents for every tier except the assembler layer, which is larger due to per-extension file decomposition.</p>
-
-<p>The RISE December 2025 blog post describes RISC-V as “mostly at feature parity with officially supported architectures like x86_64 and ARM64” and “one of the most green ports” on V8’s buildbots. No numeric cross-architecture benchmark comparison is available in any public source as of June 2026.</p>
+<p>All four JIT tiers have RISC-V backends at sizes comparable to or larger than arm64/x64 equivalents (Section 4). The December 2025 RISE blog post describes RISC-V as “mostly at feature parity with officially supported architectures like x86_64 and ARM64” and “one of the most green ports” on V8’s buildbots. No numeric cross-architecture benchmark comparison (JetStream, Speedometer, or otherwise) has been published as of this research.</p>
 <h3 id="62-float16--zvfh">
   
   
@@ -574,7 +730,7 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
 </h3>
     
 
-<p>Float16 (f16x8) Wasm SIMD operations are currently disabled. <code class="language-plaintext highlighter-rouge">f16x8</code> Liftoff ops return <code class="language-plaintext highlighter-rouge">false</code> (stub). CL <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953190">7953190</a> (open as of 2026-06-18) implements <code class="language-plaintext highlighter-rouge">vfadd/vfsub/vfmul/vfdiv</code> for fp16 using the Zvfh extension. Its prerequisite CL <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7897892">7897892</a> (Zvfh simulator support) merged 2026-06-17. CL 7953190 is blocked only by the <code class="language-plaintext highlighter-rouge">Review-Enforcement</code> submit requirement (needs a V8 owner Code-Review+2 in addition to Ji Qiu’s +1).</p>
+<p>Zvfh detection exists (<code class="language-plaintext highlighter-rouge">CpuFeatures</code> probing, commit <code class="language-plaintext highlighter-rouge">2cf1906</code> “Add zfh/zvfh detect”), but f16x8 Wasm SIMD <strong>arithmetic</strong> is not yet merged. CL <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953190">7953190</a> implements <code class="language-plaintext highlighter-rouge">vfadd/vfsub/vfmul/vfdiv</code> for fp16 under Zvfh. The CL is code-complete and has passed CQ dry-run but is blocked solely on the Gerrit <code class="language-plaintext highlighter-rouge">Review-Enforcement</code> requirement: Ji Qiu (RISC-V OWNER) has given +1, no general V8 owner has given the required +2.</p>
 <h3 id="63-bytehalfword-atomics-zabha">
   
   
@@ -584,7 +740,7 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
 </h3>
     
 
-<p>Liftoff (<code class="language-plaintext highlighter-rouge">liftoff-assembler-riscv64-inl.h</code>) has <code class="language-plaintext highlighter-rouge">TODO(riscv): use Zabha instruction if enabled</code> for byte and halfword atomic operations, which currently fall back to a slower sequence. No CL implementing Zabha was found in the research data.</p>
+<p><code class="language-plaintext highlighter-rouge">liftoff-assembler-riscv64-inl.h</code> has <code class="language-plaintext highlighter-rouge">TODO(riscv): use Zabha instruction if enabled</code> for byte/halfword atomics, which currently fall back to a slower instruction sequence. No CL implementing Zabha was found in either research pass.</p>
 <h3 id="64-instruction-scheduler-latencies">
   
   
@@ -594,7 +750,7 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
 </h3>
     
 
-<p>The instruction scheduler’s latency table was ported from MIPS and does not reflect any actual RISC-V microarchitecture. This affects code quality for out-of-order cores where scheduling matters. The problem exists for all RISC-V targets but has no CL addressing it.</p>
+<p>The instruction scheduler’s latency table (<code class="language-plaintext highlighter-rouge">instruction-scheduler-riscv.cc</code>) was copied from the MIPS port and does not reflect any real RISC-V microarchitecture; GitHub issue <a href="https://github.com/riscv-collab/v8/issues/374">riscv-collab/v8#374</a> (“Update instruction latencies,” open since 2020-12-31) tracks this. This affects code quality on out-of-order cores.</p>
 <h3 id="65-zbb-rotation-rolror">
   
   
@@ -604,65 +760,74 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
 </h3>
     
 
-<p>GitHub PRs <a href="https://github.com/v8/v8/pull/93">#93</a> and <a href="https://github.com/v8/v8/pull/94">#94</a> attempted to add <code class="language-plaintext highlighter-rouge">ror</code>/<code class="language-plaintext highlighter-rouge">rol</code> rotation instructions to the macro-assembler. Both were closed without merging due to a missing CLA, and because the GitHub mirror does not accept contributions. No equivalent Gerrit CL was found. The Zbb rotation optimization is absent from the RISC-V backend. CL <a href="https://github.com/v8/v8/commit/157c29e">157c29e</a> (merged 2026-05-08) enables Zba/Zbb/Zbs/Zicond for the rva23u64 profile target, but the rotation-specific macro-assembler paths are unimplemented.</p>
-<h3 id="66-sub32-overflow-bug">
+<p>GitHub PRs <a href="https://github.com/v8/v8/pull/93">#93</a> and <a href="https://github.com/v8/v8/pull/94">#94</a> (author <code class="language-plaintext highlighter-rouge">donebd</code>, 2024-06-03) attempted to add <code class="language-plaintext highlighter-rouge">ror</code>/<code class="language-plaintext highlighter-rouge">rol</code> to the macro-assembler via the GitHub mirror; both were closed same-day, blocked by the Google CLA bot (the contributor never signed the CLA, so no human review ever occurred - PR #94 appears to be a same-day restart attempt after #93 stalled). No equivalent Gerrit CL was found in either research pass, so Zbb rotation remains absent from the backend. [NEEDS VERIFICATION, single source carried from a prior pass: a separate CL enabling Zba/Zbb/Zbs/Zicond for the <code class="language-plaintext highlighter-rouge">rva23u64</code> profile target was reported but not independently re-confirmed this pass; if real, it would not include the rotation-specific macro-assembler paths regardless.]</p>
+<h3 id="66-sub32--int_min-overflow-bug">
   
   
-    <a href="#66-sub32-overflow-bug" class="anchor-heading" aria-labelledby="66-sub32-overflow-bug"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.6 Sub32 Overflow Bug
-  
-  
-</h3>
-    
-
-<p>CL <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7500131">7500131</a> (open since 2026-01-20, stalled) attempts to fix an acknowledged <code class="language-plaintext highlighter-rouge">TODO</code> in <code class="language-plaintext highlighter-rouge">src/codegen/riscv/macro-assembler-riscv.cc</code> around Sub32 handling of INT_MIN / immediate overflow in 32-bit integer subtraction. The CL has an unresolved inline review objection from Olivier Fluckiger (2026-01-21) stating the logic change is incorrect, and no test case demonstrating the bug has been provided. This is a latent correctness bug in the backend.</p>
-<h3 id="67-zicfiss-shadow-stack">
-  
-  
-    <a href="#67-zicfiss-shadow-stack" class="anchor-heading" aria-labelledby="67-zicfiss-shadow-stack"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.7 Zicfiss Shadow Stack
+    <a href="#66-sub32--int_min-overflow-bug" class="anchor-heading" aria-labelledby="66-sub32--int_min-overflow-bug"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.6 Sub32 / INT_MIN Overflow Bug
   
   
 </h3>
     
 
-<p>Hardware path is <code class="language-plaintext highlighter-rouge">UNREACHABLE()</code>. Only the simulator implements Zicfiss. No hardware-enabled shadow stack support exists.</p>
-<h3 id="68-performance-optimizations-landed-from-rise-dec-2025-blog">
+<p>CL <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7500131">7500131</a> (open since 2026-01-20) attempts to fix handling of Sub32 around INT_MIN/immediate overflow in 32-bit integer subtraction. It has been stalled since January 2026 on an unresolved correctness objection, and no reproducer/test case demonstrating the bug has been provided. This is a latent correctness risk for 32-bit integer subtraction on riscv64.</p>
+<h3 id="67-auipcjalr-to-jal-optimization-stalled">
   
   
-    <a href="#68-performance-optimizations-landed-from-rise-dec-2025-blog" class="anchor-heading" aria-labelledby="68-performance-optimizations-landed-from-rise-dec-2025-blog"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.8 Performance Optimizations Landed (from RISE Dec 2025 blog)
+    <a href="#67-auipcjalr-to-jal-optimization-stalled" class="anchor-heading" aria-labelledby="67-auipcjalr-to-jal-optimization-stalled"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.7 Auipc+Jalr to Jal Optimization (stalled)
+  
+  
+</h3>
+    
+
+<p>CL <a href="https://chromium-review.googlesource.com/c/v8/v8/+/6874383">6874383</a> (SpacemiT, Zhijin Zeng; open since 2025-08-22, moved to WIP 2026-02-03) replaces 2-instruction <code class="language-plaintext highlighter-rouge">auipc+jalr</code> sequences with a single <code class="language-plaintext highlighter-rouge">jal</code> where the offset fits. A CQ dry run passed. The CL is stalled on a safepoint-table-integrity concern: changing the physical address of jump instructions breaks the safepoint table’s instruction-offset-to-GC-metadata mapping. A proposed <code class="language-plaintext highlighter-rouge">nop+jal</code> fix preserving the 2-instruction slot has been suggested but not yet submitted as a separate CL.</p>
+<h3 id="68-zicfiss-shadow-stack">
+  
+  
+    <a href="#68-zicfiss-shadow-stack" class="anchor-heading" aria-labelledby="68-zicfiss-shadow-stack"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.8 Zicfiss Shadow Stack
+  
+  
+</h3>
+    
+
+<p>The hardware path in <code class="language-plaintext highlighter-rouge">shadow-stack-riscv.cc</code>/<code class="language-plaintext highlighter-rouge">.h</code> (45+63 lines) is <code class="language-plaintext highlighter-rouge">UNREACHABLE()</code>. Only the simulator path is implemented, gated by <code class="language-plaintext highlighter-rouge">V8_ENABLE_RISCV_SHADOW_STACK</code>. No hardware-enabled CFI shadow stack support exists on riscv64 today.</p>
+<h3 id="69-simulator-fidelity-and-real-hardware-bugs">
+  
+  
+    <a href="#69-simulator-fidelity-and-real-hardware-bugs" class="anchor-heading" aria-labelledby="69-simulator-fidelity-and-real-hardware-bugs"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.9 Simulator Fidelity and Real-Hardware Bugs
+  
+  
+</h3>
+    
+
+<p>The simulator does not faithfully reproduce all hardware behavior. A confirmed case (reported in the December 2025 RISE blog post): vector-register save/restore around calls into C++ code was incorrect, and the bug was found only through testing on physical hardware, not in simulator-only CI - this bug had already shipped past CI before being caught. A second fixed bug of the same class: an atomic jump-table-patching race in Wasm indirect function calls, where a CPU could execute a stale/mismatched <code class="language-plaintext highlighter-rouge">auipc</code>/<code class="language-plaintext highlighter-rouge">jalr</code> pair during code patching; the fix replaces the two-instruction sequence with an atomic memory load of the target address.</p>
+<h3 id="610-performance-optimizations-landed-rise-dec-2025-post-and-recent-commits">
+  
+  
+    <a href="#610-performance-optimizations-landed-rise-dec-2025-post-and-recent-commits" class="anchor-heading" aria-labelledby="610-performance-optimizations-landed-rise-dec-2025-post-and-recent-commits"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.10 Performance Optimizations Landed (RISE Dec 2025 post, and recent commits)
   
   
 </h3>
     
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">sh3add</code> (Zba): address calculation reduced from 4 instructions to 2.</li>
-  <li><code class="language-plaintext highlighter-rouge">zext.w</code> (Zba): pointer decompression reduced from 5 instructions to 2. Authors describe this as “a nice and noticeable improvement.”</li>
-  <li>Atomic jump table patching: two-store <code class="language-plaintext highlighter-rouge">auipc+jalr</code> replaced with a single atomic memory load sequence, fixing a race condition in Wasm indirect function call patching.</li>
-  <li>Int32MultiplyOverflownBits: peephole using <code class="language-plaintext highlighter-rouge">Mul32 + srai(out, out, 32)</code>.</li>
-  <li>RVV vector width: expanded from 128-bit to 256-bit and 512-bit, which unblocked completion of the full JetStream benchmark suite.</li>
+  <li><code class="language-plaintext highlighter-rouge">sh3add</code> (Zba): address-calculation sequences reduced from 4 instructions to 2 in the common case.</li>
+  <li><code class="language-plaintext highlighter-rouge">zext.w</code> (Zba): pointer decompression reduced from 5 instructions to 2 (“a nice and noticeable improvement,” per the authors).</li>
+  <li>Constant-pool emission simplified: moved from interleaved emission to end-of-codegen emission, both simplifying pool logic and preparing for moving constants to a non-executable memory section.</li>
+  <li>Int32MultiplyOverflownBits: peephole optimization using <code class="language-plaintext highlighter-rouge">Mul32 + srai(out, out, 32)</code> for Maglev.</li>
+  <li>RVV vector width expanded from 128-bit only to include 256-bit and 512-bit vector CPUs, which was the last piece needed to run the full JetStream suite to completion.</li>
+  <li>Recent correctness fixes landing at a near-daily cadence through late September 2026, including: a register-constraint bit-field overlap bug after an AccessMode field shrink (<code class="language-plaintext highlighter-rouge">65b7f9a</code>); <code class="language-plaintext highlighter-rouge">ZeroExtendsWord32ToWord64NoPhis</code> handling for atomic loads and <code class="language-plaintext highlighter-rouge">kProjection</code> nodes in Turboshaft (<code class="language-plaintext highlighter-rouge">91aca67</code>, <code class="language-plaintext highlighter-rouge">6ce3a62</code>); register clobbering in atomic compare-exchange (<code class="language-plaintext highlighter-rouge">de0cae9</code>); Liftoff sub-word atomic RMW (<code class="language-plaintext highlighter-rouge">d45bc02</code>); incorrect carry in wasm-wide-arith <code class="language-plaintext highlighter-rouge">Add128</code> (<code class="language-plaintext highlighter-rouge">b3783c4</code>); out-of-line spill space sizing in <code class="language-plaintext highlighter-rouge">RecordSpillsInSafepoint</code> (<code class="language-plaintext highlighter-rouge">6b42691</code>); and <code class="language-plaintext highlighter-rouge">CompareTaggedAndBranch</code> with relocatable immediates (<code class="language-plaintext highlighter-rouge">26e258c</code>).</li>
 </ul>
-<h3 id="69-jetstream-completion">
+<h3 id="611-benchmark-data">
   
   
-    <a href="#69-jetstream-completion" class="anchor-heading" aria-labelledby="69-jetstream-completion"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.9 JetStream Completion
-  
-  
-</h3>
-    
-
-<p>V8 on RISC-V runs the full JetStream benchmark suite to completion (~33 MB Wasm bytecode, ~2 million lines of JavaScript). No numeric JetStream score for RISC-V is published in any public source. No Speedometer scores for RISC-V are published. No cross-architecture (RISC-V vs. x86_64 vs. ARM64) numeric comparison exists in any public source as of June 2026.</p>
-
-<p>The only available numeric benchmark data is from the 2020 early-port era on HiFive Unleashed hardware (legacy Octane/SunSpider/Kraken benchmarks), showing near-parity with the simulator baseline. These numbers are not representative of current performance on any modern RISC-V microarchitecture.</p>
-<h3 id="66-auipcjalr-to-jal-optimization-stalled">
-  
-  
-    <a href="#66-auipcjalr-to-jal-optimization-stalled" class="anchor-heading" aria-labelledby="66-auipcjalr-to-jal-optimization-stalled"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.6 Auipc+Jalr to Jal Optimization (stalled)
+    <a href="#611-benchmark-data" class="anchor-heading" aria-labelledby="611-benchmark-data"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6.11 Benchmark Data
   
   
 </h3>
     
 
-<p>CL <a href="https://chromium-review.googlesource.com/c/v8/v8/+/6874383">6874383</a> (authored by Zhijin Zeng, SpacemiT; open since 2025-08-22, set to WIP 2026-02-03) replaces 2-instruction <code class="language-plaintext highlighter-rouge">auipc+jalr</code> sequences with single-instruction <code class="language-plaintext highlighter-rouge">jal</code> where the offset fits in 20 bits. A CQ dry run passed on 2025-09-17. The CL has been stalled for approximately 10 months due to an unresolved technical objection: the optimization changes the physical address of jump instructions, which breaks the safepoint table (which maps exact instruction offsets to GC metadata). A proposed fix using <code class="language-plaintext highlighter-rouge">nop+jal</code> to preserve the 2-instruction slot was suggested as a separate CL but has not been submitted.</p><hr />
+<p>The only quantitative riscv64 V8 numbers found are from <a href="https://github.com/riscv-collab/v8/issues/701">riscv-collab/v8#701</a> (“Octane failed on Unmatched,” open since 2022-06-30), an Octane run on a SiFive HiFive Unmatched board: Richards 3.96, DeltaBlue 4.47, Crypto 2.64, RayTrace 10.0, EarleyBoyer 18.0, RegExp 4.48, Splay 29.8, SplayLatency 262 - with NavierStokes, PdfJS, and SunSpider all <strong>failing</strong> (checksum/incorrect-output errors), not merely scoring low. These scores reflect 2022-era immature codegen and active correctness failures; they are not representative of the current port and are an order of magnitude below typical x86/ARM Octane scores of that era. No modern (2024-2026) JetStream or Speedometer score, and no riscv64-vs-arm64/x86_64 numeric comparison, has been published by V8, RISE, or any other source found.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -680,69 +845,9 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
 </h3>
     
 
-<p>V8’s CI runs on Google’s LUCI infrastructure (ci.chromium.org), not GitHub Actions. The v8/v8 GitHub repository contains only one file in <code class="language-plaintext highlighter-rouge">.github/</code>: <code class="language-plaintext highlighter-rouge">mistaken-pull-closer.yml</code>, a bot that auto-closes PRs and redirects contributors to Gerrit. There are zero GitHub Actions workflow files in the repository.</p>
+<p>V8’s CI runs on Google’s LUCI infrastructure (<code class="language-plaintext highlighter-rouge">ci.chromium.org</code>), not GitHub Actions. Direct inspection of <code class="language-plaintext highlighter-rouge">v8/v8</code> confirms there is no <code class="language-plaintext highlighter-rouge">.github/workflows/</code> directory at all - <code class="language-plaintext highlighter-rouge">.github/</code> contains exactly one file, <code class="language-plaintext highlighter-rouge">mistaken-pull-closer.yml</code> (a probot config with no <code class="language-plaintext highlighter-rouge">on:</code>/<code class="language-plaintext highlighter-rouge">jobs:</code>/<code class="language-plaintext highlighter-rouge">runs-on:</code> keys, running no code). A <code class="language-plaintext highlighter-rouge">grep -ri riscv -r .github</code> returns zero matches. Any claim of GitHub-hosted riscv64 CI for V8 is false as stated; if riscv64 testing exists, it happens entirely outside GitHub.</p>
 
-<p>RISC-V CI builders are defined in <code class="language-plaintext highlighter-rouge">infra/testing/builders.pyl</code> and <code class="language-plaintext highlighter-rouge">infra/mb/mb_config.pyl</code>. All official builders run on Ubuntu-22.04 x86-64 swarming workers using the simulator (no native hardware, no QEMU).</p>
-
-<p><strong>CI builders (<code class="language-plaintext highlighter-rouge">luci.v8.ci</code>, <code class="language-plaintext highlighter-rouge">client.v8.ports</code> group):</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Builder</th>
-      <th>Host</th>
-      <th>Test Shards</th>
-      <th>Hard Timeout</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>V8 Linux - riscv64 - sim</td>
-      <td>Ubuntu-22.04 x64</td>
-      <td>3</td>
-      <td>3600s</td>
-    </tr>
-    <tr>
-      <td>V8 Linux - riscv64 - sim - debug</td>
-      <td>Ubuntu-22.04 x64</td>
-      <td>6</td>
-      <td>3600s</td>
-    </tr>
-    <tr>
-      <td>V8 Linux - riscv64 - sim - pointer compression</td>
-      <td>Ubuntu-22.04 x64</td>
-      <td>3</td>
-      <td>3600s</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p><strong>Try builders (<code class="language-plaintext highlighter-rouge">luci.v8.try</code>, <code class="language-plaintext highlighter-rouge">tryserver.v8</code> group):</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Builder</th>
-      <th>Shards</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>v8_linux64_riscv64_dbg</td>
-      <td>9</td>
-    </tr>
-    <tr>
-      <td>v8_linux64_riscv64_rel</td>
-      <td>4</td>
-    </tr>
-    <tr>
-      <td>v8_linux64_riscv64_pointer_compression_rel</td>
-      <td>4</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>No native (bare-metal) riscv64 builders exist in upstream V8 CI. The native (<code class="language-plaintext highlighter-rouge">target_cpu="riscv64"</code>) GN configs in <code class="language-plaintext highlighter-rouge">mb_config.pyl</code> are under <code class="language-plaintext highlighter-rouge">developer_default</code> only, intended for local developer use.</p>
+<p>Three dedicated LUCI builders per <code class="language-plaintext highlighter-rouge">infra/testing/builders.pyl</code> run the full test suite via software simulator and pass consistently: <strong>“V8 Linux - riscv64 - sim”</strong>, <strong>“sim - debug”</strong>, and <strong>“sim - pointer compression”</strong>. All run on <code class="language-plaintext highlighter-rouge">Ubuntu-22.04</code> x64 swarming dimensions (<code class="language-plaintext highlighter-rouge">target_cpu="x64" v8_target_cpu="riscv64"</code>), not native hardware or QEMU. Corresponding try builders exist (<code class="language-plaintext highlighter-rouge">v8_linux64_riscv64_dbg</code>, <code class="language-plaintext highlighter-rouge">_rel</code>, <code class="language-plaintext highlighter-rouge">_pointer_compression_rel</code>). No native (bare-metal) riscv64 builders exist in upstream V8 CI; native (<code class="language-plaintext highlighter-rouge">target_cpu="riscv64"</code>) GN configs in <code class="language-plaintext highlighter-rouge">mb_config.pyl</code> are present only under <code class="language-plaintext highlighter-rouge">developer_default</code>, for local developer use.</p>
 <h3 id="72-independent-ci">
   
   
@@ -752,17 +857,60 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
 </h3>
     
 
-<p>An independent Jenkins buildbot at <a href="https://ci.rvperf.org/view/V8/">ci.rvperf.org/view/V8/</a> tests additional configurations: <code class="language-plaintext highlighter-rouge">vlen128-riscv64</code>, <code class="language-plaintext highlighter-rouge">vlen256-riscv64</code>, <code class="language-plaintext highlighter-rouge">pointer-compression-riscv64</code>, <code class="language-plaintext highlighter-rouge">sandbox-riscv64</code>, <code class="language-plaintext highlighter-rouge">fastcheck-riscv32</code>, <code class="language-plaintext highlighter-rouge">fastcheck-riscv64</code>, and a <code class="language-plaintext highlighter-rouge">riscv64-jetstream</code> job. This buildbot is maintained by the RISC-V community (PLCT Lab / rvperf.org), not Google. Numeric performance scores from this buildbot are not publicly exposed.</p>
-<h3 id="73-simulator-fidelity-limitation">
+<p>An independent Jenkins buildbot at <a href="https://ci.rvperf.org/view/V8/">ci.rvperf.org/view/V8/</a>, maintained by the RISC-V community (PLCT Lab/rvperf.org), tests additional configurations on real hardware: <code class="language-plaintext highlighter-rouge">vlen128-riscv64</code>, <code class="language-plaintext highlighter-rouge">vlen256-riscv64</code>, <code class="language-plaintext highlighter-rouge">pointer-compression-riscv64</code>, <code class="language-plaintext highlighter-rouge">sandbox-riscv64</code>, <code class="language-plaintext highlighter-rouge">fastcheck-riscv32</code>, <code class="language-plaintext highlighter-rouge">fastcheck-riscv64</code>, and a <code class="language-plaintext highlighter-rouge">riscv64-jetstream</code> job. This is explicitly <strong>not described as RISE-operated or part of official V8 CI</strong> in the RISE blog post itself - it is independent community infrastructure. No numeric performance scores are exposed on the dashboard, only build/test pass-fail status and job duration.</p>
+<h3 id="73-ci-gap-and-its-consequence">
   
   
-    <a href="#73-simulator-fidelity-limitation" class="anchor-heading" aria-labelledby="73-simulator-fidelity-limitation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.3 Simulator Fidelity Limitation
+    <a href="#73-ci-gap-and-its-consequence" class="anchor-heading" aria-labelledby="73-ci-gap-and-its-consequence"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7.3 CI Gap and Its Consequence
   
   
 </h3>
     
 
-<p>The simulator does not faithfully reproduce all hardware behaviors. A specific confirmed case: vector register save/restore around C++ function calls was incorrect, and the bug was found only on physical hardware, not in simulator CI. This means simulator-only CI gives false confidence for RVV-related code.</p><hr />
+<p>Simulator-only upstream CI gives false confidence for RVV-related code: the vector-register save/restore bug (Section 6.9) shipped past simulator CI and was caught only on physical hardware testing, outside the official CI loop.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Upstream CI mechanism</td>
+      <td>LUCI, native hardware</td>
+      <td>LUCI, native hardware + simulator</td>
+      <td>LUCI, simulator only (sim/sim-debug/sim-pointer-compression)</td>
+    </tr>
+    <tr>
+      <td>Real-hardware upstream CI</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>GitHub Actions CI</td>
+      <td>None (mirror has none for any arch)</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Independent/community CI</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Jenkins at ci.rvperf.org (community-run, not official)</td>
+    </tr>
+    <tr>
+      <td>Caught-on-hardware-only bugs found</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Yes (vector register save/restore)</td>
+    </tr>
+  </tbody>
+</table></div>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -772,13 +920,17 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
 </h2>
     
 
-<p>V8 has no standalone binary releases. The <a href="https://github.com/v8/v8/releases">v8/v8 GitHub releases page</a> is empty. V8 is distributed exclusively as source code, embedded in Node.js and Chromium/Chrome.</p>
+<p>V8 has <strong>no standalone binary releases for any architecture</strong>. The <a href="https://github.com/v8/v8/releases">v8/v8 GitHub releases page</a> loads successfully but shows “There aren’t any releases here” - confirmed directly, zero releases, zero assets, for any architecture, not specifically riscv64. V8 is distributed exclusively as source, versioned via git tags, embedded in Node.js and Chromium/Chrome.</p>
 
-<p>There is no riscv64 standalone V8 binary package in any major distribution under the name “v8”. The PyPI <code class="language-plaintext highlighter-rouge">v8</code> package (version 0.1.5) is a source tarball with no architecture wheels and is unrelated to the Google V8 engine. The Debian <code class="language-plaintext highlighter-rouge">v8</code> package does not exist (tracker.debian.org returns HTTP 404; buildd returns “No entry in riscv64 database” for all architectures).</p>
+<p><strong>PyPI:</strong> <code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/v8/json</code> returns exactly one artifact, <code class="language-plaintext highlighter-rouge">v8-0.1.5.tar.gz</code>, a source-only sdist uploaded 2014-04-21 (~11.3 MB). This is “PyV8,” a legacy, unrelated/unmaintained Python wrapper project that happens to share the name “v8” - it is not Google’s V8 engine, ships no wheels of any kind, and has no riscv64 artifact. The RISE wheel builder (<code class="language-plaintext highlighter-rouge">gitlab.com/.../pypi/simple/v8/</code>) has no package of its own named <code class="language-plaintext highlighter-rouge">v8</code> and redirects (HTTP 302) through to the same real PyPI index.</p>
 
-<p>The Debian package <code class="language-plaintext highlighter-rouge">r-cran-v8</code> (R language bindings to V8) does have a riscv64 build in Debian sid at version 7.0.0+dfsg-2+b1. This package is not a standalone V8 binary; it is 268 KB of R glue code that depends on <code class="language-plaintext highlighter-rouge">libnode137</code> (the Node.js shared library) on riscv64 as a proxy for V8. It does not provide a V8 binary or library usable outside the R ecosystem.</p>
+<p><strong>Ubuntu 26.04 “resolute”:</strong> No package named exactly <code class="language-plaintext highlighter-rouge">v8</code>, <code class="language-plaintext highlighter-rouge">libv8</code>, or <code class="language-plaintext highlighter-rouge">python3-v8</code> exists for <strong>any</strong> architecture, not just riscv64 (confirmed via <code class="language-plaintext highlighter-rouge">packages.ubuntu.com</code> name search, which otherwise correctly surfaces substring matches like <code class="language-plaintext highlighter-rouge">armv8-support</code>, <code class="language-plaintext highlighter-rouge">node-v8-compile-cache</code>, <code class="language-plaintext highlighter-rouge">r-cran-v8</code>). Ubuntu dropped the standalone <code class="language-plaintext highlighter-rouge">libv8</code> package years ago; V8 is now bundled inside <code class="language-plaintext highlighter-rouge">libnode-dev</code>. The only riscv64-built artifact touching “V8” in resolute is <code class="language-plaintext highlighter-rouge">r-cran-v8</code> (R language bindings), version 7.0.0+dfsg-2, built for riscv64 alongside amd64/arm64/ppc64el - but this is an R glue package depending on <code class="language-plaintext highlighter-rouge">libnode137</code> as a proxy for V8, not a standalone V8 binary. <code class="language-plaintext highlighter-rouge">nodejs</code> itself does have a riscv64 build in resolute (confirmed via its package page’s riscv64 download link), which embeds V8 internally, but this is a Node.js artifact, not a V8-named package.</p>
 
-<p>V8 is available for riscv64 as an embedded component of Node.js packages in Debian/Ubuntu and as part of Chromium builds.</p><hr />
+<p><strong>Arch Linux RISC-V (archriscv.felixc.at):</strong> Inconclusive. The suggested query endpoint returns the identical static homepage regardless of query string via both WebFetch and curl; no package table is exposed, so presence or absence of a <code class="language-plaintext highlighter-rouge">v8</code> package cannot be confirmed through this channel.</p>
+
+<p><strong>Debian:</strong> <code class="language-plaintext highlighter-rouge">tracker.debian.org</code> has no <code class="language-plaintext highlighter-rouge">v8</code> package entry (404); buildd shows no riscv64 entry for any <code class="language-plaintext highlighter-rouge">v8</code>-named package.</p>
+
+<p><strong>Bottom line:</strong> a user who wants V8 on riscv64 today must build it from source (Section 5) or consume it embedded inside a distro’s Node.js package; there is no standalone V8 library or interpreter binary available through any channel checked, on riscv64 or any other architecture.</p>
 <h2 id="9-dependencies">
   
   
@@ -787,109 +939,215 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
   
 </h2>
     
-<h3 id="91-libpfm4">
-  
-  
-    <a href="#91-libpfm4" class="anchor-heading" aria-labelledby="91-libpfm4"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.1 libpfm4
-  
-  
-</h3>
-    
 
-<p><strong>Gap.</strong> V8 lists <code class="language-plaintext highlighter-rouge">libpfm4</code> in its <code class="language-plaintext highlighter-rouge">DEPS</code> file for PMU-based profiling. The <code class="language-plaintext highlighter-rouge">libpfm4</code> library has no RISC-V PMU event tables. The <code class="language-plaintext highlighter-rouge">lib/events/</code> directory contains tables for AMD, Intel, ARM, and IBM Cell only. No RISC-V event table files exist, no tracked issues or PRs exist for riscv64 support, and no contribution is in progress. Hardware performance counter profiling workflows that depend on <code class="language-plaintext highlighter-rouge">libpfm4</code> (including V8’s benchmark infrastructure) are completely blocked on riscv64. This requires a contribution to <code class="language-plaintext highlighter-rouge">libpfm4</code> before V8 PMU profiling works on RISC-V hardware.</p>
-<h3 id="92-simdutf">
-  
-  
-    <a href="#92-simdutf" class="anchor-heading" aria-labelledby="92-simdutf"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.2 simdutf
-  
-  
-</h3>
-    
+<p>Scope: all direct dependencies from V8’s <code class="language-plaintext highlighter-rouge">DEPS</code> manifest (V8 has no <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code>/<code class="language-plaintext highlighter-rouge">setup.py</code>/<code class="language-plaintext highlighter-rouge">go.mod</code>/<code class="language-plaintext highlighter-rouge">Cargo.toml</code>/<code class="language-plaintext highlighter-rouge">package.json</code>; <code class="language-plaintext highlighter-rouge">DEPS</code> is the real manifest, read via <code class="language-plaintext highlighter-rouge">raw.githubusercontent.com/v8/v8/main/DEPS</code> since GitHub API access to <code class="language-plaintext highlighter-rouge">v8/v8</code> was not available this session), plus indirect dependencies recursed where they carry riscv64-relevant status (notably Abseil’s downstream consumer re2, and the SIMD/numerics dependency chain cpu_features, double-conversion, FP16).</p>
 
-<p><strong>Partial gap.</strong> <code class="language-plaintext highlighter-rouge">simdutf</code> (Unicode transcoding, used by V8’s string engine) builds with <code class="language-plaintext highlighter-rouge">-march=rv64gcv</code> but has no runtime dispatch for RVV. The extension requires an explicit compile-time flag; heterogeneous deployments cannot select RVV at runtime. One open correctness issue (<a href="https://github.com/simdutf/simdutf/issues/890">#890</a>, open as of research date): missing UTF-16 to UTF-8 length calculation with replacement for the RVV path. A history of correctness bugs found via fuzzing (issues #531-533, #728) indicates the RVV implementation has lower test coverage than scalar paths.</p>
-<h3 id="93-googlehighway">
-  
-  
-    <a href="#93-googlehighway" class="anchor-heading" aria-labelledby="93-googlehighway"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.3 google/highway
-  
-  
-</h3>
-    
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Criticality</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
+      <th>Notes / blocking issues</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Abseil</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/abseil-cpp</code> - C++ containers/strings/sync used throughout V8’s runtime and build</td>
+      <td>Critical (runtime)</td>
+      <td>Found: Ubuntu 26.04 resolute <code class="language-plaintext highlighter-rouge">libabsl-dev</code>/<code class="language-plaintext highlighter-rouge">libabsl20260107</code> 20260107.0-4 riscv64</td>
+      <td>Partial - no upstream riscv64 CI (no <code class="language-plaintext highlighter-rouge">.github/workflows/</code>); 2 open test SEGFAULTs on Debian riscv64</td>
+      <td>Source-only upstream; distro-built on Ubuntu 26.04/Debian</td>
+      <td>Open: <a href="https://github.com/abseil/abseil-cpp/issues/1702">#1702</a> (<code class="language-plaintext highlighter-rouge">-latomic</code> link failure with GCC 11-12, 2+ years open), <a href="https://github.com/abseil/abseil-cpp/issues/2002">#2002</a> (SEGFAULT in <code class="language-plaintext highlighter-rouge">absl_hashtablez_sampler_test</code>/<code class="language-plaintext highlighter-rouge">absl_cordz_sample_token_test</code> on Debian riscv64), <a href="https://github.com/abseil/abseil-cpp/issues/1236">#1236</a> (ILP32E stack-alignment gap); CRC32C hardware acceleration <a href="https://github.com/abseil/abseil-cpp/pull/1986">PR #1986</a> open, blocked on Google obtaining RISC-V test hardware</td>
+    </tr>
+    <tr>
+      <td>ICU</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/icu</code> - Intl/Unicode (bundles <code class="language-plaintext highlighter-rouge">vendor/double-conversion</code> internally)</td>
+      <td>Critical (runtime)</td>
+      <td>Found: Ubuntu 26.04 resolute <code class="language-plaintext highlighter-rouge">libicu78</code> 78.2-2ubuntu1 riscv64 (11.5 MB .deb, confirmed live)</td>
+      <td>No upstream CI for any arch beyond amd64/macOS-arm64 (23 workflows checked, zero riscv64 references); runs correctly on real riscv64 hardware via Debian buildd</td>
+      <td>Source-only upstream; distro packaged (Debian sid, Ubuntu 26.04, Arch RISC-V)</td>
+      <td>No open riscv64-specific bugs. One historical UB bug (ICU-21613, NaN-to-int64 cast) fixed since ICU 71 (2022)</td>
+    </tr>
+    <tr>
+      <td>PartitionAlloc</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/partition_alloc</code> - V8/Chromium’s primary memory allocator</td>
+      <td>Critical (runtime)</td>
+      <td>Data not available: this is a Chromium-monorepo subdirectory (<code class="language-plaintext highlighter-rouge">chromium.googlesource.com/chromium/src</code>), not an independent GitHub repo, and was not independently researched this session</td>
+      <td>Data not available: would require Chromium-repo-specific investigation; riscv64 is a known-experimental Chromium target generally</td>
+      <td>Ships only as part of Chromium/V8 builds, no standalone release</td>
+      <td>No dedicated riscv64-specific findings this session</td>
+    </tr>
+    <tr>
+      <td>fast_float</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/fast_float/src</code> - string-to-float parsing</td>
+      <td>Critical (runtime)</td>
+      <td>Header-only; not independently packaged in Ubuntu/Debian</td>
+      <td>No dedicated riscv64 CI confirmed; MIPS64/RISCV64 CI merged 2021 (<a href="https://github.com/fastfloat/fast_float/pull/78">PR #78</a>), may be stale. Active RVV work in flight: open <a href="https://github.com/fastfloat/fast_float/pull/406">PR #406</a> “RISC-V RVV optimization (UTF-16 inputs)” (Aug 2026) and open <a href="https://github.com/fastfloat/fast_float/issues/343">issue #343</a> “Use vector unit for RISC-V” (Dec 2025)</td>
+      <td>Source-only (header library)</td>
+      <td>No open riscv64 correctness bugs; vectorization work still pending merge</td>
+    </tr>
+    <tr>
+      <td>dragonbox</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/dragonbox/src</code> - fast float-to-string conversion</td>
+      <td>Critical (runtime)</td>
+      <td>Header-only; not independently packaged in Ubuntu/Debian</td>
+      <td>No upstream riscv64 CI found; zero riscv/riscv64 issues or PRs (confirmed via GitHub issue search, 0 results)</td>
+      <td>Source-only (header library)</td>
+      <td>None known - pure portable C++ numeric algorithm, no ISA-specific code</td>
+    </tr>
+    <tr>
+      <td>temporal_capi</td>
+      <td>Temporal calendar/date-time support (Rust)</td>
+      <td>Critical (runtime)</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> target available via <code class="language-plaintext highlighter-rouge">rustup target add</code> since Rust 1.60 [NEEDS VERIFICATION: single-source, not re-confirmed this pass]</td>
+      <td>Not independently researched this session</td>
+      <td>Rust target, no standalone release relevant to V8</td>
+      <td>No blocking issues found</td>
+    </tr>
+    <tr>
+      <td>simdutf</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/simdutf</code> - SIMD Unicode transcoding/Base64</td>
+      <td>Critical (runtime)</td>
+      <td>Found: Debian sid <code class="language-plaintext highlighter-rouge">libsimdutf33</code>/<code class="language-plaintext highlighter-rouge">libsimdutf-dev</code> 8.2.0-1 riscv64 (Ubuntu noble lacks it; 26.04 not independently re-checked)</td>
+      <td>Yes - 3 dedicated riscv64 CI workflows (VLEN 128/256/1024, QEMU), fuzzing included</td>
+      <td>Source-only upstream; Debian packaged</td>
+      <td>No open correctness bugs currently blocking. Base64 encode SIMD unmerged (<a href="https://github.com/simdutf/simdutf/pull/996">PR #996</a>); Base64 decode has no RVV implementation at all (<a href="https://github.com/simdutf/simdutf/issues/380">issue #380</a>, open since 2024); <a href="https://github.com/simdutf/simdutf/pull/890">PR #890</a> (UTF-16/UTF-8-with-replacement RVV) stalled</td>
+    </tr>
+    <tr>
+      <td>Highway</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/highway/src</code> - portable SIMD abstraction (RVV 1.0 backend)</td>
+      <td>Optional (runtime)</td>
+      <td>Found: Ubuntu 26.04 resolute <code class="language-plaintext highlighter-rouge">libhwy-dev</code>/<code class="language-plaintext highlighter-rouge">libhwy1t64</code> 1.3.0-2 riscv64</td>
+      <td>Build-only CI gate - riscv64 CI exists (<code class="language-plaintext highlighter-rouge">multiarch.yml</code>, QEMU, RVV enabled) but <code class="language-plaintext highlighter-rouge">ctest</code> has <code class="language-plaintext highlighter-rouge">continue-on-error: true</code>, so failing tests never block merges</td>
+      <td>Source-only; distro 1.3.0-2 is one release behind upstream 1.4.0</td>
+      <td>Open: <a href="https://github.com/google/highway/issues/2854">#2854</a> (mold-linker segfaults on <code class="language-plaintext highlighter-rouge">.riscv.attributes</code> string), <a href="https://github.com/google/highway/issues/2542">#2542</a> (no FMA on SCALAR/EMU128-RISC-V), <a href="https://github.com/google/highway/issues/2793">#2793</a> (HwyDemoteTest failure on GCC 15) [NEEDS VERIFICATION: carried from prior pass], <a href="https://github.com/google/highway/issues/2738">#2738</a> (incorrect <code class="language-plaintext highlighter-rouge">-march</code> on RVA23 profile targets) [NEEDS VERIFICATION: carried from prior pass]; RVV runtime dispatch is Clang 19+ only, no GCC path</td>
+    </tr>
+    <tr>
+      <td>zlib</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/zlib</code> - DEFLATE compression</td>
+      <td>Optional (runtime)</td>
+      <td>Found: Ubuntu Noble 24.04 <code class="language-plaintext highlighter-rouge">zlib1g</code>/<code class="language-plaintext highlighter-rouge">-dev</code>; Debian sid <code class="language-plaintext highlighter-rouge">1:1.3.dfsg+really1.3.2-3</code>; Arch RISC-V packaged</td>
+      <td>riscv64 CI exists but is OpenBSD-only (<code class="language-plaintext highlighter-rouge">others.yml</code>, via vmactions/QEMU) - not in the Linux cross-compile matrix</td>
+      <td>Source-only upstream; widely distro-packaged</td>
+      <td>No correctness bugs. RVV-accelerated Adler32 (<a href="https://github.com/madler/zlib/pull/1099">PR #1099</a>, complete and tested on SG2042) unreviewed for 8+ months - maintainer has a documented multi-year pattern of not reviewing architecture-SIMD PRs (a 6-year-unanswered Power8 precedent). No RISC-V CRC-32 hardware-accel path exists (unlike aarch64)</td>
+    </tr>
+    <tr>
+      <td>libunwind</td>
+      <td>LLVM <code class="language-plaintext highlighter-rouge">libunwind</code> - stack unwinding</td>
+      <td>Optional (runtime)</td>
+      <td>Available for riscv64 via LLVM 17+ [NEEDS VERIFICATION: single source]</td>
+      <td>Not independently researched this session</td>
+      <td>Distro-packaged via LLVM toolchains</td>
+      <td>No V8-specific blocking issues found</td>
+    </tr>
+    <tr>
+      <td>libpfm4</td>
+      <td>PMU-based profiling support</td>
+      <td>Optional (runtime)</td>
+      <td>Gap: no RISC-V PMU event tables exist. <code class="language-plaintext highlighter-rouge">lib/events/</code> contains tables for AMD, Intel, ARM, IBM Cell only [NEEDS VERIFICATION: carried from prior pass, not independently re-checked this session]</td>
+      <td>No tracked issues or PRs for riscv64 support; no contribution in progress</td>
+      <td>Source library, no riscv64-relevant release status found</td>
+      <td>Hardware performance-counter profiling workflows depending on libpfm4 (including V8’s own benchmark infrastructure) are blocked on riscv64 until event tables are contributed</td>
+    </tr>
+    <tr>
+      <td>perfetto</td>
+      <td>Tracing/profiling</td>
+      <td>Optional (runtime)</td>
+      <td>Not independently researched this session</td>
+      <td>Issue #936 (stack-unwinding failure on riscv64) resolved November 2024; no currently open riscv64 issues found [NEEDS VERIFICATION: carried from prior pass]</td>
+      <td>Distro/source</td>
+      <td>No current blockers identified</td>
+    </tr>
+    <tr>
+      <td>GN</td>
+      <td>Build system generator</td>
+      <td>Critical (build)</td>
+      <td>Data not available: not independently researched this session; GN runs on the build host, not the target, so its own riscv64 support matters only for native riscv64-hosted builds</td>
+      <td>Data not available</td>
+      <td>Source-only, Chromium-maintained</td>
+      <td>No riscv64-specific findings this session</td>
+    </tr>
+    <tr>
+      <td>Ninja</td>
+      <td>Build execution tool</td>
+      <td>Critical (build)</td>
+      <td>Data not available: not independently researched this session; Ninja is a portable, widely cross-platform C++ tool commonly packaged for riscv64 by distros, but this was not directly verified</td>
+      <td>Data not available</td>
+      <td>Distro-packaged generally</td>
+      <td>No riscv64-specific findings this session</td>
+    </tr>
+    <tr>
+      <td>LLVM</td>
+      <td>Clang toolchain (used for simulator builds and native Clang riscv64 builds)</td>
+      <td>Critical (build)</td>
+      <td>Clang riscv64 cross-compilation support exists and is used for simulator builds per Section 5; no minimum version is pinned by V8 for riscv64 specifically</td>
+      <td>Data not available beyond what Section 5 documents</td>
+      <td>DEPS pins a CIPD-distributed prebuilt Clang, architecture-generic</td>
+      <td>No riscv64-specific blocking issues found this session</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Used for native (non-simulator) riscv64 builds (<code class="language-plaintext highlighter-rouge">is_clang=false</code> via the <code class="language-plaintext highlighter-rouge">gcc</code> mixin)</td>
+      <td>Critical (build)</td>
+      <td>riscv64 cross-GCC toolchains (<code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-</code> prefix) are widely available via Debian/Ubuntu packaging; no V8-pinned minimum version</td>
+      <td>Data not available</td>
+      <td>Distro-packaged</td>
+      <td>No riscv64-specific blocking issues found this session</td>
+    </tr>
+    <tr>
+      <td>googletest</td>
+      <td>C++ test framework</td>
+      <td>Critical (test)</td>
+      <td>Header/source library, portable C++, not independently researched this session</td>
+      <td>Not independently researched this session</td>
+      <td>Source-only, widely distro-packaged</td>
+      <td>No riscv64-specific issues found</td>
+    </tr>
+    <tr>
+      <td>re2</td>
+      <td>Not in V8’s own DEPS directly, but the dominant downstream consumer of Abseil, included for Abseil blast-radius context</td>
+      <td>Indirect (via Abseil)</td>
+      <td>Found: Ubuntu 24.04 Noble <code class="language-plaintext highlighter-rouge">libre2-10</code>/<code class="language-plaintext highlighter-rouge">-dev</code> riscv64; Debian <code class="language-plaintext highlighter-rouge">20251105-1+b1</code> installed</td>
+      <td>No upstream CI (zero riscv64 references in 7 workflow files); builds cleanly, pure portable C++</td>
+      <td>Source-only upstream; distro packaged</td>
+      <td>No re2-specific bugs; inherits Abseil’s open #1702 (atomics link), #2002 (SEGFAULT), and <a href="https://github.com/google/re2/issues/2142">#2142</a> (SwissTable <code class="language-plaintext highlighter-rouge">kWidth==8</code> test failure, affects riscv64/aarch64/ppc64le/loongarch64)</td>
+    </tr>
+    <tr>
+      <td>cpu_features</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/cpu_features</code> - runtime ISA-extension detection feeding SIMD/JIT dispatch (indirect, via Highway/simdutf’s dependency chain)</td>
+      <td>Indirect</td>
+      <td>Partial: not in Ubuntu 24.04; is in Debian sid (<code class="language-plaintext highlighter-rouge">libcpu-features-dev</code> 0.11.0-1, riscv64 built on rv-manda-02)</td>
+      <td>Yes - dedicated GitHub Actions <code class="language-plaintext highlighter-rouge">riscv_linux_cmake.yml</code>, QEMU-based, scheduled plus every push/PR</td>
+      <td>Source-only releases (no binary assets for any arch)</td>
+      <td>Cannot runtime-detect Zba/Zbb/Zbc/Zbs or Zfh/Zfhmin or BF16 (3 PRs stalled 4-10 months: #368/#369/#447); silent false-negative bug in Zicsr/Zifencei detection on kernels 6.5+ (draft fix PR #468, unreviewed)</td>
+    </tr>
+    <tr>
+      <td>double-conversion</td>
+      <td>Grisu/Bignum dtoa, originally extracted from V8 itself, also vendored inside ICU (indirect, via ICU)</td>
+      <td>Indirect</td>
+      <td>Found: Ubuntu Noble 24.04 <code class="language-plaintext highlighter-rouge">libdouble-conversion3</code>/<code class="language-plaintext highlighter-rouge">-dev</code> 3.3.0-1build1 riscv64 [NEEDS VERIFICATION for 26.04 specifically]; Debian ports 3.4.0-1+b1</td>
+      <td>Not exercised by any upstream CI job (no riscv64 CI at all), but functionally complete: pure scalar C++, <code class="language-plaintext highlighter-rouge">__riscv</code> arch macro merged 2016</td>
+      <td>Source-only; Debian ports/Ubuntu packaged</td>
+      <td>None riscv64-specific. One open cross-platform correctness bug (<a href="https://github.com/google/double-conversion/pull/304">PR #304</a>, hex-float ULP rounding) affects all architectures equally</td>
+    </tr>
+    <tr>
+      <td>FP16</td>
+      <td><code class="language-plaintext highlighter-rouge">third_party/fp16/src</code> - half-precision float conversion (indirect, numerics chain)</td>
+      <td>Indirect</td>
+      <td>Header-only; not independently packaged</td>
+      <td>One open PR (<a href="https://github.com/Maratyszcza/FP16/pull/45">#45</a>, “Add RISC-V QEMU test coverage,” Jun 2026) indicates no riscv64 CI currently exists</td>
+      <td>Source-only (header library)</td>
+      <td>No correctness bugs found; CI coverage gap is the only identified item</td>
+    </tr>
+  </tbody>
+</table></div>
 
-<p><strong>Active issues.</strong> Three open issues affect riscv64: <a href="https://github.com/google/highway/issues/2854">#2854</a> (mold-linker failure), <a href="https://github.com/google/highway/issues/2793">#2793</a> (HwyDemoteTest failure on GCC 15), and <a href="https://github.com/google/highway/issues/2738">#2738</a> (incorrect <code class="language-plaintext highlighter-rouge">-march</code> flag on RVA23 profile targets, which could cause incorrect optimization selection on newer RISC-V hardware). Highway is a dependency of <code class="language-plaintext highlighter-rouge">simdutf</code>, which is used by V8’s string engine. RVV CI for Highway is QEMU-based only.</p>
-<h3 id="94-abseil-cpp">
-  
-  
-    <a href="#94-abseil-cpp" class="anchor-heading" aria-labelledby="94-abseil-cpp"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.4 abseil-cpp
-  
-  
-</h3>
-    
-
-<p><strong>Minor gap.</strong> CRC32C hardware acceleration is not implemented for riscv64. PR <a href="https://github.com/abseil/abseil-cpp/pull/1986">#1986</a> (hardware CRC32C for RISC-V) was open as of December 2025 and in progress. CRC32C falls back to software on riscv64. This affects V8’s hash table and CRC-dependent operations but is not a correctness issue.</p>
-<h3 id="95-other-dependencies">
-  
-  
-    <a href="#95-other-dependencies" class="anchor-heading" aria-labelledby="95-other-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9.5 Other Dependencies
-  
-  
-</h3>
-    
-
-<ul>
-  <li><strong>zlib (Chromium fork):</strong> Builds; <code class="language-plaintext highlighter-rouge">riscv_cpu_enable_rvv</code> and <code class="language-plaintext highlighter-rouge">riscv_cpu_enable_vclmul</code> detection flags present, but <code class="language-plaintext highlighter-rouge">vclmul</code> detection is a TODO (not yet implemented). No dedicated riscv64 SIMD source files; only x86 and ARM have dedicated SIMD paths.</li>
-  <li><strong>ICU:</strong> No riscv64-specific issues tracked. No blocking items.</li>
-  <li><strong>PartitionAlloc:</strong> No RISC-V-specific issues tracked. No RISC-V-specific spinlock tuning (uses same <code class="language-plaintext highlighter-rouge">kSpinCount = 64</code> as all non-ARM64 targets). Pointer compression and MTE branches untested on riscv64.</li>
-  <li><strong>fast_float:</strong> Builds; riscv64 CI added in 2021 (PRs #77/#78). Issue <a href="https://github.com/fastfloat/fast_float/issues/343">#343</a> (open as of December 2025): RVV vectorization not implemented, scalar-only performance.</li>
-  <li><strong>dragonbox:</strong> Architecture-agnostic C++ template library. No riscv64-specific issues.</li>
-  <li><strong>perfetto:</strong> Issue #936 (stack unwinding failure on riscv64) resolved November 2024. No currently open riscv64 issues.</li>
-  <li><strong>libc++/libc++abi/libunwind (LLVM):</strong> Available for riscv64 via LLVM 17+. No V8-specific blocking issues.</li>
-  <li><strong>temporal_capi (Rust):</strong> <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> target available since Rust 1.60 via <code class="language-plaintext highlighter-rouge">rustup target add</code>. No blocking issues.</li>
-</ul><hr />
-<h2 id="10-ecosystem-status">
-  
-  
-    <a href="#10-ecosystem-status" class="anchor-heading" aria-labelledby="10-ecosystem-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Ecosystem Status
-  
-  
-</h2>
-    
-<h3 id="101-rise-project-involvement">
-  
-  
-    <a href="#101-rise-project-involvement" class="anchor-heading" aria-labelledby="101-rise-project-involvement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.1 RISE Project Involvement
-  
-  
-</h3>
-    
-
-<p>V8 has one documented touchpoint with the RISE project: a technical blog post titled “A Glimpse Into V8 Development for RISC-V” published December 9, 2025 at <a href="https://riseproject.dev/2025/12/09/a-glimpse-into-v8-development-for-risc-v/">riseproject.dev</a>, authored by Florian Loitsch (Rivos Inc.), Ji Qiu (ISCAS), Kasper Lund (Meta), Yahan Lu (ISCAS), and Zhijin Zeng (SpacemiT).</p>
-
-<p>No RISE RFP number, grant identifier, or funded project is associated with V8. The post is a community contribution to the RISE blog, not a RISE-funded deliverable. V8 is absent from the RISE Python wheel builder (79 packages listed), the RISE runners user list (as of the May 2026 “six weeks in” post), and the RISE 2024 end-of-year funding recap. No V8 or JavaScript-related repository exists in the <a href="https://github.com/orgs/riseproject-dev/repositories">riseproject-dev GitHub organization</a> (30 repos checked).</p>
-
-<p>Google is a Premier Member of RISE (EUR 80,000/year, Governing Board representation). V8 indirectly benefits from Google’s RISE membership but has no direct RISE project.</p>
-<h3 id="102-rise-premier-and-general-members-relevant-to-v8">
-  
-  
-    <a href="#102-rise-premier-and-general-members-relevant-to-v8" class="anchor-heading" aria-labelledby="102-rise-premier-and-general-members-relevant-to-v8"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.2 RISE Premier and General Members Relevant to V8
-  
-  
-</h3>
-    
-
-<p>Premier Members who invest in RISC-V silicon and may have direct interest in V8 performance: Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, Tenstorrent.</p>
-
-<p>General Members who have directly contributed to V8 RISC-V: ISCAS / PLCT Lab (Ji Qiu, Lu Yahan; active RISC-V OWNERS), SpacemiT (Zhijin Zeng, CL 6874383 and documented optimizations).</p>
-<h3 id="103-maintainer-concentration-risk">
-  
-  
-    <a href="#103-maintainer-concentration-risk" class="anchor-heading" aria-labelledby="103-maintainer-concentration-risk"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10.3 Maintainer Concentration Risk
-  
-  
-</h3>
-    
-
-<p>The entire V8 RISC-V backend is maintained operationally by two engineers at ISCAS/PLCT Lab (Lu Yahan and Ji Qiu). Lu Yahan is the dominant committer; in the commit log for April through June 2026, Lu Yahan authored 35 of the approximately 40 RISC-V commits visible in the research data. Kasper Lund (Meta) is listed as an OWNER and contributed simulator fixes in June 2025 [NEEDS VERIFICATION: the research data lists kasperl as active in June 2025 but does not enumerate specific CLs]. This is a single-team concentration risk.</p><hr />
+<p>Key takeaways: no dependency in this set has a hard riscv64-blocking defect - everything builds and functions on riscv64 today. The recurring pattern is CI rigor gaps (Highway and zlib both run riscv64 under QEMU but do not gate merges on test results) and unmerged performance work (Highway’s mold-linker issue, zlib’s stalled RVV Adler32 PR, simdutf’s missing Base64 RVV decode, cpu_features’ stalled bitmanip-detection PRs). Abseil is the highest-leverage dependency to watch: it sits underneath Highway, re2, and much of V8’s own C++ runtime, and carries two multi-year-old open riscv64 bugs plus a CRC32C hardware-acceleration PR stalled purely on Google obtaining RISC-V test hardware.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -898,14 +1156,8 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
   
 </h2>
     
-<h3 id="111-open-issues-in-riscv-collabv8-june-2026">
-  
-  
-    <a href="#111-open-issues-in-riscv-collabv8-june-2026" class="anchor-heading" aria-labelledby="111-open-issues-in-riscv-collabv8-june-2026"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.1 Open Issues in riscv-collab/v8 (June 2026)
-  
-  
-</h3>
-    
+
+<p>Note on scope: <code class="language-plaintext highlighter-rouge">v8/v8</code>’s GitHub mirror has Issues enabled but empty/unused (0 results for both <code class="language-plaintext highlighter-rouge">riscv</code> and <code class="language-plaintext highlighter-rouge">riscv64</code> searches); the active public issue tracker for the RISC-V port is <strong>riscv-collab/v8</strong>, the historical RISC-V staging repo. Real upstream bug tracking lives on <code class="language-plaintext highlighter-rouge">crbug.com</code> (Chromium Monorail/Buganizer), which is not reachable via GitHub’s API and was not independently searchable this session - upstream bugs affecting riscv64 may exist there and are not reflected below.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -913,79 +1165,96 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
       <th>Issue</th>
       <th>Title</th>
       <th>Status</th>
+      <th>Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
+      <td><a href="https://github.com/riscv-collab/v8/issues/701">#701</a></td>
+      <td>Octane failed on Unmatched</td>
+      <td>Open since 2022-06-30</td>
+      <td>Correctness failures on real hardware: NavierStokes checksum fail, PdfJS wrong output, SunSpider failures, plus low perf scores (Section 6.11)</td>
+    </tr>
+    <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/705">#705</a></td>
       <td>Tracking test262 and mozilla test status</td>
       <td>Open, tracking</td>
+      <td>-</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/704">#704</a></td>
       <td>v8 run test failed</td>
       <td>Open</td>
+      <td>-</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/702">#702</a></td>
       <td>rv32 debug stress mode failed</td>
-      <td>Open, RV32G (deprecation target)</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/riscv-collab/v8/issues/701">#701</a></td>
-      <td>Octane failed on Unmatched</td>
-      <td>Open, benchmark failure on real hardware</td>
+      <td>Open</td>
+      <td>RV32G (deprecation target)</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/696">#696</a></td>
       <td>Record regression status for commit ddc083</td>
       <td>Open, regression tracking</td>
+      <td>-</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/695">#695</a></td>
       <td>cctest RunWasmLiftoff_I32Binop_DivS fails</td>
-      <td>Open, RV32G</td>
+      <td>Open</td>
+      <td>RV32G</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/694">#694</a></td>
       <td>How to cross compile v8 for riscv32</td>
-      <td>Open, documentation</td>
+      <td>Open, documentation gap</td>
+      <td>-</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/670">#670</a></td>
-      <td>mjsunit/regress/regress-crbug-1041232.js fails on native</td>
-      <td>Open, RV32G</td>
+      <td>regress-crbug-1041232.js fails on native test mode</td>
+      <td>Open</td>
+      <td>RV32G</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/669">#669</a></td>
-      <td>mjsunit/regress/regress-crbug-1209152.js fails on native</td>
-      <td>Open, RV32G</td>
+      <td>regress-crbug-1209152.js fails on native test mode</td>
+      <td>Open</td>
+      <td>RV32G</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/666">#666</a></td>
       <td>Test riscv32 native release</td>
-      <td>Open, RV32G</td>
+      <td>Open</td>
+      <td>RV32G tracking</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/630">#630</a></td>
-      <td>CompareI macro-assembler bug</td>
-      <td>Open, RV32G</td>
+      <td>cctest test-macro-assembler-riscv32/CompareI</td>
+      <td>Open</td>
+      <td>RV32G</td>
     </tr>
     <tr>
       <td><a href="https://github.com/riscv-collab/v8/issues/574">#574</a></td>
       <td>Integer division by power of 2 should use shift</td>
-      <td>Open, optimization</td>
+      <td>Open</td>
+      <td>riscv64 performance optimization</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/riscv-collab/v8/issues/374">#374</a></td>
+      <td>Update instruction latencies</td>
+      <td>Open since 2020-12-31</td>
+      <td>Scheduler uses MIPS-derived latency values (Section 6.4), assignee qjivy</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>5 of 12 open issues are RV32G. Issue <a href="https://github.com/riscv-collab/v8/issues/701">#701</a> (Octane failure on HiFive Unmatched) is the only open benchmark-specific failure on real riscv64 hardware. Issue <a href="https://github.com/riscv-collab/v8/issues/574">#574</a> is the only open riscv64 performance optimization ticket. No NaN or floating-point correctness issues are open.</p>
-
-<p>Note: The Chromium issue tracker (issues.chromium.org) requires authentication. No data from it was accessible during research. Upstream V8 bugs affecting riscv64 may exist there and are not reflected in this list.</p>
-<h3 id="112-active-gerrit-cls-of-note">
+<p>5 of these 13 open items are RV32G-labeled, consistent with the pending riscv32 removal (May 2026). Issue #701 is the only open benchmark-specific failure on real riscv64 hardware; #574 is the only open riscv64-specific performance-optimization ticket. NaN/floating-point correctness search turned up only <strong>closed</strong> issues (<a href="https://github.com/riscv-collab/v8/issues/97">riscv-collab/v8#97</a>, “Riscv64-simulator can’t handle a float value which isn’t NaN-boxed,” and #643, <code class="language-plaintext highlighter-rouge">RunBitcastInt32ToFloat32</code> cctest) - no open NaN-specific bugs currently.</p>
+<h3 id="active-gerrit-cls">
   
   
-    <a href="#112-active-gerrit-cls-of-note" class="anchor-heading" aria-labelledby="112-active-gerrit-cls-of-note"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11.2 Active Gerrit CLs of Note
+    <a href="#active-gerrit-cls" class="anchor-heading" aria-labelledby="active-gerrit-cls"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Active Gerrit CLs
   
   
 </h3>
@@ -997,42 +1266,42 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
       <th>CL</th>
       <th>Title</th>
       <th>Status</th>
-      <th>Blocking Factor</th>
+      <th>Blocking factor</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953190">7953190</a></td>
-      <td>[riscv] vfadd/vfsub/vfmul/vfdiv for fp16</td>
-      <td>Open, 2026-06-17</td>
-      <td>Needs V8 owner Code-Review+2</td>
+      <td>fp16 vfadd/vfsub/vfmul/vfdiv (Zvfh)</td>
+      <td>Code-complete, CQ dry-run passed</td>
+      <td>Needs a general V8 owner Code-Review+2 (only RISC-V OWNER +1 so far)</td>
     </tr>
     <tr>
       <td><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7203127">7203127</a></td>
-      <td>[riscv][liftoff] Separate FP and SIMD registers</td>
-      <td>Open, stalled since 2026-03-12</td>
-      <td>No reviewer LGTM; 3 months quiet</td>
+      <td>Separate Liftoff FP and SIMD registers</td>
+      <td>Stalled 3+ months</td>
+      <td>No reviewer engagement</td>
     </tr>
     <tr>
       <td><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7500131">7500131</a></td>
-      <td>riscv64: Fix Sub32 immediate value handling</td>
-      <td>Open, stalled since 2026-01-21</td>
-      <td>Unresolved correctness objection; no test case</td>
+      <td>Fix Sub32 immediate/INT_MIN handling</td>
+      <td>Stalled since 2026-01-20</td>
+      <td>Unresolved correctness objection, no reproducer</td>
     </tr>
     <tr>
       <td><a href="https://chromium-review.googlesource.com/c/v8/v8/+/6874383">6874383</a></td>
-      <td>[riscv] Replace auipc+jalr with jal</td>
+      <td>Replace auipc+jalr with jal</td>
       <td>WIP since 2026-02-03, stalled</td>
-      <td>Safepoint table integrity concern</td>
+      <td>Safepoint-table integrity concern</td>
     </tr>
     <tr>
       <td><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7932348">7932348</a></td>
       <td>“fix” (WIP scratchpad)</td>
       <td>Open, 2026-06-12</td>
-      <td>No description, no reviewers; -2086 lines net</td>
+      <td>No description, no reviewers; large net-negative diff [NEEDS VERIFICATION: single source, not re-confirmed this pass]</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1042,37 +1311,46 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
 </h2>
     
 
-<p><strong>Q: Is the upstream maintainer team stable enough to depend on?</strong></p>
+<p><strong>Is the upstream maintainer team stable enough to depend on?</strong> The functional RISC-V backend is maintained operationally by two ISCAS/PLCT Lab engineers, Yahan Lu and Ji Qiu, plus Kasper Lund (Meta) as a third OWNER. There is no Google commitment to continuity: Google’s stated policy (Section 3) is that RISC-V breakage is the RISC-V team’s responsibility, not Google’s. The approximately 25% upstream-tracking overhead figure quantifies the exposure: roughly one-quarter of all RISC-V V8 effort over a recent six-month window went to chasing upstream changes rather than producing new capability. This is a single-organization concentration risk - if ISCAS deprioritizes V8, the port degrades with each subsequent upstream change, since Google has no internal team positioned to absorb the work.</p>
 
-<p>The functional V8 RISC-V backend is maintained by two engineers at ISCAS/PLCT Lab. There is no Google commitment to continuity. If the ISCAS team deprioritizes V8, the port degrades with each upstream change. The 25% tracking-overhead figure (from the RISE December 2025 blog post) quantifies this exposure: roughly one-quarter of all RISC-V V8 effort is consumed by chasing upstream changes, not producing new capability.</p>
+<p><strong>Does the simulator give adequate confidence for production deployments?</strong> No. Simulator-only upstream CI failed to catch a real-hardware vector-register save/restore bug (Section 6.9); it was found only through testing on physical hardware, outside the official CI loop. Organizations deploying V8 on physical RISC-V hardware need their own bare-metal or QEMU validation to catch classes of bugs the simulator cannot.</p>
 
-<p><strong>Q: Does the simulator give adequate confidence for production deployments?</strong></p>
+<p><strong>Is the Sub32 overflow bug (CL 7500131) a production risk?</strong> It is a latent correctness risk in 32-bit integer subtraction around INT_MIN boundary values. The fix has been stalled with an unresolved objection since January 2026, and no test case demonstrating a failure has been contributed, so the practical risk cannot be quantified without a reproducer. This warrants direct investigation before relying on V8 for arbitrary JavaScript execution on riscv64.</p>
 
-<p>No. The simulator failed to catch a real-hardware RVV register save/restore bug (reported in the December 2025 RISE blog post). All upstream CI is simulator-only. Organizations deploying V8 on physical RISC-V hardware need their own bare-metal or QEMU CI to validate correctness independently.</p>
+<p><strong>Is there a path to official Google support for riscv64?</strong> Data not available: no public statement from Google’s V8 team committing to officially support riscv64 was found in either research pass. Official support (per <code class="language-plaintext highlighter-rouge">docs/official-support.md</code>) is tied to CI-bot presence and is implicitly reserved for architectures Google itself runs in production; no evidence was found that Google runs RISC-V hardware in production at a scale that would motivate elevating riscv64’s tier.</p>
 
-<p><strong>Q: Is the Sub32 overflow bug (CL 7500131) a production risk?</strong></p>
+<p><strong>What is RISE’s actual involvement?</strong> RISE Project’s only documented touchpoint with V8 is a single blog post, “A Glimpse Into V8 Development for RISC-V” (published 2025-12-09, authored by Florian Loitsch, Ji Qiu, Kasper Lund, Yahan Lu, and Zhijin Zeng). Of the 35 posts on the RISE blog, only this one mentions V8. There is no RISE GitHub/GitLab repository for V8 (the full 26-repo <code class="language-plaintext highlighter-rouge">riseproject-dev</code> org listing contains none), no evidence V8 CI uses RISE RISC-V Runners, and V8 is absent from the RISE Python wheel_builder’s 87-package list. The post itself does not claim RISE funded the described work - it reads as ecosystem reporting on community engineering progress, not a RISE-commissioned project. RISE membership is organizational, not project-level: V8 itself is not a RISE member or project. The connection to RISE is indirect, through Google (a RISE Premier Member, which owns V8 overall) and ISCAS (a RISE General Member, whose engineers - Ji Qiu and Yahan Lu - are the two primary riscv64 maintainers).</p>
 
-<p>It is a latent correctness risk in 32-bit integer subtraction around INT_MIN boundary values. The CL acknowledging it has been stalled with an unresolved objection since January 2026. No test case demonstrating a failure has been contributed. The risk level cannot be quantified without a reproducer. This warrants investigation if V8 is used for arbitrary JavaScript execution on riscv64.</p>
-
-<p><strong>Q: Is there a path to official Google support for RISC-V?</strong></p>
-
-<p>Data not available: No public statement from Google’s V8 team on plans to officially support riscv64 was found. Google’s stated policy is that official support (CI bots blocking submission, Google engineers maintaining the backend) is reserved for architectures Google uses in production. No evidence that Google runs RISC-V hardware in production at the scale requiring V8 official support was found.</p>
-
-<p><strong>Q: Are there performance numbers for RISC-V vs. ARM64 or x86-64?</strong></p>
-
-<p>No cross-architecture numeric benchmark comparison (JetStream, Speedometer, or any other suite) is publicly available as of June 2026. JetStream suite completion on RISC-V is documented, but no score is published.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Are there performance numbers for RISC-V vs. ARM64 or x86-64?</strong> No cross-architecture numeric benchmark comparison (JetStream, Speedometer, or any other suite) is publicly available. JetStream suite completion on RISC-V is documented as a capability milestone, but no score is published anywhere found, by V8, RISE, SpacemiT, or any independent source.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
-<h3 id="131-functional-enablement">
+
+<ul>
+  <li><strong>Color:</strong> blue (n/a)</li>
+  <li><strong>Release provider:</strong> none</li>
+  <li><strong>Justification:</strong> V8 has a mature, upstream-maintained riscv64 backend (89 architecture-specific files across all four JIT tiers, 913 commits, full JetStream suite passing) exercised by dedicated LUCI CI builders (“V8 Linux - riscv64 - sim” / “sim - debug” / “sim - pointer compression” in <code class="language-plaintext highlighter-rouge">infra/testing/builders.pyl</code>) that build and run the full test suite via an in-process RISC-V simulator and pass consistently, per the RISE December 2025 post (<a href="https://riseproject.dev/2025/12/09/a-glimpse-into-v8-development-for-risc-v/">riseproject.dev</a>). V8 publishes no binary releases for any architecture (<a href="https://github.com/v8/v8/releases">github.com/v8/v8/releases</a> is empty, confirmed directly), so no upstream riscv64 artifact exists - this caps the grade at blue rather than green. V8 is a general-purpose JS/Wasm runtime, not a project whose value proposition is purely architecture-specific speedup over a scalar fallback, so the optimization-purpose modifier does not apply and no separate optimization-level rating is given.</li>
+  <li><strong>Pending work that could change the grade:</strong> Open Gerrit CLs: <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953190">7953190</a> (fp16/Zvfh arithmetic, code-complete, blocked only on a V8-owner Code-Review+2), <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7500131">7500131</a> (Sub32/INT_MIN overflow fix, stalled since January 2026 on an unresolved correctness objection with no reproducer), <a href="https://chromium-review.googlesource.com/c/v8/v8/+/6874383">6874383</a> (auipc+jalr to jal optimization, stalled on a safepoint-table integrity concern), <a href="https://chromium-review.googlesource.com/c/v8/v8/+/7203127">7203127</a> (Liftoff FP/SIMD register separation, stalled 3+ months). No native-hardware or QEMU-based upstream CI exists - only simulator CI - and this gap let a real vector-register save/restore bug ship past CI and surface only on physical hardware (per the RISE blog). An independent, non-upstream Jenkins buildbot (<a href="https://ci.rvperf.org/view/V8/">ci.rvperf.org/view/V8/</a>) run by the RISC-V community does real-hardware testing but is not part of official V8 CI. RISE’s only documented touchpoint with V8 is the single December 2025 blog post; no RISE repo, RISE-funded grant, or RISE Python-wheel listing exists for V8, though ISCAS (a RISE General Member) employs the two primary riscv64 maintainers (Ji Qiu, Yahan Lu), and Google (RISE Premier Member) owns V8 overall.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>Before sizing: RISE’s only documented contribution to V8 is reporting on community engineering work already done by ISCAS/PLCT Lab and SpacemiT engineers in a single blog post - there is no RISE-funded V8 work, RISE repository, or RISE infrastructure usage to subtract from the estimates below. All items below represent genuinely unfunded, uncovered work.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
@@ -1092,44 +1370,44 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
       <td>Land CL 7953190 (fp16 vfadd/vfsub/vfmul/vfdiv)</td>
       <td>1</td>
       <td>High</td>
-      <td>CL is code-complete, CQ dry-run passed; blocked only on V8 owner +2 review. A reviewer with V8 owner status needs to engage.</td>
+      <td>Code-complete, CQ dry-run passed; blocked only on a V8 owner Code-Review+2. A reviewer with V8 owner status needs to engage.</td>
     </tr>
     <tr>
       <td>Fix Sub32 overflow bug (CL 7500131)</td>
       <td>2</td>
       <td>High</td>
-      <td>Requires writing a test case demonstrating INT_MIN failure, addressing Olivier Fluckiger’s correctness objection, and re-uploading the patch.</td>
+      <td>Requires a test case demonstrating INT_MIN failure, addressing the unresolved correctness objection, and re-upload.</td>
     </tr>
     <tr>
       <td>Implement Zabha (byte/halfword atomics)</td>
       <td>3</td>
       <td>Medium</td>
-      <td>Remove the TODO in liftoff-assembler-riscv64-inl.h; implement Zabha instructions; requires hardware with Zabha to validate.</td>
+      <td>Remove the TODO in <code class="language-plaintext highlighter-rouge">liftoff-assembler-riscv64-inl.h</code>; implement Zabha instructions; requires Zabha-capable hardware to validate.</td>
     </tr>
     <tr>
       <td>Implement Zbb ror/rol in macro-assembler</td>
       <td>2</td>
       <td>Medium</td>
-      <td>No Gerrit CL exists; prior attempt failed CLA check via wrong contribution channel. Straightforward instruction addition.</td>
-    </tr>
-    <tr>
-      <td>Harden shadow stack (Zicfiss hardware path)</td>
-      <td>4</td>
-      <td>Low</td>
-      <td>Current hardware path is UNREACHABLE(). Requires hardware with Zicfiss to test. Low priority until Zicfiss hardware is common.</td>
+      <td>No Gerrit CL exists; the one prior attempt failed on CLA via the wrong contribution channel (GitHub mirror, not Gerrit). Straightforward instruction addition via the correct channel.</td>
     </tr>
     <tr>
       <td>Separate Liftoff FP and SIMD registers (CL 7203127)</td>
       <td>3</td>
       <td>Medium</td>
-      <td>CL is at PS16, CQ dry run passed. Stalled 3 months. Needs a reviewer to re-engage and a V8 owner LGTM. Correctness and ABI improvement.</td>
+      <td>CQ dry run passed; stalled 3+ months. Needs a reviewer to re-engage and a V8 owner LGTM. Correctness/ABI improvement.</td>
+    </tr>
+    <tr>
+      <td>Harden shadow stack (Zicfiss hardware path)</td>
+      <td>4</td>
+      <td>Low</td>
+      <td>Current hardware path is <code class="language-plaintext highlighter-rouge">UNREACHABLE()</code>. Requires Zicfiss-capable hardware. Low priority until such hardware is common.</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="132-performance-optimization">
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
@@ -1149,32 +1427,32 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
       <td>Update instruction scheduler latency tables</td>
       <td>4-8</td>
       <td>Medium</td>
-      <td>Current tables are MIPS-derived. Requires latency characterization for at least one real RISC-V microarchitecture (e.g., SiFive P670 or comparable). Benefits out-of-order cores.</td>
+      <td>Current tables are MIPS-derived (<a href="https://github.com/riscv-collab/v8/issues/374">riscv-collab/v8#374</a>). Requires latency characterization on a real RISC-V microarchitecture. Benefits out-of-order cores.</td>
     </tr>
     <tr>
       <td>Land auipc+jalr to jal optimization (CL 6874383)</td>
       <td>2</td>
       <td>Medium</td>
-      <td>CQ dry run passed in September 2025. Stalled on safepoint concern. The nop+jal approach preserves safepoint structure and needs to be implemented as a separate CL per the reviewer’s suggestion.</td>
+      <td>CQ dry run passed; stalled on a safepoint-table concern. Implementing the suggested <code class="language-plaintext highlighter-rouge">nop+jal</code> approach as a separate CL would unblock it.</td>
     </tr>
     <tr>
-      <td>Benchmarking infrastructure: establish riscv64 vs. arm64 baseline</td>
+      <td>Establish riscv64 vs. arm64/x86-64 benchmark baseline</td>
       <td>3</td>
       <td>High</td>
-      <td>No public numeric comparison exists. Cannot make evidence-based investment claims without this data. Requires bare-metal riscv64 hardware running JetStream and Speedometer with results published.</td>
+      <td>No public numeric comparison exists anywhere. Investment decisions cannot be evidence-based without this. Requires bare-metal riscv64 hardware running JetStream/Speedometer with results published.</td>
     </tr>
     <tr>
-      <td>simdutf RVV runtime dispatch</td>
+      <td>simdutf RVV runtime dispatch and Base64 decode</td>
       <td>5</td>
       <td>Medium</td>
-      <td>This is a simdutf project issue, not a V8 issue directly, but it affects V8 string transcoding performance on heterogeneous deployments. Requires upstream simdutf contribution.</td>
+      <td>Upstream simdutf issue, not V8-internal, but affects V8 string transcoding performance; Base64 decode currently has no RVV path at all (<a href="https://github.com/simdutf/simdutf/issues/380">issue #380</a>).</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="133-cicd-infrastructure">
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
@@ -1194,20 +1472,20 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
       <td>Bare-metal or QEMU riscv64 CI builder</td>
       <td>3</td>
       <td>High</td>
-      <td>All upstream CI is simulator-only. A real-hardware or QEMU CI builder would have caught the RVV register save/restore bug. Without it, every RVV patch is unvalidated against hardware.</td>
+      <td>All upstream CI is simulator-only. A real-hardware or QEMU builder would have caught the RVV register save/restore bug before it shipped. Every RVV patch today is unvalidated against real hardware in official CI.</td>
     </tr>
     <tr>
       <td>Sanitizer builds (ASAN at minimum)</td>
       <td>4</td>
       <td>Medium</td>
-      <td>No ASAN CI exists for riscv64. ASAN would help find memory errors in the backend. Requires confirming ASAN support in Clang for riscv64 and creating a builder config.</td>
+      <td>No ASAN CI exists for riscv64. Would help find memory errors in the backend. Requires confirming ASAN support in Clang for riscv64 and creating a builder config.</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="134-ecosystem-enablement">
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
@@ -1227,26 +1505,32 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
       <td>libpfm4: RISC-V PMU event tables</td>
       <td>6-10</td>
       <td>High</td>
-      <td>Zero RISC-V event tables exist in libpfm4. Profiling and benchmarking workflows that depend on hardware counters are completely blocked. Requires access to RISC-V PMU documentation for target silicon and upstream contribution to libpfm4.</td>
+      <td>Zero RISC-V event tables exist today. V8’s own profiling/benchmarking workflows that depend on hardware counters are blocked on riscv64. Requires PMU documentation for target silicon and an upstream libpfm4 contribution.</td>
     </tr>
     <tr>
-      <td>simdutf: fix RVV correctness gap (#890)</td>
-      <td>2</td>
+      <td>simdutf: Base64 decode RVV implementation and merge PR #996/#890</td>
+      <td>3</td>
       <td>High</td>
-      <td>Open correctness issue in UTF-16 to UTF-8 length calculation for RVV path. Affects V8 string transcoding correctness. Requires upstream simdutf contribution.</td>
+      <td>Base64 decode has no RVV path at all; encode and UTF transcoding RVV work is unmerged. Affects V8 string transcoding performance/correctness coverage.</td>
     </tr>
     <tr>
-      <td>highway: fix -march RVA23 mismatch (#2738)</td>
+      <td>Highway: fix mold-linker and -march RVA23 issues (#2854, #2738)</td>
+      <td>3</td>
+      <td>Medium</td>
+      <td>Upstream Highway contributions; affect <code class="language-plaintext highlighter-rouge">simdutf</code>’s build correctness on current toolchains and newer RISC-V profile targets.</td>
+    </tr>
+    <tr>
+      <td>Abseil: push CRC32C hardware-acceleration PR (#1986) to completion</td>
       <td>2</td>
       <td>Medium</td>
-      <td>Incorrect march flag selection for RVA23 profile targets could cause wrong optimization selection on newer RISC-V hardware. Upstream highway contribution needed.</td>
+      <td>Stalled purely on Google obtaining RISC-V test hardware for the PR author, not on code quality. Affects V8’s own runtime hash/CRC paths indirectly via Abseil.</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="135-summary-table">
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1267,7 +1551,7 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
       <td>Functional</td>
       <td>Land CL 7953190 (fp16 SIMD arithmetic)</td>
       <td>1</td>
-      <td>Any engineer with V8 owner status</td>
+      <td>Engineer with V8 owner status</td>
       <td>High</td>
     </tr>
     <tr>
@@ -1328,7 +1612,7 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
     </tr>
     <tr>
       <td>Performance</td>
-      <td>simdutf RVV runtime dispatch</td>
+      <td>simdutf RVV runtime dispatch and Base64 decode</td>
       <td>5</td>
       <td>simdutf upstream contributor</td>
       <td>Medium</td>
@@ -1356,30 +1640,27 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Fix simdutf RVV correctness bug (#890)</td>
-      <td>2</td>
+      <td>simdutf Base64 decode RVV implementation</td>
+      <td>3</td>
       <td>simdutf upstream contributor</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Ecosystem</td>
-      <td>Fix highway -march RVA23 mismatch (#2738)</td>
+      <td>Highway mold-linker/RVA23 fixes</td>
+      <td>3</td>
+      <td>Highway upstream contributor</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Ecosystem</td>
+      <td>Abseil CRC32C hardware-acceleration PR to completion</td>
       <td>2</td>
-      <td>highway upstream contributor</td>
+      <td>Abseil upstream contributor + Google RISC-V hardware access</td>
       <td>Medium</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1391,8 +1672,11 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
 
 <ul>
   <li><a href="https://github.com/v8/v8">v8/v8 GitHub mirror</a></li>
+  <li><a href="https://github.com/v8/v8/releases">v8/v8 releases (empty)</a></li>
   <li><a href="https://v8.dev/">v8.dev</a></li>
   <li><a href="https://v8.dev/docs/ports">V8 ports documentation</a></li>
+  <li><a href="https://v8.dev/docs/become-committer">V8 committer process</a></li>
+  <li><a href="https://v8.dev/blog/pointer-compression">V8 pointer compression blog</a></li>
   <li><a href="https://chromium.googlesource.com/v8/v8/+/refs/heads/main/RISCV_OWNERS">V8 RISCV_OWNERS file</a></li>
   <li><a href="https://chromium.googlesource.com/v8/v8/+/refs/heads/main/COMMON_OWNERS">V8 COMMON_OWNERS file</a></li>
   <li><a href="https://github.com/v8/v8/tree/main/src/codegen/riscv">V8 src/codegen/riscv/</a></li>
@@ -1403,22 +1687,38 @@ ninja -C out/riscv64.debug d8 -j$(nproc)
   <li><a href="https://chromium.googlesource.com/v8/v8/+/refs/heads/main/infra/testing/builders.pyl">V8 infra/testing/builders.pyl</a></li>
   <li><a href="https://chromium.googlesource.com/v8/v8/+/refs/heads/main/infra/mb/mb_config.pyl">V8 infra/mb/mb_config.pyl</a></li>
   <li><a href="https://riseproject.dev/2025/12/09/a-glimpse-into-v8-development-for-risc-v/">RISE Project blog: A Glimpse Into V8 Development for RISC-V (Dec 2025)</a></li>
-  <li><a href="https://riseproject.dev">RISE Project members</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://riscv.org/blog/2020/08/unlocking-javascript-v8-riscv-open-sourced/">RISC-V International: Unlocking JavaScript, V8-RISCV Open Sourced (2020)</a></li>
+  <li><a href="https://github.com/isrc-cas/v8-riscv/blob/plct-riscv64/README.md">isrc-cas/v8-riscv (historical fork)</a></li>
+  <li><a href="https://github.com/riscv-collab/v8/wiki/Cross-compiled-Build">riscv-collab/v8 wiki: Cross-compiled Build</a></li>
   <li><a href="https://github.com/riscv-collab/v8/issues">riscv-collab/v8 issue tracker</a></li>
+  <li><a href="https://github.com/riscv-collab/v8/issues/701">riscv-collab/v8 issue #701: Octane failed on Unmatched</a></li>
+  <li><a href="https://github.com/riscv-collab/v8/issues/374">riscv-collab/v8 issue #374: Update instruction latencies</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7953190">Gerrit CL 7953190: fp16 vf* arithmetic</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7203127">Gerrit CL 7203127: Separate Liftoff FP and SIMD registers</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/7500131">Gerrit CL 7500131: Fix Sub32 immediate handling</a></li>
   <li><a href="https://chromium-review.googlesource.com/c/v8/v8/+/6874383">Gerrit CL 6874383: auipc+jalr to jal</a></li>
   <li><a href="https://github.com/v8/v8/pull/93">GitHub PR #93 (Zbb rotation, closed)</a></li>
   <li><a href="https://github.com/v8/v8/pull/94">GitHub PR #94 (Zbb rotation, closed)</a></li>
+  <li><a href="https://github.com/v8/v8/pull/69">GitHub PR #69 (Fix undefined identifier libs, closed)</a></li>
   <li><a href="https://ci.rvperf.org/view/V8/">V8 independent CI buildbot</a></li>
   <li><a href="https://ci.chromium.org/p/v8/g/ports/console">V8 official ports CI console</a></li>
-  <li><a href="https://github.com/simdutf/simdutf/issues/890">simdutf issue #890 (RVV UTF-16 to UTF-8 length)</a></li>
-  <li><a href="https://github.com/google/highway/issues/2738">google/highway issue #2738 (RVA23 -march mismatch)</a></li>
-  <li><a href="https://github.com/google/highway/issues/2793">google/highway issue #2793 (GCC 15 test failure)</a></li>
+  <li><a href="https://github.com/simdutf/simdutf/issues/380">simdutf issue #380 (no RVV Base64 decode)</a></li>
+  <li><a href="https://github.com/simdutf/simdutf/pull/890">simdutf PR #890 (UTF-16 to UTF-8 with replacement, RVV)</a></li>
+  <li><a href="https://github.com/simdutf/simdutf/pull/996">simdutf PR #996 (Base64 encode SIMD)</a></li>
   <li><a href="https://github.com/google/highway/issues/2854">google/highway issue #2854 (mold-linker failure)</a></li>
+  <li><a href="https://github.com/google/highway/issues/2542">google/highway issue #2542 (no FMA on SCALAR/EMU128-RISC-V)</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/1702">abseil-cpp issue #1702 (-latomic link failure)</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/2002">abseil-cpp issue #2002 (SEGFAULT on Debian riscv64)</a></li>
   <li><a href="https://github.com/abseil/abseil-cpp/pull/1986">abseil-cpp PR #1986 (CRC32C hardware acceleration)</a></li>
   <li><a href="https://github.com/fastfloat/fast_float/issues/343">fast_float issue #343 (RVV vectorization not implemented)</a></li>
+  <li><a href="https://github.com/fastfloat/fast_float/pull/406">fast_float PR #406 (RISC-V RVV optimization, UTF-16 inputs)</a></li>
+  <li><a href="https://github.com/madler/zlib/pull/1099">zlib PR #1099 (RVV-accelerated Adler32)</a></li>
+  <li><a href="https://github.com/google/re2/issues/2142">google/re2 issue #2142 (SwissTable kWidth==8 test failure)</a></li>
+  <li><a href="https://github.com/Maratyszcza/FP16/pull/45">Maratyszcza/FP16 PR #45 (Add RISC-V QEMU test coverage)</a></li>
+  <li><a href="https://github.com/google/double-conversion/pull/304">google/double-conversion PR #304 (hex-float ULP rounding)</a></li>
+  <li><a href="https://pypi.org/pypi/v8/json">PyPI: v8 package (unrelated PyV8 wrapper)</a></li>
+  <li><a href="https://packages.ubuntu.com/">Ubuntu packages.ubuntu.com search</a></li>
 </ul>
 
           

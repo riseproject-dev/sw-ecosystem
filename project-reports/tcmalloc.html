@@ -265,11 +265,13 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a>
-<strong>Date:</strong> 2026-07-20
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for tcmalloc
-<strong>Audience:</strong> Technical leadership, resource allocation strategy
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].</p><hr />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-10-01<br />
+<strong>Readiness:</strong> orange (downstream-only)<br />
+<strong>Optimization level:</strong> absent<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for tcmalloc<br />
+<strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,11 +281,9 @@
 </h2>
     
 
-<p><a href="https://google.github.io/tcmalloc/">tcmalloc</a> (Thread-Caching Malloc) is Google’s high-performance memory allocator, designed to reduce malloc/free latency by maintaining per-CPU lock-free slabs via Linux Restartable Sequences (RSEQ) and per-thread caches as a fallback. It is used in production across Google’s infrastructure for latency-sensitive workloads.</p>
+<p><a href="https://google.github.io/tcmalloc/">tcmalloc</a> (Thread-Caching Malloc) is Google’s high-performance memory allocator, designed to reduce malloc/free latency by maintaining per-CPU lock-free slabs via Linux Restartable Sequences (RSEQ), with a per-thread cache as the fallback path. It is used in production across Google’s infrastructure for latency-sensitive workloads.</p>
 
-<p>The repository at <a href="https://github.com/google/tcmalloc">github.com/google/tcmalloc</a> is a mirror of Google’s internal Piper monorepo, synced via Copybara. External pull requests are accepted but cannot be merged by the contributor; merge authority rests entirely with Google’s internal engineering team. The <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> states: “The current members of the TCMalloc engineering team are the only committers at present.” There is no foundation affiliation (not Apache, CNCF, or Linux Foundation). The license is Apache 2.0.</p>
-
-<p>The project is explicitly not an officially supported Google product. Community conduct is governed by <a href="https://opensource.google/conduct/">Google’s Open Source Community Guidelines</a>.</p>
+<p>The repository at <a href="https://github.com/google/tcmalloc">github.com/google/tcmalloc</a> is a mirror of Google’s internal Piper monorepo, synced to <code class="language-plaintext highlighter-rouge">main</code> via Copybara as direct commits. External pull requests are accepted into review but merge authority rests entirely with Google’s internal engineering team; <code class="language-plaintext highlighter-rouge">CONTRIBUTING.md</code> states: “The current members of the TCMalloc engineering team are the only committers at present.” Google-internal contributors are explicitly told it is “preferable to first create an internal CL” and let the internal code-propagation pipeline push the change to GitHub. No <code class="language-plaintext highlighter-rouge">MAINTAINERS</code>, <code class="language-plaintext highlighter-rouge">OWNERS</code>, or <code class="language-plaintext highlighter-rouge">CODEOWNERS</code> file exists in the repository. There is no foundation affiliation (not Apache, CNCF, or Linux Foundation); conduct is governed by <a href="https://opensource.google/conduct/">Google’s Open Source Community Guidelines</a>. The license is Apache 2.0. The project is explicitly disclaimed as “not an officially supported Google product.”</p>
 
 <p>Primary maintainers identified from commit history:</p>
 
@@ -330,11 +330,11 @@
   </tbody>
 </table></div>
 
-<p>Note: Martin Maas is a known Google RISC-V researcher [NEEDS VERIFICATION of current role], but there is no RISC-V-specific commit or issue attributed to him in the tcmalloc repository.</p>
+<p>Note: Martin Maas is a known Google RISC-V researcher [NEEDS VERIFICATION of current role], but no RISC-V-specific commit or issue in the tcmalloc repository is attributed to him. All riscv64-touching commits (see Section 2) were authored by a single engineer, Saleem Abdulrasool.</p>
 
-<p>The project has no RISE Project membership and no RISE blog coverage. A full crawl of all 27 RISE Project blog posts (May 2024 through June 2026) returned zero mentions of tcmalloc.</p>
+<p><strong>RISE Project involvement:</strong> none. Google LLC is a Premier Member of the <a href="https://riseproject.dev/members/">RISE Project</a>, alongside Alibaba Damo, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, and Tenstorrent (RISE’s General Members include Akeana, Andes, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin/ByteDance, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT, and ZTE). This membership is corporate-level only: <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> itself has no RISE project listing, no RISE blog coverage, and no RISE-funded work. A crawl of the RISE blog index and a targeted search of the System Libraries Working Group’s tracking surfaces found zero mentions of tcmalloc. RISE’s only documented connection to this project is indirect: its own ecosystem-tracking repository, <code class="language-plaintext highlighter-rouge">riseproject-dev/sw-ecosystem</code>, authors readiness-assessment reports about tcmalloc (such as this one and its predecessor) - this is research/cataloging activity, not sponsorship, code contribution, or CI provisioning.</p>
 
-<p>Community posture on new architecture ports is conservative: all RISC-V enablement came from a single Google engineer via the internal monorepo in 2021, with no activity in the four subsequent years and no open tracking issue. The project does not solicit or organize community porting efforts.</p><hr />
+<p>Community posture on new architecture ports is conservative and ad hoc: all RISC-V enablement came from one Google-internal engineer in 2021-2023, routed entirely through direct <code class="language-plaintext highlighter-rouge">main</code>-branch commits (Piper/Copybara), never through a GitHub pull request or tracking issue. There is no evidence of an RFC, a community-driven port proposal, or any external contributor involvement in the riscv64 work. The project does not solicit or organize community porting efforts, and riscv64 has never been promoted to an official support tier (Section 3).</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -344,36 +344,76 @@
 </h2>
     
 
+<p>All riscv64-related changes entered the public repository as direct Copybara-exported commits to <code class="language-plaintext highlighter-rouge">main</code>, with no associated GitHub pull request and no public review thread. Nine commits touch riscv64, spanning just over two years, all from one author:</p>
+
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Date</th>
+      <th>Commit</th>
       <th>Event</th>
-      <th>Source</th>
+      <th>Author</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>2021-08-16</td>
-      <td>Commit <a href="https://github.com/google/tcmalloc/commit/c730bdc">c730bdc</a>: “add initial support for RISCV targets”. Adds <code class="language-plaintext highlighter-rouge">__riscv &amp;&amp; __linux__</code> guards in <code class="language-plaintext highlighter-rouge">tcmalloc/internal/config.h</code>, sets <code class="language-plaintext highlighter-rouge">kAddressBits = 48</code> and <code class="language-plaintext highlighter-rouge">kHugePageShift = 21</code>. Author: Saleem Abdulrasool (compnerd, abdulras@google.com). Sourced via Copybara (PiperOrigin-RevId: 391119742).</td>
-      <td><a href="https://github.com/google/tcmalloc/commit/c730bdc">github.com/google/tcmalloc/commit/c730bdc</a></td>
+      <td><a href="https://github.com/google/tcmalloc/commit/c730bdcd83af0381c094aca690ee2c5e96189287">c730bdc</a></td>
+      <td>“add initial support for RISCV targets” - foundational commit adding the basic constants (<code class="language-plaintext highlighter-rouge">kAddressBits</code>, <code class="language-plaintext highlighter-rouge">kHugePageShift</code>) needed to build tcmalloc for RISC-V 64-bit Linux</td>
+      <td>Saleem Abdulrasool (compnerd, abdulras@google.com)</td>
+    </tr>
+    <tr>
+      <td>2021-08-26</td>
+      <td><a href="https://github.com/google/tcmalloc/commit/0f7596195f580b3fac6a815ce59704960f6f7082">f2096849 (1st)</a></td>
+      <td>“tcmalloc: repair the RISC-V build” - fixed <code class="language-plaintext highlighter-rouge">SharededTransferCache</code> referencing <code class="language-plaintext highlighter-rouge">__rseq_abi.cpu_id</code> inline instead of via the <code class="language-plaintext highlighter-rouge">RseqCpuId</code> wrapper, which broke non-RSEQ (RISC-V) builds</td>
+      <td>Saleem Abdulrasool</td>
+    </tr>
+    <tr>
+      <td>2021-09-08</td>
+      <td><a href="https://github.com/google/tcmalloc/commit/f4e1fb0bc6483e7d606894f085646616792ec8b2">f4e1fb0</a></td>
+      <td>“tcmalloc: repair !TCMALLOC_PERCPU_USE_RSEQ builds” - guarded unguarded <code class="language-plaintext highlighter-rouge">__rseq_abi</code> references breaking non-RSEQ targets</td>
+      <td>Saleem Abdulrasool</td>
+    </tr>
+    <tr>
+      <td>2021-09-15</td>
+      <td><a href="https://github.com/google/tcmalloc/commit/f20b9468a107b2002d4d558c6a2bcf161d70e538">f2096849 (2nd)</a></td>
+      <td>“tcmalloc: repair the percpu_tcmalloc related tests on RISC-V” - follow-up fix for a missed <code class="language-plaintext highlighter-rouge">__rseq_abi</code> reference in test targets</td>
+      <td>Saleem Abdulrasool</td>
     </tr>
     <tr>
       <td>2021-12-20</td>
-      <td>Commit <a href="https://github.com/google/tcmalloc/commit/54c1f7b">54c1f7b</a>: “correct declaration for non-RSEQ platforms”. Fixes build failure on RISC-V in <code class="language-plaintext highlighter-rouge">tcmalloc/internal/percpu.h</code> by adding missing <code class="language-plaintext highlighter-rouge">size_t shift</code> parameter to <code class="language-plaintext highlighter-rouge">TcmallocSlab_Internal_Pop</code> declaration. Author: Saleem Abdulrasool.</td>
-      <td><a href="https://github.com/google/tcmalloc/commit/54c1f7b">github.com/google/tcmalloc/commit/54c1f7b</a></td>
+      <td><a href="https://github.com/google/tcmalloc/commit/54c1f7bc61db8888a67dc62288c522e8e6a6f630">54c1f7b</a></td>
+      <td>“tcmalloc: correct declaration for non-RSEQ platforms” - fixed a declaration/implementation mismatch between RSEQ-capable (x86_64/AArch64) and non-RSEQ (RISC-V) code paths</td>
+      <td>Saleem Abdulrasool</td>
     </tr>
     <tr>
-      <td>2022-2026</td>
-      <td>No further RISC-V commits, issues, or pull requests.</td>
-      <td><a href="https://github.com/google/tcmalloc/issues">github.com/google/tcmalloc/issues</a> (zero riscv results confirmed)</td>
+      <td>2022-01-18</td>
+      <td><a href="https://github.com/google/tcmalloc/commit/cefed7bf7d696a251a98d58a158bdd565ab1eb36">cefed7bf</a></td>
+      <td>“tcmalloc: repair the build for non-rseq enabled platforms” - fixed an integral type conversion for <code class="language-plaintext highlighter-rouge">shift</code> breaking the RISC-V build</td>
+      <td>Saleem Abdulrasool</td>
+    </tr>
+    <tr>
+      <td>2022-02-03</td>
+      <td><a href="https://github.com/google/tcmalloc/commit/7ae2052200270cf1bd3e37f845e2c05d14b79aaf">7ae2052</a></td>
+      <td>“tcmalloc: skip rseq tests on non-rseq targets” - skips restartable-sequence tests on RISC-V</td>
+      <td>Saleem Abdulrasool</td>
+    </tr>
+    <tr>
+      <td>2023-08-25</td>
+      <td><a href="https://github.com/google/tcmalloc/commit/8f84341cb4b91eb025e66e55f6cbb83c8b1c62ea">8f84341</a></td>
+      <td>Fix an “unused variable” warning (<code class="language-plaintext highlighter-rouge">kPointerBits</code>) in <code class="language-plaintext highlighter-rouge">config_test.cc</code> on RISC-V</td>
+      <td>Saleem Abdulrasool</td>
+    </tr>
+    <tr>
+      <td>2023-09-12</td>
+      <td><a href="https://github.com/google/tcmalloc/commit/56e8b05f021b33883d881a69094816374e6c1497">56e8b05</a></td>
+      <td>Fix typos in <code class="language-plaintext highlighter-rouge">memory_errors_test.cc</code> for RISC-V</td>
+      <td>Saleem Abdulrasool</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Both commits entered the public repository as direct Copybara pushes with no associated GitHub pull request. There is no public record of review discussion for either change.</p>
-
-<p>Both commits are fully upstream. The port is stalled at a compile-only stub state. No tracking issue for a complete riscv64 port exists, open or closed.</p><hr />
+<p>No commit, issue, or pull request touching riscv64 exists after 2023-09-12 - the port has been dormant for roughly three years. All nine changes are fully present on <code class="language-plaintext highlighter-rouge">main</code> (they are the only history that exists). None of them add the per-CPU RSEQ fast-path assembly (Section 4); all are build/test breakage repairs for a target that was declared buildable in the first commit and never extended further. No tracking issue for a complete riscv64 port exists, open or closed, and GitHub’s own issue search (<code class="language-plaintext highlighter-rouge">q=riscv</code>) returns zero results against this repository.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -412,9 +452,7 @@
   </tbody>
 </table></div>
 
-<p>riscv64 is entirely absent from the official support matrix. There is no stated tier policy document; the categorization above is inferred from <code class="language-plaintext highlighter-rouge">docs/platforms.md</code> directly.</p>
-
-<p>Tier evidence by architecture:</p>
+<p>riscv64 is absent from both tiers. <code class="language-plaintext highlighter-rouge">docs/platforms.md</code> also states the repo-wide compiler floor (GCC 12.1+/Clang 11.0+, enforced in <code class="language-plaintext highlighter-rouge">tcmalloc/internal/config.h</code>), which is not architecture-specific and applies equally on riscv64.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -433,9 +471,9 @@
       <td>No</td>
     </tr>
     <tr>
-      <td>CI runner exists</td>
-      <td>Yes (x86 Docker, Kokoro)</td>
-      <td>Yes (ARM Docker, <code class="language-plaintext highlighter-rouge">linux_arm_hybrid-latest</code>)</td>
+      <td>CI job exists (<code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>)</td>
+      <td>Yes (matrixed)</td>
+      <td>No (same x86_64-only job builds the repo, but no arm64 runner)</td>
       <td>No</td>
     </tr>
     <tr>
@@ -446,20 +484,20 @@
     </tr>
     <tr>
       <td>Release artifacts (GitHub)</td>
-      <td>N/A (source-only)</td>
+      <td>N/A - zero releases for any architecture</td>
       <td>N/A</td>
       <td>N/A</td>
     </tr>
     <tr>
-      <td>Distro packages (upstream source)</td>
+      <td>Genuine downstream distro build of this repo</td>
+      <td>N/A - not independently confirmed</td>
       <td>N/A</td>
-      <td>N/A</td>
-      <td>N/A</td>
+      <td>No (see Section 8: the only riscv64 package sharing the name is sourced from the unrelated <code class="language-plaintext highlighter-rouge">gperftools</code> project)</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>tcmalloc ships no prebuilt binaries of any kind. There are zero GitHub releases. All distribution occurs via source or through downstream packagers (Debian/Ubuntu package gperftools, which is a separate codebase - see Section 8).</p><hr />
+<p>tcmalloc ships no prebuilt binaries of any kind, for any architecture; the GitHub releases page states “There aren’t any releases here.” All distribution is via source build or via downstream packagers who build independently (and, in the one riscv64-relevant case found, build a different codebase entirely - see Section 8).</p>
 <h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
   
   
@@ -468,8 +506,6 @@
   
 </h2>
     
-
-<p>tcmalloc’s performance-critical subsystems and their riscv64 status:</p>
 <h3 id="per-cpu-rseq-slab-allocator">
   
   
@@ -479,18 +515,55 @@
 </h3>
     
 
-<p>The primary performance advantage of tcmalloc is its lock-free per-CPU memory slab, implemented using Linux Restartable Sequences (RSEQ). Each architecture requires a hand-written assembly file implementing <code class="language-plaintext highlighter-rouge">TcmallocSlab_Internal_PushBatch</code>, <code class="language-plaintext highlighter-rouge">PopBatch</code>, and <code class="language-plaintext highlighter-rouge">PerCpuCmpxchg64</code>.</p>
+<p>tcmalloc’s primary performance differentiator is its lock-free per-CPU memory slab, implemented via Linux Restartable Sequences (RSEQ). Each supported architecture requires a hand-written assembly file:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Arch</th>
+      <th>File</th>
+      <th>Lines</th>
+      <th>Content</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>x86_64</td>
+      <td><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu_rseq_x86_64.S"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/percpu_rseq_x86_64.S</code></a></td>
+      <td>362</td>
+      <td>Hand-written RSEQ assembly implementing the lock-free per-CPU push/pop/cmpxchg fast path</td>
+    </tr>
+    <tr>
+      <td>aarch64</td>
+      <td><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu_rseq_aarch64.S"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/percpu_rseq_aarch64.S</code></a></td>
+      <td>377</td>
+      <td>Hand-written RSEQ assembly, same lock-free design</td>
+    </tr>
+    <tr>
+      <td>riscv64</td>
+      <td>none</td>
+      <td>-</td>
+      <td>No <code class="language-plaintext highlighter-rouge">percpu_rseq_riscv*.S</code> exists anywhere in the repository</td>
+    </tr>
+  </tbody>
+</table></div>
 
 <p>The platform guard in <a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu.h"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/percpu.h</code></a>:</p>
 
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#if defined(__linux__) &amp;&amp; (defined(__x86_64__) || defined(__aarch64__)) &amp;&amp; \
-    !defined(ABSL_HAVE_HWADDRESS_SANITIZER)
-#define TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM 1
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM \
+  (defined(__linux__) &amp;&amp; (defined(__x86_64__) || defined(__aarch64__)) &amp;&amp; \
+   !TCMALLOC_INTERNAL_PERCPU_HWASAN)
 </span></code></pre></div></div>
 
-<p>RISC-V is not in this list. <code class="language-plaintext highlighter-rouge">TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM = 0</code> for riscv64. The RSEQ signature for riscv64 is <code class="language-plaintext highlighter-rouge">0x0</code> (the invalid sentinel). On riscv64, all calls to RSEQ fast-path functions land in <a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu_rseq_unsupported.cc"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/percpu_rseq_unsupported.cc</code></a>, which returns 0 or -1 and performs no allocation. <code class="language-plaintext highlighter-rouge">IsFast()</code> returns false on riscv64; the per-CPU cache is never activated. tcmalloc falls back to the per-thread cache path automatically.</p>
+<p>riscv64 is not in this list, so <code class="language-plaintext highlighter-rouge">TCMALLOC_INTERNAL_PERCPU_USE_RSEQ</code> is hard-compiled to <code class="language-plaintext highlighter-rouge">0</code> for riscv64 builds. As a direct consequence, <code class="language-plaintext highlighter-rouge">IsFast()</code> (<code class="language-plaintext highlighter-rouge">percpu.h</code>, around lines 341-344) unconditionally returns <code class="language-plaintext highlighter-rouge">false</code> on riscv64, and <code class="language-plaintext highlighter-rouge">cpu_cache.cc</code>’s gate (<code class="language-plaintext highlighter-rouge">if (Parameters::per_cpu_caches() &amp;&amp; subtle::percpu::IsFast())</code>) never activates the per-CPU cache. Every call site that would otherwise use the riscv64 “RSEQ implementation” instead lands in <a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu_rseq_unsupported.cc"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/percpu_rseq_unsupported.cc</code></a> (64 lines), whose entry points are hard-abort stubs:</p>
 
-<p>The Linux kernel has supported RSEQ via syscall since v4.18 on riscv64. glibc 2.35 registers rseq per-thread. The kernel-side infrastructure exists; the missing piece is the <code class="language-plaintext highlighter-rouge">percpu_rseq_riscv.S</code> assembly file in tcmalloc.</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="kt">void</span> <span class="nf">Unsupported</span><span class="p">()</span> <span class="p">{</span> <span class="n">TC_BUG</span><span class="p">(</span><span class="s">"RSEQ function called on unsupported platform."</span><span class="p">);</span> <span class="p">}</span>
+<span class="kt">int</span> <span class="nf">TcmallocSlab_Internal_PerCpuCmpxchg64</span><span class="p">(...)</span> <span class="p">{</span> <span class="n">Unsupported</span><span class="p">();</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+</code></pre></div></div>
+
+<p>These stubs are dead code in practice (they are gated behind <code class="language-plaintext highlighter-rouge">IsFast()</code>, always false on riscv64), so there is no crash risk - but there is also zero riscv64-specific fast-path code of any kind, hand-tuned or otherwise. Allocation on riscv64 permanently runs through the legacy, mutex/TLS-list <code class="language-plaintext highlighter-rouge">ThreadCache</code> path (<code class="language-plaintext highlighter-rouge">tcmalloc/thread_cache.cc</code>, 438 lines, and <code class="language-plaintext highlighter-rouge">thread_cache.h</code>, 271 lines) - tcmalloc’s original, pre-per-CPU-cache design, functionally complete and correct, but architecturally the weakest of the three “supported” targets.</p>
+
+<p>The Linux kernel has exposed the <code class="language-plaintext highlighter-rouge">rseq</code> syscall on riscv64 since v4.18, and glibc 2.35+ registers rseq per-thread; the kernel/libc-side infrastructure to build a riscv64 RSEQ path exists. The gap is entirely in tcmalloc’s own assembly.</p>
 <h3 id="platform-constants">
   
   
@@ -500,7 +573,7 @@
 </h3>
     
 
-<p><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/config.h"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/config.h</code></a> has two riscv64-specific ifdefs:</p>
+<p><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/config.h"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/config.h</code></a> has riscv64-specific ifdefs:</p>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#elif defined __riscv &amp;&amp; defined __linux__
 </span><span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">kAddressBits</span> <span class="o">=</span> <span class="mi">48</span><span class="p">;</span>
@@ -509,7 +582,7 @@
 </span><span class="k">static</span> <span class="k">constexpr</span> <span class="kt">size_t</span> <span class="n">kHugePageShift</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
 </code></pre></div></div>
 
-<p>These values (48-bit VA, 2 MiB huge pages) are correct for sv48 RISC-V Linux and match aarch64. No architectural justification or citation is provided in the comment.</p>
+<p>These values (48-bit VA, 2 MiB huge pages) match the aarch64 branch and are correct for sv48 RISC-V Linux, but no architectural justification or citation is given in the comment - this is a constant reused from aarch64, not a measured/tuned riscv64 value.</p>
 <h3 id="prefetch">
   
   
@@ -519,7 +592,7 @@
 </h3>
     
 
-<p><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/prefetch.h"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/prefetch.h</code></a>: x86_64 uses inline <code class="language-plaintext highlighter-rouge">PREFETCHW</code> asm. riscv64 receives <code class="language-plaintext highlighter-rouge">__builtin_prefetch</code> only – no RISC-V prefetch intrinsics.</p>
+<p><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/prefetch.h"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/prefetch.h</code></a>: x86_64 uses inline <code class="language-plaintext highlighter-rouge">PREFETCHW</code> assembly. riscv64 receives only the generic <code class="language-plaintext highlighter-rouge">__builtin_prefetch</code> - no RISC-V-specific prefetch intrinsics (e.g. no Zicbop <code class="language-plaintext highlighter-rouge">prefetch.r</code>/<code class="language-plaintext highlighter-rouge">prefetch.w</code>).</p>
 <h3 id="cache-topology">
   
   
@@ -529,7 +602,17 @@
 </h3>
     
 
-<p><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/cache_topology.cc"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/cache_topology.cc</code></a>: aarch64 has an L3 identification fallback. riscv64 uses the generic sysfs path only.</p>
+<p><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/cache_topology.cc"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/cache_topology.cc</code></a>: aarch64 has an L3-identification fallback path. riscv64 uses the generic sysfs path only.</p>
+<h3 id="segv-handler">
+  
+  
+    <a href="#segv-handler" class="anchor-heading" aria-labelledby="segv-handler"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> SEGV Handler
+  
+  
+</h3>
+    
+
+<p><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/segv_handler.cc"><code class="language-plaintext highlighter-rouge">tcmalloc/segv_handler.cc</code></a> determines read-vs-write access on a fault for use-after-free/overflow diagnostics. The riscv64 branch is an explicit, self-admitted gap: <code class="language-plaintext highlighter-rouge">// __riscv is NOT (yet) supported</code> - the function returns <code class="language-plaintext highlighter-rouge">WriteFlag::Unknown</code> on riscv64. This affects only diagnostic error-message wording on SEGV, not correctness or memory safety. Two corresponding test-side guards in <code class="language-plaintext highlighter-rouge">tcmalloc/testing/memory_errors_test.cc</code> skip asserting on the read/write label on riscv64.</p>
 <h3 id="isa-extensions">
   
   
@@ -539,7 +622,7 @@
 </h3>
     
 
-<p>Zero usage of any RISC-V ISA extension: no RVV vector intrinsics, no Zba/Zbb/Zbc/Zbs bitmanip, no Zicbop prefetch hints, no inline assembly of any kind for riscv64.</p>
+<p>Zero usage of any RISC-V ISA extension anywhere in the repository: no RVV vector intrinsics, no Zba/Zbb/Zbc/Zbs bitmanip, no Zicbop prefetch hints, no inline assembly of any kind for riscv64. The only riscv64-touching files in the entire codebase are five small preprocessor-guard sites: <code class="language-plaintext highlighter-rouge">tcmalloc/tcmalloc.cc</code>, <code class="language-plaintext highlighter-rouge">tcmalloc/segv_handler.cc</code>, <code class="language-plaintext highlighter-rouge">tcmalloc/internal/config.h</code>, and two test files (<code class="language-plaintext highlighter-rouge">tcmalloc/testing/tcmalloc_test.cc</code>, <code class="language-plaintext highlighter-rouge">tcmalloc/testing/memory_errors_test.cc</code>). <code class="language-plaintext highlighter-rouge">__aarch64__</code> appears in 16 files and <code class="language-plaintext highlighter-rouge">__x86_64__</code> in 15 files, versus <code class="language-plaintext highlighter-rouge">__riscv</code> in 5.</p>
 <h3 id="summary-comparison-table">
   
   
@@ -563,25 +646,19 @@
       <td>Platform constants (<code class="language-plaintext highlighter-rouge">kAddressBits</code>, <code class="language-plaintext highlighter-rouge">kHugePageShift</code>)</td>
       <td>Full</td>
       <td>Full</td>
-      <td>Full (4 lines, values match arm64)</td>
+      <td>Full (reused aarch64 values)</td>
     </tr>
     <tr>
       <td>Per-CPU RSEQ slab assembly</td>
-      <td>Full (hand-tuned, <code class="language-plaintext highlighter-rouge">percpu_rseq_x86_64.S</code>, ~235 lines)</td>
-      <td>Full (hand-tuned, <code class="language-plaintext highlighter-rouge">percpu_rseq_aarch64.S</code>)</td>
-      <td>Missing – crash stub only</td>
+      <td>Full (hand-tuned, 362 lines)</td>
+      <td>Full (hand-tuned, 377 lines)</td>
+      <td>Missing - <code class="language-plaintext highlighter-rouge">IsFast()</code> compiled to always-false, crash-stub file unreachable in practice</td>
     </tr>
     <tr>
       <td>RSEQ platform flag</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
-    </tr>
-    <tr>
-      <td>RSEQ signature</td>
-      <td><code class="language-plaintext highlighter-rouge">0x53053053</code></td>
-      <td><code class="language-plaintext highlighter-rouge">0xd428bc00</code></td>
-      <td><code class="language-plaintext highlighter-rouge">0x0</code> (invalid)</td>
     </tr>
     <tr>
       <td>Prefetch hints</td>
@@ -596,6 +673,12 @@
       <td>Generic sysfs</td>
     </tr>
     <tr>
+      <td>SEGV read/write fault classification</td>
+      <td>Implemented</td>
+      <td>Implemented</td>
+      <td>Not implemented (<code class="language-plaintext highlighter-rouge">WriteFlag::Unknown</code>)</td>
+    </tr>
+    <tr>
       <td>SIMD / vector usage</td>
       <td>None</td>
       <td>None</td>
@@ -603,18 +686,18 @@
     </tr>
     <tr>
       <td>ISA extension usage</td>
-      <td>SSE/AVX (prefetch)</td>
+      <td>SSE/AVX (prefetch only)</td>
       <td>None</td>
       <td>None</td>
     </tr>
     <tr>
       <td>CI validation</td>
       <td>Yes</td>
-      <td>Yes</td>
+      <td>No (same x86_64-only job)</td>
       <td>No</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="5-build-system-cross-compilation-and-toolchain">
   
   
@@ -624,60 +707,42 @@
 </h2>
     
 
-<p><strong>Build systems:</strong> Bazel (primary, Bazel 4.0+) and CMake (experimental).</p>
+<p><strong>Build systems:</strong> Bazel (primary, official) and CMake (“experimental” per README).</p>
 
-<p><strong>Compiler minimums</strong> (enforced in <code class="language-plaintext highlighter-rouge">tcmalloc/internal/config.h</code>, not architecture-specific):</p>
+<p><strong>Compiler minimums</strong>, enforced in <code class="language-plaintext highlighter-rouge">tcmalloc/internal/config.h</code> and stated in <code class="language-plaintext highlighter-rouge">docs/platforms.md</code>, repo-wide and not architecture-specific:</p>
 <ul>
-  <li>GCC 12.1 or later (hard error below this)</li>
-  <li>Clang 11 or later (hard error below this)</li>
+  <li>GCC 12.1 or later (hard compile error below this)</li>
+  <li>Clang 11.0 or later (hard compile error below this)</li>
   <li>C++17 required</li>
 </ul>
 
-<p><strong>Standard Bazel build on a riscv64 host:</strong></p>
+<p><strong>Bazel build (self-hosted on a riscv64 machine):</strong></p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bazel <span class="nb">test</span> //tcmalloc/... <span class="nt">--cxxopt</span><span class="o">=</span><span class="s1">'-std=c++17'</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bazel <span class="nb">test</span> //tcmalloc/...
 </code></pre></div></div>
 
-<p>No cross-compilation toolchain files exist in the repository: no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, no <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code>. No QEMU references appear anywhere in the codebase or CI scripts.</p>
+<p>No cross-compilation toolchain file exists in the repository for any non-x86_64 target: no <code class="language-plaintext highlighter-rouge">cmake/riscv64.cmake</code>, no <code class="language-plaintext highlighter-rouge">cmake/toolchain-riscv64.cmake</code>. No QEMU reference (<code class="language-plaintext highlighter-rouge">qemu</code>, <code class="language-plaintext highlighter-rouge">qemu-riscv64</code>, <code class="language-plaintext highlighter-rouge">binfmt</code>) appears anywhere in the codebase, CI scripts, or documentation.</p>
 
-<p><strong>CMake build</strong> (experimental, from <code class="language-plaintext highlighter-rouge">ci/linux_gcc-latest_libstdcxx_cmake.sh</code>):</p>
+<p><strong>CMake build</strong> (from <code class="language-plaintext highlighter-rouge">ci/linux_gcc-latest_libstdcxx_cmake.sh</code>, x86-only in current CI use):</p>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cmake /tcmalloc <span class="se">\</span>
+  <span class="nt">-DABSL_GOOGLETEST_DOWNLOAD_URL</span><span class="o">=</span>... <span class="se">\</span>
+  <span class="nt">-DBUILD_SHARED_LIBS</span><span class="o">=</span>... <span class="se">\</span>
+  <span class="nt">-DABSL_BUILD_TESTING</span><span class="o">=</span>ON <span class="se">\</span>
+  <span class="nt">-DCMAKE_BUILD_TYPE</span><span class="o">=</span>... <span class="se">\</span>
   <span class="nt">-DCMAKE_CXX_STANDARD</span><span class="o">=</span>17 <span class="se">\</span>
-  <span class="nt">-DCMAKE_C_FLAGS</span><span class="o">=</span><span class="s2">"-Werror"</span> <span class="se">\</span>
-  <span class="nt">-DCMAKE_CXX_FLAGS</span><span class="o">=</span><span class="s2">"-Werror"</span>
+  <span class="nt">-DCMAKE_MODULE_LINKER_FLAGS</span><span class="o">=</span><span class="s2">"-Wl,--no-undefined"</span>
 make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
-ctest <span class="nt">--output-on-failure</span>
+ctest
 </code></pre></div></div>
 
-<p>No riscv64-specific CMake flags are documented.</p>
+<p><code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> uses <code class="language-plaintext highlighter-rouge">FetchContent</code> for googletest, abseil-cpp, protobuf, re2, benchmark, and fuzztest; sets <code class="language-plaintext highlighter-rouge">CMAKE_CXX_STANDARD 17</code>. No architecture conditionals, no toolchain-file includes, no <code class="language-plaintext highlighter-rouge">riscv</code> string anywhere, and no <code class="language-plaintext highlighter-rouge">-DUSE_*=OFF</code>-style component toggles exist in this file or in the helper cmake files (<code class="language-plaintext highlighter-rouge">tcmalloc_helpers.cmake</code>, <code class="language-plaintext highlighter-rouge">tcmalloc_variants.cmake</code>).</p>
 
-<p><strong>Relevant <code class="language-plaintext highlighter-rouge">-D</code> flags for riscv64:</strong></p>
+<p><code class="language-plaintext highlighter-rouge">ci/docker_toolchain/</code> is a placeholder “standalone fallback toolchain module when building outside the Docker container” (an empty Bazel <code class="language-plaintext highlighter-rouge">filegroup</code>) - not a riscv64-specific toolchain.</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Flag</th>
-      <th>Effect</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">TCMALLOC_DEPRECATED_PERTHREAD</code></td>
-      <td>Force per-thread mode (tcmalloc auto-selects this on riscv64 anyway; this flag is not required)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">TCMALLOC_INTERNAL_8K_PAGES</code></td>
-      <td>Default page size (4 KB pages will malfunction on systems with 64 KB kernel pages – see Section 11)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">TCMALLOC_INTERNAL_32K_PAGES</code></td>
-      <td>Safe alternative for systems using 64 KB kernel pages</td>
-    </tr>
-  </tbody>
-</table></div>
+<p><strong>No BUILDING.md, INSTALL, docs/building.md, docs/cross-compilation.md, Dockerfile, or <code class="language-plaintext highlighter-rouge">.ci/docker/</code> directory of any kind exists in the repository.</strong> A GitHub code search for <code class="language-plaintext highlighter-rouge">riscv64 repo:google/tcmalloc filename:Dockerfile</code> returns 0 results.</p>
 
-<p><strong>Known build failure history:</strong> Commit <a href="https://github.com/google/tcmalloc/commit/54c1f7b">54c1f7b</a> (2021-12-20) fixed the only documented riscv64 build failure (argument mismatch in <code class="language-plaintext highlighter-rouge">TcmallocSlab_Internal_Pop</code> declaration). No current build failure is documented. There is no CI to detect regressions.</p><hr />
+<p><strong>Known build failure history:</strong> of the nine riscv64 commits (Section 2), seven are build/test repairs triggered by changes elsewhere in the codebase breaking the non-RSEQ path (commits <code class="language-plaintext highlighter-rouge">f2096849</code>x2, <code class="language-plaintext highlighter-rouge">f4e1fb0</code>, <code class="language-plaintext highlighter-rouge">54c1f7b</code>, <code class="language-plaintext highlighter-rouge">cefed7bf</code>, <code class="language-plaintext highlighter-rouge">7ae2052</code>, <code class="language-plaintext highlighter-rouge">8f84341</code>, <code class="language-plaintext highlighter-rouge">56e8b05</code>). This pattern - repeated reactive breakage between August 2021 and February 2022, then two minor fixes in 2023 - is consistent with riscv64 having no CI coverage: breakage is discovered only when someone external notices and reports it, not automatically. No build failure has been reported since September 2023, but absence of reports is not evidence of a working build, given there is no CI to generate one.</p>
 <h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
   
   
@@ -710,8 +775,8 @@ ctest <span class="nt">--output-on-failure</span>
       <td>Per-CPU RSEQ slab allocator (lock-free fast path)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>No – thread-cache fallback only</td>
-      <td>Critical: primary performance differentiator is unavailable</td>
+      <td>No - thread-cache fallback only</td>
+      <td>Critical: primary performance differentiator unavailable</td>
     </tr>
     <tr>
       <td>Per-CPU cache activation (<code class="language-plaintext highlighter-rouge">IsFast()</code> returns true)</td>
@@ -721,17 +786,10 @@ ctest <span class="nt">--output-on-failure</span>
       <td>Critical</td>
     </tr>
     <tr>
-      <td>RSEQ signature validation</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No (signature = <code class="language-plaintext highlighter-rouge">0x0</code>)</td>
-      <td>Critical</td>
-    </tr>
-    <tr>
       <td>Huge page support (2 MiB)</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (constants set)</td>
+      <td>Yes (constant set)</td>
       <td>None</td>
     </tr>
     <tr>
@@ -742,10 +800,24 @@ ctest <span class="nt">--output-on-failure</span>
       <td>None</td>
     </tr>
     <tr>
-      <td>glibc 2.35+ rseq conflict resolution (issue #144)</td>
-      <td>Workaround only</td>
-      <td>Workaround only</td>
-      <td>N/A (RSEQ not used on riscv64)</td>
+      <td>SEGV read/write fault classification</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (<code class="language-plaintext highlighter-rouge">WriteFlag::Unknown</code>)</td>
+      <td>Minor - diagnostics only</td>
+    </tr>
+    <tr>
+      <td>glibc 2.35+ rseq registration conflict (tracked separately, see Section 9/11)</td>
+      <td>Workaround required</td>
+      <td>Workaround required</td>
+      <td>N/A - RSEQ not used on riscv64 at all</td>
+      <td>Informational</td>
+    </tr>
+    <tr>
+      <td>kernel-6.19 RSEQ “event setting” regression (issue <a href="https://github.com/google/tcmalloc/issues/292">#292</a>)</td>
+      <td>Affected</td>
+      <td>Affected</td>
+      <td>Not affected (RSEQ path unused on riscv64)</td>
       <td>Informational</td>
     </tr>
   </tbody>
@@ -759,11 +831,9 @@ ctest <span class="nt">--output-on-failure</span>
 </h3>
     
 
-<p>The per-thread cache fallback path – used exclusively on riscv64 – is the older, slower allocation strategy. tcmalloc’s documentation and design rationale indicate the per-CPU RSEQ path was introduced specifically because the per-thread path has contention at high thread counts.</p>
+<p>The per-thread cache fallback used exclusively on riscv64 is the older, slower allocation strategy; tcmalloc’s own design rationale for introducing the per-CPU RSEQ path is contention reduction at high thread counts, a problem the fallback path does not solve. No published benchmark comparing riscv64 vs amd64 or arm64 allocation throughput, latency, or thread-scalability was found in any searched source (GitHub, general web search, or riseproject.dev). An unrelated, low-confidence third-party benchmark of mimalloc/jemalloc/tcmalloc performance (not RISC-V, not from a known benchmarking authority) was found during research and is explicitly excluded here as uncorroborated.</p>
 
-<p>No published benchmark comparing riscv64 vs amd64 or arm64 allocation throughput was found in any source. The magnitude of the regression is unquantified.</p>
-
-<p>Data not available: published throughput numbers for tcmalloc on riscv64 at any thread count.</p>
+<p>Data not available: published throughput, latency, or contention numbers for tcmalloc on riscv64 at any thread count, from any source.</p>
 <h3 id="security-hardening-gaps">
   
   
@@ -773,7 +843,7 @@ ctest <span class="nt">--output-on-failure</span>
 </h3>
     
 
-<p>No RISC-V-specific security hardening is present. The RSEQ-based slab provides implicit temporal safety properties on x86_64 and aarch64 that are absent on riscv64. No specific CVE or hardening delta has been documented for riscv64.</p><hr />
+<p>No RISC-V-specific security hardening is present. The RSEQ-based slab provides implicit properties (per-CPU isolation of fast-path state) on x86_64 and aarch64 that are architecturally absent on riscv64 because the fast path itself is absent. No specific CVE or documented hardening delta for riscv64 was found.</p>
 <h2 id="7-cicd-infrastructure">
   
   
@@ -783,9 +853,20 @@ ctest <span class="nt">--output-on-failure</span>
 </h2>
     
 
-<p>tcmalloc’s CI runs on Google’s internal Kokoro infrastructure using Docker images defined in <a href="https://github.com/google/tcmalloc/blob/master/ci/linux_docker_containers.sh"><code class="language-plaintext highlighter-rouge">ci/linux_docker_containers.sh</code></a>. GitHub Actions is not used (<code class="language-plaintext highlighter-rouge">.github/workflows/</code> does not exist in the repository). There are no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> files.</p>
+<p><strong>riscv64 CI does not exist.</strong> Confirmed by direct read of a fresh clone (HEAD <code class="language-plaintext highlighter-rouge">1e83be2453fa96511d9a726a012600e651003fe5</code>) of the entire repository: <code class="language-plaintext highlighter-rouge">.github/workflows/</code> contains exactly two files, <code class="language-plaintext highlighter-rouge">ci.yml</code> and <code class="language-plaintext highlighter-rouge">stale.yml</code>; no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exists anywhere. A case-insensitive, repo-wide search for <code class="language-plaintext highlighter-rouge">riscv</code>/<code class="language-plaintext highlighter-rouge">RISCV</code>/<code class="language-plaintext highlighter-rouge">RISC-V</code> returns zero matches in any CI or workflow configuration file; the only 16 matches in the whole repository are the C++ preprocessor guards described in Section 4, none of them CI-related.</p>
 
-<p>Docker containers defined in <code class="language-plaintext highlighter-rouge">ci/linux_docker_containers.sh</code>:</p>
+<p><code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code> (the active, GitHub-Actions-driven CI; full content):</p>
+<ul>
+  <li>Triggers: <code class="language-plaintext highlighter-rouge">schedule</code> (hourly cron <code class="language-plaintext highlighter-rouge">0 * * * *</code>), <code class="language-plaintext highlighter-rouge">push</code> on <code class="language-plaintext highlighter-rouge">master</code>, <code class="language-plaintext highlighter-rouge">pull_request</code> on <code class="language-plaintext highlighter-rouge">master</code>, <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>.</li>
+  <li>Single job <code class="language-plaintext highlighter-rouge">linux</code>, <code class="language-plaintext highlighter-rouge">runs-on: ubuntu-24.04</code> (a standard x86_64 GitHub-hosted runner), executing inside container <code class="language-plaintext highlighter-rouge">gcr.io/google.com/absl-177019/gloop-linux-toolchain-latest</code>.</li>
+  <li>Matrix: <code class="language-plaintext highlighter-rouge">toolchain: [clang, gcc, libstdc++]</code> x <code class="language-plaintext highlighter-rouge">compilation_mode: [opt, fastbuild]</code> x <code class="language-plaintext highlighter-rouge">exceptions: [-fexceptions, -fno-exceptions]</code> - 12 job combinations, all x86_64.</li>
+  <li>Runs <code class="language-plaintext highlighter-rouge">bazel test ...</code> natively on the runner. No QEMU step, no cross-compilation flag, no <code class="language-plaintext highlighter-rouge">--platforms=</code>/<code class="language-plaintext highlighter-rouge">--cpu=riscv64</code> targeting, no architecture matrix dimension of any kind.</li>
+  <li>A second job, <code class="language-plaintext highlighter-rouge">all-blocking-tests</code>, is an aggregator used by the internal Copybara presubmit check.</li>
+</ul>
+
+<p><code class="language-plaintext highlighter-rouge">.github/workflows/stale.yml</code>: daily cron, closes stale PRs via <code class="language-plaintext highlighter-rouge">actions/stale</code>; no build/test/architecture content.</p>
+
+<p>The repository also carries a separate, older set of shell-based CI scripts in <code class="language-plaintext highlighter-rouge">ci/</code> (<code class="language-plaintext highlighter-rouge">ci/linux_docker_containers.sh</code>, <code class="language-plaintext highlighter-rouge">ci/linux_gcc-latest_libstdcxx_cmake.sh</code>), defining additional Docker images:</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -797,9 +878,19 @@ ctest <span class="nt">--output-on-failure</span>
   </thead>
   <tbody>
     <tr>
+      <td><code class="language-plaintext highlighter-rouge">LINUX_ALPINE_CONTAINER</code></td>
+      <td><code class="language-plaintext highlighter-rouge">gcr.io/google.com/absl-177019/alpine:20230612</code></td>
+      <td>x86-64</td>
+    </tr>
+    <tr>
       <td><code class="language-plaintext highlighter-rouge">LINUX_CLANG_LATEST_CONTAINER</code></td>
       <td><code class="language-plaintext highlighter-rouge">gcr.io/google.com/absl-177019/linux_hybrid-latest:20260131</code></td>
       <td>x86-64</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">LINUX_ARM_CLANG_LATEST_CONTAINER</code></td>
+      <td><code class="language-plaintext highlighter-rouge">gcr.io/google.com/absl-177019/linux_arm_hybrid-latest:20260131</code></td>
+      <td>AArch64</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">LINUX_GCC_LATEST_CONTAINER</code></td>
@@ -811,22 +902,10 @@ ctest <span class="nt">--output-on-failure</span>
       <td><code class="language-plaintext highlighter-rouge">gcr.io/google.com/absl-177019/linux_hybrid-latest:20260131</code></td>
       <td>x86-64</td>
     </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">LINUX_ARM_CLANG_LATEST_CONTAINER</code></td>
-      <td><code class="language-plaintext highlighter-rouge">gcr.io/google.com/absl-177019/linux_arm_hybrid-latest:20260131</code></td>
-      <td>AArch64</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">LINUX_ALPINE_CONTAINER</code></td>
-      <td>(Alpine image)</td>
-      <td>x86-64</td>
-    </tr>
   </tbody>
 </table></div>
 
-<p>No <code class="language-plaintext highlighter-rouge">LINUX_RISCV*</code> container is defined. No QEMU-based riscv64 emulation stage exists. No self-hosted riscv64 runner is referenced anywhere.</p>
-
-<p>CI comparison:</p>
+<p>No <code class="language-plaintext highlighter-rouge">LINUX_RISCV*</code> container is defined in either CI mechanism. No QEMU-based riscv64 emulation stage, no self-hosted riscv64 runner, and no RISE-provided runner is referenced anywhere in the repository.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -840,27 +919,27 @@ ctest <span class="nt">--output-on-failure</span>
   <tbody>
     <tr>
       <td>CI runner exists</td>
-      <td>Yes</td>
-      <td>Yes</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">ci.yml</code>, GitHub-hosted)</td>
+      <td>Yes (ARM Docker image defined, not wired into <code class="language-plaintext highlighter-rouge">ci.yml</code>’s matrix)</td>
       <td>No</td>
     </tr>
     <tr>
       <td>Build tested</td>
       <td>Yes</td>
-      <td>Yes</td>
+      <td>Not confirmed to run in <code class="language-plaintext highlighter-rouge">ci.yml</code></td>
       <td>No</td>
     </tr>
     <tr>
       <td>Tests executed</td>
       <td>Yes</td>
-      <td>Yes</td>
+      <td>Not confirmed to run in <code class="language-plaintext highlighter-rouge">ci.yml</code></td>
       <td>No</td>
     </tr>
     <tr>
       <td>RSEQ path exercised</td>
       <td>Yes</td>
-      <td>Yes</td>
-      <td>N/A</td>
+      <td>Yes (if run)</td>
+      <td>N/A - no RSEQ path exists</td>
     </tr>
     <tr>
       <td>RISE runners</td>
@@ -868,14 +947,8 @@ ctest <span class="nt">--output-on-failure</span>
       <td>No</td>
       <td>No</td>
     </tr>
-    <tr>
-      <td>Hardware runners</td>
-      <td>Yes (Docker/Kokoro)</td>
-      <td>Yes (Docker/Kokoro)</td>
-      <td>No</td>
-    </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -885,67 +958,23 @@ ctest <span class="nt">--output-on-failure</span>
 </h2>
     
 
-<p><strong>GitHub Releases:</strong> Zero. The GitHub releases page for <a href="https://github.com/google/tcmalloc/releases">google/tcmalloc</a> contains no entries. tcmalloc is a source-only project with no prebuilt binary artifacts of any kind, for any architecture.</p>
+<p><strong>GitHub Releases:</strong> zero, confirmed by direct fetch of the releases page (“There aren’t any releases here”). <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> is source-only, distributed exclusively via Bazel/CMake checkout; no binary or source release assets exist for any architecture.</p>
 
-<p><strong>PyPI:</strong> No package named <code class="language-plaintext highlighter-rouge">tcmalloc</code> exists on PyPI (HTTP 404 confirmed). No riscv64 wheels exist or can exist via this channel.</p>
+<p><strong>PyPI:</strong> no package named <code class="language-plaintext highlighter-rouge">tcmalloc</code> exists (<code class="language-plaintext highlighter-rouge">https://pypi.org/pypi/tcmalloc/json</code> and <code class="language-plaintext highlighter-rouge">https://pypi.org/simple/tcmalloc/</code> both return HTTP 404). Not applicable as a distribution channel for this C++ library.</p>
 
-<p><strong>RISE wheel builder:</strong> Not applicable. The RISE Python wheel builder at <a href="https://riseproject.gitlab.io/python/wheel_builder/">riseproject.gitlab.io</a> does not list tcmalloc. The project is not a Python package.</p>
+<p><strong>RISE wheel builder:</strong> not applicable; the RISE Python wheel builder at <a href="https://riseproject.gitlab.io/python/wheel_builder/">riseproject.gitlab.io</a> does not list tcmalloc (nor could it, since no such PyPI package exists), and the GitLab PyPI-proxy endpoint for <code class="language-plaintext highlighter-rouge">tcmalloc</code> 302-redirects to the (404) upstream PyPI URL.</p>
 
-<p><strong>Debian and Ubuntu packages:</strong> Available for riscv64, but from the <code class="language-plaintext highlighter-rouge">gperftools</code> source, NOT from <code class="language-plaintext highlighter-rouge">google/tcmalloc</code>. These are two distinct codebases that share the <code class="language-plaintext highlighter-rouge">libtcmalloc</code> library name. This distinction is critical:</p>
+<p><strong>Arch Linux:</strong> not packaged at all, on any architecture; <code class="language-plaintext highlighter-rouge">archriscv.felixc.at</code> search for tcmalloc/libtcmalloc/gperftools returns zero results.</p>
 
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Package</th>
-      <th>Source</th>
-      <th>riscv64</th>
-      <th>Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">libtcmalloc-minimal4t64</code> 2.18.1-1 (Debian sid)</td>
-      <td>gperftools</td>
-      <td>Yes</td>
-      <td>Main Debian archive</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">libtcmalloc-minimal4</code> 2.10-1 (Debian debports)</td>
-      <td>gperftools</td>
-      <td>Yes (debports only)</td>
-      <td>Unofficial ports archive; old version</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">libtcmalloc-minimal4t64</code> 2.15-3build1 (Ubuntu 24.04)</td>
-      <td>gperftools</td>
-      <td>Yes</td>
-      <td>Main Ubuntu archive</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">librust-tcmalloc-dev</code> 0.3.0-2 (Debian/Ubuntu)</td>
-      <td>Rust FFI wrapper over gperftools</td>
-      <td>Yes</td>
-      <td>Links against gperftools, not google/tcmalloc</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">librust-tcmalloc-sys-dev</code> 0.3.0-1 (Debian/Ubuntu)</td>
-      <td>Rust FFI wrapper over gperftools</td>
-      <td>Yes</td>
-      <td>Same caveat</td>
-    </tr>
-  </tbody>
-</table></div>
+<p><strong>Ubuntu/Debian packages - critical distinction:</strong> Ubuntu 26.04 (resolute) does list riscv64-architecture binary packages matching the name “tcmalloc”: <code class="language-plaintext highlighter-rouge">libtcmalloc-minimal4t64</code> 2.18.1-1, <code class="language-plaintext highlighter-rouge">librust-tcmalloc-dev</code> 0.3.0-2, and <code class="language-plaintext highlighter-rouge">librust-tcmalloc-sys-dev</code> 0.3.0-1, all built for <code class="language-plaintext highlighter-rouge">amd64 arm64 armhf ppc64el riscv64 s390x</code>. <strong>However, these packages are sourced from <code class="language-plaintext highlighter-rouge">gperftools</code>, not from <code class="language-plaintext highlighter-rouge">google/tcmalloc</code>.</strong> The <code class="language-plaintext highlighter-rouge">libtcmalloc-minimal4t64</code> package page explicitly states <code class="language-plaintext highlighter-rouge">Source: google-perftools</code>, homepage <code class="language-plaintext highlighter-rouge">https://github.com/gperftools/gperftools</code>. gperftools is a separate, older, community-maintained codebase (the pre-2015 open-source release of classic TCMalloc); it shares a library name with <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> but has had independent development since the two projects diverged. No Ubuntu, Debian, or other distro package anywhere in the channels checked (Ubuntu archive search, Arch RISC-V repository, PyPI, GitHub Releases) builds a binary from the <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> source tree for riscv64, or for any architecture. The “no genuine downstream build of this repo exists for riscv64” finding in Section 13 rests on this distinction.</p>
 
-<p><strong>gperftools</strong> (the upstream of the Debian/Ubuntu packages) is the older open-source release of classic TCMalloc from circa 2012. It achieved riscv64 support progressively: build fixes in 2.8.1 (Dec 2020), frame-pointer backtracer in 2.9rc (Feb 2021), and “Linux/riscv fully supported” declared in 2.11rc (Jul 2023).</p>
+<p>gperftools achieved its riscv64 support independently and progressively: build fixes in 2.8.1 (Dec 2020), a frame-pointer backtracer in 2.9rc (Feb 2021), and “Linux/riscv fully supported” declared in 2.11rc (Jul 2023); <a href="https://github.com/gperftools/gperftools/issues/1359">gperftools issue #1359</a> (“Broken on riscv64: Cannot calculate stack trace”) is closed (Jul 2023, fixed by the generic frame-pointer unwinder). A performance regression, <a href="https://github.com/gperftools/gperftools/issues/1278">gperftools issue #1278</a>, reports the <code class="language-plaintext highlighter-rouge">generic_fp</code> unwinder used on riscv64 is 4-8x slower than the native x86 unwinder, open since May 2021. A rejected pagesize-handling patch, <a href="https://github.com/gperftools/gperftools/pull/1269">gperftools PR #1269</a> (conditional pagesize for 64 KB kernel pages, relevant to some riscv64 kernel configurations), was closed without merge in Dec 2022.</p>
 
-<p><strong>To obtain a working binary for riscv64:</strong></p>
-
+<p><strong>To obtain a working binary:</strong></p>
 <ul>
-  <li>For <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> (modern): build from source on a riscv64 host with GCC 12.1+/Clang 11+ and Bazel 4.0+. Per-CPU RSEQ will not be active; the per-thread fallback runs instead.</li>
-  <li>For <code class="language-plaintext highlighter-rouge">gperftools</code> (legacy): install <code class="language-plaintext highlighter-rouge">libtcmalloc-minimal4t64</code> from Debian or Ubuntu package repositories.</li>
+  <li>For <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> (the project under assessment): build from source on a riscv64 host with GCC 12.1+/Clang 11+ and Bazel. The per-CPU RSEQ fast path will not be active; the per-thread fallback runs instead.</li>
+  <li>For <code class="language-plaintext highlighter-rouge">gperftools</code> (a different, older project): install <code class="language-plaintext highlighter-rouge">libtcmalloc-minimal4t64</code> from the Ubuntu or Debian archive.</li>
 </ul>
-
-<p><strong>Arch Linux:</strong> tcmalloc is not packaged in Arch Linux at all (official or riscv64 port).</p><hr />
 <h2 id="9-dependencies">
   
   
@@ -955,88 +984,115 @@ ctest <span class="nt">--output-on-failure</span>
 </h2>
     
 
-<p>Critical first-order dependencies of <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> and their riscv64 status:</p>
+<p>Direct dependencies of <code class="language-plaintext highlighter-rouge">google/tcmalloc</code>, as declared in <code class="language-plaintext highlighter-rouge">MODULE.bazel</code> (versions as of the 2026-10-01 live check: abseil-cpp 20260526.0, protobuf 34.0, re2 2025-11-05.bcr.1, googletest 1.17.0.bcr.2, google_benchmark 1.9.5, fuzztest 20260629.0) and <code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> (<code class="language-plaintext highlighter-rouge">FetchContent</code> for the same six libraries), plus the build toolchain itself:</p>
 
 <div class="table-wrapper"><table>
   <thead>
     <tr>
       <th>Dependency</th>
       <th>Role</th>
+      <th>Relation / Criticality</th>
       <th>riscv64 Build</th>
       <th>riscv64 Test</th>
       <th>riscv64 Release</th>
-      <th>Blocking Issues</th>
+      <th>Blocking issues</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>abseil-cpp</td>
-      <td>Logging, sync, CRC, hash tables, stack traces, cycle clock, string utilities</td>
-      <td>Yes (Debian 20260107.0)</td>
-      <td>Partial – 2 open test failures: <code class="language-plaintext highlighter-rouge">absl_hashtablez_sampler_test</code> and <code class="language-plaintext highlighter-rouge">absl_cordz_sample_token_test</code> segfault on riscv64-linux-gnu (<a href="https://github.com/abseil/abseil-cpp/issues/2002">issue #2002</a>, Feb 2026)</td>
-      <td>Source only</td>
-      <td>Open #2002: sampler segfault on riscv64. Open <a href="https://github.com/abseil/abseil-cpp/issues/1702">#1702</a>: link failure with older riscv64 toolchain (libatomic missing). Open <a href="https://github.com/abseil/abseil-cpp/issues/1986">#1986</a>: CRC32C hardware acceleration via Zbc not yet merged. <code class="language-plaintext highlighter-rouge">ABSL_HAVE_UNSCALED_CYCLECLOCK_IMPLEMENTATION = 0</code> on riscv64 – no hardware cycle counter, profiling uses fallback clock.</td>
+      <td>Abseil</td>
+      <td>Logging, sync primitives, CRC32C, hash tables, stack traces, cycle clock, string utilities</td>
+      <td>runtime-dependency, critical</td>
+      <td>Builds from source on riscv64</td>
+      <td>Partial - open <a href="https://github.com/abseil/abseil-cpp/issues/1702">#1702</a> “Can’t link using riscv64 toolchain” and open <a href="https://github.com/abseil/abseil-cpp/issues/1236">#1236</a> “RISCV ILP32E does not mandate 16-byte alignment”; a previously-reported sampler-test segfault, <a href="https://github.com/abseil/abseil-cpp/issues/2002">#2002</a>, was not independently re-confirmed this session [NEEDS VERIFICATION]</td>
+      <td>Source only, no riscv64 binary artifacts</td>
+      <td>Zbc-based CRC32C hardware acceleration not yet merged (<a href="https://github.com/abseil/abseil-cpp/issues/1986">#1986</a>); <code class="language-plaintext highlighter-rouge">ABSL_HAVE_UNSCALED_CYCLECLOCK_IMPLEMENTATION = 0</code> on riscv64 (no hardware cycle counter, profiling uses fallback clock)</td>
     </tr>
     <tr>
-      <td>protobuf</td>
-      <td>Profile proto serialization, profile builder</td>
-      <td>Yes (source)</td>
-      <td>No official riscv64 CI</td>
-      <td>No riscv64 protoc binary (v35.1 ships x86_32, x86_64, aarch64, ppcle_64, s390_64 only)</td>
-      <td><a href="https://github.com/protocolbuffers/protobuf/issues/12266">Issue #12266</a> requesting riscv64 protoc is closed-stale; reopened discussion May 2026. Downstream builds requiring protoc as a build-time binary must build from source.</td>
+      <td>Protocol Buffers</td>
+      <td>Profile-proto serialization, profile builder</td>
+      <td>runtime-dependency, critical</td>
+      <td>Builds from source</td>
+      <td>No dedicated riscv64 CI found</td>
+      <td>No riscv64 <code class="language-plaintext highlighter-rouge">protoc</code> prebuilt binary; source build only</td>
+      <td>Historical tracking issues <a href="https://github.com/protocolbuffers/protobuf/issues/12266">#12266</a> (“Add riscv64 support”), <a href="https://github.com/protocolbuffers/protobuf/issues/14549">#14549</a> (“Build fails on RISCV”), and <a href="https://github.com/protocolbuffers/protobuf/issues/17798">#17798</a> (“Maven central protoc prebuilts for riscv64”) are all closed; no currently-open riscv64 issue found live</td>
     </tr>
     <tr>
       <td>re2</td>
-      <td>Regular expression matching (indirect via abseil)</td>
-      <td>No known issues</td>
-      <td>No known failures</td>
+      <td>Regular-expression matching, pulled in indirectly via Abseil</td>
+      <td>runtime-dependency, optional</td>
+      <td>No known build issues</td>
+      <td>No riscv64-specific failures found</td>
       <td>Source only</td>
       <td>None identified</td>
     </tr>
     <tr>
       <td>googletest</td>
-      <td>Test-only dependency</td>
+      <td>Test framework</td>
+      <td>test-dependency, optional</td>
       <td>Builds on riscv64</td>
-      <td>Open <a href="https://github.com/google/googletest/issues/3756">issue #3756</a>: <code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code> fails on riscv64 (filed Feb 2022, still open)</td>
+      <td>Open <a href="https://github.com/google/googletest/issues/3756">#3756</a> “GetThreadCountTest.ReturnsCorrectValue fails on risc-v64”, filed 2022, still open</td>
       <td>Source only</td>
-      <td>Test-only; does not affect tcmalloc runtime</td>
+      <td>Test-only; does not affect tcmalloc’s own runtime build</td>
     </tr>
     <tr>
-      <td>google/benchmark</td>
-      <td>Microbenchmark infrastructure (dev dependency)</td>
-      <td>Yes (PR #1802 fixed sign-conversion warning)</td>
-      <td>No known failures</td>
+      <td>benchmark (google/benchmark)</td>
+      <td>Microbenchmark harness</td>
+      <td>test-dependency, optional</td>
+      <td>No riscv64-specific build issue found live</td>
+      <td>No riscv64-specific failures found</td>
       <td>Source only</td>
-      <td>None blocking</td>
+      <td>None blocking identified</td>
     </tr>
     <tr>
       <td>fuzztest</td>
-      <td>Fuzz testing (dev dependency)</td>
-      <td>No known issues</td>
-      <td>No known failures</td>
+      <td>Fuzz-testing harness</td>
+      <td>test-dependency, optional</td>
+      <td>No issues found</td>
+      <td>No riscv64-specific issues found</td>
       <td>Source only</td>
       <td>None identified</td>
     </tr>
     <tr>
-      <td>Linux rseq syscall</td>
-      <td>Kernel-level primitive for per-CPU RSEQ slab</td>
-      <td>Available on riscv64 (kernel 4.18+)</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>Not a blocker – kernel support exists. tcmalloc simply does not use it on riscv64.</td>
+      <td>Bazel</td>
+      <td>Primary, official build system</td>
+      <td>build-dependency, critical</td>
+      <td>Data not available: Bazel’s own riscv64 host-build support was not independently researched this session; tcmalloc’s own <code class="language-plaintext highlighter-rouge">ci.yml</code> Bazel jobs run x86_64 only</td>
+      <td>Not covered by any riscv64 CI job</td>
+      <td>N/A (tool, not a library release)</td>
+      <td>None identified specific to tcmalloc’s use</td>
     </tr>
     <tr>
-      <td>glibc rseq registration</td>
-      <td>glibc 2.35+ registers rseq per-thread; conflicts with tcmalloc’s own registration</td>
-      <td>N/A on riscv64 (tcmalloc does not use rseq on riscv64)</td>
+      <td>CMake</td>
+      <td>Secondary build system, explicitly “experimental” per README</td>
+      <td>build-dependency, optional</td>
+      <td><code class="language-plaintext highlighter-rouge">CMakeLists.txt</code> has no riscv64-specific conditionals or toolchain file; not exercised by any riscv64 CI</td>
+      <td>Not covered by any riscv64 CI job</td>
       <td>N/A</td>
+      <td>None identified specific to tcmalloc’s use</td>
+    </tr>
+    <tr>
+      <td>GCC</td>
+      <td>Toolchain, minimum 12.1 enforced in <code class="language-plaintext highlighter-rouge">config.h</code> (not riscv64-specific)</td>
+      <td>build-dependency, critical</td>
+      <td>Data not available: no live research on GCC’s riscv64 backend quality was performed; the 12.1+ floor is a repo-wide requirement, not a riscv64-specific finding</td>
+      <td>Not covered by any riscv64 CI job</td>
       <td>N/A</td>
-      <td>tcmalloc <a href="https://github.com/google/tcmalloc/issues/144">issue #144</a> (updated Jan 2026): tcmalloc does not cooperate with glibc’s rseq registration. This is a prerequisite for eventually enabling per-CPU caches on glibc 2.35+ systems including riscv64, but is not a current blocker since rseq is not used on riscv64 at all.</td>
+      <td>None identified specific to tcmalloc’s use</td>
+    </tr>
+    <tr>
+      <td>LLVM</td>
+      <td>Toolchain, minimum Clang 11.0 enforced in <code class="language-plaintext highlighter-rouge">config.h</code> (not riscv64-specific)</td>
+      <td>build-dependency, critical</td>
+      <td>Data not available: no live research on LLVM/Clang’s riscv64 backend quality was performed; the 11.0+ floor is a repo-wide requirement, not a riscv64-specific finding</td>
+      <td>Not covered by any riscv64 CI job</td>
+      <td>N/A</td>
+      <td>None identified specific to tcmalloc’s use</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Dependency depth note:</strong> abseil-cpp’s open sampler segfault (<a href="https://github.com/abseil/abseil-cpp/issues/2002">#2002</a>) and missing hardware cycle counter on riscv64 are relevant to tcmalloc’s heap profiling subsystem, which relies on abseil’s sampling infrastructure.</p><hr />
+<p><strong>Dependency depth note:</strong> Abseil’s unresolved riscv64 linking issue (#1702) and alignment issue (#1236), plus its missing hardware cycle counter on riscv64, are the most load-bearing dependency-side risks, since they are runtime-critical and touch tcmalloc’s own profiling and synchronization primitives. Protobuf’s riscv64 history is better resolved (all tracked issues closed), though no <code class="language-plaintext highlighter-rouge">protoc</code> riscv64 prebuilt exists, forcing a source build. None of the six functional (non-toolchain) dependencies has a currently open, release-blocking riscv64 issue; tcmalloc’s own riscv64 gap (Section 4) is an enablement gap internal to this repository, not something inherited from a dependency.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -1066,18 +1122,18 @@ ctest <span class="nt">--output-on-failure</span>
   </thead>
   <tbody>
     <tr>
-      <td>No riscv64 issues</td>
-      <td>–</td>
-      <td>–</td>
-      <td>–</td>
-      <td>Confirmed: zero issues or PRs match riscv/risc-v/riscv64 in the tracker</td>
+      <td>-</td>
+      <td>No riscv64-specific issue exists</td>
+      <td>-</td>
+      <td>-</td>
+      <td>Confirmed via <code class="language-plaintext highlighter-rouge">search_issues</code>/<code class="language-plaintext highlighter-rouge">search_pull_requests</code> (“riscv”, “riscv64”, “RISC-V”) against <code class="language-plaintext highlighter-rouge">repo:google/tcmalloc</code>, and via GitHub’s own issue search (<code class="language-plaintext highlighter-rouge">?q=riscv</code>): zero results in all cases</td>
     </tr>
     <tr>
       <td><a href="https://github.com/google/tcmalloc/issues/144">#144</a></td>
-      <td>glibc 2.35 rseq conflict</td>
+      <td>glibc 2.35 rseq registration conflict</td>
       <td>Open (updated Jan 2026)</td>
       <td>High (amd64/arm64)</td>
-      <td>Workaround: <code class="language-plaintext highlighter-rouge">GLIBC_TUNABLES=glibc.pthread.rseq=0</code>. Not a current riscv64 issue since rseq is not used there, but blocks any future rseq enablement on riscv64</td>
+      <td>Workaround: <code class="language-plaintext highlighter-rouge">GLIBC_TUNABLES=glibc.pthread.rseq=0</code>. Not a current riscv64 issue since RSEQ is not used there at all, but is a prerequisite for ever enabling per-CPU caches on riscv64 in the future</td>
     </tr>
     <tr>
       <td><a href="https://github.com/google/tcmalloc/issues/286">#286</a></td>
@@ -1089,16 +1145,16 @@ ctest <span class="nt">--output-on-failure</span>
     <tr>
       <td><a href="https://github.com/google/tcmalloc/issues/292">#292</a></td>
       <td>RSEQ-related crashes since linux-6.19</td>
-      <td>Closed (May 2026)</td>
-      <td>–</td>
-      <td>Affected x86_64/aarch64 only; riscv64 not affected</td>
+      <td>Opened Mar 2026, reported closed</td>
+      <td>High at the time</td>
+      <td>tcmalloc violated the upstream RSEQ ABI; kernel commit <code class="language-plaintext highlighter-rouge">39a167560a61</code> (“rseq: Optimize event setting”) broke an undocumented assumption, causing a CHECK failure at <code class="language-plaintext highlighter-rouge">percpu_tcmalloc.h:852</code>. Affects RSEQ-capable architectures (x86_64/aarch64); riscv64 is unaffected because it never activates the RSEQ path. Broader context: <a href="https://lwn.net/Articles/1070072/">LWN “Restartable sequences, TCMalloc, and Hyrum’s Law”</a> and the follow-up <a href="https://lwn.net/Articles/1092555/">LWN “Fixing the TCMalloc regression with RSEQ operations”</a> (Sept 2026), covering a proposed kernel-side RSEQ-operations API, still RFC as of that writing</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="gperftools-debianubuntu-packaged-version">
+<h3 id="gperftools-the-unrelated-downstream-packaged-tcmalloc---section-8">
   
   
-    <a href="#gperftools-debianubuntu-packaged-version" class="anchor-heading" aria-labelledby="gperftools-debianubuntu-packaged-version"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> gperftools (Debian/Ubuntu packaged version)
+    <a href="#gperftools-the-unrelated-downstream-packaged-tcmalloc---section-8" class="anchor-heading" aria-labelledby="gperftools-the-unrelated-downstream-packaged-tcmalloc---section-8"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> gperftools (the unrelated, downstream-packaged “tcmalloc” - Section 8)
   
   
 </h3>
@@ -1119,29 +1175,29 @@ ctest <span class="nt">--output-on-failure</span>
       <td><a href="https://github.com/gperftools/gperftools/issues/1359">gperftools #1359</a></td>
       <td>Broken on riscv64: “Cannot calculate stack trace”</td>
       <td>Closed (Jul 2023)</td>
-      <td>–</td>
-      <td>Fixed in gperftools 2.11rc via generic frame-pointer unwinder</td>
+      <td>-</td>
+      <td>Fixed via generic frame-pointer unwinder in 2.11rc</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/gperftools/gperftools/pull/1269">gperftools #1269</a></td>
+      <td><a href="https://github.com/gperftools/gperftools/pull/1269">gperftools PR #1269</a></td>
       <td>Conditional pagesize for 64 KB kernel pages</td>
-      <td>Closed (Dec 2022, not merged)</td>
+      <td>Closed, not merged (Dec 2022)</td>
       <td>Medium</td>
-      <td>Affects riscv64 with non-default 64 KB kernel page size. Maintainer rejected approach; no fix merged. Workaround: build with <code class="language-plaintext highlighter-rouge">-DTCMALLOC_INTERNAL_32K_PAGES</code> or larger. This issue is unresolved.</td>
+      <td>Affects riscv64 systems with non-default 64 KB kernel page size; maintainer rejected the approach, no fix merged, issue remains unresolved in gperftools</td>
     </tr>
     <tr>
       <td><a href="https://github.com/gperftools/gperftools/issues/1278">gperftools #1278</a></td>
-      <td>Performance regression: generic_fp stacktrace vs native</td>
-      <td>Open (May 2021)</td>
+      <td>Performance regression: <code class="language-plaintext highlighter-rouge">generic_fp</code> stacktrace vs native unwinder</td>
+      <td>Open (since May 2021)</td>
       <td>Medium</td>
-      <td><code class="language-plaintext highlighter-rouge">generic_fp</code> unwinder used by riscv64 is 4-8x slower than native x86 unwinder per reported measurements. Applies to profiling workloads on riscv64.</td>
+      <td><code class="language-plaintext highlighter-rouge">generic_fp</code>, used on riscv64, reported 4-8x slower than the native x86 unwinder for profiling workloads</td>
     </tr>
   </tbody>
 </table></div>
-<h3 id="abseil-cpp-tcmalloc-dependency">
+<h3 id="dependencies-abseil-googletest---see-section-9-for-full-context">
   
   
-    <a href="#abseil-cpp-tcmalloc-dependency" class="anchor-heading" aria-labelledby="abseil-cpp-tcmalloc-dependency"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> abseil-cpp (tcmalloc dependency)
+    <a href="#dependencies-abseil-googletest---see-section-9-for-full-context" class="anchor-heading" aria-labelledby="dependencies-abseil-googletest---see-section-9-for-full-context"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Dependencies (Abseil, googletest - see Section 9 for full context)
   
   
 </h3>
@@ -1159,21 +1215,37 @@ ctest <span class="nt">--output-on-failure</span>
   </thead>
   <tbody>
     <tr>
-      <td><a href="https://github.com/abseil/abseil-cpp/issues/2002">abseil #2002</a></td>
-      <td>Sampler tests segfault on riscv64</td>
-      <td>Open (Feb 2026)</td>
+      <td><a href="https://github.com/abseil/abseil-cpp/issues/1702">abseil-cpp #1702</a></td>
+      <td>Can’t link using riscv64 toolchain</td>
+      <td>Open</td>
       <td>High</td>
-      <td>Affects <code class="language-plaintext highlighter-rouge">absl_hashtablez_sampler_test</code> and <code class="language-plaintext highlighter-rouge">absl_cordz_sample_token_test</code>; impacts tcmalloc heap profiling infrastructure</td>
+      <td>Affects tcmalloc’s build whenever this toolchain combination is hit</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil #1986</a></td>
-      <td>CRC32C acceleration via Zbc not merged</td>
+      <td><a href="https://github.com/abseil/abseil-cpp/issues/1236">abseil-cpp #1236</a></td>
+      <td>RISCV ILP32E does not mandate 16-byte alignment</td>
+      <td>Open</td>
+      <td>Medium</td>
+      <td>ILP32E is an uncommon riscv32 ABI variant; relevance to the riscv64/lp64d target tcmalloc cares about is unconfirmed [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil-cpp #1986</a></td>
+      <td>CRC32C hardware acceleration via Zbc not merged</td>
       <td>Open</td>
       <td>Low</td>
-      <td>Performance only; no correctness issue</td>
+      <td>Performance only, no correctness issue</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/google/googletest/issues/3756">googletest #3756</a></td>
+      <td><code class="language-plaintext highlighter-rouge">GetThreadCountTest.ReturnsCorrectValue</code> fails on risc-v64</td>
+      <td>Open (filed 2022)</td>
+      <td>Low</td>
+      <td>Test-infrastructure only; does not affect tcmalloc’s production build</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
+
+<p>No correctness bug specific to tcmalloc-on-riscv64 was found in any searched source. There is no RISC-V-specific performance regression on record either, because there is no benchmark data for riscv64 to regress against (Section 6).</p>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -1183,109 +1255,114 @@ ctest <span class="nt">--output-on-failure</span>
 </h2>
     
 
-<p><strong>No stated objections to riscv64 exist</strong> – there are no issues, PRs, or public discussions where a maintainer has declined riscv64 work. The silence is total: no discussion at all.</p>
+<p><strong>No stated objections to riscv64 exist.</strong> There is no issue, PR, or public discussion in which a maintainer has declined riscv64 work; the silence is total - no discussion of any kind beyond the nine terse, build-repair commit messages in Section 2.</p>
 
 <p><strong>Technical blockers for per-CPU RSEQ enablement:</strong></p>
 
 <ol>
-  <li>
-    <p>Missing <code class="language-plaintext highlighter-rouge">percpu_rseq_riscv.S</code>: a hand-written assembly file implementing <code class="language-plaintext highlighter-rouge">TcmallocSlab_Internal_PushBatch</code>, <code class="language-plaintext highlighter-rouge">TcmallocSlab_Internal_PopBatch</code>, and <code class="language-plaintext highlighter-rouge">TcmallocSlab_Internal_PerCpuCmpxchg64</code> using the rseq syscall. The kernel rseq interface on riscv64 is available (kernel 4.18+); the assembly needs to implement the critical section and abort handler per the <a href="https://www.kernel.org/doc/html/latest/kernel/rseq.html">rseq ABI</a>.</p>
-  </li>
-  <li>
-    <p><code class="language-plaintext highlighter-rouge">TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM</code> guard in <code class="language-plaintext highlighter-rouge">percpu.h</code> must be extended to include <code class="language-plaintext highlighter-rouge">__riscv</code>.</p>
-  </li>
-  <li>
-    <p>glibc rseq conflict (issue #144) must be resolved before per-CPU caches can be safely enabled on any system with glibc 2.35+. This is an existing open issue affecting all platforms, not riscv64-specific.</p>
-  </li>
-  <li>
-    <p>A valid RSEQ abort signature for riscv64 must be selected and registered (currently <code class="language-plaintext highlighter-rouge">0x0</code>, which is invalid).</p>
-  </li>
+  <li>Missing <code class="language-plaintext highlighter-rouge">percpu_rseq_riscv.S</code> - a hand-written assembly file implementing <code class="language-plaintext highlighter-rouge">TcmallocSlab_Internal_PushBatch</code>, <code class="language-plaintext highlighter-rouge">TcmallocSlab_Internal_PopBatch</code>, and <code class="language-plaintext highlighter-rouge">TcmallocSlab_Internal_PerCpuCmpxchg64</code> against the Linux rseq syscall ABI on riscv64 (kernel support has existed since v4.18). Reference complexity: the x86_64 equivalent is 362 lines, the aarch64 equivalent 377 lines, of hand-written RSEQ assembly implementing a race-free critical section and abort handler.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM</code> guard in <code class="language-plaintext highlighter-rouge">percpu.h</code> must be extended from <code class="language-plaintext highlighter-rouge">(__x86_64__ || __aarch64__)</code> to include <code class="language-plaintext highlighter-rouge">__riscv</code>.</li>
+  <li>A valid RSEQ abort signature for riscv64 must be selected and registered (the platform currently has no riscv64-specific signature because the path is never compiled in).</li>
+  <li>The glibc 2.35+ rseq-registration conflict (<a href="https://github.com/google/tcmalloc/issues/144">#144</a>) is a cross-platform prerequisite for safely enabling any new RSEQ-based platform, not riscv64-specific, but would need to be resolved or accounted for before a riscv64 RSEQ path could ship broadly.</li>
+  <li>riscv64 CI (Section 7) would need to be added to detect regressions; today, regressions on riscv64 are found only reactively, by whoever happens to build it (the pattern visible in the seven riscv64 build-repair commits of 2021-2022).</li>
 </ol>
 
 <p><strong>Organizational blockers:</strong></p>
-
 <ul>
-  <li>All merges require Google internal committers. External contributors can submit PRs but cannot merge. Acceptance probability for a high-quality, well-tested <code class="language-plaintext highlighter-rouge">percpu_rseq_riscv.S</code> submission is plausible given that the project accepted the 2021 compile support commit, but there is no stated commitment to review riscv64 work.</li>
-  <li>The project’s “Google-internal first, then Copybara sync” model means external riscv64 work may sit unreviewed indefinitely unless Google has an internal use case.</li>
-</ul><hr />
-<h2 id="13-investment-analysis">
+  <li>All merges require a Google-internal committer (Section 1); external contributors can open PRs but cannot merge, and Google-internal engineers are directed to land changes via an internal CL first. The project accepted the original 2021 riscv64-enablement commit internally, suggesting a well-scoped, well-tested external submission is plausible to be accepted, but there is no stated commitment to review riscv64 work, and no open issue or PR currently represents such a submission.</li>
+  <li>The “Google-internal first, Copybara-sync second” model means external riscv64 work may sit unreviewed indefinitely absent an internal Google use case driving it.</li>
+</ul>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has done no documented work on <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> riscv64 support. The two existing commits came from a Google engineer in 2021. All investment sizing below is net-new work.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> orange (downstream-only)</li>
+  <li><strong>Release provider:</strong> none</li>
+  <li><strong>Optimization level:</strong> absent - the hot path (the per-CPU RSEQ slab allocator) has no riscv64 implementation at all; <code class="language-plaintext highlighter-rouge">percpu.h</code>’s <code class="language-plaintext highlighter-rouge">TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM</code> gate is limited to <code class="language-plaintext highlighter-rouge">__x86_64__</code>/<code class="language-plaintext highlighter-rouge">__aarch64__</code>, so riscv64 permanently falls back to the legacy per-thread <code class="language-plaintext highlighter-rouge">ThreadCache</code> path via the crash-stub <code class="language-plaintext highlighter-rouge">percpu_rseq_unsupported.cc</code>. Closing this gap requires writing <code class="language-plaintext highlighter-rouge">percpu_rseq_riscv.S</code> (RSEQ fast-path assembly against the standard Linux rseq syscall ABI, already available on riscv64 since kernel 4.18); no additional RISC-V ISA extension (e.g. V, Zba/Zbb/Zbc) is required to implement the RSEQ path itself, since x86_64 and aarch64’s equivalents use no vector/bitmanip extensions either - closing the gap is an assembly/ABI-integration effort, not an ISA-extension-dependent one.</li>
+  <li><strong>Justification:</strong> <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> has no upstream riscv64 CI at all: <a href="https://github.com/google/tcmalloc/blob/master/.github/workflows/ci.yml"><code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code></a> runs a single x86_64-only job (<code class="language-plaintext highlighter-rouge">ubuntu-24.04</code>, matrixed over compiler/mode/exceptions) with no riscv64 build or test step; no GitHub releases exist for any architecture; and the only riscv64-named distro package sharing the “tcmalloc” name (Ubuntu/Debian <code class="language-plaintext highlighter-rouge">libtcmalloc-minimal4t64</code>) is sourced from the unrelated <code class="language-plaintext highlighter-rouge">gperftools</code> project, not from <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> - so neither clean upstream CI nor a genuine downstream build of this repository exists for riscv64, placing it in the “no upstream CI / no distro trace” orange band. As an optimization-purpose project (a lock-free, per-CPU allocator whose value proposition is beating the system malloc), its RISC-V coverage at the hot path is absent: <a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu.h"><code class="language-plaintext highlighter-rouge">tcmalloc/internal/percpu.h</code></a> gates <code class="language-plaintext highlighter-rouge">TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM</code> to <code class="language-plaintext highlighter-rouge">__x86_64__</code>/<code class="language-plaintext highlighter-rouge">__aarch64__</code> only, with riscv64 falling back to the legacy <code class="language-plaintext highlighter-rouge">ThreadCache</code> path through the crash-stub <a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu_rseq_unsupported.cc"><code class="language-plaintext highlighter-rouge">percpu_rseq_unsupported.cc</code></a>. This optimization-absent finding caps the grade at orange as well, so it does not further lower an already-orange grade.</li>
+  <li><strong>Pending work that could change the grade:</strong> none is in flight. No open tracking issue, PR, or RISE involvement exists for a riscv64 RSEQ port. The last riscv64-touching commit was a test typo fix on 2023-09-12, and the port has been dormant for roughly three years. Closing the gap would require writing <code class="language-plaintext highlighter-rouge">percpu_rseq_riscv.S</code>, extending the <code class="language-plaintext highlighter-rouge">percpu.h</code> platform guard, and adding riscv64 CI - none of which is currently in progress upstream.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has done no documented work on <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> riscv64 support, and no community or third-party effort is in flight either. All nine existing commits (Section 2) came from a single Google engineer, 2021-2023, and the trail is cold. All investment sizing below is net-new work.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>The critical functional gap is the per-CPU RSEQ slab allocator. This is the core reason to use tcmalloc over glibc ptmalloc; without it, tcmalloc on riscv64 offers no architectural advantage.</p>
+<p>The critical functional gap is the per-CPU RSEQ slab allocator. This is the central reason to choose tcmalloc over glibc’s allocator; without it, tcmalloc on riscv64 offers no architectural advantage over the fallback path it already runs.</p>
 
 <p>Work required:</p>
 <ul>
-  <li>Write <code class="language-plaintext highlighter-rouge">tcmalloc/internal/percpu_rseq_riscv.S</code> implementing the three RSEQ critical sections (<code class="language-plaintext highlighter-rouge">PushBatch</code>, <code class="language-plaintext highlighter-rouge">PopBatch</code>, <code class="language-plaintext highlighter-rouge">PerCpuCmpxchg64</code>) using the Linux rseq ABI on riscv64.</li>
-  <li>Update <code class="language-plaintext highlighter-rouge">TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM</code> guard in <code class="language-plaintext highlighter-rouge">percpu.h</code> to include <code class="language-plaintext highlighter-rouge">__riscv</code>.</li>
+  <li>Write <code class="language-plaintext highlighter-rouge">tcmalloc/internal/percpu_rseq_riscv.S</code> implementing the three RSEQ critical sections (<code class="language-plaintext highlighter-rouge">PushBatch</code>, <code class="language-plaintext highlighter-rouge">PopBatch</code>, <code class="language-plaintext highlighter-rouge">PerCpuCmpxchg64</code>) against the Linux rseq ABI on riscv64.</li>
+  <li>Extend the <code class="language-plaintext highlighter-rouge">TCMALLOC_PERCPU_RSEQ_SUPPORTED_PLATFORM</code> guard in <code class="language-plaintext highlighter-rouge">percpu.h</code> to include <code class="language-plaintext highlighter-rouge">__riscv</code>.</li>
   <li>Select and register a valid RSEQ abort signature for riscv64.</li>
-  <li>Coordinate with glibc rseq conflict resolution (issue #144 – cross-cutting, not riscv64-specific). This may require a separate upstream engagement.</li>
-  <li>Write correctness tests exercising the RSEQ path on riscv64.</li>
+  <li>Coordinate with the glibc rseq-registration conflict (issue <a href="https://github.com/google/tcmalloc/issues/144">#144</a>), which is cross-cutting and not riscv64-specific, but is a prerequisite for safe RSEQ activation on any new platform including this one.</li>
+  <li>Implement the still-missing SEGV read/write fault classification for riscv64 (<code class="language-plaintext highlighter-rouge">segv_handler.cc</code>) - a smaller, independent fix.</li>
+  <li>Write correctness tests exercising the riscv64 RSEQ path, and remove the test-size/skip accommodations currently masking the absence of that path.</li>
 </ul>
 
-<p>Reference complexity: <code class="language-plaintext highlighter-rouge">percpu_rseq_x86_64.S</code> is approximately 235 lines of hand-written RSEQ assembly. aarch64 is comparable. RISC-V’s cleaner ISA and standard ABI should make the assembly tractable, but the RSEQ critical section semantics require careful implementation to be race-free.</p>
-<h3 id="132-performance-optimization">
+<p>Reference complexity: the x86_64 and aarch64 equivalents are 362 and 377 lines of hand-written RSEQ assembly respectively. RISC-V’s simpler, more orthogonal ISA should make the raw assembly tractable, but RSEQ critical-section semantics (atomic commit against a kernel-visible abort point) require careful, correctness-first implementation.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p>Once the RSEQ path exists:</p>
+<p>Contingent on the RSEQ path existing first; has no value on its own until then:</p>
 <ul>
-  <li>Add RISC-V prefetch intrinsics to <code class="language-plaintext highlighter-rouge">prefetch.h</code> (Zicbop extension, <code class="language-plaintext highlighter-rouge">prefetch.r</code>/<code class="language-plaintext highlighter-rouge">prefetch.w</code> instructions).</li>
-  <li>Profile and tune slab batch sizes for riscv64 cache hierarchy.</li>
-  <li>Add Zbc-based CRC acceleration in abseil-cpp (dependency, tracked as abseil #1986).</li>
+  <li>Add RISC-V prefetch intrinsics to <code class="language-plaintext highlighter-rouge">prefetch.h</code> (Zicbop extension, <code class="language-plaintext highlighter-rouge">prefetch.r</code>/<code class="language-plaintext highlighter-rouge">prefetch.w</code>), replacing the current generic <code class="language-plaintext highlighter-rouge">__builtin_prefetch</code>.</li>
+  <li>Profile and tune slab batch sizes for riscv64 cache hierarchies once the per-CPU path is live.</li>
+  <li>Track/contribute to abseil-cpp’s Zbc-based CRC32C acceleration (<a href="https://github.com/abseil/abseil-cpp/issues/1986">#1986</a>), which benefits tcmalloc’s dependency chain more broadly.</li>
 </ul>
-
-<p>This work is secondary to functional enablement and has no value until the RSEQ path exists.</p>
-<h3 id="133-cicd-infrastructure">
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
 <ul>
-  <li>Add a riscv64 Docker container to <code class="language-plaintext highlighter-rouge">ci/linux_docker_containers.sh</code>, analogous to <code class="language-plaintext highlighter-rouge">linux_arm_hybrid-latest</code>.</li>
-  <li>Add a CI script (e.g., <code class="language-plaintext highlighter-rouge">ci/linux_gcc-latest_libstdcxx_bazel_riscv64.sh</code>) using that container.</li>
-  <li>Requires either a hardware riscv64 runner accessible to the project’s Kokoro CI, or a QEMU-based emulation stage. The project uses Google-internal CI infrastructure; an external RISE-provided riscv64 runner would need to integrate with this, which is not straightforward for external contributors.</li>
+  <li>Add a riscv64 build/test job to <code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>’s matrix, or a parallel workflow, analogous in spirit to the existing (but currently unmatrixed) arm64 Docker image.</li>
+  <li>Requires either a hardware riscv64 GitHub Actions runner or a QEMU-based emulation stage; the project currently has no QEMU usage anywhere, so this would be new infrastructure, not an extension of an existing pattern.</li>
+  <li>Given the Piper/Copybara-first development model, any externally-contributed CI addition would need to be accepted and maintained through the same internal-CL-preferred process described in Section 1, adding organizational risk beyond the engineering effort.</li>
 </ul>
-
-<p>Alternatively: a RISE-hosted GitHub Actions CI job (if the project accepts GitHub Actions contributions). Currently the project has no GitHub Actions at all.</p>
-<h3 id="134-ecosystem-enablement">
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
   
   
 </h3>
     
 
-<p>Not applicable. <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> has no plugin or package ecosystem. See Section 10 (omitted per scope rules – no dependent package ecosystem exists for this project).</p>
-<h3 id="135-summary-table">
+<p>Not applicable. <code class="language-plaintext highlighter-rouge">google/tcmalloc</code> is a system-level C++ library with no dependent package ecosystem (no npm, PyPI, Maven, or similar downstream package graph depends on riscv64-specific tcmalloc artifacts) - see Section 10 note below.</p>
+<h3 id="145-summary-table">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1306,33 +1383,40 @@ ctest <span class="nt">--output-on-failure</span>
       <td>Functional</td>
       <td>Write <code class="language-plaintext highlighter-rouge">percpu_rseq_riscv.S</code> (RSEQ PushBatch/PopBatch/Cmpxchg64)</td>
       <td>4-6</td>
-      <td>RISC-V systems engineer with RSEQ/asm expertise</td>
+      <td>RISC-V systems engineer with RSEQ/assembly expertise</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Update <code class="language-plaintext highlighter-rouge">percpu.h</code> platform guard, select rseq signature, wire up build</td>
+      <td>Extend <code class="language-plaintext highlighter-rouge">percpu.h</code> platform guard, select rseq signature, wire up build</td>
       <td>1</td>
       <td>Same</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Resolve glibc rseq conflict (issue #144, cross-platform)</td>
+      <td>Resolve/account for glibc rseq conflict (issue #144, cross-platform)</td>
       <td>2-4 (coordination)</td>
       <td>Upstream engagement + Google</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Correctness tests for riscv64 RSEQ path</td>
+      <td>Implement SEGV read/write fault classification for riscv64</td>
+      <td>1</td>
+      <td>Same</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Correctness tests for the riscv64 RSEQ path</td>
       <td>2</td>
       <td>Same</td>
       <td>Critical</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Prefetch intrinsics for Zicbop in <code class="language-plaintext highlighter-rouge">prefetch.h</code></td>
+      <td>Zicbop prefetch intrinsics in <code class="language-plaintext highlighter-rouge">prefetch.h</code></td>
       <td>1</td>
       <td>RISC-V systems engineer</td>
       <td>Low</td>
@@ -1346,34 +1430,24 @@ ctest <span class="nt">--output-on-failure</span>
     </tr>
     <tr>
       <td>CI/CD</td>
-      <td>riscv64 CI job (QEMU or hardware runner, Bazel)</td>
-      <td>2</td>
-      <td>Infrastructure</td>
+      <td>riscv64 CI job (QEMU or hardware runner, wired into <code class="language-plaintext highlighter-rouge">ci.yml</code>)</td>
+      <td>2-3</td>
+      <td>Infrastructure engineer</td>
       <td>High</td>
     </tr>
     <tr>
       <td>Functional</td>
-      <td>Upstream PR submission and review iteration</td>
+      <td>Upstream submission and review iteration</td>
       <td>2-4</td>
-      <td>Depends on Google team responsiveness</td>
+      <td>Depends on Google-internal team responsiveness</td>
       <td>High</td>
     </tr>
   </tbody>
 </table></div>
 
-<p>Total estimated effort: 16-22 person-weeks for full functional parity (RSEQ path + CI). Performance optimization adds 3-5 person-weeks.</p>
+<p>Total estimated effort: roughly 14-20 person-weeks for full functional parity (RSEQ path + CI). Performance optimization adds a further 3-5 person-weeks and has no standalone value before the functional work lands.</p>
 
-<p>Risk: merge acceptance is not guaranteed. All merges require Google internal committer approval. No prior commitment to riscv64 advancement has been stated. A rejected submission means the investment produces only a maintained fork, not an upstream fix.</p><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+<p><strong>Risk:</strong> merge acceptance is not guaranteed. All merges require Google-internal committer approval, and the project’s history shows no stated commitment to riscv64 advancement beyond the original 2021 compile-support commit. A rejected or indefinitely-stalled submission produces only a maintained fork, not an upstream fix - a materially different, lower-value outcome than the effort sizing above assumes.</p>
 <h2 id="15-references">
   
   
@@ -1390,24 +1464,44 @@ ctest <span class="nt">--output-on-failure</span>
   <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/config.h">tcmalloc/internal/config.h</a></li>
   <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu.h">tcmalloc/internal/percpu.h</a></li>
   <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu_rseq_unsupported.cc">tcmalloc/internal/percpu_rseq_unsupported.cc</a></li>
-  <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/BUILD">tcmalloc/internal/BUILD</a></li>
+  <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu_rseq_x86_64.S">tcmalloc/internal/percpu_rseq_x86_64.S</a></li>
+  <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/percpu_rseq_aarch64.S">tcmalloc/internal/percpu_rseq_aarch64.S</a></li>
   <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/prefetch.h">tcmalloc/internal/prefetch.h</a></li>
+  <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/internal/cache_topology.cc">tcmalloc/internal/cache_topology.cc</a></li>
+  <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/segv_handler.cc">tcmalloc/segv_handler.cc</a></li>
+  <li><a href="https://github.com/google/tcmalloc/blob/master/tcmalloc/tcmalloc.cc">tcmalloc/tcmalloc.cc</a></li>
+  <li><a href="https://github.com/google/tcmalloc/blob/master/.github/workflows/ci.yml">.github/workflows/ci.yml</a></li>
   <li><a href="https://github.com/google/tcmalloc/blob/master/ci/linux_docker_containers.sh">ci/linux_docker_containers.sh</a></li>
-  <li><a href="https://github.com/google/tcmalloc/commit/c730bdc">Commit c730bdc: add initial support for RISCV targets (2021-08-16)</a></li>
-  <li><a href="https://github.com/google/tcmalloc/commit/54c1f7b">Commit 54c1f7b: correct declaration for non-RSEQ platforms (2021-12-20)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/commit/c730bdcd83af0381c094aca690ee2c5e96189287">Commit c730bdc: add initial support for RISCV targets (2021-08-16)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/commit/0f7596195f580b3fac6a815ce59704960f6f7082">Commit f20b9468: tcmalloc: repair the RISC-V build (2021-08-26)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/commit/f4e1fb0bc6483e7d606894f085646616792ec8b2">Commit f4e1fb0: tcmalloc: repair !TCMALLOC_PERCPU_USE_RSEQ builds (2021-09-08)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/commit/f20b9468a107b2002d4d558c6a2bcf161d70e538">Commit f20b9468: tcmalloc: repair the percpu_tcmalloc related tests on RISC-V (2021-09-15)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/commit/54c1f7bc61db8888a67dc62288c522e8e6a6f630">Commit 54c1f7b: correct declaration for non-RSEQ platforms (2021-12-20)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/commit/cefed7bf7d696a251a98d58a158bdd565ab1eb36">Commit cefed7bf: repair the build for non-rseq enabled platforms (2022-01-18)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/commit/7ae2052200270cf1bd3e37f845e2c05d14b79aaf">Commit 7ae2052: skip rseq tests on non-rseq targets (2022-02-03)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/commit/8f84341cb4b91eb025e66e55f6cbb83c8b1c62ea">Commit 8f84341: fix unused-variable warning in config_test.cc on RISC-V (2023-08-25)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/commit/56e8b05f021b33883d881a69094816374e6c1497">Commit 56e8b05: fix typos in memory_errors_test.cc for RISC-V (2023-09-12)</a></li>
   <li><a href="https://github.com/google/tcmalloc/issues/144">tcmalloc issue #144: glibc 2.35 rseq conflict</a></li>
   <li><a href="https://github.com/google/tcmalloc/issues/286">tcmalloc issue #286: High spin lock activity and slow performance</a></li>
-  <li><a href="https://github.com/google/tcmalloc/issues/292">tcmalloc issue #292: RSEQ crashes since linux-6.19 (closed)</a></li>
+  <li><a href="https://github.com/google/tcmalloc/issues/292">tcmalloc issue #292: RSEQ-related crashes since linux-6.19</a></li>
+  <li><a href="https://lwn.net/Articles/1070072/">LWN: Restartable sequences, TCMalloc, and Hyrum’s Law</a></li>
+  <li><a href="https://lwn.net/Articles/1092555/">LWN: Fixing the TCMalloc regression with RSEQ operations</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/1702">abseil-cpp issue #1702: link failure with riscv64 toolchain</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/1236">abseil-cpp issue #1236: RISCV ILP32E alignment</a></li>
   <li><a href="https://github.com/abseil/abseil-cpp/issues/2002">abseil-cpp issue #2002: sampler test segfault on riscv64</a></li>
-  <li><a href="https://github.com/abseil/abseil-cpp/issues/1702">abseil-cpp issue #1702: link failure with older riscv64 toolchain</a></li>
-  <li><a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil-cpp issue #1986: CRC32C acceleration for Zbc</a></li>
+  <li><a href="https://github.com/abseil/abseil-cpp/issues/1986">abseil-cpp issue #1986: CRC32C acceleration via Zbc</a></li>
   <li><a href="https://github.com/google/googletest/issues/3756">googletest issue #3756: GetThreadCountTest fails on riscv64</a></li>
-  <li><a href="https://github.com/protocolbuffers/protobuf/issues/12266">protobuf issue #12266: riscv64 protoc binary request</a></li>
+  <li><a href="https://github.com/protocolbuffers/protobuf/issues/12266">protobuf issue #12266: add riscv64 support (closed)</a></li>
+  <li><a href="https://github.com/protocolbuffers/protobuf/issues/14549">protobuf issue #14549: build fails on RISCV (closed)</a></li>
+  <li><a href="https://github.com/protocolbuffers/protobuf/issues/17798">protobuf issue #17798: Maven central protoc prebuilts for riscv64 (closed)</a></li>
   <li><a href="https://github.com/gperftools/gperftools/issues/1359">gperftools issue #1359: broken on riscv64 (closed)</a></li>
   <li><a href="https://github.com/gperftools/gperftools/pull/1269">gperftools PR #1269: conditional pagesize for 64 KB kernels (closed, not merged)</a></li>
   <li><a href="https://github.com/gperftools/gperftools/issues/1278">gperftools issue #1278: generic_fp profiling overhead</a></li>
-  <li><a href="https://packages.ubuntu.com/search?keywords=tcmalloc&amp;suite=noble">Ubuntu 24.04 libtcmalloc-minimal4t64 package</a></li>
-  <li><a href="https://packages.debian.org/search?keywords=tcmalloc&amp;searchon=names&amp;suite=sid">Debian sid tcmalloc package search</a></li>
+  <li><a href="https://packages.ubuntu.com/resolute/libtcmalloc-minimal4t64">Ubuntu resolute (26.04) libtcmalloc-minimal4t64 package</a></li>
+  <li><a href="https://packages.ubuntu.com/search?keywords=tcmalloc&amp;searchon=names&amp;section=all">Ubuntu package search for “tcmalloc”</a></li>
+  <li><a href="https://archriscv.felixc.at/?q=tcmalloc">Arch Linux RISC-V package search</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE Project members</a></li>
+  <li><a href="https://riseproject.gitlab.io/python/wheel_builder/">RISE Python wheel builder</a></li>
   <li><a href="https://www.kernel.org/doc/html/latest/kernel/rseq.html">Linux kernel rseq ABI documentation</a></li>
 </ul>
 

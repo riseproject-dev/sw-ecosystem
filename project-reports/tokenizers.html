@@ -265,11 +265,12 @@
 </h1>
     
 
-<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a>
-<strong>Date:</strong> 2026-07-20
-<strong>Scope:</strong> RISC-V (riscv64/linux) support status for tokenizers
-<strong>Audience:</strong> Technical leadership, resource allocation strategy
-<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].</p><hr />
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:mail@ludovic.dev">mail@ludovic.dev</a><br />
+<strong>Date:</strong> 2026-09-30<br />
+<strong>Readiness:</strong> yellow (build-only-ci)<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for tokenizers<br />
+<strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
 <h2 id="1-project-overview">
   
   
@@ -279,21 +280,15 @@
 </h2>
     
 
-<p><a href="https://huggingface.co/docs/tokenizers">tokenizers</a> is a Rust library implementing high-performance tokenizers for large language models. It provides implementations of BPE (Byte-Pair Encoding), Unigram, WordPiece, and WordLevel algorithms, along with pre-tokenizers, normalizers, and post-processors. The Python bindings are the primary consumer interface; Node.js bindings also exist. The library is used throughout the Hugging Face ecosystem as the tokenization layer for transformers inference.</p>
+<p><a href="https://huggingface.co/docs/tokenizers">tokenizers</a> is a Rust library implementing high-performance tokenizers for large language models, with BPE (Byte-Pair Encoding), Unigram, WordPiece, and WordLevel algorithm implementations plus pre-tokenizers, normalizers, and post-processors. Python bindings (via PyO3/maturin) are the primary consumer interface, used throughout the Hugging Face ecosystem (<code class="language-plaintext highlighter-rouge">transformers</code> and its dependents) as the tokenization layer for LLM inference and training; Node.js bindings also exist but are a secondary distribution channel.</p>
 
-<p><strong>Governance:</strong> tokenizers is wholly owned and controlled by Hugging Face (the company). There is no external foundation, steering committee, or community governance body. No CODEOWNERS, MAINTAINERS, or OWNERS file exists in the repository. License: Apache 2.0.</p>
+<p><strong>Governance:</strong> tokenizers is wholly owned and controlled by Hugging Face (the company). No external foundation, steering committee, or community governance body was found. No CODEOWNERS, MAINTAINERS, or OWNERS file exists, and no PLATFORMS.md/SUPPORT.md tier-policy document exists either. License: Apache 2.0.</p>
 
-<p><strong>Active maintainers (from 2026 commit history):</strong></p>
-<ul>
-  <li>ArthurZucker (Arthur Zucker, Hugging Face) – de facto lead, merges most PRs, drives releases</li>
-  <li>SBrandeis (Simon Brandeis, Hugging Face) – CI, benchmarks, PyO3 upgrades</li>
-  <li>McPatate (Hugging Face) – CI and tokenizer feature work</li>
-  <li>sebpop – allocator and benchmark work (affiliation not confirmed from available data)</li>
-</ul>
+<p><strong>Maintainers active in the riscv64 work:</strong> ArthurZucker (Hugging Face) reviewed and approved the riscv64-enabling PR; McPatate (Hugging Face) flagged and coordinated a CI-infrastructure blocker (<a href="https://github.com/huggingface/tokenizers/pull/1978">PR #1978</a>) that briefly delayed the merge; sebpop (affiliation not confirmed) authored the later mimalloc-allocator PR that explicitly excludes riscv64.</p>
 
-<p><strong>Hugging Face is not a RISE Project member.</strong> RISE Premier members are: Andes Technology, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, DAMO Academy (Alibaba), Tenstorrent. General members include SpacemiT, ByteDance, Canonical, and others. Hugging Face is absent from both tiers.</p>
+<p><strong>Hugging Face is not a RISE Project member.</strong> RISE Premier members are Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive, and Tenstorrent; General members are Akeana, Andes Technology, Beijing ESWIN, Beijing Institute of Open Source Chip, Canonical, Douyin Vision (ByteDance), Institute of Software Chinese Academy of Sciences, Microchip, NextSilicon, Quintauris, SpacemiT, and ZTE. Hugging Face appears in neither tier.</p>
 
-<p><strong>Culture on new ports:</strong> Maintainer ArthurZucker responded to the riscv64 PR with “LGTM happy to have coverage for riscv64!” with no objections or conditions. Secondary architectures (ppc64le, s390x, armv7l, aarch64) are all treated as first-class PyPI targets. The project has no gatekeeping policy for new architectures.</p><hr />
+<p><strong>Culture on new ports:</strong> maintainer ArthurZucker’s review of the riscv64-enabling PR was unreserved: “LGTM happy to have coverage for riscv64!” Secondary architectures (ppc64le, s390x, armv7, aarch64) are already treated as ordinary PyPI wheel targets in the same build matrix. No gatekeeping policy for new architectures was found.</p>
 <h2 id="2-port-history-and-upstreaming-timeline">
   
   
@@ -313,72 +308,85 @@
   </thead>
   <tbody>
     <tr>
-      <td>Jul 2, 2025</td>
-      <td><a href="https://github.com/huggingface/tokenizers/issues/1816">Issue #1816</a> opened: source build fails on RISC-V Ubuntu Jammy; maturin 1.9.0 computes <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code> but rustup does not recognise that triple (correct triple is <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code>)</td>
-      <td>GitHub issue</td>
+      <td>2025-07-02</td>
+      <td><a href="https://github.com/huggingface/tokenizers/issues/1816">Issue #1816</a> opened by zengqingfu1442: <code class="language-plaintext highlighter-rouge">pip install transformers==4.39.2</code> fails to build <code class="language-plaintext highlighter-rouge">tokenizers</code> from source on riscv64 Ubuntu Jammy/Python 3.10 because rustup does not recognize the computed target triple <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code> (the correct triple is <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code>)</td>
+      <td><a href="https://github.com/huggingface/tokenizers/issues/1816">Issue #1816</a></td>
     </tr>
     <tr>
-      <td>Jul 7, 2025</td>
-      <td>Issue #1816 closed with no fix and no linked PR; implicit resolution via later ecosystem improvements</td>
-      <td>GitHub issue</td>
+      <td>2025-07-07</td>
+      <td>Issue #1816 closed as completed, with no linked fix PR in this repository; resolution tracks to rustup’s own riscv64gc tier-2 target maturing upstream</td>
+      <td><a href="https://github.com/huggingface/tokenizers/issues/1816">Issue #1816</a></td>
     </tr>
     <tr>
-      <td>~Jul 28, 2025</td>
-      <td>maturin 1.9.3 merged upstream fix for riscv64 manylinux support, correcting the target triple handling</td>
-      <td>[NEEDS VERIFICATION] – cited in dependency findings, maturin release not directly confirmed by the research</td>
+      <td>~2025-07-28</td>
+      <td>maturin reported to have fixed riscv64 manylinux triple handling in v1.9.3</td>
+      <td>[NEEDS VERIFICATION - cited in dependency research notes, not independently confirmed against maturin’s own release notes]</td>
     </tr>
     <tr>
-      <td>Mar 11, 2026</td>
-      <td><a href="https://github.com/huggingface/tokenizers/issues/1961">Issue #1961</a> opened by gounthar (RISE-affiliated, CloudBees): requests <code class="language-plaintext highlighter-rouge">manylinux_2_34_riscv64</code> wheel on PyPI; demonstrates working wheel on BananaPi F3 (SpacemiT K1), ~20 min build from source</td>
-      <td>GitHub issue</td>
+      <td>2026-02-19</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/1951">PR #1951</a> opened by threexc (GitHub handle; commit author field reads Trevor Gamblin, BayLibre), explicitly on behalf of the RISE Project: restructures the Linux wheel build matrix so <code class="language-plaintext highlighter-rouge">arch</code> and rustc <code class="language-plaintext highlighter-rouge">target</code> are distinct fields (maturin’s riscv64 arch string and the <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> rustc triple do not line up the way they do for other architectures), then adds the riscv64 matrix entry</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/1951">PR #1951</a></td>
     </tr>
     <tr>
-      <td>Feb 19, 2026</td>
-      <td><a href="https://github.com/huggingface/tokenizers/pull/1951">PR #1951</a> opened by threexc (BayLibre / RISE Project): adds <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> cross-compilation to the python-release CI matrix</td>
-      <td>GitHub PR</td>
+      <td>2026-03-11</td>
+      <td><a href="https://github.com/huggingface/tokenizers/issues/1961">Issue #1961</a> opened by gounthar (first-time contributor) as the de facto tracking issue: demonstrates a working, smoke-tested wheel (<code class="language-plaintext highlighter-rouge">tokenizers-0.22.2-cp39-abi3-manylinux_2_34_riscv64.whl</code>) built natively on a BananaPi F3 (SpacemiT K1, rv64imafdcv, 8 cores at 1.6 GHz) in about 20 minutes, and proposes the same CI matrix change as #1951</td>
+      <td><a href="https://github.com/huggingface/tokenizers/issues/1961">Issue #1961</a></td>
     </tr>
     <tr>
-      <td>Mar 12, 2026</td>
-      <td><a href="https://github.com/huggingface/tokenizers/pull/1963">PR #1963</a> opened by gounthar as a parallel attempt; targets <code class="language-plaintext highlighter-rouge">python-release.yml</code> with maturin-action cross-compile</td>
-      <td>GitHub PR</td>
+      <td>2026-03-12</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/1963">PR #1963</a> opened by gounthar as a parallel implementation of the same matrix change, citing “Fixes #1961”</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/1963">PR #1963</a></td>
     </tr>
     <tr>
-      <td>Mar 19, 2026</td>
-      <td>PR #1963 closed by the author in favour of PR #1951 (which had been opened first)</td>
-      <td>GitHub PR</td>
+      <td>2026-03-19</td>
+      <td>PR #1963 closed by its own author in deference to #1951, which “was opened first” - avoids duplicate/competing implementations</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/1963">PR #1963</a></td>
     </tr>
     <tr>
-      <td>Mar 25, 2026</td>
-      <td>CI breakage fixed by PR #1978, unblocking PR #1951; threexc rebases</td>
-      <td>GitHub PR</td>
+      <td>2026-03-25</td>
+      <td>McPatate flags an unrelated CI breakage blocking #1951; threexc rebases once the fix (<a href="https://github.com/huggingface/tokenizers/pull/1978">PR #1978</a>) lands</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/1951">PR #1951</a></td>
     </tr>
     <tr>
-      <td>Mar 26, 2026</td>
-      <td><a href="https://github.com/huggingface/tokenizers/pull/1951">PR #1951</a> merged into main by ArthurZucker (merge commit <code class="language-plaintext highlighter-rouge">44a8416</code>); adds <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> to <code class="language-plaintext highlighter-rouge">CI.yml</code>; Issue #1961 closed same day</td>
-      <td>GitHub PR</td>
+      <td>2026-03-26</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/1951">PR #1951</a> merged to <code class="language-plaintext highlighter-rouge">main</code> (commit <code class="language-plaintext highlighter-rouge">44a84169fd719fd0b8ec6bd0c761248d7afc9abb</code>, authored Trevor Gamblin, 35 checks passing); Issue #1961 closed the same day as completed</td>
+      <td>Direct git clone verification, commit <code class="language-plaintext highlighter-rouge">44a84169</code></td>
     </tr>
     <tr>
-      <td>Apr 27, 2026</td>
-      <td><code class="language-plaintext highlighter-rouge">tokenizers-0.23.1-cp310-abi3-manylinux_2_31_riscv64.whl</code> (3,426,398 bytes) uploaded to official PyPI; first GA riscv64 wheel in the official release channel</td>
+      <td>2026-04-24</td>
+      <td><code class="language-plaintext highlighter-rouge">v0.23.0rc0</code> tagged - first release tag reachable from commit <code class="language-plaintext highlighter-rouge">44a84169</code>, i.e. the first release containing riscv64 build support</td>
+      <td><code class="language-plaintext highlighter-rouge">git tag --contains 44a84169</code></td>
+    </tr>
+    <tr>
+      <td>2026-04-27</td>
+      <td><code class="language-plaintext highlighter-rouge">v0.23.1</code> tagged - first stable (non-rc) release; <code class="language-plaintext highlighter-rouge">tokenizers-0.23.1-cp310-abi3-manylinux_2_31_riscv64.whl</code> is the first GA riscv64 wheel on official PyPI</td>
       <td>PyPI JSON API</td>
     </tr>
     <tr>
-      <td>May 26, 2026</td>
-      <td><a href="https://github.com/huggingface/tokenizers/pull/2073">PR #2073</a> opened by sebpop: adds mimalloc as global allocator for throughput gains; riscv64 explicitly excluded due to cross-toolchain GCC age</td>
-      <td>GitHub PR, open</td>
+      <td>2026-05-26</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/2073">PR #2073</a> opened by sebpop: adds mimalloc as the global allocator for the Python/Node bindings and the benchmark binary; CI breaks on riscv64 (and s390x, ppc64le, armv7, 32-bit x86) because <code class="language-plaintext highlighter-rouge">libmimalloc-sys</code> 0.1.49 passes <code class="language-plaintext highlighter-rouge">-Werror=date-time</code>, a flag the manylinux2014 cross-toolchain’s GCC 4.8.5 predates (introduced in GCC 4.9), and because mimalloc needs C11 <code class="language-plaintext highlighter-rouge">&lt;stdatomic.h&gt;</code>, also unavailable on that compiler; the fix restricts mimalloc via <code class="language-plaintext highlighter-rouge">cfg(...)</code> to <code class="language-plaintext highlighter-rouge">aarch64-unknown-linux-gnu</code>, <code class="language-plaintext highlighter-rouge">x86_64-unknown-linux-gnu</code>, and <code class="language-plaintext highlighter-rouge">aarch64-apple-darwin</code> only, leaving riscv64 on the system allocator</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/2073">PR #2073</a></td>
+    </tr>
+    <tr>
+      <td>2026-09-18</td>
+      <td>PR #2073 closed</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/2073">PR #2073</a>; direct <code class="language-plaintext highlighter-rouge">git log --all</code> search found no merge commit for it</td>
+    </tr>
+    <tr>
+      <td>2026-09-03</td>
+      <td><code class="language-plaintext highlighter-rouge">tokenizers-0.23.2-cp310-abi3-manylinux_2_31_riscv64.whl</code> uploaded to PyPI (3,577,314 bytes)</td>
+      <td>PyPI JSON API</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>Key contributors:</strong></p>
-<ul>
-  <li>treexc (Trevor Gamblin, BayLibre): submitted PR #1951 explicitly on behalf of the RISE Project; parallel PRs also submitted to <code class="language-plaintext highlighter-rouge">hf_transfer</code> (#77) and <code class="language-plaintext highlighter-rouge">safetensors</code> (#708)</li>
-  <li>gounthar (CloudBees, personal RISC-V contributor): filed issue #1961, opened and closed PR #1963</li>
-</ul>
+<p><strong>Discrepancy note:</strong> the readiness-grade justification (Section 13) characterizes PR #2073 as “open (unmerged as of research date),” while a direct scan of the upstream git history (<code class="language-plaintext highlighter-rouge">git log --all --oneline | grep -i "#2073"</code>) finds no merge commit for it and a GitHub-page fetch records it as closed on 2026-09-18. Both sources agree on the substantive fact that matters for riscv64 - the mimalloc feature never shipped for riscv64 - but disagree on whether the PR is still open or was closed unmerged. This is noted here rather than silently resolved.</p>
 
-<p><strong>Upstreaming status:</strong> Complete. The riscv64 CI entry is in the main branch. PyPI ships the riscv64 wheel as of v0.23.1. No out-of-tree patches required.</p>
+<p><strong>Key contributors:</strong> threexc / Trevor Gamblin (BayLibre, submitting on behalf of the RISE Project) authored the merged fix, PR #1951; parallel riscv64-enabling PRs were also submitted by the same contributor to sibling Hugging Face projects <code class="language-plaintext highlighter-rouge">hf_transfer</code> (#77) and <code class="language-plaintext highlighter-rouge">safetensors</code> (#708). gounthar (CloudBees; first-time contributor to this repo) filed the original tracking issue #1961, built and benchmarked the proof-of-concept wheel on a BananaPi F3, and separately maintains a stopgap community wheel index (<a href="https://github.com/gounthar/riscv64-python-wheels">gounthar/riscv64-python-wheels</a>).</p>
 
-<p>The RISE wheel_builder project (gitlab.com/riseproject/python/wheel_builder) previously distributed riscv64 wheels for tokenizers 0.20.3 through 0.22.2 ahead of upstream. That project’s tokenizers page is now marked deprecated with the note “PyPI now publishes newer versions of this package for riscv64.” The community index at gounthar.github.io continues to host 0.22.2 and 0.22.3.dev0 for backward compatibility.</p><hr />
+<p><strong>Upstreaming status:</strong> the riscv64 CI build entry and the resulting PyPI wheel are both on <code class="language-plaintext highlighter-rouge">main</code> and in production releases - no out-of-tree patches are required to install or use tokenizers on riscv64. What remains outside of <code class="language-plaintext highlighter-rouge">main</code> is test coverage (no riscv64 leg in the test matrix) and the mimalloc allocator optimization (explicitly excluded for riscv64).</p>
+
+<p>The RISE wheel_builder project (<code class="language-plaintext highlighter-rouge">gitlab.com/riseproject/python/wheel_builder</code>) previously distributed riscv64 wheels for tokenizers 0.20.3 through 0.22.2 ahead of upstream, built natively on RISE RISC-V Runner hardware. Its tokenizers page is now marked deprecated, stating “PyPI now publishes newer versions of this package for riscv64, and we will no longer maintain this package.” The community index at <code class="language-plaintext highlighter-rouge">gounthar.github.io/riscv64-python-wheels</code> continues to host wheels for backward compatibility.</p>
 <h2 id="3-upstream-support-tier">
   
   
@@ -388,278 +396,7 @@
 </h2>
     
 
-<p>tokenizers has no formal tier policy document. There is no PLATFORMS.md, SUPPORT.md, or tiering taxonomy. Secondary architectures are treated uniformly: they are included in the <code class="language-plaintext highlighter-rouge">CI.yml</code> matrix and their wheels are published to PyPI via the <code class="language-plaintext highlighter-rouge">CI.yml</code> release job on tag push.</p>
-
-<p>The CI.yml is autogenerated by <code class="language-plaintext highlighter-rouge">maturin generate-ci github</code> (header comments reference maturin v1.7.4). All architectures in the linux matrix share identical build steps. There is no differentiated handling or tier designation for riscv64 vs aarch64 vs ppc64le vs s390x.</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Capability</th>
-      <th>amd64</th>
-      <th>arm64</th>
-      <th>riscv64</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>CI builds</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes (since PR #1951, Mar 26, 2026)</td>
-    </tr>
-    <tr>
-      <td>CI tests</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-    </tr>
-    <tr>
-      <td>Official PyPI wheel</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Yes (since v0.23.1, Apr 27, 2026)</td>
-    </tr>
-    <tr>
-      <td>musllinux wheel</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No</td>
-    </tr>
-    <tr>
-      <td>Release-blocking</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Unknown – no evidence either way</td>
-    </tr>
-    <tr>
-      <td>Native CI runner</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>No (cross-compile on ubuntu-latest)</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p>The absence of riscv64 tests in CI means a correctness regression on riscv64 would not block a release. No evidence was found that a broken riscv64 wheel would prevent a tag from being pushed. This is weaker than the treatment of x86_64 and aarch64 but consistent with how s390x and ppc64le are handled.</p><hr />
-<h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
-  
-  
-    <a href="#4-technical-architecture-and-risc-v-specific-subsystems" class="anchor-heading" aria-labelledby="4-technical-architecture-and-risc-v-specific-subsystems"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Technical Architecture and RISC-V-Specific Subsystems
-  
-  
-</h2>
-    
-
-<p>tokenizers is implemented in pure Rust with no architecture-specific source code, hand-tuned SIMD intrinsics, assembly, JIT compilation, or cryptographic hardware acceleration anywhere in the core library.</p>
-
-<p>The following modules were audited and confirmed to contain no <code class="language-plaintext highlighter-rouge">#[cfg(target_arch)]</code> or <code class="language-plaintext highlighter-rouge">#[cfg(target_feature)]</code> guards:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">src/models/bpe/model.rs</code>, <code class="language-plaintext highlighter-rouge">word.rs</code>, <code class="language-plaintext highlighter-rouge">trainer.rs</code></li>
-  <li><code class="language-plaintext highlighter-rouge">src/models/unigram/lattice.rs</code></li>
-  <li><code class="language-plaintext highlighter-rouge">src/normalizers/bert.rs</code>, <code class="language-plaintext highlighter-rouge">unicode.rs</code>, <code class="language-plaintext highlighter-rouge">precompiled.rs</code></li>
-  <li><code class="language-plaintext highlighter-rouge">src/pre_tokenizers/byte_level.rs</code></li>
-  <li><code class="language-plaintext highlighter-rouge">src/utils/parallelism.rs</code></li>
-  <li><code class="language-plaintext highlighter-rouge">bindings/python/Cargo.toml</code></li>
-</ul>
-
-<p>There is no <code class="language-plaintext highlighter-rouge">build.rs</code> at the <code class="language-plaintext highlighter-rouge">tokenizers/</code> crate level, so no C/C++ compilation occurs in the core library. Parallelism is handled via the Rayon crate (CPU-agnostic work-stealing thread pool).</p>
-
-<p>The one pending architecture-conditional block is in open PR #2073 (mimalloc global allocator), which adds mimalloc only for <code class="language-plaintext highlighter-rouge">linux/x86_64/gnu</code>, <code class="language-plaintext highlighter-rouge">linux/aarch64/gnu</code>, and <code class="language-plaintext highlighter-rouge">macOS/aarch64</code>. riscv64 is excluded because the manylinux cross-toolchain ships GCC 4.8.5, which predates both <code class="language-plaintext highlighter-rouge">-Wdate-time</code> (GCC 4.9) and C11 atomics (<code class="language-plaintext highlighter-rouge">&lt;stdatomic.h&gt;</code>, also GCC 4.9). This PR is unmerged as of June 2026.</p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Component</th>
-      <th>amd64</th>
-      <th>arm64</th>
-      <th>riscv64</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>BPE tokenization</td>
-      <td>scalar Rust</td>
-      <td>scalar Rust</td>
-      <td>scalar Rust</td>
-    </tr>
-    <tr>
-      <td>Unigram (suffix array, Viterbi)</td>
-      <td>scalar Rust</td>
-      <td>scalar Rust</td>
-      <td>scalar Rust</td>
-    </tr>
-    <tr>
-      <td>Unicode normalisation</td>
-      <td>scalar Rust</td>
-      <td>scalar Rust</td>
-      <td>scalar Rust</td>
-    </tr>
-    <tr>
-      <td>Aho-Corasick pattern matching</td>
-      <td>scalar Rust</td>
-      <td>scalar Rust</td>
-      <td>scalar Rust</td>
-    </tr>
-    <tr>
-      <td>Hash maps (ahash)</td>
-      <td>AES-NI hardware</td>
-      <td>AES hardware</td>
-      <td>software fallback</td>
-    </tr>
-    <tr>
-      <td>Parallelism (Rayon)</td>
-      <td>full</td>
-      <td>full</td>
-      <td>full</td>
-    </tr>
-    <tr>
-      <td>Memory allocator (pending PR #2073)</td>
-      <td>mimalloc (pending)</td>
-      <td>mimalloc (pending)</td>
-      <td>system allocator</td>
-    </tr>
-    <tr>
-      <td>JIT / code generation</td>
-      <td>none</td>
-      <td>none</td>
-      <td>none</td>
-    </tr>
-    <tr>
-      <td>SIMD tokenization kernels</td>
-      <td>none</td>
-      <td>none</td>
-      <td>none</td>
-    </tr>
-    <tr>
-      <td>Cryptographic acceleration</td>
-      <td>none</td>
-      <td>none</td>
-      <td>none</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p><strong>ahash software fallback:</strong> The <code class="language-plaintext highlighter-rouge">ahash</code> crate uses AES-NI on x86_64 and AES on aarch64 for fast hashing. On riscv64 it falls back to a software “aHash Fallback” path. This is functionally correct. The performance delta is approximately 2-3x slower hash throughput [NEEDS VERIFICATION – no riscv64-specific ahash benchmark was found in the research]. This affects hash map operations internally but has not been cited as a bottleneck in any reported benchmark.</p>
-
-<p><strong>ISA extensions:</strong> No RVV (RISC-V Vector), no Zba, Zbb, Zbc, Zbs extensions are used or referenced. The build target is <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> (G = IMAFD baseline, C = compressed instructions), which is the generic riscv64 tier-2 Rust target.</p><hr />
-<h2 id="5-build-system-cross-compilation-and-toolchain">
-  
-  
-    <a href="#5-build-system-cross-compilation-and-toolchain" class="anchor-heading" aria-labelledby="5-build-system-cross-compilation-and-toolchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Build System, Cross-Compilation, and Toolchain
-  
-  
-</h2>
-    
-
-<p><strong>Build system:</strong> Cargo (Rust core) + maturin (Python wheel packaging). No CMake, no Autoconf, no Makefile at top level. No Dockerfile in the repository.</p>
-
-<p><strong>Exact build command used in CI (<code class="language-plaintext highlighter-rouge">.github/workflows/CI.yml</code>):</strong></p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>maturin build --release \
-  --target riscv64gc-unknown-linux-gnu \
-  --manifest-path bindings/python/Cargo.toml \
-  --out dist
-</code></pre></div></div>
-
-<p>This is invoked via the <code class="language-plaintext highlighter-rouge">PyO3/maturin-action</code> GitHub Action with <code class="language-plaintext highlighter-rouge">manylinux: auto</code>. The action selects a cross-compilation Docker container – <code class="language-plaintext highlighter-rouge">ghcr.io/rust-cross/manylinux_2_31-cross:riscv64</code> – which cross-compiles from an x86_64 host to riscv64 using <code class="language-plaintext highlighter-rouge">cargo-zigbuild</code> bundled inside the container. No QEMU is involved for the build step.</p>
-
-<p><strong>Toolchain requirements:</strong></p>
-<ul>
-  <li>Rust toolchain: <code class="language-plaintext highlighter-rouge">stable</code> (no pinned version; <code class="language-plaintext highlighter-rouge">bindings/python/rust-toolchain</code> contains only the string <code class="language-plaintext highlighter-rouge">stable</code>)</li>
-  <li>maturin: <code class="language-plaintext highlighter-rouge">&gt;=1.0,&lt;2.0</code> (from <code class="language-plaintext highlighter-rouge">pyproject.toml</code>)</li>
-  <li>maturin used to generate CI.yml: v1.7.4; latest available: v1.14.1</li>
-  <li>No minimum GCC/Clang version is specified in the repository; the cross-container supplies its own compiler</li>
-</ul>
-
-<p><strong>manylinux baseline:</strong> <code class="language-plaintext highlighter-rouge">manylinux: auto</code> resolves to <code class="language-plaintext highlighter-rouge">manylinux_2_31</code> for riscv64 (as evidenced by the wheel tag <code class="language-plaintext highlighter-rouge">manylinux_2_31_riscv64</code> on PyPI 0.23.1). This requires glibc &gt;= 2.31 on the target system. The PR and community index used <code class="language-plaintext highlighter-rouge">manylinux_2_34</code>; the production wheel uses <code class="language-plaintext highlighter-rouge">manylinux_2_31</code>. No explanation for this discrepancy was found in the research.</p>
-
-<p><strong>Known past build failures:</strong></p>
-<ul>
-  <li>Issue #1816 (Jul 2025): maturin 1.9.0 computed target triple as <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code>; rustup does not recognise this (correct: <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code>). The build aborted before any Rust compilation. Fixed by PR #1951 which separates the <code class="language-plaintext highlighter-rouge">arch</code> and <code class="language-plaintext highlighter-rouge">target</code> matrix fields.</li>
-  <li>PR #2073: the manylinux2014 cross-toolchain for riscv64 ships GCC 4.8.5, which rejects <code class="language-plaintext highlighter-rouge">-Werror=date-time</code> (introduced in GCC 4.9) and lacks <code class="language-plaintext highlighter-rouge">&lt;stdatomic.h&gt;</code>. This blocks mimalloc from compiling on riscv64. Unlike x86_64 and aarch64 (which can upgrade to <code class="language-plaintext highlighter-rouge">manylinux_2_28</code>), riscv64 has no <code class="language-plaintext highlighter-rouge">manylinux_2_28</code> cross image available. This is a structural constraint, not a configuration error.</li>
-</ul>
-
-<p><strong>Manual build from source (no wheel):</strong> On a native riscv64 system running Ubuntu Jammy with Python 3.13, building from source takes approximately 20 minutes on a BananaPi F3 (SpacemiT K1, 8 cores at 1.6 GHz). This was measured and reported in issue #1961.</p>
-
-<p><strong>No musl/Alpine build:</strong> No musllinux riscv64 wheel exists. The musllinux matrix in CI.yml covers x86_64, x86, aarch64, and armv7 only. riscv64 on Alpine Linux or any musl-based distribution requires building from source.</p><hr />
-<h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
-  
-  
-    <a href="#6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64" class="anchor-heading" aria-labelledby="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. Feature Coverage and Gap Analysis vs arm64 and amd64
-  
-  
-</h2>
-    
-
-<p>tokenizers has no functional gaps on riscv64. All tokenizer algorithms (BPE, Unigram, WordPiece, WordLevel), all normalizers, all pre-tokenizers, and all Python binding APIs are identical across architectures because the implementation is uniformly scalar Rust with no arch-specific code paths.</p>
-
-<p><strong>Functional gaps:</strong> None.</p>
-
-<p><strong>Performance gaps:</strong></p>
-
-<div class="table-wrapper"><table>
-  <thead>
-    <tr>
-      <th>Gap</th>
-      <th>Impact</th>
-      <th>Root cause</th>
-      <th>Fixable?</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>No mimalloc allocator (PR #2073 excludes riscv64)</td>
-      <td>+35-83% throughput on <code class="language-plaintext highlighter-rouge">encode_batch</code> unavailable; riscv64 uses system allocator</td>
-      <td>manylinux_2_28 cross image for riscv64 does not exist; manylinux2014 GCC too old for mimalloc C11 atomics</td>
-      <td>Yes, if a newer manylinux riscv64 cross image is produced</td>
-    </tr>
-    <tr>
-      <td>ahash software fallback (no AES hardware)</td>
-      <td>~2-3x slower hash map operations internally [NEEDS VERIFICATION]</td>
-      <td>riscv64 has no AES scalar instruction; ahash’s software path is used</td>
-      <td>Partly – Zkn or Zkne extensions would enable AES, but ahash does not check for these</td>
-    </tr>
-  </tbody>
-</table></div>
-
-<p><strong>Encode_batch throughput reference (not riscv64, for context only):</strong> On aarch64 NVIDIA Vera (88 cores) single-thread BPE GPT2 encode: 3.96 MiB/s (system allocator, pre-PR #2073 baseline). On x86_64 AMD EPYC 9124 (16 cores) single-thread: 3.84 MiB/s. No riscv64 throughput measurement exists in the public record.</p>
-
-<p><strong>Security hardening gaps:</strong> None identified. The library does no cryptographic operations. The Rust memory safety model applies uniformly regardless of architecture.</p>
-
-<p><strong>Floating-point / NaN semantics:</strong> No NaN or floating-point issues were found in the issue tracker. tokenizers does not perform floating-point inference; probabilities in Unigram model are handled in scalar Rust f64 arithmetic with no platform-specific paths.</p><hr />
-<h2 id="7-cicd-infrastructure">
-  
-  
-    <a href="#7-cicd-infrastructure" class="anchor-heading" aria-labelledby="7-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7. CI/CD Infrastructure
-  
-  
-</h2>
-    
-
-<p>riscv64 CI exists only in <code class="language-plaintext highlighter-rouge">.github/workflows/CI.yml</code>. All other workflow files – <code class="language-plaintext highlighter-rouge">node.yml</code>, <code class="language-plaintext highlighter-rouge">node-release.yml</code>, <code class="language-plaintext highlighter-rouge">python.yml</code>, <code class="language-plaintext highlighter-rouge">python-release.yml</code>, <code class="language-plaintext highlighter-rouge">rust.yml</code>, <code class="language-plaintext highlighter-rouge">rust-release.yml</code> – contain zero occurrences of the string “riscv”. This was confirmed by direct file inspection.</p>
-
-<p><strong>CI.yml riscv64 job details:</strong></p>
-
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">runner</span><span class="pi">:</span> <span class="s">ubuntu-latest</span>
-  <span class="na">arch</span><span class="pi">:</span> <span class="s">riscv64</span>
-  <span class="na">target</span><span class="pi">:</span> <span class="s">riscv64gc-unknown-linux-gnu</span>
-</code></pre></div></div>
-
-<ul>
-  <li>Host: <code class="language-plaintext highlighter-rouge">ubuntu-latest</code> (x86_64 GitHub-hosted runner)</li>
-  <li>Cross-compilation via <code class="language-plaintext highlighter-rouge">PyO3/maturin-action</code> with <code class="language-plaintext highlighter-rouge">manylinux: auto</code></li>
-  <li>Container: <code class="language-plaintext highlighter-rouge">ghcr.io/rust-cross/manylinux_2_31-cross:riscv64</code></li>
-  <li>Produces artifact: <code class="language-plaintext highlighter-rouge">wheels-linux-riscv64</code></li>
-  <li>No QEMU setup step; no test step</li>
-</ul>
-
-<p><strong>Triggers:</strong> push to <code class="language-plaintext highlighter-rouge">main</code>/<code class="language-plaintext highlighter-rouge">master</code>, push of any tag, pull_request (all PRs), <code class="language-plaintext highlighter-rouge">workflow_dispatch</code>.</p>
-
-<p><strong>PyPI publication from CI.yml:</strong> The <code class="language-plaintext highlighter-rouge">release</code> job in <code class="language-plaintext highlighter-rouge">CI.yml</code> runs on tag push, collects <code class="language-plaintext highlighter-rouge">wheels-*/*</code> (which includes <code class="language-plaintext highlighter-rouge">wheels-linux-riscv64</code>), and publishes all collected wheels to PyPI via <code class="language-plaintext highlighter-rouge">maturin upload</code>. This is how the riscv64 wheel reaches PyPI – through <code class="language-plaintext highlighter-rouge">CI.yml</code>, not <code class="language-plaintext highlighter-rouge">python-release.yml</code>.</p>
-
-<p><strong>RISE runners:</strong> No evidence was found of RISE CI runners being used in the huggingface/tokenizers repository. The RISE runners blog post (May 2026, “Six Weeks In”) lists 197 repos across 87 orgs using RISE runners; tokenizers is not cited.</p>
+<p>tokenizers has no formal tier-policy document (no PLATFORMS.md, SUPPORT.md, or similar). Architectures are handled uniformly inside a single CI matrix with no differentiated status label for riscv64 versus ppc64le, s390x, or armv7.</p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -675,7 +412,294 @@
       <td>CI build</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (cross-compile)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">.github/workflows/python-release.yml</code>, since <a href="https://github.com/huggingface/tokenizers/pull/1951">PR #1951</a>, merged 2026-03-26)</td>
+    </tr>
+    <tr>
+      <td>CI build trigger</td>
+      <td>tag push, manual dispatch</td>
+      <td>tag push, manual dispatch</td>
+      <td>tag push, manual dispatch (not on every PR or commit)</td>
+    </tr>
+    <tr>
+      <td>CI tests</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">test-wheel</code> matrix)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">test-wheel</code> matrix)</td>
+      <td>No - riscv64 is absent from the <code class="language-plaintext highlighter-rouge">test-wheel</code> job’s matrix</td>
+    </tr>
+    <tr>
+      <td>Official PyPI wheel</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes, since v0.23.1 (2026-04-27), <code class="language-plaintext highlighter-rouge">manylinux_2_31_riscv64</code> tag</td>
+    </tr>
+    <tr>
+      <td>Native CI runner</td>
+      <td>Yes</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code>)</td>
+      <td>No - cross-compiled on <code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> (x86_64) via <code class="language-plaintext highlighter-rouge">PyO3/maturin-action</code></td>
+    </tr>
+    <tr>
+      <td>Release-blocking if build/test fails</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Build failure would block (riscv64 feeds the <code class="language-plaintext highlighter-rouge">publish</code> job via the <code class="language-plaintext highlighter-rouge">wheels-*</code> artifact pattern), but no test ever runs to catch a correctness regression before release</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>The absence of riscv64 in the <code class="language-plaintext highlighter-rouge">test-wheel</code> matrix means a correctness regression introduced on riscv64 cannot be caught by CI before a tagged release ships to PyPI. This is the single fact the readiness grade (Section 13) hinges on.</p>
+<h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
+  
+  
+    <a href="#4-technical-architecture-and-risc-v-specific-subsystems" class="anchor-heading" aria-labelledby="4-technical-architecture-and-risc-v-specific-subsystems"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Technical Architecture and RISC-V-Specific Subsystems
+  
+  
+</h2>
+    
+
+<p>The core <code class="language-plaintext highlighter-rouge">tokenizers</code> crate itself (models, normalizers, pre-tokenizers in <code class="language-plaintext highlighter-rouge">src/</code>) is pure scalar Rust: no <code class="language-plaintext highlighter-rouge">#[cfg(target_arch)]</code> or <code class="language-plaintext highlighter-rouge">#[cfg(target_feature)]</code> guards were found in <code class="language-plaintext highlighter-rouge">src/models/bpe/</code>, <code class="language-plaintext highlighter-rouge">src/models/unigram/</code>, <code class="language-plaintext highlighter-rouge">src/normalizers/</code>, or <code class="language-plaintext highlighter-rouge">src/pre_tokenizers/byte_level.rs</code>. There is no <code class="language-plaintext highlighter-rouge">build.rs</code> at the core crate level, so no C/C++ compilation occurs there. Parallelism is handled by the Rayon crate (an architecture-agnostic work-stealing thread pool).</p>
+
+<p>A separate, hand-tuned SIMD component exists in the repository, however: the <code class="language-plaintext highlighter-rouge">bitcannon</code> crate (<code class="language-plaintext highlighter-rouge">tokenizers/bitcannon/</code>), a pre-tokenizer/classifier used by the fast encode path (<code class="language-plaintext highlighter-rouge">tk-encode</code>) and built by its own CI workflow (<code class="language-plaintext highlighter-rouge">bitcannon.yml</code>). Its README documents an explicit per-architecture kernel matrix:</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Kernel</th>
+      <th>aarch64</th>
+      <th>x86_64</th>
+      <th>wasm32</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Unicode atom classify</td>
+      <td>NEON (357 lines)</td>
+      <td>tiered AVX-512 VBMI to SSE4.1/SSSE3, runtime-detected (339 lines)</td>
+      <td>SIMD128 (323 lines; flagged in-repo as “AI-generated, not necessarily reviewed”)</td>
+      <td>missing - 0 lines</td>
+    </tr>
+    <tr>
+      <td>Bitstream block build</td>
+      <td>NEON (233 lines)</td>
+      <td>SSE/AVX (249 lines)</td>
+      <td>none</td>
+      <td>missing - 0 lines</td>
+    </tr>
+    <tr>
+      <td>Literal and added-token scan</td>
+      <td>NEON</td>
+      <td>x86_64-specific</td>
+      <td>none</td>
+      <td>missing - 0 lines</td>
+    </tr>
+    <tr>
+      <td>Vocab bucket nibble match</td>
+      <td>NEON</td>
+      <td>none (x86_64 has no kernel here either)</td>
+      <td>none</td>
+      <td>missing - 0 lines</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>A repo-wide <code class="language-plaintext highlighter-rouge">grep -rni riscv</code> across every <code class="language-plaintext highlighter-rouge">.rs</code>/<code class="language-plaintext highlighter-rouge">.toml</code>/<code class="language-plaintext highlighter-rouge">.py</code> file returns zero matches - the only “riscv” string anywhere in the source tree is the CI matrix line in <code class="language-plaintext highlighter-rouge">python-release.yml</code>. A search for <code class="language-plaintext highlighter-rouge">TODO|FIXME|not.?implemented|unimplemented!|stub</code> inside <code class="language-plaintext highlighter-rouge">bitcannon/src/</code> also returns zero matches: there is no half-finished riscv64 kernel to find, because none was attempted. Every <code class="language-plaintext highlighter-rouge">#[cfg(target_arch = ...)]</code> guard in <code class="language-plaintext highlighter-rouge">bitcannon</code> enumerates exactly <code class="language-plaintext highlighter-rouge">"aarch64"</code>, <code class="language-plaintext highlighter-rouge">"x86_64"</code>, and <code class="language-plaintext highlighter-rouge">"wasm32"</code>; everything else - riscv64 included, on equal footing with ppc64le, s390x, and 32-bit x86 - falls through to <code class="language-plaintext highlighter-rouge">classify_scalar</code> / <code class="language-plaintext highlighter-rouge">build_block_scalar</code>.</p>
+
+<p>Critically, per the project’s own documentation, this scalar path is not a degraded fallback bolted on after the fact: “every kernel has a portable path that is always compiled and is the byte-exact test oracle for its vectorised siblings, so correctness never depends on a kernel being present.” This means riscv64 tokenization through <code class="language-plaintext highlighter-rouge">bitcannon</code> is functionally correct, just unaccelerated - consistent with PR #1951 merging cleanly and with the PyPI riscv64 wheel shipping without any reported correctness issue.</p>
+
+<p>The only architecture-conditional block that references riscv64 in the repository is the (closed, unmerged) <a href="https://github.com/huggingface/tokenizers/pull/2073">PR #2073</a> mimalloc allocator change, which gates mimalloc to <code class="language-plaintext highlighter-rouge">aarch64-linux</code>, <code class="language-plaintext highlighter-rouge">x86_64-linux</code>, and <code class="language-plaintext highlighter-rouge">aarch64-darwin</code> and leaves riscv64 (among others) on the system allocator - not because of any riscv64-specific code defect, but because the manylinux2014 cross-compiler (GCC 4.8.5) used to build the riscv64 wheel is too old to compile <code class="language-plaintext highlighter-rouge">libmimalloc-sys</code>.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+      <th> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>BPE / Unigram / WordPiece / WordLevel tokenization</td>
+      <td>scalar Rust</td>
+      <td>scalar Rust</td>
+      <td>scalar Rust</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>bitcannon Unicode classify kernel</td>
+      <td>hand-tuned AVX-512/SSE4.1/SSSE3</td>
+      <td>hand-tuned NEON</td>
+      <td>hand-tuned SIMD128 (unreviewed)</td>
+      <td>missing - scalar fallback</td>
+    </tr>
+    <tr>
+      <td>bitcannon block-build / scan kernels</td>
+      <td>hand-tuned SSE/AVX</td>
+      <td>hand-tuned NEON</td>
+      <td>none</td>
+      <td>missing - scalar fallback</td>
+    </tr>
+    <tr>
+      <td>Hash maps (ahash)</td>
+      <td>AES-NI hardware</td>
+      <td>AES hardware</td>
+      <td>software fallback</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Parallelism (Rayon)</td>
+      <td>full</td>
+      <td>full</td>
+      <td>full</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Memory allocator (PR #2073, unmerged)</td>
+      <td>mimalloc proposed</td>
+      <td>mimalloc proposed</td>
+      <td>excluded - system allocator, GCC-4.8.5 toolchain age</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>JIT / code generation</td>
+      <td>none</td>
+      <td>none</td>
+      <td>none</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Cryptographic acceleration</td>
+      <td>none</td>
+      <td>none</td>
+      <td>none</td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>ISA extensions:</strong> no RVV (RISC-V Vector), Zba, Zbb, Zbc, or Zbs extension usage was found anywhere in tokenizers or bitcannon. The CI build target is <code class="language-plaintext highlighter-rouge">riscv64</code> (maturin arch label), which maturin-action resolves to the <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> rustc triple (G = IMAFD baseline, C = compressed instructions) - the standard Rust tier-2 generic riscv64 target, with no vector-extension baseline assumed.</p>
+<h2 id="5-build-system-cross-compilation-and-toolchain">
+  
+  
+    <a href="#5-build-system-cross-compilation-and-toolchain" class="anchor-heading" aria-labelledby="5-build-system-cross-compilation-and-toolchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Build System, Cross-Compilation, and Toolchain
+  
+  
+</h2>
+    
+
+<p><strong>Build system:</strong> Cargo (Rust core, workspace includes <code class="language-plaintext highlighter-rouge">tokenizers/</code> and <code class="language-plaintext highlighter-rouge">bitcannon/</code>) plus maturin (Python wheel packaging). No CMake, no Autoconf, no top-level Makefile, and no Dockerfile exist anywhere in the repository (confirmed by exhaustive <code class="language-plaintext highlighter-rouge">find</code>/<code class="language-plaintext highlighter-rouge">grep</code>).</p>
+
+<p><strong>Exact riscv64 CI matrix entry</strong> (<code class="language-plaintext highlighter-rouge">.github/workflows/python-release.yml</code>, line 102):</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="pi">{</span> <span class="nv">runner</span><span class="pi">:</span> <span class="nv">ubuntu-24.04</span><span class="pi">,</span> <span class="nv">target</span><span class="pi">:</span> <span class="nv">riscv64</span><span class="pi">,</span> <span class="nv">manylinux</span><span class="pi">:</span> <span class="nv">auto</span><span class="pi">,</span> <span class="nv">python</span><span class="pi">:</span> <span class="s2">"</span><span class="s">3.14"</span> <span class="pi">}</span>
+</code></pre></div></div>
+<p>invoked via <code class="language-plaintext highlighter-rouge">PyO3/maturin-action</code> with:</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">command</span><span class="pi">:</span> <span class="s">build</span>
+<span class="na">working-directory</span><span class="pi">:</span> <span class="s">bindings/python</span>
+<span class="na">target</span><span class="pi">:</span> <span class="s">riscv64</span>
+<span class="na">manylinux</span><span class="pi">:</span> <span class="s">auto</span>
+<span class="na">rust-toolchain</span><span class="pi">:</span> <span class="s">stable</span>
+<span class="na">args</span><span class="pi">:</span> <span class="s">--release --locked --compatibility pypi --out dist -i </span><span class="m">3.14</span>
+</code></pre></div></div>
+
+<p><strong>Toolchain requirements:</strong> Rust <code class="language-plaintext highlighter-rouge">stable</code> (no pinned version; <code class="language-plaintext highlighter-rouge">bindings/python/rust-toolchain</code> contains only the string <code class="language-plaintext highlighter-rouge">stable</code>); Rust edition 2024 (requires rustc &gt;= 1.85); maturin <code class="language-plaintext highlighter-rouge">&gt;=1.0,&lt;2.0</code> per <code class="language-plaintext highlighter-rouge">pyproject.toml</code>. The repository does not pin an exact GCC/glibc version for riscv64 - <code class="language-plaintext highlighter-rouge">manylinux: auto</code> lets <code class="language-plaintext highlighter-rouge">maturin-action</code> select its own cross-compilation container and toolchain for the target, and that selection is not something this repository defines or exposes. There is no explicit <code class="language-plaintext highlighter-rouge">docker/setup-qemu-action</code> step in the workflow; any QEMU usage needed for the cross build is handled internally by <code class="language-plaintext highlighter-rouge">maturin-action</code> for this target, not configured by tokenizers itself.</p>
+
+<p><strong>Known build failures:</strong></p>
+<ul>
+  <li>Issue #1816 (Jul 2025): maturin computed the target triple as <code class="language-plaintext highlighter-rouge">riscv64-unknown-linux-gnu</code>, which rustup does not recognize (correct triple: <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code>). The build failed before any Rust compilation started. Resolved by the combination of upstream rustup gaining proper riscv64gc tier-2 support and PR #1951 separating the <code class="language-plaintext highlighter-rouge">arch</code> and <code class="language-plaintext highlighter-rouge">target</code> matrix fields.</li>
+  <li>PR #2073 (May-Sep 2026): the manylinux2014 cross-toolchain used for riscv64 (and s390x, ppc64le, armv7, 32-bit x86) ships GCC 4.8.5, which rejects <code class="language-plaintext highlighter-rouge">-Werror=date-time</code> (a flag introduced in GCC 4.9) and lacks C11 <code class="language-plaintext highlighter-rouge">&lt;stdatomic.h&gt;</code>, blocking <code class="language-plaintext highlighter-rouge">libmimalloc-sys</code> from compiling for riscv64. Unlike x86_64/aarch64, which could in principle move to a newer <code class="language-plaintext highlighter-rouge">manylinux_2_28</code> base image, no <code class="language-plaintext highlighter-rouge">manylinux_2_28</code> riscv64 cross image exists yet, so this is a structural ecosystem gap rather than a tokenizers-specific defect.</li>
+</ul>
+
+<p><strong>Manual build from source (no wheel):</strong> on a native riscv64 system (Ubuntu Jammy, Python 3.13, BananaPi F3 / SpacemiT K1, 8 cores at 1.6 GHz), a from-source build of tokenizers 0.22.2 took approximately 20 minutes, per issue #1961.</p>
+
+<p><strong>musllinux:</strong> no musllinux riscv64 wheel was independently reconfirmed in this research pass; the earlier finding that the musllinux matrix in the release workflow excludes riscv64 (covering only x86_64, x86, aarch64, and armv7) is carried forward but not re-verified against the current workflow file [NEEDS VERIFICATION].</p>
+<h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
+  
+  
+    <a href="#6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64" class="anchor-heading" aria-labelledby="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. Feature Coverage and Gap Analysis vs arm64 and amd64
+  
+  
+</h2>
+    
+
+<p><strong>Functional gaps: none.</strong> All tokenizer algorithms (BPE, Unigram, WordPiece, WordLevel), all normalizers, all pre-tokenizers, and the full Python binding surface are available on riscv64, because the <code class="language-plaintext highlighter-rouge">bitcannon</code> scalar fallback is the project’s documented correctness oracle for every kernel - the same code path other unaccelerated architectures use. PR #1951 merging cleanly and the PyPI riscv64 wheel shipping without reported correctness issues (no open riscv64 bug exists, Section 11) are consistent with this.</p>
+
+<p><strong>Performance gaps:</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Gap</th>
+      <th>Impact</th>
+      <th>Root cause</th>
+      <th>Fixable?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>bitcannon SIMD kernels absent on riscv64 (Unicode classify, bitstream block build, literal/token scan)</td>
+      <td>Unicode classification and fast-path encoding run the generic scalar Rust loop instead of a vectorized kernel, on every riscv64 build, with no exception</td>
+      <td>No RVV/vector-extension kernel has been written; riscv64 is simply not one of the three <code class="language-plaintext highlighter-rouge">#[cfg(target_arch)]</code> branches (aarch64, x86_64, wasm32) in bitcannon</td>
+      <td>Yes, in principle - would require a net-new RVV (or scalar RISC-V bit-manipulation, Zbb/Zbs) kernel contribution; no number quantifying the resulting slowdown versus the AVX-512/NEON paths exists in available sources</td>
+    </tr>
+    <tr>
+      <td>No mimalloc allocator (PR #2073 excludes riscv64)</td>
+      <td>Throughput gains reported for other platforms (35-56% single-thread, 9.3-97% multi-thread depending on core count) are unavailable on riscv64; riscv64 uses the system allocator</td>
+      <td>No <code class="language-plaintext highlighter-rouge">manylinux_2_28</code> riscv64 cross image exists; the current manylinux2014/GCC-4.8.5 toolchain cannot compile <code class="language-plaintext highlighter-rouge">libmimalloc-sys</code>’s C11 atomics</td>
+      <td>Yes, once a newer riscv64 cross image exists upstream in pypa/manylinux or rust-cross</td>
+    </tr>
+    <tr>
+      <td>ahash software fallback (no AES hardware)</td>
+      <td>Hash-map-heavy internal operations run slower than on x86_64 (AES-NI) or aarch64 (AES); exact delta not independently benchmarked for riscv64</td>
+      <td>riscv64 has no scalar AES instruction that ahash currently dispatches to</td>
+      <td>Partly - Zkn/Zkne cryptography extensions could provide AES primitives, but ahash’s riscv64 dispatch path does not currently check for them [NEEDS VERIFICATION]</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Security hardening gaps:</strong> none identified. tokenizers performs no cryptographic operations of its own; Rust’s memory-safety guarantees apply uniformly regardless of architecture.</p>
+
+<p><strong>Floating-point / NaN semantics:</strong> a dedicated GitHub search for “riscv nan floating” scoped to this repository returned zero results. No NaN or floating-point correctness issue has been filed against riscv64. tokenizers does not perform floating-point model inference itself; Unigram-model probabilities are handled in scalar Rust <code class="language-plaintext highlighter-rouge">f64</code> arithmetic with no platform-specific code path.</p>
+<h2 id="7-cicd-infrastructure">
+  
+  
+    <a href="#7-cicd-infrastructure" class="anchor-heading" aria-labelledby="7-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7. CI/CD Infrastructure
+  
+  
+</h2>
+    
+
+<p>riscv64 CI exists in exactly one of the repository’s thirteen workflow files: <code class="language-plaintext highlighter-rouge">.github/workflows/python-release.yml</code>. This was verified by a direct clone of the repository (HEAD <code class="language-plaintext highlighter-rouge">bbccb0513ff9afda385ca5c85c66eddb1318cfc7</code>) and inspection of every workflow file (<code class="language-plaintext highlighter-rouge">bitcannon.yml</code>, <code class="language-plaintext highlighter-rouge">build_documentation.yml</code>, <code class="language-plaintext highlighter-rouge">build_pr_documentation.yml</code>, <code class="language-plaintext highlighter-rouge">docs_backfill.yml</code>, <code class="language-plaintext highlighter-rouge">node-release.yml</code>, <code class="language-plaintext highlighter-rouge">node.yml</code>, <code class="language-plaintext highlighter-rouge">python.yml</code>, <code class="language-plaintext highlighter-rouge">python-release.yml</code>, <code class="language-plaintext highlighter-rouge">rust-release.yml</code>, <code class="language-plaintext highlighter-rouge">rust.yml</code>, <code class="language-plaintext highlighter-rouge">stale.yml</code>, <code class="language-plaintext highlighter-rouge">trufflehog.yml</code>, <code class="language-plaintext highlighter-rouge">upload_pr_documentation.yml</code>); no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, or <code class="language-plaintext highlighter-rouge">.cirrus.yml</code> exist. In particular, <code class="language-plaintext highlighter-rouge">python.yml</code> - the workflow that fires on ordinary <code class="language-plaintext highlighter-rouge">push</code>/<code class="language-plaintext highlighter-rouge">pull_request</code> events, i.e. regular commit and PR CI - contains zero riscv references.</p>
+
+<p><strong><code class="language-plaintext highlighter-rouge">python-release.yml</code> riscv64 job details:</strong></p>
+<ul>
+  <li>Trigger: <code class="language-plaintext highlighter-rouge">on: push: tags: - v*</code> plus <code class="language-plaintext highlighter-rouge">workflow_dispatch</code> only. <strong>No <code class="language-plaintext highlighter-rouge">pull_request</code> trigger and no schedule.</strong> riscv64 never builds on an ordinary PR or commit to <code class="language-plaintext highlighter-rouge">main</code>; it builds only on a release-tag push or manual dispatch.</li>
+  <li>Runner: <code class="language-plaintext highlighter-rouge">ubuntu-24.04</code> (ordinary x86_64 GitHub-hosted runner, not native riscv64 hardware).</li>
+  <li>Mechanism: <code class="language-plaintext highlighter-rouge">build-wheel</code> job passes <code class="language-plaintext highlighter-rouge">target: riscv64</code>, <code class="language-plaintext highlighter-rouge">manylinux: auto</code> to <code class="language-plaintext highlighter-rouge">PyO3/maturin-action</code>, which cross-builds the wheel inside a manylinux container; QEMU-based cross-compilation, if used, is handled internally by the action, with no explicit <code class="language-plaintext highlighter-rouge">docker/setup-qemu-action</code> step in this file.</li>
+  <li><strong>Build only, not tested:</strong> the downstream <code class="language-plaintext highlighter-rouge">test-wheel</code> job’s matrix covers <code class="language-plaintext highlighter-rouge">ubuntu-latest</code>/x86_64, <code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code>/aarch64, <code class="language-plaintext highlighter-rouge">macos-latest</code>/arm64, and <code class="language-plaintext highlighter-rouge">macos-15-intel</code> only. riscv64 is absent. The riscv64 wheel is built and uploaded as an artifact, and feeds the <code class="language-plaintext highlighter-rouge">publish</code> job (which needs <code class="language-plaintext highlighter-rouge">test-wheel</code> + <code class="language-plaintext highlighter-rouge">build-sdist</code> to complete, then downloads all <code class="language-plaintext highlighter-rouge">wheels-*</code> artifacts, riscv64 included) - so a riscv64 wheel can and does reach PyPI without ever being executed in CI.</li>
+  <li>Last modified 2026-09-23, commit <code class="language-plaintext highlighter-rouge">bbccb05</code> (“Scope GITHUB_TOKEN permissions per job”).</li>
+</ul>
+
+<p><strong>Not riscv64 CI (ruled out):</strong> <code class="language-plaintext highlighter-rouge">bindings/node/index.js</code> contains a <code class="language-plaintext highlighter-rouge">process.arch === 'riscv64'</code> branch that attempts to <code class="language-plaintext highlighter-rouge">require()</code> <code class="language-plaintext highlighter-rouge">tokenizers.linux-riscv64-{gnu,musl}.node</code>, and <code class="language-plaintext highlighter-rouge">bindings/node/yarn.lock</code> lists an optional <code class="language-plaintext highlighter-rouge">@napi-rs/lzma-linux-riscv64-gnu</code> transitive dependency - but neither <code class="language-plaintext highlighter-rouge">node.yml</code> nor <code class="language-plaintext highlighter-rouge">node-release.yml</code> build a riscv64 target in their matrices. This is dead/unused scaffolding inherited from the napi-rs project template, not an active Node build path.</p>
+
+<p><strong>RISE runners:</strong> no evidence was found that huggingface/tokenizers uses RISE CI runners. The RISE “Six Weeks In” runners post (2026-05-12) lists 197 repos across 87 orgs using the infrastructure; tokenizers is not cited among them. (RISE’s own <code class="language-plaintext highlighter-rouge">python-wheels</code> builder, which produced the now-deprecated riscv64 wheels for tokenizers 0.20.3-0.22.2, does run on RISE runner hardware, but that is a separate repository from huggingface/tokenizers.)</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Capability</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CI build</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (cross-compile, tag-push/dispatch only)</td>
     </tr>
     <tr>
       <td>CI tests</td>
@@ -686,23 +710,23 @@
     <tr>
       <td>Native hardware in CI</td>
       <td>Yes</td>
-      <td>Yes (native runners)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">ubuntu-24.04-arm</code>)</td>
       <td>No</td>
     </tr>
     <tr>
       <td>Wheel published to PyPI on tag</td>
       <td>Yes</td>
       <td>Yes</td>
-      <td>Yes (via CI.yml release job)</td>
+      <td>Yes, via <code class="language-plaintext highlighter-rouge">python-release.yml</code>’s <code class="language-plaintext highlighter-rouge">publish</code> job</td>
     </tr>
     <tr>
-      <td>Release-blocking if CI fails</td>
-      <td>Yes</td>
-      <td>Yes</td>
-      <td>Unknown</td>
+      <td>Runs on every PR</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">python.yml</code>)</td>
+      <td>Yes (<code class="language-plaintext highlighter-rouge">python.yml</code>)</td>
+      <td>No - <code class="language-plaintext highlighter-rouge">python-release.yml</code> only fires on tags/manual dispatch</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="8-distribution-and-release-status">
   
   
@@ -712,29 +736,23 @@
 </h2>
     
 
-<p><strong>Official PyPI:</strong> <code class="language-plaintext highlighter-rouge">tokenizers-0.23.1-cp310-abi3-manylinux_2_31_riscv64.whl</code> is available on PyPI as of April 27, 2026 (upload confirmed via PyPI JSON API, 3,426,398 bytes). This is a stable ABI3 wheel (CPython 3.10+). Versions 0.22.2 and earlier do not have riscv64 wheels on PyPI; the riscv64 wheel debut was 0.23.1.</p>
+<p><strong>Official PyPI:</strong> confirmed via raw PyPI JSON API. <code class="language-plaintext highlighter-rouge">tokenizers-0.23.2-cp310-abi3-manylinux_2_31_riscv64.whl</code> (3,577,314 bytes, uploaded 2026-09-03) ships alongside 16 other platform wheels in the current release. Scanning the full <code class="language-plaintext highlighter-rouge">releases{}</code> map (103 versions) found riscv64 wheels present starting with <code class="language-plaintext highlighter-rouge">0.23.0rc0</code> (2026-04-24) through <code class="language-plaintext highlighter-rouge">1.0.0rc2</code> (2026-09-21) - six releases total carry a riscv64 wheel, consistent with PR #1951 merging 2026-03-26 and the first riscv64 wheel landing roughly one month later in the next release. The first stable (non-rc) riscv64 wheel is <code class="language-plaintext highlighter-rouge">v0.23.1</code> (2026-04-27, <code class="language-plaintext highlighter-rouge">manylinux_2_31_riscv64.whl</code>, 3,426,398 bytes). This is a stable-ABI (abi3) wheel covering CPython 3.10+.</p>
 
-<p>No musllinux riscv64 wheel exists on PyPI. Users on musl-based riscv64 systems must build from source.</p>
-
-<p><strong>Community RISE wheel index:</strong> <a href="https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/tokenizers/">gitlab.com RISE PyPI index</a> provides wheels for 0.20.3 through 0.22.2 with <code class="language-plaintext highlighter-rouge">manylinux_2_34_riscv64</code> and <code class="language-plaintext highlighter-rouge">manylinux_2_35_riscv64</code> tags. The RISE wheel_builder page for tokenizers is marked deprecated, noting that PyPI now ships the package natively. A community index at gounthar.github.io/riscv64-python-wheels also carries tokenizers among 50+ riscv64 Python packages.</p>
-
-<p><strong>GitHub Releases:</strong> GitHub release assets for all versions show only “Assets 2” (source tarball and zipball). No binary wheels are distributed via GitHub Releases; PyPI is the sole binary distribution channel.</p>
+<p><strong>Community RISE wheel index:</strong> <a href="https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/tokenizers/">gitlab.com RISE PyPI index</a> carries riscv64 wheels for versions 0.20.3 through 0.22.2 under <code class="language-plaintext highlighter-rouge">manylinux_2_34_riscv64</code> and <code class="language-plaintext highlighter-rouge">manylinux_2_35_riscv64</code> tags. The <a href="https://riseproject.gitlab.io/python/wheel_builder/packages/tokenizers.html">RISE wheel_builder tokenizers page</a> is explicitly marked deprecated, directing users to official PyPI. A separate community index, <a href="https://github.com/gounthar/riscv64-python-wheels/releases/tag/v2026.09.20-cp313">gounthar/riscv64-python-wheels</a>, continues to host tokenizers among 50+ riscv64 Python packages as a stopgap/legacy channel.</p>
 
 <p><strong>Linux distribution packages:</strong></p>
 <ul>
-  <li>Ubuntu 24.04 (Noble): No <code class="language-plaintext highlighter-rouge">python3-tokenizers</code> package. The only match for “tokenizers” in Ubuntu is <code class="language-plaintext highlighter-rouge">r-cran-tokenizers</code> (GNU R text tokenizer, unrelated).</li>
-  <li>Debian sid: tokenizers and rust-tokenizers source packages exist but show “No entry in riscv64 database” on buildd.debian.org. Not built for any architecture in Debian.</li>
-  <li>Arch Linux: No <code class="language-plaintext highlighter-rouge">python-tokenizers</code> package exists in official Arch repositories; consequently nothing to port to the Arch RISC-V overlay.</li>
+  <li>Ubuntu 26.04 “resolute”: no <code class="language-plaintext highlighter-rouge">tokenizers</code>, <code class="language-plaintext highlighter-rouge">python3-tokenizers</code>, or <code class="language-plaintext highlighter-rouge">libtokenizers</code> package exists (directly confirmed via a 404 on <code class="language-plaintext highlighter-rouge">packages.ubuntu.com/resolute/python3-tokenizers</code>). The only package matching the name “tokenizers” in Ubuntu is <code class="language-plaintext highlighter-rouge">r-cran-tokenizers</code>, an unrelated R/CRAN text-tokenization package (version 0.3.0-2), which does separately support riscv64 on resolute alongside amd64/arm64/ppc64el.</li>
+  <li>Debian: <code class="language-plaintext highlighter-rouge">tokenizers</code>/<code class="language-plaintext highlighter-rouge">rust-tokenizers</code> source packages previously showed “No entry in riscv64 database” on buildd.debian.org [carried forward from prior research, not independently reconfirmed this pass - NEEDS VERIFICATION].</li>
+  <li>Arch Linux: no <code class="language-plaintext highlighter-rouge">python-tokenizers</code> package exists in official Arch repositories.</li>
 </ul>
 
-<p><strong>What a user must do to install tokenizers on riscv64:</strong></p>
+<p><strong>npm / Node:</strong> no riscv64 npm binary package is built or published - <code class="language-plaintext highlighter-rouge">node.yml</code>/<code class="language-plaintext highlighter-rouge">node-release.yml</code> exclude riscv64 from their matrices despite <code class="language-plaintext highlighter-rouge">index.js</code> containing dead scaffolding that assumes one exists.</p>
 
-<p>For manylinux-compatible systems (glibc &gt;= 2.31, e.g., Ubuntu 22.04+, Fedora 36+):</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip install tokenizers  # fetches manylinux_2_31_riscv64.whl from PyPI
+<p><strong>What a user must do to install tokenizers on riscv64</strong> (manylinux-compatible system, glibc &gt;= 2.31, e.g. Ubuntu 22.04+ or Fedora 36+):</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip install tokenizers
 </code></pre></div></div>
-
-<p>For musl-based systems (Alpine) or systems with glibc &lt; 2.31: build from source via <code class="language-plaintext highlighter-rouge">pip install tokenizers --no-binary tokenizers</code>, requiring a Rust toolchain with the <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> target installed. Build time approximately 20 minutes on a 1.6 GHz 8-core riscv64 system.</p><hr />
+<p>This fetches the official <code class="language-plaintext highlighter-rouge">manylinux_2_31_riscv64</code> wheel directly from PyPI with no extra index configuration needed. On a musl-based system or a system with glibc &lt; 2.31, a from-source build is required (<code class="language-plaintext highlighter-rouge">pip install tokenizers --no-binary tokenizers</code>), needing a Rust toolchain with the <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> target installed; expect roughly 20 minutes on an 8-core, 1.6 GHz riscv64 system per the measurement in issue #1961.</p>
 <h2 id="9-dependencies">
   
   
@@ -750,7 +768,7 @@
       <th>Dependency</th>
       <th>Role</th>
       <th>riscv64 build</th>
-      <th>riscv64 tests</th>
+      <th>riscv64 test</th>
       <th>riscv64 release</th>
       <th>Notes</th>
     </tr>
@@ -758,100 +776,108 @@
   <tbody>
     <tr>
       <td>maturin</td>
-      <td>Python/Rust wheel builder</td>
-      <td>OK (v1.9.3+ fixed triple handling)</td>
-      <td>Not tested</td>
-      <td>riscv64 binary in v1.14.1</td>
-      <td>Was root blocker for issue #1816; fixed</td>
+      <td>Build-dependency, critical (Python/Rust wheel builder)</td>
+      <td>OK since the (unconfirmed) v1.9.3 fix for riscv64gc triple handling [NEEDS VERIFICATION on exact version/date]</td>
+      <td>Not CI-tested</td>
+      <td>Maturin itself ships a <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-musl</code> binary in v1.14.1</td>
+      <td>Was the root cause of issue #1816 (triple mismatch); also implicated in <a href="https://github.com/PyO3/maturin/issues/3034">PyO3/maturin#3034</a>, a closed riscv64 free-threaded-Python abi3 mis-tagging bug</td>
     </tr>
     <tr>
       <td>pyo3</td>
-      <td>Python/Rust FFI bindings</td>
-      <td>No issues reported</td>
+      <td>Runtime-dependency, critical (Python-Rust FFI)</td>
+      <td>OK - pure Rust</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>Pure Rust</td>
+      <td>N/A (library)</td>
+      <td>No riscv64 issues found</td>
     </tr>
     <tr>
       <td>rayon</td>
-      <td>Data-parallel iterators</td>
-      <td>No issues reported</td>
+      <td>Runtime-dependency, critical (data-parallel iterators)</td>
+      <td>OK - pure Rust, no SIMD</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>Pure Rust, no SIMD</td>
+      <td>N/A (library)</td>
+      <td>No riscv64 issues found</td>
     </tr>
     <tr>
       <td>ahash</td>
-      <td>Hash map backend</td>
-      <td>Builds (software fallback)</td>
+      <td>Runtime-dependency, optional (hash-map backend)</td>
+      <td>OK, software fallback (no AES-NI/AES on riscv64)</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>No AES on riscv64; software path used</td>
+      <td>N/A (library)</td>
+      <td>No riscv64-specific issues; only unrelated s390x test-failure issues found (<a href="https://github.com/tkaitchuck/aHash/issues/152">aHash #152</a>, <a href="https://github.com/tkaitchuck/aHash/issues/191">#191</a>)</td>
     </tr>
     <tr>
-      <td>onig / oniguruma</td>
-      <td>Regex engine (optional, default on)</td>
-      <td>No issues reported</td>
+      <td>oniguruma</td>
+      <td>Runtime-dependency, optional (default-on C regex engine)</td>
+      <td>Expected OK via Autoconf cross-compile; not independently verified</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>Rust wrapper; Autoconf cross-compile path expected to work</td>
+      <td>N/A (library)</td>
+      <td>No riscv64 issues found in kkos/oniguruma</td>
     </tr>
     <tr>
       <td>fancy-regex</td>
-      <td>Regex with look-around/backreferences</td>
-      <td>No issues reported</td>
+      <td>Runtime-dependency, critical (look-around/backreference regex)</td>
+      <td>OK - pure Rust</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>Pure Rust, no SIMD</td>
+      <td>N/A (library)</td>
+      <td>No riscv64 issues found</td>
     </tr>
     <tr>
       <td>esaxx-rs</td>
-      <td>Suffix array (Unigram tokenizer)</td>
-      <td>No issues reported</td>
+      <td>Runtime-dependency, optional (Unigram suffix array; C++ binding with pure-Rust <code class="language-plaintext highlighter-rouge">suffix_rs</code> fallback)</td>
+      <td>Expected OK via <code class="language-plaintext highlighter-rouge">cc</code>-crate cross-compile; not independently confirmed</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>C++ binding with pure-Rust fallback (<code class="language-plaintext highlighter-rouge">suffix_rs</code>); fallback is ~2x slower</td>
+      <td>N/A (library)</td>
+      <td>No riscv64 issues found; pure-Rust fallback reported roughly 2x slower than the C++ path [NEEDS VERIFICATION]</td>
     </tr>
     <tr>
       <td>daachorse</td>
-      <td>Double-array Aho-Corasick</td>
-      <td>No issues reported</td>
+      <td>Runtime-dependency, critical (double-array Aho-Corasick)</td>
+      <td>OK - pure Rust, <code class="language-plaintext highlighter-rouge">no_std</code>-compatible</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>Pure Rust, <code class="language-plaintext highlighter-rouge">no_std</code> compatible</td>
+      <td>N/A (library)</td>
+      <td>No riscv64 issues found</td>
     </tr>
     <tr>
       <td>unicode-normalization-alignments</td>
-      <td>Unicode NFC/NFD with alignment</td>
-      <td>No issues reported</td>
+      <td>Runtime-dependency, critical (NFC/NFD with alignment)</td>
+      <td>OK - pure Rust</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>Pure Rust</td>
+      <td>N/A (library)</td>
+      <td>No riscv64 issues found</td>
     </tr>
     <tr>
       <td>spm_precompiled</td>
-      <td>SentencePiece protobuf loader</td>
-      <td>No issues reported</td>
+      <td>Runtime-dependency, optional (SentencePiece protobuf loader)</td>
+      <td>OK - pure Rust</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>Pure Rust</td>
+      <td>N/A (library)</td>
+      <td>No riscv64 issues found</td>
     </tr>
     <tr>
       <td>tokio</td>
-      <td>Async runtime (Python async bindings)</td>
-      <td>No issues reported</td>
+      <td>Runtime-dependency, optional (async runtime for Python async bindings)</td>
+      <td>OK - pure Rust</td>
       <td>No riscv64 CI</td>
-      <td>Not applicable (library)</td>
-      <td>Pure Rust</td>
+      <td>N/A (library)</td>
+      <td>No riscv64 issues found</td>
+    </tr>
+    <tr>
+      <td>mimalloc (indirect, proposed)</td>
+      <td>Proposed global allocator via unmerged <a href="https://github.com/huggingface/tokenizers/pull/2073">PR #2073</a></td>
+      <td><strong>Excluded for riscv64</strong> inside tokenizers, despite upstream mimalloc itself having full riscv64 support (SV39/48/57, TLS, Zihintpause/Zacas) merged by v3.5.0 (2026-08-18)</td>
+      <td>N/A - not integrated for riscv64</td>
+      <td>Not shipped for riscv64 in tokenizers wheels</td>
+      <td>Blocked by the manylinux2014/GCC-4.8.5 cross-toolchain’s lack of C11 atomics; no <code class="language-plaintext highlighter-rouge">manylinux_2_28</code> riscv64 cross image exists yet to unblock it</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>ahash (depth-2 analysis):</strong> ahash dispatches to AES-NI on x86_64 and AES on aarch64 for hash computation. On riscv64, neither <code class="language-plaintext highlighter-rouge">target_feature = "aes"</code> check passes, so the software “aHash Fallback” is used. This is functionally correct but measurably slower for hash-intensive workloads. The Zkn or Zkne extensions on RISC-V would provide AES scalar instructions, but ahash’s riscv64 path does not check for these [NEEDS VERIFICATION – no ahash riscv64 Zkn dispatch code was found in the research].</p>
+<p><strong>ahash (depth-2):</strong> dispatches to AES-NI on x86_64 and AES on aarch64; on riscv64 neither <code class="language-plaintext highlighter-rouge">target_feature = "aes"</code> check passes, so the software “aHash Fallback” path runs. Functionally correct, measurably slower for hash-intensive workloads. Zkn/Zkne extensions could in principle provide scalar AES instructions on riscv64, but no evidence was found that ahash’s riscv64 path currently dispatches to them [NEEDS VERIFICATION].</p>
 
-<p><strong>esaxx-rs (depth-2 analysis):</strong> The <code class="language-plaintext highlighter-rouge">esaxx_fast</code> feature (default on) compiles a C++ suffix array library via the <code class="language-plaintext highlighter-rouge">cc</code> crate. A pure-Rust fallback (<code class="language-plaintext highlighter-rouge">suffix_rs</code>) is available via <code class="language-plaintext highlighter-rouge">--no-default-features</code>. The C++ build via <code class="language-plaintext highlighter-rouge">cc</code> should cross-compile normally for riscv64; no issues were reported. The fallback is approximately 2x slower according to the crate documentation [NEEDS VERIFICATION – relative performance figure cited from crate documentation, not from a riscv64-specific benchmark].</p>
+<p><strong>esaxx-rs (depth-2):</strong> the default-on <code class="language-plaintext highlighter-rouge">esaxx_fast</code> feature compiles a C++ suffix-array library via the <code class="language-plaintext highlighter-rouge">cc</code> crate; a pure-Rust fallback (<code class="language-plaintext highlighter-rouge">suffix_rs</code>) is available via <code class="language-plaintext highlighter-rouge">--no-default-features</code>. The C++ path is expected to cross-compile normally for riscv64 through the same maturin-action toolchain used for the rest of the wheel; no riscv64-specific build issue was found for this dependency.</p>
 
-<p><strong>maturin (depth-2 analysis):</strong> maturin v1.14.1 ships a <code class="language-plaintext highlighter-rouge">maturin-riscv64gc-unknown-linux-musl.tar.gz</code> in its release assets. The fix for <code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> triple recognition was merged in v1.9.3 (July 28, 2025) [NEEDS VERIFICATION – version and date from research findings, not directly confirmed against maturin release notes]. This resolved issue #1816 and was a prerequisite for tokenizers riscv64 support.</p><hr />
+<p><strong>maturin (depth-2):</strong> v1.14.1 ships a <code class="language-plaintext highlighter-rouge">maturin-riscv64gc-unknown-linux-musl.tar.gz</code> release asset. The specific fix date/version for riscv64 triple handling (cited elsewhere as v1.9.3, 2025-07-28) could not be independently confirmed against maturin’s own release notes in this research pass and should be treated as unverified.</p>
 <h2 id="11-known-bugs-and-active-issues">
   
   
@@ -861,7 +887,7 @@
 </h2>
     
 
-<p><strong>riscv64-specific issues:</strong></p>
+<p><strong>riscv64-specific:</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -877,30 +903,30 @@
     <tr>
       <td><a href="https://github.com/huggingface/tokenizers/issues/1816">#1816</a></td>
       <td>tokenizers cannot be compiled successfully on riscv machine</td>
-      <td>Closed (Jul 7, 2025)</td>
-      <td>Was Critical (build failure)</td>
-      <td>Root cause: maturin triple mismatch; resolved by PR #1951 and PyPI wheel</td>
+      <td>Closed, completed (2025-07-07)</td>
+      <td>Was critical (build failure)</td>
+      <td>Root cause: maturin/rustup target-triple mismatch; resolved by rustup’s own riscv64gc tier-2 support plus PR #1951</td>
     </tr>
     <tr>
       <td><a href="https://github.com/huggingface/tokenizers/issues/1961">#1961</a></td>
       <td>Add riscv64 (linux_riscv64) wheel to PyPI releases</td>
-      <td>Closed (Mar 26, 2026)</td>
-      <td>Was High (distribution gap)</td>
+      <td>Closed, completed (2026-03-26)</td>
+      <td>Was high (distribution gap)</td>
       <td>Resolved by merge of PR #1951</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/huggingface/tokenizers/pull/2073">#2073</a></td>
-      <td>mimalloc as global allocator – riscv64 excluded</td>
-      <td>Open (PR)</td>
-      <td>Medium (performance gap)</td>
-      <td>riscv64 cannot use mimalloc due to cross-toolchain GCC age; retains system allocator</td>
+      <td><a href="https://github.com/huggingface/tokenizers/pull/2073">PR #2073</a></td>
+      <td>bindings &amp; bench: use mimalloc as global allocator on tested targets</td>
+      <td>Closed, not merged (2026-09-18) per git history; readiness-grade source describes it as still open as of its research date (see Section 2 discrepancy note)</td>
+      <td>Medium (performance gap, not release-blocking)</td>
+      <td>riscv64 cannot use mimalloc due to the manylinux2014/GCC-4.8.5 cross-toolchain; system allocator remains in use</td>
     </tr>
   </tbody>
 </table></div>
 
-<p><strong>No open correctness bugs exist for riscv64.</strong> No NaN/floating-point issues, no ABI mismatches, no test failures on riscv64 were found in the issue tracker.</p>
+<p><strong>No open correctness bugs exist for riscv64.</strong> A dedicated search for open riscv64 issues (<code class="language-plaintext highlighter-rouge">is:open riscv repo:huggingface/tokenizers</code>) returns zero results, and a separate search for NaN/floating-point riscv64 issues also returns zero.</p>
 
-<p><strong>General open performance issues (affect all architectures including riscv64):</strong></p>
+<p><strong>General open performance issues (affect all architectures, including riscv64, not riscv64-specific):</strong></p>
 
 <div class="table-wrapper"><table>
   <thead>
@@ -924,7 +950,7 @@
     </tr>
     <tr>
       <td><a href="https://github.com/huggingface/tokenizers/issues/1821">#1821</a></td>
-      <td>Proposal for faster Whitespace PreTokenizer (~10-30% speedup)</td>
+      <td>Proposal for faster Whitespace PreTokenizer (approximately 10-30% speedup)</td>
     </tr>
     <tr>
       <td><a href="https://github.com/huggingface/tokenizers/issues/1564">#1564</a></td>
@@ -935,7 +961,7 @@
       <td>Why is tokenizer slower than tiktoken?</td>
     </tr>
   </tbody>
-</table></div><hr />
+</table></div>
 <h2 id="12-objections-and-upstream-blockers">
   
   
@@ -945,83 +971,94 @@
 </h2>
     
 
-<p><strong>No stated objections.</strong> The maintainer response to the riscv64 PR was unambiguously positive. No policy or technical barrier to riscv64 exists at the project level.</p>
+<p><strong>No stated objections.</strong> The maintainer response to the riscv64-enabling PR was unambiguously positive (“LGTM happy to have coverage for riscv64!”), and no policy or technical barrier to riscv64 support exists at the project-governance level.</p>
 
-<p><strong>Technical blockers – current:</strong></p>
-
+<p><strong>Technical blockers - current:</strong></p>
 <ol>
-  <li>
-    <p>No musllinux riscv64 wheel. The pypa <code class="language-plaintext highlighter-rouge">musllinux_1_2_riscv64</code> container would be needed. This is an infrastructure gap upstream of tokenizers, not a tokenizers-specific issue.</p>
-  </li>
-  <li>
-    <p>manylinux_2_28 riscv64 cross-compilation image does not exist (cited explicitly by PR #2073 author). This blocks mimalloc optimization on riscv64 until pypa or the rust-cross project ships a <code class="language-plaintext highlighter-rouge">manylinux_2_28-cross:riscv64</code> container. This is also upstream of tokenizers.</p>
-  </li>
-  <li>
-    <p>No riscv64 tests in CI. This is a gap in test coverage, not a stated objection. The maintainer has not requested tests as a condition of acceptance for the wheel target.</p>
-  </li>
+  <li>No riscv64 leg in the <code class="language-plaintext highlighter-rouge">test-wheel</code> CI job. This is a test-coverage gap, not a stated objection; the maintainer has not conditioned acceptance of the riscv64 build target on adding tests.</li>
+  <li><code class="language-plaintext highlighter-rouge">manylinux_2_28</code> riscv64 cross-compilation image does not yet exist upstream (pypa/manylinux or rust-cross), which blocks enabling mimalloc for riscv64 even if PR #2073 (or a successor) were merged. This is an ecosystem-level gap outside tokenizers’ own control.</li>
+  <li>No riscv64 kernel exists in the <code class="language-plaintext highlighter-rouge">bitcannon</code> SIMD crate (Section 4) - unlike the test-coverage and mimalloc gaps, closing this would require a net-new engineering contribution (an RVV or RISC-V bit-manipulation kernel), not just unblocking an existing proposal.</li>
 </ol>
 
-<p><strong>Acceptance probability for future riscv64 contributions:</strong> High. The precedent set by PR #1951 (warm reception, merge within 5 weeks including a CI-caused delay) and the explicit “happy to have coverage for riscv64” statement indicate no organizational resistance.</p><hr />
-<h2 id="13-investment-analysis">
+<p><strong>Acceptance probability for future riscv64 contributions:</strong> high. PR #1951 was merged within five weeks of being opened (including a delay caused by an unrelated CI breakage, not by riscv64-specific concerns), with explicit maintainer enthusiasm and no requested conditions.</p>
+<h2 id="13-readiness-assessment">
   
   
-    <a href="#13-investment-analysis" class="anchor-heading" aria-labelledby="13-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Investment Analysis
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
   
   
 </h2>
     
 
-<p>RISE has already delivered the primary enablement work: PR #1951 (merged, BayLibre/treexc) added riscv64 to CI and the result is a GA wheel on PyPI as of v0.23.1. The maturin triple fix was a prerequisite and is also resolved. The community wheel index (RISE wheel_builder) served as a bridge and is now deprecated. No duplication of this work is warranted.</p>
-<h3 id="131-functional-enablement">
+<ul>
+  <li><strong>Color:</strong> yellow (build-only-ci)</li>
+  <li><strong>Release provider:</strong> upstream</li>
+  <li>Optimization-purpose project: no. tokenizers is a tokenization-correctness library (pure scalar Rust core, with hand-tuned SIMD confined to the separate <code class="language-plaintext highlighter-rouge">bitcannon</code> crate), not a project whose primary value proposition is a performance differentiator, so no optimization-level rating applies here.</li>
+  <li><strong>Justification:</strong> Upstream CI (<code class="language-plaintext highlighter-rouge">.github/workflows/python-release.yml</code>, merged via <a href="https://github.com/huggingface/tokenizers/pull/1951">PR #1951</a> on 2026-03-26) cross-compiles a riscv64 wheel and publishes it to PyPI directly (official <code class="language-plaintext highlighter-rouge">manylinux_2_31_riscv64</code> wheels confirmed via the <a href="https://pypi.org/pypi/tokenizers/0.23.2/json">PyPI JSON API</a> since v0.23.1), but the <code class="language-plaintext highlighter-rouge">test-wheel</code> job’s matrix excludes riscv64 entirely, so the test suite never runs on riscv64 in CI. Per the color model’s CI evidence rule, build-only CI (build yes, test no) caps the grade at yellow regardless of release availability. tokenizers is a tokenization-correctness library, not a performance-differentiator project (pure scalar Rust, no SIMD/JIT at the core-crate level), so the Step 2 optimization modifier does not apply.</li>
+  <li><strong>Pending work that could change the grade:</strong> no open PR adds a riscv64 test step (e.g. via QEMU) to CI, which is the path to blue or green. The closed, unmerged <a href="https://github.com/huggingface/tokenizers/pull/2073">PR #2073</a> explicitly excludes riscv64 from the new mimalloc global-allocator feature because of the old manylinux2014 GCC (4.8.5) cross toolchain blocking C11 atomics - a performance-only gap, not release-blocking, and therefore not grade-relevant on its own. The RISE Project (via contributor threexc/BayLibre) authored the merged riscv64-enabling PR #1951; RISE’s own wheel-builder index for tokenizers is now deprecated in favor of the official PyPI wheels, meaning RISE’s direct involvement in this specific package is effectively complete.</li>
+</ul>
+<h2 id="14-investment-analysis">
   
   
-    <a href="#131-functional-enablement" class="anchor-heading" aria-labelledby="131-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.1 Functional Enablement
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p>RISE has already delivered the primary enablement work: PR #1951 (merged, BayLibre/threexc) added riscv64 to CI and produced a GA wheel on PyPI as of v0.23.1. The community wheel index that bridged the gap before that merge is now deprecated. No duplication of this already-completed work is warranted.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
   
   
 </h3>
     
 
-<p>No functional gaps exist. All tokenizer algorithms work on riscv64. The ABI3 wheel covers CPython 3.10+. No work required.</p>
-<h3 id="132-performance-optimization">
+<p>No functional gaps exist. All tokenizer algorithms work correctly on riscv64 via the project’s own scalar test-oracle path. The ABI3 wheel covers CPython 3.10+. No further functional work is required.</p>
+<h3 id="142-performance-optimization">
   
   
-    <a href="#132-performance-optimization" class="anchor-heading" aria-labelledby="132-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.2 Performance Optimization
-  
-  
-</h3>
-    
-
-<p>Two gaps remain:</p>
-
-<p><strong>Mimalloc on riscv64:</strong> The blocker is the absence of a <code class="language-plaintext highlighter-rouge">manylinux_2_28_riscv64</code> cross-compilation Docker image. Resolution requires contributing such an image to the <a href="https://github.com/pypa/manylinux">pypa/manylinux</a> project or the <a href="https://github.com/rust-cross/manylinux-cross">rust-cross/manylinux-cross</a> project. Once that image exists, enabling mimalloc in PR #2073 for riscv64 is a one-line change. Expected gain: +35-56% single-thread encode_batch throughput (extrapolating from aarch64/x86_64 measurements; no riscv64-specific number exists).</p>
-
-<p><strong>ahash AES acceleration:</strong> Implementing riscv64 Zkn/Zkne dispatch in the ahash crate would close the hashing performance gap. This is a contribution to a dependency (ahash), not to tokenizers directly. Impact on end-to-end tokenization throughput is unknown – ahash is used in BPE and WordPiece hash maps but has not been identified as the dominant bottleneck.</p>
-<h3 id="133-cicd-infrastructure">
-  
-  
-    <a href="#133-cicd-infrastructure" class="anchor-heading" aria-labelledby="133-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.3 CI/CD Infrastructure
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
   
   
 </h3>
     
 
-<p><strong>Test gap:</strong> riscv64 wheels are built but never tested. Adding a QEMU-based test step to the riscv64 CI matrix would catch correctness regressions before release. This requires either QEMU user-mode emulation in the existing ubuntu-latest runner or RISE hardware runners. QEMU-based testing is used by other projects in similar configurations.</p>
+<p>Two concrete, scoped gaps remain:</p>
 
-<p><strong>Musllinux gap:</strong> Requires a <code class="language-plaintext highlighter-rouge">musllinux_1_2_riscv64</code> cross-compilation image or native hardware with musl. This is infrastructure work upstream of tokenizers.</p>
-<h3 id="134-ecosystem-enablement">
+<p><strong>bitcannon SIMD kernel:</strong> riscv64 has zero lines of accelerated code in the <code class="language-plaintext highlighter-rouge">bitcannon</code> crate for Unicode classification, bitstream block building, or literal/token scanning - every riscv64 build runs the generic scalar path that aarch64 (NEON) and x86_64 (AVX-512/SSE) bypass. Closing this gap means writing a net-new RVV (or scalar bit-manipulation, Zbb/Zbs) kernel and adding a fourth <code class="language-plaintext highlighter-rouge">#[cfg(target_arch = "riscv64")]</code> branch to the dispatcher in <code class="language-plaintext highlighter-rouge">classify/mod.rs</code> and <code class="language-plaintext highlighter-rouge">fast_builder()</code>/<code class="language-plaintext highlighter-rouge">build_block()</code> in <code class="language-plaintext highlighter-rouge">lib.rs</code>. No existing quantification of the resulting slowdown on riscv64 hardware was found in any source consulted.</p>
+
+<p><strong>mimalloc allocator:</strong> blocked by the absence of a <code class="language-plaintext highlighter-rouge">manylinux_2_28_riscv64</code> cross-compilation image. Resolution requires contributing such an image to <a href="https://github.com/pypa/manylinux">pypa/manylinux</a> or <a href="https://github.com/rust-cross/manylinux-cross">rust-cross/manylinux-cross</a>; once that exists, enabling mimalloc for riscv64 in a successor to PR #2073 is a small <code class="language-plaintext highlighter-rouge">cfg</code> change. Expected gain, extrapolated from the non-riscv64 numbers reported in PR #2073 (35-56% single-thread, 9.3-97% multi-thread depending on core count): plausible but unquantified for riscv64 specifically.</p>
+
+<p><strong>ahash AES acceleration:</strong> implementing riscv64 Zkn/Zkne dispatch in the <code class="language-plaintext highlighter-rouge">ahash</code> crate would close the hashing-performance gap, but this is a contribution to a third-party dependency, not to tokenizers itself, and its end-to-end impact on tokenization throughput is unmeasured.</p>
+<h3 id="143-cicd-infrastructure">
   
   
-    <a href="#134-ecosystem-enablement" class="anchor-heading" aria-labelledby="134-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.4 Ecosystem Enablement
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
   
   
 </h3>
     
 
-<p>tokenizers is a leaf-level library dependency of transformers and many HuggingFace downstream packages. The official PyPI wheel means no per-consumer patching is needed. No additional ecosystem enablement work is required at the tokenizers level. Downstream enablement (transformers, diffusers, etc.) depends on those projects separately.</p>
-<h3 id="135-summary-table">
+<p><strong>Test gap:</strong> riscv64 wheels are built but never executed in CI. Adding a QEMU-based (or RISE-hardware-based) test step to the <code class="language-plaintext highlighter-rouge">test-wheel</code> matrix in <code class="language-plaintext highlighter-rouge">python-release.yml</code> would directly move the grade off yellow by closing the specific gap the color-coding justification cites.</p>
+
+<p><strong>musllinux gap:</strong> if confirmed (Section 8, NEEDS VERIFICATION), closing it requires a <code class="language-plaintext highlighter-rouge">musllinux_1_2_riscv64</code> cross-compilation image or native musl hardware - infrastructure work upstream of tokenizers.</p>
+<h3 id="144-ecosystem-enablement">
   
   
-    <a href="#135-summary-table" class="anchor-heading" aria-labelledby="135-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13.5 Summary Table
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+
+<p>See Section 10. The official PyPI wheel means no per-consumer patching of tokenizers itself is needed; downstream enablement work belongs to the consuming projects (transformers, sentence-transformers, ExecuTorch’s <code class="language-plaintext highlighter-rouge">pytorch-tokenizers</code>, vLLM, etc.) individually, not to tokenizers.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
   
   
 </h3>
@@ -1039,52 +1076,49 @@
   </thead>
   <tbody>
     <tr>
+      <td>CI/CD</td>
+      <td>Add a riscv64 leg (QEMU or native) to the <code class="language-plaintext highlighter-rouge">test-wheel</code> matrix in <code class="language-plaintext highlighter-rouge">python-release.yml</code></td>
+      <td>0.5-1</td>
+      <td>RISE or Qualcomm</td>
+      <td>High - this is the specific, named path to a higher grade</td>
+    </tr>
+    <tr>
       <td>Performance</td>
-      <td>Contribute <code class="language-plaintext highlighter-rouge">manylinux_2_28-cross:riscv64</code> image to pypa/manylinux or rust-cross</td>
+      <td>Contribute a <code class="language-plaintext highlighter-rouge">manylinux_2_28-cross:riscv64</code> image to pypa/manylinux or rust-cross</td>
       <td>2-4</td>
       <td>RISE / Canonical</td>
-      <td>High</td>
+      <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Enable mimalloc in PR #2073 for riscv64 (one-line change, unblocked by image above)</td>
+      <td>Enable mimalloc for riscv64 in a successor to PR #2073 (small change, unblocked by the image above)</td>
       <td>0.5</td>
-      <td>RISE or Qualcomm</td>
-      <td>High</td>
-    </tr>
-    <tr>
-      <td>CI/CD</td>
-      <td>Add QEMU test step to riscv64 matrix in CI.yml</td>
-      <td>0.5-1</td>
       <td>RISE or Qualcomm</td>
       <td>Medium</td>
     </tr>
     <tr>
       <td>Performance</td>
-      <td>Implement Zkn/Zkne dispatch in ahash crate for riscv64</td>
+      <td>Write an RVV (or Zbb/Zbs scalar) kernel for the <code class="language-plaintext highlighter-rouge">bitcannon</code> crate’s riscv64 path</td>
+      <td>3-6</td>
+      <td>RISE / Rivos / SiFive</td>
+      <td>Low - no quantified end-user impact yet</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
+      <td>Implement Zkn/Zkne AES dispatch in the <code class="language-plaintext highlighter-rouge">ahash</code> crate for riscv64</td>
       <td>2-3</td>
       <td>RISE / Rivos</td>
       <td>Low</td>
     </tr>
     <tr>
       <td>Distribution</td>
-      <td>Musllinux riscv64 wheel (requires musl cross image)</td>
+      <td>musllinux riscv64 wheel (pending confirmation the gap is real; requires a musl cross image)</td>
       <td>2-3</td>
       <td>RISE / Canonical</td>
       <td>Low</td>
     </tr>
   </tbody>
-</table></div><hr />
-<h2 id="14-updates">
-  
-  
-    <a href="#14-updates" class="anchor-heading" aria-labelledby="14-updates"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Updates
-  
-  
-</h2>
-    
-
-<p>No updates yet – initial report dated 2026-07-20.</p><hr />
+</table></div>
 <h2 id="15-references">
   
   
@@ -1100,15 +1134,26 @@
   <li><a href="https://github.com/huggingface/tokenizers/pull/1951">PR #1951: Add riscv64 build, make Linux wheel build matrix more explicit</a></li>
   <li><a href="https://github.com/huggingface/tokenizers/pull/1963">PR #1963: ci: add riscv64 target to linux wheel build matrix</a></li>
   <li><a href="https://github.com/huggingface/tokenizers/pull/2073">PR #2073: bindings &amp; bench: use mimalloc as global allocator on tested targets</a></li>
+  <li><a href="https://github.com/huggingface/tokenizers/pull/1978">PR #1978: CI infrastructure fix that unblocked PR #1951</a></li>
   <li><a href="https://pypi.org/project/tokenizers/">tokenizers PyPI page</a></li>
+  <li><a href="https://pypi.org/pypi/tokenizers/0.23.2/json">tokenizers 0.23.2 PyPI JSON API</a></li>
   <li><a href="https://riseproject.gitlab.io/python/wheel_builder/packages/tokenizers.html">RISE wheel_builder tokenizers page (deprecated)</a></li>
   <li><a href="https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/tokenizers/">RISE wheel_builder GitLab PyPI index for tokenizers</a></li>
-  <li><a href="https://gounthar.github.io/riscv64-python-wheels/simple/">Community riscv64 wheel index (gounthar)</a></li>
-  <li><a href="https://github.com/gounthar/riscv64-python-wheels">riscv64-python-wheels repository</a></li>
+  <li><a href="https://github.com/riseproject-dev/python-wheels">riseproject-dev/python-wheels repository</a></li>
+  <li><a href="https://github.com/gounthar/riscv64-python-wheels/releases/tag/v2026.09.20-cp313">Community riscv64 wheel index (gounthar)</a></li>
   <li><a href="https://riseproject.dev">RISE Project homepage</a></li>
-  <li><a href="https://riseproject.dev/blog">RISE blog: Easy Installation of Binary Python Packages on riscv64 Devices</a></li>
+  <li><a href="https://riseproject.dev/members">RISE Project members</a></li>
+  <li><a href="https://riseproject.dev/2025/05/14/easy-installation-of-binary-python-packages-on-riscv64-devices/">RISE blog: Easy Installation of Binary Python Packages on riscv64 Devices</a></li>
+  <li><a href="https://riseproject.dev/2026/03/24/announcing-the-rise-risc-v-runners-free-native-risc-v-ci-on-github/">RISE blog: Announcing the RISE RISC-V Runners</a></li>
+  <li><a href="https://riseproject.dev/2026/05/12/rise-risc-v-runners-six-weeks-in/">RISE blog: RISE RISC-V Runners, six weeks in</a></li>
+  <li><a href="https://riseproject.dev/2026/08/24/python-now-officially-supports-risc-v/">RISE blog: Python Now Officially Supports RISC-V</a></li>
+  <li><a href="https://dev.to/gounthar/first-words-llm-inference-on-risc-v-3lo5">First Words: LLM Inference on RISC-V (dev.to/gounthar)</a></li>
   <li><a href="https://huggingface.co/docs/tokenizers">tokenizers documentation homepage</a></li>
   <li><a href="https://github.com/huggingface/tokenizers">tokenizers GitHub repository</a></li>
+  <li><a href="https://github.com/PyO3/maturin/issues/3034">PyO3/maturin issue #3034: riscv64 free-threaded-Python abi3 mis-tagging</a></li>
+  <li><a href="https://github.com/tkaitchuck/aHash/issues/152">aHash issue #152: s390x test failure</a></li>
+  <li><a href="https://github.com/tkaitchuck/aHash/issues/191">aHash issue #191: s390x test failure</a></li>
+  <li><a href="https://github.com/microsoft/mimalloc/issues/939">microsoft/mimalloc issue #939: SV39 alignment (closed, fixed)</a></li>
 </ul>
 
           
