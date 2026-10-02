@@ -6,9 +6,9 @@ dependencies:
   - name: Abseil
     relation: runtime-dependency
     criticality: critical
-  - name: zlib
+  - name: zlib-ng
     relation: runtime-dependency
-    criticality: optional
+    criticality: critical
   - name: utf8_range
     relation: runtime-dependency
     criticality: critical
