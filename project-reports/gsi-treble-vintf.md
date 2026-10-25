@@ -170,7 +170,7 @@ The repository assessed is [platform/system/libvintf](https://android.googlesour
 - `generic_riscv64/README.txt` says the target is "also the target to build the generic kernel image (GKI)". The ACK riscv64 turndown (2024) makes that statement stale for current branches.
   - On `android-mainline`, `android16-6.12` and `android15-6.6`, `BUILD.bazel` has 0 riscv hits.
   - `android14-6.1` has 15 hits and still has `arch/riscv/configs/gki_defconfig`.
-- The `kernel/common` repository also has a branch `android-mainline-riscv64` tracking upstream (v7.3 merges) with `arch/riscv/configs/gki_defconfig` (701 lines) and riscv64 GKI module lists in `BUILD.bazel`. It found no `androidNN-X.Y` riscv64 branches, so no KMI-stable riscv64 release branch. Sources disagree on whether `BUILD.bazel` carries riscv64 module lists on mainline. [NEEDS VERIFICATION]
+- The `kernel/common` repository also has a branch `android-mainline-riscv64` tracking upstream (v7.3 merges) with `arch/riscv/configs/gki_defconfig` (701 lines) and riscv64 GKI module lists in `BUILD.bazel`. There are no `androidNN-X.Y` riscv64 branches, so no KMI-stable riscv64 release branch, and `android-mainline` itself carries no riscv64 GKI (see project-reports/gki-kmi.md).
 - Cuttlefish riscv64 uses a prebuilt kernel from `device/google/cuttlefish_prebuilts/kernel/mainline-riscv64` (`TARGET_KERNEL_USE ?= mainline`), not an ACK GKI. [cuttlefish vsoc_riscv64](https://android.googlesource.com/device/google/cuttlefish/+/refs/heads/main/vsoc_riscv64/)
 
 Data not available: JIT, GC barrier or SIMD implementation details for ART and Bionic on riscv64. This research covered the Treble/VINTF layer and the product build, not the runtime internals.
@@ -400,7 +400,7 @@ Person-week figures below are planning estimates made for this assessment. They 
 - Drop `ALLOW_MISSING_DEPENDENCIES` from `generic_riscv64` by supplying the missing riscv64 prebuilts, and validate a clean `aosp_riscv64` build.
 - Add a VNDK snapshot for riscv64 (`prebuilts/vndk` has none).
 - Add riscv64 conditional entries in `kernel/configs` if a riscv64 kernel contract is wanted.
-- Decide on a Treble kernel story given the ACK turndown (a downstream KMI branch or the existing `android-mainline-riscv64` branch). The findings on that branch conflict (Section 4).
+- Decide on a Treble kernel story given the ACK turndown (a downstream KMI branch or the existing `android-mainline-riscv64` branch). That branch has no KMI enforcement (see project-reports/gki-kmi.md).
 - Resolve KeyMint on riscv64 (b/339926078, b/332977378) and pvmfw (b/376363989).
 
 ### 14.2 Performance Optimization
