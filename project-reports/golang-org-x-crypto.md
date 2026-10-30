@@ -207,10 +207,10 @@ The repo has no build documentation beyond a README that points to Gerrit and pk
 |---|---|---|
 | Upstream release | Source tags only. Latest found is v0.58.0 (2026-10-09). The poly1305 riscv64 assembly first shipped in v0.55.0. | [repo](https://go.googlesource.com/crypto) |
 | Go module proxy / `go get` | Builds from source on riscv64 with the Go toolchain. Not verified here. | Section 5 |
-| Ubuntu 26.04 (resolute) | `golang-golang-x-crypto-dev`, version `1:0.47.0-1`, `Architecture: all`, listed in the [riscv64 universe index](http://ports.ubuntu.com/ubuntu-ports/dists/resolute/universe/binary-riscv64/Packages.gz). It is an architecture-independent source package, not a compiled riscv64 binary. [NEEDS VERIFICATION: single source] | Verification pass |
-| Debian | Source package `golang-go.crypto` is in sid and forky at `1:0.58.0-1` ([sources.debian.org](https://sources.debian.org/api/src/golang-go.crypto/)). This is not riscv64 evidence. | Verification pass |
+| Ubuntu 26.04 (resolute) | `golang-golang-x-crypto-dev`, version `1:0.47.0-1`, `Architecture: all`, listed in the [riscv64 universe index](http://ports.ubuntu.com/ubuntu-ports/dists/resolute/universe/binary-riscv64/Packages.gz). It is an architecture-independent source package, not a compiled riscv64 binary. [NEEDS VERIFICATION: single source] | Direct package index query |
+| Debian | Source package `golang-go.crypto` is in sid and forky at `1:0.58.0-1` ([sources.debian.org](https://sources.debian.org/api/src/golang-go.crypto/)). This is not riscv64 evidence. | Direct package index query |
 | Fedora | Data not available: not searched. | - |
-| Arch Linux RISC-V | Inconclusive. The query returned no package listing at all, which does not show absence. | Verification pass |
+| Arch Linux RISC-V | Inconclusive. The query returned no package listing at all, which does not show absence. | Direct package index query |
 | PyPI | None. It is a Go module, and `pypi.org/pypi/golang-org/x/crypto/json` returned 404. | Research |
 | RISE Python wheel builder | Not listed. The [wheel builder](https://riseproject.gitlab.io/python/wheel_builder/) covers Python wheels only. | Research |
 | packages.ubuntu.com web search | HTTP 500, unusable. | Research |
