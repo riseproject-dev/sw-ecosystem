@@ -303,6 +303,3 @@ No updates yet - initial report dated 2026-09-08.
 - [docker/docker-bake.hcl](https://github.com/autowarefoundation/autoware/blob/main/docker/docker-bake.hcl)
 - Local clone used for verification: `/home/user/autowarefoundation/autoware` (shallow, main branch, commit 3354a273fc2f374e99fb3a759f6f4ab2947b5ada)
 
----
-
-Report file written to: `/tmp/claude-0/-home-user-sw-ecosystem/c494527f-69d2-59f4-ae6c-608a75f951db/scratchpad/autoware-report.md`
