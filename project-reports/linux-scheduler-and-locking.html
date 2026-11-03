@@ -1,0 +1,1914 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/sw-ecosystem/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/sw-ecosystem/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+
+    .site-nav > ul.nav-list:first-child > li > a,
+    
+    .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(152)) > a,
+    .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:not(:first-child) a,
+    .site-nav li.external a {
+      background-image: none;
+    }
+
+    .site-nav > ul.nav-list:first-child > li:nth-child(3) > ul > li:nth-child(152) > a {
+      font-weight: 600;
+      text-decoration: none;
+    }.site-nav > ul.nav-list:first-child > li:nth-child(3) > button svg,
+    .site-nav > ul.nav-list:first-child > li:nth-child(3) > ul > li:nth-child(152) > button svg {
+      transform: rotate(-90deg);
+    }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(3) > ul.nav-list,
+    .site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(3) > ul.nav-list > li.nav-list-item:nth-child(152) > ul.nav-list {
+      display: block;
+    }
+  </style>
+
+  
+
+  
+    <script src="/sw-ecosystem/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/sw-ecosystem/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+
+
+  <!-- Begin Jekyll SEO tag v2.9.0 -->
+<title>Linux scheduler and locking | RISE Software Ecosystem</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Linux scheduler and locking" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="RISC-V Software Ecosystem Status Reports and Readiness Assessments" />
+<meta name="twitter:description" property="og:description" content="RISC-V Software Ecosystem Status Reports and Readiness Assessments" />
+<link rel="canonical" href="https://riseproject-dev.github.io/sw-ecosystem/project-reports/linux-scheduler-and-locking.html" />
+<meta property="og:url" content="https://riseproject-dev.github.io/sw-ecosystem/project-reports/linux-scheduler-and-locking.html" />
+<meta property="og:site_name" content="RISE Software Ecosystem" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Linux scheduler and locking" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"RISC-V Software Ecosystem Status Reports and Readiness Assessments","headline":"Linux scheduler and locking","url":"https://riseproject-dev.github.io/sw-ecosystem/project-reports/linux-scheduler-and-locking.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <header class="side-bar">
+  <div class="site-header">
+    <a href="/sw-ecosystem/" class="site-title lh-tight">
+  RISE Software Ecosystem
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><a href="/sw-ecosystem/" class="nav-list-link">Home</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Whole-Stack Reports submenu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/sw-ecosystem/stack-reports/" class="nav-list-link">Whole-Stack Reports</a><ul class="nav-list"><li class="nav-list-item"><a href="/sw-ecosystem/stack-reports/agentic-ai-cpu/agentic-ai-cpu.html" class="nav-list-link">Agentic AI</a></li><li class="nav-list-item"><a href="/sw-ecosystem/stack-reports/databases/databases.html" class="nav-list-link">Databases</a></li><li class="nav-list-item"><a href="/sw-ecosystem/stack-reports/sample/sample.html" class="nav-list-link">Sample</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Project Reports submenu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/sw-ecosystem/project-reports/" class="nav-list-link">Project Reports</a><ul class="nav-list"><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/-net.html" class="nav-list-link">.NET</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/apr.html" class="nav-list-link">APR</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/art.html" class="nav-list-link">ART</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/aws-iot-greengrass-v2.html" class="nav-list-link">AWS IoT Greengrass v2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/abseil-cpp.html" class="nav-list-link">Abseil</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/akri.html" class="nav-list-link">Akri</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/android-verified-boot.html" class="nav-list-link">Android Verified Boot</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/android-virtualization-framework.html" class="nav-list-link">Android Virtualization Framework</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/apache-age.html" class="nav-list-link">Apache AGE</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/apache-flink.html" class="nav-list-link">Apache Flink</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/apache-hadoop.html" class="nav-list-link">Apache Hadoop</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/apache-spark.html" class="nav-list-link">Apache Spark</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/apache-tvm-microtvm.html" class="nav-list-link">Apache TVM / microTVM</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/apache-brpc.html" class="nav-list-link">Apache bRPC</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/apache-httpd.html" class="nav-list-link">Apache httpd</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/apparmor.html" class="nav-list-link">AppArmor</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/autoware.html" class="nav-list-link">Autoware</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/azure-iot-edge.html" class="nav-list-link">Azure IoT Edge</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/binaryen.html" class="nav-list-link">Binaryen</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/bionic.html" class="nav-list-link">Bionic</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/boost.html" class="nav-list-link">Boost</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/boringssl.html" class="nav-list-link">BoringSSL</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/buildkit.html" class="nav-list-link">BuildKit</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/buildroot.html" class="nav-list-link">Buildroot</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cfu-playground.html" class="nav-list-link">CFU-Playground</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cmake.html" class="nav-list-link">CMake</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cri-o.html" class="nav-list-link">CRI-O</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/criu.html" class="nav-list-link">CRIU</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cairo.html" class="nav-list-link">Cairo</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ceph.html" class="nav-list-link">Ceph</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/chromium.html" class="nav-list-link">Chromium</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cilium.html" class="nav-list-link">Cilium</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/citus.html" class="nav-list-link">Citus</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/clickhouse.html" class="nav-list-link">ClickHouse</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cloudnativepg.html" class="nav-list-link">CloudNativePG</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/confidential-containers.html" class="nav-list-link">Confidential Containers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/coredns.html" class="nav-list-link">CoreDNS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cosmwasm.html" class="nav-list-link">CosmWasm</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cyclonedds.html" class="nav-list-link">CycloneDDS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/dart.html" class="nav-list-link">Dart</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/databend.html" class="nav-list-link">Databend</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/deepflow.html" class="nav-list-link">DeepFlow</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/docker.html" class="nav-list-link">Docker</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/dragonfly.html" class="nav-list-link">Dragonfly</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/emqx.html" class="nav-list-link">EMQX</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/eclipse-ditto.html" class="nav-list-link">Eclipse Ditto</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/eclipse-zenoh.html" class="nav-list-link">Eclipse Zenoh</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/eclipse-hawkbit.html" class="nav-list-link">Eclipse hawkBit</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-cli.html" class="nav-list-link">Edge Impulse CLI</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-ffi-(rust).html" class="nav-list-link">Edge Impulse FFI (Rust)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-inferencing-sdk-(c++).html" class="nav-list-link">Edge Impulse Inferencing SDK (C++)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-ingestion-sdk-(c).html" class="nav-list-link">Edge Impulse Ingestion SDK (C)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-linux-cli.html" class="nav-list-link">Edge Impulse Linux CLI</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-linux-sdk-(go).html" class="nav-list-link">Edge Impulse Linux SDK (Go)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-linux-sdk-(python).html" class="nav-list-link">Edge Impulse Linux SDK (Python)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-processing-blocks.html" class="nav-list-link">Edge Impulse Processing Blocks</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-python-sdk.html" class="nav-list-link">Edge Impulse Python SDK</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-ros-integration.html" class="nav-list-link">Edge Impulse ROS Integration</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-runner-(rust).html" class="nav-list-link">Edge Impulse Runner (Rust)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-sdk-open-cmsis-pack.html" class="nav-list-link">Edge Impulse SDK Open CMSIS Pack</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/edge-impulse-sdk-zephyr-module.html" class="nav-list-link">Edge Impulse SDK Zephyr Module</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/eigen.html" class="nav-list-link">Eigen</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/envoy.html" class="nav-list-link">Envoy</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/extism.html" class="nav-list-link">Extism</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/faiss.html" class="nav-list-link">FAISS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/fbgemm.html" class="nav-list-link">FBGEMM</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/fd-io.html" class="nav-list-link">FD.io</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ffmpeg.html" class="nav-list-link">FFmpeg</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/fiware-orion-context-broker.html" class="nav-list-link">FIWARE Orion Context Broker</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/falco.html" class="nav-list-link">Falco</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/fastdds-(eprosima).html" class="nav-list-link">FastDDS (eProsima)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/firecracker.html" class="nav-list-link">Firecracker</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/firefox.html" class="nav-list-link">Firefox</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/flatbuffers.html" class="nav-list-link">FlatBuffers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/flatcar-container-linux.html" class="nav-list-link">Flatcar Container Linux</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/flower-(flwr).html" class="nav-list-link">Flower (flwr)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/fluent-bit.html" class="nav-list-link">Fluent Bit</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/fluvio.html" class="nav-list-link">Fluvio</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/foundationdb.html" class="nav-list-link">FoundationDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/freertos.html" class="nav-list-link">FreeRTOS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/freetype.html" class="nav-list-link">FreeType</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gcc.html" class="nav-list-link">GCC</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gdb.html" class="nav-list-link">GDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gear.html" class="nav-list-link">GEAR</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gki-kmi.html" class="nav-list-link">GKI/KMI</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gnu-binutils.html" class="nav-list-link">GNU binutils</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gnu-make.html" class="nav-list-link">GNU make</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gsi-treble-vintf.html" class="nav-list-link">GSI/Treble/VINTF</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gstreamer.html" class="nav-list-link">GStreamer</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gstreamer-plugin-for-edge-impulse.html" class="nav-list-link">GStreamer Plugin for Edge Impulse</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/galera.html" class="nav-list-link">Galera</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gatekeeper.html" class="nav-list-link">Gatekeeper</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/geekbench.html" class="nav-list-link">Geekbench</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/genode.html" class="nav-list-link">Genode</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gloo.html" class="nav-list-link">Gloo</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go.html" class="nav-list-link">Go</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/google-mediapipe.html" class="nav-list-link">Google MediaPipe</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/graalvm.html" class="nav-list-link">GraalVM</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/grafana.html" class="nav-list-link">Grafana</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/grafana-alloy.html" class="nav-list-link">Grafana Alloy</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/grain.html" class="nav-list-link">Grain</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/greptimedb.html" class="nav-list-link">GreptimeDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/hami.html" class="nav-list-link">HAMi</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/harfbuzz.html" class="nav-list-link">HarfBuzz</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/haskell-(ghc).html" class="nav-list-link">Haskell (GHC)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/helm.html" class="nav-list-link">Helm</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/highway.html" class="nav-list-link">Highway</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/home-assistant.html" class="nav-list-link">Home Assistant</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/hubble.html" class="nav-list-link">Hubble</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/huggingface-hub.html" class="nav-list-link">HuggingFace Hub</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/huggingface-optimum.html" class="nav-list-link">HuggingFace Optimum</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/huggingface-transformers.html" class="nav-list-link">HuggingFace Transformers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/hyperlight.html" class="nav-list-link">Hyperlight</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/icu.html" class="nav-list-link">ICU</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/iceoryx.html" class="nav-list-link">Iceoryx</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/inclavare-containers.html" class="nav-list-link">Inclavare Containers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/influxdb.html" class="nav-list-link">InfluxDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/inspektor-gadget.html" class="nav-list-link">Inspektor Gadget</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/intel-neural-compressor-(inc).html" class="nav-list-link">Intel Neural Compressor (INC)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/interlink.html" class="nav-list-link">Interlink</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/javy.html" class="nav-list-link">Javy</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kairos.html" class="nav-list-link">Kairos</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/karmada.html" class="nav-list-link">Karmada</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kata-containers.html" class="nav-list-link">Kata Containers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kepler.html" class="nav-list-link">Kepler</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/keydb.html" class="nav-list-link">KeyDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/keymint.html" class="nav-list-link">KeyMint</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kmesh.html" class="nav-list-link">Kmesh</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kotlin.html" class="nav-list-link">Kotlin</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kuasar.html" class="nav-list-link">Kuasar</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kubeedge.html" class="nav-list-link">KubeEdge</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kubevirt.html" class="nav-list-link">KubeVirt</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kubernetes.html" class="nav-list-link">Kubernetes</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kwasm.html" class="nav-list-link">Kwasm</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/lldb.html" class="nav-list-link">LLDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/lz4.html" class="nav-list-link">LZ4</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/langchain.html" class="nav-list-link">LangChain</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/langgraph.html" class="nav-list-link">LangGraph</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/lima.html" class="nav-list-link">Lima</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-iommu.html" class="nav-list-link">Linux IOMMU</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-isa-discovery.html" class="nav-list-link">Linux ISA discovery</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-kvm.html" class="nav-list-link">Linux KVM</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-ras.html" class="nav-list-link">Linux RAS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-sbi.html" class="nav-list-link">Linux SBI</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-soc-support.html" class="nav-list-link">Linux SoC support</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-vector.html" class="nav-list-link">Linux Vector</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-boot-and-mmu.html" class="nav-list-link">Linux boot and MMU</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-boot-flow.html" class="nav-list-link">Linux boot flow</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-crypto.html" class="nav-list-link">Linux crypto</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-hardening.html" class="nav-list-link">Linux hardening</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-interrupts-and-timers.html" class="nav-list-link">Linux interrupts and timers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-scheduler-and-locking.html" class="nav-list-link">Linux scheduler and locking</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/litert.html" class="nav-list-link">LiteRT</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/loxilb.html" class="nav-list-link">LoxiLB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/lua.html" class="nav-list-link">Lua</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/luajit.html" class="nav-list-link">LuaJIT</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/lunatic.html" class="nav-list-link">Lunatic</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mnn.html" class="nav-list-link">MNN</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mariadb.html" class="nav-list-link">MariaDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mariadb-columnstore.html" class="nav-list-link">MariaDB ColumnStore</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mariadb-connector-c.html" class="nav-list-link">MariaDB Connector/C</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/matter-chip-tool-(project-chip).html" class="nav-list-link">Matter / chip-tool (Project CHIP)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/maxscale.html" class="nav-list-link">MaxScale</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mediapipe.html" class="nav-list-link">MediaPipe</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/memcached.html" class="nav-list-link">Memcached</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mender.html" class="nav-list-link">Mender</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/meson.html" class="nav-list-link">Meson</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mewz.html" class="nav-list-link">Mewz</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/milvus.html" class="nav-list-link">Milvus</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mindspore-lite.html" class="nav-list-link">MindSpore Lite</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mongodb.html" class="nav-list-link">MongoDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mosquitto.html" class="nav-list-link">Mosquitto</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/moveit-2.html" class="nav-list-link">MoveIt 2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/myrocks.html" class="nav-list-link">MyRocks</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mysql.html" class="nav-list-link">MySQL</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nccl.html" class="nav-list-link">NCCL</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nncf-(neural-network-compression-framework).html" class="nav-list-link">NNCF (Neural Network Compression Framework)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nnpack.html" class="nav-list-link">NNPACK</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nss.html" class="nav-list-link">NSS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nav2.html" class="nav-list-link">Nav2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ninja.html" class="nav-list-link">Ninja</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/node-red.html" class="nav-list-link">Node-RED</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/numpy.html" class="nav-list-link">NumPy</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/onnx.html" class="nav-list-link">ONNX</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/op-tee.html" class="nav-list-link">OP-TEE</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ostree-rpm-ostree.html" class="nav-list-link">OSTree / rpm-ostree</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/odigos.html" class="nav-list-link">Odigos</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/open-vswitch.html" class="nav-list-link">Open vSwitch</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/openblas.html" class="nav-list-link">OpenBLAS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/opencv.html" class="nav-list-link">OpenCV</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/openjdk.html" class="nav-list-link">OpenJDK</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/openocd.html" class="nav-list-link">OpenOCD</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/opensbi.html" class="nav-list-link">OpenSBI</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/opensk.html" class="nav-list-link">OpenSK</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/openssl.html" class="nav-list-link">OpenSSL</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/openstack.html" class="nav-list-link">OpenStack</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/opentelemetry.html" class="nav-list-link">OpenTelemetry</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/openthread.html" class="nav-list-link">OpenThread</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/openvino-runtime.html" class="nav-list-link">OpenVINO Runtime</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/openwrt.html" class="nav-list-link">OpenWRT</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/openyurt.html" class="nav-list-link">OpenYurt</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/oracle-mysql-op.html" class="nav-list-link">Oracle MySQL-op</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pcre2.html" class="nav-list-link">PCRE2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/paddlepaddle-lite.html" class="nav-list-link">PaddlePaddle Lite</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/patroni.html" class="nav-list-link">Patroni</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/percona-mysql-op.html" class="nav-list-link">Percona MySQL-op</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pgbouncer.html" class="nav-list-link">PgBouncer</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pgpool-ii.html" class="nav-list-link">Pgpool-II</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pixie.html" class="nav-list-link">Pixie</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/podman.html" class="nav-list-link">Podman</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/postgis.html" class="nav-list-link">PostGIS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/postgresql.html" class="nav-list-link">PostgreSQL</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/prometheus.html" class="nav-list-link">Prometheus</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/protocol-buffers.html" class="nav-list-link">Protocol Buffers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/proxysql.html" class="nav-list-link">ProxySQL</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pytorch.html" class="nav-list-link">PyTorch</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pyodide.html" class="nav-list-link">Pyodide</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/python.html" class="nav-list-link">Python</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/qemu.html" class="nav-list-link">QEMU</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/qdrant.html" class="nav-list-link">Qdrant</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/rauc.html" class="nav-list-link">RAUC</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ros-2.html" class="nav-list-link">ROS 2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/rt-thread.html" class="nav-list-link">RT-Thread</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/rabbitmq.html" class="nav-list-link">RabbitMQ</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ray.html" class="nav-list-link">Ray</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/red-hat-device-edge-(microshift).html" class="nav-list-link">Red Hat Device Edge (MicroShift)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/redisearch.html" class="nav-list-link">RediSearch</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/redis.html" class="nav-list-link">Redis</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/redisbloom.html" class="nav-list-link">RedisBloom</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/redisjson.html" class="nav-list-link">RedisJSON</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/redistimeseries.html" class="nav-list-link">RedisTimeSeries</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/redpanda.html" class="nav-list-link">Redpanda</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/rocksdb.html" class="nav-list-link">RocksDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/rust.html" class="nav-list-link">Rust</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sglang.html" class="nav-list-link">SGLang</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sleef.html" class="nav-list-link">SLEEF</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/spiffe-spire.html" class="nav-list-link">SPIFFE / SPIRE</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sqlite.html" class="nav-list-link">SQLite</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/svt-av1.html" class="nav-list-link">SVT-AV1</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/swupdate.html" class="nav-list-link">SWUpdate</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/scale.html" class="nav-list-link">Scale</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/scylla.html" class="nav-list-link">Scylla</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sidero-talos-linux.html" class="nav-list-link">Sidero Talos Linux</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/singularity.html" class="nav-list-link">Singularity</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/skia.html" class="nav-list-link">Skia</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/slurm.html" class="nav-list-link">Slurm</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/smartos.html" class="nav-list-link">SmartOS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/spiderlightning.html" class="nav-list-link">SpiderLightning</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/spidermonkey.html" class="nav-list-link">SpiderMonkey</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/spiderpool.html" class="nav-list-link">Spiderpool</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/spin.html" class="nav-list-link">Spin</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/spinkube.html" class="nav-list-link">SpinKube</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/starrocks.html" class="nav-list-link">StarRocks</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/starlingx.html" class="nav-list-link">StarlingX</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/stratovirt.html" class="nav-list-link">StratoVirt</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/swiftshader.html" class="nav-list-link">SwiftShader</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sysbox.html" class="nav-list-link">Sysbox</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/telegraf.html" class="nav-list-link">Telegraf</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tensorflow.html" class="nav-list-link">TensorFlow</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tensorflow-federated.html" class="nav-list-link">TensorFlow Federated</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tensorflow-lite-micro-(tflm).html" class="nav-list-link">TensorFlow Lite Micro (TFLM)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tetragon.html" class="nav-list-link">Tetragon</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tikv.html" class="nav-list-link">TiKV</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/timescaledb.html" class="nav-list-link">TimescaleDB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tinkerbell.html" class="nav-list-link">Tinkerbell</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tinygo.html" class="nav-list-link">TinyGo</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/traefik.html" class="nav-list-link">Traefik</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tremor.html" class="nav-list-link">Tremor</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/triton.html" class="nav-list-link">Triton</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/trusted-firmware-a-(tf-a).html" class="nav-list-link">Trusted Firmware-A (TF-A)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/u-boot.html" class="nav-list-link">U-Boot</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/unikraft.html" class="nav-list-link">Unikraft</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/uptane.html" class="nav-list-link">Uptane</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/v4l2-(video4linux2).html" class="nav-list-link">V4L2 (Video4Linux2)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/v8.html" class="nav-list-link">V8</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/vixl.html" class="nav-list-link">VIXL</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/valgrind.html" class="nav-list-link">Valgrind</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/valkey.html" class="nav-list-link">Valkey</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/vitess.html" class="nav-list-link">Vitess</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wamr.html" class="nav-list-link">WAMR</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasi-nn.html" class="nav-list-link">WASI NN</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasix.html" class="nav-list-link">WASIX</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wavm.html" class="nav-list-link">WAVM</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wa-lang.html" class="nav-list-link">Wa-lang</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wabt.html" class="nav-list-link">Wabt</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasm-workers-server.html" class="nav-list-link">Wasm Workers Server</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasmedge.html" class="nav-list-link">WasmEdge</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasmedge-quickjs.html" class="nav-list-link">WasmEdge-QuickJS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasmer.html" class="nav-list-link">Wasmer</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasmtime.html" class="nav-list-link">Wasmtime</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wazero.html" class="nav-list-link">Wazero</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/webassembly-language-runtimes.html" class="nav-list-link">WebAssembly Language runtimes</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/webkit.html" class="nav-list-link">WebKit</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/winterjs.html" class="nav-list-link">WinterJS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wireguard.html" class="nav-list-link">WireGuard</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/xgboost.html" class="nav-list-link">XGBoost</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/xnnpack.html" class="nav-list-link">XNNPACK</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/yocto-project.html" class="nav-list-link">Yocto Project</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/zalando-pg-op.html" class="nav-list-link">Zalando PG-op</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/zephyr-rtos.html" class="nav-list-link">Zephyr RTOS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/zig.html" class="nav-list-link">Zig</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/adk-go.html" class="nav-list-link">adk-go</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/alioth.html" class="nav-list-link">alioth</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/amber.html" class="nav-list-link">amber</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/angle.html" class="nav-list-link">angle</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/async-profiler.html" class="nav-list-link">async-profiler</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/atheris.html" class="nav-list-link">atheris</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/autoconf.html" class="nav-list-link">autoconf</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/autofdo.html" class="nav-list-link">autofdo</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/balenaos.html" class="nav-list-link">balenaOS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/benchmark.html" class="nav-list-link">benchmark</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/binexport.html" class="nav-list-link">binexport</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/bloaty.html" class="nav-list-link">bloaty</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/bootc.html" class="nav-list-link">bootc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/bpfman.html" class="nav-list-link">bpfman</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/brotli.html" class="nav-list-link">brotli</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/brunsli.html" class="nav-list-link">brunsli</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/bzip2.html" class="nav-list-link">bzip2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cadvisor.html" class="nav-list-link">cadvisor</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/capslock.html" class="nav-list-link">capslock</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/capstone.html" class="nav-list-link">capstone</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cargo.html" class="nav-list-link">cargo</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/certificate-transparency-go.html" class="nav-list-link">certificate-transparency-go</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cloud-init.html" class="nav-list-link">cloud-init</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/clspv.html" class="nav-list-link">clspv</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/clusterfuzz.html" class="nav-list-link">clusterfuzz</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/componentize-js.html" class="nav-list-link">componentize-js</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/composefs.html" class="nav-list-link">composefs</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/comprehensive-rust.html" class="nav-list-link">comprehensive-rust</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/container2wasm.html" class="nav-list-link">container2wasm</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/containerd.html" class="nav-list-link">containerd</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cpu_features.html" class="nav-list-link">cpu_features</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/cpuinfo.html" class="nav-list-link">cpuinfo</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/crc32c.html" class="nav-list-link">crc32c</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/crosvm.html" class="nav-list-link">crosvm</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/crun.html" class="nav-list-link">crun</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/dav1d.html" class="nav-list-link">dav1d</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/dawn.html" class="nav-list-link">dawn</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/differential-privacy.html" class="nav-list-link">differential-privacy</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/double-conversion.html" class="nav-list-link">double-conversion</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/draco.html" class="nav-list-link">draco</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ebpf.html" class="nav-list-link">eBPF</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/elfconv.html" class="nav-list-link">elfconv</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/elfutils.html" class="nav-list-link">elfutils</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/emscripten.html" class="nav-list-link">emscripten</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/etcd.html" class="nav-list-link">etcd</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/eunomia-bpf.html" class="nav-list-link">eunomia-bpf</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/executorch.html" class="nav-list-link">executorch</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/expat.html" class="nav-list-link">expat</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/farmhash.html" class="nav-list-link">farmhash</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/filament.html" class="nav-list-link">filament</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/fleetbench.html" class="nav-list-link">fleetbench</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/fscrypt.html" class="nav-list-link">fscrypt</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/fuzztest.html" class="nav-list-link">fuzztest</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/grpc.html" class="nav-list-link">gRPC</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/grpc-go.html" class="nav-list-link">gRPC-Go</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gemma-cpp.html" class="nav-list-link">gemma.cpp</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gfxstream.html" class="nav-list-link">gfxstream</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ggml.html" class="nav-list-link">ggml</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/giflib.html" class="nav-list-link">giflib</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/glibc.html" class="nav-list-link">glibc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-cloud.html" class="nav-list-link">go-cloud</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-containerregistry.html" class="nav-list-link">go-containerregistry</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-github.html" class="nav-list-link">go-github</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-jsonnet.html" class="nav-list-link">go-jsonnet</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-licenses.html" class="nav-list-link">go-licenses</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-sev-guest.html" class="nav-list-link">go-sev-guest</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-sql-driver-mysql.html" class="nav-list-link">go-sql-driver/mysql</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-tdx-guest.html" class="nav-list-link">go-tdx-guest</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-tpm.html" class="nav-list-link">go-tpm</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/go-tpm-tools.html" class="nav-list-link">go-tpm-tools</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/golang-org-x-crypto.html" class="nav-list-link">golang.org/x/crypto</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/golang-org-x-sys.html" class="nav-list-link">golang.org/x/sys</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/google-authenticator-libpam.html" class="nav-list-link">google-authenticator-libpam</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/google-ctf.html" class="nav-list-link">google-ctf</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/googlesql.html" class="nav-list-link">googlesql</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/googletest.html" class="nav-list-link">googletest</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gopacket.html" class="nav-list-link">gopacket</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gops.html" class="nav-list-link">gops</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/guava.html" class="nav-list-link">guava</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gvisor.html" class="nav-list-link">gvisor</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/gwpsan.html" class="nav-list-link">gwpsan</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/heir.html" class="nav-list-link">heir</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/honggfuzz.html" class="nav-list-link">honggfuzz</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/hwmon.html" class="nav-list-link">hwmon</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/isulad.html" class="nav-list-link">iSulad</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/jemalloc.html" class="nav-list-link">jemalloc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/jpegli.html" class="nav-list-link">jpegli</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/jsonnet.html" class="nav-list-link">jsonnet</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/k0s.html" class="nav-list-link">k0s</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/k3s.html" class="nav-list-link">k3s</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/kafel.html" class="nav-list-link">kafel</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/leveldb.html" class="nav-list-link">leveldb</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libaom.html" class="nav-list-link">libaom</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libavc.html" class="nav-list-link">libavc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libavif.html" class="nav-list-link">libavif</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libbpf.html" class="nav-list-link">libbpf</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libcap.html" class="nav-list-link">libcap</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libcurl.html" class="nav-list-link">libcurl</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libevent.html" class="nav-list-link">libevent</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libfdk-aac.html" class="nav-list-link">libfdk-aac</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libffi.html" class="nav-list-link">libffi</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libgcrypt.html" class="nav-list-link">libgcrypt</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libjpeg-turbo.html" class="nav-list-link">libjpeg-turbo</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libjxl.html" class="nav-list-link">libjxl</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libmp3lame.html" class="nav-list-link">libmp3lame</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libmvec.html" class="nav-list-link">libmvec</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libnuma.html" class="nav-list-link">libnuma</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libopus.html" class="nav-list-link">libopus</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libpfm4.html" class="nav-list-link">libpfm4</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libphonenumber.html" class="nav-list-link">libphonenumber</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libpng.html" class="nav-list-link">libpng</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libprotobuf-mutator.html" class="nav-list-link">libprotobuf-mutator</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libseccomp.html" class="nav-list-link">libseccomp</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libsoup.html" class="nav-list-link">libsoup</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libtraceevent.html" class="nav-list-link">libtraceevent</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libultrahdr.html" class="nav-list-link">libultrahdr</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libunwind.html" class="nav-list-link">libunwind</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/liburing.html" class="nav-list-link">liburing</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libvirt.html" class="nav-list-link">libvirt</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libvorbis.html" class="nav-list-link">libvorbis</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libvpx.html" class="nav-list-link">libvpx</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libwebp.html" class="nav-list-link">libwebp</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libwebrtc.html" class="nav-list-link">libwebrtc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libx264.html" class="nav-list-link">libx264</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libx265.html" class="nav-list-link">libx265</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libxml2.html" class="nav-list-link">libxml2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/libxslt.html" class="nav-list-link">libxslt</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/linux-perf.html" class="nav-list-link">linux-perf</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/llama-cpp.html" class="nav-list-link">llama.cpp</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/llvm.html" class="nav-list-link">llvm</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/llvm-propeller.html" class="nav-list-link">llvm-propeller</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/longfellow-zk.html" class="nav-list-link">longfellow-zk</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/lxd.html" class="nav-list-link">lxd</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mangle.html" class="nav-list-link">mangle</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mariadb-operator.html" class="nav-list-link">mariadb-operator</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mcrouter.html" class="nav-list-link">mcrouter</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/memcached_exporter.html" class="nav-list-link">memcached_exporter</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/metal3-io.html" class="nav-list-link">metal3-io</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/micro-ros.html" class="nav-list-link">micro-ROS</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mimalloc.html" class="nav-list-link">mimalloc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/minijail.html" class="nav-list-link">minijail</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mpact-riscv.html" class="nav-list-link">mpact-riscv</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mtail.html" class="nav-list-link">mtail</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/multichase.html" class="nav-list-link">multichase</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/mysqld_exporter.html" class="nav-list-link">mysqld_exporter</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/native-pkcs11.html" class="nav-list-link">native-pkcs11</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ncnn.html" class="nav-list-link">ncnn</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/neper.html" class="nav-list-link">neper</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nftables.html" class="nav-list-link">nftables</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nghttp2.html" class="nav-list-link">nghttp2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nginx.html" class="nav-list-link">nginx</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/node_exporter.html" class="nav-list-link">node_exporter</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nsjail.html" class="nav-list-link">nsjail</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/nsync.html" class="nav-list-link">nsync</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/numba.html" class="nav-list-link">numba</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/onedal.html" class="nav-list-link">oneDAL</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/onednn.html" class="nav-list-link">oneDNN</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/onetbb.html" class="nav-list-link">oneTBB</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/open62541-(opc-ua).html" class="nav-list-link">open62541 (OPC UA)</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/or-tools.html" class="nav-list-link">or-tools</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/oss-fuzz.html" class="nav-list-link">oss-fuzz</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/osv-scalibr.html" class="nav-list-link">osv-scalibr</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/osv-scanner.html" class="nav-list-link">osv-scanner</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/osv-dev.html" class="nav-list-link">osv.dev</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pkvm.html" class="nav-list-link">pKVM</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/packetdrill.html" class="nav-list-link">packetdrill</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/perf_data_converter.html" class="nav-list-link">perf_data_converter</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/perfetto.html" class="nav-list-link">perfetto</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pgcat.html" class="nav-list-link">pgcat</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pgjdbc.html" class="nav-list-link">pgjdbc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pgvector.html" class="nav-list-link">pgvector</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pgx.html" class="nav-list-link">pgx</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/postgres_exporter.html" class="nav-list-link">postgres_exporter</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/pprof.html" class="nav-list-link">pprof</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/prometheus-client_golang.html" class="nav-list-link">prometheus/client_golang</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/psycopg.html" class="nav-list-link">psycopg</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/quiche.html" class="nav-list-link">quiche</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/re2.html" class="nav-list-link">re2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/readline.html" class="nav-list-link">readline</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/redis-operator.html" class="nav-list-link">redis-operator</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/redis_exporter.html" class="nav-list-link">redis_exporter</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/riegeli.html" class="nav-list-link">riegeli</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/runc.html" class="nav-list-link">runc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/runwasi.html" class="nav-list-link">runwasi</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/ruy.html" class="nav-list-link">ruy</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/s2geometry.html" class="nav-list-link">s2geometry</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/safetensors.html" class="nav-list-link">safetensors</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sandboxed-api.html" class="nav-list-link">sandboxed-api</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sanitizers.html" class="nav-list-link">sanitizers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sel4.html" class="nav-list-link">seL4</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/security-research.html" class="nav-list-link">security-research</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/seesaw.html" class="nav-list-link">seesaw</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sentencepiece.html" class="nav-list-link">sentencepiece</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/shaderc.html" class="nav-list-link">shaderc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/silifuzz.html" class="nav-list-link">silifuzz</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/simdutf.html" class="nav-list-link">simdutf</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/snappy.html" class="nav-list-link">snappy</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/starlark-go.html" class="nav-list-link">starlark-go</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/sysdig.html" class="nav-list-link">sysdig</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tarpc.html" class="nav-list-link">tarpc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tcmalloc.html" class="nav-list-link">tcmalloc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tensorstore.html" class="nav-list-link">tensorstore</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/text-generation-inference.html" class="nav-list-link">text-generation-inference</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tiktoken.html" class="nav-list-link">tiktoken</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tinygrad.html" class="nav-list-link">tinygrad</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/tokenizers.html" class="nav-list-link">tokenizers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/trillian.html" class="nav-list-link">trillian</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/urunc.html" class="nav-list-link">urunc</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/vllm.html" class="nav-list-link">vLLM</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/warg.html" class="nav-list-link">warg</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasm-bindgen.html" class="nav-list-link">wasm-bindgen</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasm-pack.html" class="nav-list-link">wasm-pack</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasm3.html" class="nav-list-link">wasm3</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wasmcloud.html" class="nav-list-link">wasmCloud</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/whisper-cpp.html" class="nav-list-link">whisper.cpp</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wit-bindgen.html" class="nav-list-link">wit-bindgen</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/woff2.html" class="nav-list-link">woff2</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/wuffs.html" class="nav-list-link">wuffs</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/xbyak-riscv.html" class="nav-list-link">xbyak_riscv</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/xls.html" class="nav-list-link">xls</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/xxhash.html" class="nav-list-link">xxHash</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/xz.html" class="nav-list-link">xz</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/yamlfmt.html" class="nav-list-link">yamlfmt</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/youki.html" class="nav-list-link">youki</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/zerocopy.html" class="nav-list-link">zerocopy</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/zlib.html" class="nav-list-link">zlib</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/zlib-ng.html" class="nav-list-link">zlib-ng</a></li><li class="nav-list-item"><a href="/sw-ecosystem/project-reports/zstd.html" class="nav-list-link">zstd</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Prompts submenu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/sw-ecosystem/prompts/" class="nav-list-link">Prompts</a><ul class="nav-list"><li class="nav-list-item"><a href="/sw-ecosystem/prompts/project-report/project-report.html" class="nav-list-link">Per-Project RISC-V Ecosystem Status Report</a></li><li class="nav-list-item"><a href="/sw-ecosystem/prompts/aiml-status/aiml-status.html" class="nav-list-link">Agentic AI Status on RISC-V Architecture</a></li><li class="nav-list-item"><a href="/sw-ecosystem/prompts/software-takeaways/software-takeaways.html" class="nav-list-link">Key Takeaways for Software Developers</a></li><li class="nav-list-item"><a href="/sw-ecosystem/prompts/maintainer-status/maintainer-status.html" class="nav-list-link">Open-Source Maintainer Stance & Receptivity Analysis</a></li><li class="nav-list-item"><a href="/sw-ecosystem/prompts/project-priority/project-priority.html" class="nav-list-link">Project Priorities, Green-Field Markets, and High-Moat Spaces</a></li><li class="nav-list-item"><a href="/sw-ecosystem/prompts/competition/competition.html" class="nav-list-link">RISC-V Competitive Ecosystem Analysis</a></li><li class="nav-list-item"><a href="/sw-ecosystem/prompts/industry-libraries/industry-libraries.html" class="nav-list-link">Recommended Software Ecosystem Expansion for Key Industry Markets</a></li><li class="nav-list-item"><a href="/sw-ecosystem/prompts/market-report/market-report.html" class="nav-list-link">Software Ecosystem Technical Market Assessment</a></li><li class="nav-list-item"><a href="/sw-ecosystem/prompts/porting-advice/porting-advice.html" class="nav-list-link">Technical Guide & Advice for Porting Software to RISC-V</a></li></ul></li></ul>
+  
+</nav>
+
+
+<div class="d-md-block d-none site-footer">
+  
+  
+    This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+  
+  </div>
+</header>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search RISE Software Ecosystem" autocomplete="off">
+    <label for="search-input" class="search-label">
+      <span class="sr-only">Search RISE Software Ecosystem</span>
+      <svg viewBox="0 0 24 24" class="search-icon" aria-hidden="true"><use xlink:href="#svg-search"></use></svg>
+    </label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+    <nav aria-label="Auxiliary" class="aux-nav">
+  <ul class="aux-nav-list">
+    
+      <li class="aux-nav-list-item">
+        <a href="https://github.com/riseproject-dev/sw-ecosystem" class="site-button"
+          
+        >
+          GitHub
+        </a>
+      </li>
+    
+  </ul>
+</nav>
+
+  
+</div>
+
+    <div class="main-content-wrap">
+      <nav aria-label="Breadcrumb" class="breadcrumb-nav">
+  <ol class="breadcrumb-nav-list">
+    <li class="breadcrumb-nav-list-item"><a href="/sw-ecosystem/project-reports/">Project Reports</a></li>
+    <li class="breadcrumb-nav-list-item"><span>Linux scheduler and locking</span></li>
+  </ol>
+</nav>
+
+
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <!--
+  Renders an interactive dependency graph. Two callers:
+  - A stack report's generated root aggregation (see stack-report frontmatter `roots:`):
+    {% include dependency-graph.html slug="<vertical-slug>" %}
+  - A project report, against the shared graph built by _plugins/dependency_graph_generator.rb from
+    every project-reports/*.md's `dependencies:` frontmatter, bounded to this project's own
+    dependency tree:
+    {% include dependency-graph.html slug="dependencies" subset="<project-slug>" %}
+
+  `slug` may be omitted on a stack-report page; it then defaults to page.slug. `subset`, when set,
+  bounds the entire instance -- initial view, search, and focus/reset alike -- to that node plus
+  its descendants only, never ancestors, so e.g. a project depended on by hundreds of others in the
+  shared graph doesn't pull all of them onto that project's own page; beyond that node's own direct
+  dependencies, only the runtime-dependency chain is included (a dependency's build/test tooling is
+  dropped -- see findDescendantsRuntimeOnlyBeyondRoot in dependency-graph.js). Omit `subset` to
+  leave the whole fetched graph in play (as stack reports, whose own graph.json is already scoped
+  to one vertical, do).
+
+  `focus`, when set, pre-selects that node on load instead of showing the whole graph unfocused --
+  no current caller passes it (a project report's own subset root has no ancestors within its own
+  subset barring a dependency cycle, so focusing it on load looks identical to leaving it
+  unfocused), but the search box still drives the same mechanism at runtime, and it remains
+  available to any future caller that wants a pre-selected node independent of subset.
+-->
+<link rel="stylesheet" href="/sw-ecosystem/assets/css/dependency-graph.css" />
+
+<div class="dependency-graph" data-graph="dependencies.graph.json" data-focus="" data-subset="linux-scheduler-and-locking"></div>
+<p class="dg-json-link"><a href="dependencies.graph.json">Raw dependency graph data (JSON)</a></p>
+<script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/dagre-d3@0.6.4/dist/dagre-d3.min.js"></script>
+
+<script src="/sw-ecosystem/assets/js/dependency-graph.js"></script>
+<h1 id="linux-scheduler-and-locking">
+  
+  
+    <a href="#linux-scheduler-and-locking" class="anchor-heading" aria-labelledby="linux-scheduler-and-locking"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Linux scheduler and locking
+  
+  
+</h1>
+    
+
+<p><strong>Author:</strong> Ludovic HENRY <a href="mailto:ludovic.henry@qti.qualcomm.com">ludovic.henry@qti.qualcomm.com</a><br />
+<strong>Date:</strong> 2026-11-03<br />
+<strong>Readiness:</strong> yellow (build-only-ci)<br />
+<strong>Scope:</strong> RISC-V (riscv64/linux) support status for Linux scheduler and locking<br />
+<strong>Audience:</strong> Technical leadership, resource allocation strategy<br />
+<strong>Verification policy:</strong> Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br /></p>
+<h2 id="1-project-overview">
+  
+  
+    <a href="#1-project-overview" class="anchor-heading" aria-labelledby="1-project-overview"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Project Overview
+  
+  
+</h2>
+    
+
+<p>“Linux scheduler and locking” is a slice of the mainline Linux kernel, not a standalone package. It covers the riscv64 architecture code under <code class="language-plaintext highlighter-rouge">arch/riscv</code> for the following areas. The generic code in <code class="language-plaintext highlighter-rouge">kernel/sched/</code> and <code class="language-plaintext highlighter-rouge">kernel/locking/</code> contains no riscv-specific files.</p>
+
+<ul>
+  <li>Atomics, cmpxchg and barriers.</li>
+  <li>Spinlocks: ticket, queued and combo.</li>
+  <li>Futex.</li>
+  <li>Context switch, preemption and PREEMPT_RT.</li>
+  <li>SMP bring-up, IPIs and topology.</li>
+  <li>Static keys.</li>
+  <li>The vDSO, including <code class="language-plaintext highlighter-rouge">getrandom()</code>.</li>
+  <li>membarrier.</li>
+  <li>The rseq selftest backend.</li>
+</ul>
+
+<p>The reference clone is at HEAD <code class="language-plaintext highlighter-rouge">05441d697f7f</code>, dated 2026-11-03 (<code class="language-plaintext highlighter-rouge">v7.4-rc1-132</code>). Its repository is <a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git">torvalds/linux.git</a>. The <a href="https://docs.kernel.org/scheduler/index.html">docs.kernel.org scheduler index</a> lists these topics: completions, membarrier, CFS and EEVDF, CFS bandwidth, deadline and RT group scheduling, scheduler domains, capacity-aware and energy-aware scheduling, schedutil, utilization clamping, sched_ext and scheduler preemption.</p>
+
+<p><strong>Governance.</strong></p>
+<ul>
+  <li>No dedicated foundation or project entity governs this subsystem. It is part of the Linux kernel, which is GPL-2.0 and developed through mailing lists and git.kernel.org.</li>
+  <li>A Linux Foundation hosting claim is not stated in either fetched page. [NEEDS VERIFICATION]</li>
+  <li>Core subsystems use the tip tree model (<code class="language-plaintext highlighter-rouge">Documentation/process/maintainer-tip.rst</code>). The branches are sched/core, locking/core and timers/vdso.</li>
+  <li>The RISC-V port is a separate MAINTAINERS entry, “RISC-V ARCHITECTURE”. Its status is Supported. The list is linux-riscv@lists.infradead.org. The tree is <code class="language-plaintext highlighter-rouge">git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git</code>. The patch queue is <a href="https://patchwork.kernel.org/project/linux-riscv/list/">patchwork linux-riscv</a>.</li>
+</ul>
+
+<p><strong>Maintainers (MAINTAINERS at HEAD).</strong> The employers below are inferred from email domains, not stated in MAINTAINERS.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Entry</th>
+      <th>Maintainers and reviewers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RISC-V ARCHITECTURE</td>
+      <td>Paul Walmsley, Palmer Dabbelt, Albert Ou (M); Alexandre Ghiti (R). Employers not given in MAINTAINERS. [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>SCHEDULER</td>
+      <td>Ingo Molnar, Peter Zijlstra, Juri Lelli, Vincent Guittot (M); Dietmar Eggemann, Steven Rostedt, Ben Segall, Mel Gorman, Valentin Schneider, K Prateek Nayak (R)</td>
+    </tr>
+    <tr>
+      <td>SCHED_EXT</td>
+      <td>Reviewers Tejun Heo, David Vernet, Andrea Righi, Changwoo Min. Status Maintained.</td>
+    </tr>
+    <tr>
+      <td>LOCKING PRIMITIVES</td>
+      <td>Peter Zijlstra, Ingo Molnar, Will Deacon, Boqun Feng (M); Waiman Long (R). It also owns <code class="language-plaintext highlighter-rouge">arch/*/include/asm/spinlock*.h</code>, so riscv’s spinlock headers fall under it.</td>
+    </tr>
+    <tr>
+      <td>ATOMIC INFRASTRUCTURE</td>
+      <td>Will Deacon, Peter Zijlstra, Boqun Feng (M); Mark Rutland, Gary Guo (R). It also owns <code class="language-plaintext highlighter-rouge">arch/*/include/asm/atomic*.h</code>.</td>
+    </tr>
+    <tr>
+      <td>RCU</td>
+      <td>Paul E. McKenney leads, with Frederic Weisbecker, Neeraj Upadhyay, Joel Fernandes, Josh Triplett, Boqun Feng and Uladzislau Rezki. Status Supported.</td>
+    </tr>
+    <tr>
+      <td>FUTEX</td>
+      <td>Thomas Gleixner, Ingo Molnar (M); Peter Zijlstra, Darren Hart, Davidlohr Bueso, Andre Almeida (R)</td>
+    </tr>
+    <tr>
+      <td>RSEQ</td>
+      <td>Mathieu Desnoyers, Peter Zijlstra, Paul McKenney, Boqun Feng. Status Supported.</td>
+    </tr>
+    <tr>
+      <td>GENERIC VDSO LIBRARY</td>
+      <td>Andy Lutomirski, Thomas Gleixner, Vincenzo Frascino. Status Maintained.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Corporate contributors.</strong> The sample is about 40 commits since 2025-11-01, counted by author domain on the riscv atomic, cmpxchg, barrier, spinlock, percpu, jump_label, vdso, smpboot, cacheinfo and hwprobe paths. The sample is small.</p>
+<ul>
+  <li>linutronix.de: 9. This is likely generic vDSO and cross-architecture cleanups. [NEEDS VERIFICATION]</li>
+  <li>iscas.ac.cn: 7.</li>
+  <li>linux-foundation.org: 5.</li>
+  <li>rivosinc.com: 4.</li>
+  <li>kernel.org: 3.</li>
+  <li>tenstorrent.com, sifive.com, oss.qualcomm.com, bytedance.com, gmail.com: 2 each.</li>
+  <li>ventanamicro.com, linux.dev, kylinos.cn, debian.org: 1 each.</li>
+</ul>
+
+<p><strong>RISE.</strong> No RISE-funded project for scheduler, locking, atomics, futex or vDSO work was found. See Section 7 and Section 14. Whether RISE funds the Zawrs, Zacas, Zabha or qspinlock work is [NEEDS VERIFICATION], because lore.kernel.org was not accessible.</p>
+
+<p><strong>Community stance on new ports and features.</strong> There is no new-port question: the port is mainline and Supported. For new ISA extensions, <a href="https://docs.kernel.org/arch/riscv/patch-acceptance.html">patch-acceptance.rst</a> accepts them only if the spec is Frozen or Ratified. It also states that “Linux maintainers disapprove of churn” and prefer “well-reviewed and tested code over experimental code”. The core scheduler and locking maintainers are arch-neutral. Arch hooks are accepted when they follow the generic APIs.</p>
+<h2 id="2-port-history-and-upstreaming-timeline">
+  
+  
+    <a href="#2-port-history-and-upstreaming-timeline" class="anchor-heading" aria-labelledby="2-port-history-and-upstreaming-timeline"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Port History and Upstreaming Timeline
+  
+  
+</h2>
+    
+
+<p>The code is fully upstream. The first riscv commit in the clone is <code class="language-plaintext highlighter-rouge">76d2a0493a17</code> “RISC-V: Init and Halt Code” (Palmer Dabbelt, authored 2017-07-10, first tag v4.15-rc1). The author date is when the patches were written. The mainline merge was November 2017, in Linux 4.15, via Linus Torvalds’s merge <code class="language-plaintext highlighter-rouge">b293fca43be5</code> (2017-11-15).</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Event</th>
+      <th>Source</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2017-07-10 (authored), v4.15</td>
+      <td><code class="language-plaintext highlighter-rouge">fab957c11efe</code> “RISC-V: Atomic and Locking Code” (Palmer Dabbelt) introduces <code class="language-plaintext highlighter-rouge">atomic.h</code> and <code class="language-plaintext highlighter-rouge">spinlock.h</code>. <code class="language-plaintext highlighter-rouge">e2c0cdfba7f6</code> “User-facing API” is the first vDSO commit.</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2018-03-09, v4.17</td>
+      <td><code class="language-plaintext highlighter-rouge">fence.h</code> (Andrea Parri)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2018-10-16, v4.20</td>
+      <td><code class="language-plaintext highlighter-rouge">futex.h</code> (Jim Wilson, SiFive)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2019-02-22, v5.2</td>
+      <td><code class="language-plaintext highlighter-rouge">mmiowb.h</code> (Will Deacon)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2020-03-17, v5.7</td>
+      <td><code class="language-plaintext highlighter-rouge">cpu_ops_spinwait.c</code> (Atish Patra, WDC)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2020-06-09, v5.8</td>
+      <td>vDSO <code class="language-plaintext highlighter-rouge">gettimeofday.h</code> and <code class="language-plaintext highlighter-rouge">vgettimeofday.c</code> (Vincent Chen, SiFive)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2020-07-14, v5.9</td>
+      <td><code class="language-plaintext highlighter-rouge">jump_label.h</code> and <code class="language-plaintext highlighter-rouge">jump_label.c</code> (Emil Renner Berthing)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2021-03</td>
+      <td>Guo Ren’s ticket spinlock series v6 posted. Merge status [NEEDS VERIFICATION].</td>
+      <td><a href="https://lists.infradead.org/pipermail/linux-riscv/2021-March/005576.html">linux-riscv archive</a></td>
+    </tr>
+    <tr>
+      <td>2022-04-05, v5.19</td>
+      <td><code class="language-plaintext highlighter-rouge">compat_vdso/Makefile</code> (Guo Ren, Alibaba)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2022-06</td>
+      <td>Zawrs RFC (Christoph Müllner, VRULL)</td>
+      <td><a href="https://patchew.org/linux/20220602141032.169907-1-christoph.muellner@vrull.io/">patchew</a></td>
+    </tr>
+    <tr>
+      <td>2022-08</td>
+      <td>PREEMPT_RT v2 series (Jisheng Zhang)</td>
+      <td><a href="https://patchew.org/linux/20220831175920.2806-1-jszhang@kernel.org/">patchew</a>, <a href="https://lwn.net/Articles/931531/">LWN 931531</a></td>
+    </tr>
+    <tr>
+      <td>2023-03-23, v6.4-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">f0bddf50586d</code> convert to generic entry (Guo Ren). Base for RT, rseq and TIF work.</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2023-04-18, v6.4-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">c4b52d8b6c1d</code> CPU and frequency invariance exported to the scheduler (Song Shuai). <code class="language-plaintext highlighter-rouge">8bf7b3b66762</code> SCHED_MC enabled.</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2023-12-14, v6.8-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">6b9f29b81b15</code> percpu page first-chunk allocator (Ghiti, Rivos)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2024-01-09, v6.8-rc1</td>
+      <td>Ztso ISA parsing <code class="language-plaintext highlighter-rouge">1ec9f381e848</code> and hwprobe export <code class="language-plaintext highlighter-rouge">5b4d64a819c0</code></td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2024-07-12, v6.11-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">b8ddb0df30f9</code> Zawrs for spinlocks (Müllner, VRULL; co-developed by Andrew Jones). Authored 2024-04-26, so 2024-07-12 is the commit date.</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2024-09-17, v6.12-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">2638e4e6b182</code> allow PREEMPT_RT (Sebastian Siewior, Linutronix)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2024-11-11, v6.13-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">ab83647fadae</code> qspinlock plus the Zacas and Zabha atomics, merged via <code class="language-plaintext highlighter-rouge">64f7b77f0bd9</code>. Authored 2024-11-03 by Ghiti (Rivos).</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2024-11-05, v6.13-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">22aaec357c1f</code> PREEMPT_LAZY (Jisheng Zhang). Authored 2024-10-21.</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2024-12 to 2025-01, v6.13</td>
+      <td>Fixes <code class="language-plaintext highlighter-rouge">b3134b8c1a1c</code> (DEBUG_RT_MUTEXES boot failure) and <code class="language-plaintext highlighter-rouge">40e6073e7648</code> (<code class="language-plaintext highlighter-rouge">_Q_PENDING_LOOPS</code>)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2025-03-18, v6.15-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">d9708b1931fc</code> smp_cond_load8/16 with Zawrs (Guo Ren)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2025-04-16 to 2025-06-05, v6.16-rc1</td>
+      <td>vDSO getrandom: first attempt <code class="language-plaintext highlighter-rouge">89079520cef6</code>, revert <code class="language-plaintext highlighter-rouge">2f956db8b3b0</code> on 2025-06-02, re-land <code class="language-plaintext highlighter-rouge">ee0d03053e70</code> on 2025-06-05</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2025-07-16, v6.16</td>
+      <td><code class="language-plaintext highlighter-rouge">969f028bf2c4</code> enable interrupts during exception handling, an RT fix (Nam Cao, Linutronix)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2025-09-17, v6.18-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">41e871f2b63e</code> generic TIF bits (Thomas Gleixner)</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2025-11-19, v6.19-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">ad1bb4b8525e</code> Zalasr instruction definitions (Xu Lu, ByteDance). <code class="language-plaintext highlighter-rouge">724c69447975</code> cmpxchg uses <code class="language-plaintext highlighter-rouge">riscv_has_extension_likely</code>.</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2026-07-13, v7.2</td>
+      <td><code class="language-plaintext highlighter-rouge">ad6dcfa02376</code> no LTO for the vDSO</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2026-08-07, v7.3-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">76555252981e</code> <code class="language-plaintext highlighter-rouge">.option arch</code> for Zacas and Zabha. <code class="language-plaintext highlighter-rouge">f61959a3a8b5</code> Ziccamoa, Ziccif, Ziccrse and Za64rs in cpufeature and hwprobe.</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2026-10-07</td>
+      <td><code class="language-plaintext highlighter-rouge">405290be962b</code> futex user pointer untagging. Release tag not checked.</td>
+      <td>Linux clone</td>
+    </tr>
+    <tr>
+      <td>2026-10-08, v7.4-rc1</td>
+      <td><code class="language-plaintext highlighter-rouge">5ae75414416f</code> MMU_GATHER_RCU_TABLE_FREE for riscv MMU (Lorenzo Stoakes)</td>
+      <td>Linux clone</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Key contributors and organizations.</strong></p>
+<ul>
+  <li>Palmer Dabbelt: original port.</li>
+  <li>Alexandre Ghiti (Rivos): qspinlock and Zacas/Zabha atomics.</li>
+  <li>Guo Ren (Alibaba): generic entry, ticket spinlock and qspinlock predecessor work, and Zawrs byte/halfword waits.</li>
+  <li>Christoph Müllner (VRULL) and Andrew Jones (Ventana, later Qualcomm): Zawrs.</li>
+  <li>Sebastian Siewior, Nam Cao and Thomas Gleixner (Linutronix): RT.</li>
+  <li>Jisheng Zhang: PREEMPT_LAZY.</li>
+  <li>Xi Ruoyao: vDSO getrandom.</li>
+  <li>Davidlohr Bueso: futex cmpxchg.</li>
+  <li>Xu Lu and Qingwei Hu (ByteDance): Zalasr.</li>
+  <li>Andrea Parri: memory-model reviews and fences.</li>
+</ul>
+
+<p><strong>Notes on authorship and dates.</strong></p>
+<ul>
+  <li>Git records the author of <code class="language-plaintext highlighter-rouge">724c69447975</code> as Vivian Wang <a href="mailto:wangruikang@iscas.ac.cn">wangruikang@iscas.ac.cn</a> (ISCAS). The same name may apply to <code class="language-plaintext highlighter-rouge">76555252981e</code>.</li>
+  <li>The qspinlock series has two dates in its threads: the list thread for the author’s V11 is <a href="https://lists.infradead.org/pipermail/linux-riscv/2023-November/043379.html">November 2023</a>, and the predecessor series link is <a href="https://lore.kernel.org/linux-riscv/20231225125847.2778638-1-guoren@kernel.org/">dated 2023-12-25</a>. The LWN summary says “early 2024”. These are possibly different revisions and were not reconciled.</li>
+</ul>
+<h2 id="3-upstream-support-tier">
+  
+  
+    <a href="#3-upstream-support-tier" class="anchor-heading" aria-labelledby="3-upstream-support-tier"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Upstream Support Tier
+  
+  
+</h2>
+    
+
+<p><strong>Formal tier policy.</strong> No formal tier system exists. The policy document is <a href="https://docs.kernel.org/arch/riscv/patch-acceptance.html">patch-acceptance.rst</a>.</p>
+<ul>
+  <li>New extensions are accepted only if the spec is Frozen or Ratified.</li>
+  <li>Custom vendor extensions have extra rules. The text was cut off in the read, so the details are not available.</li>
+  <li>Patches are checked by CI on patchwork, and a failing check makes a patch unlikely to be applied.</li>
+</ul>
+
+<p>The MAINTAINERS status for RISC-V is “Supported”.</p>
+
+<p><strong>Evidence on CI, release-blocking and binaries.</strong></p>
+<ul>
+  <li>The kernel tree has no CI configuration: no <code class="language-plaintext highlighter-rouge">.gitlab-ci.yml</code>, <code class="language-plaintext highlighter-rouge">.github/</code>, <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, <code class="language-plaintext highlighter-rouge">.travis.yml</code>, <code class="language-plaintext highlighter-rouge">.cirrus.yml</code>, <code class="language-plaintext highlighter-rouge">azure-pipelines.yml</code> or <code class="language-plaintext highlighter-rouge">ci/</code> directory.</li>
+  <li><code class="language-plaintext highlighter-rouge">tools/testing/selftests/riscv/Makefile</code> builds <code class="language-plaintext highlighter-rouge">abi hwprobe mm sigreturn vector cfi</code>. None of these tests scheduling or locking.</li>
+  <li>Release-blocking status of any riscv64 scheduler or locking test: data not available. Searched the tree, MAINTAINERS, and KernelCI, LKFT and 0-day references.</li>
+  <li>Upstream ships source only. Binaries come from distro kernel packages (Section 8).</li>
+</ul>
+
+<p><strong>Comparison table.</strong> Only items found are filled in. All others were not searched.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Arch status in MAINTAINERS</td>
+      <td>Data not available (not searched)</td>
+      <td>Data not available (not searched)</td>
+      <td>Supported</td>
+    </tr>
+    <tr>
+      <td>rcutorture QEMU selection (<code class="language-plaintext highlighter-rouge">functions.sh</code>)</td>
+      <td>Present (x86_64, i386)</td>
+      <td>Present (aarch64)</td>
+      <td>No match; no riscv rcutorture config under <code class="language-plaintext highlighter-rouge">configs/</code>. The qemu script itself was not checked, so this is a tooling gap, not a confirmed absence.</td>
+    </tr>
+    <tr>
+      <td>rseq selftest backend</td>
+      <td>Present (<code class="language-plaintext highlighter-rouge">rseq-x86</code>)</td>
+      <td>Present (<code class="language-plaintext highlighter-rouge">rseq-arm64</code>)</td>
+      <td>Present (<code class="language-plaintext highlighter-rouge">rseq-riscv.h</code>, <code class="language-plaintext highlighter-rouge">rseq-riscv-bits.h</code>)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">vdso_standalone_test_x86</code></td>
+      <td>Built</td>
+      <td>Not built</td>
+      <td>Not built</td>
+    </tr>
+    <tr>
+      <td>Bounded LL/SC retry in futex cmpxchg</td>
+      <td>Data not available</td>
+      <td>Present (commit <code class="language-plaintext highlighter-rouge">03110a5cb216</code>, cited by the riscv patch)</td>
+      <td>Posted as v2, not merged</td>
+    </tr>
+    <tr>
+      <td>Queued spinlock default</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Combo (runtime choice of queued or ticket); pure queued needs NONPORTABLE</td>
+    </tr>
+    <tr>
+      <td>In-tree CI config</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>riscv64 external test evidence</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>KernelCI qemu LTP on CIP trees (ltp-ipc, ltp-timers, fcntl-locktests), search snippets only [NEEDS VERIFICATION]</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="4-technical-architecture-and-risc-v-specific-subsystems">
+  
+  
+    <a href="#4-technical-architecture-and-risc-v-specific-subsystems" class="anchor-heading" aria-labelledby="4-technical-architecture-and-risc-v-specific-subsystems"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Technical Architecture and RISC-V-Specific Subsystems
+  
+  
+</h2>
+    
+
+<p>The comparison columns for amd64 and arm64 are mostly “Data not available (not searched)”, because only the riscv tree was examined.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>riscv64 state</th>
+      <th>ISA extensions</th>
+      <th>Quality</th>
+      <th>amd64 / arm64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cmpxchg and xchg (<code class="language-plaintext highlighter-rouge">cmpxchg.h</code>)</td>
+      <td>Present since v4.15. Zacas (32/64/128-bit) and Zabha (8/16-bit) paths since v6.13. Dispatch is by <code class="language-plaintext highlighter-rouge">riscv_has_extension_likely</code> since v6.19.</td>
+      <td>A, Zacas, Zabha, <code class="language-plaintext highlighter-rouge">.option arch</code> since v7.3</td>
+      <td>Hand-written inline assembly. The base path is <code class="language-plaintext highlighter-rouge">lr.w/sc.w</code> loops. <code class="language-plaintext highlighter-rouge">amocas.X.aqrl</code> replaced <code class="language-plaintext highlighter-rouge">amocas.X.rl</code> plus <code class="language-plaintext highlighter-rouge">fence rw,rw</code>.</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>Spinlocks (<code class="language-plaintext highlighter-rouge">spinlock.h</code>)</td>
+      <td>Ticket, queued or combo, selected by the <code class="language-plaintext highlighter-rouge">qspinlock_key</code> static key. Default is combo.</td>
+      <td>Zabha or Ziccrse needed for queued</td>
+      <td>Generic asm-generic code plus a runtime switch</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>Spin-wait (<code class="language-plaintext highlighter-rouge">barrier.h</code>)</td>
+      <td><code class="language-plaintext highlighter-rouge">smp_cond_load_relaxed</code> uses <code class="language-plaintext highlighter-rouge">WRS.NTO</code>. Byte and halfword variants since v6.15.</td>
+      <td>Zawrs</td>
+      <td>Inline assembly</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>Acquire/release (<code class="language-plaintext highlighter-rouge">barrier.h</code>)</td>
+      <td><code class="language-plaintext highlighter-rouge">__smp_load_acquire</code> and <code class="language-plaintext highlighter-rouge">__smp_store_release</code> do not use Zalasr at HEAD.</td>
+      <td>Zalasr instruction definitions merged</td>
+      <td>Fence-based. Zalasr use is pending (v5).</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>Futex (<code class="language-plaintext highlighter-rouge">futex.h</code>)</td>
+      <td>Present since v4.20. The cmpxchg was optimized in v6.14. The unbounded LR/SC loop fix is pending.</td>
+      <td>A (LR/SC)</td>
+      <td>Inline assembly</td>
+      <td>arm64 has a bounded retry (<code class="language-plaintext highlighter-rouge">03110a5cb216</code>)</td>
+    </tr>
+    <tr>
+      <td>Static keys and patching</td>
+      <td><code class="language-plaintext highlighter-rouge">jump_label.c</code>, <code class="language-plaintext highlighter-rouge">patch.c</code>. Kconfig <code class="language-plaintext highlighter-rouge">HAVE_ARCH_JUMP_LABEL(_RELATIVE)</code>.</td>
+      <td>none</td>
+      <td>C plus alternatives</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>Context switch and preemption</td>
+      <td><code class="language-plaintext highlighter-rouge">entry.S</code>, <code class="language-plaintext highlighter-rouge">process.c</code>. GENERIC_ENTRY, <code class="language-plaintext highlighter-rouge">ARCH_HAS_PREEMPT_LAZY</code>, <code class="language-plaintext highlighter-rouge">ARCH_SUPPORTS_RT</code>. Generic TIF bits since v6.18.</td>
+      <td>none</td>
+      <td>Generic framework</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>SMP, hotplug, IPI</td>
+      <td><code class="language-plaintext highlighter-rouge">smp.c</code>, <code class="language-plaintext highlighter-rouge">smpboot.c</code>, <code class="language-plaintext highlighter-rouge">cpu_ops_sbi.c</code>, <code class="language-plaintext highlighter-rouge">sbi-ipi.c</code>. <code class="language-plaintext highlighter-rouge">HOTPLUG_CPU</code>, <code class="language-plaintext highlighter-rouge">HOTPLUG_PARALLEL</code>.</td>
+      <td>SBI IPI and HSM</td>
+      <td>SBI-based</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>Topology and capacity</td>
+      <td><code class="language-plaintext highlighter-rouge">topology.h</code>, <code class="language-plaintext highlighter-rouge">GENERIC_ARCH_TOPOLOGY</code>, <code class="language-plaintext highlighter-rouge">ARCH_SUPPORTS_SCHED_MC</code>. Asymmetric capacity wiring was not checked.</td>
+      <td>none</td>
+      <td>Generic</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>vDSO</td>
+      <td><code class="language-plaintext highlighter-rouge">kernel/vdso/</code> (<code class="language-plaintext highlighter-rouge">rt_sigreturn.S</code>, <code class="language-plaintext highlighter-rouge">getcpu.S</code>, <code class="language-plaintext highlighter-rouge">flush_icache.S</code>, <code class="language-plaintext highlighter-rouge">sys_hwprobe.S</code>, <code class="language-plaintext highlighter-rouge">vgettimeofday.c</code>, <code class="language-plaintext highlighter-rouge">hwprobe.c</code>, <code class="language-plaintext highlighter-rouge">getrandom.c</code>, <code class="language-plaintext highlighter-rouge">vgetrandom-chacha.S</code>). Also <code class="language-plaintext highlighter-rouge">compat_vdso/</code> and <code class="language-plaintext highlighter-rouge">vdso_cfi/</code>. <code class="language-plaintext highlighter-rouge">VDSO_GETRANDOM</code> for MMU and 64-bit.</td>
+      <td>Base ISA. The CFI variant needs Zicfilp/Zicfiss (<code class="language-plaintext highlighter-rouge">-fcf-protection=full</code>).</td>
+      <td>ChaCha20 is hand-written assembly; vector use is not stated. Other entry points are C or assembly.</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>membarrier</td>
+      <td><code class="language-plaintext highlighter-rouge">membarrier.h</code>. <code class="language-plaintext highlighter-rouge">ARCH_HAS_MEMBARRIER_CALLBACKS</code>, <code class="language-plaintext highlighter-rouge">ARCH_HAS_MEMBARRIER_SYNC_CORE</code>.</td>
+      <td>none</td>
+      <td>C</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>rseq</td>
+      <td><code class="language-plaintext highlighter-rouge">HAVE_RSEQ</code> selected. Selftest backend present.</td>
+      <td>none</td>
+      <td>Assembly in selftests</td>
+      <td>Backends for arm, arm64, mips, ppc, s390, x86 and or1k exist</td>
+    </tr>
+    <tr>
+      <td>percpu, preempt count, READ_ONCE</td>
+      <td>No <code class="language-plaintext highlighter-rouge">asm/percpu.h</code>, <code class="language-plaintext highlighter-rouge">asm/preempt.h</code> or <code class="language-plaintext highlighter-rouge">asm/rwonce.h</code>. Generic implementations are used.</td>
+      <td>none</td>
+      <td>Generic</td>
+      <td>Not searched</td>
+    </tr>
+    <tr>
+      <td>mmiowb</td>
+      <td><code class="language-plaintext highlighter-rouge">ARCH_HAS_MMIOWB</code> selected</td>
+      <td>none</td>
+      <td>Present since v5.2</td>
+      <td>Not searched</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Other Kconfig facts:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">ARCH_USE_QUEUED_RWLOCKS</code> and <code class="language-plaintext highlighter-rouge">ARCH_USE_CMPXCHG_LOCKREF</code> (64-bit only) are set.</li>
+  <li><code class="language-plaintext highlighter-rouge">ARCH_WEAK_RELEASE_ACQUIRE</code> is set when queued spinlocks are on.</li>
+  <li><code class="language-plaintext highlighter-rouge">RISCV_ISA_V_PREEMPTIVE</code> exists.</li>
+  <li>The merged cover text states the qspinlock implementation “satisfies the forward progress guarantee” using Zabha or Ziccrse.</li>
+  <li>Ztso is parsed and exported through hwprobe.</li>
+  <li><code class="language-plaintext highlighter-rouge">fence.tso</code> memory-model details were not checked beyond the Ztso commits.</li>
+</ul>
+
+<p>The <code class="language-plaintext highlighter-rouge">qspinlock_key</code> static key carries a code TODO: use an alternative instead, once extension parsing happens earlier in boot. Whether it has been resolved was not checked.</p>
+<h2 id="5-build-system-cross-compilation-and-toolchain">
+  
+  
+    <a href="#5-build-system-cross-compilation-and-toolchain" class="anchor-heading" aria-labelledby="5-build-system-cross-compilation-and-toolchain"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Build System, Cross-Compilation, and Toolchain
+  
+  
+</h2>
+    
+
+<p>The kernel uses kbuild <code class="language-plaintext highlighter-rouge">make</code>, with no cmake or configure step. The commands below apply the generic forms from <code class="language-plaintext highlighter-rouge">kbuild.rst</code> and <code class="language-plaintext highlighter-rouge">llvm.rst</code>. I did not run them.</p>
+
+<p>GNU cross build:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- defconfig
+make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j$(nproc) Image modules dtbs
+</code></pre></div></div>
+<p>The <code class="language-plaintext highlighter-rouge">riscv64-linux-gnu-</code> prefix is the usual Debian name. The docs do not give a prefix. [NEEDS VERIFICATION]</p>
+
+<p>LLVM build:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make LLVM=1 ARCH=riscv defconfig
+make LLVM=1 ARCH=riscv -j$(nproc)
+</code></pre></div></div>
+<ul>
+  <li>A versioned suffix works: <code class="language-plaintext highlighter-rouge">LLVM=-18</code>.</li>
+  <li>Use the same <code class="language-plaintext highlighter-rouge">LLVM=</code> value on every <code class="language-plaintext highlighter-rouge">make</code> invocation.</li>
+  <li><code class="language-plaintext highlighter-rouge">LLVM_IAS=0</code> disables the integrated assembler and needs <code class="language-plaintext highlighter-rouge">CROSS_COMPILE</code> when cross compiling.</li>
+  <li>Config fragments in <code class="language-plaintext highlighter-rouge">arch/riscv/configs/</code>: <code class="language-plaintext highlighter-rouge">defconfig</code>, <code class="language-plaintext highlighter-rouge">32-bit.config</code>, <code class="language-plaintext highlighter-rouge">64-bit.config</code>, <code class="language-plaintext highlighter-rouge">hardening.config</code>, <code class="language-plaintext highlighter-rouge">nommu_k210_defconfig</code>, <code class="language-plaintext highlighter-rouge">nommu_k210_sdcard_defconfig</code>, <code class="language-plaintext highlighter-rouge">nommu_virt_defconfig</code>.</li>
+</ul>
+
+<p>Default flags set by <code class="language-plaintext highlighter-rouge">arch/riscv/Makefile</code>:</p>
+<ul>
+  <li>64-bit uses <code class="language-plaintext highlighter-rouge">-mabi=lp64</code> and <code class="language-plaintext highlighter-rouge">-melf64lriscv</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">-march</code> starts at <code class="language-plaintext highlighter-rouge">rv64ima</code>, then appends <code class="language-plaintext highlighter-rouge">fd</code>, <code class="language-plaintext highlighter-rouge">c</code> and <code class="language-plaintext highlighter-rouge">v</code> by Kconfig.</li>
+  <li><code class="language-plaintext highlighter-rouge">_zicsr_zifencei</code> is added when <code class="language-plaintext highlighter-rouge">TOOLCHAIN_NEEDS_EXPLICIT_ZICSR_ZIFENCEI</code> is set.</li>
+  <li><code class="language-plaintext highlighter-rouge">-Wa,-misa-spec=2.2</code> is added when <code class="language-plaintext highlighter-rouge">TOOLCHAIN_NEEDS_OLD_ISA_SPEC</code> is set.</li>
+</ul>
+
+<p>Selftests, from <code class="language-plaintext highlighter-rouge">tools/testing/selftests/riscv/README</code>:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make TARGETS=riscv kselftest
+make -C tools/testing/selftests TARGETS=riscv RISCV_SUBTARGETS="mm vector" INSTALL_PATH=&lt;path&gt; install
+</code></pre></div></div>
+<p>The riscv tests are skipped unless <code class="language-plaintext highlighter-rouge">ARCH=riscv</code>. Generic futex, rseq, vDSO and locking selftests are built from <code class="language-plaintext highlighter-rouge">tools/testing/selftests/Makefile</code>. It sets <code class="language-plaintext highlighter-rouge">SKIP_TARGETS ?= bpf sched_ext</code>, so sched_ext is skipped by default.</p>
+
+<p><strong>Toolchain minimums</strong> (<code class="language-plaintext highlighter-rouge">scripts/min-tool-version.sh</code> and <code class="language-plaintext highlighter-rouge">changes.rst</code> agree). The scripts give no reason for the GCC and LLVM minimums.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Tool</th>
+      <th>Minimum</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GCC</td>
+      <td>8.1.0</td>
+      <td>No riscv-specific minimum</td>
+    </tr>
+    <tr>
+      <td>binutils</td>
+      <td>2.30</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Clang/LLVM</td>
+      <td>17.0.1</td>
+      <td>Only the latest formal LLVM release is supported, per <code class="language-plaintext highlighter-rouge">changes.rst</code></td>
+    </tr>
+    <tr>
+      <td>GNU make</td>
+      <td>4.0</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>bash</td>
+      <td>4.2</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td>3.9</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>pahole</td>
+      <td>1.26</td>
+      <td><code class="language-plaintext highlighter-rouge">changes.rst</code> table says 1.26 but its prose says 1.22. Discrepancy; only relevant with <code class="language-plaintext highlighter-rouge">DEBUG_INFO_BTF</code>.</td>
+    </tr>
+    <tr>
+      <td>Rust (optional)</td>
+      <td>1.85.0</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>bindgen (optional)</td>
+      <td>0.71.1</td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Riscv-specific toolchain gates.</strong> A feature drops out silently when its gate fails; these are not hard build errors.</p>
+<ul>
+  <li><strong>Zacas and Zabha:</strong> <code class="language-plaintext highlighter-rouge">RISCV_ISA_ZACAS</code> and <code class="language-plaintext highlighter-rouge">RISCV_ISA_ZABHA</code> need compiler <code class="language-plaintext highlighter-rouge">-march</code> support for each extension (<code class="language-plaintext highlighter-rouge">TOOLCHAIN_HAS_ZACAS</code>, <code class="language-plaintext highlighter-rouge">TOOLCHAIN_HAS_ZABHA</code>) plus assembler <code class="language-plaintext highlighter-rouge">.option arch</code> support. The “why” is that the cmpxchg fast paths use these instructions. Without Zacas in the toolchain, Zabha CAS instructions are not used either.</li>
+  <li><strong>Vector (<code class="language-plaintext highlighter-rouge">RISCV_ISA_V</code>):</strong> needs <code class="language-plaintext highlighter-rouge">-march=rv64imv</code> support, GNU <code class="language-plaintext highlighter-rouge">ld</code> 2.38 or newer (or lld), and <code class="language-plaintext highlighter-rouge">.option arch</code>.</li>
+  <li><strong>Zbb, Zba, Zbc, Zbkb:</strong> need <code class="language-plaintext highlighter-rouge">ld</code> 2.39 or newer (or lld).</li>
+  <li><strong>Zicsr and Zifencei:</strong> binutils 2.38 and GCC 12.1.0 moved the default ISA spec, so the extensions become explicit. <code class="language-plaintext highlighter-rouge">TOOLCHAIN_NEEDS_OLD_ISA_SPEC</code> applies when GCC is older than 11.3.0.</li>
+  <li><strong>Ftrace:</strong> <code class="language-plaintext highlighter-rouge">CLANG_SUPPORTS_DYNAMIC_FTRACE</code> and <code class="language-plaintext highlighter-rouge">GCC_SUPPORTS_DYNAMIC_FTRACE</code> (<code class="language-plaintext highlighter-rouge">-fpatchable-function-entry=8</code>).</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">ARCH_HAS_BROKEN_DWARF5</code>:</strong> set when the LLVM assembler and lld are both older than 18.0.0.</li>
+  <li><strong>Rust:</strong> <code class="language-plaintext highlighter-rouge">HAVE_RUST</code> requires <code class="language-plaintext highlighter-rouge">CC_IS_CLANG</code> and riscv64. <code class="language-plaintext highlighter-rouge">Documentation/rust/arch-support.rst</code> lists riscv as Maintained, “riscv64 and LLVM/Clang only”.</li>
+  <li><strong>LLVM support level:</strong> <code class="language-plaintext highlighter-rouge">llvm.rst</code> lists riscv as “Supported”.</li>
+  <li><strong>Shadow call stack:</strong> needs <code class="language-plaintext highlighter-rouge">ld --no-relax-gp</code>.</li>
+  <li><strong>vDSO CFI variant:</strong> needs GCC support for <code class="language-plaintext highlighter-rouge">-fcf-protection=full</code>.</li>
+</ul>
+
+<p><strong>QEMU.</strong> The tree contains no QEMU invocation instructions. <code class="language-plaintext highlighter-rouge">SOC_VIRT</code> (“QEMU Virt Machine”) exists in <code class="language-plaintext highlighter-rouge">arch/riscv/Kconfig.socs</code>, and <code class="language-plaintext highlighter-rouge">nommu_virt_defconfig</code> targets it. Any <code class="language-plaintext highlighter-rouge">qemu-system-riscv64 -M virt</code> command line would be unsourced. [NEEDS VERIFICATION]</p>
+
+<p><strong>Known build failures and toolchain pitfalls.</strong></p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">2b9518684f85</code>: Clang could drop the argument assignment in the getrandom syscall wrapper.</li>
+  <li><code class="language-plaintext highlighter-rouge">ad6dcfa02376</code>: LTO removed vDSO symbols.</li>
+  <li><code class="language-plaintext highlighter-rouge">0f289334af68</code>: linker relaxation had to be disabled for <code class="language-plaintext highlighter-rouge">RUNTIME_MAGIC</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">f7bd2be7663c</code>: cmpxchg128 needs fixed registers because GCC otherwise picks odd registers and produces a reserved encoding.</li>
+  <li><code class="language-plaintext highlighter-rouge">76555252981e</code>: Zacas and Zabha are no longer added to <code class="language-plaintext highlighter-rouge">-march</code> globally.</li>
+  <li>A compat vDSO fix for lld (<a href="https://lore.kernel.org/all/20250423-riscv-fix-compat_vdso-lld-v2-1-b7bbbc244501@kernel.org/">lore</a>) was squashed into the getrandom series.</li>
+</ul>
+
+<p>No Dockerfile or Containerfile exists in the tree.</p>
+<h2 id="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64">
+  
+  
+    <a href="#6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64" class="anchor-heading" aria-labelledby="6-feature-coverage-and-gap-analysis-vs-arm64-and-amd64"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. Feature Coverage and Gap Analysis vs arm64 and amd64
+  
+  
+</h2>
+    
+
+<p>Comparisons with arm64 and amd64 were not systematically searched. The matrix shows riscv64 state with notes where arm64 data exists.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>riscv64</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Ticket spinlocks</td>
+      <td>Yes</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Queued spinlocks</td>
+      <td>Yes, since v6.13</td>
+      <td>Combo is the default. Pure queued needs <code class="language-plaintext highlighter-rouge">NONPORTABLE</code>, SMP and MMU.</td>
+    </tr>
+    <tr>
+      <td>Queued rwlocks</td>
+      <td>Yes</td>
+      <td><code class="language-plaintext highlighter-rouge">ARCH_USE_QUEUED_RWLOCKS</code></td>
+    </tr>
+    <tr>
+      <td>Zacas and Zabha cmpxchg/xchg</td>
+      <td>Yes, since v6.13</td>
+      <td>Toolchain gated</td>
+    </tr>
+    <tr>
+      <td>Zawrs waiting</td>
+      <td>Yes, since v6.11 and v6.15</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Zalasr acquire/release</td>
+      <td>Not used</td>
+      <td>Pending, v5</td>
+    </tr>
+    <tr>
+      <td>PREEMPT_RT</td>
+      <td>Yes, since v6.12</td>
+      <td>A latent bug in exception handling was fixed in v6.16</td>
+    </tr>
+    <tr>
+      <td>PREEMPT_LAZY</td>
+      <td>Yes, since v6.13</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Generic entry, generic TIF</td>
+      <td>Yes</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>rseq</td>
+      <td><code class="language-plaintext highlighter-rouge">HAVE_RSEQ</code> selected</td>
+      <td>Selftest backend exists</td>
+    </tr>
+    <tr>
+      <td>sched_ext</td>
+      <td>No riscv-specific kernel commit in <code class="language-plaintext highlighter-rouge">arch/riscv</code> history. <code class="language-plaintext highlighter-rouge">SCHED_CLASS_EXT</code> is in <code class="language-plaintext highlighter-rouge">init/Kconfig</code>.</td>
+      <td>Distro enablement on riscv64 [NEEDS VERIFICATION]</td>
+    </tr>
+    <tr>
+      <td>SCHED_MC</td>
+      <td>Yes</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>SCHED_CLUSTER, SCHED_SMT</td>
+      <td>Not seen in the arch Kconfig grep</td>
+      <td>Other files were not checked</td>
+    </tr>
+    <tr>
+      <td>PREEMPT_DYNAMIC</td>
+      <td>Available: riscv selects <code class="language-plaintext highlighter-rouge">ARCH_HAS_PREEMPT_LAZY</code>, and generic <code class="language-plaintext highlighter-rouge">PREEMPT_DYNAMIC</code> depends on it (default y). There is no <code class="language-plaintext highlighter-rouge">HAVE_PREEMPT_DYNAMIC</code> select in <code class="language-plaintext highlighter-rouge">arch/riscv/Kconfig</code>.</td>
+      <td>See the note below.</td>
+    </tr>
+    <tr>
+      <td>vDSO gettimeofday, getcpu, hwprobe</td>
+      <td>Yes</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>vDSO getrandom</td>
+      <td>Yes, since v6.16</td>
+      <td>About 17-18x faster than syscall, per the author’s figures (Section 11)</td>
+    </tr>
+    <tr>
+      <td>rv32 compat vDSO on rv64</td>
+      <td>Yes</td>
+      <td><code class="language-plaintext highlighter-rouge">compat_vdso/</code></td>
+    </tr>
+    <tr>
+      <td>CFI vDSO</td>
+      <td>Yes, since v7.0 (<code class="language-plaintext highlighter-rouge">vdso_cfi</code>)</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>RCU</td>
+      <td>Not checked. No riscv-specific commits were seen in git history.</td>
+      <td>MMU_GATHER_RCU_TABLE_FREE enabled in v7.4-rc1</td>
+    </tr>
+    <tr>
+      <td>rcutorture on riscv under QEMU</td>
+      <td>Not available</td>
+      <td>Tooling gap</td>
+    </tr>
+    <tr>
+      <td>KUnit</td>
+      <td>No <code class="language-plaintext highlighter-rouge">.kunitconfig</code> found under <code class="language-plaintext highlighter-rouge">arch/riscv</code>, <code class="language-plaintext highlighter-rouge">kernel/locking</code>, <code class="language-plaintext highlighter-rouge">kernel/sched</code> or <code class="language-plaintext highlighter-rouge">kernel/rcu</code>. The search was <code class="language-plaintext highlighter-rouge">head</code>-limited.</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>lock torture / locktorture on riscv</td>
+      <td>Used by the author of the T-Head fix on SG2042 and TH1520</td>
+      <td>Results not in the tree</td>
+    </tr>
+    <tr>
+      <td>Hardware coverage notes</td>
+      <td>SG2042 and TH1520 used for qspinlock testing</td>
+      <td>Early C910 cores have a store-merge livelock</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>PREEMPT_DYNAMIC.</strong> A gnulib reporter described a PREEMPT_DYNAMIC kernel on riscv64. This is consistent with the clone: <code class="language-plaintext highlighter-rouge">arch/riscv/Kconfig</code> has <code class="language-plaintext highlighter-rouge">select ARCH_HAS_PREEMPT_LAZY</code> (line 47), and <code class="language-plaintext highlighter-rouge">kernel/Kconfig.preempt</code> makes <code class="language-plaintext highlighter-rouge">PREEMPT_DYNAMIC</code> depend on <code class="language-plaintext highlighter-rouge">ARCH_HAS_PREEMPT_LAZY</code> with <code class="language-plaintext highlighter-rouge">default y</code>. A grep for <code class="language-plaintext highlighter-rouge">HAVE_PREEMPT_DYNAMIC</code> in the arch Kconfig correctly finds nothing.</p>
+
+<p><strong>Functional gaps.</strong></p>
+<ul>
+  <li>Queued spinlocks as the default are not possible without Zabha or Ziccrse. Combo falls back to ticket locks at runtime.</li>
+  <li>The riscv atomics-based locks depend on LR/SC forward-progress. The bound is missing in futex until Bueso’s v2 is merged.</li>
+  <li>No rcutorture riscv QEMU path.</li>
+  <li>Zalasr is not used for <code class="language-plaintext highlighter-rouge">smp_load_acquire</code> and <code class="language-plaintext highlighter-rouge">smp_store_release</code>.</li>
+</ul>
+
+<p><strong>Performance gaps.</strong></p>
+<ul>
+  <li>No riscv64 benchmark of Zawrs, Zacas or Zabha was found.</li>
+  <li>No riscv64 <code class="language-plaintext highlighter-rouge">clock_gettime</code> or <code class="language-plaintext highlighter-rouge">gettimeofday</code> vDSO timings, and no schbench, hackbench, will-it-scale or lock_torture results, were found.</li>
+  <li>The only quantified figures are Guo Ren’s pre-merge qspinlock numbers on SG2042 and the vDSO getrandom timings (Section 11).</li>
+  <li>Data not available for deltas against arm64 and amd64.</li>
+</ul>
+
+<p><strong>Security hardening.</strong></p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">hardening.config</code> exists in <code class="language-plaintext highlighter-rouge">arch/riscv/configs/</code>.</li>
+  <li>CVE-2024-57939: <code class="language-plaintext highlighter-rouge">die()</code> took a sleeping lock under RT. It was fixed with <code class="language-plaintext highlighter-rouge">raw_spinlock_t</code> (<code class="language-plaintext highlighter-rouge">6a97f4118ac0</code>, v6.13).</li>
+  <li><code class="language-plaintext highlighter-rouge">4d0697f19297</code> (v7.3): under <code class="language-plaintext highlighter-rouge">SHADOW_CALL_STACK</code>, an unprivileged task could set <code class="language-plaintext highlighter-rouge">tp</code> and make the kernel skip reloading the shadow-call-stack pointer. This gave an arbitrary-write and control-flow primitive. It was fixed by checking <code class="language-plaintext highlighter-rouge">sstatus.SPP</code>. It is marked for stable.</li>
+  <li>Unbounded LR/SC retry from unprivileged PI futex operations is open.</li>
+</ul>
+
+<p><strong>NaN and floating-point semantics:</strong> not applicable to this subsystem.</p>
+<h2 id="7-cicd-infrastructure">
+  
+  
+    <a href="#7-cicd-infrastructure" class="anchor-heading" aria-labelledby="7-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7. CI/CD Infrastructure
+  
+  
+</h2>
+    
+
+<p><strong>Does riscv64 CI exist in the tree?</strong> No. A tree listing of the shared clone at HEAD found no CI config of any kind (see Section 3 for the file names). The checks were:</p>
+<ul>
+  <li>the tree top level;</li>
+  <li>MAINTAINERS, searched for KernelCI, LKFT, 0-day, syzbot, buildbot and Jenkins;</li>
+  <li><code class="language-plaintext highlighter-rouge">tools/testing/selftests/Makefile</code>, <code class="language-plaintext highlighter-rouge">riscv/Makefile</code>, <code class="language-plaintext highlighter-rouge">vDSO/Makefile</code>, <code class="language-plaintext highlighter-rouge">rseq/Makefile</code> and <code class="language-plaintext highlighter-rouge">rcutorture/bin/functions.sh</code>.</li>
+</ul>
+
+<p>The MAINTAINERS GitLab hits are git tree and bug-tracker URLs for drm, amdgpu and apparmor. None relate to scheduler or locking CI.</p>
+
+<p><strong>Patch-level checks.</strong> <a href="https://docs.kernel.org/arch/riscv/patch-acceptance.html">patch-acceptance.rst</a> says patchwork CI checks apply and that failing checks make a patch unlikely to be applied. I could not read the job definitions, so whether they only build or also run tests is an inference. The grade treats them as build-only.</p>
+
+<p><strong>External riscv64 test execution.</strong></p>
+<ul>
+  <li>KernelCI qemu riscv64 LTP runs on the CIP trees 5.10.y-cip and 6.1.y-cip. They ran in <code class="language-plaintext highlighter-rouge">lab-broonie</code> and <code class="language-plaintext highlighter-rouge">lab-collabora</code> and were reported to kernel-build-reports@lists.linaro.org. [NEEDS VERIFICATION], because only search snippets were read:
+    <ul>
+      <li><a href="https://lists-ec2.linaro.org/archives/list/kernel-build-reports@lists.linaro.org/thread/2N2GXQONP467SDG2273INU3RM6WLS5ND">fcntl-locktests</a></li>
+      <li><a href="https://lists.linaro.org/archives/list/kernel-build-reports@lists.linaro.org/thread/7ASRBPRMGIYEQR4Z2EY7AZNJKYKYARVM">ltp-timers</a></li>
+      <li><a href="https://lists.linaro.org/archives/list/kernel-build-reports@lists.linaro.org/thread/MZCXFAFOBKS3BGLKSTRCGHXXI6D4ZQLX">ltp-ipc</a></li>
+    </ul>
+  </li>
+  <li>No riscv64 kselftest coverage for futex, rseq, vDSO or sched was found in KernelCI, LKFT or 0-day. [NEEDS VERIFICATION]</li>
+  <li>The KernelCI dashboard (Anubis page), git.kernel.org and the lore.kernel.org linux-riscv search were all blocked. LKFT and syzkaller were not attempted.</li>
+  <li>syzbot has produced two riscv64-only reports (Section 11).</li>
+  <li>The sched-ext CI workflow found uses GitHub Actions with virtme-ng and is not riscv64.</li>
+</ul>
+
+<p><strong>RISE.</strong></p>
+<ul>
+  <li>No RISE runner usage or funded work was found for this subsystem.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">riscv-runner</code> repo exists (free GitHub runners on real RISC-V hardware), as do <code class="language-plaintext highlighter-rouge">board-farm</code> and a <code class="language-plaintext highlighter-rouge">linux</code> fork with no visible scheduler, locking, atomics or vDSO changes. Only 10 of the org’s 70 repositories were visible. A <code class="language-plaintext highlighter-rouge">kernel-and-virtualization-wg</code> repo was mentioned but was not among the visible ones. [NEEDS VERIFICATION]</li>
+  <li>The <a href="https://riseproject.dev/">December 2024 deck</a> lists the Linux kernel among seven active CI projects on the RISE build farm. The June 2026 RISC-V Summit Europe deck says the build farm integrates with kernel, GCC and LLVM CI. Whether these exercise scheduler or locking tests is not shown.</li>
+  <li>RP012 added the Banana Pi BPI-F3 and SiFive HiFive Premier P550 to Collabora’s LAVA lab, which KernelCI uses. The lab has close to 400 devices. The <a href="https://riseproject.dev/2025/09/01/">post</a> is a summary. The post’s own URL was not captured, so treat the link as the site root. [NEEDS VERIFICATION]</li>
+  <li>Scaleway EM-RV1 (TH1520) runners run a vendor 5.10.x kernel and do not support virtualization. RISE says it is contributing full TH1520 mainline support.</li>
+</ul>
+
+<p><strong>Comparison table.</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>amd64</th>
+      <th>arm64</th>
+      <th>riscv64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CI config in kernel tree</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>rcutorture QEMU support</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No match found</td>
+    </tr>
+    <tr>
+      <td>Test execution seen externally</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>KernelCI qemu LTP on CIP trees (snippets)</td>
+    </tr>
+    <tr>
+      <td>Patchwork checks</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>Apply to linux-riscv; contents unread</td>
+    </tr>
+    <tr>
+      <td>Hardware</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+      <td>QEMU; LAVA boards; RISE runners (not tied to this subsystem)</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="8-distribution-and-release-status">
+  
+  
+    <a href="#8-distribution-and-release-status" class="anchor-heading" aria-labelledby="8-distribution-and-release-status"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8. Distribution and Release Status
+  
+  
+</h2>
+    
+
+<p><strong>Release provider:</strong> distro. Upstream ships source only. The binaries are distro kernel packages.</p>
+
+<ul>
+  <li>No PyPI package named <code class="language-plaintext highlighter-rouge">linux-scheduler-and-locking</code> exists (HTTP 404). The <a href="https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/linux-scheduler-and-locking/">RISE wheel builder index</a> redirects to PyPI and also returns 404.</li>
+  <li>The mainline riscv64 port has been in mainline since Linux 4.15.</li>
+  <li>The clone is at <code class="language-plaintext highlighter-rouge">v7.4-rc1-132-g05441d697f7f</code>. The clone gives the state, because the git.kernel.org release page was not accessible.</li>
+  <li>Ubuntu 26.04 (resolute) riscv64: not checked. packages.ubuntu.com was not accessible. [NEEDS VERIFICATION]</li>
+  <li>Debian, Fedora, openSUSE and Arch kernel package and config sources were not checked. Whether distro configs enable sched_ext, queued spinlocks or PREEMPT_RT on riscv64 is [NEEDS VERIFICATION]. Data not available: distro packaging patches.</li>
+  <li>Downstream hints (neither verified):
+    <ul>
+      <li>An <a href="https://build-test-1.opensuse.org/request/show/1227554">openSUSE request</a> mentions sched_ext tooling patches for riscv64 and aarch64.</li>
+      <li>A <a href="https://github.com/cordanaLLM/nucleus/pull/162">downstream packaging PR</a> titled “enable sched-ext on riscv64” (2026-10-16) is not upstream.</li>
+    </ul>
+  </li>
+  <li>Rust sched_ext userspace tooling added riscv64gc as a target in March 2025. [NEEDS VERIFICATION]</li>
+</ul>
+
+<p><strong>What a user must do for a working binary.</strong></p>
+<ol>
+  <li>Install a distro riscv64 kernel package. The kernel ships in <code class="language-plaintext highlighter-rouge">linux-image-*</code> / <code class="language-plaintext highlighter-rouge">linux-riscv</code> packages on Ubuntu.</li>
+  <li>Or build from source per Section 5, with a toolchain new enough for Zacas and Zabha if the fast paths are wanted.</li>
+  <li>Select the spinlock type. The default combo falls back to ticket locks when neither Zabha nor Ziccrse is present.</li>
+  <li>Boot with OpenSBI or another SBI firmware for IPIs, timer and HSM.</li>
+</ol>
+<h2 id="9-dependencies">
+  
+  
+    <a href="#9-dependencies" class="anchor-heading" aria-labelledby="9-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9. Dependencies
+  
+  
+</h2>
+    
+
+<p>Build, test and release statuses for toolchain rows come from the existing <code class="language-plaintext highlighter-rouge">project-reports/*.md</code> files (single source each). The dependency graph query was not available, so no row has graph confirmation.</p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Role</th>
+      <th>riscv64 build</th>
+      <th>riscv64 test</th>
+      <th>riscv64 release</th>
+      <th>Community</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Linux kernel (runtime-dependency, critical)</td>
+      <td>The host kernel. Scheduler and locking code is part of it. Build tooling is generic userland (bash, make, bc, flex, bison, Python 3.9, openssl).</td>
+      <td>Builds, <code class="language-plaintext highlighter-rouge">ARCH=riscv</code></td>
+      <td>No in-tree CI; limited external LTP (Section 7)</td>
+      <td>Distro kernel packages</td>
+      <td>Mainline; RISC-V Supported</td>
+    </tr>
+    <tr>
+      <td>OpenSBI (runtime-dependency, critical)</td>
+      <td>Firmware. SBI provides IPIs, timer and HSM for SMP and scheduler bring-up.</td>
+      <td>Builds. Report readiness orange.</td>
+      <td>SBIUnit tests exist but are off by default and no CI runs them</td>
+      <td>Not verified</td>
+      <td>See project-reports/opensbi.md</td>
+    </tr>
+    <tr>
+      <td>GCC (build-dependency, critical)</td>
+      <td>Default compiler (min 8.1). Needs <code class="language-plaintext highlighter-rouge">-march</code> support for zacas and zabha. Builds the vDSO, including <code class="language-plaintext highlighter-rouge">-fcf-protection=full</code> for the CFI variant.</td>
+      <td>Works. Report readiness blue.</td>
+      <td>riscv64 results go to gcc-testresults but are not release-blocking</td>
+      <td>Distro-provided. Latest stable 16.2 per the GCC report.</td>
+      <td>See project-reports/gcc.md</td>
+    </tr>
+    <tr>
+      <td>GNU binutils (build-dependency, critical)</td>
+      <td>Assembler and linker (min 2.30). Several extensions need <code class="language-plaintext highlighter-rouge">ld</code> 2.38 or 2.39. Links the vDSO.</td>
+      <td>Works. Report readiness blue.</td>
+      <td>Not separately verified</td>
+      <td>Distro-provided</td>
+      <td>See project-reports/gnu-binutils.md</td>
+    </tr>
+    <tr>
+      <td>LLVM (build-dependency, optional)</td>
+      <td>Alternative toolchain (Clang min 17.0.1, LLD). <code class="language-plaintext highlighter-rouge">HAVE_RUST</code> requires Clang.</td>
+      <td>Works. Report readiness yellow.</td>
+      <td>riscv64 is not in LLVM’s required pre-merge CI per the LLVM report</td>
+      <td>Distro-provided</td>
+      <td>See project-reports/llvm.md</td>
+    </tr>
+    <tr>
+      <td>QEMU (test-dependency, optional)</td>
+      <td>Runs kselftests, KUnit and boot tests on riscv64. Not needed to build.</td>
+      <td>Builds. Report readiness yellow (build-only CI).</td>
+      <td>Not verified</td>
+      <td>Distro-provided</td>
+      <td>See project-reports/qemu.md</td>
+    </tr>
+    <tr>
+      <td>LTP (test-dependency, optional)</td>
+      <td>The Linux Test Project. KernelCI runs ltp-ipc, ltp-timers and fcntl-locktests on qemu riscv64 CIP trees (snippets). [NEEDS VERIFICATION]</td>
+      <td>Data not available. No LTP project report was consulted.</td>
+      <td>Seen on KernelCI qemu only; details not verified</td>
+      <td>Data not available</td>
+      <td>Data not available</td>
+    </tr>
+    <tr>
+      <td>Rust and bindgen (optional, indirect)</td>
+      <td>Rust-for-Linux only (Rust min 1.85.0, bindgen min 0.71.1). Not needed for core scheduler or locking.</td>
+      <td><code class="language-plaintext highlighter-rouge">riscv64gc-unknown-linux-gnu</code> target available since Rust 1.41.0. Report readiness yellow.</td>
+      <td>Not verified</td>
+      <td>Distro-provided</td>
+      <td>Needs Clang as well. bindgen has no report.</td>
+    </tr>
+    <tr>
+      <td>glibc (indirect, userspace consumer)</td>
+      <td>Consumes futex, rseq and the vDSO (<code class="language-plaintext highlighter-rouge">__vdso_clock_gettime</code>, <code class="language-plaintext highlighter-rouge">getrandom</code>). Not a kernel build dependency.</td>
+      <td>Works. Report readiness yellow.</td>
+      <td>The riscv64 test-run gate is unconfirmed per the glibc report</td>
+      <td>Distro-provided</td>
+      <td>See project-reports/glibc.md</td>
+    </tr>
+    <tr>
+      <td>dwarves / pahole (indirect, optional)</td>
+      <td>BTF generation, min 1.26. Needed for <code class="language-plaintext highlighter-rouge">DEBUG_INFO_BTF</code>, which sched_ext requires.</td>
+      <td>[NEEDS VERIFICATION]</td>
+      <td>[NEEDS VERIFICATION]</td>
+      <td>[NEEDS VERIFICATION]</td>
+      <td>In <code class="language-plaintext highlighter-rouge">projects.yml</code>, no report</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Deep-dive on critical dependencies.</strong></p>
+<ul>
+  <li><strong>Toolchain.</strong>
+    <ul>
+      <li>A GCC or binutils that is too old does not fail the build. It silently disables Zacas, Zabha, and the CFI vDSO. The kernel runs with the slower LR/SC paths. This is a degraded configuration, not an error.</li>
+      <li>Binutils <code class="language-plaintext highlighter-rouge">ld</code> below 2.38/2.39 limits Vector and the bit-manipulation extensions.</li>
+      <li>Zacas and Zabha paths also depend on <code class="language-plaintext highlighter-rouge">.option arch</code> assembler support.</li>
+    </ul>
+  </li>
+  <li><strong>LLVM.</strong> Rust-for-Linux on riscv requires Clang. LLD below 18 triggers a Kconfig workaround (<code class="language-plaintext highlighter-rouge">ARCH_HAS_BROKEN_DWARF5</code>).</li>
+  <li><strong>OpenSBI.</strong> SMP, IPIs and hotplug use the SBI. The firmware is a hard runtime dependency. Its readiness is orange.</li>
+  <li><strong>Hardware extensions.</strong> Zacas, Zabha, Zawrs, Zicfilp and Zicfiss are runtime-detected, not build-time dependencies. SMP and CPU topology come from the device tree or ACPI.</li>
+</ul>
+<h2 id="11-known-bugs-and-active-issues">
+  
+  
+    <a href="#11-known-bugs-and-active-issues" class="anchor-heading" aria-labelledby="11-known-bugs-and-active-issues"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11. Known Bugs and Active Issues
+  
+  
+</h2>
+    
+
+<p>There are no bug-tracker issue numbers. Kernel bugs are tracked by commit and mailing-list thread. The syzbot reports are the only trackers found.</p>
+
+<p><strong>Open or unmerged.</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://lists.infradead.org/pipermail/linux-riscv/2026-May/090709.html">Bueso v2</a></td>
+      <td>Bound LL/SC retries in riscv <code class="language-plaintext highlighter-rouge">futex_atomic_cmpxchg_inatomic()</code></td>
+      <td>Posted 2026-05-05, not seen merged. The latest change to <code class="language-plaintext highlighter-rouge">futex.h</code> in the clone is <code class="language-plaintext highlighter-rouge">405290be962b</code>. Later status [NEEDS VERIFICATION].</td>
+      <td>High (correctness and denial of service)</td>
+      <td>The loop runs while holding the hash-bucket lock with page faults disabled. The author says it enables “pathological cases from unprivileged userspace pi operations”. The cap is 128 iterations, chosen “arbitrarily”. The arm64 equivalent is <code class="language-plaintext highlighter-rouge">03110a5cb216</code>. The patch is “compile tested only”.</td>
+    </tr>
+    <tr>
+      <td><a href="https://patchew.org/linux/20260421143154.1590156-1-guoren@kernel.org/">ERRATA_THEAD_WRITE_ONCE v5</a></td>
+      <td>T-Head C910 store-merge-buffer livelock</td>
+      <td>Posted April 2026, not merged (<code class="language-plaintext highlighter-rouge">git grep THEAD_WRITE_ONCE</code> returns nothing). Later status [NEEDS VERIFICATION].</td>
+      <td>High on affected silicon</td>
+      <td>A lone store can sit in the merge buffer for a long time. Found on SG2042 and TH1520 during qspinlock lock_torture testing, and on SG2042 after about 30 minutes. The fix appends <code class="language-plaintext highlighter-rouge">fence w,o</code> to <code class="language-plaintext highlighter-rouge">WRITE_ONCE()</code> via alternatives on T-Head cores only. It adds an option that defaults to y. No cost figures.</td>
+    </tr>
+    <tr>
+      <td>Zalasr v5</td>
+      <td>Use Zalasr for <code class="language-plaintext highlighter-rouge">smp_load_acquire</code> and <code class="language-plaintext highlighter-rouge">smp_store_release</code></td>
+      <td>v5 (Qingwei Hu, ByteDance, October 2026). Only the instruction definitions, hwprobe and KVM parts are merged.</td>
+      <td>Low (performance)</td>
+      <td>See Section 12.</td>
+    </tr>
+    <tr>
+      <td>Kernel-mode vector under RT</td>
+      <td>Andy Chiu, linux-rt-devel, August 2026</td>
+      <td>Status unknown [NEEDS VERIFICATION]</td>
+      <td>Unknown</td>
+      <td><a href="https://ratatoskr.run/linux-rt-devel/2026/08/17360219">Thread</a></td>
+    </tr>
+    <tr>
+      <td>syzbot</td>
+      <td>“corrupted stack end detected inside scheduler”</td>
+      <td>Kernel 6.10-rc1, QEMU riscv-virtio, reported 2024-06-03, auto-closed as obsolete 2024-08-28, no reproducer</td>
+      <td>Unknown</td>
+      <td><a href="https://groups.google.com/g/syzkaller-upstream-moderation/c/PkAFdhGiE7E/m/juPnE1SpDAAJ">Report</a></td>
+    </tr>
+    <tr>
+      <td>syzbot</td>
+      <td>“possible circular locking dependency” on 6.16.0-rc7 with riscv64 userspace</td>
+      <td>No reproducer. Seen only through a search summary, and the page title it points to is a different bug, so the match is doubtful. [NEEDS VERIFICATION]</td>
+      <td>Unknown</td>
+      <td><a href="https://groups.google.com/g/syzkaller-bugs/c/WbWLT0nipws/m/aOgcYgNwAwAJ">Thread</a></td>
+    </tr>
+    <tr>
+      <td>gnulib <code class="language-plaintext highlighter-rouge">test-pthread-rwlock</code></td>
+      <td>Timeouts on a riscv64 Alpine system</td>
+      <td>Root cause not established</td>
+      <td>Unknown</td>
+      <td>See the paragraph below.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>gnulib <code class="language-plaintext highlighter-rouge">test-pthread-rwlock</code> (<a href="https://mail-archive.com/bug-gnulib@gnu.org/msg49781.html">bug-gnulib msg49781</a>).</strong> This is a symptom report, not a benchmark. The reporter’s riscv64 Alpine system ran under an LXC container with a PREEMPT_DYNAMIC kernel and musl libc. CPU model and kernel version are not given.</p>
+<ul>
+  <li>Under SCHED_OTHER the test timed out at 10m0.01s.</li>
+  <li>With <code class="language-plaintext highlighter-rouge">chrt --fifo 10</code> it took 33.00 s. With <code class="language-plaintext highlighter-rouge">--rr 10</code> or <code class="language-plaintext highlighter-rouge">--rr 99</code> it took 30.00 s.</li>
+  <li>Other machines: Ubuntu x86_64 glibc about 0.15-0.20 s; Alpine 3.20 x86_64 VM 1.24-1.59 s; cfarm91 riscv64 3.908 s; cfarm94 riscv64 0.84 s; cfarm95 riscv64 2.166 s; other riscv64 systems and a QEMU riscv64 VM under 4 s.</li>
+  <li>It may be tied to the reporter’s configuration rather than the kernel.</li>
+</ul>
+
+<p><strong>Fixed (verified in the clone).</strong></p>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Commit</th>
+      <th>First release</th>
+      <th>Problem and fix</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">6a97f4118ac0</code></td>
+      <td>6.13</td>
+      <td>CVE-2024-57939 (<a href="https://security-tracker.debian.org/tracker/CVE-2024-57939">tracker</a>). <code class="language-plaintext highlighter-rouge">die()</code> took a <code class="language-plaintext highlighter-rouge">spinlock_t</code>, which sleeps under RT. Switched to <code class="language-plaintext highlighter-rouge">raw_spinlock_t</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">b3134b8c1a1c</code></td>
+      <td>6.13-rc3</td>
+      <td>Boot failure with <code class="language-plaintext highlighter-rouge">CONFIG_DEBUG_RT_MUTEXES=y</code>. Jump-label patching switched queued to ticket spinlock one call site at a time, which could pair <code class="language-plaintext highlighter-rouge">ticket_lock</code> with <code class="language-plaintext highlighter-rouge">queued_spin_unlock</code>, dirty the lock value and deadlock. Fix: avoid the text mutex in <code class="language-plaintext highlighter-rouge">arch_jump_label_transform_queue()</code> while <code class="language-plaintext highlighter-rouge">early_boot_irqs_disabled</code>. Reported and tested by Conor Dooley.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">40e6073e7648</code></td>
+      <td>6.13-rc7</td>
+      <td><code class="language-plaintext highlighter-rouge">_Q_PENDING_LOOPS</code> was undefined with <code class="language-plaintext highlighter-rouge">RISCV_QUEUED_SPINLOCKS=y</code>. Fixes <code class="language-plaintext highlighter-rouge">ab83647fadae</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">599c44cd21f4</code></td>
+      <td>6.14</td>
+      <td>The futex cmpxchg compare value was not sign-extended to match <code class="language-plaintext highlighter-rouge">lr.w</code>. No miscompile was observed.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">89079520cef6</code>, <code class="language-plaintext highlighter-rouge">2f956db8b3b0</code>, <code class="language-plaintext highlighter-rouge">ee0d03053e70</code></td>
+      <td>6.16-rc1</td>
+      <td>vDSO getrandom: first wiring reverted by Palmer Dabbelt as “broken”, then re-applied.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">2b9518684f85</code></td>
+      <td>6.16-rc4</td>
+      <td>Wrong inline-asm constraints in the getrandom syscall wrapper. Clang could drop the argument assignment.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">969f028bf2c4</code></td>
+      <td>6.16-rc7</td>
+      <td><code class="language-plaintext highlighter-rouge">force_sig_fault()</code> took a sleeping lock with interrupts disabled under RT. Reproducible with <code class="language-plaintext highlighter-rouge">asm("ebreak")</code> or <code class="language-plaintext highlighter-rouge">asm("unimp")</code>. RT enablement (v6.12) shipped this latent bug for about four releases. Fixes <code class="language-plaintext highlighter-rouge">f0bddf50586d</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ad6dcfa02376</code></td>
+      <td>7.2</td>
+      <td>Under LTO the compiler removed <code class="language-plaintext highlighter-rouge">__vdso_clock_getres</code>, <code class="language-plaintext highlighter-rouge">__vdso_clock_gettime</code>, <code class="language-plaintext highlighter-rouge">__vdso_getrandom</code>, <code class="language-plaintext highlighter-rouge">__vdso_gettimeofday</code> and <code class="language-plaintext highlighter-rouge">__vdso_riscv_hwprobe</code>. LTO is now disabled for the vDSO.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">4d0697f19297</code></td>
+      <td>7.3</td>
+      <td>Shadow-call-stack <code class="language-plaintext highlighter-rouge">tp</code> trust bug (Section 6). Marked for stable.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">76555252981e</code></td>
+      <td>7.3-rc1</td>
+      <td>Zacas and Zabha no longer added to <code class="language-plaintext highlighter-rouge">-march</code> globally.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">405290be962b</code></td>
+      <td>Not checked</td>
+      <td>Untag the user pointer before the atomic access in futex.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">3ec4350d4efb</code>, <code class="language-plaintext highlighter-rouge">80f6e72b21aa</code></td>
+      <td>6.12-rc5; not checked</td>
+      <td>Raw locks for IMSIC KVM state under RT.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p><strong>Correctness bugs highlighted.</strong> The unbounded LR/SC futex loop, the T-Head store-merge livelock and the shadow-call-stack <code class="language-plaintext highlighter-rouge">tp</code> bug are correctness or security issues. The qspinlock jump-label deadlock and the RT sleeping-lock issues were the correctness bugs found after the RT and qspinlock enablement.</p>
+
+<p><strong>Generic CVEs not verified for riscv relevance:</strong> the sched_ext CVEs CVE-2025-68202 and CVE-2025-21657, and CVE-2026-89521 (<code class="language-plaintext highlighter-rouge">pick_task()</code> releasing the rq lock). A Will Deacon <a href="https://lore.kernel.org/all/20210415092212.GA26151@willie-the-truck/">2021 reply</a> warned that ticket spinlocks had forward-progress trouble on arm64 big.LITTLE. That is background, not a riscv bug.</p>
+
+<p><strong>Benchmarks (all author-reported, none reproduced).</strong></p>
+<ul>
+  <li><strong>qspinlock vs ticket on SOPHGO SG2042 (64 cores), <a href="https://lists.infradead.org/pipermail/linux-riscv/2023-November/043379.html">Guo Ren V11 cover letter, November 2023</a>.</strong> This is the pre-merge series. The merged v6 cover letter (<a href="https://lkml.iu.edu/hypermail/linux/kernel/2411.0/02159.html">lkml</a>) has no numbers, and the merged version differs, since it adds COMBO_SPINLOCKS and requires Zabha and Ziccrse. The kernel baseline and sysbench units are not given.</li>
+</ul>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Test</th>
+      <th>queued</th>
+      <th>ticket</th>
+      <th>Stated gain</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>sysbench threads=32 yields=100 lock=8</td>
+      <td>0.5109</td>
+      <td>0.5814</td>
+      <td>+13.8%</td>
+    </tr>
+    <tr>
+      <td>perf futex/hash (ops/sec)</td>
+      <td>1444393</td>
+      <td>1353215</td>
+      <td>+6.7%</td>
+    </tr>
+    <tr>
+      <td>perf futex/wake-parallel (1/64 threads)</td>
+      <td>0.0253 ms</td>
+      <td>0.0275 ms</td>
+      <td>+8.6%</td>
+    </tr>
+    <tr>
+      <td>perf futex/requeue (64 of 64 threads)</td>
+      <td>0.0785 ms</td>
+      <td>0.0818 ms</td>
+      <td>+4.2%</td>
+    </tr>
+    <tr>
+      <td>UnixBench index score</td>
+      <td>12426.1</td>
+      <td>11670.7</td>
+      <td>+6.4% overall</td>
+    </tr>
+    <tr>
+      <td>Pipe Throughput</td>
+      <td>18535.9</td>
+      <td>16554.7</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Pipe-based Context Switching</td>
+      <td>7089.0</td>
+      <td>6427.8</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Process Creation</td>
+      <td>995.0</td>
+      <td>857.0</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>File Copy 1024</td>
+      <td>19601.8</td>
+      <td>16550.0</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>System Call Overhead</td>
+      <td>22205.5</td>
+      <td>20511.2</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>Execl Throughput</td>
+      <td>3050.4</td>
+      <td>2936.1</td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>Shell Scripts (1 concurrent) was marginally better with ticket locks (13497.1 vs 13456.9). A second summary via <a href="https://lwn.net/Articles/956175">LWN 956175</a> confirms the same direction, and says the patches were also tested on TH1520 and on Fedora, Ubuntu and openEuler. That summary is partial.</p>
+<ul>
+  <li><strong>vDSO getrandom (<a href="https://lists.infradead.org/pipermail/linux-riscv/2025-April/068949.html">Xi Ruoyao, April 2025</a>).</strong> The same numbers are in the <code class="language-plaintext highlighter-rouge">ee0d03053e70</code> commit message. Hardware is not stated.</li>
+</ul>
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Test</th>
+      <th>vDSO</th>
+      <th>libc</th>
+      <th>syscall</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>25,000,000 calls</td>
+      <td>2.466 s</td>
+      <td>41.448 s</td>
+      <td>41.044 s</td>
+    </tr>
+    <tr>
+      <td>“25,000,000 x 256” (multiplier unexplained)</td>
+      <td>162.286 s</td>
+      <td>2953.855 s</td>
+      <td>2796.269 s</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>My arithmetic puts the vDSO path at about 17-18x faster. The v1 posting (February 2025) gave 2.560 s for the vDSO and 40.961 s for libc. [NEEDS VERIFICATION]</p>
+<ul>
+  <li><strong>Not found:</strong> RISC-V figures for Zawrs, Zacas or Zabha; riscv64 clock_gettime or gettimeofday timings; schbench, hackbench, will-it-scale or lock_torture results; KernelCI or LKFT performance data. The RISE Confluence page “LK_01_019 - Zawrs support” returned empty. No RISE blog post covers this subsystem. No riscv64 versus arm64 comparison was found for 2024-2026.</li>
+</ul>
+<h2 id="12-objections-and-upstream-blockers">
+  
+  
+    <a href="#12-objections-and-upstream-blockers" class="anchor-heading" aria-labelledby="12-objections-and-upstream-blockers"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 12. Objections and Upstream Blockers
+  
+  
+</h2>
+    
+
+<p><strong>Stated objections.</strong> No explicit objection to riscv scheduler or locking work was found. The lore.kernel.org mailing-list threads could not be read (lore.kernel.org was not accessible), so review discussion is not verified. [NEEDS VERIFICATION]</p>
+
+<p><strong>Technical blockers.</strong></p>
+<ul>
+  <li>Queued spinlocks depend on a hardware forward-progress guarantee. The Kconfig help text requires CAS with Zabha, or LR/SC with Ziccrse, which is why <code class="language-plaintext highlighter-rouge">RISCV_QUEUED_SPINLOCKS</code> is gated by <code class="language-plaintext highlighter-rouge">NONPORTABLE</code> and combo is the default.</li>
+  <li>Extension discovery runs too late in boot to use alternatives, so a static key is used (<code class="language-plaintext highlighter-rouge">qspinlock_key</code> TODO).</li>
+  <li>Unbounded LR/SC loops (futex) are an open correctness issue.</li>
+  <li>A T-Head C910 erratum needs a <code class="language-plaintext highlighter-rouge">WRITE_ONCE</code> workaround that would affect all kernel stores on those cores.</li>
+  <li>Zalasr is not yet applied to acquire/release.</li>
+  <li>SCHED_CLUSTER, SCHED_SMT and HAVE_PREEMPT_DYNAMIC were not seen in the arch Kconfig. [NEEDS VERIFICATION]</li>
+  <li>Guo Ren’s older CNA and paravirt qspinlock work in the <a href="https://isrc.iscas.ac.cn/gitlab/mirrors/github.com/c-sky_csky-linux/">c-sky mirror</a> shows no mainline merge. [NEEDS VERIFICATION]</li>
+</ul>
+
+<p><strong>Organizational blockers.</strong></p>
+<ul>
+  <li>The patch policy only admits ratified or frozen extensions, and favors well-tested code. Failing patchwork checks make a patch unlikely to be applied.</li>
+  <li>Review bandwidth appears to be the limit: the Bueso futex v2 (May 2026) and the T-Head v5 (April 2026) were not seen merged by 2026-11-03, and the Zalasr work went from v4 (2025-10-20) to v5 (October 2026), with only the instruction, hwprobe and KVM parts merged. Why they are unmerged is unknown.</li>
+  <li>Earlier work by one contributor (Guo Ren) was largely re-based into a series by another (Ghiti) before merging. That is the pattern seen with qspinlock.</li>
+</ul>
+
+<p><strong>Acceptance probability.</strong> Data not available. Not estimable from the findings.</p>
+<h2 id="13-readiness-assessment">
+  
+  
+    <a href="#13-readiness-assessment" class="anchor-heading" aria-labelledby="13-readiness-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 13. Readiness Assessment
+  
+  
+</h2>
+    
+
+<ul>
+  <li><strong>Color:</strong> yellow (build-only-ci)</li>
+  <li><strong>Release provider:</strong> distro</li>
+</ul>
+
+<p><strong>Justification.</strong> The riscv64 scheduler, locking, atomics and vDSO code is in mainline and supported (<a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/MAINTAINERS">RISC-V ARCHITECTURE entry in MAINTAINERS</a>, status Supported). The tree has no CI config of any kind, and the riscv selftests (abi, hwprobe, mm, sigreturn, vector, cfi) do not test scheduling or locking. The only riscv64 test execution found is KernelCI qemu LTP runs (ltp-ipc, ltp-timers, fcntl-locktests) on CIP trees, seen only as search snippets (<a href="https://lists-ec2.linaro.org/archives/list/kernel-build-reports@lists.linaro.org/thread/2N2GXQONP467SDG2273INU3RM6WLS5ND">example report</a>). I found no riscv64 coverage of futex, rseq, vDSO or sched in KernelCI, LKFT or 0-day, so I did not credit blue. The patchwork CI checks described in patch-acceptance.rst are the only evidence of a build gate. I could not read their job definitions, so the build-only reading is an inference. Binaries come from distro kernel packages. Upstream ships source only, so the provider is a distro. I did not check Ubuntu 26.04 or the distros’ packaging patches, because the package site was not accessible and no new research was allowed.</p>
+
+<p><strong>Pending work that could change the grade.</strong> The grade could rise to blue if mainline KernelCI or patchwork CI is confirmed to run riscv64 tests that cover futex, rseq, vDSO or locking. Unmerged work:</p>
+<ul>
+  <li>Zalasr for smp_load_acquire/smp_store_release: v5 (Qingwei Hu, ByteDance, October 2026). Only the instruction definitions, hwprobe and KVM parts are merged.</li>
+  <li>Bounded LR/SC retries in riscv futex cmpxchg: v2 (Davidlohr Bueso, May 2026). It fixes an unbounded retry loop reachable from unprivileged PI futex operations. Not seen merged.</li>
+  <li>ERRATA_THEAD_WRITE_ONCE: v5 (Guo Ren, April 2026). It works around a T-Head C910 store-merge livelock found in qspinlock torture testing. Not seen merged.</li>
+  <li>Kernel-mode vector under PREEMPT_RT (Andy Chiu, August 2026): status unknown.</li>
+</ul>
+
+<p>No RISE involvement was found for this subsystem. The lore.kernel.org check was blocked. The Ubuntu 26.04 riscv64 kernel check and the package-graph query were not run.</p>
+<h2 id="14-investment-analysis">
+  
+  
+    <a href="#14-investment-analysis" class="anchor-heading" aria-labelledby="14-investment-analysis"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14. Investment Analysis
+  
+  
+</h2>
+    
+
+<p><strong>RISE check first.</strong> Searching riseproject.dev, the RSS feed (entries from 2026-07-07 to 2026-10-30), the riseproject-dev GitHub org (10 of 70 repos visible) and the RISE decks found no RISE-funded or RISE-run work on scheduler, locking, atomics, futex or vDSO. The only kernel-adjacent RISE items are the build farm CI listing, the LAVA boards (RP012) and general RVA23 kernel talks. Coverage is partial. The blog list did not render, the lore check was blocked, and the Kernel and Virtualization WG wiki was unreadable. So no sizing below is netted against RISE work, and the RISE overlap should be confirmed with the RISE kernel working group before committing resources. The effort figures are the author’s estimates for planning, not figures from the research.</p>
+<h3 id="141-functional-enablement">
+  
+  
+    <a href="#141-functional-enablement" class="anchor-heading" aria-labelledby="141-functional-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.1 Functional Enablement
+  
+  
+</h3>
+    
+<ul>
+  <li>Drive review and testing of the bounded LR/SC futex patch (v2) to merge. It closes a reachable unprivileged denial-of-service path.</li>
+  <li>Help land Zalasr use in <code class="language-plaintext highlighter-rouge">smp_load_acquire</code> and <code class="language-plaintext highlighter-rouge">smp_store_release</code> (v5), with benchmarking on RVA23-class hardware.</li>
+  <li>Resolve the T-Head ERRATA_THEAD_WRITE_ONCE question, if the company ships or supports C910-class silicon.</li>
+  <li>Audit the open questions: SCHED_CLUSTER and SCHED_SMT, HAVE_PREEMPT_DYNAMIC, asymmetric CPU capacity wiring, and sched_ext arch hooks.</li>
+  <li>Confirm RT status of kernel-mode vector.</li>
+</ul>
+<h3 id="142-performance-optimization">
+  
+  
+    <a href="#142-performance-optimization" class="anchor-heading" aria-labelledby="142-performance-optimization"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.2 Performance Optimization
+  
+  
+</h3>
+    
+<ul>
+  <li>No riscv64 numbers were found for Zawrs, Zacas, Zabha, schbench, hackbench, will-it-scale or lock_torture. Producing a baseline on current hardware is the first deliverable.</li>
+  <li>Compare combo, queued and ticket spinlocks on modern silicon. The only data are pre-merge SG2042 numbers from 2023.</li>
+  <li>Measure Zalasr against fence-based acquire/release once the series is mergeable.</li>
+  <li>Check vector use in <code class="language-plaintext highlighter-rouge">vgetrandom-chacha.S</code>.</li>
+</ul>
+<h3 id="143-cicd-infrastructure">
+  
+  
+    <a href="#143-cicd-infrastructure" class="anchor-heading" aria-labelledby="143-cicd-infrastructure"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.3 CI/CD Infrastructure
+  
+  
+</h3>
+    
+<ul>
+  <li>Run the generic futex, rseq, vDSO, membarrier and locking selftests on riscv64 in KernelCI, LKFT or RISE runners, and report results regularly. This is the evidence that would move the grade to blue.</li>
+  <li>Add a riscv rcutorture QEMU configuration and an lock-torture job.</li>
+  <li>Confirm what the patchwork CI checks do for linux-riscv.</li>
+</ul>
+<h3 id="144-ecosystem-enablement">
+  
+  
+    <a href="#144-ecosystem-enablement" class="anchor-heading" aria-labelledby="144-ecosystem-enablement"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.4 Ecosystem Enablement
+  
+  
+</h3>
+    
+<p>Not applicable. The subsystem has no dependent package ecosystem (Section 10 omitted). Downstream consumers are glibc and the distro kernels (Section 8). Distro enablement checks (sched_ext, queued spinlocks, PREEMPT_RT configs) are under Functional.</p>
+<h3 id="145-summary-table">
+  
+  
+    <a href="#145-summary-table" class="anchor-heading" aria-labelledby="145-summary-table"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 14.5 Summary Table
+  
+  
+</h3>
+    
+
+<div class="table-wrapper"><table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>Work Item</th>
+      <th>Effort (person-weeks)</th>
+      <th>Owner</th>
+      <th>Priority</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Functional</td>
+      <td>Review, test and shepherd bounded LR/SC futex v2 to merge</td>
+      <td>2</td>
+      <td>Kernel team, with Davidlohr Bueso</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Zalasr acquire/release: review, test, benchmark v5</td>
+      <td>4</td>
+      <td>Kernel team, with ByteDance authors</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>T-Head WRITE_ONCE erratum: assess impact on supported silicon</td>
+      <td>2</td>
+      <td>Kernel team, with Guo Ren</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Audit SCHED_CLUSTER/SMT, PREEMPT_DYNAMIC, capacity and sched_ext hooks</td>
+      <td>3</td>
+      <td>Kernel team</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Functional</td>
+      <td>Verify distro kernel configs on riscv64 (Debian, Ubuntu, Fedora, openSUSE, Arch)</td>
+      <td>2</td>
+      <td>Distro liaison</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Performance</td>
+      <td>Baseline benchmarks (schbench, hackbench, will-it-scale, lock_torture, vDSO) on current riscv64 hardware</td>
+      <td>6</td>
+      <td>Performance team</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>riscv64 kselftest (futex, rseq, vDSO, membarrier, locking) in KernelCI/LKFT/RISE runners</td>
+      <td>8</td>
+      <td>Kernel CI team</td>
+      <td>Critical</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>riscv rcutorture QEMU config and lock-torture job</td>
+      <td>4</td>
+      <td>Kernel CI team</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>CI/CD</td>
+      <td>Confirm patchwork CI job definitions for linux-riscv</td>
+      <td>1</td>
+      <td>Kernel team</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Ecosystem</td>
+      <td>Not applicable</td>
+      <td>0</td>
+      <td>None</td>
+      <td>Low</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2 id="15-references">
+  
+  
+    <a href="#15-references" class="anchor-heading" aria-labelledby="15-references"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 15. References
+  
+  
+</h2>
+    
+
+<ul>
+  <li><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git">Linux kernel mainline repository</a></li>
+  <li><a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/MAINTAINERS">MAINTAINERS (RISC-V ARCHITECTURE entry)</a></li>
+  <li><a href="https://docs.kernel.org/scheduler/index.html">docs.kernel.org scheduler index</a></li>
+  <li><a href="https://docs.kernel.org/arch/riscv/patch-acceptance.html">RISC-V patch acceptance guidelines</a></li>
+  <li><a href="https://patchwork.kernel.org/project/linux-riscv/list/">Patchwork linux-riscv queue</a></li>
+  <li><a href="https://lists.infradead.org/pipermail/linux-riscv/2021-March/005576.html">Guo Ren ticket spinlock series v6 (March 2021)</a></li>
+  <li><a href="https://patchew.org/linux/20220602141032.169907-1-christoph.muellner@vrull.io/">Zawrs RFC (Christoph Müllner, June 2022)</a></li>
+  <li><a href="https://patchew.org/linux/20220831175920.2806-1-jszhang@kernel.org/">PREEMPT_RT v2 series (Jisheng Zhang, August 2022)</a></li>
+  <li><a href="https://lwn.net/Articles/931531/">LWN 931531</a></li>
+  <li><a href="https://lore.kernel.org/linux-riscv/20231225125847.2778638-1-guoren@kernel.org/">Guo Ren qspinlock predecessor series (December 2023)</a></li>
+  <li><a href="https://lists.infradead.org/pipermail/linux-riscv/2023-November/043379.html">Guo Ren qspinlock V11 cover letter with benchmarks (November 2023)</a></li>
+  <li><a href="https://lwn.net/Articles/956175">LWN 956175, native and paravirt qspinlock</a></li>
+  <li><a href="https://lists.infradead.org/pipermail/linux-riscv/2024-July/057405.html">Zacas/Zabha/qspinlock series v3</a></li>
+  <li><a href="https://lists.infradead.org/pipermail/linux-riscv/2024-July/058227.html">Zacas/Zabha/qspinlock series v4</a></li>
+  <li><a href="https://lkml.iu.edu/hypermail/linux/kernel/2411.0/02159.html">Zacas/Zabha/qspinlock series v6</a></li>
+  <li><a href="https://lore.kernel.org/all/20250423-riscv-fix-compat_vdso-lld-v2-1-b7bbbc244501@kernel.org/">Compat vDSO lld fix</a></li>
+  <li><a href="https://lists.infradead.org/pipermail/linux-riscv/2025-April/068949.html">vDSO getrandom benchmark thread (April 2025)</a></li>
+  <li><a href="https://patchew.org/linux/20261002165910.3818940-1-qingwei.hu@bytedance.com/">Zalasr v5 series (Qingwei Hu, ByteDance)</a></li>
+  <li><a href="https://patchew.org/linux/20251020042056.30283-1-luxu.kernel@bytedance.com/">Zalasr v4 series (Xu Lu)</a></li>
+  <li><a href="https://ratatoskr.run/linux-riscv/2025/10/3257762/t">Zalasr thread view</a></li>
+  <li><a href="https://lists.infradead.org/pipermail/linux-riscv/2026-May/090709.html">Bounded LR/SC retry in riscv futex cmpxchg, v2</a></li>
+  <li><a href="https://patchew.org/linux/20260421143154.1590156-1-guoren@kernel.org/">ERRATA_THEAD_WRITE_ONCE v5</a></li>
+  <li><a href="https://ratatoskr.run/linux-rt-devel/2026/08/17360219">Kernel-mode vector under RT (Andy Chiu)</a></li>
+  <li><a href="https://isrc.iscas.ac.cn/gitlab/mirrors/github.com/c-sky_csky-linux/">c-sky Linux mirror (ticket, CNA and paravirt qspinlock work)</a></li>
+  <li><a href="https://security-tracker.debian.org/tracker/CVE-2024-57939">CVE-2024-57939 (Debian security tracker)</a></li>
+  <li><a href="https://groups.google.com/g/syzkaller-upstream-moderation/c/PkAFdhGiE7E/m/juPnE1SpDAAJ">syzbot: corrupted stack end detected inside scheduler</a></li>
+  <li><a href="https://groups.google.com/g/syzkaller-bugs/c/WbWLT0nipws/m/aOgcYgNwAwAJ">syzbot: possible circular locking dependency (doubtful match)</a></li>
+  <li><a href="https://lore.kernel.org/all/20210415092212.GA26151@willie-the-truck/">Will Deacon on ticket spinlocks, 2021</a></li>
+  <li><a href="https://mail-archive.com/bug-gnulib@gnu.org/msg49781.html">gnulib test-pthread-rwlock report</a></li>
+  <li><a href="https://lists-ec2.linaro.org/archives/list/kernel-build-reports@lists.linaro.org/thread/2N2GXQONP467SDG2273INU3RM6WLS5ND">KernelCI qemu riscv64 fcntl-locktests report</a></li>
+  <li><a href="https://lists.linaro.org/archives/list/kernel-build-reports@lists.linaro.org/thread/7ASRBPRMGIYEQR4Z2EY7AZNJKYKYARVM">KernelCI qemu riscv64 ltp-timers report</a></li>
+  <li><a href="https://lists.linaro.org/archives/list/kernel-build-reports@lists.linaro.org/thread/MZCXFAFOBKS3BGLKSTRCGHXXI6D4ZQLX">KernelCI qemu riscv64 ltp-ipc report</a></li>
+  <li><a href="https://build-test-1.opensuse.org/request/show/1227554">openSUSE build request mentioning sched_ext tooling for riscv64</a></li>
+  <li><a href="https://github.com/cordanaLLM/nucleus/pull/162">Downstream PR: enable sched-ext on riscv64</a></li>
+  <li><a href="https://riseproject.dev/">RISE Project</a></li>
+  <li><a href="https://gitlab.com/api/v4/projects/56254198/packages/pypi/simple/linux-scheduler-and-locking/">RISE wheel builder index (linux-scheduler-and-locking)</a></li>
+  <li><a href="https://riseproject.dev/2026/10/30/bringing-the-conda-ecosystem-to-risc-v/">RISE blog: Bringing the Conda Ecosystem to RISC-V</a></li>
+  <li><a href="https://riseproject.dev/2026/10/20/android-17-available-on-rva23-with-rise/">RISE blog: Android 17 Available on RVA23 with RISE</a></li>
+  <li><a href="https://riseproject.dev/2026/07/16/advancing-opensbi-interrupt-handling/">RISE blog: Advancing OpenSBI Interrupt Handling</a></li>
+  <li><a href="https://riseproject.dev/2026/08/24/python-now-officially-supports-risc-v/">RISE blog: Python Now Officially Supports RISC-V</a></li>
+  <li><a href="https://riseproject.dev/2026/08/18/pytorch-is-available-on-riscv64/">RISE blog: PyTorch is available on riscv64</a></li>
+  <li><a href="https://riseproject.dev/2026/07/30/rise-working-groups-move-their-project-tracking-to-github/">RISE blog: RISE Working Groups move their project tracking to GitHub</a></li>
+  <li><a href="https://riseproject.dev/members/">RISE members page</a></li>
+  <li><a href="https://riseproject.dev/wp-content/uploads/sites/25/2026/01/RISE-Introduction.pdf">RISE Introduction deck (image-only, not read)</a></li>
+</ul>
+
+          
+
+          
+            
+          
+        </main>
+        
+<hr>
+<footer>
+  
+    <p><a href="#top" id="back-to-top">Back to top</a></p>
+  
+
+  <p class="text-small mb-0">RISE Project</p>
+
+  <div class="d-md-none mt-4 fs-2">
+    
+    
+      This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+    
+  </div>
+</footer>
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+    
+
+
+
+
+
+<script type="module">
+  
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  
+
+  var config = {}
+;
+  mermaid.initialize(config);
+  mermaid.run({
+    querySelector: '.language-mermaid',
+  });
+</script>
+
+
+
+  
+</body>
+</html>
+
