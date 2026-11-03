@@ -390,7 +390,7 @@ Ubuntu 26.04 package names to query once available: `libnuma1`, `libnuma-dev`, `
 
 ## 9. Dependencies
 
-The MM subsystem depends on other kernel subsystems, firmware, toolchain and the test environment. Sibling subsystem reports (Linux boot and MMU, Linux hardening, Linux ISA discovery, Linux SoC support) are not listed as dependencies. The project-graph query tool was unavailable, so every row's graph status is "not found (query tool unavailable, not verified)".
+The MM subsystem depends on other kernel subsystems, firmware, toolchain and the test environment. Sibling subsystem reports (Linux boot and MMU, Linux hardening, Linux ISA discovery, Linux SoC support) are not listed as dependencies. Package-graph status was not queried, so every row's graph status is "not verified".
 
 | Name | Role | riscv64 build | riscv64 test | riscv64 release | Community |
 |---|---|---|---|---|---|
