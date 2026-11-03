@@ -340,7 +340,7 @@ Effort figures below are the author's estimates, not sourced.
 
 ### 14.3 CI/CD Infrastructure
 - Run the cgroup, timens and namespaces kselftests on riscv64 in KernelCI or LKFT. Use the RISE board farm and the Collabora LAVA lab, which already include BPI-F3 and P550 boards.
-- Before building anything, confirm via KernelCI and LKFT access that the tests are not already run, since those sources were blocked.
+- Before building anything, confirm via KernelCI and LKFT access that the tests are not already run, since their result dashboards were not reviewed.
 
 ### 14.4 Ecosystem Enablement
 - No dependent package ecosystem exists for this subsystem (Section 10 omitted). Container runtimes and tools are tracked in their own reports.
