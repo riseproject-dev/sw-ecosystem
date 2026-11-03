@@ -286,7 +286,3 @@ Not applicable - Section 10 is omitted per the report's scoping rules. OpenYurt 
 - [Arch Linux RISC-V (archriscv) package search](https://archriscv.felixc.at/?q=openyurt)
 - [RISE Project blog](https://riseproject.dev/blog)
 - [RISE Project members page](https://riseproject.dev/members/)
-
----
-
-**File notes for the calling process:** This report was written directly from the supplied live research findings, with no new research performed beyond invoking the `/project-color-coding` skill (loaded inline, applied by the assistant per its documented model) to derive the color/case/release_provider/optimization_gap values used in Section 13 and the frontmatter/header. No local repository clone, GitHub API call, or web fetch was made in the course of writing this report; the clone path referenced in the source findings (`/home/user/openyurtio/openyurt`, and a scratchpad clone at `/tmp/claude-0/-home-user-sw-ecosystem/c494527f-69d2-59f4-ae6c-608a75f951db/scratchpad/openyurt-repo`) belongs to the prior research session, not this one.
