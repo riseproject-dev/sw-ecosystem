@@ -192,7 +192,7 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchains/aarch64_toolchain.cmake
 - The SVC and MVC cmake files (`libsvcenc.cmake`, `libsvcdec.cmake`, `libmvcdec.cmake`, `svccommon.cmake`) key off `CMAKE_SYSTEM_PROCESSOR` and have no riscv64 branch. They were not built.
 - The sanitizer/fuzzer build is skipped with "Compiler doesn't support -fsanitize=fuzzer". A riscv64 libFuzzer build was not tested.
 
-**Working recipe** (requires an 11-line, 4-file patch adding an `elseif riscv64` branch in each place; not upstream; saved by the researcher as `libavc-riscv64-cmake.patch` in the scratchpad):
+**Working recipe** (requires an 11-line, 4-file patch adding an `elseif riscv64` branch in each place; not upstream):
 
 ```
 apt-get install -y gcc-riscv64-linux-gnu g++-riscv64-linux-gnu qemu-user cmake
