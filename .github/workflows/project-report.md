@@ -33,42 +33,16 @@ concurrency:
   group: project-report-${{ github.event.inputs.project }}
   cancel-in-progress: false
 
-network:
-  allowed:
-    - defaults
-    - github
-    - claude
-    - api.anthropic.com
-    - linux-distros
-    - containers
-    - python
-    - node
-    - rust
-    - go
-    - java
-    - ruby
-    - riseproject.dev
-    - "*.riseproject.dev"
-    - gitlab.com
-    - "*.gitlab.io"
-    - archriscv.felixc.at
-    - packages.fedoraproject.org
-    - tracker.debian.org
-    - packages.debian.org
-    - buildd.debian.org
-    - packages.ubuntu.com
-    - launchpad.net
-    - repology.org
-    - sourceware.org
-    - gcc.gnu.org
-    - www.gnu.org
-    - git.savannah.gnu.org
-    - lists.gnu.org
-    - git.kernel.org
-    - lore.kernel.org
-    - "*.googlesource.com"
-    - lists.riscv.org
-    - riscv.org
+# Run the agent without the network firewall: the research reads arbitrary
+# forges, trackers, mailing lists and package registries, so no fixed
+# allowlist fits. Disabling the sandbox requires non-strict mode.
+strict: false
+
+features:
+  dangerously-disable-sandbox-agent: true
+
+sandbox:
+  agent: false
 
 tools:
   github:
@@ -82,7 +56,7 @@ mcp-servers:
   project-graph:
     container: "ghcr.io/riseproject-dev/sw-ecosystem/project-graph-mcp:latest"
     allowed: ["project_graph_query"]
-    required: false
+    required: true
 
 safe-outputs:
   messages:
@@ -142,8 +116,8 @@ repositories, a shallow clone (`git clone --depth 1`) into a temporary directory
 workspace is the fastest way to read CI files and architecture-specific code. Do not build or
 run code from a cloned repository.
 
-Use the `project-graph` tool for Ubuntu package lookups when it is available. If it is not,
-fall back to the distribution URLs listed in the research instructions.
+Use the `project-graph` tool for Ubuntu package lookups first. Fall back to the distribution
+URLs listed in the research instructions only when it returns no results.
 
 ## 3. Grade
 
