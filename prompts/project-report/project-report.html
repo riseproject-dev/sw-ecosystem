@@ -232,7 +232,7 @@
 </h1>
     
 
-<p><strong>Usage:</strong> Pick a project from <code class="language-plaintext highlighter-rouge">projects.yml</code> (the project registry) and pass its fields to the <code class="language-plaintext highlighter-rouge">Workflow</code> tool (see execution model below).</p>
+<p><strong>Usage:</strong> Pick a project from <code class="language-plaintext highlighter-rouge">projects.yml</code> (the project registry) and run the research for it (see “Running the research” below).</p>
 
 <p>Each <code class="language-plaintext highlighter-rouge">projects.yml</code> entry has these fields:</p>
 
@@ -244,46 +244,62 @@
   <li><code class="language-plaintext highlighter-rouge">synonyms</code> (optional): alternate names the project appears under in the dependency graphs</li>
 </ul>
 
-<p>Only <code class="language-plaintext highlighter-rouge">name</code>, <code class="language-plaintext highlighter-rouge">repo</code>, <code class="language-plaintext highlighter-rouge">home</code>, and the full <code class="language-plaintext highlighter-rouge">projects.yml</code> array itself (as <code class="language-plaintext highlighter-rouge">registry</code>, see execution
-model below) are passed to the workflow; <code class="language-plaintext highlighter-rouge">report</code>/<code class="language-plaintext highlighter-rouge">synonyms</code> are registry bookkeeping. Pick a
-project whose entry has no <code class="language-plaintext highlighter-rouge">report:</code> field yet (it still needs a report).</p>
+<p>The research uses <code class="language-plaintext highlighter-rouge">name</code>, <code class="language-plaintext highlighter-rouge">repo</code> and <code class="language-plaintext highlighter-rouge">home</code>; <code class="language-plaintext highlighter-rouge">report</code>/<code class="language-plaintext highlighter-rouge">synonyms</code> are registry bookkeeping. A project
+whose entry has no <code class="language-plaintext highlighter-rouge">report:</code> field yet still needs a report.</p>
 
-<p>The output report path is derived from the name: <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>, where <code class="language-plaintext highlighter-rouge">slug</code> is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. “Apache Flink” -&gt; <code class="language-plaintext highlighter-rouge">project-reports/apache-flink.md</code>, “Open vSwitch” -&gt; <code class="language-plaintext highlighter-rouge">project-reports/open-vswitch.md</code>).</p>
-
-<p><strong>See <code class="language-plaintext highlighter-rouge">AGENTS.md</code> in this directory for the complete operator guide</strong>, including:</p>
-<ul>
-  <li>How <code class="language-plaintext highlighter-rouge">projects.yml</code> maps to workflow args and how to find projects without a report yet</li>
-  <li>Rate limiting recovery procedures (resume with <code class="language-plaintext highlighter-rouge">resumeFromRunId</code>)</li>
-  <li>How to monitor workflow progress via the journal file</li>
-  <li>How to write, verify, and commit each report</li>
-  <li>All known issues and workarounds from the 2026-06 generation session</li>
-</ul><hr />
-<h2 id="execution-model">
+<p>The output report path is derived from the name: <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>, where <code class="language-plaintext highlighter-rouge">slug</code> is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. “Apache Flink” -&gt; <code class="language-plaintext highlighter-rouge">project-reports/apache-flink.md</code>, “Open vSwitch” -&gt; <code class="language-plaintext highlighter-rouge">project-reports/open-vswitch.md</code>).</p><hr />
+<h2 id="running-the-research">
   
   
-    <a href="#execution-model" class="anchor-heading" aria-labelledby="execution-model"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Execution model
+    <a href="#running-the-research" class="anchor-heading" aria-labelledby="running-the-research"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Running the research
   
   
 </h2>
     
+<h3 id="github-workflow">
+  
+  
+    <a href="#github-workflow" class="anchor-heading" aria-labelledby="github-workflow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> GitHub workflow
+  
+  
+</h3>
+    
 
-<p>Do not use <code class="language-plaintext highlighter-rouge">/deep-research</code> for this prompt – it loads instructions but does not self-execute. Instead, invoke the <code class="language-plaintext highlighter-rouge">Workflow</code> tool directly with the pre-built script at <code class="language-plaintext highlighter-rouge">prompts/project-report/project-report-workflow.js</code>. Pass one <code class="language-plaintext highlighter-rouge">projects.yml</code> entry as the single element of <code class="language-plaintext highlighter-rouge">args</code> (the <code class="language-plaintext highlighter-rouge">repo</code> and <code class="language-plaintext highlighter-rouge">home</code> fields map straight through; the script derives the output path from <code class="language-plaintext highlighter-rouge">name</code>), plus <code class="language-plaintext highlighter-rouge">registryPath</code>, the absolute path to <code class="language-plaintext highlighter-rouge">projects.yml</code> itself – the script has no filesystem access, but the agents it spawns do, and the deps-extraction agent greps that path directly to resolve each dependency to its exact <code class="language-plaintext highlighter-rouge">projects.yml</code> <code class="language-plaintext highlighter-rouge">name:</code> spelling (or flag it as not yet registered), so no parsed registry array needs to cross the <code class="language-plaintext highlighter-rouge">args</code> boundary. Also pass <code class="language-plaintext highlighter-rouge">reportDate</code> (today’s date, <code class="language-plaintext highlighter-rouge">YYYY-MM-DD</code>) – the script cannot call <code class="language-plaintext highlighter-rouge">new Date()</code> itself (workflow scripts must stay deterministic/resumable), so the caller computes it:</p>
+<p>The <code class="language-plaintext highlighter-rouge">project-report</code> agentic workflow (<code class="language-plaintext highlighter-rouge">.github/workflows/project-report.md</code>) runs the research for
+one project and opens a pull request with the report and any <code class="language-plaintext highlighter-rouge">projects.yml</code> changes. Dispatch it from
+the Actions tab, or from the command line, with the project name as its only input:</p>
 
-<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Workflow</span><span class="p">({</span>
-  <span class="na">args</span><span class="p">:</span> <span class="p">[{</span>
-    <span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">&lt;project-name&gt;</span><span class="dl">"</span><span class="p">,</span>                        <span class="c1">// projects.yml: name</span>
-    <span class="dl">"</span><span class="s2">repo</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-repository&gt;/</span><span class="dl">"</span><span class="p">,</span>         <span class="c1">// projects.yml: repo</span>
-    <span class="dl">"</span><span class="s2">home</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-homepage&gt;/</span><span class="dl">"</span><span class="p">,</span>           <span class="c1">// projects.yml: home</span>
-    <span class="dl">"</span><span class="s2">reportDate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">&lt;YYYY-MM-DD&gt;</span><span class="dl">"</span><span class="p">,</span>                     <span class="c1">// today's date, computed by the caller</span>
-    <span class="dl">"</span><span class="s2">registryPath</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/abs/path/to/projects.yml</span><span class="dl">"</span>
-  <span class="p">}],</span>
-  <span class="na">scriptPath</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/abs/path/to/prompts/project-report/project-report-workflow.js</span><span class="dl">"</span>
-<span class="p">})</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gh workflow run project-report.lock.yml <span class="nt">-f</span> <span class="nv">project</span><span class="o">=</span><span class="s2">"&lt;project-name&gt;"</span>
 </code></pre></div></div>
 
-<p>The script derives the output path as <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>. To override it, add an absolute <code class="language-plaintext highlighter-rouge">"slug"</code> field to the args object. The script runs four phases sequentially (8 search agents, 4 fetch agents, 3 verify agents, 1 dependency-structuring agent, 1 synthesize agent = 17 total). On completion the workflow returns a JSON object with <code class="language-plaintext highlighter-rouge">{name, file, report, totalChars, new_registry_entries}</code>. Write <code class="language-plaintext highlighter-rouge">report</code> to <code class="language-plaintext highlighter-rouge">file</code> and verify before committing.</p>
+<p>The workflow runs the <a href="https://github.com/earendil-works/pi">Pi</a> coding agent. Pi launches the
+orchestration script <code class="language-plaintext highlighter-rouge">project-report-workflow.js</code> (see below), waits for it, assembles the report
+from its result and opens the pull request.</p>
 
-<p><code class="language-plaintext highlighter-rouge">new_registry_entries</code> lists any direct dependency (found for Section 9 / the report’s own <code class="language-plaintext highlighter-rouge">dependencies:</code> frontmatter) that the deps-extraction agent did not find in the registry file – i.e. it has no <code class="language-plaintext highlighter-rouge">projects.yml</code> entry yet. <strong>Before committing the report</strong>, add one new alphabetically-positioned entry (<code class="language-plaintext highlighter-rouge">name</code>/<code class="language-plaintext highlighter-rouge">repo</code>/<code class="language-plaintext highlighter-rouge">home</code>, best effort) to <code class="language-plaintext highlighter-rouge">projects.yml</code> for each item in this array – see <code class="language-plaintext highlighter-rouge">AGENTS.md</code>’s “After the workflow completes” section. This keeps the hard constraint enforced by <code class="language-plaintext highlighter-rouge">_plugins/dependency_graph_generator.rb</code> (every <code class="language-plaintext highlighter-rouge">dependencies: name:</code> in every report must match a <code class="language-plaintext highlighter-rouge">projects.yml</code> entry, or the site fails to build) from ever actually tripping in normal use.</p>
+<p>The workflow source is Markdown. After changing its frontmatter, regenerate the lock file with
+<code class="language-plaintext highlighter-rouge">gh aw compile project-report</code> and commit both files.</p>
+<h3 id="the-four-passes">
+  
+  
+    <a href="#the-four-passes" class="anchor-heading" aria-labelledby="the-four-passes"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The four passes
+  
+  
+</h3>
+    
+
+<p>Whatever runs the research, it proceeds in four passes:</p>
+
+<p><strong>Pass 1 – Search:</strong> Issues/PRs, CI config files, package availability, RISE involvement, arch-specific source code, governance, dependencies, performance benchmarks and bugs.</p>
+
+<p><strong>Pass 2 – Fetch:</strong> Deep-read of the most important issues/PRs, PR merge status verification via API, build documentation, RISE details and benchmark data.</p>
+
+<p><strong>Pass 3 – Verify:</strong> Confirm CI status from the actual YAML, confirm package availability from registry APIs, assess arch code completeness.</p>
+
+<p><strong>Pass 4 – Synthesize:</strong> Write the complete report from all gathered findings.</p>
+
+<p>Use the GitHub API or GitHub tools for a project hosted on GitHub. For a non-GitHub project
+(sourceware.org, kernel.org, googlesource.com), read its web interfaces directly. For a project with
+no <code class="language-plaintext highlighter-rouge">repo</code> at all, start from the <code class="language-plaintext highlighter-rouge">home</code> URL.</p>
 <h3 id="refreshing-an-existing-report">
   
   
@@ -293,29 +309,60 @@ project whose entry has no <code class="language-plaintext highlighter-rouge">re
 </h3>
     
 
-<p>There is only one way to refresh a report: a full rewrite. Add <code class="language-plaintext highlighter-rouge">"existingReportPath"</code>
-(absolute path to the current <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code>) to <code class="language-plaintext highlighter-rouge">args</code>. When present, a
-Synthesize-phase agent reads that file and the final report is written as one standalone,
-cohesive document combining it with fresh live research: content the live findings don’t
-contradict is kept, anything they show has changed is corrected, and whatever new information
-they reveal is added. The result never references “the previous version” or reads as a change
-log against it – it reads exactly like a report written today from scratch. Omit
-<code class="language-plaintext highlighter-rouge">existingReportPath</code> for a project that has no report yet – the script then behaves exactly as
-in the base case above, writing a report grounded in live findings only.</p>
+<p>There is only one way to refresh a report: a full rewrite. When <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code> already
+exists, read it and write one standalone, cohesive document combining it with fresh live research:
+content the live findings don’t contradict is kept, anything they show has changed is corrected, and
+whatever new information they reveal is added. The result never references “the previous version” or
+reads as a change log against it – it reads exactly like a report written today from scratch.</p>
 
-<p>Never hand-append a changelog-style entry to a report instead of running this. A report is
-either freshly generated (no <code class="language-plaintext highlighter-rouge">existingReportPath</code>) or fully rewritten (<code class="language-plaintext highlighter-rouge">existingReportPath</code>
-set) – there is no partial-update mode.</p>
+<p>Never hand-append a changelog-style entry to a report. A report is either freshly generated or fully
+rewritten – there is no partial-update mode.</p>
+<h3 id="registering-dependencies">
+  
+  
+    <a href="#registering-dependencies" class="anchor-heading" aria-labelledby="registering-dependencies"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Registering dependencies
+  
+  
+</h3>
+    
 
-<p>For a non-GitHub project (sourceware.org, kernel.org, googlesource.com), the <code class="language-plaintext highlighter-rouge">repo</code> URL is not a github.com URL and the script automatically switches to WebSearch + WebFetch instead of GitHub MCP tools. For a project with no <code class="language-plaintext highlighter-rouge">repo</code> at all, the script falls back to the <code class="language-plaintext highlighter-rouge">home</code> URL for web searches.</p>
+<p>Every direct dependency named in the report’s <code class="language-plaintext highlighter-rouge">dependencies:</code> frontmatter must match a <code class="language-plaintext highlighter-rouge">projects.yml</code>
+entry, or <code class="language-plaintext highlighter-rouge">_plugins/dependency_graph_generator.rb</code> fails the site build. Before committing a report,
+add one alphabetically-positioned entry (<code class="language-plaintext highlighter-rouge">name</code>/<code class="language-plaintext highlighter-rouge">repo</code>/<code class="language-plaintext highlighter-rouge">home</code>, best effort) to <code class="language-plaintext highlighter-rouge">projects.yml</code> for each
+direct dependency that has none.</p>
+<h3 id="orchestration-script">
+  
+  
+    <a href="#orchestration-script" class="anchor-heading" aria-labelledby="orchestration-script"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Orchestration script
+  
+  
+</h3>
+    
 
-<p><strong>Phase 1 – Search (sequential, 8 agents):</strong> Issues/PRs, CI config files, package availability, RISE involvement, arch-specific source code, governance, dependencies, performance benchmarks and bugs.</p>
+<p><code class="language-plaintext highlighter-rouge">project-report-workflow.js</code> in this directory runs the four passes as about twenty sequential steps,
+each in its own sub-agent, and returns the report. It is a
+<a href="https://github.com/nicobailon/pi-subagents">pi-subagents</a> scripted workflow, launched with that
+extension’s <code class="language-plaintext highlighter-rouge">subagent</code> tool:</p>
 
-<p><strong>Phase 2 – Fetch (sequential, 4 agents):</strong> Deep-read of the 5 most important issues/PRs, PR merge status verification via API, build documentation, RISE details and benchmark data.</p>
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">subagent</span><span class="p">({</span>
+  <span class="na">workflow</span><span class="p">:</span> <span class="dl">"</span><span class="s2">./prompts/project-report/project-report-workflow.js</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">async</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+  <span class="na">args</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">name</span><span class="p">:</span> <span class="dl">"</span><span class="s2">&lt;project-name&gt;</span><span class="dl">"</span><span class="p">,</span>                         <span class="c1">// projects.yml: name</span>
+    <span class="na">repo</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-repository&gt;/</span><span class="dl">"</span><span class="p">,</span>          <span class="c1">// projects.yml: repo (omit if none)</span>
+    <span class="na">home</span><span class="p">:</span> <span class="dl">"</span><span class="s2">https://&lt;project-homepage&gt;/</span><span class="dl">"</span><span class="p">,</span>            <span class="c1">// projects.yml: home</span>
+    <span class="na">reportDate</span><span class="p">:</span> <span class="dl">"</span><span class="s2">&lt;YYYY-MM-DD&gt;</span><span class="dl">"</span><span class="p">,</span>                      <span class="c1">// today's date</span>
+    <span class="na">registryPath</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/abs/path/to/projects.yml</span><span class="dl">"</span><span class="p">,</span>
+    <span class="na">existingReportPath</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/abs/path/to/project-reports/&lt;slug&gt;.md</span><span class="dl">"</span><span class="p">,</span>   <span class="c1">// only for a rewrite</span>
+    <span class="na">reportBodyPath</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/abs/path/to/report-body.md</span><span class="dl">"</span>   <span class="c1">// where to save the synthesized body</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div></div>
 
-<p><strong>Phase 3 – Verify (sequential, 3 adversarial agents):</strong> Confirm CI status from actual YAML, confirm package availability from registry APIs, assess arch code completeness.</p>
-
-<p><strong>Phase 4 – Synthesize (1 agent):</strong> Writes the complete report text from all gathered findings. Returns the report as plain text; the calling session writes it to disk.</p><hr />
+<p>Each step runs as the <code class="language-plaintext highlighter-rouge">report-researcher</code> agent defined in <code class="language-plaintext highlighter-rouge">agents/report-researcher.md</code>, which must
+be copied to Pi’s user agents directory (<code class="language-plaintext highlighter-rouge">$PI_CODING_AGENT_DIR/agents/</code>) first. That file also maps
+the tool names used in the step prompts onto the tools Pi provides. <code class="language-plaintext highlighter-rouge">AGENTS.md</code> in this directory is
+the operator guide.</p><hr />
 <h2 id="research-instructions">
   
   
@@ -329,7 +376,7 @@ set) – there is no partial-update mode.</p>
 
 <p>Research the project named in the <code class="language-plaintext highlighter-rouge">projects.yml</code> entry (using its <code class="language-plaintext highlighter-rouge">repo</code>) and generate the report at the derived <code class="language-plaintext highlighter-rouge">project-reports/&lt;slug&gt;.md</code> path.</p>
 
-<p>Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trackers, CI configuration files, build scripts, release notes, changelogs, blog posts, conference slides, foundation governance documents, and any other primary sources. Use sub-agents to parallelize the search. Go deep.</p>
+<p>Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trackers, CI configuration files, build scripts, release notes, changelogs, blog posts, conference slides, foundation governance documents, and any other primary sources. Use sub-agents to parallelize the search where the runtime offers them. Go deep.</p>
 
 <p><strong>RISE Project resources – check these for every report.</strong> The <a href="https://riseproject.dev">RISE Project</a> (RISC-V Software Ecosystem) is a Linux Foundation project and the primary industry consortium coordinating RISC-V software enablement across the open-source ecosystem. Its members include Qualcomm, SiFive, Red Hat, Canonical, Google, and others. RISE directly funds and coordinates upstream work. For every report, check the following:</p>
 
@@ -346,7 +393,7 @@ set) – there is no partial-update mode.</p>
 <p><strong>Verifying Linux distribution packages.</strong> Use the following canonical sources to check riscv64 package availability. Start with the project graph database (faster, structured, no HTML scraping) and fall back to web URLs only when the graph returns no results:</p>
 
 <ul>
-  <li><strong>Project graph (first stop):</strong> Use <code class="language-plaintext highlighter-rouge">mcp__project-graph__project_graph_query</code> to query the Ubuntu 26.04 (Resolute) binary package index for riscv64. Example query for a package named “libfoo-dev”:
+  <li><strong>Project graph (first stop):</strong> Use the <code class="language-plaintext highlighter-rouge">project_graph_query</code> tool of the <code class="language-plaintext highlighter-rouge">project-graph</code> MCP server to query the Ubuntu 26.04 (Resolute) binary package index for riscv64. Example query for a package named “libfoo-dev”:
     <div class="language-sparql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span><span class="w"> </span><span class="nv">?pkgName</span><span class="w"> </span><span class="nv">?suite</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="p">{</span><span class="w">
   </span><span class="nv">?pkg</span><span class="w"> </span><span class="k">a</span><span class="w"> </span><span class="nn">&lt;https://purl.org/packagegraph/ontology/deb#BinaryPackage&gt;</span><span class="w"> </span><span class="p">;</span><span class="w">
        </span><span class="nn">&lt;https://purl.org/packagegraph/ontology/core#packageName&gt;</span><span class="w"> </span><span class="nv">?pkgName</span><span class="w"> </span><span class="p">;</span><span class="w">
@@ -375,7 +422,7 @@ set) – there is no partial-update mode.</p>
   <li>Output is a Markdown file. Use the simplest, default formatting. Every URL in the report must be a Markdown link: <code class="language-plaintext highlighter-rouge">[descriptive text](https://url)</code>. Never write bare URLs.</li>
 </ul>
 
-<p><strong>Update cadence:</strong> This report is refreshed approximately every 6 months, and every refresh is a full rewrite – see “Refreshing an existing report” above (<code class="language-plaintext highlighter-rouge">existingReportPath</code>). Never append a changelog-style “Update - YYYY-MM-DD” entry instead of rewriting; there is no partial-update mode.</p><hr />
+<p><strong>Update cadence:</strong> This report is refreshed approximately every 6 months, and every refresh is a full rewrite – see “Refreshing an existing report” above. Never append a changelog-style “Update - YYYY-MM-DD” entry instead of rewriting; there is no partial-update mode.</p><hr />
 <h2 id="report-sections">
   
   
@@ -456,10 +503,7 @@ Items that could not be verified against a second source are marked [NEEDS VERIF
 
 <p><code class="language-plaintext highlighter-rouge">dependencies:</code> lists every <em>direct</em> dependency from Section 9 (not transitive/indirect ones – the
 dependency graph derives those client-side). <code class="language-plaintext highlighter-rouge">[SLUG]</code> is this report’s own filename slug (matching
-<code class="language-plaintext highlighter-rouge">title</code>). The <code class="language-plaintext highlighter-rouge">project-report-workflow.js</code> script generates both automatically – one entry per direct
-dependency, <code class="language-plaintext highlighter-rouge">name</code> resolved against <code class="language-plaintext highlighter-rouge">projects.yml</code> – and splices them into its output deterministically,
-so this template only needs to be followed exactly when writing a report by hand. Every project report
-must include this graph; it is not optional.</p><hr />
+<code class="language-plaintext highlighter-rouge">title</code>). Every project report must include this graph; it is not optional.</p><hr />
 <h3 id="1-project-overview">
   
   
@@ -613,7 +657,7 @@ client-side from direct edges alone).</p>
 
 <ul>
   <li>Is it built, tested, and released on riscv64? (yes / partial / no, with evidence)</li>
-  <li><strong>Graph lookup:</strong> Use <code class="language-plaintext highlighter-rouge">mcp__project-graph__project_graph_query</code> to check whether the dependency’s Ubuntu 26.04 binary package exists on riscv64 before doing live GitHub searches:
+  <li><strong>Graph lookup:</strong> Use the <code class="language-plaintext highlighter-rouge">project_graph_query</code> tool of the <code class="language-plaintext highlighter-rouge">project-graph</code> MCP server to check whether the dependency’s Ubuntu 26.04 binary package exists on riscv64 before doing live GitHub searches:
     <div class="language-sparql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span><span class="w"> </span><span class="nv">?pkgName</span><span class="w"> </span><span class="nv">?suite</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="p">{</span><span class="w">
   </span><span class="nv">?pkg</span><span class="w"> </span><span class="k">a</span><span class="w"> </span><span class="nn">&lt;https://purl.org/packagegraph/ontology/deb#BinaryPackage&gt;</span><span class="w"> </span><span class="p">;</span><span class="w">
        </span><span class="nn">&lt;https://purl.org/packagegraph/ontology/core#packageName&gt;</span><span class="w"> </span><span class="nv">?pkgName</span><span class="w"> </span><span class="p">;</span><span class="w">
@@ -695,7 +739,7 @@ client-side from direct edges alone).</p>
 </h3>
     
 
-<p>Run the <code class="language-plaintext highlighter-rouge">/project-color-coding</code> skill on this project. That skill is the authoritative source for the color model, research procedure, and decision rules. Do not replicate the color model here.</p>
+<p>Apply the <code class="language-plaintext highlighter-rouge">project-color-coding</code> skill (<code class="language-plaintext highlighter-rouge">skills/project-color-coding/SKILL.md</code>) to this project. That skill is the authoritative source for the color model, research procedure, and decision rules. Do not replicate the color model here.</p>
 
 <p>The skill produces a per-node record with fields <code class="language-plaintext highlighter-rouge">color</code>, <code class="language-plaintext highlighter-rouge">color_case</code>, <code class="language-plaintext highlighter-rouge">release_provider</code>, and <code class="language-plaintext highlighter-rouge">optimization_gap</code> (for optimization-purpose projects). Use those fields to populate:</p>
 
