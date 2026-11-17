@@ -1,5 +1,8 @@
 
-export const meta = {
+// This script runs as a pi-subagents scripted workflow (https://github.com/nicobailon/pi-subagents):
+//   subagent({ workflow: "./prompts/project-report/project-report-workflow.js", args: {...}, async: false })
+// See AGENTS.md in this directory for the arguments and for how the result is used.
+const meta = {
   name: 'project-report',
   description: 'Deep research RISC-V ecosystem status report -- new report from live findings, or (with existingReportPath) a full rewrite merging live findings with prior report content',
   phases: [
@@ -10,7 +13,28 @@ export const meta = {
   ],
 }
 
-const proj = args[0]
+const proj = Array.isArray(args) ? args[0] : args
+
+// Runtime adapter. Every step below is written as `await agent(prompt, { label, phase, schema })`.
+// pi-subagents launches a child with `runs.run(key, { agent, task, ... })`, so these three plain
+// helpers map one onto the other. They must stay plain functions that return the `runs.run`
+// promise: the runtime rejects nested async helpers.
+const STEP_AGENT = proj.agent || 'report-researcher'
+let stepCount = 0
+function agent(prompt, opts) {
+  const o = opts || {}
+  stepCount += 1
+  const key = 'step-' + (stepCount < 10 ? '0' : '') + stepCount
+  const child = { agent: STEP_AGENT, task: prompt, label: o.label || key }
+  if (o.schema) child.outputSchema = o.schema
+  if (o.output) child.output = o.output
+  return runs.run(key, child).then(function (r) {
+    if (!r || !r.ok) return null
+    return o.schema ? r.structuredOutput : r.output
+  })
+}
+function phase(title) { emit({ phase: title }) }
+function log(message) { console.log(message) }
 const ABORT_THRESHOLD = 1000
 // Workflow scripts must be deterministic/resumable -- new Date()/Date.now() are disallowed at
 // the top level. The orchestrator computes today's date and passes it in via args instead.
@@ -660,7 +684,11 @@ Before sizing: check what RISE has already done or funded. Do not size work alre
 
 ## 15. References
 
-Complete list of every source cited. Format: [descriptive text](URL).`, {label: `${proj.name}:synthesize`, phase: 'Synthesize'})
+Complete list of every source cited. Format: [descriptive text](URL).`, {label: `${proj.name}:synthesize`, phase: 'Synthesize', output: proj.reportBodyPath || undefined})
+
+if (!report) {
+  return [{ name: proj.name, status: 'FAILED', reason: 'The synthesize step returned no report.' }]
+}
 
 // Splice the resolved, registry-canonical dependencies (extracted at the start of this phase)
 // into the frontmatter deterministically, rather than trusting the synthesize agent above to
@@ -692,6 +720,22 @@ const categoriesMatch = report.match(/^categories:\n(?:[ \t]+-.*\n?)+/m)
 const categoriesYaml = categoriesMatch ? categoriesMatch[0] : ''
 const frontmatter = `---\ntitle: ${proj.name}\nparent: Project Reports\n${categoriesYaml}color: ${grade.color}\n${depsYaml}---\n\n{% include dependency-graph.html slug="dependencies" subset="${slug}" %}\n\n`
 let finalReport = frontmatter + reportBody
+
+// With proj.reportBodyPath set, the runtime has saved the synthesize step's raw output to that
+// file. Return the frontmatter and the path instead of the full text, so the caller can assemble
+// the report with a shell command (frontmatter, then the body file from its first "# " heading)
+// without copying tens of kilobytes of text through a model.
+if (proj.reportBodyPath) {
+  return [{
+    name: proj.name,
+    file: `project-reports/${slug}.md`,
+    frontmatter: frontmatter,
+    bodyPath: proj.reportBodyPath,
+    reportChars: finalReport.length,
+    totalChars: fullContext.length,
+    new_registry_entries: newRegistryEntries,
+  }]
+}
 
 return [{
   name: proj.name,

@@ -25,8 +25,13 @@ github-app:
   private-key: ${{ secrets.RISEPROJECT_APP_PRIVATE_KEY }}
 
 engine:
-  id: claude
-  model: sonnet
+  id: pi
+  model: anthropic/claude-sonnet-5-5
+  # pi-subagents runs prompts/project-report/project-report-workflow.js as a scripted
+  # workflow; pi-web-access gives its steps web search and page fetching.
+  extensions:
+    - npm:pi-subagents@0.89.0
+    - npm:pi-web-access@0.48.0
 
 timeout-minutes: 180
 
@@ -49,8 +54,10 @@ sandbox:
 tools:
   github:
     toolsets: [default, actions]
+    # The research reads issues and pull requests written by anyone in other
+    # projects' repositories, so do not filter them by author trust.
+    min-integrity: none
   web-fetch:
-  web-search:
   edit:
   bash: [":*"]
 
@@ -93,85 +100,96 @@ instructions.
 3. Derive the slug: the lowercased name with every run of spaces, dots and slashes replaced by
    one hyphen. The report path is `project-reports/<slug>.md`. If the entry already has a
    `report:` field, use that path instead.
-4. If the report file already exists, this run is a full rewrite. Read the existing report
-   first, keep what the fresh research does not contradict, correct what has changed, and
-   write one standalone document. Otherwise this is a new report.
+4. If the report file already exists, this run is a full rewrite: pass the existing report to
+   the workflow as described below. Otherwise this is a new report.
 
-## 2. Research
+## 2. Run the research workflow
 
-Read `prompts/project-report/project-report.md` and follow its "Research instructions" and
-"Report sections" exactly. They define the audience, the sources to check, the verification
-rules and all fifteen sections. Skip its "Execution model" section: the `Workflow` tool it
-describes is not available here, so do the same research directly, in the same four passes:
+The research is done by the scripted workflow `prompts/project-report/project-report-workflow.js`,
+which runs about twenty steps in sequence (search, fetch, verify, synthesize), each in its own
+sub-agent. Your job is to launch it and use its result. Do not do the research yourself, do not
+write the report yourself, and do not skip or shorten the workflow.
 
-- **Search:** issues and pull requests, CI configuration files, package availability, RISE
-  involvement, architecture-specific source code, governance, dependencies, performance
-  benchmarks and bugs.
-- **Fetch:** read the most important issues and pull requests in full, confirm merge status
-  from the API (`merged_at`), read the build documentation, and read RISE details and
-  benchmark data.
-- **Verify:** confirm CI status from the actual workflow files, confirm package availability
-  from the registries themselves, and assess how complete the architecture-specific code is.
-- **Synthesize:** write the report.
+1. Install the agent definition the workflow steps run as:
 
-Use sub-agents to parallelize the search passes where that helps. Use the GitHub tools for
-projects hosted on GitHub, and web search plus web fetch for everything else. For large
-repositories, a shallow clone (`git clone --depth 1`) into a temporary directory outside the
-workspace is the fastest way to read CI files and architecture-specific code. Do not build or
-run code from a cloned repository.
+   ```bash
+   mkdir -p "$PI_CODING_AGENT_DIR/agents" /tmp/gh-aw/agent
+   cp prompts/project-report/agents/report-researcher.md "$PI_CODING_AGENT_DIR/agents/"
+   ```
 
-Use the `project-graph` tool for Ubuntu package lookups first. Fall back to the distribution
-URLs listed in the research instructions only when it returns no results.
+2. If you have no `subagent` tool yet, call `subagents_enable` first.
 
-## 3. Grade
+3. Call `subagent` once, with:
 
-Read `skills/project-color-coding/SKILL.md` and apply it to this project. It is the only
-source for the color model and decision rules. Use its result for the `color:` frontmatter
-field, the **Readiness** header line and Section 13.
+   ```json
+   {
+     "workflow": "./prompts/project-report/project-report-workflow.js",
+     "async": false,
+     "options": { "timeoutMs": 9000000 },
+     "args": {
+       "name": "<name>",
+       "repo": "<repo>",
+       "home": "<home>",
+       "reportDate": "<today, from `date -u +%Y-%m-%d`>",
+       "registryPath": "<absolute path to projects.yml>",
+       "reportBodyPath": "/tmp/gh-aw/agent/report-body.md"
+     }
+   }
+   ```
 
-Do not settle the grade on unverified evidence. If the evidence that decides the grade could
-not be verified, grade `grey` and say in Section 13 exactly what is missing.
+   Leave `repo` out if the registry entry has none. For a rewrite, add
+   `"existingReportPath": "<absolute path to the existing report>"`.
 
-## 4. Write the report
+4. Wait for the call to return. Its result is a one-element array:
+   `{ name, file, frontmatter, bodyPath, reportChars, totalChars, new_registry_entries }`.
+   If the call fails, or the result has `status: "FAILED"`, or `bodyPath` does not exist or is
+   smaller than 10 KB, do not open a pull request: report the failure with the
+   `report_incomplete` output, quoting the error, and stop.
 
-Write the report to the path from step 1. Requirements beyond the template:
+## 3. Assemble the report
 
-- The frontmatter has `title`, `parent: Project Reports`, `color` and `dependencies`. Each
-  dependency has `name`, `relation` and `criticality`.
-- Every dependency `name` must match a `name:` in `projects.yml` exactly. For each direct
-  dependency missing from the registry, add an entry (`name`, `repo`, `home`) in alphabetical
-  order, the same way as in step 1. The site build fails otherwise.
-- The first line after the frontmatter is
-  `{% include dependency-graph.html slug="dependencies" subset="<slug>" %}`, followed by
-  `# <name>`.
-- Use today's date (`date -u +%Y-%m-%d`) in the **Date** header line.
-- Sections are numbered `## 1.` to `## 15.`. Section 10 is optional. There is no "Updates"
-  section.
-- Links to other reports are sibling-relative, for example `linux-kvm.md`.
-- The report is a standalone assessment. Do not describe how the research was done: no
-  mention of tools, agents, sessions, access errors, rate limits, earlier versions of the
-  report or this workflow. Where something could not be established, state what is unknown
-  and mark the claim `[NEEDS VERIFICATION]`.
-- Latin-1 characters only, no em-dashes, and every URL is a Markdown link.
+1. Save the returned `frontmatter` string, character for character, to
+   `/tmp/gh-aw/agent/frontmatter.md`. It ends with the dependency-graph include line and a blank
+   line.
+2. Build the report from it and the body file, dropping anything the body has before its first
+   `# ` heading:
 
-Then set `report: project-reports/<slug>.md` on the project's `projects.yml` entry if it is
-not already there.
+   ```bash
+   { cat /tmp/gh-aw/agent/frontmatter.md; awk 'f || /^# / { f = 1; print }' /tmp/gh-aw/agent/report-body.md; } > "<file>"
+   ```
 
-## 5. Check before submitting
+   `<file>` is the path from step 1 of "Resolve the project".
+3. For each item in `new_registry_entries`, add an entry (`name`, `repo`, `home`) to
+   `projects.yml` in alphabetical order, the same way as in section 1. If an item is only a
+   different spelling of an existing entry, add it to that entry's `synonyms:` instead and use
+   the existing `name` in the report frontmatter.
+4. Set `report: project-reports/<slug>.md` on the project's `projects.yml` entry if it is not
+   already there.
+
+Do not rewrite the report's content. The only edits allowed are the ones the checks below
+require.
+
+## 4. Check before submitting
 
 Run these checks and fix any failure:
 
-- The report is larger than 10 KB and its first heading is exactly `# <name>`.
-- All required section headings are present, in order.
+- The report is larger than 10 KB. It starts with the frontmatter, then the
+  `{% include dependency-graph.html slug="dependencies" subset="<slug>" %}` line, then `# <name>`.
+- Sections `## 1.` to `## 15.` are present in order (Section 10 is optional), and there is no
+  "Updates" section.
 - Every frontmatter dependency name appears as a `name:` in `projects.yml`.
+- The report does not describe how the research was done: no mention of tools, agents,
+  sessions, access errors, rate limits, earlier versions of the report or this workflow. Reword
+  any such sentence to state only what is known or unknown, keeping `[NEEDS VERIFICATION]`
+  where a claim is unverified.
 - `git status` shows changes only to the report file and `projects.yml`.
 
-## 6. Open the pull request
+## 5. Open the pull request
 
 Create one pull request with a single commit containing the report and any `projects.yml`
 changes.
 
 - Title: `Add report for <name>` for a new report, `Rewrite report for <name>` for a rewrite.
   The `project-reports: ` prefix is added automatically.
-- Body: the grade and its one-paragraph justification, the registry entries added, and the
-  claims left marked `[NEEDS VERIFICATION]`.
+- Body: the grade (the `color:` in the frontmatter) with the justification from Section 13, the
+  registry entries added, and the claims left marked `[NEEDS VERIFICATION]`.

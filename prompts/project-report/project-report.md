@@ -6,7 +6,7 @@ nav_order: 1
 
 # Per-Project RISC-V Ecosystem Status Report
 
-**Usage:** Pick a project from `projects.yml` (the project registry) and pass its fields to the `Workflow` tool (see execution model below).
+**Usage:** Pick a project from `projects.yml` (the project registry) and run the research for it (see "Running the research" below).
 
 Each `projects.yml` entry has these fields:
 
@@ -16,67 +16,93 @@ Each `projects.yml` entry has these fields:
 - `report` (optional): path to the per-project report under `project-reports/` -- present only when a report already exists
 - `synonyms` (optional): alternate names the project appears under in the dependency graphs
 
-Only `name`, `repo`, `home`, and the full `projects.yml` array itself (as `registry`, see execution
-model below) are passed to the workflow; `report`/`synonyms` are registry bookkeeping. Pick a
-project whose entry has no `report:` field yet (it still needs a report).
+The research uses `name`, `repo` and `home`; `report`/`synonyms` are registry bookkeeping. A project
+whose entry has no `report:` field yet still needs a report.
 
 The output report path is derived from the name: `project-reports/<slug>.md`, where `slug` is the lowercased name with spaces, dots, and slashes replaced by hyphens (e.g. "Apache Flink" -> `project-reports/apache-flink.md`, "Open vSwitch" -> `project-reports/open-vswitch.md`).
 
-**See `AGENTS.md` in this directory for the complete operator guide**, including:
-- How `projects.yml` maps to workflow args and how to find projects without a report yet
-- Rate limiting recovery procedures (resume with `resumeFromRunId`)
-- How to monitor workflow progress via the journal file
-- How to write, verify, and commit each report
-- All known issues and workarounds from the 2026-06 generation session
-
 ---
 
-## Execution model
+## Running the research
 
-Do not use `/deep-research` for this prompt -- it loads instructions but does not self-execute. Instead, invoke the `Workflow` tool directly with the pre-built script at `prompts/project-report/project-report-workflow.js`. Pass one `projects.yml` entry as the single element of `args` (the `repo` and `home` fields map straight through; the script derives the output path from `name`), plus `registryPath`, the absolute path to `projects.yml` itself -- the script has no filesystem access, but the agents it spawns do, and the deps-extraction agent greps that path directly to resolve each dependency to its exact `projects.yml` `name:` spelling (or flag it as not yet registered), so no parsed registry array needs to cross the `args` boundary. Also pass `reportDate` (today's date, `YYYY-MM-DD`) -- the script cannot call `new Date()` itself (workflow scripts must stay deterministic/resumable), so the caller computes it:
+### GitHub workflow
 
-```js
-Workflow({
-  args: [{
-    "name": "<project-name>",                        // projects.yml: name
-    "repo": "https://<project-repository>/",         // projects.yml: repo
-    "home": "https://<project-homepage>/",           // projects.yml: home
-    "reportDate": "<YYYY-MM-DD>",                     // today's date, computed by the caller
-    "registryPath": "/abs/path/to/projects.yml"
-  }],
-  scriptPath: "/abs/path/to/prompts/project-report/project-report-workflow.js"
-})
+The `project-report` agentic workflow (`.github/workflows/project-report.md`) runs the research for
+one project and opens a pull request with the report and any `projects.yml` changes. Dispatch it from
+the Actions tab, or from the command line, with the project name as its only input:
+
+```bash
+gh workflow run project-report.lock.yml -f project="<project-name>"
 ```
 
-The script derives the output path as `project-reports/<slug>.md`. To override it, add an absolute `"slug"` field to the args object. The script runs four phases sequentially (8 search agents, 4 fetch agents, 3 verify agents, 1 dependency-structuring agent, 1 synthesize agent = 17 total). On completion the workflow returns a JSON object with `{name, file, report, totalChars, new_registry_entries}`. Write `report` to `file` and verify before committing.
+The workflow runs the [Pi](https://github.com/earendil-works/pi) coding agent. Pi launches the
+orchestration script `project-report-workflow.js` (see below), waits for it, assembles the report
+from its result and opens the pull request.
 
-`new_registry_entries` lists any direct dependency (found for Section 9 / the report's own `dependencies:` frontmatter) that the deps-extraction agent did not find in the registry file -- i.e. it has no `projects.yml` entry yet. **Before committing the report**, add one new alphabetically-positioned entry (`name`/`repo`/`home`, best effort) to `projects.yml` for each item in this array -- see `AGENTS.md`'s "After the workflow completes" section. This keeps the hard constraint enforced by `_plugins/dependency_graph_generator.rb` (every `dependencies: name:` in every report must match a `projects.yml` entry, or the site fails to build) from ever actually tripping in normal use.
+The workflow source is Markdown. After changing its frontmatter, regenerate the lock file with
+`gh aw compile project-report` and commit both files.
+
+### The four passes
+
+Whatever runs the research, it proceeds in four passes:
+
+**Pass 1 -- Search:** Issues/PRs, CI config files, package availability, RISE involvement, arch-specific source code, governance, dependencies, performance benchmarks and bugs.
+
+**Pass 2 -- Fetch:** Deep-read of the most important issues/PRs, PR merge status verification via API, build documentation, RISE details and benchmark data.
+
+**Pass 3 -- Verify:** Confirm CI status from the actual YAML, confirm package availability from registry APIs, assess arch code completeness.
+
+**Pass 4 -- Synthesize:** Write the complete report from all gathered findings.
+
+Use the GitHub API or GitHub tools for a project hosted on GitHub. For a non-GitHub project
+(sourceware.org, kernel.org, googlesource.com), read its web interfaces directly. For a project with
+no `repo` at all, start from the `home` URL.
 
 ### Refreshing an existing report
 
-There is only one way to refresh a report: a full rewrite. Add `"existingReportPath"`
-(absolute path to the current `project-reports/<slug>.md`) to `args`. When present, a
-Synthesize-phase agent reads that file and the final report is written as one standalone,
-cohesive document combining it with fresh live research: content the live findings don't
-contradict is kept, anything they show has changed is corrected, and whatever new information
-they reveal is added. The result never references "the previous version" or reads as a change
-log against it -- it reads exactly like a report written today from scratch. Omit
-`existingReportPath` for a project that has no report yet -- the script then behaves exactly as
-in the base case above, writing a report grounded in live findings only.
+There is only one way to refresh a report: a full rewrite. When `project-reports/<slug>.md` already
+exists, read it and write one standalone, cohesive document combining it with fresh live research:
+content the live findings don't contradict is kept, anything they show has changed is corrected, and
+whatever new information they reveal is added. The result never references "the previous version" or
+reads as a change log against it -- it reads exactly like a report written today from scratch.
 
-Never hand-append a changelog-style entry to a report instead of running this. A report is
-either freshly generated (no `existingReportPath`) or fully rewritten (`existingReportPath`
-set) -- there is no partial-update mode.
+Never hand-append a changelog-style entry to a report. A report is either freshly generated or fully
+rewritten -- there is no partial-update mode.
 
-For a non-GitHub project (sourceware.org, kernel.org, googlesource.com), the `repo` URL is not a github.com URL and the script automatically switches to WebSearch + WebFetch instead of GitHub MCP tools. For a project with no `repo` at all, the script falls back to the `home` URL for web searches.
+### Registering dependencies
 
-**Phase 1 -- Search (sequential, 8 agents):** Issues/PRs, CI config files, package availability, RISE involvement, arch-specific source code, governance, dependencies, performance benchmarks and bugs.
+Every direct dependency named in the report's `dependencies:` frontmatter must match a `projects.yml`
+entry, or `_plugins/dependency_graph_generator.rb` fails the site build. Before committing a report,
+add one alphabetically-positioned entry (`name`/`repo`/`home`, best effort) to `projects.yml` for each
+direct dependency that has none.
 
-**Phase 2 -- Fetch (sequential, 4 agents):** Deep-read of the 5 most important issues/PRs, PR merge status verification via API, build documentation, RISE details and benchmark data.
+### Orchestration script
 
-**Phase 3 -- Verify (sequential, 3 adversarial agents):** Confirm CI status from actual YAML, confirm package availability from registry APIs, assess arch code completeness.
+`project-report-workflow.js` in this directory runs the four passes as about twenty sequential steps,
+each in its own sub-agent, and returns the report. It is a
+[pi-subagents](https://github.com/nicobailon/pi-subagents) scripted workflow, launched with that
+extension's `subagent` tool:
 
-**Phase 4 -- Synthesize (1 agent):** Writes the complete report text from all gathered findings. Returns the report as plain text; the calling session writes it to disk.
+```js
+subagent({
+  workflow: "./prompts/project-report/project-report-workflow.js",
+  async: false,
+  args: {
+    name: "<project-name>",                         // projects.yml: name
+    repo: "https://<project-repository>/",          // projects.yml: repo (omit if none)
+    home: "https://<project-homepage>/",            // projects.yml: home
+    reportDate: "<YYYY-MM-DD>",                      // today's date
+    registryPath: "/abs/path/to/projects.yml",
+    existingReportPath: "/abs/path/to/project-reports/<slug>.md",   // only for a rewrite
+    reportBodyPath: "/abs/path/to/report-body.md"   // where to save the synthesized body
+  }
+})
+```
+
+Each step runs as the `report-researcher` agent defined in `agents/report-researcher.md`, which must
+be copied to Pi's user agents directory (`$PI_CODING_AGENT_DIR/agents/`) first. That file also maps
+the tool names used in the step prompts onto the tools Pi provides. `AGENTS.md` in this directory is
+the operator guide.
 
 ---
 
@@ -86,7 +112,7 @@ You are a highly technical, principal software engineer writing a fact-based tec
 
 Research the project named in the `projects.yml` entry (using its `repo`) and generate the report at the derived `project-reports/<slug>.md` path.
 
-Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trackers, CI configuration files, build scripts, release notes, changelogs, blog posts, conference slides, foundation governance documents, and any other primary sources. Use sub-agents to parallelize the search. Go deep.
+Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trackers, CI configuration files, build scripts, release notes, changelogs, blog posts, conference slides, foundation governance documents, and any other primary sources. Use sub-agents to parallelize the search where the runtime offers them. Go deep.
 
 **RISE Project resources -- check these for every report.** The [RISE Project](https://riseproject.dev) (RISC-V Software Ecosystem) is a Linux Foundation project and the primary industry consortium coordinating RISC-V software enablement across the open-source ecosystem. Its members include Qualcomm, SiFive, Red Hat, Canonical, Google, and others. RISE directly funds and coordinates upstream work. For every report, check the following:
 
@@ -100,7 +126,7 @@ Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trac
 
 **Verifying Linux distribution packages.** Use the following canonical sources to check riscv64 package availability. Start with the project graph database (faster, structured, no HTML scraping) and fall back to web URLs only when the graph returns no results:
 
-- **Project graph (first stop):** Use `mcp__project-graph__project_graph_query` to query the Ubuntu 26.04 (Resolute) binary package index for riscv64. Example query for a package named "libfoo-dev":
+- **Project graph (first stop):** Use the `project_graph_query` tool of the `project-graph` MCP server to query the Ubuntu 26.04 (Resolute) binary package index for riscv64. Example query for a package named "libfoo-dev":
   ```sparql
   SELECT ?pkgName ?suite WHERE {
     ?pkg a <https://purl.org/packagegraph/ontology/deb#BinaryPackage> ;
@@ -126,7 +152,7 @@ Search exhaustively: GitHub/GitLab issues, PRs, commits, mailing lists, bug trac
 - Only generate Latin-1 characters. Do not use em-dashes; use a hyphen or comma instead. Write like a human.
 - Output is a Markdown file. Use the simplest, default formatting. Every URL in the report must be a Markdown link: `[descriptive text](https://url)`. Never write bare URLs.
 
-**Update cadence:** This report is refreshed approximately every 6 months, and every refresh is a full rewrite -- see "Refreshing an existing report" above (`existingReportPath`). Never append a changelog-style "Update - YYYY-MM-DD" entry instead of rewriting; there is no partial-update mode.
+**Update cadence:** This report is refreshed approximately every 6 months, and every refresh is a full rewrite -- see "Refreshing an existing report" above. Never append a changelog-style "Update - YYYY-MM-DD" entry instead of rewriting; there is no partial-update mode.
 
 ---
 
@@ -165,10 +191,7 @@ Items that could not be verified against a second source are marked [NEEDS VERIF
 
 `dependencies:` lists every *direct* dependency from Section 9 (not transitive/indirect ones -- the
 dependency graph derives those client-side). `[SLUG]` is this report's own filename slug (matching
-`title`). The `project-report-workflow.js` script generates both automatically -- one entry per direct
-dependency, `name` resolved against `projects.yml` -- and splices them into its output deterministically,
-so this template only needs to be followed exactly when writing a report by hand. Every project report
-must include this graph; it is not optional.
+`title`). Every project report must include this graph; it is not optional.
 
 ---
 
@@ -266,7 +289,7 @@ client-side from direct edges alone).
 **Step 1 -- Direct dependencies.** List every significant direct dependency: build dependencies, runtime dependencies, and optional dependencies that affect performance or functionality. For each:
 
 - Is it built, tested, and released on riscv64? (yes / partial / no, with evidence)
-- **Graph lookup:** Use `mcp__project-graph__project_graph_query` to check whether the dependency's Ubuntu 26.04 binary package exists on riscv64 before doing live GitHub searches:
+- **Graph lookup:** Use the `project_graph_query` tool of the `project-graph` MCP server to check whether the dependency's Ubuntu 26.04 binary package exists on riscv64 before doing live GitHub searches:
   ```sparql
   SELECT ?pkgName ?suite WHERE {
     ?pkg a <https://purl.org/packagegraph/ontology/deb#BinaryPackage> ;
@@ -325,7 +348,7 @@ Include this section only if the project has a significant ecosystem of packages
 
 ### 13. Readiness Assessment
 
-Run the `/project-color-coding` skill on this project. That skill is the authoritative source for the color model, research procedure, and decision rules. Do not replicate the color model here.
+Apply the `project-color-coding` skill (`skills/project-color-coding/SKILL.md`) to this project. That skill is the authoritative source for the color model, research procedure, and decision rules. Do not replicate the color model here.
 
 The skill produces a per-node record with fields `color`, `color_case`, `release_provider`, and `optimization_gap` (for optimization-purpose projects). Use those fields to populate:
 
