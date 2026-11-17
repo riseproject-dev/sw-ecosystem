@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: MIT
+name: Compile agentic workflows
+
+# Agentic workflows are written as Markdown (.github/workflows/*.md). GitHub
+# Actions only runs the lock file the gh-aw compiler generates from each one.
+# This workflow regenerates the lock files and commits them back to the
+# branch whenever a workflow source changes.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/*.md"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/*.md"
+  workflow_dispatch:
+
+concurrency:
+  group: compile-agentic-workflows-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    # Pull requests from forks get no secrets, so there is nothing to push with.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # GITHUB_TOKEN cannot push changes under .github/workflows, and a push
+      # made with it raises no events. Push as the riseproject-dev App, which
+      # needs the "workflows" permission on this repository.
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          client-id: ${{ vars.RISEPROJECT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RISEPROJECT_APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Install the gh-aw compiler
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh extension install github/gh-aw
+          gh aw version
+
+      - name: Compile
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: gh aw compile
+
+      - name: Commit the generated files
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          git add -A .github
+          if git diff --cached --quiet; then
+            echo "Lock files are up to date."
+            exit 0
+          fi
+          git diff --cached --stat
+          user_id="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${user_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          git commit -m "workflows: Compile agentic workflows"
+          git push origin "HEAD:${BRANCH}"
