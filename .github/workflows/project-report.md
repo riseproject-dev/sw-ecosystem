@@ -92,7 +92,9 @@ instructions.
 1. Read `projects.yml` at the repository root. Find the entry whose `name:` or one of whose
    `synonyms:` matches the input, ignoring case. Use that entry's exact `name`, `repo` and
    `home` from here on.
-2. If no entry matches, identify the canonical upstream repository and homepage, and add a new
+2. If no entry matches, look for the project in `project-reports/.queue.yml`, the list of
+   projects waiting for a report, and take its `name`, `repo` and `home` from there. Otherwise
+   identify the canonical upstream repository and homepage. Either way, add a new
    entry (`name`, `repo`, `home`) to `projects.yml` in case-insensitive alphabetical order.
    Edit only the lines you add. Never reformat or re-serialize the file. If the input does not
    name a real, identifiable open-source project, stop and report that with the `noop` output
@@ -165,6 +167,11 @@ write the report yourself, and do not skip or shorten the workflow.
    the existing `name` in the report frontmatter.
 4. Set `report: project-reports/<slug>.md` on the project's `projects.yml` entry if it is not
    already there.
+5. Take the project off the queue. If `project-reports/.queue.yml` has an entry whose `name`
+   matches the project's name or one of its synonyms, ignoring case, delete that entry: its
+   `- name:` line, the lines that belong to it, and the blank line that separates it from the
+   next entry. Leave the header comment and every other entry untouched, and never re-serialize
+   the file. If the project is not in the queue, leave the file alone.
 
 Do not rewrite the report's content. The only edits allowed are the ones the checks below
 require.
@@ -182,14 +189,18 @@ Run these checks and fix any failure:
   sessions, access errors, rate limits, earlier versions of the report or this workflow. Reword
   any such sentence to state only what is known or unknown, keeping `[NEEDS VERIFICATION]`
   where a claim is unverified.
-- `git status` shows changes only to the report file and `projects.yml`.
+- If the project was in `project-reports/.queue.yml`, its entry is gone and the file still
+  parses as YAML (an empty list is fine).
+- `git status` shows changes only to the report file, `projects.yml` and
+  `project-reports/.queue.yml`.
 
 ## 5. Open the pull request
 
-Create one pull request with a single commit containing the report and any `projects.yml`
-changes.
+Create one pull request with a single commit containing the report, any `projects.yml`
+changes and the `project-reports/.queue.yml` change, if there is one.
 
 - Title: `Add report for <name>` for a new report, `Rewrite report for <name>` for a rewrite.
   The `project-reports: ` prefix is added automatically.
 - Body: the grade (the `color:` in the frontmatter) with the justification from Section 13, the
-  registry entries added, and the claims left marked `[NEEDS VERIFICATION]`.
+  registry entries added, whether the project was removed from the queue, and the claims left
+  marked `[NEEDS VERIFICATION]`.

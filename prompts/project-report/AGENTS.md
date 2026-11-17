@@ -14,8 +14,9 @@ gh workflow run project-report.lock.yml -f project="GDB"
 ```
 
 or use Actions -> the project report workflow -> Run workflow. The run researches the project and
-opens a pull request, as the riseproject-dev app, containing `project-reports/<slug>.md` and any
-`projects.yml` changes. Review the pull request and merge it.
+opens a pull request, as the riseproject-dev app, containing `project-reports/<slug>.md`, any
+`projects.yml` changes, and the removal of the project from `project-reports/.queue.yml` if it was
+queued there. Review the pull request and merge it.
 
 If the project already has a report, the run is a full rewrite of it. If the name is not in
 `projects.yml`, the run adds a registry entry for it.
@@ -28,7 +29,7 @@ If the project already has a report, the run is a full rewrite of it. If the nam
 |-------|--------------|
 | Resolve | The agent looks the project up in `projects.yml` and derives the report path. |
 | Research | The agent launches `project-report-workflow.js` and waits for it. |
-| Assemble | The agent builds the report file from the script's result and updates `projects.yml`. |
+| Assemble | The agent builds the report file from the script's result, updates `projects.yml`, and removes the project from `project-reports/.queue.yml` if it is listed there. |
 | Check | Structure, dependency names and process narration are checked. |
 | Publish | One pull request with one commit is opened. |
 
@@ -130,6 +131,12 @@ Before merging, check:
    evidence is marked `[NEEDS VERIFICATION]`, re-run instead of merging.
 5. The report does not narrate the research process (tools, agents, access errors, earlier
    versions).
+
+### The queue
+
+`project-reports/.queue.yml` lists the projects waiting for a report. A run for a queued project
+deletes that project's entry, and only that entry, in the same commit as the report. Check that
+the pull request does so; a report merged without it leaves a stale queue entry.
 
 ### New registry entries
 

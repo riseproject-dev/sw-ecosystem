@@ -76,6 +76,13 @@ entry, or `_plugins/dependency_graph_generator.rb` fails the site build. Before 
 add one alphabetically-positioned entry (`name`/`repo`/`home`, best effort) to `projects.yml` for each
 direct dependency that has none.
 
+### The report queue
+
+`project-reports/.queue.yml` lists projects waiting for a report (`name`, `repo`, `home`). When a
+report is created for a project that is in the queue, remove its entry from that file in the same
+commit as the report. Delete only that entry's lines; leave the header comment and the other
+entries as they are.
+
 ### Orchestration script
 
 `project-report-workflow.js` in this directory runs the four passes as about twenty sequential steps,
