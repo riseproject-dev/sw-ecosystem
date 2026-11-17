@@ -39,6 +39,10 @@ const ABORT_THRESHOLD = 1000
 // Workflow scripts must be deterministic/resumable -- new Date()/Date.now() are disallowed at
 // the top level. The orchestrator computes today's date and passes it in via args instead.
 const reportDate = proj.reportDate
+// proj.author (optional): the report's Author header value, "Name <email>" or
+// "Name ([@login](https://github.com/login))" -- whoever launched the run. Falls back to the
+// repository's default author when the caller does not pass one.
+const reportAuthor = proj.author || 'Ludovic HENRY <ludovic.henry@qti.qualcomm.com>'
 // Projects with no public repo (e.g. Geekbench) fall back to the homepage for every
 // proj.repo reference below (search/fetch/verify agents and the non-GitHub WebSearch branches).
 if (!proj.repo) proj.repo = proj.home
@@ -595,7 +599,7 @@ Write the COMPLETE report. Formatting rules:
 
 # ${proj.name}
 
-**Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
+**Author:** ${reportAuthor}<br/>
 **Date:** ${reportDate}<br/>
 **Readiness:** [color]<br/>
 [**Optimization level:** full|partial|minimal|absent   ← include ONLY for optimization-purpose projects; omit entirely otherwise]<br/>

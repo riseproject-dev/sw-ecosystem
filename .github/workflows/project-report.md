@@ -105,7 +105,23 @@ instructions.
 4. If the report file already exists, this run is a full rewrite: pass the existing report to
    the workflow as described below. Otherwise this is a new report.
 
-## 2. Run the research workflow
+## 2. Identify the report author
+
+The report's author is the person who launched this run: the GitHub user
+`${{ github.actor }}`. Build the author string once and use it unchanged:
+
+```bash
+curl -sSL "https://api.github.com/users/${{ github.actor }}"
+```
+
+- Name: the profile's `name`, or the login if the profile has no name.
+- If the profile has a public `email`, the author string is `<Name> <<email>>`, for example
+  `Jane Doe <jane@example.org>`.
+- Otherwise it is `<Name> ([@<login>](https://github.com/<login>))`.
+
+Do not guess or look up an email address anywhere else.
+
+## 3. Run the research workflow
 
 The research is done by the scripted workflow `prompts/project-report/project-report-workflow.js`,
 which runs about twenty steps in sequence (search, fetch, verify, synthesize), each in its own
@@ -133,6 +149,7 @@ write the report yourself, and do not skip or shorten the workflow.
        "repo": "<repo>",
        "home": "<home>",
        "reportDate": "<today, from `date -u +%Y-%m-%d`>",
+       "author": "<the author string from section 2>",
        "registryPath": "<absolute path to projects.yml>",
        "reportBodyPath": "/tmp/gh-aw/agent/report-body.md"
      }
@@ -148,7 +165,7 @@ write the report yourself, and do not skip or shorten the workflow.
    smaller than 10 KB, do not open a pull request: report the failure with the
    `report_incomplete` output, quoting the error, and stop.
 
-## 3. Assemble the report
+## 4. Assemble the report
 
 1. Save the returned `frontmatter` string, character for character, to
    `/tmp/gh-aw/agent/frontmatter.md`. It ends with the dependency-graph include line and a blank
@@ -176,12 +193,14 @@ write the report yourself, and do not skip or shorten the workflow.
 Do not rewrite the report's content. The only edits allowed are the ones the checks below
 require.
 
-## 4. Check before submitting
+## 5. Check before submitting
 
 Run these checks and fix any failure:
 
 - The report is larger than 10 KB. It starts with the frontmatter, then the
   `{% include dependency-graph.html slug="dependencies" subset="<slug>" %}` line, then `# <name>`.
+- The `**Author:**` header line carries exactly the author string from section 2. Fix it if it
+  does not.
 - Sections `## 1.` to `## 15.` are present in order (Section 10 is optional), and there is no
   "Updates" section.
 - Every frontmatter dependency name appears as a `name:` in `projects.yml`.
@@ -194,7 +213,7 @@ Run these checks and fix any failure:
 - `git status` shows changes only to the report file, `projects.yml` and
   `project-reports/.queue.yml`.
 
-## 5. Open the pull request
+## 6. Open the pull request
 
 Create one pull request with a single commit containing the report, any `projects.yml`
 changes and the `project-reports/.queue.yml` change, if there is one.

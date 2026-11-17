@@ -99,6 +99,7 @@ subagent({
     repo: "https://<project-repository>/",          // projects.yml: repo (omit if none)
     home: "https://<project-homepage>/",            // projects.yml: home
     reportDate: "<YYYY-MM-DD>",                      // today's date
+    author: "<Name> <email>",                       // whoever launched the run
     registryPath: "/abs/path/to/projects.yml",
     existingReportPath: "/abs/path/to/project-reports/<slug>.md",   // only for a rewrite
     reportBodyPath: "/abs/path/to/report-body.md"   // where to save the synthesized body
@@ -186,7 +187,7 @@ dependencies:
 
 # [PROJECT_NAME]
 
-**Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
+**Author:** [AUTHOR]   ← whoever launched the run: `Name <email>`, or `Name ([@login](https://github.com/login))` when no public email is known<br/>
 **Date:** YYYY-MM-DD<br/>
 **Readiness:** [color]<br/>
 **Optimization level:** [full | partial | minimal | absent]   ← include only for optimization-purpose projects; omit entirely otherwise<br/>

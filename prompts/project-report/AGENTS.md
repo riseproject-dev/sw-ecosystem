@@ -18,6 +18,9 @@ opens a pull request, as the riseproject-dev app, containing `project-reports/<s
 `projects.yml` changes, and the removal of the project from `project-reports/.queue.yml` if it was
 queued there. Review the pull request and merge it.
 
+The report's author is whoever dispatched the run: the workflow takes the name and public email
+from that user's GitHub profile, and links the profile when it has no public email.
+
 If the project already has a report, the run is a full rewrite of it. If the name is not in
 `projects.yml`, the run adds a registry entry for it.
 
@@ -61,6 +64,7 @@ The pieces:
 | `repo` | The `repo:` field (absent for projects with no public repo, e.g. Geekbench) |
 | `home` | The `home:` field |
 | `reportDate` | Today's date, `YYYY-MM-DD` |
+| `author` | The report's Author header value: whoever launched the run, as `Name <email>` or `Name ([@login](https://github.com/login))` |
 | `registryPath` | Absolute path to `projects.yml` |
 | `existingReportPath` | Absolute path to the current report; only for a rewrite |
 | `reportBodyPath` | Absolute path where the synthesized report body is saved |
