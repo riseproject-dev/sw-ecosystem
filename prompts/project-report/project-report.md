@@ -187,7 +187,7 @@ dependencies:
 
 # [PROJECT_NAME]
 
-**Author:** [AUTHOR]   ← whoever launched the run: `Name <email>`, or `Name ([@login](https://github.com/login))` when no public email is known<br/>
+**Author:** [AUTHOR]   ← whoever launched the run: `Name <email>`, or `Name ([@login](https://github.com/login))` when no public email is known; left blank when the launcher is not known<br/>
 **Date:** YYYY-MM-DD<br/>
 **Readiness:** [color]<br/>
 **Optimization level:** [full | partial | minimal | absent]   ← include only for optimization-purpose projects; omit entirely otherwise<br/>

@@ -40,9 +40,9 @@ const ABORT_THRESHOLD = 1000
 // the top level. The orchestrator computes today's date and passes it in via args instead.
 const reportDate = proj.reportDate
 // proj.author (optional): the report's Author header value, "Name <email>" or
-// "Name ([@login](https://github.com/login))" -- whoever launched the run. Falls back to the
-// repository's default author when the caller does not pass one.
-const reportAuthor = proj.author || 'Ludovic HENRY <ludovic.henry@qti.qualcomm.com>'
+// "Name ([@login](https://github.com/login))" -- whoever launched the run. Left blank when the
+// caller does not pass one; no author is ever assumed.
+const reportAuthor = proj.author || ''
 // Projects with no public repo (e.g. Geekbench) fall back to the homepage for every
 // proj.repo reference below (search/fetch/verify agents and the non-GitHub WebSearch branches).
 if (!proj.repo) proj.repo = proj.home

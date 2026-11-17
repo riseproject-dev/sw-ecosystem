@@ -64,7 +64,7 @@ The pieces:
 | `repo` | The `repo:` field (absent for projects with no public repo, e.g. Geekbench) |
 | `home` | The `home:` field |
 | `reportDate` | Today's date, `YYYY-MM-DD` |
-| `author` | The report's Author header value: whoever launched the run, as `Name <email>` or `Name ([@login](https://github.com/login))` |
+| `author` | The report's Author header value: whoever launched the run, as `Name <email>` or `Name ([@login](https://github.com/login))`. Left blank when not passed |
 | `registryPath` | Absolute path to `projects.yml` |
 | `existingReportPath` | Absolute path to the current report; only for a rewrite |
 | `reportBodyPath` | Absolute path where the synthesized report body is saved |
