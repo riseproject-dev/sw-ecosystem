@@ -2,308 +2,354 @@
 title: zlib
 parent: Project Reports
 color: blue
-categories:
-  - libraries
+dependencies:
+  - name: glibc
+    relation: runtime-dependency
+    criticality: critical
+  - name: GCC
+    relation: build-dependency
+    criticality: critical
+  - name: CMake
+    relation: build-dependency
+    criticality: optional
+  - name: GNU make
+    relation: build-dependency
+    criticality: optional
+  - name: bzip2
+    relation: runtime-dependency
+    criticality: optional
 ---
 
 {% include dependency-graph.html slug="dependencies" subset="zlib" %}
 
 # zlib
 
-**Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com>
-**Date:** 2026-07-20
-**Scope:** RISC-V (riscv64/linux) support status for zlib
-**Audience:** Technical leadership, resource allocation strategy
-**Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].
-
----
+**Author:** Ludovic HENRY <ludovic.henry@qti.qualcomm.com><br/>
+**Date:** 2026-11-17<br/>
+**Readiness:** blue<br/>
+**Scope:** RISC-V (riscv64/linux) support status for zlib<br/>
+**Audience:** Technical leadership, resource allocation strategy<br/>
+**Verification policy:** Every claim is cross-referenced to a primary upstream source. Items that could not be verified against a second source are marked [NEEDS VERIFICATION].<br/>
 
 ## 1. Project Overview
 
-zlib is a portable, lossless data compression library implementing the DEFLATE algorithm (RFC 1950/1951). It is written in portable C with no external library dependencies. The library provides two core functions: `deflate` (compression) and `inflate` (decompression), plus Adler-32 and CRC-32 checksum primitives. It is ubiquitous in system software, language runtimes, and data pipelines.
+zlib is a portable, lossless data compression library implementing DEFLATE (RFC 1950/1951), written in C. It provides `deflate`, `inflate`, and the Adler-32 and CRC-32 checksums. The only external dependency is the C library.
 
-**Governance:** Solo-maintainer benevolent-dictator model. Mark Adler (GitHub: `madler`, approximately 672 of roughly 730 total commits) is the de facto sole maintainer and repository owner. Jean-loup Gailly is the original co-author of the compression half but is no longer active on GitHub. There is no governance document, no MAINTAINERS file, no CODEOWNERS file, and no steering committee. The project has no foundation affiliation (not Apache, CNCF, or Linux Foundation). The mailing list `zlib-devel` is described as "for contributors and testers only."
+**Governance:** Single-maintainer, BDFL-style. [zlib.net](https://zlib.net/) credits Jean-loup Gailly (compression) and Mark Adler (decompression), with the web pages maintained by Mark Adler. Mark Adler (madler) is the only committer: every one of the last 30 commits lists him as committer. The repository has no MAINTAINERS, OWNERS, CODEOWNERS, SUPPORT.md or PLATFORMS.md. A `zlib-devel` mailing list exists for contributors and testers. Contributions go through GitHub, and the 30 latest commits were all merged within days.
 
-**License:** The zlib License (permissive, non-copyleft). The README explicitly states the implementation is "not covered by any patents."
+**License:** zlib license (permissive). Only the link on zlib.net and the LICENSE file were confirmed; the text was not opened.
 
-**Corporate sponsors:** None. Mark Adler is a retired engineer (formerly JPL/NASA, later Google). No current corporate employer is listed on his GitHub profile. The contributor `nmoinvaz` (10 commits) is affiliated with `@snxd`. No company holds sustained contributor representation.
+**Current release:** zlib 1.4. zlib.net dates it 2026-11-04; the GitHub releases API shows it published 2026-11-05. The dates differ by one day, probably a timezone or publication-order difference.
 
-**RISE membership:** zlib is not a RISE Project member. No RISE blog posts, funded projects, or RFPs covering zlib were found across 27 blog posts from May 2024 through June 2026.
+**Corporate sponsors:** None listed on zlib.net. Security audits are credited to outside firms (7ASecurity, Trail of Bits), which are not sponsors. External contributors are one-off or occasional. Employer evidence exists only for Bhagirath Mehta (`@microsoft.com` author email on one commit) and Jason Gross (`@theorem.dev` email, bug credited to "Theorem"). No company holds sustained contributor representation.
 
-**Culture toward new ports:** The project's acceptance pattern for architecture-specific optimizations is conservative. s390x CRC-32 vectorization was merged in release 1.3.2 (February 2026), demonstrating that arch-specific work is accepted when it is clean and demonstrates clear value. However, Power8/Power9 SIMD PRs filed in December 2019 remain open as of June 2026 with no maintainer response -- a six-year backlog. The repository has 270 open issues. The pattern strongly suggests that correctness on new architectures is assumed (pure C), and SIMD performance work is accepted slowly if at all.
+**RISE membership:** zlib is not a RISE member. The [RISE members page](https://riseproject.dev/members/) (last updated 2026-01-09) lists Premier members Alibaba Damo, Google, MediaTek, NVIDIA, Qualcomm, Red Hat, SiFive and Tenstorrent, and General members Akeana, Andes, ESWIN, BOSC, Canonical, Douyin Vision, ISCAS, Microchip, NextSilicon, Quintauris, SpacemiT and ZTE. RISE tracks zlib-ng, the fork, as project SL_00_005 (see Section 14). Data not available: any RISE RFP or funded project for madler/zlib; searched the RISE blog index (about 38 post titles, none mention zlib), `riseproject.dev/?s=zlib`, and the RISE wiki (blocked by a cookie wall).
 
----
+**Culture toward new ports:** No stated policy. No maintainer statement on RISC-V is known [NEEDS VERIFICATION: issues and PRs not fully reviewed, see Section 11]. Arch-specific code in the tree is accepted in small, self-contained forms: `contrib/crc32vx` (s390x), `contrib/gcc_gvmat64` (x86-64), and a compile-time ARM CRC32 path in `crc32.c`. A RISC-V port would most likely follow the `contrib/` or CI-matrix pattern; this is an inference, not stated policy. The existing assessment that Power8/Power9 SIMD PRs (#458, #459, #468, #478, filed 2019-2020) remain open without maintainer response, and that the repository has about 270 open issues, is [NEEDS VERIFICATION] (not re-checked).
 
 ## 2. Port History and Upstreaming Timeline
 
 | Date | Event | Source |
 |---|---|---|
-| Pre-2020 | zlib builds and runs on riscv64 via portable C; no dedicated effort required | Implied by pure-C codebase; no recorded event |
-| 2025-10-28 | PR #1099 opened: RVV-accelerated Adler32 by leiwen2025 (zte-riscv org), claiming 7% decompression improvement on SG2042 via lzbench | [PR #1099](https://github.com/madler/zlib/pull/1099) |
-| 2025-11-17 | Single comment on PR #1099 pinging madler; no maintainer response | [PR #1099](https://github.com/madler/zlib/pull/1099) |
-| 2025-12-25 | PR #1139 opened: "More tests" adds OpenBSD/riscv64 to CI matrix via vmactions | [PR #1139](https://github.com/madler/zlib/pull/1139) |
-| 2026-01-28 | PR #1139 merged by madler: OpenBSD riscv64 CI target now active in develop branch | [PR #1139](https://github.com/madler/zlib/pull/1139) |
-| 2026-02-17 | zlib v1.3.2 released; CI workflow change included; no riscv64 source code changes | [zlib releases](https://github.com/madler/zlib/releases) |
-| 2026-06-10 | PR #1267 opened and self-closed same day (9 seconds): duplicate RVV Adler32 submission by same author; branch deleted next day | [PR #1267](https://github.com/madler/zlib/pull/1267) |
+| 2025-10-28 | PR #1099 opened: RVV-accelerated Adler-32 by leiwen2025 (zte-riscv org), claiming 7% decompression improvement on SG2042 via lzbench. [NEEDS VERIFICATION] | [PR #1099](https://github.com/madler/zlib/pull/1099) |
+| 2025-11-17 | One comment on PR #1099 pinging madler; no maintainer response. [NEEDS VERIFICATION] | [PR #1099](https://github.com/madler/zlib/pull/1099) |
+| 2025-12-25 | Commit c5c3b0b by Vollstrecker, "Check multiple architectures in *BSD workflows", adds `riscv64` to the OpenBSD CI matrix. It is the first and only commit introducing the string `riscv64` (`git log -S riscv64`). Linked to PR #1139 [NEEDS VERIFICATION: PR contents not reviewed]. | [PR #1139](https://github.com/madler/zlib/pull/1139) |
+| 2026-01-28 | PR #1139 merged by madler. [NEEDS VERIFICATION] (previously gathered; the PR was unreadable in the latest research) | [PR #1139](https://github.com/madler/zlib/pull/1139) |
+| 2026-06-10 | PR #1267 opened and self-closed same day: duplicate RVV Adler-32 submission. [NEEDS VERIFICATION] | [PR #1267](https://github.com/madler/zlib/pull/1267) |
+| 2026-11-04/05 | zlib 1.4 released. No RISC-V source changes found. | [zlib.net](https://zlib.net/), [releases](https://github.com/madler/zlib/releases) |
 
-**Is RISC-V fully upstream?** No. The only merged RISC-V content is a CI matrix entry for OpenBSD/riscv64 (workflow file, not library source). There is no RISC-V source code, no architecture-specific optimization, and no RISC-V entry in the Linux cross-compilation CI matrix. Zero RISC-V commits exist in any merged branch.
+**Is RISC-V fully upstream?** No. The only RISC-V content is a CI matrix entry. Searches of the repository for `riscv`, `riscv64`, `rvv`, `vfloat32m1_t` and `__riscv` return only `.github/workflows/others.yml`. At commit 99623ef there is no `__riscv` guard, assembly file, intrinsic, RVV or Zbc code anywhere. No commit messages mention "riscv" or "RISC-V".
 
 **Key contributors:**
-- Vollstrecker (no confirmed corporate affiliation): added OpenBSD/riscv64 CI target.
-- leiwen2025 (zte-riscv org, ZTE): authored the unmerged RVV Adler32 PR. Fork list includes `isa-l`, `ceph`, and `hadoop`, suggesting a storage/HPC background. [NEEDS VERIFICATION: exact employer within ZTE ecosystem]
-
----
+- Vollstrecker (Werner, werner@vollstreckernet.de): author of the multi-architecture BSD workflow commit. No corporate affiliation confirmed.
+- leiwen2025 (zte-riscv org, ZTE): author of the unmerged RVV Adler-32 PR. [NEEDS VERIFICATION: exact employer]
 
 ## 3. Upstream Support Tier
 
-zlib has no formal tier or platform support policy. No document defines tiers, support levels, or testing requirements for any architecture.
-
-**Evidence by architecture:**
+No platform tier, support or PLATFORMS document exists. Platform support is informal, described by `README`, `FAQ` and top-level directories (`amiga`, `msdos`, `os400`, `qnx`, `watcom`, `win32`, plus `make_vms.com`).
 
 | Criterion | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| Builds in upstream CI | Yes (`cmake.yml`, `configure.yml`) | Yes (`configure.yml`: AARCH64 cross + QEMU) | Yes (OpenBSD only, `others.yml`, QEMU emulation via vmactions) |
-| Linux cross-compile CI | Yes (native) | Yes (QEMU) | No |
-| Release-blocking CI | Yes | Yes | No |
-| Architecture-specific source code | Yes (contrib assembly for longest_match; 64-bit word path in crc32.c) | Yes (3 lines CRC32 hardware instruction in crc32.c) | No |
-| Official prebuilt binaries | No (source-only releases) | No | No |
+| Builds in upstream CI | Yes (`cmake.yml`, `configure.yml`, `c-std.yml`) | Yes (`configure.yml` qemu-user, `c-std.yml`) | Yes, OpenBSD only (`others.yml`, emulated VM) |
+| Tests in upstream CI | Yes | Yes | Yes, OpenBSD only (`ctest`) |
+| Linux CI | Yes | Yes | No |
+| Arch-specific source | contrib asm (opt-in), W=8 CRC path | ARM CRC32 path in `crc32.c` (lines 109-111) | None |
+| Official prebuilt binaries | No (source only) | No | No |
 | Distro packages | Yes | Yes | Yes |
 
-The riscv64 CI target (OpenBSD via vmactions) was added as part of a broad platform coverage sweep, not as a dedicated RISC-V investment. The more telling signal: `configure.yml` has a QEMU-based cross-compilation pattern for ARM, AARCH64, PPC, PPC64LE, and S390X but omits riscv64 entirely.
-
----
+The riscv64 job came from a broad multi-architecture BSD CI change, not a dedicated RISC-V effort. `configure.yml` cross-tests ARM (armel, armhf), AARCH64, PPC, PPC64, PPC64LE and S390X under qemu-user but has no riscv64 entry.
 
 ## 4. Technical Architecture and RISC-V-Specific Subsystems
 
-zlib has no JIT backend, no crypto primitives, and no garbage collector. The architecture-sensitive components are:
-
-- **Adler-32 checksum** (`adler32.c`): used in zlib stream headers (inflate/deflate). Pure C scalar implementation only in mainline. An unmerged RVV implementation exists in PR #1099.
-- **CRC-32 checksum** (`crc32.c`): used for gzip-compatible streams. Has a 64-bit word-at-a-time path for x86_64, hardware CRC32 instruction path for aarch64, and a VX hardware path for s390x (via `contrib/crc32vx/`). No RISC-V path.
-- **Deflate longest_match** (`deflate.c`): the most CPU-intensive function in compression. x86_64 hand-written assembly exists in `contrib/gcc_gvmat64/gvmat64.S` (opt-in, not default). No arm64 or riscv64 equivalent.
-- **Inflate** (`inflate.c`): decompression inner loop. No architecture-specific code for any platform.
-
-**Per-component quality table:**
+zlib has no JIT, crypto or GC. Architecture-sensitive components are the checksums and the deflate/inflate inner loops. Upstream treats riscv64 as portable scalar C on every component.
 
 | Component | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| Adler-32 | Scalar C | Scalar C | Scalar C (RVV intrinsics proposed in PR #1099, not merged) |
-| CRC-32 | 64-bit word-at-a-time | Hardware instruction (`__ARM_FEATURE_CRC32`) | Scalar C |
-| longest_match (deflate) | Hand-written x86_64 assembly (contrib, opt-in) | Scalar C | Scalar C |
-| Inflate inner loop | Scalar C | Scalar C | Scalar C |
+| Deflate longest_match | Partial: contrib asm `gvmat64.S` (570 lines), not built by default | Scalar | Scalar |
+| Inflate fast | Scalar | Scalar | Scalar |
+| CRC-32 | Scalar, W=8 braided | Partial: hardware CRC32 instructions, guarded by `__aarch64__ && __ARM_FEATURE_CRC32 && W==8`, compile-time only (runtime detection not checked) | Scalar, W=4 braided |
+| Adler-32 | Scalar | Scalar | Scalar |
+| SIMD / vector | Missing | Missing | Missing |
 
-**RISC-V ISA extensions proposed (not merged):**
-PR #1099 uses RVV intrinsics (`riscv_vector.h`): `vsetvlmax_e8m4`, `vle8_v_u8m4` (LMUL=4 element-width-8 load), `vzext_vf2_u16m8` (zero-extend u8 to u16), `vid_v_u16m8` (vector index for positional weights), and vector reduction to u32. Requires the V extension. Tested on Sophgo SG2042. No Zba/Zbb bit-manipulation extensions, no `.S` assembly files, no SIMD dispatch infrastructure in mainline.
+`crc32.c` line 89 selects an 8-byte word for `__x86_64__` or `__aarch64__`; all other targets, riscv64 included, use W=4. `contrib/crc32vx` was listed but not opened; it is presumed s390x vector code.
 
-The `#ifdef __riscv` pattern does not appear anywhere in the repository across any source file.
+**Proposed, unmerged:** PR #1099 uses RVV intrinsics (`vsetvlmax_e8m4`, `vle8_v_u8m4`, `vzext_vf2_u16m8`, `vid_v_u16m8`, reduction to u32), 104 lines, tested on Sophgo SG2042. [NEEDS VERIFICATION: details come from earlier research; PR contents could not be re-read.] No Zba/Zbb code, `.S` files or SIMD dispatch exist in mainline.
 
----
+**Fork reference (zlib-ng, not madler/zlib):** zlib-ng has `arch/riscv` with RVV paths for adler32, chunkmemset, compare256, longest_match, slide_hash and inflate_fast (per DeepWiki), plus Zbc CRC-32 (see Section 6). It was not examined directly.
 
 ## 5. Build System, Cross-Compilation, and Toolchain
 
-**Build systems:** `./configure` + `make` (autoconf-style) and CMake. Both are supported upstream.
+Upstream has no riscv64-specific build documentation. Checked and absent (404): `BUILDING.md`, `INSTALL`, `docs/building.md`, `docs/cross-compilation.md`, `cmake/riscv64.cmake`, `cmake/toolchain-riscv64.cmake`, `Dockerfile.riscv64`. `CMakeLists.txt` has zero "riscv" matches. The commands below are extrapolated from the generic recipes, not taken from the repo.
 
-**Cross-compilation via `./configure`:**
-
+**configure (Debian/Ubuntu package names assumed):**
 ```
-CHOST=riscv64-linux-gnu \
-CC=riscv64-linux-gnu-gcc \
-./configure --warn
-make -j$(nproc)
+sudo apt-get install -y qemu-user gcc-riscv64-linux-gnu libc-dev-riscv64-cross
+CHOST=riscv64-linux-gnu CC=riscv64-linux-gnu-gcc ./configure --warn
+make -j2
 QEMU_RUN="qemu-riscv64 -L /usr/riscv64-linux-gnu" make test
 ```
+`configure` sets `CROSS_PREFIX="${CHOST}-"` when `CHOST` is set, and `Makefile.in` runs test binaries through `${QEMU_RUN}`. The existing CI adds static linking only for the ppc and s390x jobs.
 
-The `Makefile.in`-generated Makefile prefixes each test binary invocation with `${QEMU_RUN}`. This pattern is identical to the existing ARM, AARCH64, PPC, PPC64LE, and S390X cross-compilation jobs in `configure.yml` -- riscv64 simply has not been added to that matrix.
-
-**Cross-compilation via CMake:**
-
+**CMake:** requires `cmake_minimum_required(VERSION 3.15...3.31)`. Options per `README-cmake.md`: `ZLIB_BUILD_TESTING`, `ZLIB_BUILD_SHARED`, `ZLIB_BUILD_STATIC`, `ZLIB_BUILD_MINIZIP`, `ZLIB_INSTALL`, `ZLIB_PREFIX`, `MINIZIP_BUILD_SHARED`, `MINIZIP_BUILD_STATIC`, `MINIZIP_BUILD_TESTING`, `MINIZIP_ENABLE_BZIP2`, `MINIZIP_INSTALL`. Turn `MINIZIP_ENABLE_BZIP2` off if libbz2 is unavailable. There are no `-DUSE_X=OFF` arch flags. Cross-compile with your own toolchain file:
 ```
-cmake -S . -B build \
-    -DCMAKE_TOOLCHAIN_FILE=riscv64-linux-gnu.cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DZLIB_BUILD_MINIZIP=ON
-cmake --build build
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=riscv64.cmake -DCMAKE_BUILD_TYPE=Release
 ```
+In that file set `CMAKE_SYSTEM_NAME` to `Linux`, `CMAKE_SYSTEM_PROCESSOR` to `riscv64`, `CMAKE_C_COMPILER` to `riscv64-linux-gnu-gcc`, and `CMAKE_CROSSCOMPILING_EMULATOR` to `qemu-riscv64;-L;/usr/riscv64-linux-gnu` so `ctest` runs.
 
-No CMake cross-compilation examples exist in the upstream repository for any architecture. The standard `-DCMAKE_TOOLCHAIN_FILE` approach applies. No riscv64-specific `-DUSE_X=OFF` flags exist; there are no optional SIMD/arch features to disable in the library.
+**Toolchain minimums:** None stated upstream, and no RISC-V-specific reason for one was found. CI uses `gcc-14` on BSD and OmniOS jobs and `gcc-13` to `gcc-15` on macOS; these are not stated minimums.
 
-**Toolchain version requirements:** No explicit minimum GCC or Clang version is documented for any architecture. The code uses standard C89/C99. Any GCC or Clang version supporting `riscv64-linux-gnu` targets is sufficient (GCC >= 7.0, Clang >= 6.0). [NEEDS VERIFICATION: lower bound not stated by upstream]
-
-**Known build failures on riscv64:** None. The OpenBSD/riscv64 vmactions CI (merged 2026-01-28) runs cmake configure, cmake build, and ctest without recorded failures. No riscv64-specific build issues exist in the issue tracker.
-
-**Native build (OpenBSD riscv64):** The `others.yml` CI workflow uses `vmactions/openbsd-vm@v1` with `arch: riscv64` on an ubuntu-latest host. The vmactions project uses QEMU under the hood for riscv64 OpenBSD. The test pipeline is: `cmake . -B build -DZLIB_BUILD_MINIZIP=ON -DMINIZIP_ENABLE_BZIP2=ON && cmake --build build/ && ctest --test-dir build`.
-
----
+**Known build failures on riscv64:** None found in readable sources. The OpenBSD riscv64 job runs cmake configure, build and ctest. Hidden issues (Section 11) could change this.
 
 ## 6. Feature Coverage and Gap Analysis vs arm64 and amd64
 
-**Functional gaps:** None. zlib is pure portable C. Every feature -- compression, decompression, gzip streams, zlib streams, raw deflate, minizip -- works on riscv64 with no functional gaps.
+**Functional gaps:** None identified. The scalar C code is portable, and the OpenBSD riscv64 job builds it and runs `ctest`.
 
-**Performance gaps:**
+**Performance gaps in madler/zlib:** riscv64 runs scalar C for all components. Against arm64 it lacks the hardware CRC32 path. Against amd64 it lacks the optional contrib longest_match assembly. No riscv64 benchmark of madler/zlib was found. The claimed 7% decompression gain from PR #1099 on SG2042 is [NEEDS VERIFICATION].
 
-| Function | amd64 delta vs scalar | arm64 delta vs scalar | riscv64 delta vs scalar |
+**Fork benchmark data (zlib-ng, not madler/zlib):**
+
+zlib-ng [PR #1905](https://github.com/zlib-ng/zlib-ng/pull/1905) (Zbc CRC-32, by Ag-Cu, merged 2025-04-27), measured with `benchmark_crc32` on a "musebook" board that supports Zbc. No CPU model, clock, compiler or OS is given. The author claims "4x~7x speedup when data_len >= 16". Time per call in ns:
+
+| Bytes | braid | generic_chorba | riscv (Zbc) |
 |---|---|---|---|
-| Adler-32 | Minimal (no SIMD in mainline; zlib-ng has SSE2/AVX2) | Minimal (no NEON in mainline) | 0% (pure scalar; RVV unmerged PR claims +7% on SG2042) |
-| CRC-32 | Moderate (64-bit word path, ~2x over byte loop) | Large (hardware instruction, depends on CPU generation) | 0% (pure scalar byte loop) |
-| longest_match | Large (hand-written assembly in contrib; large but opt-in) | 0% (no opt-in equivalent) | 0% |
-| inflate | 0% (no SIMD in mainline for any arch) | 0% | 0% |
+| 1 | 16.2 | 17.5 | 24.2 |
+| 8 | 50.0 | 51.9 | 57.3 |
+| 12 | 73.6 | 85.7 | 89.6 |
+| 16 | 86.4 | 98.3 | 24.7 |
+| 32 | 179 | 191 | 30.7 |
+| 64 | 263 | 308 | 40.3 |
+| 512 | 1503 | 1050 | 181 |
+| 4096 | 11298 | 6422 | 1306 |
+| 32768 | 93140 | 56719 | 10479 |
+| 262144 | 740223 | 395788 | 82844 |
+| 4194304 | 11938022 | 8142963 | 1368543 |
 
-The riscv64 CRC-32 gap is material: aarch64 uses a hardware CRC32 instruction (available on most modern cores), while riscv64 falls to the byte-at-a-time scalar loop. The Adler-32 gap is modest: +7% decompression impact claimed by leiwen2025 on SG2042 for the unmerged RVV patch.
+Zbc is slower for 1, 8 and 12 bytes and faster from 16 bytes. At 4 MiB it is about 5.95x faster than generic_chorba and about 8.7x faster than braid (derived arithmetic, not stated in the PR).
 
-**Security hardening gaps:** None specific to riscv64. No architecture-specific sanitizer exclusions or hardening flags are documented.
+zlib-ng [PR #1522](https://github.com/zlib-ng/zlib-ng/pull/1522) (slide_hash with RVV, merged 2023-06-23, SiFive FPGA p470 bitstream), RVV speedup over scalar: 7.727 (1024), 8.158 (2048), 8.529 (4096), 8.599 (8192), 8.150 (16384), 7.753 (32768).
 
-**Floating-point / NaN:** Not applicable. zlib performs no floating-point arithmetic.
+zlib-ng [PR #1498](https://github.com/zlib-ng/zlib-ng/pull/1498) (compare256 with RVV, merged 2023-06-13, SiFive FPGA x280 bitstream), RVV speedup over scalar: 0.1754 (length 1), 0.4614 (8), 3.1771 (64), 11.6448 (256). RVV is slower than scalar for lengths 1 and 8.
 
-**FreeBSD/riscv64:** Explicitly excluded from CI in PR #1139 due to "FreeBSD on riscv64 has no packages." [NEEDS VERIFICATION: current status of FreeBSD riscv64 package availability]
+Other zlib-ng RISC-V PRs: #1532 (RVV adler32, merged 2023-07-16) and #1921 (RVV chunkcopy, merged 2025-06-25) have no numbers in their bodies. #1904 adds a bash configure script for riscv, and #1999 fixes riscv hwcap detection. Data not available: any riscv64 vs arm64 zlib comparison for 2024-2026.
 
----
+**Security hardening gaps:** Data not available: no riscv64-specific hardening or sanitizer information was found.
+
+**Floating-point / NaN:** Not applicable. zlib performs no floating-point arithmetic. A search for "riscv nan floating" returned 0 results.
+
+**FreeBSD/riscv64:** Previously reported as excluded from CI because "FreeBSD on riscv64 has no packages" (from PR #1139). [NEEDS VERIFICATION] The current `others.yml` has FreeBSD only for aarch64 and x86_64.
 
 ## 7. CI/CD Infrastructure
 
+The riscv64 job is in `.github/workflows/others.yml` (workflow `anyVM-OSes`, commit 99623ef), line 106. It is the only workflow among seven that mentions riscv. Trigger is `on: [push, pull_request]`, with no `workflow_dispatch` or schedule.
+
+```yaml
+  openbsd:
+    runs-on: ubuntu-latest
+    name: OpenBSD - ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: aarch64
+          - name: x86_64
+          - name: riscv64
+    steps:
+    - uses: actions/checkout@v6
+    - name: OpenBSD - ${{ matrix.name }}
+      uses: vmactions/openbsd-vm@v1
+      with:
+        arch: ${{ matrix.name }}
+        copyback: false
+        sync: scp
+        prepare: |
+          pkg_add cmake
+          bzip2
+        run: |
+          cmake . -B build -DZLIB_BUILD_MINIZIP=ON -DMINIZIP_ENABLE_BZIP2=ON
+          cmake --build build/
+          ctest --test-dir build
+```
+
+- The runner is x86_64 `ubuntu-latest`; the guest is an emulated OpenBSD VM (QEMU-based, inferred; the action source was not read).
+- The `prepare` block has `bzip2` on its own line, so it runs as a command and likely does not install the package. The job also lacks `--output-on-failure`.
+- Other jobs in the file: DragonflyBSD, FreeBSD (aarch64, x86_64), NetBSD (aarch64, x86_64), OmniOS, Solaris. OpenIndiana is commented out.
+
 | Criterion | amd64 | arm64 | riscv64 |
 |---|---|---|---|
-| CI workflow | `cmake.yml`, `configure.yml`, `c-std.yml`, `fuzz.yml` | `configure.yml` (QEMU cross-compile) | `others.yml` (OpenBSD via vmactions) |
-| OS | Linux, Windows, macOS | Linux (cross-compile) | OpenBSD |
-| Hardware | Native x86 runners | QEMU (user-mode) | QEMU via vmactions |
+| Workflow | `cmake.yml`, `configure.yml`, `c-std.yml`, `fuzz.yml`, `contribs.yml`, `msys-cygwin.yml` | `configure.yml`, `c-std.yml` | `others.yml` |
+| OS | Linux, Windows, macOS | Linux | OpenBSD |
+| Hardware | x86_64 runners | qemu-user | Emulated VM on x86_64 runner |
 | Trigger | push, pull_request | push, pull_request | push, pull_request |
 | Linux coverage | Yes | Yes | No |
-| Build system tested | CMake + configure | configure | CMake |
-| Release-blocking | Yes | Yes | No |
-| RISE runners | No | No | No |
+| Build system tested | CMake, configure | configure | CMake |
+| RISE runners | No (none found) | No | No |
 
-The riscv64 CI target is:
-- Active (triggers on push and pull_request)
-- OpenBSD-only, not Linux
-- QEMU-emulated (vmactions/openbsd-vm@v1 uses QEMU for riscv64)
-- Added incidentally via PR #1139 as part of a broad platform sweep
-- Not in the Linux cross-compilation matrix (`configure.yml`)
-
-No RISE runners are used. No Cirrus CI, GitLab CI, or Jenkins configurations exist in the repository (`.cirrus.yml`, `.gitlab-ci.yml`, and `Jenkinsfile` all return 404).
-
----
+`configure.yml` (the qemu-user cross workflow) has no riscv64 entry. `.gitlab-ci.yml`, `Jenkinsfile` and `.cirrus.yml` do not exist. RISE runner usage is unknown [NEEDS VERIFICATION].
 
 ## 8. Distribution and Release Status
 
-**Upstream releases:** madler/zlib ships source-only releases. Releases v1.3.2, v1.3.1, v1.3, v1.2.13 each have six assets: source tarballs (`.tar.gz`, `.tar.xz`, `.zip`) and PGP signatures (`.asc`). No prebuilt binaries are distributed upstream for any architecture.
+**Upstream:** Source only. The GitHub releases API returned releases v1.4, v1.3.2, v1.3.1, v1.3 and v1.2.13 with no `assets` field, so no riscv64 binaries. An earlier survey reported six assets per release (source tarballs and `.asc` signatures); the API returned none, a discrepancy in asset listing that does not change the conclusion (no binaries). PyPI has no project named `zlib` (`https://pypi.org/pypi/zlib/json` returns 404). The RISE wheel index has no `zlib` entry (404).
 
-**Distribution packages:**
+**Distributions:**
 
 | Distribution | Package | Version | riscv64 status |
 |---|---|---|---|
-| Ubuntu 24.04 (noble) | zlib1g | 1:1.3.dfsg-3.1ubuntu2 | Present; arch list: amd64, arm64, armhf, i386, ppc64el, riscv64, s390x |
-| Ubuntu 24.04 (noble) | zlib1g-dev | 1:1.3.dfsg-3.1ubuntu2 | Present; same arch list |
-| Debian sid | zlib | 1:1.3.dfsg+really1.3.2-3 | "Installed" on riscv64, builder rv-manda-03, ~85 days ago |
-| Arch Linux RISC-V | zlib | 1:1.3.2-3 | zlib-1:1.3.2-3-riscv64.pkg.tar.zst (83,409 bytes, 2026-03-09) |
-| Arch Linux RISC-V | zlib-static | 1:1.3.2-3 | zlib-static-1:1.3.2-3-riscv64.pkg.tar.zst (137,298 bytes, 2026-03-09) |
-| Alpine Linux (edge) | zlib | 1.3.2-r0 | Present for riscv64 (built 2026-03-05) |
+| Ubuntu 26.04 (resolute) | zlib1g, zlib1g-dev | 1:1.3.dfsg+really1.3.1-1ubuntu3 | Present in ports pocket for armhf, ppc64el, riscv64, s390x; amd64, arm64, i386 at ...ubuntu3.2 in security |
+| Ubuntu 24.04 (noble) | zlib1g, zlib1g-dev | 1:1.3.dfsg-3.1ubuntu2 | Present, including riscv64 [NEEDS VERIFICATION] |
+| Debian sid | zlib | 1:1.3.dfsg+really1.3.2-3 | Installed on riscv64, builder rv-manda-03 [NEEDS VERIFICATION] |
+| Arch Linux RISC-V | zlib, zlib-static | 1:1.3.2-3 | Built 2026-03-09 [NEEDS VERIFICATION]; latest Arch RISC-V page check was inconclusive |
+| Alpine | zlib | edge 1.3.2-r0 (earlier research); riscv64 package page showed 1.4-r0 | Present; versions differ between sources |
+| conda-forge | zlib-feedstock | n/a | [PR #92](https://github.com/conda-forge/zlib-feedstock/pull/92) "FEA: add riscv64", closed |
 
-**What a user must do to get a working binary:** Install from their distribution's package manager (`apt install zlib1g` on Ubuntu/Debian, `pacman -S zlib` on Arch RISC-V). No additional steps required. The library builds cleanly from source for any user who wants to compile it.
+The project graph returned empty for the names `zlib`, `python3-zlib` and `libzlib`; this is a naming mismatch, since the Ubuntu package names are `zlib1g` and `zlib1g-dev`. The graph was not re-queried with those names.
 
-**PyPI:** Not applicable. Python's `zlib` module is part of the CPython standard library and is not distributed as a standalone PyPI wheel. `https://pypi.org/pypi/zlib/json` returns HTTP 404.
-
----
+**User action:** `apt install zlib1g zlib1g-dev` on Ubuntu or Debian, `pacman -S zlib` on Arch RISC-V. Alternatively build from source (Section 5).
 
 ## 9. Dependencies
 
-zlib has no external library dependencies. Its only build-time dependencies are the standard C toolchain (compiler, make/cmake) and the C standard library.
+zlib has no third-party library dependencies. `CMakeLists.txt` is plain C and uses only CMake and libc checks (`fseeko`, `off64_t`, `stdarg.h`, `unistd.h`, a visibility-attribute test). It has no JIT, SIMD, numerics, crypto, compression or allocator dependencies.
 
 | Name | Role | riscv64 build | riscv64 test | riscv64 release | Notes |
 |---|---|---|---|---|---|
-| libc (glibc) | C runtime | Fully supported | Yes (Debian/Ubuntu CI) | Debian sid, Ubuntu noble | No blockers |
-| gcc / clang | C compiler (build-time) | Both support riscv64 targets | N/A | Shipped in all major distros | No blockers |
-| cmake 3.x | Build system (build-time) | Fully supported | N/A | Released | No blockers |
-| autoconf / make | Alternate build system (build-time) | Fully supported | N/A | Released | No blockers |
+| glibc | Runtime dependency (critical): libc/POSIX APIs | Available | Not assessed | Ubuntu 26.04 riscv64 `libc6` found in graph | No known blockers; riscv64 issues not searched (not GitHub-hosted) |
+| GCC | Build dependency (critical): C compiler | Not assessed directly; CI uses `gcc-14` on BSD/OmniOS jobs | Not assessed | Not assessed | No riscv-specific compiler minimum stated upstream |
+| CMake | Build dependency (optional): 3.15 or newer | Used in the OpenBSD riscv64 CI job | Yes (`ctest`, OpenBSD) | Installed via `pkg_add` in CI | No known blockers |
+| GNU make | Build dependency (optional): `./configure` + `make` path | Not exercised on riscv64 in upstream CI | Not exercised | Not assessed | The qemu-user riscv64 path is absent from CI |
+| bzip2 | Runtime dependency (optional): minizip only, via `MINIZIP_ENABLE_BZIP2` | CI enables it, but the `prepare` step may not install it | Same | Not assessed | Stray `bzip2` line in `others.yml` (Section 7) |
 
-**zlib-ng** (the SIMD-enhanced fork, a separate project) is a drop-in replacement with active RISC-V work: RVV optimizations for adler32, chunkset, compare256, and slide_hash; Zbc carry-less multiply for CRC32. CI uses QEMU-based cross-compilation (GCC and Clang jobs; corpora tests skipped on RISC-V for speed). PR #2152 fixed a ZBC-only (no RVV) build failure; no open RISC-V blocking issues as of June 2026. zlib-ng is tracked separately and is not a dependency of madler/zlib.
+**Related projects:** zlib-ng is a drop-in fork, not a dependency, tracked in `projects.yml` and at project-reports/zlib-ng.md. zlib-rs is also in `projects.yml` without a report. The `hasDependency` graph query was not run, since nothing beyond libc exists to enumerate.
 
----
+zlib-ng riscv64 issues seen in web search (relevant to anyone evaluating the fork): [#941](https://github.com/zlib-ng/zlib-ng/issues/941) "riscv64 support in cmake is broken", and [#1936](https://github.com/zlib-ng/zlib-ng/issues/1936) (SIGILL in `riscv_check_features` when cross-building with `-static-pie`). Their states were not shown. [riscv-gnu-toolchain #943](https://github.com/riscv-collab/riscv-gnu-toolchain/issues/943) reports "Cannot find -lz" when cross-compiling the toolchain.
 
 ## 11. Known Bugs and Active Issues
 
-| ID | Title | State | Severity | Notes |
+Some issue and PR titles, states and dates are unknown [NEEDS VERIFICATION].
+
+| ID | Title | Status | Severity | Notes |
 |---|---|---|---|---|
-| [#1099](https://github.com/madler/zlib/pull/1099) | Add RVV-optimized implementation for Adler32 | Open (PR, no reviews) | Low (performance, not correctness) | Open since 2025-10-28; zero maintainer response; one comment pinging madler on 2025-11-17 |
-| [#1267](https://github.com/madler/zlib/pull/1267) | Add RVV-optimized implementation for Adler32 (duplicate) | Closed/self-withdrawn | N/A | Opened and closed 2026-06-10; branch deleted next day; duplicate of #1099 |
+| [#1200](https://github.com/madler/zlib/issues/1200) | Unknown (hidden) | Unknown | Unknown | Matched "riscv" and "riscv64"; only hit for plain "riscv". Whether it is a tracking issue is unknown |
+| [#143](https://github.com/madler/zlib/issues/143) | Unknown (hidden) | Unknown | Unknown | Matched "riscv64" |
+| [#413](https://github.com/madler/zlib/issues/413) | Unknown (hidden) | Unknown | Unknown | Matched "riscv64" |
+| [#416](https://github.com/madler/zlib/issues/416) | Unknown (hidden) | Unknown | Unknown | Matched "riscv64" |
+| [PR #1139](https://github.com/madler/zlib/pull/1139) | Unknown (hidden) | Unverified | n/a | Matched "riscv64"; linked to OpenBSD riscv64 CI commit c5c3b0b |
+| [PR #1099](https://github.com/madler/zlib/pull/1099) | Add RVV-optimized implementation for Adler32 | Open, no reviews [NEEDS VERIFICATION] | Low (performance) | Per the readiness grade, unmerged (ZTE) |
+| [PR #1267](https://github.com/madler/zlib/pull/1267) | Duplicate of #1099 | Self-closed [NEEDS VERIFICATION] | n/a | Opened and closed 2026-06-10 |
 
-No riscv64-specific correctness bugs exist in the issue tracker. No floating-point issues exist (the library performs no floating-point arithmetic). The open Power8 SIMD PRs (#458, #459, #468, #478, filed 2019-2020) are not riscv64-relevant but demonstrate the maintainer's pattern of leaving architecture SIMD work unreviewed indefinitely.
+Other counts: "riscv64 performance" returned 3 hidden results (#1200, #143, #874); "riscv64 bug" returned 14 hidden results. Whether any are open is unknown. These need manual review.
 
----
+**Correctness bugs:** None confirmed. Data not available: no riscv64 correctness bug could be verified because all candidates were hidden.
 
 ## 12. Objections and Upstream Blockers
 
-**Stated objections:** None. Mark Adler has not publicly commented on RISC-V support or the RVV Adler32 PR. The absence of any comment for eight months is itself informative.
+**Stated objections:** None found. Data not available: Mark Adler's statements on RISC-V (no readable issue or PR discussion).
 
-**Technical blockers:**
-- No technical blockers for correctness on riscv64. The library builds and tests pass.
-- The unmerged RVV Adler32 PR (#1099) is a complete, working implementation (104 lines, verified on SG2042), not a stub. It is not blocked by technical issues but by maintainer attention.
+**Technical blockers:** None found for the scalar build. PR #1099 is reported as a complete implementation, not a stub [NEEDS VERIFICATION].
 
-**Organizational blockers:**
-- Solo maintainer with a demonstrated pattern of not reviewing architecture SIMD contributions (Power8 PRs open since 2019).
-- No co-maintainer, no deputy reviewer, no documented review process for architecture contributions.
-- 270 open issues as of June 2026.
+**Organizational blockers:** Single maintainer, no deputy reviewer, no documented review process for architecture contributions, and no corporate sponsor. PR #1099 has been open since 2025-10-28 with no reported response [NEEDS VERIFICATION].
 
-**Acceptance probability for RVV Adler32 PR #1099:** Low in the near term based on the Power8 precedent (six years, no response). Medium in the longer term if upstream maintainer succession occurs or if distribution maintainers apply pressure. The s390x CRC-32 merge in 2026 shows the maintainer will act when sufficiently motivated.
+**Acceptance probability:** Linux riscv64 CI addition (one matrix entry in `configure.yml`): likely, since the maintainer merged the multi-architecture BSD CI change. RVV Adler-32 (#1099): uncertain; no evidence of review. This is an assessment, not a stated position.
 
-**Note on zlib-ng:** Many downstream consumers of zlib have migrated to zlib-ng precisely because madler/zlib is slow to accept architecture optimizations. If RISC-V performance is the priority, engaging with zlib-ng is more actionable than investing in madler/zlib upstreaming.
+**Note on zlib-ng:** Optimized RISC-V work (RVV, Zbc) is merged in zlib-ng and tracked by RISE as SL_00_005, so engagement with zlib-ng is more actionable if RISC-V performance is the goal.
 
----
+## 13. Readiness Assessment
 
-## 13. Investment Analysis
+- **Color:** blue
+- **Release provider:** distro
 
-RISE has no involvement with zlib. No funded work exists to subtract from the sizing.
+**Justification:** Upstream CI [others.yml](https://github.com/madler/zlib/blob/develop/.github/workflows/others.yml) runs an OpenBSD riscv64 job (emulated VM, added in c5c3b0b / [PR #1139](https://github.com/madler/zlib/pull/1139)) that does a cmake build and ctest on every push and PR. That gives build and tests, but only on OpenBSD, with no Linux riscv64 job. Upstream ships source only; riscv64 binaries come from distros (Ubuntu zlib1g, Debian, Arch, Alpine). zlib is the reference DEFLATE implementation, so the optimization modifier does not apply.
 
-### 13.1 Functional Enablement
+**Pending work that could change the grade:**
+- Unmerged RVV Adler-32 [PR #1099](https://github.com/madler/zlib/pull/1099) (ZTE).
+- No qemu-riscv64 entry in `configure.yml`, so a Linux riscv64 CI job is still missing.
+- Issues #1200, #143, #413 and #416 have unknown content [NEEDS VERIFICATION].
+- No RISE involvement with madler/zlib; RISE work targets zlib-ng (SL_00_005).
 
-No work required. zlib is functionally complete on riscv64. Distro packages are available and tested.
+## 14. Investment Analysis
 
-### 13.2 Performance Optimization
+RISE has no funded work on madler/zlib. RISE claims RVV optimizations for zlib-ng in its [December 2024 webinar](https://riseproject.dev/wp-content/uploads/sites/25/2024/12/RISE-Webinar-December-2024.pdf) ("Added RISC-V Vector optimizations to system libraries: bionic, dav1d, zlib-ng, XNNPACK"). Data not available: funding amount or recipient for zlib-ng (the wiki page [SL_00_005](https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/8586096/SL_00_005+-+zlib-ng) returned only a cookie banner). The RISE index also hosts the wheels `zlib-state` and `cmeel-zlib`, which are not madler/zlib. riseproject-dev has an `android_external_zlib` repo (created 2026-10-12, the Chromium/Android zlib fork), which is separate from madler/zlib.
 
-The RVV Adler32 implementation (PR #1099) is already written and tested by leiwen2025 (zte-riscv). The gap is upstream acceptance, not implementation. A CRC-32 optimization using the Zbc extension (carry-less multiply) does not yet exist for madler/zlib (it exists in zlib-ng). The performance delta for CRC-32 on riscv64 vs aarch64 is material for gzip-heavy workloads.
+Effort figures below are estimates, not measured data.
 
-Remaining work if upstream acceptance is pursued:
-- Review and polish PR #1099 (RVV Adler32): the implementation is complete but has had no code review.
-- Implement CRC-32 via Zbc extension (analogous to aarch64 `__ARM_FEATURE_CRC32` path).
-- Add SIMD dispatch infrastructure (runtime HWCAP detection) if multiple SIMD paths are merged.
+### 14.1 Functional Enablement
 
-### 13.3 CI/CD Infrastructure
+No work required for the scalar library. Distro packages exist.
 
-Adding Linux/riscv64 cross-compilation to `configure.yml` requires a one-line matrix addition and follows the established pattern of the existing five non-x86 architectures in that workflow. This is the lowest-effort action available.
+### 14.2 Performance Optimization
 
-### 13.4 Ecosystem Enablement
+- Review and rebase PR #1099 (RVV Adler-32) for upstream: existing code, no review so far.
+- Implement Zbc CRC-32 for madler/zlib, following the zlib-ng PR #1905 approach (hand-off from fork data above).
+- Add runtime hwcap detection if more than one vector path lands. Note zlib-ng issue #1936 (SIGILL in feature probing) as a hazard.
 
-Not applicable. zlib has no dependent package ecosystem to enable separately; it is a foundational system library.
+### 14.3 CI/CD Infrastructure
 
-### 13.5 Summary Table
+Add a riscv64 job to `configure.yml` using the existing qemu-user pattern (Section 5). Fix the stray `bzip2` line in `others.yml`.
+
+### 14.4 Ecosystem Enablement
+
+Not applicable. zlib is a foundational system library with no dependent package ecosystem to enable separately.
+
+### 14.5 Summary Table
 
 | Area | Work Item | Effort (person-weeks) | Owner | Priority |
 |---|---|---|---|---|
-| CI/CD | Add riscv64 cross-compile target to `configure.yml` (Linux/QEMU) | 0.5 | Any contributor | High |
-| Performance | Review, benchmark, and upstream PR #1099 (RVV Adler32) | 2 | RISC-V vendor or Qualcomm | Medium |
-| Performance | Implement CRC-32 via Zbc extension (new work, analogous to aarch64 path) | 3 | RISC-V vendor or Qualcomm | Medium |
-| Performance | Add SIMD dispatch infrastructure (HWCAP runtime detection for RVV/Zbc) | 1 | Dependent on above | Medium |
-| Upstream engagement | Direct engagement with madler to unblock architecture SIMD PRs | 1 (recurring) | Qualcomm or distribution maintainer | Low |
+| CI/CD | Add riscv64 qemu-user job to `configure.yml` | 0.5 | Any contributor | High |
+| CI/CD | Fix `bzip2` install line in `others.yml` | 0.1 | Any contributor | Low |
+| Performance | Review, benchmark and upstream PR #1099 (RVV Adler-32) | 2 | RISC-V vendor | Medium |
+| Performance | Zbc CRC-32 for madler/zlib | 3 | RISC-V vendor | Medium |
+| Performance | Runtime hwcap dispatch for RVV/Zbc | 1 | Dependent on above | Medium |
+| Upstream engagement | Engage maintainer on architecture PRs | 1 (recurring) | Interested vendor | Low |
+| Verification | Read hidden issues #1200, #143, #413, #416 and PR #1139 with sufficient access | 0.2 | Report maintainer | High |
 
-Total: approximately 7.5 person-weeks, with the CI addition being trivially actionable immediately. The largest risk is not implementation effort but maintainer responsiveness; zlib-ng should be evaluated as an alternative investment target if near-term RISC-V performance impact is required.
-
----
-
-## 14. Updates
-
-No updates yet -- initial report dated 2026-07-20.
-
----
+Total about 7.8 person-weeks, dominated by performance work that depends on maintainer responsiveness.
 
 ## 15. References
 
 - [madler/zlib repository](https://github.com/madler/zlib)
 - [zlib homepage](https://zlib.net/)
-- [PR #1099: Add RVV-optimized implementation for Adler32](https://github.com/madler/zlib/pull/1099)
-- [PR #1139: More tests (OpenBSD riscv64 CI)](https://github.com/madler/zlib/pull/1139)
-- [PR #1267: Add RVV-optimized implementation for Adler32 (duplicate, closed)](https://github.com/madler/zlib/pull/1267)
-- [zlib releases (v1.3.2, v1.3.1, v1.3, v1.2.13)](https://github.com/madler/zlib/releases)
-- [CI workflow: others.yml (raw)](https://raw.githubusercontent.com/madler/zlib/develop/.github/workflows/others.yml)
-- [CI workflow: configure.yml (raw)](https://raw.githubusercontent.com/madler/zlib/develop/.github/workflows/configure.yml)
-- [CI workflow: cmake.yml (raw)](https://raw.githubusercontent.com/madler/zlib/develop/.github/workflows/cmake.yml)
-- [Ubuntu 24.04 Noble: zlib package search](https://packages.ubuntu.com/search?keywords=zlib&suite=noble&searchon=names&section=all)
-- [Debian buildd: zlib sid riscv64 status](https://buildd.debian.org/status/package.php?p=zlib&suite=sid)
+- [madler/zlib releases](https://github.com/madler/zlib/releases)
+- [PR #1099: RVV Adler32](https://github.com/madler/zlib/pull/1099)
+- [PR #1139](https://github.com/madler/zlib/pull/1139)
+- [PR #1267: duplicate RVV Adler32](https://github.com/madler/zlib/pull/1267)
+- [Issue #1200](https://github.com/madler/zlib/issues/1200)
+- [Issue #143](https://github.com/madler/zlib/issues/143)
+- [Issue #413](https://github.com/madler/zlib/issues/413)
+- [Issue #416](https://github.com/madler/zlib/issues/416)
+- [CI workflow: others.yml](https://github.com/madler/zlib/blob/develop/.github/workflows/others.yml)
+- [CI workflow: configure.yml](https://raw.githubusercontent.com/madler/zlib/develop/.github/workflows/configure.yml)
+- [zlib-ng PR #1905: Zbc CRC32](https://github.com/zlib-ng/zlib-ng/pull/1905)
+- [zlib-ng PR #1904: riscv configure script](https://github.com/zlib-ng/zlib-ng/pull/1904)
+- [zlib-ng PR #1522: slide_hash RVV](https://github.com/zlib-ng/zlib-ng/pull/1522)
+- [zlib-ng PR #1498: compare256 RVV](https://github.com/zlib-ng/zlib-ng/pull/1498)
+- [zlib-ng issue #941](https://github.com/zlib-ng/zlib-ng/issues/941)
+- [zlib-ng issue #1936](https://github.com/zlib-ng/zlib-ng/issues/1936)
+- [conda-forge zlib-feedstock PR #92](https://github.com/conda-forge/zlib-feedstock/pull/92)
+- [riscv-gnu-toolchain issue #943](https://github.com/riscv-collab/riscv-gnu-toolchain/issues/943)
+- [Ubuntu resolute zlib package search](https://packages.ubuntu.com/search?keywords=zlib&suite=resolute&searchon=names&section=all)
+- [Debian buildd: zlib sid](https://buildd.debian.org/status/package.php?p=zlib&suite=sid)
 - [Arch Linux RISC-V mirror: core repo](https://riscv.mirror.pkgbuild.com/repo/core/)
-- [RISE Project blog](https://riseproject.dev/blog)
+- [RISE members](https://riseproject.dev/members/)
+- [RISE blog](https://riseproject.dev/blog)
+- [RISE webinar December 2024](https://riseproject.dev/wp-content/uploads/sites/25/2024/12/RISE-Webinar-December-2024.pdf)
+- [RISE wiki: SL_00_005 zlib-ng](https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/8586096/SL_00_005+-+zlib-ng)
+- [RISE Python wheels index](https://pypi.riseproject.dev)
+- [riseproject-dev/android_external_zlib](https://github.com/riseproject-dev/android_external_zlib)
