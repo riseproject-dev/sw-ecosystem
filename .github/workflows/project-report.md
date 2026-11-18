@@ -26,7 +26,7 @@ github-app:
 
 engine:
   id: pi
-  model: anthropic/claude-sonnet-5-5
+  model: copilot/claude-sonnet-5.5
   # pi-subagents runs prompts/project-report/project-report-workflow.js as a scripted
   # workflow; pi-web-access gives its steps web search and page fetching.
   extensions:
